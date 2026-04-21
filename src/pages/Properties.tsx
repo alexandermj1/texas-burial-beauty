@@ -301,7 +301,7 @@ const Properties = () => {
               Cemeteries We Serve ({filteredCemeteries.length})
             </button>
             <button onClick={() => setTab("plots")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "plots" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              Available Plots ({filteredListings.length})
+              Available Plots
             </button>
           </div>
 
@@ -386,23 +386,44 @@ const Properties = () => {
           {/* Available Plots Tab */}
           {tab === "plots" && (
             <>
-              <p className="text-sm text-muted-foreground mb-5">Showing {filteredListings.length} {filteredListings.length === 1 ? "plot" : "plots"}</p>
+              {filteredListings.length > 0 && (
+                <p className="text-sm text-muted-foreground mb-5">Showing recently refreshed plots</p>
+              )}
               {loadingListings ? (
                 <div className="text-center py-16 text-muted-foreground">Loading plots...</div>
               ) : filteredListings.length === 0 ? (
-                <div className="text-center py-16">
-                  <p className="text-muted-foreground text-lg mb-2">No plots available yet</p>
-                  <p className="text-sm text-muted-foreground mb-6">New properties are added regularly. Use our guided search to tell us what you need.</p>
-                  <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
-                    Start Guided Search <ArrowRight className="w-4 h-4" />
-                  </Link>
+                <div className="text-center py-20 bg-gradient-sage rounded-2xl px-6">
+                  <p className="font-display text-2xl text-foreground mb-2">Inventory refreshing daily</p>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                    New Texas plots are added to our private network every week. Tell us what you're looking for and we'll match you with the right property — often before it's listed publicly.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
+                      Request First Access <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <a href="tel:+12142560795" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
+                      <Phone className="w-4 h-4" /> Call (214) 256-0795
+                    </a>
+                  </div>
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredListings.map((listing, i) => (
-                    <ListingCard key={listing.id} listing={listing} isAdmin={isAdmin} index={i} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredListings.map((listing, i) => (
+                      <ListingCard key={listing.id} listing={listing} isAdmin={isAdmin} index={i} />
+                    ))}
+                  </div>
+                  {filteredListings.length < 6 && (
+                    <div className="mt-10 bg-card border border-border/60 rounded-2xl p-6 text-center">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Many of our Texas plots sell privately before reaching this page. Get first access to off-market inventory.
+                      </p>
+                      <Link to="/buy" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
+                        Request First Access <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

@@ -313,8 +313,9 @@ export const Properties2Browser = () => {
             )}
 
             {filteredListings.length === 0 && (
-              <div className="text-center py-16 text-muted-foreground">
-                No available plots right now. Check back soon.
+              <div className="text-center py-16 px-6">
+                <p className="font-display text-2xl text-foreground mb-2">Inventory refreshing</p>
+                <p className="text-muted-foreground max-w-md mx-auto">New Texas plots are added to our private network every week. Request first access and we'll reach out as soon as new inventory matches your needs.</p>
               </div>
             )}
           </>
