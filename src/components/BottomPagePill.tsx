@@ -143,14 +143,14 @@ const BottomPagePill = () => {
 
                 <div className="flex items-center justify-between text-xs text-primary-foreground/60 border-t border-primary-foreground/15 pt-4">
                   <a
-                    href="tel:+16503720795"
+                    href="tel:+12142560795"
                     className="inline-flex items-center gap-1.5 text-primary-foreground hover:text-accent transition-colors"
                   >
                     <Phone className="w-3 h-3" />
-                    650-372-0795
+                    (214) 256-0795
                   </a>
                   <span className="tracking-[0.2em] uppercase text-[10px]">
-                    Bay Area
+                    Texas
                   </span>
                 </div>
               </div>

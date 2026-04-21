@@ -125,7 +125,7 @@ const SellerQuoteForm = () => {
                   <Input
                     value={form.cemetery}
                     onChange={(e) => setForm({ ...form, cemetery: e.target.value })}
-                    placeholder="e.g. Cypress Lawn"
+                    placeholder="e.g. Restland Memorial Park"
                     maxLength={200}
                   />
                 </div>

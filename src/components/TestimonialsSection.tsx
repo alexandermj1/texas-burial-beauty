@@ -4,20 +4,20 @@ import { Star } from "lucide-react";
 const testimonials = [
   {
     name: "Diane C.",
-    location: "San Mateo, CA",
+    location: "Plano, TX",
     text: "Thank you for helping us through a very difficult time. That we saved significant amounts over the price we had expected is also appreciated.",
     rating: 5,
   },
   {
     name: "Stephen P.",
-    location: "Bay Area, CA",
+    location: "Houston, TX",
     text: "Excellent service and very professional. Provided us with the best for our situation. Quick to respond at time of need.",
     rating: 5,
   },
   {
     name: "Dolores R.",
-    location: "San Francisco, CA",
-    text: "Thank you for selling my cemetery plot so quickly. I had tried for over a year and paid quite a lot for newspaper advertising. Cemetery Property Resales made it easy.",
+    location: "Dallas, TX",
+    text: "Thank you for selling my cemetery plot so quickly. I had tried for over a year and paid quite a lot for newspaper advertising. Texas Cemetery Brokers made it easy.",
     rating: 5,
   },
 ];
@@ -35,7 +35,7 @@ const TestimonialsSection = () => {
         >
           <p className="text-primary font-medium text-sm tracking-wide mb-3">Testimonials</p>
           <h2 className="font-display text-3xl md:text-5xl text-foreground">
-            Trusted by Bay Area families
+            Trusted by Texas families
           </h2>
           <p className="text-muted-foreground mt-3">4.9 ★ rating from 71+ reviews</p>
         </motion.div>

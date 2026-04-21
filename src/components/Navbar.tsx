@@ -25,6 +25,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     { to: "/properties", label: "Properties" },
     { to: "/sell", label: "Sell Property" },
     { to: "/team", label: "Our Team" },
+    { to: "/partners", label: "Partners" },
     { to: "/blog", label: "Blog" },
   ];
 
@@ -44,17 +45,17 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-baseline gap-2">
           <span className={`font-display text-2xl transition-colors duration-500 ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
-            Cemetery Property
+            Texas Cemetery
           </span>
           <span className={`text-xs tracking-[0.2em] uppercase font-body hidden sm:inline transition-colors duration-500 ${scrolled ? "text-muted-foreground" : "text-primary-foreground/60"}`}>
-            Resales
+            Brokers
           </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <a href="tel:+16503720795" className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-500 ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
+          <a href="tel:+12142560795" className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-500 ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
             <Phone className="w-3.5 h-3.5" />
-            650-372-0795
+            (214) 256-0795
           </a>
           {links.map(link => (
             <Link
@@ -106,9 +107,9 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
       {menuOpen && (
         <div className="md:hidden bg-background border-t border-border px-6 py-6 flex flex-col gap-4">
-          <a href="tel:+16503720795" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
+          <a href="tel:+12142560795" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
             <Phone className="w-3.5 h-3.5" />
-            650-372-0795
+            (214) 256-0795
           </a>
           {links.map(link => (
             <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="text-sm text-foreground">

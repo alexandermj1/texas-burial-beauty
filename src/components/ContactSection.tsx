@@ -17,7 +17,6 @@ const ContactSection = () => {
       return;
     }
     setLoading(true);
-    // Simulate sending — in production this would hit an edge function
     await new Promise((r) => setTimeout(r, 1000));
     toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
     setForm({ name: "", email: "", phone: "", message: "" });
@@ -28,7 +27,6 @@ const ContactSection = () => {
     <section id="contact" className="py-16 bg-gradient-sage">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-start">
-          {/* Left — info */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -45,7 +43,7 @@ const ContactSection = () => {
 
             <div className="space-y-4 mb-8">
               <a
-                href="tel:+16503720795"
+                href="tel:+12142560795"
                 className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -53,11 +51,11 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Call us</p>
-                  <p className="font-medium">650-372-0795</p>
+                  <p className="font-medium">(214) 256-0795</p>
                 </div>
               </a>
               <a
-                href="mailto:Help@CemeteryProperty.com"
+                href="mailto:Help@TexasCemeteryBrokers.com"
                 className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -65,17 +63,16 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email us</p>
-                  <p className="font-medium">Help@CemeteryProperty.com</p>
+                  <p className="font-medium">Help@TexasCemeteryBrokers.com</p>
                 </div>
               </a>
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Serving the San Francisco Bay Area · Licensed & Bonded (CEB 1421)
+              Serving all of Texas · Partner of Bay Cemetery Brokers
             </p>
           </motion.div>
 
-          {/* Right — form */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -87,48 +84,22 @@ const ContactSection = () => {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1 block">Name *</label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="Your name"
-                    maxLength={100}
-                  />
+                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your name" maxLength={100} />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1 block">Phone</label>
-                  <Input
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="(optional)"
-                    maxLength={20}
-                  />
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(optional)" maxLength={20} />
                 </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Email *</label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@example.com"
-                  maxLength={255}
-                />
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" maxLength={255} />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Message *</label>
-                <Textarea
-                  value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  placeholder="Tell us what you're looking for — buying, selling, or just have a question..."
-                  rows={4}
-                  maxLength={1000}
-                />
+                <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Tell us what you're looking for — buying, selling, or just have a question..." rows={4} maxLength={1000} />
               </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-50"
-              >
+              <button type="submit" disabled={loading} className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-50">
                 {loading ? "Sending..." : "Send Message"}
                 <Send className="w-4 h-4" />
               </button>

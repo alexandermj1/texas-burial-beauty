@@ -118,7 +118,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="block text-primary-foreground/90 text-xs tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-md"
         >
-          Est. 1996 · Bay Area
+          Est. 1996 · All of Texas
         </motion.span>
 
         <motion.h1
@@ -140,7 +140,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.9 }}
           className="mt-6 max-w-2xl text-primary-foreground/85 text-base sm:text-lg font-light drop-shadow-md"
         >
-          Buying or selling a plot shouldn't be hard. We make it effortless — across the San Francisco Bay Area, at 30–50% below cemetery prices.
+          Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
         </motion.p>
       </motion.div>
 
