@@ -2,18 +2,28 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 
+// Pin coordinates are positioned over a stylized Texas SVG.
 const cemeteries = [
-  { name: "Rose Hills Memorial Park", city: "Whittier", lat: 33.99, lng: -118.03, x: 58, y: 52 },
-  { name: "Forest Lawn Memorial Park", city: "Glendale", lat: 34.13, lng: -118.25, x: 50, y: 38 },
-  { name: "Pacific View Memorial Park", city: "Corona del Mar", lat: 33.59, lng: -117.87, x: 65, y: 72 },
-  { name: "Green Hills Memorial Park", city: "Rancho Palos Verdes", lat: 33.77, lng: -118.36, x: 42, y: 62 },
-  { name: "El Camino Memorial Park", city: "San Diego", lat: 32.87, lng: -117.21, x: 82, y: 92 },
-  { name: "Holy Cross Cemetery", city: "Culver City", lat: 33.98, lng: -118.39, x: 40, y: 50 },
-  { name: "Inglewood Park Cemetery", city: "Inglewood", lat: 33.96, lng: -118.35, x: 42, y: 54 },
-  { name: "Mountain View Cemetery", city: "Altadena", lat: 34.19, lng: -118.13, x: 54, y: 32 },
-  { name: "Harbor Lawn-Mt. Olive", city: "Costa Mesa", lat: 33.66, lng: -117.91, x: 63, y: 68 },
-  { name: "Riverside National Cemetery", city: "Riverside", lat: 33.89, lng: -117.44, x: 76, y: 56 },
-  { name: "Eternal Hills Memorial Park", city: "Oceanside", lat: 33.18, lng: -117.33, x: 78, y: 82 },
+  { name: "Restland Memorial Park", city: "Dallas", x: 60, y: 40 },
+  { name: "Sparkman/Hillcrest Memorial Park", city: "Dallas", x: 59, y: 41 },
+  { name: "Greenwood Memorial Park", city: "Fort Worth", x: 56, y: 41 },
+  { name: "Mount Olivet Cemetery", city: "Fort Worth", x: 56, y: 42 },
+  { name: "Forest Park Lawndale", city: "Houston", x: 70, y: 70 },
+  { name: "Memorial Oaks Cemetery", city: "Houston", x: 69, y: 70 },
+  { name: "Houston National Cemetery", city: "Houston", x: 70, y: 68 },
+  { name: "Austin Memorial Park Cemetery", city: "Austin", x: 58, y: 65 },
+  { name: "Texas State Cemetery", city: "Austin", x: 59, y: 65 },
+  { name: "San Jose Burial Park", city: "San Antonio", x: 52, y: 72 },
+  { name: "Fort Sam Houston National Cemetery", city: "San Antonio", x: 53, y: 71 },
+  { name: "Evergreen Cemetery East", city: "El Paso", x: 14, y: 56 },
+  { name: "Fort Bliss National Cemetery", city: "El Paso", x: 13, y: 55 },
+  { name: "City of Lubbock Cemetery", city: "Lubbock", x: 32, y: 30 },
+  { name: "Llano Cemetery", city: "Amarillo", x: 32, y: 12 },
+  { name: "Greenleaf Cemetery", city: "Waco", x: 60, y: 53 },
+  { name: "Memorial Park Cemetery", city: "Tyler", x: 70, y: 47 },
+  { name: "Forest Park Cemetery", city: "Beaumont", x: 80, y: 70 },
+  { name: "Seaside Memorial Park", city: "Corpus Christi", x: 60, y: 84 },
+  { name: "Memory Gardens", city: "McAllen", x: 56, y: 92 },
 ];
 
 const CemeteryMap = () => {
@@ -30,8 +40,9 @@ const CemeteryMap = () => {
         >
           <p className="text-primary font-medium text-sm tracking-wide mb-2">Our Coverage</p>
           <h2 className="font-display text-3xl md:text-4xl text-foreground">
-            Southern California Cemeteries
+            Texas Cemeteries — Statewide Reach
           </h2>
+          <p className="text-muted-foreground text-sm mt-2 max-w-xl mx-auto">A representative sample of the cemeteries we work with across Texas.</p>
         </motion.div>
 
         <motion.div
@@ -41,37 +52,30 @@ const CemeteryMap = () => {
           transition={{ duration: 0.6 }}
           className="relative max-w-4xl mx-auto"
         >
-          {/* Map container */}
-          <div className="relative bg-card rounded-2xl shadow-soft overflow-hidden" style={{ paddingBottom: "70%" }}>
-            {/* Stylized map background */}
+          <div className="relative bg-card rounded-2xl shadow-soft overflow-hidden" style={{ paddingBottom: "85%" }}>
             <div className="absolute inset-0">
-              <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                {/* Ocean */}
-                <rect width="100" height="100" fill="hsl(200 30% 88%)" />
-                {/* Land mass - stylized Southern California */}
+              <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                <rect width="100" height="100" fill="hsl(38 35% 95%)" />
+                {/* Stylized Texas outline */}
                 <path
-                  d="M 0 0 L 100 0 L 100 45 Q 90 50, 85 55 Q 80 58, 78 65 Q 75 72, 70 75 Q 65 78, 60 80 Q 50 85, 45 82 Q 38 78, 35 72 Q 32 68, 28 65 Q 22 60, 18 58 Q 12 55, 8 52 Q 2 48, 0 45 Z"
-                  fill="hsl(38 35% 92%)"
-                  stroke="hsl(35 20% 82%)"
-                  strokeWidth="0.3"
+                  d="M 28 8 L 68 8 L 70 12 L 78 14 L 82 22 L 86 32 L 84 44 L 80 50 L 78 58 L 76 64 L 82 70 L 84 78 L 78 82 L 70 82 L 66 86 L 62 90 L 56 96 L 50 92 L 44 86 L 38 82 L 32 78 L 26 74 L 18 68 L 12 60 L 8 52 L 10 42 L 14 30 L 20 20 L 24 12 Z"
+                  fill="hsl(145 25% 80%)"
+                  stroke="hsl(145 25% 50%)"
+                  strokeWidth="0.4"
                 />
-                {/* Inland texture lines */}
-                <path d="M 30 20 Q 50 25, 70 18" fill="none" stroke="hsl(35 20% 86%)" strokeWidth="0.2" />
-                <path d="M 25 35 Q 45 40, 65 33" fill="none" stroke="hsl(35 20% 86%)" strokeWidth="0.2" />
-                {/* Coastline label */}
-                <text x="15" y="75" fill="hsl(200 20% 65%)" fontSize="2.5" fontStyle="italic" opacity="0.6">Pacific Ocean</text>
                 {/* Region labels */}
-                <text x="42" y="28" fill="hsl(25 10% 55%)" fontSize="1.8" opacity="0.5">Los Angeles County</text>
-                <text x="60" y="60" fill="hsl(25 10% 55%)" fontSize="1.8" opacity="0.5">Orange County</text>
-                <text x="72" y="48" fill="hsl(25 10% 55%)" fontSize="1.8" opacity="0.5">Riverside County</text>
-                <text x="72" y="88" fill="hsl(25 10% 55%)" fontSize="1.8" opacity="0.5">San Diego County</text>
+                <text x="55" y="40" fill="hsl(25 10% 35%)" fontSize="2.2" opacity="0.65" fontWeight="600">DFW</text>
+                <text x="65" y="72" fill="hsl(25 10% 35%)" fontSize="2.2" opacity="0.65" fontWeight="600">Houston</text>
+                <text x="55" y="67" fill="hsl(25 10% 35%)" fontSize="1.8" opacity="0.6">Austin</text>
+                <text x="48" y="74" fill="hsl(25 10% 35%)" fontSize="1.8" opacity="0.6">San Antonio</text>
+                <text x="9" y="58" fill="hsl(25 10% 35%)" fontSize="1.8" opacity="0.6">El Paso</text>
+                <text x="86" y="92" fill="hsl(200 25% 55%)" fontSize="2" fontStyle="italic" opacity="0.6">Gulf</text>
               </svg>
             </div>
 
-            {/* Cemetery pins */}
             {cemeteries.map((cem) => (
               <button
-                key={cem.name}
+                key={cem.name + cem.city}
                 className="absolute z-10 group"
                 style={{ left: `${cem.x}%`, top: `${cem.y}%`, transform: "translate(-50%, -100%)" }}
                 onMouseEnter={() => setActive(cem.name)}
@@ -80,14 +84,11 @@ const CemeteryMap = () => {
               >
                 <MapPin
                   className={`w-5 h-5 md:w-6 md:h-6 transition-all drop-shadow-md ${
-                    active === cem.name
-                      ? "text-accent scale-125"
-                      : "text-primary hover:text-accent hover:scale-110"
+                    active === cem.name ? "text-accent scale-125" : "text-primary hover:text-accent hover:scale-110"
                   }`}
                   fill={active === cem.name ? "hsl(16 50% 58%)" : "hsl(145 25% 36%)"}
                   strokeWidth={1.5}
                 />
-                {/* Tooltip */}
                 {active === cem.name && (
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
@@ -95,7 +96,7 @@ const CemeteryMap = () => {
                     className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-foreground text-primary-foreground px-3 py-2 rounded-lg text-xs whitespace-nowrap shadow-lg"
                   >
                     <p className="font-medium">{cem.name}</p>
-                    <p className="opacity-75">{cem.city}, CA</p>
+                    <p className="opacity-75">{cem.city}, TX</p>
                     <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45 -mt-1" />
                   </motion.div>
                 )}
@@ -103,11 +104,10 @@ const CemeteryMap = () => {
             ))}
           </div>
 
-          {/* Legend */}
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
             {cemeteries.map((cem) => (
               <button
-                key={cem.name}
+                key={cem.name + cem.city}
                 onMouseEnter={() => setActive(cem.name)}
                 onMouseLeave={() => setActive(null)}
                 className={`text-xs px-3 py-1.5 rounded-full transition-all ${
