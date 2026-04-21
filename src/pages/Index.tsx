@@ -19,7 +19,7 @@ const FEATURED_PHRASES = [
   "Featured plots.",
   "Featured this week.",
   "Featured near you.",
-  "Featured in the Bay Area.",
+  "Featured across Texas.",
   "Featured below market.",
 ];
 
@@ -113,7 +113,7 @@ const Index = () => {
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
               <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
-                Available Now · Bay Area
+                Available Now · Texas
               </span>
               <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl">
                 <span className="italic font-light">{typed || "\u00A0"}</span>
@@ -123,7 +123,7 @@ const Index = () => {
                 />
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base font-light text-muted-foreground sm:text-lg">
-                Recently listed properties at below-market prices across the Bay Area.
+                Recently listed properties at below-market prices across Texas — Dallas, Houston & beyond.
               </p>
             </div>
 

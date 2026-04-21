@@ -90,7 +90,7 @@ const SearchBar = ({ query, setQuery }: { query: string; setQuery: (v: string) =
       </div>
       <div className="hidden sm:block flex-1 px-6 py-3 border-r border-border/60">
         <div className="text-[11px] font-semibold text-foreground">Region</div>
-        <div className="text-sm text-muted-foreground">Bay Area</div>
+        <div className="text-sm text-muted-foreground">Texas</div>
       </div>
       <div className="hidden sm:block flex-1 px-6 py-3 border-r border-border/60">
         <div className="text-[11px] font-semibold text-foreground">Type</div>
@@ -161,7 +161,7 @@ const PlotCard = ({ listing, isAdmin }: { listing: Listing; isAdmin: boolean }) 
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-medium text-[15px] text-foreground leading-tight truncate">{listing.cemetery}</h3>
         </div>
-        <p className="text-[13px] text-muted-foreground truncate">{listing.city}, CA · {listing.plot_type}</p>
+        <p className="text-[13px] text-muted-foreground truncate">{listing.city}, TX · {listing.plot_type}</p>
         <p className="text-[13px] text-muted-foreground">Section {listing.section} · {listing.spaces} {listing.spaces > 1 ? "spaces" : "space"}</p>
         <div className="mt-1 flex items-center gap-2 flex-wrap">
           {listing.asking_price ? (
@@ -278,37 +278,37 @@ export const Properties2Browser = () => {
           </>
         ) : (
           <>
-            {byRegion("Peninsula & SF").length > 0 && (
-              <CarouselRow title="Popular plots in Peninsula & SF" subtitle="Cypress Lawn, Olivet, Skylawn and more">
-                {byRegion("Peninsula & SF").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
+            {byRegion("Dallas–Fort Worth").length > 0 && (
+              <CarouselRow title="Popular plots in Dallas–Fort Worth" subtitle="Restland, Hillcrest, Sparkman, Mount Olivet and more">
+                {byRegion("Dallas–Fort Worth").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
               </CarouselRow>
             )}
 
-            {byRegion("East Bay").length > 0 && (
-              <CarouselRow title="Available in the East Bay" subtitle="Mountain View, Chapel of the Chimes & more">
-                {byRegion("East Bay").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
+            {byRegion("Greater Houston").length > 0 && (
+              <CarouselRow title="Available in Greater Houston" subtitle="Forest Park, Memorial Oaks, Glenwood & more">
+                {byRegion("Greater Houston").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
               </CarouselRow>
             )}
 
-            <CarouselRow title="Featured cemeteries in the Bay Area" subtitle="A collection of trusted memorial parks">
+            <CarouselRow title="Featured cemeteries across Texas" subtitle="A collection of trusted memorial parks">
               {filteredCemeteries.slice(0, 16).map((c) => <CemeteryCard key={c.name} {...c} />)}
             </CarouselRow>
 
-            {byRegion("South Bay").length > 0 && (
-              <CarouselRow title="Available in the South Bay" subtitle="Los Gatos, Oak Hill, Santa Clara Mission">
-                {byRegion("South Bay").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
+            {byRegion("Austin").length > 0 && (
+              <CarouselRow title="Available in Austin" subtitle="Texas State Cemetery, Memorial Park, Cook-Walden">
+                {byRegion("Austin").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
               </CarouselRow>
             )}
 
-            {byRegion("North Bay").length > 0 && (
-              <CarouselRow title="Available in the North Bay" subtitle="Marin, Sonoma & Napa">
-                {byRegion("North Bay").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
+            {byRegion("San Antonio").length > 0 && (
+              <CarouselRow title="Available in San Antonio" subtitle="Mission Burial Park, Sunset, Fort Sam Houston">
+                {byRegion("San Antonio").slice(0, 20).map((l) => <PlotCard key={l.id} listing={l} isAdmin={isAdmin} />)}
               </CarouselRow>
             )}
 
-            {featuredCemeteriesByRegion("North Bay").length > 0 && (
-              <CarouselRow title="Cemeteries in the North Bay" subtitle="Wine country memorial parks">
-                {featuredCemeteriesByRegion("North Bay").map((c) => <CemeteryCard key={c.name} {...c} />)}
+            {featuredCemeteriesByRegion("San Antonio").length > 0 && (
+              <CarouselRow title="Cemeteries in San Antonio" subtitle="Historic memorial parks of South Texas">
+                {featuredCemeteriesByRegion("San Antonio").map((c) => <CemeteryCard key={c.name} {...c} />)}
               </CarouselRow>
             )}
 
@@ -326,7 +326,7 @@ export const Properties2Browser = () => {
 
 const Properties2 = () => {
   useEffect(() => {
-    document.title = "Available Plots — Bay Area | Properties 2";
+    document.title = "Available Plots — Texas | Properties 2";
   }, []);
 
   return (

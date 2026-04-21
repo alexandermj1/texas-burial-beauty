@@ -16,7 +16,7 @@ import veteransGardenImg from "@/assets/property-types/veterans-garden.png";
 /* ─── Data ────────────────────────────────────────────────────── */
 
 const propertyTypes = [
-  { id: "single-plot", title: "Single Burial Plot", subtitle: "The Traditional Choice", image: singlePlotImg, description: "The most common type of cemetery property — space for one casket burial with a flat bronze or granite marker flush with the ground.", features: ["Most affordable traditional burial option", "Wide availability across all Bay Area cemeteries", "Flat markers maintain a park-like setting", "Can often accommodate 1–2 cremation urns"], stat: { value: "1", unit: "Casket", detail: "Flat Bronze Marker" }, pullQuote: "The most popular choice for Bay Area families since 1996." },
+  { id: "single-plot", title: "Single Burial Plot", subtitle: "The Traditional Choice", image: singlePlotImg, description: "The most common type of cemetery property — space for one casket burial with a flat bronze or granite marker flush with the ground.", features: ["Most affordable traditional burial option", "Wide availability across all Texas cemeteries", "Flat markers maintain a park-like setting", "Can often accommodate 1–2 cremation urns"], stat: { value: "1", unit: "Casket", detail: "Flat Bronze Marker" }, pullQuote: "The most popular choice for Texas families." },
   { id: "companion-plot", title: "Companion Plot", subtitle: "Together Forever", image: companionPlotImg, description: "Two side-by-side spaces for couples or family. Matching markers create a unified, elegant memorial tribute.", features: ["Perfect for couples and family members", "Often purchased at a bundled discount", "Matching markers for a unified tribute", "Some allow double-depth (stacked) interment"], stat: { value: "2", unit: "Caskets", detail: "Side-by-Side Layout" }, pullQuote: "A unified tribute for those who shared a lifetime together." },
   { id: "lawn-crypt", title: "Lawn Crypt", subtitle: "Superior Protection", image: lawnCryptImg, description: "A pre-installed concrete vault in the ground. Double-depth options allow two burials stacked vertically — ideal for couples.", features: ["Pre-installed concrete vault included", "Superior protection from soil and weather", "Double-depth option saves space and cost", "Clean, manicured lawn appearance"], stat: { value: "1–2", unit: "Caskets", detail: "Pre-Installed Vault" }, pullQuote: "Engineered for permanence." },
   { id: "mausoleum-crypt", title: "Mausoleum Crypt", subtitle: "Elegant Entombment", image: mausoleumImg, description: "Above-ground entombment in elegant structures. Single, tandem, or companion crypts in indoor or outdoor settings.", features: ["Elegant above-ground entombment", "Climate-protected indoor options", "No ground maintenance required", "Architecturally significant buildings"], stat: { value: "1–2", unit: "Entombments", detail: "Indoor / Outdoor" }, pullQuote: "Architecture that honours a life beautifully lived." },
@@ -614,7 +614,7 @@ const PropertyTypes = () => {
               Types of cemetery <span className="italic">property</span>
             </h1>
             <p className="text-primary-foreground/80 text-base md:text-lg font-light leading-relaxed max-w-2xl drop-shadow-md">
-              A guide to the different memorial options available across the Bay Area.
+              A guide to the different memorial options available across Texas.
             </p>
           </motion.div>
         </motion.div>
@@ -640,11 +640,11 @@ const PropertyTypes = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Not Sure Which Type Is Right?</h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">Our team will walk you through every option and help you find the perfect property for your needs and budget.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href="tel:6503720795" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Phone className="w-4 h-4" /> (650) 372-0795
+              <a href="tel:2142560795" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
+                <Phone className="w-4 h-4" /> (214) 256-0795
               </a>
-              <a href="mailto:help@cemeteryproperty.com" className="inline-flex items-center gap-2 px-6 py-3 border-2 border-foreground/15 text-foreground font-medium rounded-full text-sm hover:bg-foreground/5 transition-all">
-                <Mail className="w-4 h-4" /> help@cemeteryproperty.com
+              <a href="mailto:Help@TexasCemeteryBrokers.com" className="inline-flex items-center gap-2 px-6 py-3 border-2 border-foreground/15 text-foreground font-medium rounded-full text-sm hover:bg-foreground/5 transition-all">
+                <Mail className="w-4 h-4" /> Help@TexasCemeteryBrokers.com
               </a>
             </div>
             <div className="mt-8">
