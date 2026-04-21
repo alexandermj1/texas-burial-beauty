@@ -5,12 +5,12 @@ const reasons = [
   {
     icon: Shield,
     title: "Licensed & Bonded",
-    description: "Licensed by the CA Cemetery and Funeral Bureau (CEB 1421). Full legal protection on every transaction.",
+    description: "Licensed Texas brokerage in partnership with Bay Cemetery Brokers (CEB 1421). Full legal protection on every transaction.",
   },
   {
     icon: Clock,
     title: "29+ Years Experience",
-    description: "Serving Bay Area families since 1996 with over 10,000 properties sold.",
+    description: "Backed by a partner brokerage that has helped over 10,000 families since 1996 — now bringing that expertise to Texas.",
   },
   {
     icon: FileCheck,
@@ -41,7 +41,7 @@ const WhyUsSection = () => {
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               Whether planning ahead or managing an unexpected situation, choosing
-              cemetery property is deeply personal. Cemetery Property Resales is here to make the process
+              cemetery property is deeply personal. Texas Cemetery Brokers is here to make the process
               as smooth and respectful as possible.
             </p>
           </motion.div>

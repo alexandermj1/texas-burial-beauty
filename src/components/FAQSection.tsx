@@ -21,11 +21,11 @@ const faqs = [
   },
   {
     q: "What areas do you serve?",
-    a: "We serve the entire San Francisco Bay Area including the Peninsula, South Bay, East Bay, North Bay, San Francisco, and select Central Valley locations.",
+    a: "We serve all of Texas with a particular focus on the Dallas–Fort Worth Metroplex and Greater Houston. We also actively work in Austin, San Antonio, El Paso, and most other Texas metros.",
   },
   {
     q: "Is the transfer process legally binding and secure?",
-    a: "Absolutely. All transfers go through the cemetery's official process with proper documentation, ensuring full legal protection for both parties. We are licensed and bonded (CEB 1421).",
+    a: "Absolutely. All transfers go through the cemetery's official process with proper documentation, ensuring full legal protection for both parties. We are a licensed Texas brokerage operating in partnership with Bay Cemetery Brokers (CEB 1421) for back-office expertise and shared buyer networks.",
   },
 ];
 

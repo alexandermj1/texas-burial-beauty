@@ -180,7 +180,7 @@ const PriceComparison = () => {
               transition={{ duration: 0.6, delay: 1 }}
               className="text-xs text-muted-foreground pt-2"
             >
-              * Prices are approximate averages across the San Francisco Bay Area. Actual savings vary by cemetery and property type.
+              * Prices are approximate averages across major Texas metros (Dallas, Houston, Austin, San Antonio). Actual savings vary by cemetery and property type.
             </motion.p>
           </div>
         </div>

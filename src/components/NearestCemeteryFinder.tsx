@@ -14,24 +14,40 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Zip code to approximate lat/lng (Bay Area zips)
+// Approximate Texas zip-prefix → lat/lng mapping (covers all major metros).
 const zipToCoords = (zip: string): { lat: number; lng: number } | null => {
   const zipNum = parseInt(zip);
-  if (zipNum >= 94000 && zipNum <= 94099) return { lat: 37.75, lng: -122.45 };
-  if (zipNum >= 94100 && zipNum <= 94199) return { lat: 37.75, lng: -122.42 };
-  if (zipNum >= 94200 && zipNum <= 94299) return { lat: 37.55, lng: -122.27 };
-  if (zipNum >= 94300 && zipNum <= 94399) return { lat: 37.45, lng: -122.18 };
-  if (zipNum >= 94400 && zipNum <= 94499) return { lat: 37.60, lng: -122.40 };
-  if (zipNum >= 94500 && zipNum <= 94599) return { lat: 37.80, lng: -122.25 };
-  if (zipNum >= 94600 && zipNum <= 94699) return { lat: 37.80, lng: -122.20 };
-  if (zipNum >= 94700 && zipNum <= 94799) return { lat: 37.87, lng: -122.27 };
-  if (zipNum >= 94800 && zipNum <= 94899) return { lat: 37.93, lng: -122.35 };
-  if (zipNum >= 94900 && zipNum <= 94999) return { lat: 37.95, lng: -122.50 };
-  if (zipNum >= 95000 && zipNum <= 95199) return { lat: 37.34, lng: -121.89 };
-  if (zipNum >= 95400 && zipNum <= 95499) return { lat: 38.44, lng: -122.71 };
-  if (zipNum >= 93900 && zipNum <= 93999) return { lat: 36.62, lng: -121.85 };
-  if (zipNum >= 93700 && zipNum <= 93799) return { lat: 36.74, lng: -119.79 };
-  return { lat: 37.56, lng: -122.33 };
+  // Dallas–Fort Worth (75xxx, 76xxx)
+  if (zipNum >= 75000 && zipNum <= 75399) return { lat: 32.7767, lng: -96.7970 }; // Dallas
+  if (zipNum >= 75400 && zipNum <= 75599) return { lat: 32.3513, lng: -95.3011 }; // Tyler / NE TX
+  if (zipNum >= 75600 && zipNum <= 75999) return { lat: 32.5007, lng: -94.7405 }; // Longview/Marshall
+  if (zipNum >= 76000 && zipNum <= 76199) return { lat: 32.7555, lng: -97.3308 }; // Fort Worth
+  if (zipNum >= 76200 && zipNum <= 76299) return { lat: 33.2148, lng: -97.1331 }; // Denton
+  if (zipNum >= 76300 && zipNum <= 76399) return { lat: 33.9137, lng: -98.4934 }; // Wichita Falls
+  if (zipNum >= 76400 && zipNum <= 76699) return { lat: 32.4487, lng: -99.7331 }; // Abilene
+  if (zipNum >= 76700 && zipNum <= 76799) return { lat: 31.5493, lng: -97.1467 }; // Waco
+  // Austin / Central (78xxx)
+  if (zipNum >= 78600 && zipNum <= 78799) return { lat: 30.2672, lng: -97.7431 }; // Austin
+  if (zipNum >= 78900 && zipNum <= 78999) return { lat: 30.0860, lng: -94.1018 }; // SE TX edge
+  // San Antonio (78000–78299)
+  if (zipNum >= 78000 && zipNum <= 78299) return { lat: 29.4241, lng: -98.4936 };
+  // South TX / Valley (78300–78599)
+  if (zipNum >= 78300 && zipNum <= 78499) return { lat: 27.8006, lng: -97.3964 }; // Corpus Christi
+  if (zipNum >= 78500 && zipNum <= 78599) return { lat: 26.2034, lng: -98.2300 }; // McAllen
+  // Houston metro (77xxx)
+  if (zipNum >= 77000 && zipNum <= 77299) return { lat: 29.7604, lng: -95.3698 }; // Houston
+  if (zipNum >= 77300 && zipNum <= 77399) return { lat: 30.3119, lng: -95.4561 }; // Conroe
+  if (zipNum >= 77400 && zipNum <= 77499) return { lat: 29.5635, lng: -95.8076 }; // Rosenberg
+  if (zipNum >= 77500 && zipNum <= 77599) return { lat: 29.5805, lng: -95.0608 }; // Galveston
+  if (zipNum >= 77600 && zipNum <= 77799) return { lat: 30.0860, lng: -94.1018 }; // Beaumont
+  // West TX (79xxx)
+  if (zipNum >= 79000 && zipNum <= 79199) return { lat: 35.2220, lng: -101.8313 }; // Amarillo
+  if (zipNum >= 79200 && zipNum <= 79499) return { lat: 33.5779, lng: -101.8552 }; // Lubbock
+  if (zipNum >= 79500 && zipNum <= 79699) return { lat: 32.4487, lng: -99.7331 }; // Abilene
+  if (zipNum >= 79700 && zipNum <= 79899) return { lat: 31.9973, lng: -102.0779 }; // Midland/Odessa
+  if (zipNum >= 79900 && zipNum <= 79999) return { lat: 31.7619, lng: -106.4850 }; // El Paso
+  // Default — center of Texas
+  return { lat: 31.0, lng: -100.0 };
 };
 
 interface Props {
@@ -129,7 +145,7 @@ const NearestCemeteryFinder = ({ cemeteries }: Props) => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Enter zip code (e.g. 94401)"
+                  placeholder="Enter Texas zip (e.g. 75201)"
                   value={zipSearch}
                   onChange={e => setZipSearch(e.target.value.replace(/\D/g, "").slice(0, 5))}
                   onKeyDown={e => e.key === "Enter" && handleZipSearch()}

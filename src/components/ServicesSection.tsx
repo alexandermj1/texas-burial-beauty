@@ -38,7 +38,7 @@ const ServicesSection = () => {
                 </div>
                 <h3 className="font-display text-2xl mb-3 text-foreground">Buy Property</h3>
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  Find cemetery plots, crypts, and niches at below-market prices across the Bay Area. We personally show you available properties.
+                  Find cemetery plots, crypts, and niches at below-market prices across Texas. We personally show you available properties in Dallas, Houston, and beyond.
                 </p>
                 <div className="inline-flex items-center gap-2 text-primary font-medium text-sm group-hover:gap-3 transition-all">
                   Browse available properties
