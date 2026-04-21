@@ -29,7 +29,7 @@ const leadership: TeamMember[] = [
     name: "Terry Arellano",
     title: "President, Licensed Cemetery Salesperson",
     photo: terryPhoto,
-    bio: `Cemetery Property Resales, Inc. has recently acquired California Cemetery Brokers, reaffirming its commitment to San Francisco Bay Area families in need of selling and buying their cemetery property in an otherwise difficult resale market. Sellers and Buyers were limited to very few options before Cemetery Property Resales, Inc. was established in 1996 as a full-service brokerage firm. Licensed cemetery salesperson and co-founder Terry Arellano, now President, has created a thriving company, working with over 60 Bay Area cemeteries even before the recent acquisition of California Cemetery Brokers.\n\nTerry Arellano has successfully addressed the needs of families by saving 20% to 80% off the high cost of buying direct from cemeteries.`,
+    bio: `Terry Arellano is the President and co-founder of Bay Cemetery Brokers — our trusted partner organization powering Texas Cemetery Brokers. Established in 1996 as a full-service brokerage firm, the company has helped thousands of families navigate cemetery resales with integrity. Through our Texas partnership, Terry's three decades of expertise are now extended to families across Dallas, Houston, Austin and San Antonio.\n\nUnder Terry's leadership, our combined network has successfully addressed the needs of families by saving 20% to 80% off the high cost of buying direct from cemeteries.`,
   },
   {
     name: "Michael Schepers",
@@ -321,13 +321,13 @@ const Team = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary-foreground/60 font-medium mb-4">
-              Established 1996 · San Mateo, CA
+              Headquartered in Dallas · Partnered with Bay Cemetery Brokers (Est. 1996)
             </span>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground drop-shadow-lg mb-4">
               Meet Our Team
             </h1>
             <p className="text-primary-foreground/75 max-w-2xl mx-auto text-lg leading-relaxed drop-shadow-sm">
-              A dedicated team of licensed professionals with over 30 years of trusted service helping Bay Area families
+              A dedicated team of licensed professionals — Texas-based brokers backed by a 29-year partner network — helping families across Dallas, Houston, Austin and San Antonio.
             </p>
           </motion.div>
         </div>
@@ -347,10 +347,10 @@ const Team = () => {
               An Ethical Approach & Teamwork
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Experienced representatives each with over 30 years of cemetery knowledge who genuinely care for the families they serve. Our team displays integrity, humility and professionalism — serving over 60 Bay Area cemeteries and helping more than 10,000 families since 1996.
+              Texas Cemetery Brokers operates in close partnership with Bay Cemetery Brokers — the licensed brokerage (CEB 1421) that has been serving families since 1996. Together, our teams bring 30+ years of cemetery resale expertise to Texas families, with growing on-the-ground coverage of Dallas–Fort Worth, Greater Houston, Austin and San Antonio.
             </p>
             <p className="text-muted-foreground leading-relaxed text-sm">
-              Cemetery Property Resales is well known by Bay Area Funeral Directors, Hospices, churches, Veteran organizations, and by word of mouth, maintaining a solid online presence and reputation.
+              Our partner network is well known to Funeral Directors, hospices, churches and Veteran organizations across two states — combining the trust of a long-established brokerage with a Texas-first focus on speed and local service.
             </p>
           </motion.div>
         </div>
@@ -403,10 +403,10 @@ const Team = () => {
             viewport={{ once: true }}
             className="mb-10 text-center"
           >
-            <span className="inline-block text-xs tracking-[0.2em] uppercase text-accent font-medium mb-2">Our Team</span>
+            <span className="inline-block text-xs tracking-[0.2em] uppercase text-accent font-medium mb-2">Partner Network</span>
             <h2 className="font-display text-2xl md:text-3xl text-foreground">Sales, Office & Support</h2>
             <p className="text-muted-foreground mt-2 text-sm max-w-xl mx-auto">
-              Experienced representatives and dedicated support staff serving Bay Area families.
+              Licensed representatives and support staff from our Bay Cemetery Brokers partner team — providing the back-office strength and buyer-network depth that Texas families benefit from every day.
             </p>
           </motion.div>
 
@@ -462,27 +462,27 @@ const Team = () => {
               Ready to Get Started?
             </h2>
             <p className="text-muted-foreground mb-8">
-              Our team is here to help you buy or sell cemetery property in the Bay Area. Reach out today for a free consultation.
+              Our team is here to help you buy or sell cemetery property anywhere in Texas. Reach out today for a free consultation.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="tel:+16503720795"
+                href="tel:+12142560795"
                 className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
               >
                 <Phone className="w-4 h-4" />
-                (650) 372-0795
+                (214) 256-0795
               </a>
               <a
-                href="mailto:help@cemeteryproperty.com"
+                href="mailto:Help@TexasCemeteryBrokers.com"
                 className="inline-flex items-center gap-2 px-8 py-3.5 border border-border text-foreground rounded-full font-medium hover:bg-muted transition-colors"
               >
                 <Mail className="w-4 h-4" />
-                help@cemeteryproperty.com
+                Help@TexasCemeteryBrokers.com
               </a>
             </div>
             <div className="flex items-center justify-center gap-2 mt-6 text-sm text-muted-foreground">
               <MapPin className="w-3.5 h-3.5" />
-              15 North Ellsworth Avenue, Ste. 201, San Mateo, CA 94401
+              325 N St Paul St, Suite 3100, Dallas, TX 75201
             </div>
           </motion.div>
         </div>
