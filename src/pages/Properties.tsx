@@ -130,7 +130,7 @@ export const ListingCard = ({ listing, isAdmin, index = 0 }: { listing: ListingR
             </div>
             <h3 className="font-display text-lg text-foreground mb-1 truncate">{listing.cemetery}</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1 mb-0.5">
-              <MapPin className="w-3.5 h-3.5 shrink-0" /> {listing.city}, CA
+              <MapPin className="w-3.5 h-3.5 shrink-0" /> {listing.city}, TX
             </p>
             <p className="text-xs text-muted-foreground mb-0">Section: {listing.section}</p>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
@@ -152,7 +152,7 @@ export const ListingCard = ({ listing, isAdmin, index = 0 }: { listing: ListingR
                   <Phone className="w-3.5 h-3.5" /> Contact
                 </a>
               ) : (
-                <a href="tel:+16503720795" className="inline-flex items-center gap-1.5 text-primary font-medium text-sm hover:gap-2 transition-all">
+                <a href="tel:+12142560795" className="inline-flex items-center gap-1.5 text-primary font-medium text-sm hover:gap-2 transition-all">
                   Inquire <ArrowRight className="w-3.5 h-3.5" />
                 </a>
               )}
@@ -258,7 +258,7 @@ const Properties = () => {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl">
             <p className="text-primary-foreground/70 text-xs tracking-[0.2em] uppercase font-medium mb-2 drop-shadow">Browse & Search</p>
             <h1 className="font-display text-3xl md:text-4xl text-primary-foreground mb-2 drop-shadow-lg">Available Plots</h1>
-            <p className="text-primary-foreground/85 text-sm font-light max-w-xl drop-shadow-md">Discounted burial plots, niches, and crypts across the Bay Area.</p>
+            <p className="text-primary-foreground/85 text-sm font-light max-w-xl drop-shadow-md">Discounted burial plots, niches, and crypts across Texas — Dallas, Fort Worth, Houston, Austin & San Antonio.</p>
           </motion.div>
         </div>
       </section>
@@ -301,7 +301,7 @@ const Properties = () => {
               Cemeteries We Serve ({filteredCemeteries.length})
             </button>
             <button onClick={() => setTab("plots")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "plots" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              Available Plots ({filteredListings.length})
+              Available Plots
             </button>
           </div>
 
@@ -386,23 +386,44 @@ const Properties = () => {
           {/* Available Plots Tab */}
           {tab === "plots" && (
             <>
-              <p className="text-sm text-muted-foreground mb-5">Showing {filteredListings.length} {filteredListings.length === 1 ? "plot" : "plots"}</p>
+              {filteredListings.length > 0 && (
+                <p className="text-sm text-muted-foreground mb-5">Showing recently refreshed plots</p>
+              )}
               {loadingListings ? (
                 <div className="text-center py-16 text-muted-foreground">Loading plots...</div>
               ) : filteredListings.length === 0 ? (
-                <div className="text-center py-16">
-                  <p className="text-muted-foreground text-lg mb-2">No plots available yet</p>
-                  <p className="text-sm text-muted-foreground mb-6">New properties are added regularly. Use our guided search to tell us what you need.</p>
-                  <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
-                    Start Guided Search <ArrowRight className="w-4 h-4" />
-                  </Link>
+                <div className="text-center py-20 bg-gradient-sage rounded-2xl px-6">
+                  <p className="font-display text-2xl text-foreground mb-2">Inventory refreshing daily</p>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                    New Texas plots are added to our private network every week. Tell us what you're looking for and we'll match you with the right property — often before it's listed publicly.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
+                      Request First Access <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <a href="tel:+12142560795" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
+                      <Phone className="w-4 h-4" /> Call (214) 256-0795
+                    </a>
+                  </div>
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredListings.map((listing, i) => (
-                    <ListingCard key={listing.id} listing={listing} isAdmin={isAdmin} index={i} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredListings.map((listing, i) => (
+                      <ListingCard key={listing.id} listing={listing} isAdmin={isAdmin} index={i} />
+                    ))}
+                  </div>
+                  {filteredListings.length < 6 && (
+                    <div className="mt-10 bg-card border border-border/60 rounded-2xl p-6 text-center">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Many of our Texas plots sell privately before reaching this page. Get first access to off-market inventory.
+                      </p>
+                      <Link to="/buy" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
+                        Request First Access <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -415,8 +436,8 @@ const Properties = () => {
               <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
                 Start Guided Search <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="tel:+16503720795" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
-                <Phone className="w-4 h-4" /> Call 650-372-0795
+              <a href="tel:+12142560795" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
+                <Phone className="w-4 h-4" /> Call (214) 256-0795
               </a>
             </div>
           </motion.div>

@@ -26,7 +26,7 @@ const SEARCH_PHRASES = [
   "Begin your search.",
   "Find a peaceful resting place.",
   "Discover plots near you.",
-  "Explore Bay Area cemeteries.",
+  "Explore Texas cemeteries.",
   "Compare prices instantly.",
 ];
 
@@ -214,7 +214,7 @@ const Home2 = () => {
         <motion.div style={{ opacity: copyOpacity, y: copyY }} className="absolute inset-0 z-20 flex flex-col justify-end pb-24 sm:pb-32">
           <div className="container mx-auto px-6 sm:px-10">
             <span className="mb-4 block text-xs font-medium uppercase tracking-[0.3em] text-primary-foreground/90 drop-shadow-md sm:mb-6">
-              Scroll · A Bay Area Story
+              Scroll · A Texas Story
             </span>
             <h1 className="font-display text-5xl leading-[1.02] tracking-tight text-primary-foreground drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
               Where memory <span className="italic font-light">meets sky.</span>
@@ -245,7 +245,7 @@ const Home2 = () => {
             {/* Header — white text, typewriter */}
             <div className="mb-8 text-center sm:mb-10">
               <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary-foreground/85 drop-shadow-md sm:text-xs">
-                Available Now · Bay Area
+                Available Now · Texas
               </span>
               <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-primary-foreground drop-shadow-2xl sm:text-6xl md:text-7xl">
                 <span className="italic font-light">{typed || "\u00A0"}</span>
@@ -255,7 +255,7 @@ const Home2 = () => {
                 />
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base font-light text-primary-foreground/85 drop-shadow-md sm:text-lg">
-                Recently listed plots and trusted cemeteries across the Bay Area.
+                Recently listed plots and trusted cemeteries across Texas — Dallas, Houston, Austin & San Antonio.
               </p>
             </div>
 

@@ -85,7 +85,7 @@ export const BuyerPromoAnimation = () => {
                 </div>
                 <div className="flex-1 mx-4">
                   <div className="bg-muted/50 rounded-full px-3 py-1 text-xs text-muted-foreground text-center">
-                    cemeteryproperty.com/buy
+                    texascemeterybrokers.com/buy
                   </div>
                 </div>
               </div>
@@ -277,7 +277,7 @@ export const SellerPromoAnimation = () => {
                 </div>
                 <div className="flex-1 mx-4">
                   <div className="bg-muted/50 rounded-full px-3 py-1 text-xs text-muted-foreground text-center">
-                    cemeteryproperty.com/sell
+                    texascemeterybrokers.com/sell
                   </div>
                 </div>
               </div>

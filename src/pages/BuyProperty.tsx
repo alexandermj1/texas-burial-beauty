@@ -266,7 +266,7 @@ const BuyProperty = () => {
             {step === 4 && (
               <motion.div key="step4" variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
                 <h2 className="font-display text-2xl md:text-3xl text-foreground mb-2">Where are you looking?</h2>
-                <p className="text-muted-foreground mb-6 text-sm">Pick a region and optionally select a specific cemetery. We serve 50+ cemeteries across the Bay Area.</p>
+                <p className="text-muted-foreground mb-6 text-sm">Pick a region and optionally select a specific cemetery. We serve 80+ cemeteries across Texas — Dallas, Houston, Austin, San Antonio and beyond.</p>
 
                 <div className="flex flex-wrap gap-2 mb-5">
                   {regions.filter(r => r !== "All").map(r => (
@@ -416,7 +416,7 @@ const BuyProperty = () => {
               <button
                 disabled={!canProceed()}
                 onClick={() => {
-                  alert("Thank you! We'll be in touch within 24 hours. You can also call us at 650-372-0795.");
+                  alert("Thank you! We'll be in touch within 24 hours. You can also call us at (214) 256-0795.");
                 }}
                 className="inline-flex items-center gap-2 px-7 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
@@ -434,11 +434,11 @@ const BuyProperty = () => {
           >
             <p className="text-xs text-muted-foreground mb-2">Prefer to talk to someone?</p>
             <a
-              href="tel:+16503720795"
+              href="tel:+12142560795"
               className="inline-flex items-center gap-2 text-primary font-medium text-sm hover:underline"
             >
               <Phone className="w-3.5 h-3.5" />
-              Call 650-372-0795
+              Call (214) 256-0795
             </a>
           </motion.div>
         </div>

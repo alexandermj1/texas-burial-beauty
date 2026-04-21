@@ -12,7 +12,7 @@ const benefits = [
   { icon: FileText, title: "Free Valuation", desc: "Get an honest, no-obligation market value for your property." },
   { icon: ShieldCheck, title: "We Handle Everything", desc: "From paperwork to cemetery coordination to buyer matching — we do it all." },
   { icon: CheckCircle, title: "Close in 30–60 Days", desc: "Most sales complete in under two months with our streamlined process." },
-  { icon: Users, title: "Bay Area Buyer Network", desc: "Access to thousands of qualified buyers looking for Bay Area cemetery property." },
+  { icon: Users, title: "Texas Buyer Network", desc: "Access to thousands of qualified buyers across Dallas, Houston, Austin and San Antonio looking for Texas cemetery property." },
   { icon: TrendingUp, title: "Best Market Prices", desc: "We research comparables to ensure you get the best possible price." },
 ];
 
@@ -55,8 +55,8 @@ const SellProperty = () => {
                 <a href="#quote-form" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
                   Get a Free Valuation <ArrowRight className="w-4 h-4" />
                 </a>
-                <a href="tel:+16503720795" className="inline-flex items-center gap-2 px-6 py-3 border border-primary-foreground/20 text-primary-foreground/80 font-medium rounded-full text-sm hover:bg-primary-foreground/5 transition-all">
-                  <Phone className="w-4 h-4" /> 650-372-0795
+                <a href="tel:+12142560795" className="inline-flex items-center gap-2 px-6 py-3 border border-primary-foreground/20 text-primary-foreground/80 font-medium rounded-full text-sm hover:bg-primary-foreground/5 transition-all">
+                  <Phone className="w-4 h-4" /> (214) 256-0795
                 </a>
               </div>
             </motion.div>
@@ -67,7 +67,7 @@ const SellProperty = () => {
                   {[
                     { label: "Average sale time", value: "30–60 days" },
                     { label: "Upfront cost to you", value: "$0" },
-                    { label: "Families helped since 1996", value: "10,000+" },
+                    { label: "Families helped (network)", value: "10,000+" },
                   ].map((stat, i) => (
                     <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.15 }} className="flex items-center justify-between border-b border-primary-foreground/10 pb-4 last:border-0 last:pb-0">
                       <span className="text-primary-foreground/50 text-sm">{stat.label}</span>
@@ -143,10 +143,10 @@ const SellProperty = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Ready to sell your property?</h2>
             <p className="text-muted-foreground mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours and there's never any pressure.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="tel:+16503720795" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Phone className="w-4 h-4" /> 650-372-0795
+              <a href="tel:+12142560795" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
+                <Phone className="w-4 h-4" /> (214) 256-0795
               </a>
-              <a href="mailto:Help@CemeteryProperty.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
+              <a href="mailto:Help@TexasCemeteryBrokers.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
                 <Mail className="w-4 h-4" /> Email Us <ArrowRight className="w-4 h-4" />
               </a>
             </div>

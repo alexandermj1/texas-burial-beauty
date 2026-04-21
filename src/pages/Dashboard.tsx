@@ -120,7 +120,7 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-display text-lg text-foreground">{listing.cemetery}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {listing.city}, CA · {listing.plot_type} · {listing.section} · {listing.spaces} {listing.spaces > 1 ? "spaces" : "space"}
+                      {listing.city}, TX · {listing.plot_type} · {listing.section} · {listing.spaces} {listing.spaces > 1 ? "spaces" : "space"}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

@@ -22,6 +22,7 @@ import Team from "./pages/Team";
 import Admin from "./pages/Admin";
 import AgentDashboard from "./pages/AgentDashboard";
 import Home2 from "./pages/Home2";
+import Partners from "./pages/Partners";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/team" element={<Team />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/agent" element={<AgentDashboard />} />
+              <Route path="/partners" element={<Partners />} />
               {/* Redirects for old routes */}
               <Route path="/listings" element={<Navigate to="/properties" replace />} />
               <Route path="/cemeteries" element={<Navigate to="/properties" replace />} />
