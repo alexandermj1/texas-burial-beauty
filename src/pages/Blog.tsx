@@ -3,6 +3,7 @@ import { ArrowRight, Calendar, Clock, Phone, Mail } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import blogHeroBg from "@/assets/hero/cemetery-cathedral.jpg";
 import springCleaningImg from "@/assets/blog/spring-cleaning-hero.jpg";
 
@@ -67,6 +68,11 @@ const blogPosts: BlogPost[] = [
 
 const BlogIndex = () => (
   <div className="min-h-screen bg-background">
+    <Seo
+      title="The Journal | Texas Cemetery Brokers Insights & Guidance"
+      description="Expert advice on Texas cemetery property, estate planning, the resale process, and helping families navigate end-of-life decisions with care."
+      path="/blog"
+    />
     <Navbar forceScrolled />
 
     {/* Hero — magazine-style with photo background */}
@@ -114,6 +120,24 @@ const BlogIndex = () => (
 
 const BlogArticle = ({ post }: { post: BlogPost }) => (
   <div className="min-h-screen bg-background">
+    <Seo
+      title={`${post.title} | Texas Cemetery Brokers Journal`}
+      description={post.excerpt}
+      path={`/blog/${post.slug}`}
+      type="article"
+      image={post.image}
+      jsonLd={{
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: post.title,
+        description: post.excerpt,
+        image: post.image,
+        datePublished: post.date,
+        author: { "@type": "Organization", name: "Texas Cemetery Brokers" },
+        publisher: { "@id": "https://texas-burial-beauty.lovable.app/#organization" },
+        mainEntityOfPage: `https://texas-burial-beauty.lovable.app/blog/${post.slug}`,
+      }}
+    />
     <Navbar forceScrolled />
 
     {/* Article Hero — photo with dark overlay */}
