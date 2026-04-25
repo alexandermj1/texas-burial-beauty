@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/useAdmin";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import NearestCemeteryFinder from "@/components/NearestCemeteryFinder";
 import { BuyerPromoAnimation } from "@/components/PromoAnimation";
 import { bayCemeteries, regions, plotTypes } from "@/data/cemeteries";
@@ -248,8 +249,19 @@ const Properties = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Available Cemetery Plots for Sale in Texas | Browse Listings"
+        description="Browse discounted burial plots, niches, mausoleums and crypts for sale across Texas — Dallas, Fort Worth, Houston, Austin and San Antonio. Below-market resale plots."
+        path="/properties"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Available Texas Cemetery Plots",
+          about: "Cemetery plot resale listings across Texas",
+          isPartOf: { "@id": "https://texas-burial-beauty.lovable.app/#organization" },
+        }}
+      />
       <Navbar />
-
       {/* Compact photo hero with dark overlay for white text legibility */}
       <section className="relative pt-24 pb-5 overflow-hidden">
         <img src={heroBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />

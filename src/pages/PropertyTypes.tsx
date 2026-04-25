@@ -596,6 +596,11 @@ const PropertyTypes = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Cemetery Property Types Explained | Plots, Niches, Crypts & Mausoleums"
+        description="A guide to cemetery property types in Texas: single & companion plots, lawn crypts, mausoleums, cremation niches, family estates and veterans options."
+        path="/property-types"
+      />
       <Navbar />
 
       {/* Hero */}

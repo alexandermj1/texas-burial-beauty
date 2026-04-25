@@ -3,6 +3,7 @@ import { Phone, Mail, ArrowRight, CheckCircle, DollarSign, FileText, ShieldCheck
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { SellerPromoAnimation } from "@/components/PromoAnimation";
 import sellHeroBg from "@/assets/hero/cemetery-mountains.jpg";
@@ -34,6 +35,19 @@ const faqs = [
 const SellProperty = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Sell Your Cemetery Plot in Texas | Free Valuation, No Upfront Fees"
+        description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees, 30–60 day average close. Serving Dallas, Houston, Austin & San Antonio."
+        path="/sell"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          serviceType: "Cemetery Plot Resale",
+          provider: { "@id": "https://texas-burial-beauty.lovable.app/#organization" },
+          areaServed: "Texas, United States",
+          offers: { "@type": "Offer", description: "Commission-only — no upfront fees" },
+        }}
+      />
       <Navbar />
 
       {/* Hero — editorial split layout with photo background */}

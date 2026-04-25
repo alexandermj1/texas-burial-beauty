@@ -194,6 +194,12 @@ const Home2 = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <Seo
+        title="Texas Cemetery Brokers — Premium Cemetery Plot Resale"
+        description="Premium cemetery plot resale across Texas — Dallas, Houston, Austin, San Antonio. Below-market plots, concierge service, partnered with Bayer Cemetery Brokers."
+        path="/home2"
+        noindex
+      />
       <Navbar />
 
       <section className="relative h-screen overflow-hidden">
