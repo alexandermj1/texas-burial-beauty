@@ -1,7 +1,28 @@
+# https://texas-burial-beauty.lovable.app/robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /agent
+Disallow: /dashboard
+Disallow: /auth
+Disallow: /create-listing
+Disallow: /edit-listing/
+
 User-agent: Googlebot
 Allow: /
+Disallow: /admin
+Disallow: /agent
+Disallow: /dashboard
+Disallow: /auth
 
 User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /agent
+Disallow: /dashboard
+Disallow: /auth
+
+User-agent: GPTBot
 Allow: /
 
 User-agent: Twitterbot
@@ -10,5 +31,4 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+Sitemap: https://texas-burial-beauty.lovable.app/sitemap.xml
