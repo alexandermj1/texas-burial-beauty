@@ -13,7 +13,47 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { ListingCard } from "@/pages/Properties";
+
+const HOME_FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How much can I save buying cemetery property in Texas through a broker?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Most buyers save 30–50% versus purchasing directly from a Texas cemetery because we source from private sellers and pass the savings on.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What areas of Texas do you serve?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "All of Texas, with focus on Dallas–Fort Worth, Greater Houston, Austin, San Antonio and El Paso.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Are there upfront fees to sell my cemetery plot?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "No. We work on commission and only get paid when your plot sells. No listing or appraisal fees.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How long does a typical Texas cemetery plot transaction take?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Most transactions complete within 30–60 days, depending on the cemetery's official transfer process.",
+      },
+    },
+  ],
+};
 
 const FEATURED_PHRASES = [
   "Featured plots.",
@@ -104,6 +144,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Texas Cemetery Brokers | Buy & Sell Cemetery Plots in Texas"
+        description="Buy and sell cemetery plots, niches and crypts across Texas — Dallas, Houston, Austin, San Antonio. Below-market resale. Partnered with Bayer Cemetery Brokers (27+ yrs)."
+        path="/"
+        jsonLd={HOME_FAQ_JSONLD}
+      />
       <Navbar />
       <HeroSection />
 
