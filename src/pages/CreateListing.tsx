@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 
 const plotTypes = ["Single Plot", "Double Plot", "Niche", "Crypt"];
@@ -137,6 +138,7 @@ const CreateListing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Create Listing | Texas Cemetery Brokers" description="Create or edit a cemetery property listing." path="/create-listing" noindex />
       <Navbar />
       <section className="pt-28 pb-16">
         <div className="container mx-auto px-6 max-w-2xl">

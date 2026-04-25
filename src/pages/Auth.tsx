@@ -6,6 +6,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useAgent } from "@/hooks/useAgent";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 
 const Auth = () => {
@@ -52,6 +53,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Sign In | Texas Cemetery Brokers" description="Sign in to your Texas Cemetery Brokers account." path="/auth" noindex />
       <Navbar />
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-6 max-w-md">

@@ -7,6 +7,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 
@@ -199,6 +200,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
       <section className="pt-28 pb-16">
         <div className="container mx-auto px-6">

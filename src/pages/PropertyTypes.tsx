@@ -12,6 +12,7 @@ import mausoleumImg from "@/assets/property-types/mausoleum.png";
 import cremationNicheImg from "@/assets/property-types/cremation-niche.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
 import veteransGardenImg from "@/assets/property-types/veterans-garden.png";
+import Seo from "@/components/Seo";
 
 /* ─── Data ────────────────────────────────────────────────────── */
 
@@ -596,6 +597,11 @@ const PropertyTypes = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Cemetery Property Types Explained | Plots, Niches, Crypts & Mausoleums"
+        description="A guide to cemetery property types in Texas: single & companion plots, lawn crypts, mausoleums, cremation niches, family estates and veterans options."
+        path="/property-types"
+      />
       <Navbar />
 
       {/* Hero */}

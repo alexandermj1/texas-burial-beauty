@@ -20,6 +20,7 @@ import {
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import partnersHeroBg from "@/assets/hero/cemetery-mountains.jpg";
 
 const BAYER_URL = "https://bayercemeterybrokers.com";
@@ -100,6 +101,11 @@ const Partners = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers"
+        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — 27+ years, 4.9★ rated, 10,000+ transactions and 2,500+ active plots. Trusted Texas resale."
+        path="/partners"
+      />
       <Navbar />
 
       {/* Hero */}

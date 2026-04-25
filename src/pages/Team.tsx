@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Award } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import teamHeroBg from "@/assets/team/team-hero-bg.jpg";
 
 // Photos
@@ -299,6 +300,11 @@ const getObjectPosition = (name: string) => PHOTO_OBJECT_POSITION[name] ?? "cent
 const Team = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Our Team & Texas Partner Network | Texas Cemetery Brokers"
+        description="Meet the leadership and Texas partner network behind Texas Cemetery Brokers — decades of cemetery resale experience supporting Dallas, Houston, Austin and San Antonio families."
+        path="/team"
+      />
       <Navbar forceScrolled />
 
       {/* Hero */}

@@ -4,6 +4,7 @@ import { ArrowRight, ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Calendar
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { bayCemeteries, regions } from "@/data/cemeteries";
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -80,6 +81,11 @@ const BuyProperty = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Buy a Cemetery Plot in Texas | Guided Buyer Concierge"
+        description="A guided 5-step concierge to help you buy the right cemetery plot in Texas — Dallas, Houston, Austin, San Antonio. Save 30–50% versus buying direct from a cemetery."
+        path="/buy"
+      />
       <Navbar />
 
       {/* Hero - matching sell page style */}

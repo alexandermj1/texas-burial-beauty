@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 
 interface Listing {
@@ -66,6 +67,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="My Dashboard | Texas Cemetery Brokers" description="Manage your Texas Cemetery Brokers listings and account." path="/dashboard" noindex />
       <Navbar forceScrolled />
       <section className="pt-28 pb-16">
         <div className="container mx-auto px-6">
