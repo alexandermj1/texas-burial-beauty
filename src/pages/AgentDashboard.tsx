@@ -7,6 +7,7 @@ import { useAgent } from "@/hooks/useAgent";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -240,6 +241,7 @@ const AgentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Agent Dashboard | Texas Cemetery Brokers" description="Sales agent portal." path="/agent" noindex />
       <Navbar forceScrolled />
       <section className="pt-28 pb-16">
         <div className="container mx-auto px-6">
