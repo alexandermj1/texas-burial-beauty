@@ -6,6 +6,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useAgent } from "@/hooks/useAgent";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 
 const Auth = () => {
