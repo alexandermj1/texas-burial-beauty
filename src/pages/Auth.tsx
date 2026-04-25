@@ -53,6 +53,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Sign In | Texas Cemetery Brokers" description="Sign in to your Texas Cemetery Brokers account." path="/auth" noindex />
       <Navbar />
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-6 max-w-md">
