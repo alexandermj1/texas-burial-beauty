@@ -12,6 +12,7 @@ import mausoleumImg from "@/assets/property-types/mausoleum.png";
 import cremationNicheImg from "@/assets/property-types/cremation-niche.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
 import veteransGardenImg from "@/assets/property-types/veterans-garden.png";
+import Seo from "@/components/Seo";
 
 /* ─── Data ────────────────────────────────────────────────────── */
 

@@ -11,6 +11,7 @@ import PriceComparison from "@/components/PriceComparison";
 import { BuyerPromoAnimation, SellerPromoAnimation } from "@/components/PromoAnimation";
 import { supabase } from "@/integrations/supabase/client";
 import { ListingCard } from "@/pages/Properties";
+import Seo from "@/components/Seo";
 
 
 type ListingRow = any;
