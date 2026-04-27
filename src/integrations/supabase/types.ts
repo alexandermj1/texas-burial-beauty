@@ -206,6 +206,13 @@ export type Database = {
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "plot_reservations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings_internal"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -284,6 +291,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings_internal"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sales_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
@@ -312,7 +326,69 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      listings_internal: {
+        Row: {
+          asking_price: number | null
+          cemetery: string | null
+          city: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          cost_price: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          photos: string[] | null
+          plot_type: string | null
+          profit: number | null
+          section: string | null
+          spaces: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          asking_price?: number | null
+          cemetery?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          photos?: string[] | null
+          plot_type?: string | null
+          profit?: number | null
+          section?: string | null
+          spaces?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          asking_price?: number | null
+          cemetery?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          photos?: string[] | null
+          plot_type?: string | null
+          profit?: number | null
+          section?: string | null
+          spaces?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
