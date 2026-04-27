@@ -447,6 +447,25 @@ const Admin = () => {
             </>
           )}
 
+          {tab === "submissions" && (
+            <SubmissionsPanel
+              submissions={submissions}
+              searchQuery={searchQuery}
+              onUpdate={async (id, patch) => {
+                const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                setSubmissions(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+              }}
+              onDelete={async (id) => {
+                if (!confirm("Delete this submission?")) return;
+                const { error } = await supabase.from("contact_submissions" as any).delete().eq("id", id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                setSubmissions(prev => prev.filter(s => s.id !== id));
+                toast({ title: "Deleted" });
+              }}
+            />
+          )}
+
           {tab === "cemeteries" && (
             <div>
               <div className="bg-card rounded-2xl p-6 shadow-soft mb-6">
