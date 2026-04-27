@@ -458,6 +458,7 @@ const Admin = () => {
             <SubmissionsPanel
               submissions={submissions}
               searchQuery={searchQuery}
+              focusSubmissionId={focusSubmissionId}
               onUpdate={async (id, patch) => {
                 const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
                 if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -473,7 +474,14 @@ const Admin = () => {
             />
           )}
 
-          {tab === "inbox" && <InboxPanel />}
+          {tab === "inbox" && (
+            <InboxPanel
+              onJumpToSubmission={(id) => {
+                setFocusSubmissionId(id);
+                setTab("submissions");
+              }}
+            />
+          )}
 
           {tab === "cemeteries" && (
             <div>
