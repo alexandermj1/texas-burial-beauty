@@ -1,6 +1,8 @@
-// Quote estimator edge function for California cemetery plots.
-// Strategy: rules-based comp lookup against ca_sold_history + ca_inventory,
-// then a small Gemini Flash Lite call to write the customer-facing explanation.
+// Quote estimator for California cemetery plots.
+//
+// Strategy: comparables are pulled STRICTLY from the same cemetery (canonical key),
+// then ranked by lawn (area) match and property-type match. We never blend across
+// cemeteries — pricing is location-driven.
 //
 // The math (price + confidence) is fully deterministic so admins can audit it.
 // The AI is only used for the natural-language explanation — keeping cost minimal.
@@ -14,7 +16,9 @@ const corsHeaders = {
 };
 
 interface EstimateRequest {
-  cemetery: string;
+  cemetery: string;        // raw display name OR canonical key
+  cemetery_key?: string;   // preferred — already canonical
+  lawn?: string | null;    // area / lawn (e.g. "Hollywood Hills")
   property_type?: string | null;
   spaces?: number | null;
   request_details?: string | null;
@@ -24,7 +28,33 @@ interface EstimateRequest {
   generated_by_name?: string | null;
 }
 
-// Median + IQR helper (IQR drives confidence)
+// Local copies of the SQL canonicalizers — kept in sync with the migration
+function canonCem(name: string | null | undefined): string {
+  if (!name) return "";
+  let s = name.toLowerCase();
+  s = s.replace(/\([^)]*\)/g, " ");
+  s = s.replace(/\s+g[-\s]?\d+/g, " ");
+  s = s.replace(/\bm\.?\s*p\.?\b/gi, " ");
+  s = s.replace(/memorial\s+park/g, " ");
+  s = s.replace(/mortuary\s+and\s+cemetery/g, " ");
+  s = s.replace(/(mausoleum|mortuary|cemetery|association|assoc\.?)/g, " ");
+  s = s.replace(/[^a-z0-9 ]/g, " ");
+  s = s.replace(/\s+/g, " ").trim();
+  return s;
+}
+function canonPT(pt: string | null | undefined): string {
+  if (!pt) return "";
+  let s = pt.toLowerCase();
+  s = s.replace(/(package|deluxe)/g, " ");
+  s = s.replace(/t\.?\s*c\.?/g, "tc");
+  s = s.replace(/gr\/sps/g, "gr/sp");
+  s = s.replace(/gr\/sp/g, "grsp");
+  s = s.replace(/[^a-z0-9 ]/g, " ");
+  s = s.replace(/(crypt|niche|space|grave|plot)s/g, "$1");
+  s = s.replace(/\s+/g, " ").trim();
+  return s;
+}
+
 function summarize(prices: number[]) {
   if (prices.length === 0) return null;
   const sorted = [...prices].sort((a, b) => a - b);
@@ -33,19 +63,6 @@ function summarize(prices: number[]) {
   const q1 = sorted[Math.floor(sorted.length * 0.25)];
   const q3 = sorted[Math.floor(sorted.length * 0.75)];
   return { median, low: q1, high: q3, n: sorted.length };
-}
-
-// Loose token-overlap similarity for property_type matching ("GR/SP" vs "Single Plot")
-function similarPropertyType(a: string | null | undefined, b: string | null | undefined) {
-  if (!a || !b) return true; // permissive when one side missing
-  const tokenize = (s: string) =>
-    s.toLowerCase().replace(/[^a-z0-9]/g, " ").split(/\s+/).filter(Boolean);
-  const aT = new Set(tokenize(a));
-  const bT = new Set(tokenize(b));
-  if (aT.size === 0 || bT.size === 0) return true;
-  let overlap = 0;
-  for (const t of aT) if (bT.has(t)) overlap++;
-  return overlap > 0;
 }
 
 Deno.serve(async (req) => {
@@ -58,79 +75,133 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     const body = (await req.json()) as EstimateRequest;
-    if (!body.cemetery) {
+    if (!body.cemetery && !body.cemetery_key) {
       return new Response(JSON.stringify({ error: "cemetery is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 1) Pull comparables from sold history + matching active inventory
-    const cemeteryLike = `%${body.cemetery.replace(/[%_]/g, "")}%`;
-    const [soldRes, invRes, acceptedRes] = await Promise.all([
+    const cemKey = (body.cemetery_key || canonCem(body.cemetery)).trim();
+    const lawnLower = (body.lawn || "").trim().toLowerCase();
+    const ptNorm = canonPT(body.property_type);
+    const spaces = Math.max(1, Number(body.spaces ?? 1));
+
+    if (!cemKey) {
+      return new Response(JSON.stringify({ error: "could not canonicalize cemetery" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 1) Pull EVERYTHING for this cemetery (we'll filter/rank in JS)
+    const [soldRes, invRes, quoteRes] = await Promise.all([
       supabase
         .from("ca_sold_history")
-        .select("cemetery,property_type,property_type_code,resale_price,retail_price,location_details,poa_date")
-        .ilike("cemetery", cemeteryLike)
-        .limit(500),
+        .select("cemetery,area,property_type,property_type_norm,resale_price,retail_price,location_details,poa_date,lawn_key")
+        .eq("cemetery_key", cemKey)
+        .limit(1000),
       supabase
         .from("ca_inventory")
-        .select("cemetery,property_type,property_type_code,resale_price,retail_price,location_details,poa_date")
-        .ilike("cemetery", cemeteryLike)
-        .limit(500),
-      // Past accepted quotes for this cemetery — strongest signal we have
+        .select("id,cemetery,area,property_type,property_type_norm,resale_price,retail_price,location_details,poa_date,lawn_key,status")
+        .eq("cemetery_key", cemKey)
+        .limit(1000),
       supabase
         .from("quote_estimates")
-        .select("cemetery,property_type,outcome_amount,outcome,created_at")
-        .ilike("cemetery", cemeteryLike)
-        .eq("outcome", "accepted")
-        .limit(200),
+        .select("cemetery,lawn,property_type,property_type_norm,outcome,outcome_amount,estimated_mid,created_at,lawn_key")
+        .eq("cemetery_key", cemKey)
+        .in("outcome", ["accepted", "declined"])
+        .order("created_at", { ascending: false })
+        .limit(50),
     ]);
 
-    const soldRows = (soldRes.data ?? []).filter((r: any) =>
-      similarPropertyType(r.property_type, body.property_type),
-    );
-    const invRows = (invRes.data ?? []).filter((r: any) =>
-      similarPropertyType(r.property_type, body.property_type),
-    );
-    const acceptedRows = (acceptedRes.data ?? []).filter((r: any) =>
-      similarPropertyType(r.property_type, body.property_type),
-    );
+    if (soldRes.error) console.error("sold lookup error", soldRes.error);
+    if (invRes.error) console.error("inventory lookup error", invRes.error);
+    if (quoteRes.error) console.error("quote lookup error", quoteRes.error);
 
-    // 2) Build price arrays. Multiply by spaces for multi-plot requests.
-    const spaces = Math.max(1, Number(body.spaces ?? 1));
-    const soldPrices = soldRows.map((r: any) => Number(r.resale_price)).filter((n) => n > 0);
-    const invPrices = invRows.map((r: any) => Number(r.resale_price)).filter((n) => n > 0);
-    const acceptedPrices = acceptedRows
-      .map((r: any) => Number(r.outcome_amount))
+    const soldAll = soldRes.data ?? [];
+    const invAll = (invRes.data ?? []).filter((r: any) => r.status !== "sold");
+    const quotesAll = quoteRes.data ?? [];
+
+    // 2) Rank rows: same lawn AND same property type > same lawn > same property type > cemetery
+    const lawnKey = `${cemKey}|${lawnLower}`;
+    const score = (row: any, ptField = "property_type_norm") => {
+      let s = 0;
+      if (lawnLower && row.lawn_key === lawnKey) s += 10;
+      if (ptNorm && row[ptField] === ptNorm) s += 6;
+      // partial property type token overlap as fallback
+      if (ptNorm && row[ptField] && row[ptField] !== ptNorm) {
+        const a = new Set(ptNorm.split(" "));
+        const b = new Set(row[ptField].split(" "));
+        for (const t of a) if (b.has(t)) s += 1;
+      }
+      return s;
+    };
+
+    const rankedSold = [...soldAll].sort((a: any, b: any) => score(b) - score(a));
+    const rankedInv = [...invAll].sort((a: any, b: any) => score(b) - score(a));
+    const rankedQuotes = [...quotesAll].sort((a: any, b: any) => score(b) - score(a));
+
+    // The "best comp tier": same lawn + same property type
+    const tierSold = rankedSold.filter((r: any) => score(r) >= 16);
+    const tierInv = rankedInv.filter((r: any) => score(r) >= 16);
+    const tierQuotes = rankedQuotes.filter((r: any) => score(r) >= 16);
+
+    // Fallback tiers: same lawn (any pt), then same pt at this cemetery (any lawn)
+    const lawnOnlySold = rankedSold.filter((r: any) => lawnLower && r.lawn_key === lawnKey);
+    const ptOnlySold = rankedSold.filter((r: any) => ptNorm && r.property_type_norm === ptNorm);
+
+    // Choose comp pool: prefer tightest tier with at least 3 comps
+    let pool: any[] = tierSold;
+    let poolDesc = "same lawn + same property type";
+    if (pool.length < 3 && lawnOnlySold.length >= 3) {
+      pool = lawnOnlySold;
+      poolDesc = "same lawn (any property type)";
+    }
+    if (pool.length < 3 && ptOnlySold.length >= 3) {
+      pool = ptOnlySold;
+      poolDesc = "same property type (other lawns at this cemetery)";
+    }
+    if (pool.length === 0) {
+      pool = rankedSold; // anything at this cemetery
+      poolDesc = "this cemetery (any lawn / type)";
+    }
+
+    // Build price array, weighting accepted past quotes 3x, sold 2x
+    const acceptedQuotePrices = tierQuotes
+      .filter((q: any) => q.outcome === "accepted" && Number(q.outcome_amount) > 0)
+      .map((q: any) => Number(q.outcome_amount));
+
+    const soldPrices = pool.map((r: any) => Number(r.resale_price)).filter((n) => n > 0);
+    const invPrices = (tierInv.length ? tierInv : rankedInv)
+      .map((r: any) => Number(r.resale_price))
       .filter((n) => n > 0);
 
-    // Weighted blend: accepted past quotes > sold history > current inventory
-    const allPrices = [
-      ...acceptedPrices.flatMap((p) => [p, p, p]), // 3x weight
-      ...soldPrices.flatMap((p) => [p, p]), // 2x weight
+    const blended = [
+      ...acceptedQuotePrices.flatMap((p) => [p, p, p]),
+      ...soldPrices.flatMap((p) => [p, p]),
       ...invPrices,
     ];
 
-    const summary = summarize(allPrices);
+    const summary = summarize(blended);
 
-    // 3) Confidence model (deterministic 0–100)
-    //    - Comp count contributes up to 60 pts (saturates at ~40 comps)
-    //    - Tightness of IQR contributes up to 40 pts
+    // Confidence: comp count + IQR tightness + lawn-match bonus
     let confidence = 0;
-    let comp_count = soldPrices.length + acceptedPrices.length;
     let confidence_label = "Insufficient data";
     let estimated_low: number | null = null;
     let estimated_mid: number | null = null;
     let estimated_high: number | null = null;
+    const comp_count = soldPrices.length + acceptedQuotePrices.length;
     let closestComp: any = null;
 
     if (summary) {
-      const compPts = Math.min(60, comp_count * 1.5);
+      const compPts = Math.min(50, comp_count * 2);
       const spread = summary.high - summary.low;
       const tightness = summary.median > 0 ? 1 - Math.min(1, spread / summary.median) : 0;
-      const tightPts = tightness * 40;
-      confidence = Math.round(compPts + tightPts);
+      const tightPts = tightness * 30;
+      const tierBonus = poolDesc.startsWith("same lawn + same") ? 20 : poolDesc.startsWith("same lawn") ? 10 : 0;
+      confidence = Math.round(compPts + tightPts + tierBonus);
+      confidence = Math.min(100, confidence);
       confidence_label =
         confidence >= 80 ? "Very high" : confidence >= 60 ? "High" : confidence >= 40 ? "Moderate" : confidence >= 20 ? "Low" : "Very low";
 
@@ -138,20 +209,18 @@ Deno.serve(async (req) => {
       estimated_mid = Math.round(summary.median * spaces);
       estimated_high = Math.round(summary.high * spaces);
 
-      // Pick closest comp by distance from median (prefer accepted > sold > inv)
       const pickClosest = (rows: any[], priceField: string, source: string) => {
-        if (rows.length === 0) return null;
-        const ranked = [...rows]
-          .filter((r: any) => Number(r[priceField]) > 0)
-          .sort(
-            (a: any, b: any) =>
-              Math.abs(Number(a[priceField]) - summary.median) -
-              Math.abs(Number(b[priceField]) - summary.median),
-          );
-        if (!ranked[0]) return null;
+        const filt = rows.filter((r: any) => Number(r[priceField]) > 0);
+        if (filt.length === 0) return null;
+        const ranked = [...filt].sort(
+          (a: any, b: any) =>
+            Math.abs(Number(a[priceField]) - summary.median) -
+            Math.abs(Number(b[priceField]) - summary.median),
+        );
         return {
           source,
           cemetery: ranked[0].cemetery,
+          area: ranked[0].area,
           property_type: ranked[0].property_type,
           location: ranked[0].location_details,
           price: Number(ranked[0][priceField]),
@@ -160,12 +229,31 @@ Deno.serve(async (req) => {
       };
 
       closestComp =
-        pickClosest(acceptedRows as any[], "outcome_amount", "accepted_quote") ??
-        pickClosest(soldRows as any[], "resale_price", "sold_history") ??
-        pickClosest(invRows as any[], "resale_price", "active_inventory");
+        pickClosest(tierQuotes.filter((q: any) => q.outcome === "accepted"), "outcome_amount", "accepted_quote") ??
+        pickClosest(pool, "resale_price", "sold_history") ??
+        pickClosest(tierInv.length ? tierInv : rankedInv, "resale_price", "active_inventory");
     }
 
-    // 4) Generate the customer-facing explanation via Lovable AI (cheap model)
+    // Build the inventory + quote snapshot we return for the UI
+    const invSnapshot = (tierInv.length ? tierInv : rankedInv).slice(0, 25).map((r: any) => ({
+      id: r.id,
+      cemetery: r.cemetery,
+      area: r.area,
+      property_type: r.property_type,
+      location_details: r.location_details,
+      retail_price: r.retail_price,
+      resale_price: r.resale_price,
+      lawn_match: lawnLower ? r.lawn_key === lawnKey : false,
+      pt_match: ptNorm ? r.property_type_norm === ptNorm : false,
+    }));
+    const acceptedSnapshot = rankedQuotes
+      .filter((q: any) => q.outcome === "accepted")
+      .slice(0, 10);
+    const declinedSnapshot = rankedQuotes
+      .filter((q: any) => q.outcome === "declined")
+      .slice(0, 10);
+
+    // 3) AI explanation (only when we have an estimate)
     let ai_explanation = "";
     let ai_model_used = "google/gemini-2.5-flash-lite";
     let ai_cost_estimate_usd = 0;
@@ -173,18 +261,21 @@ Deno.serve(async (req) => {
     if (LOVABLE_API_KEY && summary) {
       try {
         const sysPrompt =
-          "You are a senior cemetery property broker. In 3-4 short sentences, explain a recommended quote price for a customer. Be warm, professional, and reference the comp data. Never invent prices. Output plain prose only — no markdown headings.";
-        const userPrompt = `Cemetery: ${body.cemetery}
-Property type requested: ${body.property_type || "not specified"}
+          "You are a senior cemetery property broker writing for an internal admin. In 3-4 short sentences, justify the recommended quote price using ONLY the comp data shown. Reference the closest comp by lawn + property type. Be concrete with numbers. Plain prose, no markdown.";
+        const userPrompt = `Cemetery: ${body.cemetery} (canonical: ${cemKey})
+Lawn / area requested: ${body.lawn || "not specified"}
+Property type requested: ${body.property_type || "not specified"} (normalized: ${ptNorm || "—"})
 Spaces: ${spaces}
-Customer details: ${body.request_details || "none provided"}
+Customer notes: ${body.request_details || "none"}
 
-Computed estimate: $${estimated_low?.toLocaleString()} – $${estimated_high?.toLocaleString()} (recommended midpoint: $${estimated_mid?.toLocaleString()})
-Comp count: ${comp_count} historical sales + ${invRows.length} active inventory rows
-Closest comparable: ${closestComp ? `${closestComp.location ?? closestComp.cemetery} sold for $${closestComp.price.toLocaleString()} (${closestComp.source})` : "none"}
+Comp pool used: ${poolDesc} (${pool.length} sold rows)
+Accepted past quotes at same lawn+type: ${tierQuotes.filter((q: any) => q.outcome === "accepted").length}
+Active inventory matching: ${tierInv.length}
+Computed range: $${estimated_low?.toLocaleString()} – $${estimated_high?.toLocaleString()} (mid $${estimated_mid?.toLocaleString()})
+Closest comp: ${closestComp ? `${closestComp.area ?? ""} · ${closestComp.location ?? closestComp.cemetery} · ${closestComp.property_type} · $${closestComp.price.toLocaleString()} (${closestComp.source})` : "none"}
 Confidence: ${confidence_label} (${confidence}/100)
 
-Write a brief justification of the recommended price using this data. Mention the closest comp.`;
+Write a brief justification.`;
 
         const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -204,10 +295,9 @@ Write a brief justification of the recommended price using this data. Mention th
         if (aiRes.ok) {
           const j = await aiRes.json();
           ai_explanation = j.choices?.[0]?.message?.content?.trim() ?? "";
-          // Rough cost: gemini-2.5-flash-lite ≈ $0.0001 per quote at this prompt size
           ai_cost_estimate_usd = 0.0002;
         } else if (aiRes.status === 429) {
-          ai_explanation = "(AI explanation skipped — rate limited. Please try again shortly.)";
+          ai_explanation = "(AI explanation skipped — rate limited.)";
         } else if (aiRes.status === 402) {
           ai_explanation = "(AI explanation skipped — workspace credits exhausted.)";
         } else {
@@ -219,13 +309,14 @@ Write a brief justification of the recommended price using this data. Mention th
       }
     }
 
-    // 5) Persist the estimate
+    // 4) Persist
     const { data: inserted, error: insertErr } = await supabase
       .from("quote_estimates")
       .insert({
         submission_id: body.submission_id ?? null,
         customer_profile_id: body.customer_profile_id ?? null,
         cemetery: body.cemetery,
+        lawn: body.lawn ?? null,
         property_type: body.property_type ?? null,
         spaces,
         request_details: body.request_details ?? null,
@@ -246,17 +337,24 @@ Write a brief justification of the recommended price using this data. Mention th
       .select()
       .single();
 
-    if (insertErr) {
-      console.error("insert failed", insertErr);
-    }
+    if (insertErr) console.error("insert failed", insertErr);
 
     return new Response(
       JSON.stringify({
         estimate: inserted,
+        pool_description: poolDesc,
+        inventory: invSnapshot,
+        accepted_quotes: acceptedSnapshot,
+        declined_quotes: declinedSnapshot,
         debug: {
+          canonical_cemetery: cemKey,
+          canonical_property_type: ptNorm,
+          lawn_key: lawnKey,
           sold_comp_count: soldPrices.length,
-          inventory_count: invRows.length,
-          accepted_quote_count: acceptedPrices.length,
+          accepted_quote_count: acceptedQuotePrices.length,
+          inventory_count: invSnapshot.length,
+          tier_sold: tierSold.length,
+          tier_inv: tierInv.length,
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
