@@ -69,7 +69,7 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Props) => {
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
@@ -78,6 +78,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const { countFor } = useActiveListings();
+
+  // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
+  // Switch the status filter to "all" so the chosen submission is guaranteed to be visible.
+  useEffect(() => {
+    if (focusSubmissionId) {
+      setSelectedId(focusSubmissionId);
+      setFilter("all");
+      setKindFilter("all");
+      const target = submissions.find(s => s.id === focusSubmissionId);
+      setNotesDraft(target?.admin_notes ?? "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusSubmissionId]);
 
   const filtered = useMemo(() => {
     return submissions.filter(s => {
