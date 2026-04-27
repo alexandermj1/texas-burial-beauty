@@ -25,6 +25,12 @@ Disallow: /auth
 User-agent: GPTBot
 Allow: /
 
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
 User-agent: Twitterbot
 Allow: /
 

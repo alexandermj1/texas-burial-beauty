@@ -486,10 +486,6 @@ const Team = () => {
                 Help@TexasCemeteryBrokers.com
               </a>
             </div>
-            <div className="flex items-center justify-center gap-2 mt-6 text-sm text-muted-foreground">
-              <MapPin className="w-3.5 h-3.5" />
-              325 N St Paul St, Suite 3100, Dallas, TX 75201
-            </div>
           </motion.div>
         </div>
       </section>
