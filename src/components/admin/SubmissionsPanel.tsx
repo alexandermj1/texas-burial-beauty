@@ -211,9 +211,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
-                <h3 className="font-display text-xl text-foreground mt-1">{selected.name || "Anonymous"}</h3>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
+                  <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                </div>
+                <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{formatDate(selected.created_at)}</p>
               </div>
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${selected.handled ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
@@ -328,6 +331,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                 </span>
               </div>
             )}
+
+            {/* Customer journey: DocuSign + documents + linked emails + reminders */}
+            <CustomerJourney
+              submission={selected}
+              onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+            />
 
             {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
