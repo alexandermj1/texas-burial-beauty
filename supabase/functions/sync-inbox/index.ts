@@ -176,19 +176,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Step 2: fetch full message bodies for new IDs only (cap at 25 per sync).
-    const toFetch = newIds.slice(0, 25);
-    const fetched: GmailMessage[] = [];
-    for (const id of toFetch) {
-      const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${id}?format=full`, {
-        headers: gmailHeaders(lovableKey, gmailKey),
-      });
-      if (r.ok) fetched.push(await r.json());
-    }
+    // Step 2: fetch full message bodies for new IDs only — parallelize, cap at 10/run for speed.
+    const toFetch = newIds.slice(0, 10);
+    const fetched: GmailMessage[] = (
+      await Promise.all(
+        toFetch.map(async (id) => {
+          try {
+            const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${id}?format=full`, {
+              headers: gmailHeaders(lovableKey, gmailKey),
+            });
+            return r.ok ? ((await r.json()) as GmailMessage) : null;
+          } catch {
+            return null;
+          }
+        })
+      )
+    ).filter((m): m is GmailMessage => !!m);
 
-    // Step 3: AI-analyze + insert.
-    const inserted: any[] = [];
-    for (const msg of fetched) {
+    // Step 3: AI-analyze in parallel + insert sequentially.
+    const analyses = await Promise.all(fetched.map(async (msg) => {
       const headers = msg.payload?.headers ?? [];
       const fromRaw = header(headers, "From");
       const { email: fromEmail, name: fromName } = parseFromHeader(fromRaw);
@@ -196,13 +202,11 @@ Deno.serve(async (req) => {
       const toEmail = header(headers, "To");
       const dateMs = parseInt(msg.internalDate, 10);
       const { text, html } = extractBody(msg.payload);
-
       const match = matchSubmission(fromEmail, fromName, subs);
 
       let aiSummary: string | null = null;
       let aiIntent: string | null = null;
       let aiDraft: string | null = null;
-
       const bodyForAi = (text || msg.snippet || "").slice(0, 2000);
       if (bodyForAi.length > 20) {
         try {
@@ -212,15 +216,8 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               model: "google/gemini-2.5-flash-lite",
               messages: [
-                {
-                  role: "system",
-                  content:
-                    "You are an assistant for Texas Cemetery Brokers. Analyze inbound emails. Respond ONLY via the provided tool.",
-                },
-                {
-                  role: "user",
-                  content: `From: ${fromName ?? fromEmail} <${fromEmail}>\nSubject: ${subject}\n\n${bodyForAi}\n\nAnalyze this email.`,
-                },
+                { role: "system", content: "You are an assistant for Texas Cemetery Brokers. Analyze inbound emails. Respond ONLY via the provided tool." },
+                { role: "user", content: `From: ${fromName ?? fromEmail} <${fromEmail}>\nSubject: ${subject}\n\n${bodyForAi}\n\nAnalyze this email.` },
               ],
               tools: [{
                 type: "function",
@@ -231,10 +228,7 @@ Deno.serve(async (req) => {
                     type: "object",
                     properties: {
                       summary: { type: "string", description: "One-sentence summary" },
-                      intent: {
-                        type: "string",
-                        enum: ["quote_accepted", "quote_declined", "question", "document_submission", "new_inquiry", "spam_or_unrelated", "other"],
-                      },
+                      intent: { type: "string", enum: ["quote_accepted", "quote_declined", "question", "document_submission", "new_inquiry", "spam_or_unrelated", "other"] },
                       draft_reply: { type: "string", description: "Short professional draft reply (3-5 sentences). Sign as 'The Team at Texas Cemetery Brokers'." },
                     },
                     required: ["summary", "intent", "draft_reply"],
@@ -254,15 +248,13 @@ Deno.serve(async (req) => {
               aiIntent = parsed.intent ?? null;
               aiDraft = parsed.draft_reply ?? null;
             }
-          } else if (aiRes.status === 429 || aiRes.status === 402) {
-            console.warn("AI rate/credit limit hit, skipping analysis for remaining emails");
           }
         } catch (e) {
           console.error("AI analysis failed", e);
         }
       }
 
-      const row = {
+      return {
         gmail_message_id: msg.id,
         gmail_thread_id: msg.threadId,
         from_email: fromEmail,
@@ -281,14 +273,13 @@ Deno.serve(async (req) => {
         matched_submission_id: match?.id ?? null,
         match_confidence: match?.confidence ?? "none",
       };
+    }));
 
-      const { data: ins, error: insErr } = await admin
-        .from("email_messages")
-        .insert(row)
-        .select()
-        .single();
-      if (insErr) console.error("Insert failed", insErr);
-      else inserted.push(ins);
+    const inserted: any[] = [];
+    if (analyses.length > 0) {
+      const { data: ins, error: insErr } = await admin.from("email_messages").insert(analyses).select();
+      if (insErr) console.error("Bulk insert failed", insErr);
+      else if (ins) inserted.push(...ins);
     }
 
     return json({
