@@ -45,6 +45,8 @@ interface Props {
   searchQuery: string;
   onUpdate: (id: string, patch: Partial<Submission>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  /** Optional: focus a specific submission (used when arriving from the Gmail inbox). */
+  focusSubmissionId?: string | null;
 }
 
 const sourceLabel = (s: string | null) => {
