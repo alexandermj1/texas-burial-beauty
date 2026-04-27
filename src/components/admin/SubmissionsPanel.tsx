@@ -286,12 +286,31 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                   <CheckCircle className="w-3.5 h-3.5" />
                   {selected.handled ? "Mark as new" : "Mark as handled"}
                 </button>
+
+                {selected.source === "seller_quote" ? (
+                  <button
+                    onClick={() => setQuoteOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setBuyerOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Send available plots
+                  </button>
+                )}
+
                 <button
-                  onClick={() => setQuoteOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  onClick={() => setDeclineOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
                 >
-                  <FileText className="w-3.5 h-3.5" />
-                  {selected.quote_sent_at ? "Update quote" : "Send quote"}
+                  <MessageCircleX className="w-3.5 h-3.5" />
+                  Polite decline
                 </button>
               </div>
               <button
@@ -306,12 +325,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
       </div>
 
       {selected && (
-        <SendQuoteDialog
-          submission={selected}
-          open={quoteOpen}
-          onClose={() => setQuoteOpen(false)}
-          onSave={onUpdate}
-        />
+        <>
+          <SendQuoteDialog
+            submission={selected}
+            open={quoteOpen}
+            onClose={() => setQuoteOpen(false)}
+            onSave={onUpdate}
+          />
+          <SendBuyerQuoteDialog
+            submission={selected}
+            open={buyerOpen}
+            onClose={() => setBuyerOpen(false)}
+          />
+          <SendDeclineDialog
+            submission={selected}
+            open={declineOpen}
+            onClose={() => setDeclineOpen(false)}
+          />
+        </>
       )}
     </div>
   );
