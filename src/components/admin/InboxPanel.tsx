@@ -84,15 +84,32 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
   const sync = async () => {
     setSyncing(true);
-    const { data, error } = await supabase.functions.invoke("sync-inbox", { body: {} });
-    if (error || data?.error) {
-      toast({ title: "Sync failed", description: error?.message || data?.error, variant: "destructive" });
-    } else {
-      toast({
-        title: "Inbox synced",
-        description: `${data.newly_synced} new emails analyzed. ${data.remaining_to_sync} remaining (run again to continue).`,
-      });
-      await fetchEmails();
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-inbox", { body: {} });
+      if (error) {
+        // FunctionsHttpError exposes context.response with the body — extract for better messages.
+        let msg = error.message;
+        try {
+          const ctx = (error as any).context;
+          if (ctx?.body) {
+            const text = typeof ctx.body === "string" ? ctx.body : await new Response(ctx.body).text();
+            const j = JSON.parse(text);
+            if (j.error) msg = j.error;
+          }
+        } catch { /* ignore */ }
+        toast({ title: "Sync failed", description: msg, variant: "destructive" });
+      } else if (data?.error) {
+        toast({ title: "Sync failed", description: data.error, variant: "destructive" });
+      } else {
+        const remaining = data?.remaining_to_sync ?? 0;
+        toast({
+          title: "Inbox synced",
+          description: `${data?.newly_synced ?? 0} new analyzed${remaining ? ` · ${remaining} more queued (click Sync again)` : ""}.`,
+        });
+        await fetchEmails();
+      }
+    } catch (e) {
+      toast({ title: "Sync failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
     }
     setSyncing(false);
   };
