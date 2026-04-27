@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_submissions: {
+        Row: {
+          admin_notes: string | null
+          budget: string | null
+          cemetery: string | null
+          created_at: string
+          details: string | null
+          email: string | null
+          handled: boolean
+          id: string
+          message: string | null
+          name: string | null
+          phone: string | null
+          property_type: string | null
+          region: string | null
+          section: string | null
+          source: string
+          spaces: string | null
+          timeline: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          budget?: string | null
+          cemetery?: string | null
+          created_at?: string
+          details?: string | null
+          email?: string | null
+          handled?: boolean
+          id?: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          property_type?: string | null
+          region?: string | null
+          section?: string | null
+          source?: string
+          spaces?: string | null
+          timeline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          budget?: string | null
+          cemetery?: string | null
+          created_at?: string
+          details?: string | null
+          email?: string | null
+          handled?: boolean
+          id?: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          property_type?: string | null
+          region?: string | null
+          section?: string | null
+          source?: string
+          spaces?: string | null
+          timeline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           asking_price: number | null
