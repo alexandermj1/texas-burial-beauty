@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, RefreshCw, Sparkles, Link2, ChevronRight, MailOpen, FileText, ThumbsUp, ThumbsDown, HelpCircle, FilePlus2 } from "lucide-react";
+import { Mail, RefreshCw, Sparkles, Link2, ChevronRight, MailOpen, FileText, ThumbsUp, ThumbsDown, HelpCircle, FilePlus2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import CustomerKindBadge, { resolveKind, type CustomerKind } from "./CustomerKindBadge";
 
 interface EmailMessage {
   id: string;
@@ -34,13 +35,20 @@ const intentMeta: Record<string, { label: string; icon: any; color: string }> = 
   other: { label: "Other", icon: Mail, color: "bg-muted text-muted-foreground border-border" },
 };
 
-const InboxPanel = () => {
+interface Props {
+  /** Called when admin clicks "Open customer" on a matched email — Admin.tsx switches tabs and selects. */
+  onJumpToSubmission?: (submissionId: string) => void;
+}
+
+const InboxPanel = ({ onJumpToSubmission }: Props) => {
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [selected, setSelected] = useState<EmailMessage | null>(null);
   const [filter, setFilter] = useState<"all" | "matched" | "unmatched">("all");
   const [draftEdit, setDraftEdit] = useState("");
+  // Map submission_id -> customer kind, used to render colored badges next to matched emails.
+  const [kindBySubmission, setKindBySubmission] = useState<Record<string, CustomerKind>>({});
 
   useEffect(() => { fetchEmails(); }, []);
 
