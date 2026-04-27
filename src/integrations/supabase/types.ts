@@ -19,8 +19,16 @@ export type Database = {
           admin_notes: string | null
           budget: string | null
           cemetery: string | null
+          closed_at: string | null
+          closed_outcome: string | null
           created_at: string
+          customer_kind: string | null
           details: string | null
+          documents_requested_at: string | null
+          docusign_envelope_url: string | null
+          docusign_sent_at: string | null
+          docusign_signed_at: string | null
+          docusign_status: string
           email: string | null
           handled: boolean
           id: string
@@ -44,8 +52,16 @@ export type Database = {
           admin_notes?: string | null
           budget?: string | null
           cemetery?: string | null
+          closed_at?: string | null
+          closed_outcome?: string | null
           created_at?: string
+          customer_kind?: string | null
           details?: string | null
+          documents_requested_at?: string | null
+          docusign_envelope_url?: string | null
+          docusign_sent_at?: string | null
+          docusign_signed_at?: string | null
+          docusign_status?: string
           email?: string | null
           handled?: boolean
           id?: string
@@ -69,8 +85,16 @@ export type Database = {
           admin_notes?: string | null
           budget?: string | null
           cemetery?: string | null
+          closed_at?: string | null
+          closed_outcome?: string | null
           created_at?: string
+          customer_kind?: string | null
           details?: string | null
+          documents_requested_at?: string | null
+          docusign_envelope_url?: string | null
+          docusign_sent_at?: string | null
+          docusign_signed_at?: string | null
+          docusign_status?: string
           email?: string | null
           handled?: boolean
           id?: string
@@ -333,6 +357,44 @@ export type Database = {
         }
         Relationships: []
       }
+      reminder_log: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          reminder_type: string
+          sent_at: string
+          sent_via: string
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reminder_type: string
+          sent_at?: string
+          sent_via?: string
+          submission_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reminder_type?: string
+          sent_at?: string
+          sent_via?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales: {
         Row: {
           agent_id: string
@@ -393,6 +455,56 @@ export type Database = {
             columns: ["reservation_id"]
             isOneToOne: false
             referencedRelation: "plot_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_url: string | null
+          id: string
+          label: string
+          notes: string | null
+          received_at: string | null
+          requested_at: string | null
+          status: string
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          file_url?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          received_at?: string | null
+          requested_at?: string | null
+          status?: string
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_url?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          received_at?: string | null
+          requested_at?: string | null
+          status?: string
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_documents_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
             referencedColumns: ["id"]
           },
         ]
