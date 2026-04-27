@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Family Estate", "Other"];
 
@@ -28,7 +29,23 @@ const SellerQuoteForm = () => {
       return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
+    const { error } = await supabase.from("contact_submissions" as any).insert({
+      source: "seller_quote",
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim() || null,
+      cemetery: form.cemetery.trim(),
+      property_type: form.propertyType,
+      spaces: form.spaces || null,
+      section: form.section.trim() || null,
+      details: form.details.trim() || null,
+      created_at: new Date().toISOString(),
+    });
+    if (error) {
+      toast({ title: "Something went wrong", description: "Please call or email us directly.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
     toast({
       title: "Quote request submitted!",
       description: "We'll review your property details and get back to you within 24 hours with a free valuation.",
@@ -36,6 +53,7 @@ const SellerQuoteForm = () => {
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "" });
     setLoading(false);
   };
+
 
   return (
     <section className="py-16" id="quote-form">
