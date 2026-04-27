@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy } from "lucide-react";
+import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -44,7 +45,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox">("listings");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance">("listings");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -240,13 +241,16 @@ const Admin = () => {
             <button onClick={() => setTab("inbox")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "inbox" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Mail className="w-4 h-4 inline mr-1" /> Gmail Inbox
             </button>
+            <button onClick={() => setTab("performance")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "performance" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
+              <Trophy className="w-4 h-4 inline mr-1" /> Agent Performance
+            </button>
             <button onClick={() => setTab("cemeteries")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "cemeteries" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Building2 className="w-4 h-4 inline mr-1" /> Cemeteries
             </button>
           </div>
 
           {/* Search (hidden on inbox tab) */}
-          {tab !== "inbox" && (
+          {tab !== "inbox" && tab !== "performance" && (
             <div className="relative max-w-md mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -476,6 +480,8 @@ const Admin = () => {
               }}
             />
           )}
+
+          {tab === "performance" && <AgentPerformancePanel />}
 
           {tab === "inbox" && (
             <InboxPanel

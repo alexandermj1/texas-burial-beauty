@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_sales: {
+        Row: {
+          agent_name: string
+          cemetery: string | null
+          created_at: string
+          id: string
+          is_mortuary: boolean
+          listing_source: string | null
+          notes: string | null
+          profit: number | null
+          sale_amount: number | null
+          sale_date: string
+          sale_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_name: string
+          cemetery?: string | null
+          created_at?: string
+          id?: string
+          is_mortuary?: boolean
+          listing_source?: string | null
+          notes?: string | null
+          profit?: number | null
+          sale_amount?: number | null
+          sale_date: string
+          sale_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string
+          cemetery?: string | null
+          created_at?: string
+          id?: string
+          is_mortuary?: boolean
+          listing_source?: string | null
+          notes?: string | null
+          profit?: number | null
+          sale_amount?: number | null
+          sale_date?: string
+          sale_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           admin_notes: string | null
