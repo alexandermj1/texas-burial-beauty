@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, Shield } from "lucide-react";
+import { Phone, Mail, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -12,31 +12,27 @@ const Footer = () => {
               <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Brokers</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Licensed cemetery brokerage proudly serving Texas families. A partner of Bay Cemetery Brokers, drawing on 29+ years of resale experience.
+              Licensed cemetery brokerage proudly serving Texas families. A partner of Bayer Cemetery Brokers, drawing on 29+ years of resale experience.
             </p>
           </div>
           <div>
             <h4 className="font-display text-sm text-foreground mb-3">Contact</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="tel:+12142560795" className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Phone className="w-3.5 h-3.5" /> (214) 256-0795
+              <a href="tel:+14242341678" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Phone className="w-3.5 h-3.5" /> (424) 234-1678
               </a>
               <a href="mailto:Help@TexasCemeteryBrokers.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
                 <Mail className="w-3.5 h-3.5" /> Help@TexasCemeteryBrokers.com
               </a>
-              <p className="flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                325 N St Paul St, Suite 3100<br />Dallas, TX 75201
-              </p>
             </div>
           </div>
           <div>
             <h4 className="font-display text-sm text-foreground mb-3">Quick Links</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="/properties" className="block hover:text-foreground transition-colors">Browse Properties</a>
-              <a href="/sell" className="block hover:text-foreground transition-colors">Sell Property</a>
-              <a href="/partners" className="block hover:text-foreground transition-colors">Our Partners</a>
-              <a href="/auth" className="block hover:text-foreground transition-colors">Sign In</a>
+              <Link to="/properties" className="block hover:text-foreground transition-colors">Browse Properties</Link>
+              <Link to="/sell" className="block hover:text-foreground transition-colors">Sell Property</Link>
+              <Link to="/partners" className="block hover:text-foreground transition-colors">Our Partners</Link>
+              <Link to="/auth" className="block hover:text-foreground transition-colors">Sign In</Link>
             </div>
           </div>
           <div>
@@ -49,7 +45,7 @@ const Footer = () => {
         <div className="divider-earth mb-6" />
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Texas Cemetery Brokers. All rights reserved. In partnership with Bay Cemetery Brokers.
+            © {new Date().getFullYear()} Texas Cemetery Brokers. All rights reserved. In partnership with Bayer Cemetery Brokers.
           </p>
           <Link
             to="/admin"

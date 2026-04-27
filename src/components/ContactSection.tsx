@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactSection = () => {
   const { toast } = useToast();
@@ -17,11 +18,24 @@ const ContactSection = () => {
       return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
+    const { error } = await supabase.from("contact_submissions" as any).insert({
+      source: "contact",
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim() || null,
+      message: form.message.trim(),
+      created_at: new Date().toISOString(),
+    });
+    if (error) {
+      toast({ title: "Something went wrong", description: "Please call or email us directly.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
     toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
     setForm({ name: "", email: "", phone: "", message: "" });
     setLoading(false);
   };
+
 
   return (
     <section id="contact" className="py-16 bg-gradient-sage">
@@ -43,7 +57,7 @@ const ContactSection = () => {
 
             <div className="space-y-4 mb-8">
               <a
-                href="tel:+12142560795"
+                href="tel:+14242341678"
                 className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -51,7 +65,7 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Call us</p>
-                  <p className="font-medium">(214) 256-0795</p>
+                  <p className="font-medium">(424) 234-1678</p>
                 </div>
               </a>
               <a
@@ -69,7 +83,7 @@ const ContactSection = () => {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Serving all of Texas · Partner of Bay Cemetery Brokers
+              Serving all of Texas · Partner of Bayer Cemetery Brokers
             </p>
           </motion.div>
 

@@ -1,0 +1,266 @@
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox } from "lucide-react";
+
+export interface Submission {
+  id: string;
+  source: string | null;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  cemetery: string | null;
+  property_type: string | null;
+  spaces: string | null;
+  section: string | null;
+  message: string | null;
+  details: string | null;
+  timeline: string | null;
+  budget: string | null;
+  region: string | null;
+  handled: boolean;
+  admin_notes: string | null;
+  created_at: string;
+}
+
+interface Props {
+  submissions: Submission[];
+  searchQuery: string;
+  onUpdate: (id: string, patch: Partial<Submission>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}
+
+const sourceLabel = (s: string | null) => {
+  switch (s) {
+    case "contact": return "Contact form";
+    case "seller_quote": return "Seller quote";
+    case "buy_property_wizard": return "Buyer wizard";
+    default: return s || "Unknown";
+  }
+};
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return d.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+};
+
+const cemeterySearchUrl = (cemetery: string) =>
+  `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
+
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Props) => {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "new" | "handled">("new");
+  const [notesDraft, setNotesDraft] = useState("");
+
+  const filtered = useMemo(() => {
+    return submissions.filter(s => {
+      if (filter === "new" && s.handled) return false;
+      if (filter === "handled" && !s.handled) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
+        .filter(Boolean)
+        .some(v => String(v).toLowerCase().includes(q));
+    });
+  }, [submissions, filter, searchQuery]);
+
+  const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* Filter pills + counts */}
+      <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
+        {(["new", "handled", "all"] as const).map(f => {
+          const count = f === "all" ? submissions.length : f === "new" ? submissions.filter(s => !s.handled).length : submissions.filter(s => s.handled).length;
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                filter === f ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              {f === "new" ? "New" : f === "handled" ? "Handled" : "All"} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* List */}
+      <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[70vh] overflow-y-auto">
+        {filtered.length === 0 ? (
+          <div className="p-10 text-center">
+            <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No submissions in this view.</p>
+          </div>
+        ) : (
+          filtered.map((s, i) => {
+            const isActive = selected?.id === s.id;
+            return (
+              <motion.button
+                key={s.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: Math.min(i * 0.02, 0.2) }}
+                onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); }}
+                className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${
+                  isActive ? "bg-primary/5" : "hover:bg-muted/40"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${s.handled ? "bg-muted-foreground/30" : "bg-primary"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    <span className="text-primary/80">{sourceLabel(s.source)}</span>
+                    {s.cemetery ? ` · ${s.cemetery}` : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
+                    {s.message || s.details || s.email || s.phone || "—"}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-1" />
+              </motion.button>
+            );
+          })
+        )}
+      </div>
+
+      {/* Detail */}
+      <div className="lg:col-span-7">
+        {!selected ? (
+          <div className="bg-card rounded-xl border border-border/50 p-10 text-center text-sm text-muted-foreground">
+            Select a submission to view details.
+          </div>
+        ) : (
+          <motion.div
+            key={selected.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-xl border border-border/50 p-6 space-y-5"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                <h3 className="font-display text-xl text-foreground mt-1">{selected.name || "Anonymous"}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{formatDate(selected.created_at)}</p>
+              </div>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${selected.handled ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+                {selected.handled ? "Handled" : "New"}
+              </span>
+            </div>
+
+            {/* Contact actions */}
+            <div className="flex flex-wrap gap-2">
+              {selected.email && (
+                <a
+                  href={`mailto:${selected.email}`}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Mail className="w-3.5 h-3.5" /> {selected.email}
+                </a>
+              )}
+              {selected.phone && (
+                <a
+                  href={`tel:${selected.phone.replace(/[^\d+]/g, "")}`}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-foreground text-background rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Phone className="w-3.5 h-3.5" /> {selected.phone}
+                </a>
+              )}
+            </div>
+
+            {/* Cemetery + lookup */}
+            {selected.cemetery && (
+              <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
+                <p className="text-sm font-medium text-foreground mb-2">{selected.cemetery}</p>
+                <a
+                  href={cemeterySearchUrl(selected.cemetery)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                >
+                  <ExternalLink className="w-3 h-3" /> Look up cemetery phone on Google
+                </a>
+              </div>
+            )}
+
+            {/* Property details grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              {selected.property_type && (
+                <Field label="Property type" value={selected.property_type} />
+              )}
+              {selected.timeline && <Field label="Timeline" value={selected.timeline} />}
+              {selected.budget && <Field label="Budget" value={selected.budget} />}
+              {selected.region && <Field label="Region" value={selected.region} />}
+              {selected.spaces && <Field label="Spaces" value={selected.spaces} />}
+              {selected.section && <Field label="Section / Lot" value={selected.section} />}
+            </div>
+
+            {/* Message / details */}
+            {(selected.message || selected.details) && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                  {selected.message ? "Message" : "Additional details"}
+                </p>
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {selected.message || selected.details}
+                </p>
+              </div>
+            )}
+
+            {/* Admin notes */}
+            <div>
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Internal notes</label>
+              <textarea
+                value={notesDraft}
+                onChange={e => setNotesDraft(e.target.value)}
+                onBlur={() => {
+                  if (notesDraft !== (selected.admin_notes || "")) {
+                    onUpdate(selected.id, { admin_notes: notesDraft });
+                  }
+                }}
+                rows={3}
+                placeholder="Add notes for your team…"
+                className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+              <button
+                onClick={() => onUpdate(selected.id, { handled: !selected.handled })}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                  selected.handled
+                    ? "border border-border text-muted-foreground hover:text-foreground"
+                    : "bg-primary text-primary-foreground hover:opacity-90"
+                }`}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                {selected.handled ? "Mark as new" : "Mark as handled"}
+              </button>
+              <button
+                onClick={() => onDelete(selected.id)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Delete
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const Field = ({ label, value }: { label: string; value: string }) => (
+  <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/40">
+    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+    <p className="text-sm text-foreground capitalize">{value}</p>
+  </div>
+);
+
+export default SubmissionsPanel;

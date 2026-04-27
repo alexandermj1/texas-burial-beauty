@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
+import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
 
 interface AdminListing {
   id: string;
@@ -42,9 +43,10 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales">("listings");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions">("listings");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -67,13 +69,15 @@ const Admin = () => {
   }, [user, isAdmin, authLoading, adminLoading]);
 
   const fetchAllListings = async () => {
-    const [listingsRes, reservationsRes, salesRes] = await Promise.all([
+    const [listingsRes, reservationsRes, salesRes, submissionsRes] = await Promise.all([
       supabase.from("listings").select("*").order("created_at", { ascending: false }),
       supabase.from("plot_reservations" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("sales" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false }),
     ]);
     if (listingsRes.data) setListings(listingsRes.data as any);
     if (salesRes.data) setSales(salesRes.data as any);
+    if (submissionsRes.data) setSubmissions(submissionsRes.data as any);
     if (reservationsRes.data) {
       setReservations(reservationsRes.data as any);
       const allAgentIds = [
@@ -225,6 +229,9 @@ const Admin = () => {
             </button>
             <button onClick={() => setTab("sales")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "sales" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <DollarSign className="w-4 h-4 inline mr-1" /> Sales & Commissions ({sales.length})
+            </button>
+            <button onClick={() => setTab("submissions")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "submissions" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
+              <Inbox className="w-4 h-4 inline mr-1" /> Submissions ({submissions.filter(s => !s.handled).length})
             </button>
             <button onClick={() => setTab("cemeteries")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "cemeteries" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Building2 className="w-4 h-4 inline mr-1" /> Cemeteries
@@ -439,6 +446,25 @@ const Admin = () => {
                 )}
               </div>
             </>
+          )}
+
+          {tab === "submissions" && (
+            <SubmissionsPanel
+              submissions={submissions}
+              searchQuery={searchQuery}
+              onUpdate={async (id, patch) => {
+                const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                setSubmissions(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+              }}
+              onDelete={async (id) => {
+                if (!confirm("Delete this submission?")) return;
+                const { error } = await supabase.from("contact_submissions" as any).delete().eq("id", id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                setSubmissions(prev => prev.filter(s => s.id !== id));
+                toast({ title: "Deleted" });
+              }}
+            />
           )}
 
           {tab === "cemeteries" && (

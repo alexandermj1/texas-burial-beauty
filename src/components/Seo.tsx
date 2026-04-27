@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const SITE_URL = "https://texas-burial-beauty.lovable.app";
+const SITE_URL = "https://texascemeterybrokers.com";
 const DEFAULT_OG = `${SITE_URL}/images/og-default.jpg`;
 const SITE_NAME = "Texas Cemetery Brokers";
 

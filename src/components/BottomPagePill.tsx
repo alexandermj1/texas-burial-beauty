@@ -143,11 +143,11 @@ const BottomPagePill = () => {
 
                 <div className="flex items-center justify-between text-xs text-primary-foreground/60 border-t border-primary-foreground/15 pt-4">
                   <a
-                    href="tel:+12142560795"
+                    href="tel:+14242341678"
                     className="inline-flex items-center gap-1.5 text-primary-foreground hover:text-accent transition-colors"
                   >
                     <Phone className="w-3 h-3" />
-                    (214) 256-0795
+                    (424) 234-1678
                   </a>
                   <span className="tracking-[0.2em] uppercase text-[10px]">
                     Texas

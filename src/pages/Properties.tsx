@@ -153,7 +153,7 @@ export const ListingCard = ({ listing, isAdmin, index = 0 }: { listing: ListingR
                   <Phone className="w-3.5 h-3.5" /> Contact
                 </a>
               ) : (
-                <a href="tel:+12142560795" className="inline-flex items-center gap-1.5 text-primary font-medium text-sm hover:gap-2 transition-all">
+                <a href="tel:+14242341678" className="inline-flex items-center gap-1.5 text-primary font-medium text-sm hover:gap-2 transition-all">
                   Inquire <ArrowRight className="w-3.5 h-3.5" />
                 </a>
               )}
@@ -258,7 +258,7 @@ const Properties = () => {
           "@type": "CollectionPage",
           name: "Available Texas Cemetery Plots",
           about: "Cemetery plot resale listings across Texas",
-          isPartOf: { "@id": "https://texas-burial-beauty.lovable.app/#organization" },
+          isPartOf: { "@id": "https://texascemeterybrokers.com/#organization" },
         }}
       />
       <Navbar />
@@ -413,8 +413,8 @@ const Properties = () => {
                     <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
                       Request First Access <ArrowRight className="w-4 h-4" />
                     </Link>
-                    <a href="tel:+12142560795" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
-                      <Phone className="w-4 h-4" /> Call (214) 256-0795
+                    <a href="tel:+14242341678" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
+                      <Phone className="w-4 h-4" /> Call (424) 234-1678
                     </a>
                   </div>
                 </div>
@@ -448,8 +448,8 @@ const Properties = () => {
               <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity">
                 Start Guided Search <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="tel:+12142560795" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
-                <Phone className="w-4 h-4" /> Call (214) 256-0795
+              <a href="tel:+14242341678" className="inline-flex items-center gap-2 px-6 py-3 border border-border text-foreground font-medium rounded-full text-sm hover:bg-card transition-all">
+                <Phone className="w-4 h-4" /> Call (424) 234-1678
               </a>
             </div>
           </motion.div>

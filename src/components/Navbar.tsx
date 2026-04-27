@@ -53,9 +53,9 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <a href="tel:+12142560795" className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-500 ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
+          <a href="tel:+14242341678" className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-500 ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
             <Phone className="w-3.5 h-3.5" />
-            (214) 256-0795
+            (424) 234-1678
           </a>
           {links.map(link => (
             <Link
@@ -107,9 +107,9 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
       {menuOpen && (
         <div className="md:hidden bg-background border-t border-border px-6 py-6 flex flex-col gap-4">
-          <a href="tel:+12142560795" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
+          <a href="tel:+14242341678" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
             <Phone className="w-3.5 h-3.5" />
-            (214) 256-0795
+            (424) 234-1678
           </a>
           {links.map(link => (
             <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="text-sm text-foreground">
