@@ -60,7 +60,25 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
       .order("received_at", { ascending: false })
       .limit(100);
     if (error) toast({ title: "Failed to load emails", description: error.message, variant: "destructive" });
-    else setEmails((data ?? []) as any);
+    else {
+      const rows = (data ?? []) as any[];
+      setEmails(rows as any);
+      // Fetch the kind/source for every matched submission so we can render colored badges.
+      const subIds = Array.from(new Set(rows.map(r => r.matched_submission_id).filter(Boolean)));
+      if (subIds.length > 0) {
+        const { data: subs } = await supabase
+          .from("contact_submissions" as any)
+          .select("id, customer_kind, source")
+          .in("id", subIds);
+        if (subs) {
+          const map: Record<string, CustomerKind> = {};
+          (subs as any[]).forEach(s => { map[s.id] = resolveKind(s.customer_kind, s.source); });
+          setKindBySubmission(map);
+        }
+      } else {
+        setKindBySubmission({});
+      }
+    }
     setLoading(false);
   };
 
