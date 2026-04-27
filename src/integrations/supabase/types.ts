@@ -63,11 +63,13 @@ export type Database = {
         Row: {
           area: string | null
           cemetery: string
+          cemetery_key: string | null
           control_number: string | null
           county: string | null
           created_at: string
           discount_pct_off_retail: number | null
           id: string
+          lawn_key: string | null
           location_details: string | null
           net_pct_to_owner: number | null
           net_to_owner: number | null
@@ -77,6 +79,7 @@ export type Database = {
           price_unit: string | null
           property_type: string | null
           property_type_code: number | null
+          property_type_norm: string | null
           resale_pct_of_retail: number | null
           resale_price: number | null
           retail_price: number | null
@@ -88,11 +91,13 @@ export type Database = {
         Insert: {
           area?: string | null
           cemetery: string
+          cemetery_key?: string | null
           control_number?: string | null
           county?: string | null
           created_at?: string
           discount_pct_off_retail?: number | null
           id?: string
+          lawn_key?: string | null
           location_details?: string | null
           net_pct_to_owner?: number | null
           net_to_owner?: number | null
@@ -102,6 +107,7 @@ export type Database = {
           price_unit?: string | null
           property_type?: string | null
           property_type_code?: number | null
+          property_type_norm?: string | null
           resale_pct_of_retail?: number | null
           resale_price?: number | null
           retail_price?: number | null
@@ -113,11 +119,13 @@ export type Database = {
         Update: {
           area?: string | null
           cemetery?: string
+          cemetery_key?: string | null
           control_number?: string | null
           county?: string | null
           created_at?: string
           discount_pct_off_retail?: number | null
           id?: string
+          lawn_key?: string | null
           location_details?: string | null
           net_pct_to_owner?: number | null
           net_to_owner?: number | null
@@ -127,6 +135,7 @@ export type Database = {
           price_unit?: string | null
           property_type?: string | null
           property_type_code?: number | null
+          property_type_norm?: string | null
           resale_pct_of_retail?: number | null
           resale_price?: number | null
           retail_price?: number | null
@@ -141,10 +150,12 @@ export type Database = {
         Row: {
           area: string | null
           cemetery: string
+          cemetery_key: string | null
           control_number: string | null
           created_at: string
           discount_pct_off_retail: number | null
           id: string
+          lawn_key: string | null
           location_details: string | null
           net_pct_to_owner: number | null
           net_to_owner: number | null
@@ -153,6 +164,7 @@ export type Database = {
           poa_date: string | null
           property_type: string | null
           property_type_code: number | null
+          property_type_norm: string | null
           resale_pct_of_retail: number | null
           resale_price: number | null
           retail_price: number | null
@@ -163,10 +175,12 @@ export type Database = {
         Insert: {
           area?: string | null
           cemetery: string
+          cemetery_key?: string | null
           control_number?: string | null
           created_at?: string
           discount_pct_off_retail?: number | null
           id?: string
+          lawn_key?: string | null
           location_details?: string | null
           net_pct_to_owner?: number | null
           net_to_owner?: number | null
@@ -175,6 +189,7 @@ export type Database = {
           poa_date?: string | null
           property_type?: string | null
           property_type_code?: number | null
+          property_type_norm?: string | null
           resale_pct_of_retail?: number | null
           resale_price?: number | null
           retail_price?: number | null
@@ -185,10 +200,12 @@ export type Database = {
         Update: {
           area?: string | null
           cemetery?: string
+          cemetery_key?: string | null
           control_number?: string | null
           created_at?: string
           discount_pct_off_retail?: number | null
           id?: string
+          lawn_key?: string | null
           location_details?: string | null
           net_pct_to_owner?: number | null
           net_to_owner?: number | null
@@ -197,6 +214,7 @@ export type Database = {
           poa_date?: string | null
           property_type?: string | null
           property_type_code?: number | null
+          property_type_norm?: string | null
           resale_pct_of_retail?: number | null
           resale_price?: number | null
           retail_price?: number | null
@@ -682,6 +700,7 @@ export type Database = {
           ai_explanation: string | null
           ai_model_used: string | null
           cemetery: string
+          cemetery_key: string | null
           closest_comp: Json | null
           comp_count: number | null
           confidence_label: string | null
@@ -694,10 +713,13 @@ export type Database = {
           generated_by_name: string | null
           generated_by_user_id: string | null
           id: string
+          lawn: string | null
+          lawn_key: string | null
           outcome: string | null
           outcome_amount: number | null
           outcome_at: string | null
           property_type: string | null
+          property_type_norm: string | null
           request_details: string | null
           spaces: number | null
           state: string | null
@@ -709,6 +731,7 @@ export type Database = {
           ai_explanation?: string | null
           ai_model_used?: string | null
           cemetery: string
+          cemetery_key?: string | null
           closest_comp?: Json | null
           comp_count?: number | null
           confidence_label?: string | null
@@ -721,10 +744,13 @@ export type Database = {
           generated_by_name?: string | null
           generated_by_user_id?: string | null
           id?: string
+          lawn?: string | null
+          lawn_key?: string | null
           outcome?: string | null
           outcome_amount?: number | null
           outcome_at?: string | null
           property_type?: string | null
+          property_type_norm?: string | null
           request_details?: string | null
           spaces?: number | null
           state?: string | null
@@ -736,6 +762,7 @@ export type Database = {
           ai_explanation?: string | null
           ai_model_used?: string | null
           cemetery?: string
+          cemetery_key?: string | null
           closest_comp?: Json | null
           comp_count?: number | null
           confidence_label?: string | null
@@ -748,10 +775,13 @@ export type Database = {
           generated_by_name?: string | null
           generated_by_user_id?: string | null
           id?: string
+          lawn?: string | null
+          lawn_key?: string | null
           outcome?: string | null
           outcome_amount?: number | null
           outcome_at?: string | null
           property_type?: string | null
+          property_type_norm?: string | null
           request_details?: string | null
           spaces?: number | null
           state?: string | null
@@ -1005,6 +1035,8 @@ export type Database = {
       }
     }
     Functions: {
+      canonical_cemetery: { Args: { name: string }; Returns: string }
+      canonical_property_type: { Args: { pt: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
