@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Phone as PhoneIcon, ExternalLink, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -42,9 +42,10 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales">("listings");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions">("listings");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -67,13 +68,15 @@ const Admin = () => {
   }, [user, isAdmin, authLoading, adminLoading]);
 
   const fetchAllListings = async () => {
-    const [listingsRes, reservationsRes, salesRes] = await Promise.all([
+    const [listingsRes, reservationsRes, salesRes, submissionsRes] = await Promise.all([
       supabase.from("listings").select("*").order("created_at", { ascending: false }),
       supabase.from("plot_reservations" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("sales" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false }),
     ]);
     if (listingsRes.data) setListings(listingsRes.data as any);
     if (salesRes.data) setSales(salesRes.data as any);
+    if (submissionsRes.data) setSubmissions(submissionsRes.data as any);
     if (reservationsRes.data) {
       setReservations(reservationsRes.data as any);
       const allAgentIds = [
