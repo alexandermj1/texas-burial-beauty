@@ -280,6 +280,30 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                   </p>
                 </div>
 
+                {selected.matched_submission_id && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Link2 className="w-4 h-4 text-primary shrink-0" />
+                      <p className="text-xs text-foreground">
+                        Linked to a customer record
+                        {kindBySubmission[selected.matched_submission_id] && (
+                          <span className="ml-2 inline-block align-middle">
+                            <CustomerKindBadge kind={kindBySubmission[selected.matched_submission_id]} size="xs" />
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {onJumpToSubmission && (
+                      <button
+                        onClick={() => onJumpToSubmission(selected.matched_submission_id!)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-[11px] font-medium rounded-full hover:opacity-90"
+                      >
+                        Open customer <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {!selected.matched_submission_id && (
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
                     <p className="text-xs font-medium text-amber-900 mb-2">
