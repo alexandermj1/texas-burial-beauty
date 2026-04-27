@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers } from "lucide-react";
 import SendQuoteDialog from "./SendQuoteDialog";
+import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
+import SendDeclineDialog from "./SendDeclineDialog";
+import { useActiveListings } from "@/hooks/useActiveListings";
 
 export interface Submission {
   id: string;
@@ -56,6 +59,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
   const [filter, setFilter] = useState<"all" | "new" | "handled">("new");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [buyerOpen, setBuyerOpen] = useState(false);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const { countFor } = useActiveListings();
 
   const filtered = useMemo(() => {
     return submissions.filter(s => {
@@ -179,20 +185,38 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
             </div>
 
             {/* Cemetery + lookup */}
-            {selected.cemetery && (
-              <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
-                <p className="text-sm font-medium text-foreground mb-2">{selected.cemetery}</p>
-                <a
-                  href={cemeterySearchUrl(selected.cemetery)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                >
-                  <ExternalLink className="w-3 h-3" /> Look up cemetery phone on Google
-                </a>
-              </div>
-            )}
+            {selected.cemetery && (() => {
+              const count = countFor(selected.cemetery);
+              return (
+                <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
+                      <p className="text-sm font-medium text-foreground truncate">{selected.cemetery}</p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 ${
+                        count > 0
+                          ? "bg-primary/10 text-primary border-primary/20"
+                          : "bg-muted text-muted-foreground border-border"
+                      }`}
+                      title={count > 0 ? `${count} active listing${count === 1 ? "" : "s"} in our inventory` : "No listings in our inventory"}
+                    >
+                      <Layers className="w-3 h-3" />
+                      {count} {count === 1 ? "plot" : "plots"} in inventory
+                    </span>
+                  </div>
+                  <a
+                    href={cemeterySearchUrl(selected.cemetery)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Look up cemetery phone on Google
+                  </a>
+                </div>
+              );
+            })()}
 
             {/* Property details grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
