@@ -64,9 +64,13 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
+type StatusFilter = "all" | "new" | "handled";
+type KindFilter = "all" | "seller" | "buyer" | "contact";
+
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "new" | "handled">("new");
+  const [filter, setFilter] = useState<StatusFilter>("new");
+  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
@@ -77,19 +81,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
     return submissions.filter(s => {
       if (filter === "new" && s.handled) return false;
       if (filter === "handled" && !s.handled) return false;
+      if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, searchQuery]);
+  }, [submissions, filter, kindFilter, searchQuery]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
 
+  // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
+  const kindBase = useMemo(() => submissions.filter(s => {
+    if (filter === "new" && s.handled) return false;
+    if (filter === "handled" && !s.handled) return false;
+    return true;
+  }), [submissions, filter]);
+  const kindCount = (k: KindFilter) =>
+    k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* Filter pills + counts */}
+      {/* Status pills */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
         {(["new", "handled", "all"] as const).map(f => {
           const count = f === "all" ? submissions.length : f === "new" ? submissions.filter(s => !s.handled).length : submissions.filter(s => s.handled).length;
@@ -105,7 +119,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
             </button>
           );
         })}
+
+        {/* Divider + customer-kind pills */}
+        <span className="w-px h-5 bg-border mx-1" />
+        {(["all", "seller", "buyer", "contact"] as const).map(k => {
+          const isActive = kindFilter === k;
+          const labels: Record<KindFilter, string> = { all: "All types", seller: "Sellers", buyer: "Buyers", contact: "General" };
+          const activeCls: Record<KindFilter, string> = {
+            all: "bg-foreground text-background border-foreground",
+            seller: "bg-primary text-primary-foreground border-primary",
+            buyer: "bg-emerald-600 text-white border-emerald-600",
+            contact: "bg-foreground text-background border-foreground",
+          };
+          return (
+            <button
+              key={k}
+              onClick={() => setKindFilter(k)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+                isActive ? activeCls[k] : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              {k !== "all" && <CustomerKindBadge kind={k} variant="dot" />}
+              {labels[k]} ({kindCount(k)})
+            </button>
+          );
+        })}
       </div>
+
 
       {/* List */}
       <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[70vh] overflow-y-auto">
