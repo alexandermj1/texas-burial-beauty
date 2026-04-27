@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText } from "lucide-react";
+import SendQuoteDialog from "./SendQuoteDialog";
 
 export interface Submission {
   id: string;
@@ -20,6 +21,10 @@ export interface Submission {
   handled: boolean;
   admin_notes: string | null;
   created_at: string;
+  quote_amount?: number | null;
+  transfer_fee_amount?: number | null;
+  quote_message?: string | null;
+  quote_sent_at?: string | null;
 }
 
 interface Props {
