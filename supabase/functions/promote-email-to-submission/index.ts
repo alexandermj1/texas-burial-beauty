@@ -27,8 +27,16 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const emailId = body.email_id;
-    const source = body.source ?? "contact"; // 'contact' | 'sell' | 'buy'
+    const kindInput = body.source ?? "contact"; // 'contact' | 'sell' | 'buy'
     if (!emailId || typeof emailId !== "string") return json({ error: "email_id required" }, 400);
+
+    // Normalize to canonical source + customer_kind values used elsewhere.
+    const customerKind =
+      kindInput === "sell" || kindInput === "seller" ? "seller" :
+      kindInput === "buy"  || kindInput === "buyer"  ? "buyer"  : "contact";
+    const sourceCanonical =
+      customerKind === "seller" ? "seller_quote" :
+      customerKind === "buyer"  ? "buy_property_wizard" : "contact";
 
     const admin = createClient(supabaseUrl, serviceKey);
     const { data: email, error: emailErr } = await admin
@@ -38,7 +46,8 @@ Deno.serve(async (req) => {
     const submissionId = crypto.randomUUID();
     const { error: subErr } = await admin.from("contact_submissions").insert({
       id: submissionId,
-      source,
+      source: sourceCanonical,
+      customer_kind: customerKind,
       name: email.from_name ?? email.from_email,
       email: email.from_email,
       message: email.body_text ?? email.snippet,
