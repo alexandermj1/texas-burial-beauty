@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -11,6 +11,7 @@ import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
+import InboxPanel from "@/components/admin/InboxPanel";
 
 interface AdminListing {
   id: string;
@@ -43,7 +44,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions">("listings");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox">("listings");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -233,22 +234,27 @@ const Admin = () => {
             <button onClick={() => setTab("submissions")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "submissions" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Inbox className="w-4 h-4 inline mr-1" /> Submissions ({submissions.filter(s => !s.handled).length})
             </button>
+            <button onClick={() => setTab("inbox")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "inbox" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
+              <Mail className="w-4 h-4 inline mr-1" /> Gmail Inbox
+            </button>
             <button onClick={() => setTab("cemeteries")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "cemeteries" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Building2 className="w-4 h-4 inline mr-1" /> Cemeteries
             </button>
           </div>
 
-          {/* Search */}
-          <div className="relative max-w-md mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={tab === "cemeteries" ? "Search cemeteries..." : "Search listings by cemetery, city, type..."}
-              className="w-full pl-10 pr-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
+          {/* Search (hidden on inbox tab) */}
+          {tab !== "inbox" && (
+            <div className="relative max-w-md mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={tab === "cemeteries" ? "Search cemeteries..." : "Search listings by cemetery, city, type..."}
+                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          )}
 
           {tab === "listings" && (
             <>
@@ -466,6 +472,8 @@ const Admin = () => {
               }}
             />
           )}
+
+          {tab === "inbox" && <InboxPanel />}
 
           {tab === "cemeteries" && (
             <div>
