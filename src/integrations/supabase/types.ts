@@ -240,6 +240,7 @@ export type Database = {
           source: string
           source_email_id: string | null
           spaces: string | null
+          state: string | null
           timeline: string | null
           transfer_fee_amount: number | null
           updated_at: string
@@ -277,6 +278,7 @@ export type Database = {
           source?: string
           source_email_id?: string | null
           spaces?: string | null
+          state?: string | null
           timeline?: string | null
           transfer_fee_amount?: number | null
           updated_at?: string
@@ -314,6 +316,7 @@ export type Database = {
           source?: string
           source_email_id?: string | null
           spaces?: string | null
+          state?: string | null
           timeline?: string | null
           transfer_fee_amount?: number | null
           updated_at?: string
@@ -697,6 +700,7 @@ export type Database = {
           property_type: string | null
           request_details: string | null
           spaces: number | null
+          state: string | null
           submission_id: string | null
           updated_at: string
         }
@@ -723,6 +727,7 @@ export type Database = {
           property_type?: string | null
           request_details?: string | null
           spaces?: number | null
+          state?: string | null
           submission_id?: string | null
           updated_at?: string
         }
@@ -749,6 +754,7 @@ export type Database = {
           property_type?: string | null
           request_details?: string | null
           spaces?: number | null
+          state?: string | null
           submission_id?: string | null
           updated_at?: string
         }
