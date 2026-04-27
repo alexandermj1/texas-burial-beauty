@@ -168,10 +168,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                   isActive ? "bg-primary/5" : "hover:bg-muted/40"
                 }`}
               >
-                <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${s.handled ? "bg-muted-foreground/30" : "bg-primary"}`} />
+                <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} variant="dot" className="mt-2" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
+                      <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} size="xs" />
+                      {!s.handled && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" title="New" />}
+                    </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
