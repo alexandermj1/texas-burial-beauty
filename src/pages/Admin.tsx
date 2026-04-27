@@ -229,6 +229,9 @@ const Admin = () => {
             <button onClick={() => setTab("sales")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "sales" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <DollarSign className="w-4 h-4 inline mr-1" /> Sales & Commissions ({sales.length})
             </button>
+            <button onClick={() => setTab("submissions")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "submissions" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
+              <Inbox className="w-4 h-4 inline mr-1" /> Submissions ({submissions.filter(s => !s.handled).length})
+            </button>
             <button onClick={() => setTab("cemeteries")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "cemeteries" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Building2 className="w-4 h-4 inline mr-1" /> Cemeteries
             </button>
