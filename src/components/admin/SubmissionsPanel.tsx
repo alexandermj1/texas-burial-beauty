@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers } from "lucide-react";
 import SendQuoteDialog from "./SendQuoteDialog";
+import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
+import SendDeclineDialog from "./SendDeclineDialog";
+import { useActiveListings } from "@/hooks/useActiveListings";
 
 export interface Submission {
   id: string;
@@ -56,6 +59,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
   const [filter, setFilter] = useState<"all" | "new" | "handled">("new");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [buyerOpen, setBuyerOpen] = useState(false);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const { countFor } = useActiveListings();
 
   const filtered = useMemo(() => {
     return submissions.filter(s => {
@@ -121,6 +127,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                   <p className="text-xs text-muted-foreground truncate">
                     <span className="text-primary/80">{sourceLabel(s.source)}</span>
                     {s.cemetery ? ` · ${s.cemetery}` : ""}
+                    {s.cemetery && countFor(s.cemetery) > 0 ? (
+                      <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
+                    ) : null}
                   </p>
                   <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
                     {s.message || s.details || s.email || s.phone || "—"}
@@ -179,20 +188,38 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
             </div>
 
             {/* Cemetery + lookup */}
-            {selected.cemetery && (
-              <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
-                <p className="text-sm font-medium text-foreground mb-2">{selected.cemetery}</p>
-                <a
-                  href={cemeterySearchUrl(selected.cemetery)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                >
-                  <ExternalLink className="w-3 h-3" /> Look up cemetery phone on Google
-                </a>
-              </div>
-            )}
+            {selected.cemetery && (() => {
+              const count = countFor(selected.cemetery);
+              return (
+                <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
+                      <p className="text-sm font-medium text-foreground truncate">{selected.cemetery}</p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 ${
+                        count > 0
+                          ? "bg-primary/10 text-primary border-primary/20"
+                          : "bg-muted text-muted-foreground border-border"
+                      }`}
+                      title={count > 0 ? `${count} active listing${count === 1 ? "" : "s"} in our inventory` : "No listings in our inventory"}
+                    >
+                      <Layers className="w-3 h-3" />
+                      {count} {count === 1 ? "plot" : "plots"} in inventory
+                    </span>
+                  </div>
+                  <a
+                    href={cemeterySearchUrl(selected.cemetery)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Look up cemetery phone on Google
+                  </a>
+                </div>
+              );
+            })()}
 
             {/* Property details grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
@@ -262,12 +289,31 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                   <CheckCircle className="w-3.5 h-3.5" />
                   {selected.handled ? "Mark as new" : "Mark as handled"}
                 </button>
+
+                {selected.source === "seller_quote" ? (
+                  <button
+                    onClick={() => setQuoteOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setBuyerOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Send available plots
+                  </button>
+                )}
+
                 <button
-                  onClick={() => setQuoteOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  onClick={() => setDeclineOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
                 >
-                  <FileText className="w-3.5 h-3.5" />
-                  {selected.quote_sent_at ? "Update quote" : "Send quote"}
+                  <MessageCircleX className="w-3.5 h-3.5" />
+                  Polite decline
                 </button>
               </div>
               <button
@@ -282,12 +328,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
       </div>
 
       {selected && (
-        <SendQuoteDialog
-          submission={selected}
-          open={quoteOpen}
-          onClose={() => setQuoteOpen(false)}
-          onSave={onUpdate}
-        />
+        <>
+          <SendQuoteDialog
+            submission={selected}
+            open={quoteOpen}
+            onClose={() => setQuoteOpen(false)}
+            onSave={onUpdate}
+          />
+          <SendBuyerQuoteDialog
+            submission={selected}
+            open={buyerOpen}
+            onClose={() => setBuyerOpen(false)}
+          />
+          <SendDeclineDialog
+            submission={selected}
+            open={declineOpen}
+            onClose={() => setDeclineOpen(false)}
+          />
+        </>
       )}
     </div>
   );
