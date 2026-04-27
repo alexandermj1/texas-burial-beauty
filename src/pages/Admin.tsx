@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
+import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
 
 interface AdminListing {
   id: string;
