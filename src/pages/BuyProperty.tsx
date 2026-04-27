@@ -6,6 +6,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { bayCemeteries, regions } from "@/data/cemeteries";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -31,6 +33,8 @@ const budgets = [
 ];
 
 const BuyProperty = () => {
+  const { toast } = useToast();
+  const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [selections, setSelections] = useState({
     propertyType: "",
@@ -420,13 +424,31 @@ const BuyProperty = () => {
               </button>
             ) : (
               <button
-                disabled={!canProceed()}
-                onClick={() => {
-                  alert("Thank you! We'll be in touch within 24 hours. You can also call us at (424) 234-1678.");
+                disabled={!canProceed() || submitting}
+                onClick={async () => {
+                  setSubmitting(true);
+                  const { error } = await supabase.from("contact_submissions" as any).insert({
+                    source: "buy_property_wizard",
+                    name: selections.name.trim(),
+                    email: selections.email.trim() || null,
+                    phone: selections.phone.trim() || null,
+                    property_type: selections.propertyType,
+                    timeline: selections.timeline,
+                    budget: selections.budget,
+                    region: selections.region,
+                    cemetery: selections.cemetery || null,
+                    created_at: new Date().toISOString(),
+                  });
+                  setSubmitting(false);
+                  if (error) {
+                    toast({ title: "Something went wrong", description: "Please call or email us directly.", variant: "destructive" });
+                    return;
+                  }
+                  toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call us at (424) 234-1678." });
                 }}
                 className="inline-flex items-center gap-2 px-7 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Submit Request <ArrowRight className="w-4 h-4" />
+                {submitting ? "Submitting..." : "Submit Request"} <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
