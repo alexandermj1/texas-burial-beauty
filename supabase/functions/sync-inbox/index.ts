@@ -51,10 +51,6 @@ function extractBody(payload: GmailMessage["payload"]): { text: string; html: st
   return { text, html };
 }
 
-serve(Deno.serve);
-
-async function serve(_handler: typeof Deno.serve) {}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
