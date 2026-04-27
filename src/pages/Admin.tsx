@@ -50,6 +50,9 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  // When admin clicks "Open customer" inside the Gmail inbox, this id flows into the
+  // Submissions panel and auto-selects the matching customer.
+  const [focusSubmissionId, setFocusSubmissionId] = useState<string | null>(null);
 
   // Login form
   const [email, setEmail] = useState("");
@@ -458,6 +461,7 @@ const Admin = () => {
             <SubmissionsPanel
               submissions={submissions}
               searchQuery={searchQuery}
+              focusSubmissionId={focusSubmissionId}
               onUpdate={async (id, patch) => {
                 const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
                 if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -473,7 +477,14 @@ const Admin = () => {
             />
           )}
 
-          {tab === "inbox" && <InboxPanel />}
+          {tab === "inbox" && (
+            <InboxPanel
+              onJumpToSubmission={(id) => {
+                setFocusSubmissionId(id);
+                setTab("submissions");
+              }}
+            />
+          )}
 
           {tab === "cemeteries" && (
             <div>

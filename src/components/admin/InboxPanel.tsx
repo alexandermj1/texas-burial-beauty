@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, RefreshCw, Sparkles, Link2, ChevronRight, MailOpen, FileText, ThumbsUp, ThumbsDown, HelpCircle, FilePlus2 } from "lucide-react";
+import { Mail, RefreshCw, Sparkles, Link2, ChevronRight, MailOpen, FileText, ThumbsUp, ThumbsDown, HelpCircle, FilePlus2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import CustomerKindBadge, { resolveKind, type CustomerKind } from "./CustomerKindBadge";
 
 interface EmailMessage {
   id: string;
@@ -34,13 +35,20 @@ const intentMeta: Record<string, { label: string; icon: any; color: string }> = 
   other: { label: "Other", icon: Mail, color: "bg-muted text-muted-foreground border-border" },
 };
 
-const InboxPanel = () => {
+interface Props {
+  /** Called when admin clicks "Open customer" on a matched email — Admin.tsx switches tabs and selects. */
+  onJumpToSubmission?: (submissionId: string) => void;
+}
+
+const InboxPanel = ({ onJumpToSubmission }: Props) => {
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [selected, setSelected] = useState<EmailMessage | null>(null);
   const [filter, setFilter] = useState<"all" | "matched" | "unmatched">("all");
   const [draftEdit, setDraftEdit] = useState("");
+  // Map submission_id -> customer kind, used to render colored badges next to matched emails.
+  const [kindBySubmission, setKindBySubmission] = useState<Record<string, CustomerKind>>({});
 
   useEffect(() => { fetchEmails(); }, []);
 
@@ -52,7 +60,25 @@ const InboxPanel = () => {
       .order("received_at", { ascending: false })
       .limit(100);
     if (error) toast({ title: "Failed to load emails", description: error.message, variant: "destructive" });
-    else setEmails((data ?? []) as any);
+    else {
+      const rows = (data ?? []) as any[];
+      setEmails(rows as any);
+      // Fetch the kind/source for every matched submission so we can render colored badges.
+      const subIds = Array.from(new Set(rows.map(r => r.matched_submission_id).filter(Boolean)));
+      if (subIds.length > 0) {
+        const { data: subs } = await supabase
+          .from("contact_submissions" as any)
+          .select("id, customer_kind, source")
+          .in("id", subIds);
+        if (subs) {
+          const map: Record<string, CustomerKind> = {};
+          (subs as any[]).forEach(s => { map[s.id] = resolveKind(s.customer_kind, s.source); });
+          setKindBySubmission(map);
+        }
+      } else {
+        setKindBySubmission({});
+      }
+    }
     setLoading(false);
   };
 
@@ -170,9 +196,14 @@ const InboxPanel = () => {
                 >
                   <div className="flex items-start justify-between gap-3 mb-1.5">
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm text-foreground truncate">
-                        {email.from_name ?? email.from_email}
-                      </p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="font-medium text-sm text-foreground truncate">
+                          {email.from_name ?? email.from_email}
+                        </p>
+                        {email.matched_submission_id && kindBySubmission[email.matched_submission_id] && (
+                          <CustomerKindBadge kind={kindBySubmission[email.matched_submission_id]} size="xs" />
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">{email.from_email}</p>
                     </div>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -196,7 +227,7 @@ const InboxPanel = () => {
                     )}
                     {email.matched_submission_id ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
-                        <Link2 className="w-2.5 h-2.5" /> Matched
+                        <Link2 className="w-2.5 h-2.5" /> Linked to customer
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
@@ -248,6 +279,30 @@ const InboxPanel = () => {
                     {selected.body_text || selected.snippet || "(no content)"}
                   </p>
                 </div>
+
+                {selected.matched_submission_id && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Link2 className="w-4 h-4 text-primary shrink-0" />
+                      <p className="text-xs text-foreground">
+                        Linked to a customer record
+                        {kindBySubmission[selected.matched_submission_id] && (
+                          <span className="ml-2 inline-block align-middle">
+                            <CustomerKindBadge kind={kindBySubmission[selected.matched_submission_id]} size="xs" />
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {onJumpToSubmission && (
+                      <button
+                        onClick={() => onJumpToSubmission(selected.matched_submission_id!)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-[11px] font-medium rounded-full hover:opacity-90"
+                      >
+                        Open customer <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {!selected.matched_submission_id && (
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">

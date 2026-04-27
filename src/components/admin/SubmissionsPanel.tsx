@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers } from "lucide-react";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
+import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
+import CustomerJourney from "./CustomerJourney";
 import { useActiveListings } from "@/hooks/useActiveListings";
 
 export interface Submission {
@@ -28,6 +30,14 @@ export interface Submission {
   transfer_fee_amount?: number | null;
   quote_message?: string | null;
   quote_sent_at?: string | null;
+  customer_kind?: string | null;
+  docusign_status?: string | null;
+  docusign_sent_at?: string | null;
+  docusign_signed_at?: string | null;
+  docusign_envelope_url?: string | null;
+  documents_requested_at?: string | null;
+  closed_at?: string | null;
+  closed_outcome?: string | null;
 }
 
 interface Props {
@@ -35,6 +45,8 @@ interface Props {
   searchQuery: string;
   onUpdate: (id: string, patch: Partial<Submission>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  /** Optional: focus a specific submission (used when arriving from the Gmail inbox). */
+  focusSubmissionId?: string | null;
 }
 
 const sourceLabel = (s: string | null) => {
@@ -54,32 +66,59 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Props) => {
+type StatusFilter = "all" | "new" | "handled";
+type KindFilter = "all" | "seller" | "buyer" | "contact";
+
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "new" | "handled">("new");
+  const [filter, setFilter] = useState<StatusFilter>("new");
+  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const { countFor } = useActiveListings();
 
+  // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
+  // Switch the status filter to "all" so the chosen submission is guaranteed to be visible.
+  useEffect(() => {
+    if (focusSubmissionId) {
+      setSelectedId(focusSubmissionId);
+      setFilter("all");
+      setKindFilter("all");
+      const target = submissions.find(s => s.id === focusSubmissionId);
+      setNotesDraft(target?.admin_notes ?? "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusSubmissionId]);
+
   const filtered = useMemo(() => {
     return submissions.filter(s => {
       if (filter === "new" && s.handled) return false;
       if (filter === "handled" && !s.handled) return false;
+      if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, searchQuery]);
+  }, [submissions, filter, kindFilter, searchQuery]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
 
+  // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
+  const kindBase = useMemo(() => submissions.filter(s => {
+    if (filter === "new" && s.handled) return false;
+    if (filter === "handled" && !s.handled) return false;
+    return true;
+  }), [submissions, filter]);
+  const kindCount = (k: KindFilter) =>
+    k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* Filter pills + counts */}
+      {/* Status pills */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
         {(["new", "handled", "all"] as const).map(f => {
           const count = f === "all" ? submissions.length : f === "new" ? submissions.filter(s => !s.handled).length : submissions.filter(s => s.handled).length;
@@ -95,7 +134,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
             </button>
           );
         })}
+
+        {/* Divider + customer-kind pills */}
+        <span className="w-px h-5 bg-border mx-1" />
+        {(["all", "seller", "buyer", "contact"] as const).map(k => {
+          const isActive = kindFilter === k;
+          const labels: Record<KindFilter, string> = { all: "All types", seller: "Sellers", buyer: "Buyers", contact: "General" };
+          const activeCls: Record<KindFilter, string> = {
+            all: "bg-foreground text-background border-foreground",
+            seller: "bg-primary text-primary-foreground border-primary",
+            buyer: "bg-emerald-600 text-white border-emerald-600",
+            contact: "bg-foreground text-background border-foreground",
+          };
+          return (
+            <button
+              key={k}
+              onClick={() => setKindFilter(k)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+                isActive ? activeCls[k] : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              {k !== "all" && <CustomerKindBadge kind={k} variant="dot" />}
+              {labels[k]} ({kindCount(k)})
+            </button>
+          );
+        })}
       </div>
+
 
       {/* List */}
       <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[70vh] overflow-y-auto">
@@ -118,10 +183,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                   isActive ? "bg-primary/5" : "hover:bg-muted/40"
                 }`}
               >
-                <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${s.handled ? "bg-muted-foreground/30" : "bg-primary"}`} />
+                <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} variant="dot" className="mt-2" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
+                      <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} size="xs" />
+                      {!s.handled && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" title="New" />}
+                    </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
@@ -157,9 +226,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
-                <h3 className="font-display text-xl text-foreground mt-1">{selected.name || "Anonymous"}</h3>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
+                  <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                </div>
+                <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{formatDate(selected.created_at)}</p>
               </div>
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${selected.handled ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
@@ -274,6 +346,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                 </span>
               </div>
             )}
+
+            {/* Customer journey: DocuSign + documents + linked emails + reminders */}
+            <CustomerJourney
+              submission={selected}
+              onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+            />
 
             {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">

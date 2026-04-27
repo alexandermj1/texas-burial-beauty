@@ -1,4 +1,4 @@
-// Sync recent Gmail messages, AI-classify, match to submissions, cache to DB.
+// Sync recent Gmail messages, AI-classify, match to submissions (email + name), cache to DB.
 // Admin-only. Uses Lovable AI (cheap model) for batch analysis.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -19,6 +19,16 @@ interface GmailMessage {
   internalDate: string;
   labelIds: string[];
   payload: { headers: GmailHeader[]; mimeType: string; body: { data?: string }; parts?: GmailPart[] };
+}
+
+interface SubmissionLite {
+  id: string;
+  name: string | null;
+  email: string | null;
+  source: string | null;
+  cemetery: string | null;
+  message: string | null;
+  created_at: string;
 }
 
 function header(headers: GmailHeader[], name: string): string {
@@ -51,11 +61,53 @@ function extractBody(payload: GmailMessage["payload"]): { text: string; html: st
   return { text, html };
 }
 
+// Normalize a name for fuzzy comparison: lowercase, strip punctuation, collapse whitespace.
+function normName(s: string | null | undefined): string {
+  return (s ?? "").toLowerCase().replace(/[^\p{L}\s]/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+// Returns true if two name strings share at least 2 tokens of length >=3 (first + last).
+function fuzzyNameMatch(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const ta = new Set(a.split(" ").filter((t) => t.length >= 3));
+  const tb = b.split(" ").filter((t) => t.length >= 3);
+  let hits = 0;
+  for (const t of tb) if (ta.has(t)) hits++;
+  return hits >= 2;
+}
+
+// Match an email to the best submission. Returns { id, confidence } or null.
+function matchSubmission(
+  fromEmail: string,
+  fromName: string | null,
+  submissions: SubmissionLite[],
+): { id: string; confidence: "high" | "medium" | "low" } | null {
+  // 1. Exact email match wins.
+  const byEmail = submissions.find((s) => (s.email ?? "").toLowerCase() === fromEmail);
+  if (byEmail) return { id: byEmail.id, confidence: "high" };
+
+  // 2. Fuzzy name match (first + last token overlap).
+  if (fromName) {
+    const normFrom = normName(fromName);
+    const byName = submissions.find((s) => fuzzyNameMatch(normFrom, normName(s.name)));
+    if (byName) return { id: byName.id, confidence: "medium" };
+  }
+
+  // 3. Local-part of email overlaps with name.
+  const local = fromEmail.split("@")[0]?.replace(/[._\-]+/g, " ") ?? "";
+  if (local.length >= 5) {
+    const byLocal = submissions.find((s) => fuzzyNameMatch(normName(local), normName(s.name)));
+    if (byLocal) return { id: byLocal.id, confidence: "low" };
+  }
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Auth: require admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Unauthorized" }, 401);
 
@@ -75,14 +127,21 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!roleData) return json({ error: "Admin only" }, 403);
 
-    // Service client for cached writes (bypass RLS)
     const admin = createClient(supabaseUrl, serviceKey);
 
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
     const gmailKey = Deno.env.get("GOOGLE_MAIL_API_KEY")!;
     if (!lovableKey || !gmailKey) return json({ error: "Missing connector keys" }, 500);
 
-    // Step 1: list message IDs from last 7 days
+    // Load submissions once for matching (used for both new and re-match).
+    const { data: submissions } = await admin
+      .from("contact_submissions")
+      .select("id, name, email, source, cemetery, message, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    const subs: SubmissionLite[] = (submissions ?? []) as any;
+
+    // Step 1: list message IDs from last 7 days.
     const sevenDaysAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
     const listRes = await fetch(
       `${GMAIL_GATEWAY}/users/me/messages?maxResults=50&q=after:${sevenDaysAgo} -in:sent -in:draft`,
@@ -95,16 +154,29 @@ Deno.serve(async (req) => {
     const listData = await listRes.json();
     const messages: { id: string; threadId: string }[] = listData.messages ?? [];
 
-    // Find which IDs are already cached
     const ids = messages.map((m) => m.id);
     const { data: existing } = await admin
       .from("email_messages")
-      .select("gmail_message_id")
+      .select("id, gmail_message_id, from_email, from_name, matched_submission_id")
       .in("gmail_message_id", ids.length ? ids : ["__none__"]);
-    const existingIds = new Set((existing ?? []).map((r: { gmail_message_id: string }) => r.gmail_message_id));
+    const existingIds = new Set((existing ?? []).map((r: any) => r.gmail_message_id));
     const newIds = ids.filter((id) => !existingIds.has(id));
 
-    // Step 2: fetch full message bodies for new IDs only (cap at 25 per sync to control credits)
+    // Step 1b: re-run matching across already-cached emails that still have no match.
+    let rematchedCount = 0;
+    for (const row of (existing ?? []) as any[]) {
+      if (row.matched_submission_id) continue;
+      const m = matchSubmission(row.from_email, row.from_name, subs);
+      if (m) {
+        await admin
+          .from("email_messages")
+          .update({ matched_submission_id: m.id, match_confidence: m.confidence })
+          .eq("id", row.id);
+        rematchedCount++;
+      }
+    }
+
+    // Step 2: fetch full message bodies for new IDs only (cap at 25 per sync).
     const toFetch = newIds.slice(0, 25);
     const fetched: GmailMessage[] = [];
     for (const id of toFetch) {
@@ -114,14 +186,7 @@ Deno.serve(async (req) => {
       if (r.ok) fetched.push(await r.json());
     }
 
-    // Step 3: load existing submissions for matching
-    const { data: submissions } = await admin
-      .from("contact_submissions")
-      .select("id, name, email, source, cemetery, message, created_at")
-      .order("created_at", { ascending: false })
-      .limit(200);
-
-    // Step 4: insert raw rows + run AI batch analysis
+    // Step 3: AI-analyze + insert.
     const inserted: any[] = [];
     for (const msg of fetched) {
       const headers = msg.payload?.headers ?? [];
@@ -132,18 +197,12 @@ Deno.serve(async (req) => {
       const dateMs = parseInt(msg.internalDate, 10);
       const { text, html } = extractBody(msg.payload);
 
-      // Quick heuristic match by sender email
-      const candidate = (submissions ?? []).find(
-        (s: any) => (s.email ?? "").toLowerCase() === fromEmail
-      );
+      const match = matchSubmission(fromEmail, fromName, subs);
 
       let aiSummary: string | null = null;
       let aiIntent: string | null = null;
       let aiDraft: string | null = null;
-      let matchedId: string | null = candidate?.id ?? null;
-      let matchConfidence: string = candidate ? "high" : "none";
 
-      // Only call AI for emails with real content
       const bodyForAi = (text || msg.snippet || "").slice(0, 2000);
       if (bodyForAi.length > 20) {
         try {
@@ -219,8 +278,8 @@ Deno.serve(async (req) => {
         ai_intent: aiIntent,
         ai_draft_reply: aiDraft,
         ai_analyzed_at: aiSummary ? new Date().toISOString() : null,
-        matched_submission_id: matchedId,
-        match_confidence: matchConfidence,
+        matched_submission_id: match?.id ?? null,
+        match_confidence: match?.confidence ?? "none",
       };
 
       const { data: ins, error: insErr } = await admin
@@ -237,6 +296,7 @@ Deno.serve(async (req) => {
       total_in_inbox: messages.length,
       already_cached: existingIds.size,
       newly_synced: inserted.length,
+      rematched: rematchedCount,
       remaining_to_sync: newIds.length - toFetch.length,
     });
   } catch (e) {
