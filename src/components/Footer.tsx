@@ -12,14 +12,14 @@ const Footer = () => {
               <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Brokers</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Licensed cemetery brokerage proudly serving Texas families. A partner of Bay Cemetery Brokers, drawing on 29+ years of resale experience.
+              Licensed cemetery brokerage proudly serving Texas families. A partner of Bayer Cemetery Brokers, drawing on 29+ years of resale experience.
             </p>
           </div>
           <div>
             <h4 className="font-display text-sm text-foreground mb-3">Contact</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="tel:+12142560795" className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Phone className="w-3.5 h-3.5" /> (214) 256-0795
+              <a href="tel:+14242341678" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Phone className="w-3.5 h-3.5" /> (424) 234-1678
               </a>
               <a href="mailto:Help@TexasCemeteryBrokers.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
                 <Mail className="w-3.5 h-3.5" /> Help@TexasCemeteryBrokers.com
@@ -49,7 +49,7 @@ const Footer = () => {
         <div className="divider-earth mb-6" />
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Texas Cemetery Brokers. All rights reserved. In partnership with Bay Cemetery Brokers.
+            © {new Date().getFullYear()} Texas Cemetery Brokers. All rights reserved. In partnership with Bayer Cemetery Brokers.
           </p>
           <Link
             to="/admin"

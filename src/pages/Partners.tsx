@@ -467,10 +467,10 @@ const Partners = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href="tel:+12142560795"
+                href="tel:+14242341678"
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all"
               >
-                <Phone className="w-4 h-4" /> (214) 256-0795
+                <Phone className="w-4 h-4" /> (424) 234-1678
               </a>
               <a
                 href="mailto:Help@TexasCemeteryBrokers.com"

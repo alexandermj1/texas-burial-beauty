@@ -43,7 +43,7 @@ const ContactSection = () => {
 
             <div className="space-y-4 mb-8">
               <a
-                href="tel:+12142560795"
+                href="tel:+14242341678"
                 className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -51,7 +51,7 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Call us</p>
-                  <p className="font-medium">(214) 256-0795</p>
+                  <p className="font-medium">(424) 234-1678</p>
                 </div>
               </a>
               <a
@@ -69,7 +69,7 @@ const ContactSection = () => {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Serving all of Texas · Partner of Bay Cemetery Brokers
+              Serving all of Texas · Partner of Bayer Cemetery Brokers
             </p>
           </motion.div>
 

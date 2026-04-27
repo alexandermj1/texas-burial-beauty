@@ -30,7 +30,7 @@ const leadership: TeamMember[] = [
     name: "Terry Arellano",
     title: "President, Licensed Cemetery Salesperson",
     photo: terryPhoto,
-    bio: `Terry Arellano is the President and co-founder of Bay Cemetery Brokers — our trusted partner organization powering Texas Cemetery Brokers. Established in 1996 as a full-service brokerage firm, the company has helped thousands of families navigate cemetery resales with integrity. Through our Texas partnership, Terry's three decades of expertise are now extended to families across Dallas, Houston, Austin and San Antonio.\n\nUnder Terry's leadership, our combined network has successfully addressed the needs of families by saving 20% to 80% off the high cost of buying direct from cemeteries.`,
+    bio: `Terry Arellano is the President and co-founder of Bayer Cemetery Brokers — our trusted partner organization powering Texas Cemetery Brokers. Established in 1996 as a full-service brokerage firm, the company has helped thousands of families navigate cemetery resales with integrity. Through our Texas partnership, Terry's three decades of expertise are now extended to families across Dallas, Houston, Austin and San Antonio.\n\nUnder Terry's leadership, our combined network has successfully addressed the needs of families by saving 20% to 80% off the high cost of buying direct from cemeteries.`,
   },
   {
     name: "Michael Schepers",
@@ -327,7 +327,7 @@ const Team = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary-foreground/60 font-medium mb-4">
-              Headquartered in Dallas · Partnered with Bay Cemetery Brokers (Est. 1996)
+              Headquartered in Dallas · Partnered with Bayer Cemetery Brokers (Est. 1996)
             </span>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground drop-shadow-lg mb-4">
               Meet Our Team
@@ -353,7 +353,7 @@ const Team = () => {
               An Ethical Approach & Teamwork
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Texas Cemetery Brokers operates in close partnership with Bay Cemetery Brokers — the licensed brokerage (CEB 1421) that has been serving families since 1996. Together, our teams bring 30+ years of cemetery resale expertise to Texas families, with growing on-the-ground coverage of Dallas–Fort Worth, Greater Houston, Austin and San Antonio.
+              Texas Cemetery Brokers operates in close partnership with Bayer Cemetery Brokers — the licensed brokerage (CEB 1421) that has been serving families since 1996. Together, our teams bring 30+ years of cemetery resale expertise to Texas families, with growing on-the-ground coverage of Dallas–Fort Worth, Greater Houston, Austin and San Antonio.
             </p>
             <p className="text-muted-foreground leading-relaxed text-sm">
               Our partner network is well known to Funeral Directors, hospices, churches and Veteran organizations across two states — combining the trust of a long-established brokerage with a Texas-first focus on speed and local service.
@@ -412,7 +412,7 @@ const Team = () => {
             <span className="inline-block text-xs tracking-[0.2em] uppercase text-accent font-medium mb-2">Partner Network</span>
             <h2 className="font-display text-2xl md:text-3xl text-foreground">Sales, Office & Support</h2>
             <p className="text-muted-foreground mt-2 text-sm max-w-xl mx-auto">
-              Licensed representatives and support staff from our Bay Cemetery Brokers partner team — providing the back-office strength and buyer-network depth that Texas families benefit from every day.
+              Licensed representatives and support staff from our Bayer Cemetery Brokers partner team — providing the back-office strength and buyer-network depth that Texas families benefit from every day.
             </p>
           </motion.div>
 
@@ -472,11 +472,11 @@ const Team = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="tel:+12142560795"
+                href="tel:+14242341678"
                 className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
               >
                 <Phone className="w-4 h-4" />
-                (214) 256-0795
+                (424) 234-1678
               </a>
               <a
                 href="mailto:Help@TexasCemeteryBrokers.com"

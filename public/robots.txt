@@ -1,4 +1,4 @@
-# https://texas-burial-beauty.lovable.app/robots.txt
+# https://texascemeterybrokers.com/robots.txt
 User-agent: *
 Allow: /
 Disallow: /admin
@@ -31,4 +31,4 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-Sitemap: https://texas-burial-beauty.lovable.app/sitemap.xml
+Sitemap: https://texascemeterybrokers.com/sitemap.xml

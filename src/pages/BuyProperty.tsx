@@ -422,7 +422,7 @@ const BuyProperty = () => {
               <button
                 disabled={!canProceed()}
                 onClick={() => {
-                  alert("Thank you! We'll be in touch within 24 hours. You can also call us at (214) 256-0795.");
+                  alert("Thank you! We'll be in touch within 24 hours. You can also call us at (424) 234-1678.");
                 }}
                 className="inline-flex items-center gap-2 px-7 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
@@ -440,11 +440,11 @@ const BuyProperty = () => {
           >
             <p className="text-xs text-muted-foreground mb-2">Prefer to talk to someone?</p>
             <a
-              href="tel:+12142560795"
+              href="tel:+14242341678"
               className="inline-flex items-center gap-2 text-primary font-medium text-sm hover:underline"
             >
               <Phone className="w-3.5 h-3.5" />
-              Call (214) 256-0795
+              Call (424) 234-1678
             </a>
           </motion.div>
         </div>
