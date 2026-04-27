@@ -242,17 +242,19 @@ const Admin = () => {
             </button>
           </div>
 
-          {/* Search */}
-          <div className="relative max-w-md mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={tab === "cemeteries" ? "Search cemeteries..." : "Search listings by cemetery, city, type..."}
-              className="w-full pl-10 pr-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
+          {/* Search (hidden on inbox tab) */}
+          {tab !== "inbox" && (
+            <div className="relative max-w-md mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={tab === "cemeteries" ? "Search cemeteries..." : "Search listings by cemetery, city, type..."}
+                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          )}
 
           {tab === "listings" && (
             <>
