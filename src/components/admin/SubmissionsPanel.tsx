@@ -235,19 +235,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
               />
             </div>
 
+            {/* Quote sent indicator */}
+            {selected.quote_sent_at && (
+              <div className="bg-primary/5 border border-primary/15 rounded-lg p-3 text-xs text-foreground">
+                <span className="font-medium">Quote sent</span>
+                {selected.quote_amount ? ` · $${Number(selected.quote_amount).toLocaleString()}` : ""} ·{" "}
+                <span className="text-muted-foreground">
+                  {new Date(selected.quote_sent_at).toLocaleString("en-US", {
+                    month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            )}
+
             {/* Actions */}
-            <div className="flex items-center justify-between pt-2 border-t border-border/50">
-              <button
-                onClick={() => onUpdate(selected.id, { handled: !selected.handled })}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                  selected.handled
-                    ? "border border-border text-muted-foreground hover:text-foreground"
-                    : "bg-primary text-primary-foreground hover:opacity-90"
-                }`}
-              >
-                <CheckCircle className="w-3.5 h-3.5" />
-                {selected.handled ? "Mark as new" : "Mark as handled"}
-              </button>
+            <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => onUpdate(selected.id, { handled: !selected.handled })}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                    selected.handled
+                      ? "border border-border text-muted-foreground hover:text-foreground"
+                      : "bg-foreground text-background hover:opacity-90"
+                  }`}
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  {selected.handled ? "Mark as new" : "Mark as handled"}
+                </button>
+                <button
+                  onClick={() => setQuoteOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  {selected.quote_sent_at ? "Update quote" : "Send quote"}
+                </button>
+              </div>
               <button
                 onClick={() => onDelete(selected.id)}
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
@@ -258,6 +280,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
           </motion.div>
         )}
       </div>
+
+      {selected && (
+        <SendQuoteDialog
+          submission={selected}
+          open={quoteOpen}
+          onClose={() => setQuoteOpen(false)}
+          onSave={onUpdate}
+        />
+      )}
     </div>
   );
 };
