@@ -28,11 +28,15 @@ export type Database = {
           name: string | null
           phone: string | null
           property_type: string | null
+          quote_amount: number | null
+          quote_message: string | null
+          quote_sent_at: string | null
           region: string | null
           section: string | null
           source: string
           spaces: string | null
           timeline: string | null
+          transfer_fee_amount: number | null
           updated_at: string
         }
         Insert: {
@@ -48,11 +52,15 @@ export type Database = {
           name?: string | null
           phone?: string | null
           property_type?: string | null
+          quote_amount?: number | null
+          quote_message?: string | null
+          quote_sent_at?: string | null
           region?: string | null
           section?: string | null
           source?: string
           spaces?: string | null
           timeline?: string | null
+          transfer_fee_amount?: number | null
           updated_at?: string
         }
         Update: {
@@ -68,11 +76,15 @@ export type Database = {
           name?: string | null
           phone?: string | null
           property_type?: string | null
+          quote_amount?: number | null
+          quote_message?: string | null
+          quote_sent_at?: string | null
           region?: string | null
           section?: string | null
           source?: string
           spaces?: string | null
           timeline?: string | null
+          transfer_fee_amount?: number | null
           updated_at?: string
         }
         Relationships: []
