@@ -1,0 +1,305 @@
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Mail, RefreshCw, Sparkles, Link2, ChevronRight, MailOpen, FileText, ThumbsUp, ThumbsDown, HelpCircle, FilePlus2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+
+interface EmailMessage {
+  id: string;
+  gmail_message_id: string;
+  gmail_thread_id: string;
+  from_email: string;
+  from_name: string | null;
+  subject: string | null;
+  snippet: string | null;
+  body_text: string | null;
+  body_html: string | null;
+  received_at: string;
+  is_read: boolean;
+  ai_summary: string | null;
+  ai_intent: string | null;
+  ai_draft_reply: string | null;
+  matched_submission_id: string | null;
+  match_confidence: string | null;
+}
+
+const intentMeta: Record<string, { label: string; icon: any; color: string }> = {
+  quote_accepted: { label: "Quote Accepted", icon: ThumbsUp, color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  quote_declined: { label: "Quote Declined", icon: ThumbsDown, color: "bg-rose-100 text-rose-700 border-rose-200" },
+  question: { label: "Question", icon: HelpCircle, color: "bg-blue-100 text-blue-700 border-blue-200" },
+  document_submission: { label: "Documents", icon: FileText, color: "bg-violet-100 text-violet-700 border-violet-200" },
+  new_inquiry: { label: "New Inquiry", icon: Mail, color: "bg-amber-100 text-amber-700 border-amber-200" },
+  spam_or_unrelated: { label: "Spam / Other", icon: HelpCircle, color: "bg-muted text-muted-foreground border-border" },
+  other: { label: "Other", icon: Mail, color: "bg-muted text-muted-foreground border-border" },
+};
+
+const InboxPanel = () => {
+  const [emails, setEmails] = useState<EmailMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [selected, setSelected] = useState<EmailMessage | null>(null);
+  const [filter, setFilter] = useState<"all" | "matched" | "unmatched">("all");
+  const [draftEdit, setDraftEdit] = useState("");
+
+  useEffect(() => { fetchEmails(); }, []);
+
+  const fetchEmails = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("email_messages" as any)
+      .select("*")
+      .order("received_at", { ascending: false })
+      .limit(100);
+    if (error) toast({ title: "Failed to load emails", description: error.message, variant: "destructive" });
+    else setEmails((data ?? []) as any);
+    setLoading(false);
+  };
+
+  const sync = async () => {
+    setSyncing(true);
+    const { data, error } = await supabase.functions.invoke("sync-inbox", { body: {} });
+    if (error || data?.error) {
+      toast({ title: "Sync failed", description: error?.message || data?.error, variant: "destructive" });
+    } else {
+      toast({
+        title: "Inbox synced",
+        description: `${data.newly_synced} new emails analyzed. ${data.remaining_to_sync} remaining (run again to continue).`,
+      });
+      await fetchEmails();
+    }
+    setSyncing(false);
+  };
+
+  const promoteToSubmission = async (email: EmailMessage, source: "contact" | "sell" | "buy" = "contact") => {
+    const { data, error } = await supabase.functions.invoke("promote-email-to-submission", {
+      body: { email_id: email.id, source },
+    });
+    if (error || data?.error) {
+      toast({ title: "Failed", description: error?.message || data?.error, variant: "destructive" });
+    } else {
+      toast({ title: "Submission created", description: "This email is now tracked under Submissions." });
+      await fetchEmails();
+    }
+  };
+
+  const openDraft = (email: EmailMessage) => {
+    setSelected(email);
+    setDraftEdit(email.ai_draft_reply ?? "");
+  };
+
+  const sendViaMailto = (email: EmailMessage) => {
+    const subject = email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject ?? ""}`;
+    const url = `mailto:${email.from_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(draftEdit)}`;
+    window.location.href = url;
+  };
+
+  const filtered = emails.filter((e) => {
+    if (filter === "matched") return !!e.matched_submission_id;
+    if (filter === "unmatched") return !e.matched_submission_id;
+    return true;
+  });
+
+  const unmatchedCount = emails.filter((e) => !e.matched_submission_id).length;
+
+  return (
+    <div className="space-y-4">
+      {/* Header bar */}
+      <div className="flex items-center justify-between flex-wrap gap-3 bg-card rounded-2xl border border-border/50 p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Mail className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-display text-base text-foreground">Gmail Inbox</h3>
+            <p className="text-xs text-muted-foreground">
+              {emails.length} cached · {unmatchedCount} need attention
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-background rounded-full border border-border p-0.5">
+            {(["all", "matched", "unmatched"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all capitalize ${
+                  filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={sync}
+            disabled={syncing}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:opacity-90 disabled:opacity-50 transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing..." : "Sync Inbox"}
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-16 text-muted-foreground">Loading inbox...</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 bg-card rounded-2xl border border-border/50">
+          <Mail className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-muted-foreground">No emails {filter !== "all" ? `(${filter})` : "yet"}.</p>
+          <p className="text-xs text-muted-foreground mt-1">Click "Sync Inbox" to pull the last 7 days from Gmail.</p>
+        </div>
+      ) : (
+        <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 items-start">
+          {/* List */}
+          <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+            {filtered.map((email, i) => {
+              const intent = email.ai_intent ? intentMeta[email.ai_intent] : null;
+              const isSelected = selected?.id === email.id;
+              return (
+                <motion.button
+                  key={email.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.02, 0.3) }}
+                  onClick={() => openDraft(email)}
+                  className={`w-full text-left bg-card rounded-xl border p-4 transition-all hover:border-primary/40 hover:shadow-sm ${
+                    isSelected ? "border-primary/60 ring-2 ring-primary/10" : "border-border/50"
+                  } ${!email.is_read ? "border-l-4 border-l-primary" : ""}`}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-1.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm text-foreground truncate">
+                        {email.from_name ?? email.from_email}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{email.from_email}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDistanceToNow(new Date(email.received_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-foreground mb-1 line-clamp-1">
+                    {email.subject || "(no subject)"}
+                  </p>
+                  {email.ai_summary && (
+                    <p className="text-xs text-muted-foreground italic line-clamp-2 flex items-start gap-1">
+                      <Sparkles className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                      {email.ai_summary}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {intent && (
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${intent.color}`}>
+                        <intent.icon className="w-2.5 h-2.5" /> {intent.label}
+                      </span>
+                    )}
+                    {email.matched_submission_id ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
+                        <Link2 className="w-2.5 h-2.5" /> Matched
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+                        Unmatched
+                      </span>
+                    )}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Detail panel */}
+          <AnimatePresence mode="wait">
+            {selected ? (
+              <motion.div
+                key={selected.id}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-card rounded-2xl border border-border/50 p-6 sticky top-4 max-h-[70vh] overflow-y-auto"
+              >
+                <div className="flex items-start justify-between mb-3 gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-display text-lg text-foreground mb-1">{selected.subject || "(no subject)"}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      From {selected.from_name ? `${selected.from_name} ` : ""}<span className="text-foreground">{selected.from_email}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(selected.received_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground text-sm">
+                    ✕
+                  </button>
+                </div>
+
+                {selected.ai_summary && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4">
+                    <p className="text-xs text-primary font-medium mb-1 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> AI Summary
+                    </p>
+                    <p className="text-sm text-foreground">{selected.ai_summary}</p>
+                  </div>
+                )}
+
+                <div className="bg-background rounded-xl p-4 mb-4 max-h-60 overflow-y-auto">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">
+                    {selected.body_text || selected.snippet || "(no content)"}
+                  </p>
+                </div>
+
+                {!selected.matched_submission_id && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                    <p className="text-xs font-medium text-amber-900 mb-2">
+                      This email isn't linked to a form submission. Promote it to track as a lead:
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      <button onClick={() => promoteToSubmission(selected, "buy")} className="inline-flex items-center gap-1 px-3 py-1.5 bg-card border border-amber-300 text-xs font-medium rounded-full hover:bg-amber-100">
+                        <FilePlus2 className="w-3 h-3" /> As Buyer Inquiry
+                      </button>
+                      <button onClick={() => promoteToSubmission(selected, "sell")} className="inline-flex items-center gap-1 px-3 py-1.5 bg-card border border-amber-300 text-xs font-medium rounded-full hover:bg-amber-100">
+                        <FilePlus2 className="w-3 h-3" /> As Seller Inquiry
+                      </button>
+                      <button onClick={() => promoteToSubmission(selected, "contact")} className="inline-flex items-center gap-1 px-3 py-1.5 bg-card border border-amber-300 text-xs font-medium rounded-full hover:bg-amber-100">
+                        <FilePlus2 className="w-3 h-3" /> As General Contact
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-primary" /> AI-Drafted Reply (edit before sending)
+                  </p>
+                  <textarea
+                    value={draftEdit}
+                    onChange={(e) => setDraftEdit(e.target.value)}
+                    rows={8}
+                    className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 mb-3"
+                    placeholder="No AI draft generated. Write your reply..."
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setDraftEdit(selected.ai_draft_reply ?? "")} className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
+                      Reset to AI draft
+                    </button>
+                    <button onClick={() => sendViaMailto(selected)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:opacity-90">
+                      Open in mail client <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="bg-card rounded-2xl border border-dashed border-border/50 p-12 text-center sticky top-4">
+                <MailOpen className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">Select an email to view AI analysis and draft a reply.</p>
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default InboxPanel;
