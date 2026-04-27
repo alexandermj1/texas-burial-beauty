@@ -55,6 +55,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "new" | "handled">("new");
   const [notesDraft, setNotesDraft] = useState("");
+  const [quoteOpen, setQuoteOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return submissions.filter(s => {
