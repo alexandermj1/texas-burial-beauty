@@ -127,6 +127,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete }: Prop
                   <p className="text-xs text-muted-foreground truncate">
                     <span className="text-primary/80">{sourceLabel(s.source)}</span>
                     {s.cemetery ? ` · ${s.cemetery}` : ""}
+                    {s.cemetery && countFor(s.cemetery) > 0 ? (
+                      <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
+                    ) : null}
                   </p>
                   <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
                     {s.message || s.details || s.email || s.phone || "—"}
