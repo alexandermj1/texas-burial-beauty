@@ -4,6 +4,8 @@ import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, Fi
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
+import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
+import CustomerJourney from "./CustomerJourney";
 import { useActiveListings } from "@/hooks/useActiveListings";
 
 export interface Submission {
@@ -28,6 +30,14 @@ export interface Submission {
   transfer_fee_amount?: number | null;
   quote_message?: string | null;
   quote_sent_at?: string | null;
+  customer_kind?: string | null;
+  docusign_status?: string | null;
+  docusign_sent_at?: string | null;
+  docusign_signed_at?: string | null;
+  docusign_envelope_url?: string | null;
+  documents_requested_at?: string | null;
+  closed_at?: string | null;
+  closed_outcome?: string | null;
 }
 
 interface Props {
