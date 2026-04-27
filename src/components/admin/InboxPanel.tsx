@@ -196,9 +196,14 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                 >
                   <div className="flex items-start justify-between gap-3 mb-1.5">
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm text-foreground truncate">
-                        {email.from_name ?? email.from_email}
-                      </p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="font-medium text-sm text-foreground truncate">
+                          {email.from_name ?? email.from_email}
+                        </p>
+                        {email.matched_submission_id && kindBySubmission[email.matched_submission_id] && (
+                          <CustomerKindBadge kind={kindBySubmission[email.matched_submission_id]} size="xs" />
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">{email.from_email}</p>
                     </div>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -222,7 +227,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                     )}
                     {email.matched_submission_id ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
-                        <Link2 className="w-2.5 h-2.5" /> Matched
+                        <Link2 className="w-2.5 h-2.5" /> Linked to customer
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
