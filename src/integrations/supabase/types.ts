@@ -59,6 +59,153 @@ export type Database = {
         }
         Relationships: []
       }
+      ca_inventory: {
+        Row: {
+          area: string | null
+          cemetery: string
+          control_number: string | null
+          county: string | null
+          created_at: string
+          discount_pct_off_retail: number | null
+          id: string
+          location_details: string | null
+          net_pct_to_owner: number | null
+          net_to_owner: number | null
+          notes: string | null
+          owner_name: string | null
+          poa_date: string | null
+          price_unit: string | null
+          property_type: string | null
+          property_type_code: number | null
+          resale_pct_of_retail: number | null
+          resale_price: number | null
+          retail_price: number | null
+          sku: string | null
+          status: string
+          transfer_fee: string | null
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          cemetery: string
+          control_number?: string | null
+          county?: string | null
+          created_at?: string
+          discount_pct_off_retail?: number | null
+          id?: string
+          location_details?: string | null
+          net_pct_to_owner?: number | null
+          net_to_owner?: number | null
+          notes?: string | null
+          owner_name?: string | null
+          poa_date?: string | null
+          price_unit?: string | null
+          property_type?: string | null
+          property_type_code?: number | null
+          resale_pct_of_retail?: number | null
+          resale_price?: number | null
+          retail_price?: number | null
+          sku?: string | null
+          status?: string
+          transfer_fee?: string | null
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          cemetery?: string
+          control_number?: string | null
+          county?: string | null
+          created_at?: string
+          discount_pct_off_retail?: number | null
+          id?: string
+          location_details?: string | null
+          net_pct_to_owner?: number | null
+          net_to_owner?: number | null
+          notes?: string | null
+          owner_name?: string | null
+          poa_date?: string | null
+          price_unit?: string | null
+          property_type?: string | null
+          property_type_code?: number | null
+          resale_pct_of_retail?: number | null
+          resale_price?: number | null
+          retail_price?: number | null
+          sku?: string | null
+          status?: string
+          transfer_fee?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ca_sold_history: {
+        Row: {
+          area: string | null
+          cemetery: string
+          control_number: string | null
+          created_at: string
+          discount_pct_off_retail: number | null
+          id: string
+          location_details: string | null
+          net_pct_to_owner: number | null
+          net_to_owner: number | null
+          notes: string | null
+          owner_name: string | null
+          poa_date: string | null
+          property_type: string | null
+          property_type_code: number | null
+          resale_pct_of_retail: number | null
+          resale_price: number | null
+          retail_price: number | null
+          sku: string | null
+          sold_marker: string | null
+          transfer_fee: string | null
+        }
+        Insert: {
+          area?: string | null
+          cemetery: string
+          control_number?: string | null
+          created_at?: string
+          discount_pct_off_retail?: number | null
+          id?: string
+          location_details?: string | null
+          net_pct_to_owner?: number | null
+          net_to_owner?: number | null
+          notes?: string | null
+          owner_name?: string | null
+          poa_date?: string | null
+          property_type?: string | null
+          property_type_code?: number | null
+          resale_pct_of_retail?: number | null
+          resale_price?: number | null
+          retail_price?: number | null
+          sku?: string | null
+          sold_marker?: string | null
+          transfer_fee?: string | null
+        }
+        Update: {
+          area?: string | null
+          cemetery?: string
+          control_number?: string | null
+          created_at?: string
+          discount_pct_off_retail?: number | null
+          id?: string
+          location_details?: string | null
+          net_pct_to_owner?: number | null
+          net_to_owner?: number | null
+          notes?: string | null
+          owner_name?: string | null
+          poa_date?: string | null
+          property_type?: string | null
+          property_type_code?: number | null
+          resale_pct_of_retail?: number | null
+          resale_price?: number | null
+          retail_price?: number | null
+          sku?: string | null
+          sold_marker?: string | null
+          transfer_fee?: string | null
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           admin_notes: string | null
@@ -68,6 +215,7 @@ export type Database = {
           closed_outcome: string | null
           created_at: string
           customer_kind: string | null
+          customer_profile_id: string | null
           details: string | null
           documents_requested_at: string | null
           docusign_envelope_url: string | null
@@ -76,6 +224,9 @@ export type Database = {
           docusign_status: string
           email: string | null
           handled: boolean
+          handled_at: string | null
+          handled_by_name: string | null
+          handled_by_user_id: string | null
           id: string
           message: string | null
           name: string | null
@@ -101,6 +252,7 @@ export type Database = {
           closed_outcome?: string | null
           created_at?: string
           customer_kind?: string | null
+          customer_profile_id?: string | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -109,6 +261,9 @@ export type Database = {
           docusign_status?: string
           email?: string | null
           handled?: boolean
+          handled_at?: string | null
+          handled_by_name?: string | null
+          handled_by_user_id?: string | null
           id?: string
           message?: string | null
           name?: string | null
@@ -134,6 +289,7 @@ export type Database = {
           closed_outcome?: string | null
           created_at?: string
           customer_kind?: string | null
+          customer_profile_id?: string | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -142,6 +298,9 @@ export type Database = {
           docusign_status?: string
           email?: string | null
           handled?: boolean
+          handled_at?: string | null
+          handled_by_name?: string | null
+          handled_by_user_id?: string | null
           id?: string
           message?: string | null
           name?: string | null
@@ -161,6 +320,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "contact_submissions_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contact_submissions_source_email_id_fkey"
             columns: ["source_email_id"]
             isOneToOne: false
@@ -168,6 +334,101 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_activity_log: {
+        Row: {
+          action_summary: string
+          action_type: string
+          actor_name: string | null
+          actor_user_id: string | null
+          created_at: string
+          customer_profile_id: string | null
+          details: Json | null
+          id: string
+          submission_id: string | null
+        }
+        Insert: {
+          action_summary: string
+          action_type: string
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          customer_profile_id?: string | null
+          details?: Json | null
+          id?: string
+          submission_id?: string | null
+        }
+        Update: {
+          action_summary?: string
+          action_type?: string
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          customer_profile_id?: string | null
+          details?: Json | null
+          id?: string
+          submission_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_activity_log_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_profiles: {
+        Row: {
+          alt_emails: string[] | null
+          alt_phones: string[] | null
+          created_at: string
+          customer_kind: string | null
+          id: string
+          last_interaction_at: string | null
+          lifetime_value: number | null
+          pinned_notes: string | null
+          primary_email: string | null
+          primary_name: string | null
+          primary_phone: string | null
+          state_focus: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          alt_emails?: string[] | null
+          alt_phones?: string[] | null
+          created_at?: string
+          customer_kind?: string | null
+          id?: string
+          last_interaction_at?: string | null
+          lifetime_value?: number | null
+          pinned_notes?: string | null
+          primary_email?: string | null
+          primary_name?: string | null
+          primary_phone?: string | null
+          state_focus?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          alt_emails?: string[] | null
+          alt_phones?: string[] | null
+          created_at?: string
+          customer_kind?: string | null
+          id?: string
+          last_interaction_at?: string | null
+          lifetime_value?: number | null
+          pinned_notes?: string | null
+          primary_email?: string | null
+          primary_name?: string | null
+          primary_phone?: string | null
+          state_focus?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       email_messages: {
         Row: {
@@ -178,6 +439,7 @@ export type Database = {
           body_html: string | null
           body_text: string | null
           created_at: string
+          customer_profile_id: string | null
           fetched_at: string
           from_email: string
           from_name: string | null
@@ -201,6 +463,7 @@ export type Database = {
           body_html?: string | null
           body_text?: string | null
           created_at?: string
+          customer_profile_id?: string | null
           fetched_at?: string
           from_email: string
           from_name?: string | null
@@ -224,6 +487,7 @@ export type Database = {
           body_html?: string | null
           body_text?: string | null
           created_at?: string
+          customer_profile_id?: string | null
           fetched_at?: string
           from_email?: string
           from_name?: string | null
@@ -240,6 +504,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "email_messages_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "email_messages_matched_submission_id_fkey"
             columns: ["matched_submission_id"]
@@ -401,6 +672,95 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      quote_estimates: {
+        Row: {
+          ai_cost_estimate_usd: number | null
+          ai_explanation: string | null
+          ai_model_used: string | null
+          cemetery: string
+          closest_comp: Json | null
+          comp_count: number | null
+          confidence_label: string | null
+          confidence_score: number | null
+          created_at: string
+          customer_profile_id: string | null
+          estimated_high: number | null
+          estimated_low: number | null
+          estimated_mid: number | null
+          generated_by_name: string | null
+          generated_by_user_id: string | null
+          id: string
+          outcome: string | null
+          outcome_amount: number | null
+          outcome_at: string | null
+          property_type: string | null
+          request_details: string | null
+          spaces: number | null
+          submission_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_cost_estimate_usd?: number | null
+          ai_explanation?: string | null
+          ai_model_used?: string | null
+          cemetery: string
+          closest_comp?: Json | null
+          comp_count?: number | null
+          confidence_label?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          customer_profile_id?: string | null
+          estimated_high?: number | null
+          estimated_low?: number | null
+          estimated_mid?: number | null
+          generated_by_name?: string | null
+          generated_by_user_id?: string | null
+          id?: string
+          outcome?: string | null
+          outcome_amount?: number | null
+          outcome_at?: string | null
+          property_type?: string | null
+          request_details?: string | null
+          spaces?: number | null
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_cost_estimate_usd?: number | null
+          ai_explanation?: string | null
+          ai_model_used?: string | null
+          cemetery?: string
+          closest_comp?: Json | null
+          comp_count?: number | null
+          confidence_label?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          customer_profile_id?: string | null
+          estimated_high?: number | null
+          estimated_low?: number | null
+          estimated_mid?: number | null
+          generated_by_name?: string | null
+          generated_by_user_id?: string | null
+          id?: string
+          outcome?: string | null
+          outcome_amount?: number | null
+          outcome_at?: string | null
+          property_type?: string | null
+          request_details?: string | null
+          spaces?: number | null
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_estimates_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reminder_log: {
         Row: {
