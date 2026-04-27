@@ -34,6 +34,7 @@ export type Database = {
           region: string | null
           section: string | null
           source: string
+          source_email_id: string | null
           spaces: string | null
           timeline: string | null
           transfer_fee_amount: number | null
@@ -58,6 +59,7 @@ export type Database = {
           region?: string | null
           section?: string | null
           source?: string
+          source_email_id?: string | null
           spaces?: string | null
           timeline?: string | null
           transfer_fee_amount?: number | null
@@ -82,12 +84,101 @@ export type Database = {
           region?: string | null
           section?: string | null
           source?: string
+          source_email_id?: string | null
           spaces?: string | null
           timeline?: string | null
           transfer_fee_amount?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contact_submissions_source_email_id_fkey"
+            columns: ["source_email_id"]
+            isOneToOne: false
+            referencedRelation: "email_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_messages: {
+        Row: {
+          ai_analyzed_at: string | null
+          ai_draft_reply: string | null
+          ai_intent: string | null
+          ai_summary: string | null
+          body_html: string | null
+          body_text: string | null
+          created_at: string
+          fetched_at: string
+          from_email: string
+          from_name: string | null
+          gmail_message_id: string
+          gmail_thread_id: string
+          id: string
+          is_read: boolean
+          match_confidence: string | null
+          matched_submission_id: string | null
+          received_at: string
+          snippet: string | null
+          subject: string | null
+          to_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_analyzed_at?: string | null
+          ai_draft_reply?: string | null
+          ai_intent?: string | null
+          ai_summary?: string | null
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          fetched_at?: string
+          from_email: string
+          from_name?: string | null
+          gmail_message_id: string
+          gmail_thread_id: string
+          id?: string
+          is_read?: boolean
+          match_confidence?: string | null
+          matched_submission_id?: string | null
+          received_at: string
+          snippet?: string | null
+          subject?: string | null
+          to_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_analyzed_at?: string | null
+          ai_draft_reply?: string | null
+          ai_intent?: string | null
+          ai_summary?: string | null
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          fetched_at?: string
+          from_email?: string
+          from_name?: string | null
+          gmail_message_id?: string
+          gmail_thread_id?: string
+          id?: string
+          is_read?: boolean
+          match_confidence?: string | null
+          matched_submission_id?: string | null
+          received_at?: string
+          snippet?: string | null
+          subject?: string | null
+          to_email?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_messages_matched_submission_id_fkey"
+            columns: ["matched_submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listings: {
         Row: {
