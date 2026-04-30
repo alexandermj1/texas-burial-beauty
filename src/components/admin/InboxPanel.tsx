@@ -37,6 +37,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
   const [selected, setSelected] = useState<EmailMessage | null>(null);
   const [filter, setFilter] = useState<"all" | "matched" | "unmatched">("all");
   const [draftEdit, setDraftEdit] = useState("");
+  const [syncProgress, setSyncProgress] = useState("");
   // Map submission_id -> customer kind, used to render colored badges next to matched emails.
   const [kindBySubmission, setKindBySubmission] = useState<Record<string, CustomerKind>>({});
 
@@ -74,34 +75,49 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
   const sync = async () => {
     setSyncing(true);
+    setSyncProgress("Starting Gmail import...");
     try {
-      const { data, error } = await supabase.functions.invoke("sync-inbox", { body: {} });
-      if (error) {
-        // FunctionsHttpError exposes context.response with the body — extract for better messages.
-        let msg = error.message;
-        try {
-          const ctx = (error as any).context;
-          if (ctx?.body) {
-            const text = typeof ctx.body === "string" ? ctx.body : await new Response(ctx.body).text();
-            const j = JSON.parse(text);
-            if (j.error) msg = j.error;
-          }
-        } catch { /* ignore */ }
-        toast({ title: "Sync failed", description: msg, variant: "destructive" });
-      } else if (data?.error) {
-        toast({ title: "Sync failed", description: data.error, variant: "destructive" });
-      } else {
-        const remaining = data?.remaining_to_sync ?? 0;
-        toast({
-          title: "Inbox synced",
-          description: `${data?.newly_synced ?? 0} new analyzed${remaining ? ` · ${remaining} more queued (click Sync again)` : ""}.`,
+      let pageToken: string | undefined;
+      let totalNew = 0;
+      let totalSeen = 0;
+      let pages = 0;
+
+      do {
+        const { data, error } = await supabase.functions.invoke("sync-inbox", {
+          body: { pageToken, maxResults: 100 },
         });
-        await fetchEmails();
-      }
+        if (error || data?.error) {
+          let msg = error?.message || data?.error || "Unknown sync error";
+          try {
+            const ctx = (error as any)?.context;
+            if (ctx?.body) {
+              const text = typeof ctx.body === "string" ? ctx.body : await new Response(ctx.body).text();
+              const j = JSON.parse(text);
+              if (j.error) msg = j.error;
+            }
+          } catch { /* ignore */ }
+          toast({ title: "Sync failed", description: msg, variant: "destructive" });
+          return;
+        }
+
+        totalNew += data?.newly_synced ?? 0;
+        totalSeen += data?.page_size ?? 0;
+        pages += 1;
+        pageToken = data?.next_page_token || undefined;
+        setSyncProgress(`Imported ${totalSeen} Gmail messages${pageToken ? "..." : ""}`);
+      } while (pageToken);
+
+      toast({
+        title: "Gmail imported",
+        description: `${totalSeen} messages checked across ${pages} page${pages === 1 ? "" : "s"} · ${totalNew} new saved. No AI used.`,
+      });
+      await fetchEmails();
     } catch (e) {
       toast({ title: "Sync failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setSyncing(false);
+      setSyncProgress("");
     }
-    setSyncing(false);
   };
 
   const promoteToSubmission = async (email: EmailMessage, source: "contact" | "sell" | "buy" = "contact") => {
