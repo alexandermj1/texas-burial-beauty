@@ -190,6 +190,11 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
           </button>
         </div>
       </div>
+      {syncProgress && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-sm text-primary">
+          {syncProgress}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-16 text-muted-foreground">Loading inbox...</div>
@@ -197,14 +202,13 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
         <div className="text-center py-16 bg-card rounded-2xl border border-border/50">
           <Mail className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
           <p className="text-muted-foreground">No emails {filter !== "all" ? `(${filter})` : "yet"}.</p>
-          <p className="text-xs text-muted-foreground mt-1">Click "Sync Inbox" to pull the last 7 days from Gmail.</p>
+          <p className="text-xs text-muted-foreground mt-1">Click "Sync Inbox" to pull Gmail messages directly.</p>
         </div>
       ) : (
         <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 items-start">
           {/* List */}
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.map((email, i) => {
-              const intent = email.ai_intent ? intentMeta[email.ai_intent] : null;
               const isSelected = selected?.id === email.id;
               return (
                 <motion.button
@@ -236,18 +240,8 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                   <p className="text-sm font-medium text-foreground mb-1 line-clamp-1">
                     {email.subject || "(no subject)"}
                   </p>
-                  {email.ai_summary && (
-                    <p className="text-xs text-muted-foreground italic line-clamp-2 flex items-start gap-1">
-                      <Sparkles className="w-3 h-3 text-primary shrink-0 mt-0.5" />
-                      {email.ai_summary}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground line-clamp-2">{email.snippet || email.body_text || "No preview available"}</p>
                   <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    {intent && (
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${intent.color}`}>
-                        <intent.icon className="w-2.5 h-2.5" /> {intent.label}
-                      </span>
-                    )}
                     {email.matched_submission_id ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
                         <Link2 className="w-2.5 h-2.5" /> Linked to customer
