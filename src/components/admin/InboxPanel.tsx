@@ -45,14 +45,23 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
   const fetchEmails = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("email_messages" as any)
-      .select("*")
-      .order("received_at", { ascending: false })
-      .limit(100);
-    if (error) toast({ title: "Failed to load emails", description: error.message, variant: "destructive" });
+    const rows: any[] = [];
+    let errorMessage: string | null = null;
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("email_messages" as any)
+        .select("*")
+        .order("received_at", { ascending: false })
+        .range(from, from + 999);
+      if (error) {
+        errorMessage = error.message;
+        break;
+      }
+      rows.push(...((data ?? []) as any[]));
+      if (!data || data.length < 1000) break;
+    }
+    if (errorMessage) toast({ title: "Failed to load emails", description: errorMessage, variant: "destructive" });
     else {
-      const rows = (data ?? []) as any[];
       setEmails(rows as any);
       // Fetch the kind/source for every matched submission so we can render colored badges.
       const subIds = Array.from(new Set(rows.map(r => r.matched_submission_id).filter(Boolean)));
@@ -340,7 +349,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                     onChange={(e) => setDraftEdit(e.target.value)}
                     rows={8}
                     className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 mb-3"
-                    placeholder="No AI draft generated. Write your reply..."
+                    placeholder="Write your reply..."
                   />
                   <div className="flex justify-end gap-2">
                     <button onClick={() => setDraftEdit("")} className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
@@ -355,7 +364,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
             ) : (
               <div className="bg-card rounded-2xl border border-dashed border-border/50 p-12 text-center sticky top-4">
                 <MailOpen className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">Select an email to view AI analysis and draft a reply.</p>
+                <p className="text-sm text-muted-foreground">Select an email to view the message and draft a reply.</p>
               </div>
             )}
           </AnimatePresence>
