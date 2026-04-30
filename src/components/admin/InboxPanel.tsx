@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, RefreshCw, Sparkles, Link2, ChevronRight, MailOpen, FileText, ThumbsUp, ThumbsDown, HelpCircle, FilePlus2, ArrowRight } from "lucide-react";
+import { Mail, RefreshCw, Link2, ChevronRight, MailOpen, FilePlus2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -25,16 +25,6 @@ interface EmailMessage {
   match_confidence: string | null;
 }
 
-const intentMeta: Record<string, { label: string; icon: any; color: string }> = {
-  quote_accepted: { label: "Quote Accepted", icon: ThumbsUp, color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  quote_declined: { label: "Quote Declined", icon: ThumbsDown, color: "bg-rose-100 text-rose-700 border-rose-200" },
-  question: { label: "Question", icon: HelpCircle, color: "bg-blue-100 text-blue-700 border-blue-200" },
-  document_submission: { label: "Documents", icon: FileText, color: "bg-violet-100 text-violet-700 border-violet-200" },
-  new_inquiry: { label: "New Inquiry", icon: Mail, color: "bg-amber-100 text-amber-700 border-amber-200" },
-  spam_or_unrelated: { label: "Spam / Other", icon: HelpCircle, color: "bg-muted text-muted-foreground border-border" },
-  other: { label: "Other", icon: Mail, color: "bg-muted text-muted-foreground border-border" },
-};
-
 interface Props {
   /** Called when admin clicks "Open customer" on a matched email — Admin.tsx switches tabs and selects. */
   onJumpToSubmission?: (submissionId: string) => void;
@@ -47,6 +37,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
   const [selected, setSelected] = useState<EmailMessage | null>(null);
   const [filter, setFilter] = useState<"all" | "matched" | "unmatched">("all");
   const [draftEdit, setDraftEdit] = useState("");
+  const [syncProgress, setSyncProgress] = useState("");
   // Map submission_id -> customer kind, used to render colored badges next to matched emails.
   const [kindBySubmission, setKindBySubmission] = useState<Record<string, CustomerKind>>({});
 
@@ -54,14 +45,23 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
   const fetchEmails = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("email_messages" as any)
-      .select("*")
-      .order("received_at", { ascending: false })
-      .limit(100);
-    if (error) toast({ title: "Failed to load emails", description: error.message, variant: "destructive" });
+    const rows: any[] = [];
+    let errorMessage: string | null = null;
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("email_messages" as any)
+        .select("*")
+        .order("received_at", { ascending: false })
+        .range(from, from + 999);
+      if (error) {
+        errorMessage = error.message;
+        break;
+      }
+      rows.push(...((data ?? []) as any[]));
+      if (!data || data.length < 1000) break;
+    }
+    if (errorMessage) toast({ title: "Failed to load emails", description: errorMessage, variant: "destructive" });
     else {
-      const rows = (data ?? []) as any[];
       setEmails(rows as any);
       // Fetch the kind/source for every matched submission so we can render colored badges.
       const subIds = Array.from(new Set(rows.map(r => r.matched_submission_id).filter(Boolean)));
@@ -84,34 +84,49 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
   const sync = async () => {
     setSyncing(true);
+    setSyncProgress("Starting Gmail import...");
     try {
-      const { data, error } = await supabase.functions.invoke("sync-inbox", { body: {} });
-      if (error) {
-        // FunctionsHttpError exposes context.response with the body — extract for better messages.
-        let msg = error.message;
-        try {
-          const ctx = (error as any).context;
-          if (ctx?.body) {
-            const text = typeof ctx.body === "string" ? ctx.body : await new Response(ctx.body).text();
-            const j = JSON.parse(text);
-            if (j.error) msg = j.error;
-          }
-        } catch { /* ignore */ }
-        toast({ title: "Sync failed", description: msg, variant: "destructive" });
-      } else if (data?.error) {
-        toast({ title: "Sync failed", description: data.error, variant: "destructive" });
-      } else {
-        const remaining = data?.remaining_to_sync ?? 0;
-        toast({
-          title: "Inbox synced",
-          description: `${data?.newly_synced ?? 0} new analyzed${remaining ? ` · ${remaining} more queued (click Sync again)` : ""}.`,
+      let pageToken: string | undefined;
+      let totalNew = 0;
+      let totalSeen = 0;
+      let pages = 0;
+
+      do {
+        const { data, error } = await supabase.functions.invoke("sync-inbox", {
+          body: { pageToken, maxResults: 100 },
         });
-        await fetchEmails();
-      }
+        if (error || data?.error) {
+          let msg = error?.message || data?.error || "Unknown sync error";
+          try {
+            const ctx = (error as any)?.context;
+            if (ctx?.body) {
+              const text = typeof ctx.body === "string" ? ctx.body : await new Response(ctx.body).text();
+              const j = JSON.parse(text);
+              if (j.error) msg = j.error;
+            }
+          } catch { /* ignore */ }
+          toast({ title: "Sync failed", description: msg, variant: "destructive" });
+          return;
+        }
+
+        totalNew += data?.newly_synced ?? 0;
+        totalSeen += data?.page_size ?? 0;
+        pages += 1;
+        pageToken = data?.next_page_token || undefined;
+        setSyncProgress(`Imported ${totalSeen} Gmail messages${pageToken ? "..." : ""}`);
+      } while (pageToken);
+
+      toast({
+        title: "Gmail imported",
+        description: `${totalSeen} messages checked across ${pages} page${pages === 1 ? "" : "s"} · ${totalNew} new saved. No AI used.`,
+      });
+      await fetchEmails();
     } catch (e) {
       toast({ title: "Sync failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setSyncing(false);
+      setSyncProgress("");
     }
-    setSyncing(false);
   };
 
   const promoteToSubmission = async (email: EmailMessage, source: "contact" | "sell" | "buy" = "contact") => {
@@ -184,6 +199,11 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
           </button>
         </div>
       </div>
+      {syncProgress && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-sm text-primary">
+          {syncProgress}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-16 text-muted-foreground">Loading inbox...</div>
@@ -191,14 +211,13 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
         <div className="text-center py-16 bg-card rounded-2xl border border-border/50">
           <Mail className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
           <p className="text-muted-foreground">No emails {filter !== "all" ? `(${filter})` : "yet"}.</p>
-          <p className="text-xs text-muted-foreground mt-1">Click "Sync Inbox" to pull the last 7 days from Gmail.</p>
+          <p className="text-xs text-muted-foreground mt-1">Click "Sync Inbox" to pull Gmail messages directly.</p>
         </div>
       ) : (
         <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 items-start">
           {/* List */}
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.map((email, i) => {
-              const intent = email.ai_intent ? intentMeta[email.ai_intent] : null;
               const isSelected = selected?.id === email.id;
               return (
                 <motion.button
@@ -230,18 +249,8 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                   <p className="text-sm font-medium text-foreground mb-1 line-clamp-1">
                     {email.subject || "(no subject)"}
                   </p>
-                  {email.ai_summary && (
-                    <p className="text-xs text-muted-foreground italic line-clamp-2 flex items-start gap-1">
-                      <Sparkles className="w-3 h-3 text-primary shrink-0 mt-0.5" />
-                      {email.ai_summary}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground line-clamp-2">{email.snippet || email.body_text || "No preview available"}</p>
                   <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    {intent && (
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${intent.color}`}>
-                        <intent.icon className="w-2.5 h-2.5" /> {intent.label}
-                      </span>
-                    )}
                     {email.matched_submission_id ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
                         <Link2 className="w-2.5 h-2.5" /> Linked to customer
@@ -281,15 +290,6 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                     ✕
                   </button>
                 </div>
-
-                {selected.ai_summary && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4">
-                    <p className="text-xs text-primary font-medium mb-1 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> AI Summary
-                    </p>
-                    <p className="text-sm text-foreground">{selected.ai_summary}</p>
-                  </div>
-                )}
 
                 <div className="bg-background rounded-xl p-4 mb-4 max-h-60 overflow-y-auto">
                   <p className="text-sm text-foreground whitespace-pre-wrap">
@@ -342,18 +342,18 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
                 <div className="border-t border-border pt-4">
                   <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-primary" /> AI-Drafted Reply (edit before sending)
+                    Reply draft
                   </p>
                   <textarea
                     value={draftEdit}
                     onChange={(e) => setDraftEdit(e.target.value)}
                     rows={8}
                     className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 mb-3"
-                    placeholder="No AI draft generated. Write your reply..."
+                    placeholder="Write your reply..."
                   />
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => setDraftEdit(selected.ai_draft_reply ?? "")} className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
-                      Reset to AI draft
+                    <button onClick={() => setDraftEdit("")} className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
+                      Clear
                     </button>
                     <button onClick={() => sendViaMailto(selected)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:opacity-90">
                       Open in mail client <ChevronRight className="w-3 h-3" />
@@ -364,7 +364,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
             ) : (
               <div className="bg-card rounded-2xl border border-dashed border-border/50 p-12 text-center sticky top-4">
                 <MailOpen className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">Select an email to view AI analysis and draft a reply.</p>
+                <p className="text-sm text-muted-foreground">Select an email to view the message and draft a reply.</p>
               </div>
             )}
           </AnimatePresence>
