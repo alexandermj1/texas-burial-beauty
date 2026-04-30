@@ -282,15 +282,6 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                   </button>
                 </div>
 
-                {selected.ai_summary && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4">
-                    <p className="text-xs text-primary font-medium mb-1 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> AI Summary
-                    </p>
-                    <p className="text-sm text-foreground">{selected.ai_summary}</p>
-                  </div>
-                )}
-
                 <div className="bg-background rounded-xl p-4 mb-4 max-h-60 overflow-y-auto">
                   <p className="text-sm text-foreground whitespace-pre-wrap">
                     {selected.body_text || selected.snippet || "(no content)"}
@@ -342,7 +333,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
                 <div className="border-t border-border pt-4">
                   <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-primary" /> AI-Drafted Reply (edit before sending)
+                    Reply draft
                   </p>
                   <textarea
                     value={draftEdit}
@@ -352,8 +343,8 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
                     placeholder="No AI draft generated. Write your reply..."
                   />
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => setDraftEdit(selected.ai_draft_reply ?? "")} className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
-                      Reset to AI draft
+                    <button onClick={() => setDraftEdit("")} className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
+                      Clear
                     </button>
                     <button onClick={() => sendViaMailto(selected)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:opacity-90">
                       Open in mail client <ChevronRight className="w-3 h-3" />
