@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, RefreshCw, Sparkles, Link2, ChevronRight, MailOpen, FileText, ThumbsUp, ThumbsDown, HelpCircle, FilePlus2, ArrowRight } from "lucide-react";
+import { Mail, RefreshCw, Link2, ChevronRight, MailOpen, FilePlus2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -24,16 +24,6 @@ interface EmailMessage {
   matched_submission_id: string | null;
   match_confidence: string | null;
 }
-
-const intentMeta: Record<string, { label: string; icon: any; color: string }> = {
-  quote_accepted: { label: "Quote Accepted", icon: ThumbsUp, color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  quote_declined: { label: "Quote Declined", icon: ThumbsDown, color: "bg-rose-100 text-rose-700 border-rose-200" },
-  question: { label: "Question", icon: HelpCircle, color: "bg-blue-100 text-blue-700 border-blue-200" },
-  document_submission: { label: "Documents", icon: FileText, color: "bg-violet-100 text-violet-700 border-violet-200" },
-  new_inquiry: { label: "New Inquiry", icon: Mail, color: "bg-amber-100 text-amber-700 border-amber-200" },
-  spam_or_unrelated: { label: "Spam / Other", icon: HelpCircle, color: "bg-muted text-muted-foreground border-border" },
-  other: { label: "Other", icon: Mail, color: "bg-muted text-muted-foreground border-border" },
-};
 
 interface Props {
   /** Called when admin clicks "Open customer" on a matched email — Admin.tsx switches tabs and selects. */
