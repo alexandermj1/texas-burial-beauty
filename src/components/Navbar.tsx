@@ -16,9 +16,10 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
   useEffect(() => {
     const onScroll = () => setScrolled(forceScrolled || window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [forceScrolled, location.pathname]);
 
   const links = [
     { to: "/property-types", label: "Property Types" },
