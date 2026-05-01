@@ -49,7 +49,7 @@ const AgentDashboard = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"properties" | "my-holds" | "my-sales">("properties");
+  const [tab, setTab] = useState<"properties" | "my-holds" | "my-sales" | "requests">("properties");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Login
