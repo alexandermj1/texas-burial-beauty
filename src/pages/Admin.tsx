@@ -500,7 +500,7 @@ const Admin = () => {
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "customers" && <CustomersPanel />}
           {tab === "quote_estimator" && <QuoteEstimatorPanel />}
-          {tab === "velocity" && <InventoryVelocityPanel />}
+          {tab === "inventory_requests" && <InventoryRequestsPanel />}
           {tab === "ca_inventory" && <CaliforniaInventoryPanel />}
 
           {tab === "inbox" && (
