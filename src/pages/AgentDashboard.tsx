@@ -268,6 +268,9 @@ const AgentDashboard = () => {
             <button onClick={() => setTab("my-sales")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "my-sales" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <DollarSign className="w-4 h-4 inline mr-1" /> My Sales ({mySoldReservations.length})
             </button>
+            <button onClick={() => setTab("requests")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "requests" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
+              <ClipboardList className="w-4 h-4 inline mr-1" /> Request Inventory
+            </button>
           </div>
 
           {/* Search bar for properties */}
