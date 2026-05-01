@@ -266,7 +266,7 @@ const Admin = () => {
           </div>
 
           {/* Search (hidden on inbox tab) */}
-          {tab !== "inbox" && tab !== "performance" && tab !== "customers" && tab !== "quote_estimator" && tab !== "velocity" && tab !== "ca_inventory" && (
+          {tab !== "inbox" && tab !== "performance" && tab !== "customers" && tab !== "quote_estimator" && tab !== "inventory_requests" && tab !== "ca_inventory" && (
             <div className="relative max-w-md mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
