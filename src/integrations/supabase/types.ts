@@ -541,6 +541,66 @@ export type Database = {
           },
         ]
       }
+      inventory_requests: {
+        Row: {
+          admin_response: string | null
+          agent_id: string
+          agent_name: string | null
+          buyer_context: string | null
+          cemetery: string
+          created_at: string
+          id: string
+          notes: string | null
+          priority: string
+          property_type: string | null
+          resolved_at: string | null
+          resolved_by_user_id: string | null
+          section: string | null
+          spaces: number | null
+          status: string
+          target_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          agent_id: string
+          agent_name?: string | null
+          buyer_context?: string | null
+          cemetery: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_type?: string | null
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          section?: string | null
+          spaces?: number | null
+          status?: string
+          target_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          agent_id?: string
+          agent_name?: string | null
+          buyer_context?: string | null
+          cemetery?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_type?: string | null
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          section?: string | null
+          spaces?: number | null
+          status?: string
+          target_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           asking_price: number | null
