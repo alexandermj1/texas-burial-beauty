@@ -501,6 +501,8 @@ const AgentDashboard = () => {
               )}
             </div>
           )}
+
+          {tab === "requests" && <AgentInventoryRequests />}
         </div>
       </section>
 
