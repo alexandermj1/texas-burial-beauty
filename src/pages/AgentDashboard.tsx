@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Calendar, Clock, TrendingUp, MapPin, X, CalendarDays, AlertCircle, Search, CheckCircle, DollarSign, Send } from "lucide-react";
+import { LogOut, Calendar, Clock, TrendingUp, MapPin, X, CalendarDays, AlertCircle, Search, CheckCircle, DollarSign, Send, ClipboardList } from "lucide-react";
+import AgentInventoryRequests from "@/components/agent/AgentInventoryRequests";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAgent } from "@/hooks/useAgent";
