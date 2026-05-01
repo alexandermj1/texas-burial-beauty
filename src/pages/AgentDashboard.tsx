@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Calendar, Clock, TrendingUp, MapPin, X, CalendarDays, AlertCircle, Search, CheckCircle, DollarSign, Send } from "lucide-react";
+import { LogOut, Calendar, Clock, TrendingUp, MapPin, X, CalendarDays, AlertCircle, Search, CheckCircle, DollarSign, Send, ClipboardList } from "lucide-react";
+import AgentInventoryRequests from "@/components/agent/AgentInventoryRequests";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAgent } from "@/hooks/useAgent";
@@ -48,7 +49,7 @@ const AgentDashboard = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"properties" | "my-holds" | "my-sales">("properties");
+  const [tab, setTab] = useState<"properties" | "my-holds" | "my-sales" | "requests">("properties");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Login
@@ -266,6 +267,9 @@ const AgentDashboard = () => {
             </button>
             <button onClick={() => setTab("my-sales")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "my-sales" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <DollarSign className="w-4 h-4 inline mr-1" /> My Sales ({mySoldReservations.length})
+            </button>
+            <button onClick={() => setTab("requests")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "requests" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
+              <ClipboardList className="w-4 h-4 inline mr-1" /> Request Inventory
             </button>
           </div>
 
@@ -497,6 +501,8 @@ const AgentDashboard = () => {
               )}
             </div>
           )}
+
+          {tab === "requests" && <AgentInventoryRequests />}
         </div>
       </section>
 

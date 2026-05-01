@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Calculator, Package } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Calculator, Package, ClipboardList } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
 import CustomersPanel from "@/components/admin/CustomersPanel";
 import QuoteEstimatorPanel from "@/components/admin/QuoteEstimatorPanel";
-import InventoryVelocityPanel from "@/components/admin/InventoryVelocityPanel";
+import InventoryRequestsPanel from "@/components/admin/InventoryRequestsPanel";
 import CaliforniaInventoryPanel from "@/components/admin/CaliforniaInventoryPanel";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,7 +49,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "quote_estimator" | "ca_inventory" | "velocity">("listings");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "quote_estimator" | "ca_inventory" | "inventory_requests">("listings");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -254,8 +254,8 @@ const Admin = () => {
             <button onClick={() => setTab("quote_estimator")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "quote_estimator" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Calculator className="w-4 h-4 inline mr-1" /> Quote Estimator
             </button>
-            <button onClick={() => setTab("velocity")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "velocity" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <TrendingUp className="w-4 h-4 inline mr-1" /> Inventory Velocity
+            <button onClick={() => setTab("inventory_requests")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "inventory_requests" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
+              <ClipboardList className="w-4 h-4 inline mr-1" /> Inventory Requests
             </button>
             <button onClick={() => setTab("ca_inventory")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "ca_inventory" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Package className="w-4 h-4 inline mr-1" /> California Inventory
@@ -266,7 +266,7 @@ const Admin = () => {
           </div>
 
           {/* Search (hidden on inbox tab) */}
-          {tab !== "inbox" && tab !== "performance" && tab !== "customers" && tab !== "quote_estimator" && tab !== "velocity" && tab !== "ca_inventory" && (
+          {tab !== "inbox" && tab !== "performance" && tab !== "customers" && tab !== "quote_estimator" && tab !== "inventory_requests" && tab !== "ca_inventory" && (
             <div className="relative max-w-md mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -500,7 +500,7 @@ const Admin = () => {
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "customers" && <CustomersPanel />}
           {tab === "quote_estimator" && <QuoteEstimatorPanel />}
-          {tab === "velocity" && <InventoryVelocityPanel />}
+          {tab === "inventory_requests" && <InventoryRequestsPanel />}
           {tab === "ca_inventory" && <CaliforniaInventoryPanel />}
 
           {tab === "inbox" && (
