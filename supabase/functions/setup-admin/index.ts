@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+const ADMINS: Array<{ email: string; password: string; full_name: string }> = [
+  { email: "alexandermaclarenjames@gmail.com", password: "123456", full_name: "Alexander Maclaren James" },
+  { email: "emmamaclaren@gmail.com", password: "123456", full_name: "Emma Maclaren" },
+];
+
 Deno.serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -16,58 +21,49 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const adminEmail = "alexandermaclarenjames@gmail.com";
-    const adminPassword = "123456";
-
-    // Check if user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    let userId: string;
-    
-    const existing = existingUsers?.users?.find(u => u.email === adminEmail);
-    if (existing) {
-      userId = existing.id;
-    } else {
-      // Create the user
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: adminEmail,
-        password: adminPassword,
-        email_confirm: true,
-      });
-      if (createError) throw createError;
-      userId = newUser.user.id;
-    }
+    const results: Array<{ email: string; userId: string; created: boolean }> = [];
 
-    // Assign admin role (upsert)
-    const { error: roleError } = await supabaseAdmin.from("user_roles").upsert(
-      { user_id: userId, role: "admin" },
-      { onConflict: "user_id,role" }
-    );
-    if (roleError) throw roleError;
-
-    // Generate random profit for all listings that don't have one
-    const { data: listings } = await supabaseAdmin
-      .from("listings")
-      .select("id, asking_price")
-      .is("profit", null);
-
-    if (listings && listings.length > 0) {
-      for (const listing of listings) {
-        const profit = Math.floor(Math.random() * 48000) + 2000; // 2k-50k
-        const costPrice = (listing.asking_price || 10000) - profit;
-        await supabaseAdmin
-          .from("listings")
-          .update({ profit, cost_price: Math.max(costPrice, 500) })
-          .eq("id", listing.id);
+    for (const a of ADMINS) {
+      let userId: string;
+      let created = false;
+      const existing = existingUsers?.users?.find((u) => u.email === a.email);
+      if (existing) {
+        userId = existing.id;
+        // Reset password to ensure access
+        await supabaseAdmin.auth.admin.updateUserById(userId, { password: a.password });
+      } else {
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: a.email,
+          password: a.password,
+          email_confirm: true,
+          user_metadata: { full_name: a.full_name },
+        });
+        if (createError) throw createError;
+        userId = newUser.user.id;
+        created = true;
       }
+
+      await supabaseAdmin.from("user_roles").upsert(
+        { user_id: userId, role: "admin" },
+        { onConflict: "user_id,role" }
+      );
+
+      await supabaseAdmin.from("profiles").upsert(
+        { id: userId, email: a.email, full_name: a.full_name },
+        { onConflict: "id" }
+      );
+
+      results.push({ email: a.email, userId, created });
     }
 
     return new Response(
-      JSON.stringify({ success: true, userId, listingsUpdated: listings?.length || 0 }),
+      JSON.stringify({ success: true, admins: results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
