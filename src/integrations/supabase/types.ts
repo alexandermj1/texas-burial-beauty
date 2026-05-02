@@ -252,6 +252,8 @@ export type Database = {
           property_type: string | null
           quote_amount: number | null
           quote_message: string | null
+          quote_responded_at: string | null
+          quote_response: string | null
           quote_sent_at: string | null
           region: string | null
           section: string | null
@@ -290,6 +292,8 @@ export type Database = {
           property_type?: string | null
           quote_amount?: number | null
           quote_message?: string | null
+          quote_responded_at?: string | null
+          quote_response?: string | null
           quote_sent_at?: string | null
           region?: string | null
           section?: string | null
@@ -328,6 +332,8 @@ export type Database = {
           property_type?: string | null
           quote_amount?: number | null
           quote_message?: string | null
+          quote_responded_at?: string | null
+          quote_response?: string | null
           quote_sent_at?: string | null
           region?: string | null
           section?: string | null
