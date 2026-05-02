@@ -104,6 +104,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
+  const [stageFilter, setStageFilter] = useState<Stage | "all">("all");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
@@ -111,12 +112,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const { countFor } = useActiveListings();
 
   // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
-  // Switch the status filter to "all" so the chosen submission is guaranteed to be visible.
   useEffect(() => {
     if (focusSubmissionId) {
       setSelectedId(focusSubmissionId);
       setFilter("all");
       setKindFilter("all");
+      setStageFilter("all");
       const target = submissions.find(s => s.id === focusSubmissionId);
       setNotesDraft(target?.admin_notes ?? "");
     }
@@ -128,15 +129,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (filter === "new" && s.handled) return false;
       if (filter === "handled" && !s.handled) return false;
       if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
+      if (stageFilter !== "all" && deriveStage(s) !== stageFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, searchQuery]);
+  }, [submissions, filter, kindFilter, stageFilter, searchQuery]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
+  const selectedStage = selected ? deriveStage(selected) : null;
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
@@ -146,6 +149,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   }), [submissions, filter]);
   const kindCount = (k: KindFilter) =>
     k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
+
+  // Stage counts — scoped to the current kind filter so numbers match the active view.
+  const stageBase = useMemo(() => kindBase.filter(s => {
+    if (kindFilter === "all") return true;
+    return resolveKind(s.customer_kind, s.source) === kindFilter;
+  }), [kindBase, kindFilter]);
+  const stageCount = (st: Stage | "all") =>
+    st === "all" ? stageBase.length : stageBase.filter(s => deriveStage(s) === st).length;
+
+  const setQuoteResponse = async (resp: "accepted" | "declined") => {
+    if (!selected) return;
+    await onUpdate(selected.id, {
+      quote_response: resp,
+      quote_responded_at: new Date().toISOString(),
+    } as any);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
