@@ -323,9 +323,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{formatDate(selected.created_at)}</p>
               </div>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${selected.handled ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-                {selected.handled ? "Handled" : "New"}
-              </span>
+              <div className="flex flex-col items-end gap-1.5">
+                {selectedStage && (
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border ${STAGE_META[selectedStage].cls}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${STAGE_META[selectedStage].dot}`} />
+                    {STAGE_META[selectedStage].label}
+                  </span>
+                )}
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${selected.handled ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+                  {selected.handled ? "Handled" : "New"}
+                </span>
+              </div>
             </div>
 
             {/* Contact actions */}
