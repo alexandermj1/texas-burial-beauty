@@ -254,6 +254,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         ) : (
           filtered.map((s, i) => {
             const isActive = selected?.id === s.id;
+            const stage = deriveStage(s);
+            const stageMeta = STAGE_META[stage];
             return (
               <motion.button
                 key={s.id}
@@ -271,9 +273,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="flex items-center gap-1.5 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
                       <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} size="xs" />
-                      {!s.handled && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" title="New" />}
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
+                      <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
+                      {stageMeta.label}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
                     <span className="text-primary/80">{sourceLabel(s.source)}</span>
