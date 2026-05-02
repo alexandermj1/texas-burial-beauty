@@ -1,3 +1,11 @@
+html, body {
+  /* Stop iOS rubber-band / wheel-overshoot from revealing space below the footer. */
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
+}
+
 #root {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
