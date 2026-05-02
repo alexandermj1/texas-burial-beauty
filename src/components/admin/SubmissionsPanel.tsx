@@ -30,6 +30,8 @@ export interface Submission {
   transfer_fee_amount?: number | null;
   quote_message?: string | null;
   quote_sent_at?: string | null;
+  quote_response?: string | null;
+  quote_responded_at?: string | null;
   customer_kind?: string | null;
   docusign_status?: string | null;
   docusign_sent_at?: string | null;
