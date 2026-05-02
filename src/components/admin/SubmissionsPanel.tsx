@@ -209,6 +209,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
           );
         })}
+      </div>
 
       {/* Pipeline stage rail — sellers move left → right through these stages */}
       <div className="lg:col-span-12">
