@@ -431,16 +431,49 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               />
             </div>
 
-            {/* Quote sent indicator */}
+            {/* Quote sent — record the customer's response to advance the pipeline */}
             {selected.quote_sent_at && (
-              <div className="bg-primary/5 border border-primary/15 rounded-lg p-3 text-xs text-foreground">
-                <span className="font-medium">Quote sent</span>
-                {selected.quote_amount ? ` · $${Number(selected.quote_amount).toLocaleString()}` : ""} ·{" "}
-                <span className="text-muted-foreground">
-                  {new Date(selected.quote_sent_at).toLocaleString("en-US", {
-                    month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-                  })}
-                </span>
+              <div className="bg-primary/5 border border-primary/15 rounded-lg p-3 space-y-2.5">
+                <div className="text-xs text-foreground">
+                  <span className="font-medium">Quote sent</span>
+                  {selected.quote_amount ? ` · $${Number(selected.quote_amount).toLocaleString()}` : ""} ·{" "}
+                  <span className="text-muted-foreground">
+                    {new Date(selected.quote_sent_at).toLocaleString("en-US", {
+                      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Response:</span>
+                  <button
+                    onClick={() => setQuoteResponse("accepted")}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                      selected.quote_response === "accepted"
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-card text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    <ThumbsUp className="w-3 h-3" /> Accepted
+                  </button>
+                  <button
+                    onClick={() => setQuoteResponse("declined")}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                      selected.quote_response === "declined"
+                        ? "bg-rose-600 text-white border-rose-600"
+                        : "bg-card text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    <ThumbsDown className="w-3 h-3" /> Declined
+                  </button>
+                  {selected.quote_responded_at && (
+                    <span className="text-[10px] text-muted-foreground">
+                      · {new Date(selected.quote_responded_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                  )}
+                </div>
+                {selected.quote_response === "accepted" && (
+                  <p className="text-[11px] text-emerald-700">Next: send paperwork via DocuSign and request required documents below.</p>
+                )}
               </div>
             )}
 
