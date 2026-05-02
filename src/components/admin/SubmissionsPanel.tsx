@@ -209,10 +209,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
           );
         })}
+
+      {/* Pipeline stage rail — sellers move left → right through these stages */}
+      <div className="lg:col-span-12">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          <button
+            onClick={() => setStageFilter("all")}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
+              stageFilter === "all" ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
+            }`}
+          >
+            All stages ({stageCount("all")})
+          </button>
+          <span className="text-muted-foreground/40 text-xs px-1">→</span>
+          {STAGE_ORDER.map((st, idx) => {
+            const meta = STAGE_META[st];
+            const isActive = stageFilter === st;
+            return (
+              <div key={st} className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => setStageFilter(st)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+                    isActive ? meta.cls.replace("/10", "/20") + " ring-1 ring-current/30" : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                  {meta.label} ({stageCount(st)})
+                </button>
+                {idx < STAGE_ORDER.length - 1 && <span className="text-muted-foreground/30 text-xs">→</span>}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
 
-      {/* List */}
       <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[70vh] overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="p-10 text-center">
