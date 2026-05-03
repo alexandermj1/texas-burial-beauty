@@ -1,16 +1,16 @@
 import { motion } from "framer-motion";
-import { Phone } from "lucide-react";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import SellerQuoteForm from "@/components/SellerQuoteForm";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import sellHeroBg from "@/assets/hero/cemetery-mountains.jpg";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const PHONE_DISPLAY = "(424) 234-1678";
 const PHONE_HREF = "tel:+14242341678";
@@ -18,30 +18,24 @@ const PHONE_HREF = "tel:+14242341678";
 const steps = [
   {
     num: "01",
-    title: "Tell us about your plot",
-    body: "Cemetery name, section, and any paperwork you have on hand. If you don't have the deed, that's fine — we'll take it from there.",
+    title: "Tell us about your plot.",
+    body: "Cemetery name, section, whatever paperwork you have. We take it from there.",
   },
   {
     num: "02",
-    title: "We value it against current Texas market data",
-    body: "Most cemeteries restrict resale prices, and most online estimates are wrong. We'll tell you plainly what your property can fetch in today's market and why.",
+    title: "We value it against current Texas market data.",
+    body: "Most cemeteries restrict resale prices. We'll tell you exactly what yours can fetch.",
   },
   {
     num: "03",
-    title: "We find the buyer and handle the cemetery transfer",
-    body: "Including the deed work, the cemetery's transfer fee, and any required forms. You don't speak to the cemetery — we do that on your behalf.",
+    title: "We find the buyer and handle the cemetery transfer.",
+    body: "Including the deed, the cemetery's transfer fee, and any required forms.",
   },
   {
     num: "04",
     title: "You sign once. We wire your funds.",
-    body: "Most sales close in 60–120 days, depending on the cemetery's official transfer timeline.",
+    body: "Most sales close in 60 to 120 days.",
   },
-];
-
-const ranges = [
-  { label: "Houston metro · lawn section", value: "$1,800 – $3,500" },
-  { label: "DFW · companion plot", value: "$3,200 – $6,800" },
-  { label: "Austin · mausoleum crypt", value: "$5,500 – $14,000" },
 ];
 
 const faqs = [
@@ -63,7 +57,7 @@ const faqs = [
   },
   {
     q: "What fees are involved?",
-    a: "There are no upfront fees. We are paid a commission only when your plot sells. The cemetery typically charges a transfer fee (usually $100–$400), which is paid out of the sale proceeds at closing.",
+    a: "There are no upfront fees. We are paid a commission only when your plot sells. The cemetery typically charges a transfer fee of $100 to $400, paid out of the sale proceeds at closing.",
   },
   {
     q: "Do I owe taxes on the sale?",
@@ -74,10 +68,162 @@ const faqs = [
     a: "All listed owners or heirs typically need to sign the transfer documents. We can coordinate signatures across multiple family members, even in different states, and we'll guide you through what the cemetery requires.",
   },
   {
-    q: "Can I sell just one plot out of a family estate?",
+    q: "Can I sell just one plot from a family estate?",
     a: "Yes. Family estates of two, four, six or more spaces can be sold whole or split, depending on the cemetery's rules. We'll review your specific section and let you know which is likely to net you more.",
   },
 ];
+
+const InlineValuationForm = () => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cemetery: "",
+    city: "",
+    notes: "",
+  });
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.cemetery.trim()) {
+      toast({ title: "Please fill in name, email, and cemetery.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from("contact_submissions" as any).insert({
+      source: "seller_quote",
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim() || null,
+      cemetery: form.cemetery.trim(),
+      details: [form.city.trim() && `City: ${form.city.trim()}`, form.notes.trim()]
+        .filter(Boolean)
+        .join("\n\n") || null,
+      created_at: new Date().toISOString(),
+    });
+    setLoading(false);
+    if (error) {
+      toast({
+        title: "Something went wrong",
+        description: "Please call or email us directly.",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({
+      title: "Valuation request received.",
+      description: "We'll respond within 48 hours, usually sooner.",
+    });
+    setForm({ name: "", email: "", phone: "", cemetery: "", city: "", notes: "" });
+  };
+
+  const labelCls =
+    "block text-[11px] font-medium tracking-[0.18em] uppercase text-foreground/60 mb-2";
+  const inputCls =
+    "w-full h-[52px] px-4 bg-background border border-foreground/15 text-foreground text-[15px] rounded-md " +
+    "placeholder:text-foreground/30 transition-colors duration-300 " +
+    "focus:outline-none focus:border-primary focus:ring-0";
+
+  return (
+    <form
+      id="quote-form"
+      onSubmit={onSubmit}
+      className="bg-[hsl(var(--card))] border border-foreground/10 rounded-[10px] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.18)] p-8 md:p-12"
+    >
+      <h2 className="font-display text-2xl md:text-[28px] text-foreground leading-tight">
+        Request a Free Valuation
+      </h2>
+      <p className="text-[15px] text-muted-foreground mt-2 mb-8">
+        We'll respond within 48 hours, usually sooner.
+      </p>
+
+      <div className="space-y-5">
+        <div>
+          <label className={labelCls} htmlFor="vf-name">Full name</label>
+          <input
+            id="vf-name"
+            className={inputCls}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            autoComplete="name"
+          />
+        </div>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div>
+            <label className={labelCls} htmlFor="vf-email">Email</label>
+            <input
+              id="vf-email"
+              type="email"
+              className={inputCls}
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              autoComplete="email"
+            />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="vf-phone">Phone</label>
+            <input
+              id="vf-phone"
+              className={inputCls}
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              autoComplete="tel"
+            />
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div>
+            <label className={labelCls} htmlFor="vf-cem">Cemetery name</label>
+            <input
+              id="vf-cem"
+              className={inputCls}
+              value={form.cemetery}
+              onChange={(e) => setForm({ ...form, cemetery: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="vf-city">City</label>
+            <input
+              id="vf-city"
+              className={inputCls}
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+            />
+          </div>
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="vf-notes">
+            Anything we should know <span className="normal-case tracking-normal text-foreground/40">— optional</span>
+          </label>
+          <textarea
+            id="vf-notes"
+            rows={3}
+            className={
+              "w-full px-4 py-3 bg-background border border-foreground/15 text-foreground text-[15px] rounded-md " +
+              "placeholder:text-foreground/30 transition-colors duration-300 resize-none " +
+              "focus:outline-none focus:border-primary"
+            }
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-[56px] mt-2 bg-primary text-primary-foreground rounded-md font-medium text-[15px] tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          {loading ? "Sending…" : "Request My Free Valuation"}
+        </button>
+        <p className="text-[12px] text-muted-foreground/80 text-center">
+          No obligation. We never share your information.
+        </p>
+      </div>
+    </form>
+  );
+};
 
 const SellProperty = () => {
   return (
@@ -97,241 +243,190 @@ const SellProperty = () => {
       />
       <Navbar />
 
-      {/* 1. Hero — editorial, left-aligned, photo on the right */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28">
+      {/* 1. Hero — form is the centerpiece */}
+      <section className="relative pt-32 md:pt-40 pb-24 md:pb-32 overflow-hidden">
+        {/* faint atmospheric texture */}
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 10%, hsl(var(--foreground)) 0, transparent 40%), radial-gradient(circle at 80% 90%, hsl(var(--primary)) 0, transparent 50%)",
+          }}
+        />
         <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-12 gap-10 md:gap-16 items-center">
+          <div className="grid md:grid-cols-12 gap-12 md:gap-20 items-start">
+            {/* Left: editorial copy */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="md:col-span-5 md:pt-6"
+            >
+              <p className="text-foreground/60 text-[11px] tracking-[0.28em] uppercase mb-8">
+                Texas Cemetery Brokers — Licensed Plot Resale
+              </p>
+              <h1 className="font-display text-[42px] sm:text-5xl md:text-[60px] lg:text-[68px] text-foreground leading-[1.05] tracking-tight">
+                Selling a cemetery plot is{" "}
+                <span className="italic font-light text-foreground/75">more delicate</span>{" "}
+                than selling a house. We treat it that way.
+              </h1>
+              <div className="mt-10 max-w-md space-y-4 text-[16px] md:text-[17px] text-muted-foreground leading-[1.7]">
+                <p>
+                  We handle the cemetery, the buyer, and the paperwork. You sign once at the end and receive your funds.
+                </p>
+                <p>
+                  Most families come to us sorting out an estate or a plot a parent purchased decades ago. They want it handled, plainly, by people who have done it before.
+                </p>
+              </div>
+
+              <div className="mt-12 h-px w-16 bg-foreground/20" />
+              <ul className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-foreground/70">
+                <li>Licensed in Texas</li>
+                <li className="text-foreground/20">·</li>
+                <li>10,000+ families helped</li>
+                <li className="text-foreground/20">·</li>
+                <li>No fee until sale</li>
+                <li className="text-foreground/20">·</li>
+                <li>BBB Accredited</li>
+              </ul>
+            </motion.div>
+
+            {/* Right: the form */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
               className="md:col-span-7"
             >
-              <p className="text-primary font-medium text-xs tracking-[0.3em] uppercase mb-6">
-                For Texas families
-              </p>
-              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.05] tracking-tight">
-                Selling a cemetery plot{" "}
-                <span className="italic font-light text-foreground/80">
-                  you no longer need.
-                </span>
-              </h1>
-              <p className="mt-8 max-w-xl text-lg md:text-xl font-light text-muted-foreground leading-relaxed">
-                We handle the paperwork, the cemetery, and the buyer. You sign at the end and receive your funds.
-              </p>
-
-              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
-                <a
-                  href="#quote-form"
-                  className="inline-flex items-center px-7 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all"
-                >
-                  Get a Free Valuation
-                </a>
-                <a
-                  href={PHONE_HREF}
-                  className="text-foreground/70 hover:text-foreground text-sm underline underline-offset-4 decoration-foreground/30"
-                >
-                  Or call us: {PHONE_DISPLAY}
-                </a>
-              </div>
-
-              <p className="mt-6 text-sm text-muted-foreground/80 max-w-md">
-                No obligation. No upfront fees. Most valuations returned within 48 hours.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.2 }}
-              className="md:col-span-5"
-            >
-              <div className="relative aspect-[4/5] overflow-hidden rounded-sm shadow-hover">
-                <img
-                  src={sellHeroBg}
-                  alt="A quiet Texas cemetery in the soft light of late afternoon."
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <InlineValuationForm />
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* 2. Trust strip */}
-      <section className="border-y border-foreground/10">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-foreground/70">
-            <span>Licensed in Texas</span>
-            <span className="hidden sm:inline text-foreground/20">|</span>
-            <span>10,000+ families helped through our network since 1996</span>
-            <span className="hidden sm:inline text-foreground/20">|</span>
-            <span>BBB Accredited</span>
-            <span className="hidden sm:inline text-foreground/20">|</span>
-            <span>No fee until your plot sells</span>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. How it works — vertical, not card grid */}
-      <section className="py-24 md:py-32">
+      {/* 2. Quiet testimonial */}
+      <section className="py-32 md:py-40">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-16">
-            <p className="text-primary font-medium text-xs tracking-[0.3em] uppercase mb-4">
-              How it works
-            </p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-tight">
-              Four steps. We do most of them for you.
-            </h2>
-          </div>
-
-          <div className="max-w-3xl mx-auto">
-            {steps.map((s, i) => (
-              <motion.div
-                key={s.num}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-                className="grid grid-cols-[auto_1fr] gap-6 md:gap-10 py-8 border-b border-foreground/10 last:border-0"
-              >
-                <span className="font-display text-3xl md:text-4xl text-primary/60 tabular-nums">
-                  {s.num}
-                </span>
-                <div>
-                  <h3 className="font-display text-xl md:text-2xl text-foreground mb-2">
-                    {s.title}
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">{s.body}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. What your plot is likely worth — broken grid */}
-      <section className="py-24 bg-card/50">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-12 gap-10 md:gap-16">
-            <div className="md:col-span-7 md:col-start-1">
-              <p className="text-primary font-medium text-xs tracking-[0.3em] uppercase mb-4">
-                What it's worth
-              </p>
-              <h2 className="font-display text-3xl md:text-4xl text-foreground leading-tight mb-6">
-                Texas plot values vary more than people expect.
-              </h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Value depends on the specific cemetery, the section, the type of property — single, companion, or family estate — and what the cemetery itself currently charges for an equivalent space. A plot at a busy Houston memorial park behaves nothing like one in a small-town section in West Texas. We compare yours against actual recent sales, not a national average, and we tell you the truth even when it isn't what you hoped to hear.
-              </p>
-            </div>
-
-            <div className="md:col-span-4 md:col-start-9">
-              <div className="border border-foreground/10 bg-background p-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-foreground/50 mb-5">
-                  Illustrative ranges
-                </p>
-                <ul className="space-y-5">
-                  {ranges.map((r) => (
-                    <li key={r.label} className="border-b border-foreground/10 pb-4 last:border-0 last:pb-0">
-                      <p className="text-sm text-muted-foreground">{r.label}</p>
-                      <p className="font-display text-lg text-foreground mt-1">{r.value}</p>
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-xs text-muted-foreground/70 mt-6 leading-relaxed">
-                  Ranges are illustrative of recent Texas comparables. Your property's value depends on the specific cemetery and section.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Why families choose us — paragraph, not a feature grid */}
-      <section className="py-24">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl">
-            <p className="text-primary font-medium text-xs tracking-[0.3em] uppercase mb-4">
-              Why families choose us
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground leading-tight mb-8">
-              We're a small Texas firm doing one thing carefully.
-            </h2>
-            <p className="text-lg text-foreground/80 font-light leading-[1.7]">
-              Most of our clients are sorting out an estate or selling a plot a parent purchased decades ago. They've never done this before, and they don't want a sales pitch — they want it handled. <span className="font-medium text-foreground">We work only in Texas.</span> <span className="font-medium text-foreground">We never charge upfront.</span> <span className="font-medium text-foreground">We handle the cemetery directly so you don't have to.</span> When the sale closes, we send your funds and you're done.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Testimonial */}
-      <section className="py-24 border-y border-foreground/10 bg-card/40">
-        <div className="container mx-auto px-6">
-          <figure className="max-w-4xl mx-auto text-center">
-            <blockquote className="font-display text-2xl md:text-4xl text-foreground leading-[1.3] italic font-light">
-              &ldquo;After my mother passed, I had no idea what to do with the plots my parents bought in 1987. They handled everything. I never had to call the cemetery once.&rdquo;
+          <figure className="max-w-3xl mx-auto text-center">
+            <blockquote className="font-display text-2xl md:text-[34px] text-foreground leading-[1.4] italic font-light">
+              &ldquo;After my mother passed, I had no idea what to do with the plots my parents bought in 1987. They handled everything — I never once had to call the cemetery.&rdquo;
             </blockquote>
-            <figcaption className="mt-8 text-sm text-muted-foreground tracking-wide">
-              Linda M. &middot; San Antonio, TX
+            <figcaption className="mt-10 text-[13px] text-muted-foreground tracking-[0.15em] uppercase">
+              Linda M. — San Antonio
             </figcaption>
           </figure>
         </div>
       </section>
 
-      {/* The form — keep existing component */}
-      <SellerQuoteForm />
-
-      {/* 7. FAQ */}
-      <section className="py-24 md:py-32">
+      {/* 3. How it works — editorial numbered list */}
+      <section className="py-24 md:py-32 border-t border-foreground/10">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto">
-            <p className="text-primary font-medium text-xs tracking-[0.3em] uppercase mb-4">
-              Common questions
+          <div className="max-w-3xl mb-20">
+            <p className="text-foreground/60 text-[11px] tracking-[0.28em] uppercase mb-5">
+              The process
             </p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-tight mb-12">
-              The things sellers actually ask.
+            <h2 className="font-display text-3xl md:text-[44px] text-foreground leading-[1.15]">
+              How selling a plot through us works.
             </h2>
+          </div>
 
-            <Accordion type="single" collapsible className="border-t border-foreground/10">
-              {faqs.map((faq, i) => (
-                <AccordionItem
-                  key={i}
-                  value={`faq-${i}`}
-                  className="border-b border-foreground/10"
+          <div className="max-w-4xl mx-auto space-y-16 md:space-y-20">
+            {steps.map((s, i) => (
+              <motion.div
+                key={s.num}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.6, delay: i * 0.05, ease: "easeOut" }}
+                className="grid grid-cols-[auto_1fr] gap-8 md:gap-16 items-start"
+              >
+                <span
+                  className="font-display font-light text-foreground/15 tabular-nums leading-none select-none"
+                  style={{ fontSize: "clamp(56px, 9vw, 96px)" }}
                 >
-                  <AccordionTrigger className="font-display text-base md:text-lg text-foreground hover:no-underline py-6 text-left">
-                    {faq.q}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground leading-relaxed pb-6 text-base max-w-2xl">
-                    {faq.a}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                  {s.num}
+                </span>
+                <div className="pt-4 md:pt-6 max-w-xl">
+                  <h3 className="font-display text-xl md:text-2xl text-foreground leading-snug mb-3">
+                    {s.title}
+                  </h3>
+                  <p className="text-[16px] text-muted-foreground leading-[1.7]">
+                    {s.body}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="max-w-4xl mx-auto mt-20">
+            <a
+              href="#quote-form"
+              className="inline-flex items-center gap-2 text-foreground border-b border-foreground/30 pb-1 hover:border-primary hover:text-primary transition-colors text-[15px]"
+            >
+              Ready to start? Request your valuation
+              <span aria-hidden>→</span>
+            </a>
           </div>
         </div>
       </section>
 
-      {/* 8. Final CTA — quiet */}
-      <section className="py-24 border-t border-foreground/10">
+      {/* 4. FAQ — editorial two-column */}
+      <section className="py-24 md:py-32 border-t border-foreground/10">
         <div className="container mx-auto px-6">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="font-display text-3xl md:text-4xl text-foreground leading-tight mb-8">
-              Ready to know what your plot is worth?
+          <div className="grid md:grid-cols-12 gap-12 md:gap-20">
+            <div className="md:col-span-4">
+              <p className="text-foreground/60 text-[11px] tracking-[0.28em] uppercase mb-5">
+                Common questions
+              </p>
+              <h2 className="font-display text-3xl md:text-[40px] text-foreground leading-[1.15] mb-6">
+                Questions families ask.
+              </h2>
+              <p className="text-muted-foreground leading-[1.7] text-[15px] max-w-sm">
+                Most sellers have never done this before. These are the questions that come up first. If yours isn't here, call us — we'll answer plainly.
+              </p>
+            </div>
+            <div className="md:col-span-8">
+              <Accordion type="single" collapsible className="border-t border-foreground/15">
+                {faqs.map((faq, i) => (
+                  <AccordionItem
+                    key={i}
+                    value={`faq-${i}`}
+                    className="border-b border-foreground/15"
+                  >
+                    <AccordionTrigger className="font-display text-base md:text-lg text-foreground hover:no-underline py-6 text-left">
+                      {faq.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground leading-[1.75] pb-6 text-[15px] max-w-2xl">
+                      {faq.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Final quiet CTA */}
+      <section className="py-32 md:py-40 border-t border-foreground/10">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl">
+            <h2 className="font-display text-3xl md:text-[44px] text-foreground leading-[1.2] font-light mb-10">
+              When you're ready, we're here. <span className="italic text-foreground/70">We'll handle the rest.</span>
             </h2>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
               <a
                 href="#quote-form"
-                className="inline-flex items-center px-7 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all"
+                className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground rounded-md text-[14px] font-medium tracking-wide hover:opacity-90 transition-opacity"
               >
-                Get a Free Valuation
+                Request a Free Valuation
               </a>
               <a
                 href={PHONE_HREF}
-                className="inline-flex items-center gap-2 text-foreground/80 hover:text-foreground text-sm"
+                className="text-foreground/70 hover:text-foreground text-[14px] underline underline-offset-4 decoration-foreground/30"
               >
-                <Phone className="w-4 h-4" /> {PHONE_DISPLAY}
+                Or call {PHONE_DISPLAY}
               </a>
             </div>
           </div>
