@@ -456,21 +456,32 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </div>
 
             {/* Kind-specific journey:
-                - Sellers: Bayer 8-stage pipeline (dominant) + DocuSign/document tracker
-                - Buyers:  recommended-plots tracker + notes (no DocuSign / paperwork)
+                - Sellers: Bayer 8-stage pipeline is dominant. The Dropbox Sign + document
+                  checklist only appears once they reach the L.A. issuance stage.
+                - Buyers:  recommended-plots tracker only (no Dropbox / paperwork).
                 - Other:   linked email thread only via CustomerJourney */}
-            {selectedKind === "seller" && (
-              <>
-                <BayerPipelinePanel
-                  submission={selected}
-                  onPatch={(patch) => onUpdate(selected.id, patch)}
-                />
-                <CustomerJourney
-                  submission={selected}
-                  onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
-                />
-              </>
-            )}
+            {selectedKind === "seller" && (() => {
+              const dropboxStages: BayerStage[] = [
+                "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
+                "la_confirmed_poa_issued", "awaiting_notarized_docs",
+                "file_compiled", "listing_live",
+              ];
+              const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
+              return (
+                <>
+                  <BayerPipelinePanel
+                    submission={selected}
+                    onPatch={(patch) => onUpdate(selected.id, patch)}
+                  />
+                  {showDropbox && (
+                    <CustomerJourney
+                      submission={selected}
+                      onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                    />
+                  )}
+                </>
+              );
+            })()}
 
             {selectedKind === "buyer" && (
               <BuyerJourneyPanel
@@ -555,6 +566,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             open={declineOpen}
             onClose={() => setDeclineOpen(false)}
           />
+          {selected.cemetery && (
+            <CemeteryMatchDialog
+              open={matchOpen}
+              onClose={() => setMatchOpen(false)}
+              cemetery={selected.cemetery}
+              city={(selected as any).cemetery_city || selected.region}
+              propertyType={selected.property_type}
+              spaces={selected.spaces}
+            />
+          )}
         </>
       )}
     </div>
