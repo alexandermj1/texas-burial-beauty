@@ -345,17 +345,53 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* 3. How it works — editorial numbered list */}
-      <section className="py-24 md:py-32 border-t border-foreground/10">
+      {/* 2.5 Stats / trust band */}
+      <section className="py-20 border-y border-foreground/10 bg-[hsl(var(--card))]/40 backdrop-blur-sm">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-12 gap-x-8 max-w-5xl mx-auto">
+            {[
+              { n: "10,000+", l: "Texas families helped" },
+              { n: "60–120", l: "Days to close, on average" },
+              { n: "$0", l: "Upfront — commission only" },
+              { n: "48 hr", l: "Valuation turnaround" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.l}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.55, delay: i * 0.08, ease: "easeOut" }}
+                className="text-center"
+              >
+                <div className="font-display text-3xl md:text-[40px] text-foreground leading-none">
+                  {s.n}
+                </div>
+                <div className="mt-3 text-[11px] tracking-[0.2em] uppercase text-muted-foreground">
+                  {s.l}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. How it works — editorial numbered list */}
+      <section className="py-24 md:py-32">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7 }}
+            className="max-w-3xl mb-20"
+          >
             <p className="text-foreground/60 text-[11px] tracking-[0.28em] uppercase mb-5">
               The process
             </p>
             <h2 className="font-display text-3xl md:text-[44px] text-foreground leading-[1.15]">
               How selling a plot through us works.
             </h2>
-          </div>
+          </motion.div>
 
           <div className="max-w-4xl mx-auto space-y-16 md:space-y-20">
             {steps.map((s, i) => (
