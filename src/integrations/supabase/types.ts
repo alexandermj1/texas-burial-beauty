@@ -568,6 +568,36 @@ export type Database = {
           },
         ]
       }
+      customer_notes: {
+        Row: {
+          author_name: string | null
+          author_user_id: string | null
+          body: string
+          created_at: string
+          customer_profile_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          author_user_id?: string | null
+          body: string
+          created_at?: string
+          customer_profile_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          author_user_id?: string | null
+          body?: string
+          created_at?: string
+          customer_profile_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_profiles: {
         Row: {
           alt_emails: string[] | null
