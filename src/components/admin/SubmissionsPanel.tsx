@@ -264,6 +264,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 }`}
               >
                 <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
+                <img
+                  src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                  alt=""
+                  className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
@@ -283,6 +288,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   )}
                   <p className="text-xs text-muted-foreground truncate">
                     <span className="text-primary/80">{sourceLabel(s.source)}</span>
+                    {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
                     {s.cemetery ? ` · ${s.cemetery}` : ""}
                     {s.cemetery && countFor(s.cemetery) > 0 ? (
                       <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
