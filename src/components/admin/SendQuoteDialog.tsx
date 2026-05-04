@@ -93,29 +93,23 @@ ${WEBSITE}`;
 const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
   const [quote, setQuote] = useState("");
   const [transferFee, setTransferFee] = useState("");
+  const [retail, setRetail] = useState("");
   const [customMessage, setCustomMessage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
-      // Auto-populate from the Stage 1 intake fields (cemetery_retail / transfer_fee_amount)
-      // when no quote has been entered yet, so the admin doesn't have to retype them.
+      // Auto-populate from the Stage 1 intake fields (cemetery_retail /
+      // transfer_fee_amount) so the admin doesn't have to retype them.
       const intakeRetail = (submission as any).cemetery_retail;
-      const intakeFee = submission.transfer_fee_amount;
       setQuote(submission.quote_amount ? String(submission.quote_amount) : "");
-      setTransferFee(
-        submission.transfer_fee_amount != null
-          ? String(submission.transfer_fee_amount)
-          : intakeFee != null ? String(intakeFee) : "",
-      );
+      setTransferFee(submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : "");
       setRetail(intakeRetail != null ? String(intakeRetail) : "");
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
     }
   }, [open, submission]);
-
-  const [retail, _setRetail] = [undefined, undefined] as any; // placeholder line, real state below
 
   const subject = buildSubject(submission);
   const body = buildBody(submission, quote, transferFee, customMessage);
