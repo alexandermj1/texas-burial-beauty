@@ -11,6 +11,11 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import heroPalms from "@/assets/hero/cemetery-palms.jpg";
+import heroHillside from "@/assets/hero/cemetery-hillside.jpg";
+import heroMural from "@/assets/hero/cemetery-mural.jpg";
+import heroCathedral from "@/assets/hero/cemetery-cathedral.jpg";
+import heroGarden from "@/assets/hero-garden.jpg";
 
 const PHONE_DISPLAY = "(424) 234-1678";
 const PHONE_HREF = "tel:+14242341678";
