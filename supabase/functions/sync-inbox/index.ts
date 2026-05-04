@@ -316,6 +316,7 @@ Deno.serve(async (req) => {
             deed_owner_names: parsed.deed_owner_names,
             deed_owners_status: parsed.deed_owners_status,
             relationship_to_owner: parsed.relationship_to_owner,
+            purchase_info: parsed.purchase_info,
             message: parsed.additional_info,
             source_email_id: em.id,
             created_at: em.received_at,
@@ -382,6 +383,7 @@ interface BayerSellAPlot {
   deed_owner_names: string | null;
   deed_owners_status: string | null;
   relationship_to_owner: string | null;
+  purchase_info: string | null;
   additional_info: string | null;
 }
 
@@ -401,14 +403,31 @@ function parseBayerSellAPlot(subject: string, fromEmail: string, body: string): 
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
 
-  const grab = (label: string): string | null => {
-    const re = new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\??$`, "i");
-    for (let i = 0; i < lines.length; i++) {
-      if (re.test(lines[i])) {
-        // Return the next non-blank line that is NOT itself a known label.
-        const next = lines[i + 1];
-        if (next && !/^(Name|Email|Phone|Cemetery name|Cemetery City and State|Number of plots\/spaces|Description and location of plots\/spaces|Plot owner.*name as it appears on the deed|Are the plot owner.*currently living or deceased|Your relationship to the plot owner|Any additional information.*)$/i.test(next)) {
-          return next;
+  const KNOWN_LABELS = [
+    "Name", "Email", "Phone",
+    "Cemetery name", "Cemetery City and State",
+    "Number of plots/spaces", "Description and location of plots/spaces",
+    "Plot owner's name as it appears on the deed",
+    "Plot owners name as it appears on the deed",
+    "Are the plot owner/s named on the deed currently living or deceased?",
+    "Are the plot owners named on the deed currently living or deceased?",
+    "Your relationship to the plot owner/s named on the deed",
+    "Your relationship to the plot owners named on the deed",
+    "When was the plot/s purchased and for what amount? (estimate is OK)",
+    "When was the plots purchased and for what amount? (estimate is OK)",
+    "When was the plot purchased and for what amount? (estimate is OK)",
+    "Any additional information you'd like us to know?",
+    "Any additional information youd like us to know?",
+  ];
+  const isLabel = (s: string) => KNOWN_LABELS.some((l) => l.toLowerCase() === s.toLowerCase().replace(/\s+/g, " ").trim());
+
+  const grab = (...labels: string[]): string | null => {
+    for (const label of labels) {
+      const target = label.toLowerCase();
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].toLowerCase() === target) {
+          const next = lines[i + 1];
+          if (next && !isLabel(next)) return next;
         }
       }
     }
@@ -424,9 +443,10 @@ function parseBayerSellAPlot(subject: string, fromEmail: string, body: string): 
     cemetery_city: grab("Cemetery City and State"),
     spaces: grab("Number of plots/spaces"),
     details: grab("Description and location of plots/spaces"),
-    deed_owner_names: grab("Plot owner'?s? name as it appears on the deed"),
-    deed_owners_status: grab("Are the plot owner/?s? named on the deed currently living or deceased\\??"),
-    relationship_to_owner: grab("Your relationship to the plot owner/?s? named on the deed"),
-    additional_info: grab("Any additional information you'?d like us to know\\??"),
+    deed_owner_names: grab("Plot owner's name as it appears on the deed", "Plot owners name as it appears on the deed"),
+    deed_owners_status: grab("Are the plot owner/s named on the deed currently living or deceased?", "Are the plot owners named on the deed currently living or deceased?"),
+    relationship_to_owner: grab("Your relationship to the plot owner/s named on the deed", "Your relationship to the plot owners named on the deed"),
+    purchase_info: grab("When was the plot/s purchased and for what amount? (estimate is OK)", "When was the plots purchased and for what amount? (estimate is OK)", "When was the plot purchased and for what amount? (estimate is OK)"),
+    additional_info: grab("Any additional information you'd like us to know?", "Any additional information youd like us to know?"),
   };
 }

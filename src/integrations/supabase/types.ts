@@ -326,6 +326,7 @@ export type Database = {
           pipeline_stage_override: string | null
           plot_count: number | null
           property_type: string | null
+          purchase_info: string | null
           quote_amount: number | null
           quote_approved_by: string | null
           quote_expires_at: string | null
@@ -404,6 +405,7 @@ export type Database = {
           pipeline_stage_override?: string | null
           plot_count?: number | null
           property_type?: string | null
+          purchase_info?: string | null
           quote_amount?: number | null
           quote_approved_by?: string | null
           quote_expires_at?: string | null
@@ -482,6 +484,7 @@ export type Database = {
           pipeline_stage_override?: string | null
           plot_count?: number | null
           property_type?: string | null
+          purchase_info?: string | null
           quote_amount?: number | null
           quote_approved_by?: string | null
           quote_expires_at?: string | null
