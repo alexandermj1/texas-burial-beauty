@@ -226,14 +226,21 @@ export type Database = {
       }
       contact_submissions: {
         Row: {
+          acceptance_channel: string | null
           admin_notes: string | null
+          authorization_confirmed: boolean | null
+          authorization_notes: string | null
           budget: string | null
           cemetery: string | null
+          cemetery_retail: number | null
+          cemetery_verified_ownership: boolean | null
           closed_at: string | null
           closed_outcome: string | null
           created_at: string
           customer_kind: string | null
           customer_profile_id: string | null
+          death_cert_on_file: boolean | null
+          deed_on_file: boolean | null
           details: string | null
           documents_requested_at: string | null
           docusign_envelope_url: string | null
@@ -241,24 +248,50 @@ export type Database = {
           docusign_signed_at: string | null
           docusign_status: string
           email: string | null
+          gdrive_url: string | null
+          gov_id_on_file: boolean | null
           handled: boolean
           handled_at: string | null
           handled_by_name: string | null
           handled_by_user_id: string | null
           id: string
+          inquiry_channel: string | null
+          la_countersigned_at: string | null
+          la_issued_at: string | null
+          la_signature_expires_at: string | null
+          la_signed_at: string | null
+          lawn: string | null
+          listing_live_at: string | null
+          listing_number: string | null
+          listing_option: string | null
+          listing_url: string | null
           message: string | null
+          morgued_at: string | null
+          multi_owner_perm_required: boolean | null
+          multi_owner_perm_signed_at: string | null
           name: string | null
+          ownership_type: string | null
+          payment_link_sent_at: string | null
+          payment_received_at: string | null
           phone: string | null
+          pipeline_stage_override: string | null
+          plot_count: number | null
           property_type: string | null
           quote_amount: number | null
+          quote_approved_by: string | null
+          quote_expires_at: string | null
           quote_message: string | null
+          quote_net_amount: number | null
           quote_responded_at: string | null
           quote_response: string | null
           quote_sent_at: string | null
+          quote_template: string | null
+          receipt_sent_at: string | null
           region: string | null
           section: string | null
           source: string
           source_email_id: string | null
+          space_numbers: string | null
           spaces: string | null
           state: string | null
           timeline: string | null
@@ -266,14 +299,21 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acceptance_channel?: string | null
           admin_notes?: string | null
+          authorization_confirmed?: boolean | null
+          authorization_notes?: string | null
           budget?: string | null
           cemetery?: string | null
+          cemetery_retail?: number | null
+          cemetery_verified_ownership?: boolean | null
           closed_at?: string | null
           closed_outcome?: string | null
           created_at?: string
           customer_kind?: string | null
           customer_profile_id?: string | null
+          death_cert_on_file?: boolean | null
+          deed_on_file?: boolean | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -281,24 +321,50 @@ export type Database = {
           docusign_signed_at?: string | null
           docusign_status?: string
           email?: string | null
+          gdrive_url?: string | null
+          gov_id_on_file?: boolean | null
           handled?: boolean
           handled_at?: string | null
           handled_by_name?: string | null
           handled_by_user_id?: string | null
           id?: string
+          inquiry_channel?: string | null
+          la_countersigned_at?: string | null
+          la_issued_at?: string | null
+          la_signature_expires_at?: string | null
+          la_signed_at?: string | null
+          lawn?: string | null
+          listing_live_at?: string | null
+          listing_number?: string | null
+          listing_option?: string | null
+          listing_url?: string | null
           message?: string | null
+          morgued_at?: string | null
+          multi_owner_perm_required?: boolean | null
+          multi_owner_perm_signed_at?: string | null
           name?: string | null
+          ownership_type?: string | null
+          payment_link_sent_at?: string | null
+          payment_received_at?: string | null
           phone?: string | null
+          pipeline_stage_override?: string | null
+          plot_count?: number | null
           property_type?: string | null
           quote_amount?: number | null
+          quote_approved_by?: string | null
+          quote_expires_at?: string | null
           quote_message?: string | null
+          quote_net_amount?: number | null
           quote_responded_at?: string | null
           quote_response?: string | null
           quote_sent_at?: string | null
+          quote_template?: string | null
+          receipt_sent_at?: string | null
           region?: string | null
           section?: string | null
           source?: string
           source_email_id?: string | null
+          space_numbers?: string | null
           spaces?: string | null
           state?: string | null
           timeline?: string | null
@@ -306,14 +372,21 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acceptance_channel?: string | null
           admin_notes?: string | null
+          authorization_confirmed?: boolean | null
+          authorization_notes?: string | null
           budget?: string | null
           cemetery?: string | null
+          cemetery_retail?: number | null
+          cemetery_verified_ownership?: boolean | null
           closed_at?: string | null
           closed_outcome?: string | null
           created_at?: string
           customer_kind?: string | null
           customer_profile_id?: string | null
+          death_cert_on_file?: boolean | null
+          deed_on_file?: boolean | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -321,24 +394,50 @@ export type Database = {
           docusign_signed_at?: string | null
           docusign_status?: string
           email?: string | null
+          gdrive_url?: string | null
+          gov_id_on_file?: boolean | null
           handled?: boolean
           handled_at?: string | null
           handled_by_name?: string | null
           handled_by_user_id?: string | null
           id?: string
+          inquiry_channel?: string | null
+          la_countersigned_at?: string | null
+          la_issued_at?: string | null
+          la_signature_expires_at?: string | null
+          la_signed_at?: string | null
+          lawn?: string | null
+          listing_live_at?: string | null
+          listing_number?: string | null
+          listing_option?: string | null
+          listing_url?: string | null
           message?: string | null
+          morgued_at?: string | null
+          multi_owner_perm_required?: boolean | null
+          multi_owner_perm_signed_at?: string | null
           name?: string | null
+          ownership_type?: string | null
+          payment_link_sent_at?: string | null
+          payment_received_at?: string | null
           phone?: string | null
+          pipeline_stage_override?: string | null
+          plot_count?: number | null
           property_type?: string | null
           quote_amount?: number | null
+          quote_approved_by?: string | null
+          quote_expires_at?: string | null
           quote_message?: string | null
+          quote_net_amount?: number | null
           quote_responded_at?: string | null
           quote_response?: string | null
           quote_sent_at?: string | null
+          quote_template?: string | null
+          receipt_sent_at?: string | null
           region?: string | null
           section?: string | null
           source?: string
           source_email_id?: string | null
+          space_numbers?: string | null
           spaces?: string | null
           state?: string | null
           timeline?: string | null
@@ -733,6 +832,57 @@ export type Database = {
           },
         ]
       }
+      poa_records: {
+        Row: {
+          created_at: string
+          delivery_method: string | null
+          id: string
+          issued_at: string | null
+          mailed_at: string | null
+          notarized_at: string | null
+          notes: string | null
+          owner_name: string
+          poa_type: string
+          relation: string | null
+          returned_at: string | null
+          status: string
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_method?: string | null
+          id?: string
+          issued_at?: string | null
+          mailed_at?: string | null
+          notarized_at?: string | null
+          notes?: string | null
+          owner_name: string
+          poa_type?: string
+          relation?: string | null
+          returned_at?: string | null
+          status?: string
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_method?: string | null
+          id?: string
+          issued_at?: string | null
+          mailed_at?: string | null
+          notarized_at?: string | null
+          notes?: string | null
+          owner_name?: string
+          poa_type?: string
+          relation?: string | null
+          returned_at?: string | null
+          status?: string
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -863,6 +1013,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      quote_revisions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by_name: string | null
+          id: string
+          new_amount: number
+          prior_amount: number | null
+          reason: string | null
+          submission_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by_name?: string | null
+          id?: string
+          new_amount: number
+          prior_amount?: number | null
+          reason?: string | null
+          submission_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by_name?: string | null
+          id?: string
+          new_amount?: number
+          prior_amount?: number | null
+          reason?: string | null
+          submission_id?: string
+        }
+        Relationships: []
       }
       reminder_log: {
         Row: {

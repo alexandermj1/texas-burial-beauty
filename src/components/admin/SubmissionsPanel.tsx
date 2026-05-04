@@ -6,6 +6,7 @@ import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import CustomerJourney from "./CustomerJourney";
+import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { useActiveListings } from "@/hooks/useActiveListings";
 
 export interface Submission {
@@ -475,6 +476,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <p className="text-[11px] text-emerald-700">Next: send paperwork via DocuSign and request required documents below.</p>
                 )}
               </div>
+            )}
+
+            {/* Bayer 8-stage seller pipeline (shown for sellers) */}
+            {resolveKind(selected.customer_kind, selected.source) === "seller" && (
+              <BayerPipelinePanel
+                submission={selected}
+                onPatch={(patch) => onUpdate(selected.id, patch)}
+              />
             )}
 
             {/* Customer journey: DocuSign + documents + linked emails + reminders */}

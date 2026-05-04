@@ -3,6 +3,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const ADMINS: Array<{ email: string; password: string; full_name: string }> = [
   { email: "alexandermaclarenjames@gmail.com", password: "123456", full_name: "Alexander Maclaren James" },
   { email: "emmamaclaren@gmail.com", password: "123456", full_name: "Emma Maclaren" },
+  // Bayer staff (8-stage pipeline roles)
+  { email: "cathy@bayerbrokers.com", password: "Bayer123!", full_name: "Cathy (CC) — Quote approver" },
+  { email: "em@bayerbrokers.com", password: "Bayer123!", full_name: "EM — Forest Lawn / template owner" },
+  { email: "cici@bayerbrokers.com", password: "Bayer123!", full_name: "Cici (CA) — Quote sender / file scans" },
+  { email: "ym@bayerbrokers.com", password: "Bayer123!", full_name: "YM — Payment & document receipt" },
+  { email: "zm@bayerbrokers.com", password: "Bayer123!", full_name: "ZM — Website publisher" },
+  { email: "broker@bayerbrokers.com", password: "Bayer123!", full_name: "Senior Broker — L.A. countersign" },
 ];
 
 Deno.serve(async (req) => {
