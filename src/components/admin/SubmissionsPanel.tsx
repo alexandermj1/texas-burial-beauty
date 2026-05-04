@@ -77,7 +77,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
-  const [stageFilter, setStageFilter] = useState<Stage | "all">("all");
+  const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
@@ -97,22 +97,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusSubmissionId]);
 
+  // Bayer stages only apply to sellers; for everyone else stage filtering is a no-op.
+  const isSellerView = kindFilter === "seller";
+
   const filtered = useMemo(() => {
     return submissions.filter(s => {
       if (filter === "new" && s.handled) return false;
       if (filter === "handled" && !s.handled) return false;
       if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
-      if (stageFilter !== "all" && deriveStage(s) !== stageFilter) return false;
+      if (isSellerView && stageFilter !== "all" && deriveBayerStage(s as any) !== stageFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, stageFilter, searchQuery]);
+  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
-  const selectedStage = selected ? deriveStage(selected) : null;
+  const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
+  const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
@@ -123,21 +127,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const kindCount = (k: KindFilter) =>
     k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
 
-  // Stage counts — scoped to the current kind filter so numbers match the active view.
-  const stageBase = useMemo(() => kindBase.filter(s => {
-    if (kindFilter === "all") return true;
-    return resolveKind(s.customer_kind, s.source) === kindFilter;
-  }), [kindBase, kindFilter]);
-  const stageCount = (st: Stage | "all") =>
-    st === "all" ? stageBase.length : stageBase.filter(s => deriveStage(s) === st).length;
-
-  const setQuoteResponse = async (resp: "accepted" | "declined") => {
-    if (!selected) return;
-    await onUpdate(selected.id, {
-      quote_response: resp,
-      quote_responded_at: new Date().toISOString(),
-    } as any);
-  };
+  // Stage counts (sellers only).
+  const stageBase = useMemo(
+    () => kindBase.filter(s => resolveKind(s.customer_kind, s.source) === "seller"),
+    [kindBase],
+  );
+  const stageCount = (st: BayerStage | "all") =>
+    st === "all" ? stageBase.length : stageBase.filter(s => deriveBayerStage(s as any) === st).length;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
