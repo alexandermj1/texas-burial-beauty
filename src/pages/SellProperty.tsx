@@ -268,24 +268,32 @@ const SellProperty = () => {
 
       {/* 1. Hero — form is the centerpiece */}
       <section className="relative pt-32 md:pt-40 pb-24 md:pb-32 overflow-hidden">
-        {/* decorative blooms */}
-        <motion.div
-          aria-hidden
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.4, ease: "easeOut" }}
-          className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full blur-3xl -z-10"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 70%)" }}
-        />
-        <motion.div
-          aria-hidden
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.6, delay: 0.2, ease: "easeOut" }}
-          className="absolute top-40 -right-40 w-[640px] h-[640px] rounded-full blur-3xl -z-10"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.12), transparent 70%)" }}
-        />
-        <div className="container mx-auto px-6">
+        {/* Hero background photo */}
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <img
+            src={heroPalms}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: "center 35%" }}
+          />
+          {/* warm wash so text stays readable but color comes through */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, hsl(var(--background) / 0.92) 0%, hsl(var(--background) / 0.78) 45%, hsl(var(--background) / 0.95) 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 60% at 80% 30%, hsl(var(--primary) / 0.18), transparent 60%)",
+            }}
+          />
+        </div>
+
+        <div className="container mx-auto px-6 relative">
           <div className="grid md:grid-cols-12 gap-12 md:gap-20 items-start">
             {/* Left: editorial copy */}
             <motion.div
@@ -299,7 +307,7 @@ const SellProperty = () => {
               </p>
               <h1 className="font-display text-[42px] sm:text-5xl md:text-[60px] lg:text-[68px] text-foreground leading-[1.05] tracking-tight">
                 Selling a cemetery plot is{" "}
-                <span className="italic font-light text-foreground/75">more delicate</span>{" "}
+                <span className="italic font-light text-primary/80">more delicate</span>{" "}
                 than selling a house. We treat it that way.
               </h1>
               <div className="mt-10 max-w-md space-y-4 text-[16px] md:text-[17px] text-muted-foreground leading-[1.7]">
@@ -311,7 +319,7 @@ const SellProperty = () => {
                 </p>
               </div>
 
-              <div className="mt-12 h-px w-16 bg-foreground/20" />
+              <div className="mt-12 h-px w-16 bg-primary/40" />
               <ul className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-foreground/70">
                 <li>Licensed in Texas</li>
                 <li className="text-foreground/20">·</li>
@@ -336,17 +344,34 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* 2. Quiet testimonial */}
-      <section className="py-32 md:py-40">
+      {/* 2. Testimonial over an integrated photo */}
+      <section className="relative py-40 md:py-48 overflow-hidden">
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <img src={heroHillside} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background) / 0.55) 25%, hsl(var(--background) / 0.55) 75%, hsl(var(--background)) 100%)",
+            }}
+          />
+        </div>
         <div className="container mx-auto px-6">
-          <figure className="max-w-3xl mx-auto text-center">
+          <motion.figure
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="max-w-3xl mx-auto text-center"
+          >
+            <div className="font-display text-primary/60 text-6xl leading-none mb-6 select-none">&ldquo;</div>
             <blockquote className="font-display text-2xl md:text-[34px] text-foreground leading-[1.4] italic font-light">
-              &ldquo;After my mother passed, I had no idea what to do with the plots my parents bought in 1987. They handled everything — I never once had to call the cemetery.&rdquo;
+              After my mother passed, I had no idea what to do with the plots my parents bought in 1987. They handled everything — I never once had to call the cemetery.
             </blockquote>
             <figcaption className="mt-10 text-[13px] text-muted-foreground tracking-[0.15em] uppercase">
               Linda M. — San Antonio
             </figcaption>
-          </figure>
+          </motion.figure>
         </div>
       </section>
 
