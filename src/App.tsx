@@ -44,7 +44,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
-          <BottomPagePill />
+          
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route element={<PageTransition />}>
