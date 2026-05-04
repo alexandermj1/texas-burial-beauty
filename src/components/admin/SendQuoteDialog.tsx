@@ -119,6 +119,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     await onSave(submission.id, {
       quote_amount: quote ? Number(quote) : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
+      cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
       quote_sent_at: new Date().toISOString(),
     } as any);
@@ -135,6 +136,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     await onSave(submission.id, {
       quote_amount: quote ? Number(quote) : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
+      cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
     } as any);
     setSaving(false);
