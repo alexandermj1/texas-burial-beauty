@@ -72,35 +72,6 @@ const cemeterySearchUrl = (cemetery: string) =>
 
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
-type Stage = "new" | "quote_sent" | "accepted" | "declined" | "paperwork" | "signed_up" | "closed";
-
-// Derive the seller pipeline stage from the submission state.
-// Order matters: we evaluate from terminal back to entry.
-const deriveStage = (s: Submission): Stage => {
-  if (s.closed_outcome === "won" || s.closed_outcome === "lost" || s.closed_at) return "closed";
-  // Fully signed up = DocuSign signed AND we've requested documents (paperwork issued).
-  if (s.docusign_status === "signed") return "signed_up";
-  // Paperwork stage = DocuSign sent OR documents requested, but not yet signed.
-  if (s.docusign_status === "sent" || s.documents_requested_at) return "paperwork";
-  // Customer responded to quote.
-  if (s.quote_response === "declined") return "declined";
-  if (s.quote_response === "accepted") return "accepted";
-  // Quote sent but no response yet.
-  if (s.quote_sent_at) return "quote_sent";
-  return "new";
-};
-
-const STAGE_META: Record<Stage, { label: string; cls: string; dot: string }> = {
-  new:        { label: "New lead",     cls: "bg-primary/10 text-primary border-primary/25",           dot: "bg-primary" },
-  quote_sent: { label: "Quote sent",   cls: "bg-amber-500/10 text-amber-700 border-amber-500/25",     dot: "bg-amber-500" },
-  accepted:   { label: "Accepted",     cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25", dot: "bg-emerald-500" },
-  declined:   { label: "Declined",     cls: "bg-rose-500/10 text-rose-700 border-rose-500/25",        dot: "bg-rose-500" },
-  paperwork:  { label: "Paperwork out",cls: "bg-sky-500/10 text-sky-700 border-sky-500/25",           dot: "bg-sky-500" },
-  signed_up:  { label: "Signed up",    cls: "bg-emerald-600/15 text-emerald-700 border-emerald-600/30", dot: "bg-emerald-600" },
-  closed:     { label: "Closed",       cls: "bg-muted text-muted-foreground border-border",            dot: "bg-muted-foreground" },
-};
-
-const STAGE_ORDER: Stage[] = ["new", "quote_sent", "accepted", "declined", "paperwork", "signed_up", "closed"];
 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
