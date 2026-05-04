@@ -404,8 +404,12 @@ const SellProperty = () => {
                 className="grid grid-cols-[auto_1fr] gap-8 md:gap-16 items-start"
               >
                 <span
-                  className="font-display font-light text-foreground/15 tabular-nums leading-none select-none"
-                  style={{ fontSize: "clamp(56px, 9vw, 96px)" }}
+                  className="font-display font-light tabular-nums leading-none select-none bg-clip-text text-transparent"
+                  style={{
+                    fontSize: "clamp(56px, 9vw, 110px)",
+                    backgroundImage:
+                      "linear-gradient(180deg, hsl(var(--primary) / 0.55) 0%, hsl(var(--primary) / 0.10) 100%)",
+                  }}
                 >
                   {s.num}
                 </span>
