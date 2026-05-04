@@ -225,8 +225,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         ) : (
           filtered.map((s, i) => {
             const isActive = selected?.id === s.id;
-            const stage = deriveStage(s);
-            const stageMeta = STAGE_META[stage];
+            const sKind = resolveKind(s.customer_kind, s.source);
+            const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
+            const stageMeta = bayer ? BAYER_STAGE_META[bayer] : null;
             return (
               <motion.button
                 key={s.id}
@@ -238,21 +239,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   isActive ? "bg-primary/5" : "hover:bg-muted/40"
                 }`}
               >
-                <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} variant="dot" className="mt-2" />
+                <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
-                      <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} size="xs" />
+                      <CustomerKindBadge kind={sKind} size="xs" />
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
-                      <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
-                      {stageMeta.label}
-                    </span>
-                  </div>
+                  {stageMeta && (
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
+                        <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
+                        {stageMeta.short}
+                      </span>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground truncate">
                     <span className="text-primary/80">{sourceLabel(s.source)}</span>
                     {s.cemetery ? ` · ${s.cemetery}` : ""}
