@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw } from "lucide-react";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
@@ -53,6 +53,8 @@ interface Props {
   onDelete: (id: string) => Promise<void>;
   /** Optional: focus a specific submission (used when arriving from the Gmail inbox). */
   focusSubmissionId?: string | null;
+  /** Optional: trigger a Gmail sync + reload submissions. */
+  onRefresh?: () => Promise<void>;
 }
 
 const sourceLabel = (s: string | null) => {
@@ -75,9 +77,10 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId }: Props) => {
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
+  const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
   const [notesDraft, setNotesDraft] = useState("");
@@ -180,6 +183,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
           );
         })}
+
+        {onRefresh && (
+          <button
+            onClick={async () => {
+              if (refreshing) return;
+              setRefreshing(true);
+              try { await onRefresh(); } finally { setRefreshing(false); }
+            }}
+            disabled={refreshing}
+            className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+            title="Sync Gmail and reload submissions"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Refreshing..." : "Refresh inbox"}
+          </button>
+        )}
       </div>
 
       {/* Bayer pipeline rail — only meaningful for sellers */}
