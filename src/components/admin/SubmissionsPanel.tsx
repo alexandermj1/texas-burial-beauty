@@ -43,6 +43,7 @@ export interface Submission {
   documents_requested_at?: string | null;
   closed_at?: string | null;
   closed_outcome?: string | null;
+  inquiry_channel?: string | null;
 }
 
 interface Props {
