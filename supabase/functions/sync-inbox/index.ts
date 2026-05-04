@@ -343,6 +343,7 @@ Deno.serve(async (req) => {
       next_page_token: listData.nextPageToken ?? null,
       has_more: Boolean(listData.nextPageToken),
       result_size_estimate: listData.resultSizeEstimate ?? null,
+      bayer_imported: bayerCreated,
     });
   } catch (e) {
     console.error("sync-inbox error", e);
