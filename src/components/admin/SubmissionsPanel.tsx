@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers } from "lucide-react";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import CustomerJourney from "./CustomerJourney";
+import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { useActiveListings } from "@/hooks/useActiveListings";
 
@@ -71,41 +72,12 @@ const cemeterySearchUrl = (cemetery: string) =>
 
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
-type Stage = "new" | "quote_sent" | "accepted" | "declined" | "paperwork" | "signed_up" | "closed";
-
-// Derive the seller pipeline stage from the submission state.
-// Order matters: we evaluate from terminal back to entry.
-const deriveStage = (s: Submission): Stage => {
-  if (s.closed_outcome === "won" || s.closed_outcome === "lost" || s.closed_at) return "closed";
-  // Fully signed up = DocuSign signed AND we've requested documents (paperwork issued).
-  if (s.docusign_status === "signed") return "signed_up";
-  // Paperwork stage = DocuSign sent OR documents requested, but not yet signed.
-  if (s.docusign_status === "sent" || s.documents_requested_at) return "paperwork";
-  // Customer responded to quote.
-  if (s.quote_response === "declined") return "declined";
-  if (s.quote_response === "accepted") return "accepted";
-  // Quote sent but no response yet.
-  if (s.quote_sent_at) return "quote_sent";
-  return "new";
-};
-
-const STAGE_META: Record<Stage, { label: string; cls: string; dot: string }> = {
-  new:        { label: "New lead",     cls: "bg-primary/10 text-primary border-primary/25",           dot: "bg-primary" },
-  quote_sent: { label: "Quote sent",   cls: "bg-amber-500/10 text-amber-700 border-amber-500/25",     dot: "bg-amber-500" },
-  accepted:   { label: "Accepted",     cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25", dot: "bg-emerald-500" },
-  declined:   { label: "Declined",     cls: "bg-rose-500/10 text-rose-700 border-rose-500/25",        dot: "bg-rose-500" },
-  paperwork:  { label: "Paperwork out",cls: "bg-sky-500/10 text-sky-700 border-sky-500/25",           dot: "bg-sky-500" },
-  signed_up:  { label: "Signed up",    cls: "bg-emerald-600/15 text-emerald-700 border-emerald-600/30", dot: "bg-emerald-600" },
-  closed:     { label: "Closed",       cls: "bg-muted text-muted-foreground border-border",            dot: "bg-muted-foreground" },
-};
-
-const STAGE_ORDER: Stage[] = ["new", "quote_sent", "accepted", "declined", "paperwork", "signed_up", "closed"];
 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
-  const [stageFilter, setStageFilter] = useState<Stage | "all">("all");
+  const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
@@ -125,22 +97,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusSubmissionId]);
 
+  // Bayer stages only apply to sellers; for everyone else stage filtering is a no-op.
+  const isSellerView = kindFilter === "seller";
+
   const filtered = useMemo(() => {
     return submissions.filter(s => {
       if (filter === "new" && s.handled) return false;
       if (filter === "handled" && !s.handled) return false;
       if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
-      if (stageFilter !== "all" && deriveStage(s) !== stageFilter) return false;
+      if (isSellerView && stageFilter !== "all" && deriveBayerStage(s as any) !== stageFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, stageFilter, searchQuery]);
+  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
-  const selectedStage = selected ? deriveStage(selected) : null;
+  const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
+  const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
@@ -151,21 +127,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const kindCount = (k: KindFilter) =>
     k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
 
-  // Stage counts — scoped to the current kind filter so numbers match the active view.
-  const stageBase = useMemo(() => kindBase.filter(s => {
-    if (kindFilter === "all") return true;
-    return resolveKind(s.customer_kind, s.source) === kindFilter;
-  }), [kindBase, kindFilter]);
-  const stageCount = (st: Stage | "all") =>
-    st === "all" ? stageBase.length : stageBase.filter(s => deriveStage(s) === st).length;
-
-  const setQuoteResponse = async (resp: "accepted" | "declined") => {
-    if (!selected) return;
-    await onUpdate(selected.id, {
-      quote_response: resp,
-      quote_responded_at: new Date().toISOString(),
-    } as any);
-  };
+  // Stage counts (sellers only).
+  const stageBase = useMemo(
+    () => kindBase.filter(s => resolveKind(s.customer_kind, s.source) === "seller"),
+    [kindBase],
+  );
+  const stageCount = (st: BayerStage | "all") =>
+    st === "all" ? stageBase.length : stageBase.filter(s => deriveBayerStage(s as any) === st).length;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -212,38 +180,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         })}
       </div>
 
-      {/* Pipeline stage rail — sellers move left → right through these stages */}
-      <div className="lg:col-span-12">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          <button
-            onClick={() => setStageFilter("all")}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
-              stageFilter === "all" ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-          >
-            All stages ({stageCount("all")})
-          </button>
-          <span className="text-muted-foreground/40 text-xs px-1">→</span>
-          {STAGE_ORDER.map((st, idx) => {
-            const meta = STAGE_META[st];
-            const isActive = stageFilter === st;
-            return (
-              <div key={st} className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={() => setStageFilter(st)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
-                    isActive ? meta.cls.replace("/10", "/20") + " ring-1 ring-current/30" : "bg-card text-muted-foreground border-border hover:text-foreground"
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-                  {meta.label} ({stageCount(st)})
-                </button>
-                {idx < STAGE_ORDER.length - 1 && <span className="text-muted-foreground/30 text-xs">→</span>}
-              </div>
-            );
-          })}
+      {/* Bayer pipeline rail — only meaningful for sellers */}
+      {isSellerView && (
+        <div className="lg:col-span-12">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            <button
+              onClick={() => setStageFilter("all")}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
+                stageFilter === "all" ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              All stages ({stageCount("all")})
+            </button>
+            <span className="text-muted-foreground/40 text-xs px-1">→</span>
+            {BAYER_STAGE_ORDER.map((st, idx) => {
+              const meta = BAYER_STAGE_META[st];
+              const isActive = stageFilter === st;
+              return (
+                <div key={st} className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => setStageFilter(st)}
+                    className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+                      isActive ? meta.cls.replace("/10", "/20") + " ring-1 ring-current/30" : "bg-card text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                    {meta.short} ({stageCount(st)})
+                  </button>
+                  {idx < BAYER_STAGE_ORDER.length - 1 && <span className="text-muted-foreground/30 text-xs">→</span>}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
 
       <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[70vh] overflow-y-auto">
@@ -255,8 +225,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         ) : (
           filtered.map((s, i) => {
             const isActive = selected?.id === s.id;
-            const stage = deriveStage(s);
-            const stageMeta = STAGE_META[stage];
+            const sKind = resolveKind(s.customer_kind, s.source);
+            const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
+            const stageMeta = bayer ? BAYER_STAGE_META[bayer] : null;
             return (
               <motion.button
                 key={s.id}
@@ -268,21 +239,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   isActive ? "bg-primary/5" : "hover:bg-muted/40"
                 }`}
               >
-                <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} variant="dot" className="mt-2" />
+                <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
-                      <CustomerKindBadge kind={resolveKind(s.customer_kind, s.source)} size="xs" />
+                      <CustomerKindBadge kind={sKind} size="xs" />
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
-                      <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
-                      {stageMeta.label}
-                    </span>
-                  </div>
+                  {stageMeta && (
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
+                        <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
+                        {stageMeta.short}
+                      </span>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground truncate">
                     <span className="text-primary/80">{sourceLabel(s.source)}</span>
                     {s.cemetery ? ` · ${s.cemetery}` : ""}
@@ -325,10 +298,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <p className="text-xs text-muted-foreground mt-1">{formatDate(selected.created_at)}</p>
               </div>
               <div className="flex flex-col items-end gap-1.5">
-                {selectedStage && (
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border ${STAGE_META[selectedStage].cls}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${STAGE_META[selectedStage].dot}`} />
-                    {STAGE_META[selectedStage].label}
+                {selectedBayerStage && (
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border ${BAYER_STAGE_META[selectedBayerStage].cls}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${BAYER_STAGE_META[selectedBayerStage].dot}`} />
+                    {BAYER_STAGE_META[selectedBayerStage].label}
                   </span>
                 )}
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${selected.handled ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
@@ -432,66 +405,36 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               />
             </div>
 
-            {/* Quote sent — record the customer's response to advance the pipeline */}
-            {selected.quote_sent_at && (
-              <div className="bg-primary/5 border border-primary/15 rounded-lg p-3 space-y-2.5">
-                <div className="text-xs text-foreground">
-                  <span className="font-medium">Quote sent</span>
-                  {selected.quote_amount ? ` · $${Number(selected.quote_amount).toLocaleString()}` : ""} ·{" "}
-                  <span className="text-muted-foreground">
-                    {new Date(selected.quote_sent_at).toLocaleString("en-US", {
-                      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Response:</span>
-                  <button
-                    onClick={() => setQuoteResponse("accepted")}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                      selected.quote_response === "accepted"
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-card text-muted-foreground border-border hover:text-foreground"
-                    }`}
-                  >
-                    <ThumbsUp className="w-3 h-3" /> Accepted
-                  </button>
-                  <button
-                    onClick={() => setQuoteResponse("declined")}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                      selected.quote_response === "declined"
-                        ? "bg-rose-600 text-white border-rose-600"
-                        : "bg-card text-muted-foreground border-border hover:text-foreground"
-                    }`}
-                  >
-                    <ThumbsDown className="w-3 h-3" /> Declined
-                  </button>
-                  {selected.quote_responded_at && (
-                    <span className="text-[10px] text-muted-foreground">
-                      · {new Date(selected.quote_responded_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </span>
-                  )}
-                </div>
-                {selected.quote_response === "accepted" && (
-                  <p className="text-[11px] text-emerald-700">Next: send paperwork via DocuSign and request required documents below.</p>
-                )}
-              </div>
+            {/* Kind-specific journey:
+                - Sellers: Bayer 8-stage pipeline (dominant) + DocuSign/document tracker
+                - Buyers:  recommended-plots tracker + notes (no DocuSign / paperwork)
+                - Other:   linked email thread only via CustomerJourney */}
+            {selectedKind === "seller" && (
+              <>
+                <BayerPipelinePanel
+                  submission={selected}
+                  onPatch={(patch) => onUpdate(selected.id, patch)}
+                />
+                <CustomerJourney
+                  submission={selected}
+                  onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                />
+              </>
             )}
 
-            {/* Bayer 8-stage seller pipeline (shown for sellers) */}
-            {resolveKind(selected.customer_kind, selected.source) === "seller" && (
-              <BayerPipelinePanel
+            {selectedKind === "buyer" && (
+              <BuyerJourneyPanel
                 submission={selected}
-                onPatch={(patch) => onUpdate(selected.id, patch)}
+                onOpenSend={() => setBuyerOpen(true)}
               />
             )}
 
-            {/* Customer journey: DocuSign + documents + linked emails + reminders */}
-            <CustomerJourney
-              submission={selected}
-              onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
-            />
-
+            {selectedKind !== "seller" && selectedKind !== "buyer" && (
+              <CustomerJourney
+                submission={selected}
+                onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+              />
+            )}
             {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">

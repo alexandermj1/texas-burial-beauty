@@ -59,6 +59,51 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_recommendations: {
+        Row: {
+          asking_price: number | null
+          buyer_response: string | null
+          cemetery: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          notes: string | null
+          plot_type: string | null
+          responded_at: string | null
+          sent_at: string
+          sent_by_name: string | null
+          submission_id: string
+        }
+        Insert: {
+          asking_price?: number | null
+          buyer_response?: string | null
+          cemetery?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          notes?: string | null
+          plot_type?: string | null
+          responded_at?: string | null
+          sent_at?: string
+          sent_by_name?: string | null
+          submission_id: string
+        }
+        Update: {
+          asking_price?: number | null
+          buyer_response?: string | null
+          cemetery?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          notes?: string | null
+          plot_type?: string | null
+          responded_at?: string | null
+          sent_at?: string
+          sent_by_name?: string | null
+          submission_id?: string
+        }
+        Relationships: []
+      }
       ca_inventory: {
         Row: {
           area: string | null
