@@ -217,8 +217,20 @@ const SendBuyerQuoteDialog = ({ submission, open, onClose }: Props) => {
   const subject = buildSubject(submission);
   const body = buildBody(submission, selected, need, includeFinancing, intro, closing);
 
-  const handleSendMailto = () => {
+  const handleSendMailto = async () => {
     if (!submission.email) return;
+    // Persist recommendations so they show up in the buyer's journey panel.
+    if (selected.length > 0) {
+      const rows = selected.map((l) => ({
+        submission_id: submission.id,
+        listing_id: l.id,
+        cemetery: l.cemetery,
+        plot_type: l.plot_type,
+        asking_price: l.asking_price,
+      }));
+      await supabase.from("buyer_recommendations" as any).insert(rows);
+      window.dispatchEvent(new Event("buyer-rec-saved"));
+    }
     const mailto = `mailto:${submission.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
     onClose();
