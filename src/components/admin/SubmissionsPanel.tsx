@@ -382,6 +382,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {(selected as any).deed_owner_names && <Field label="Deed owner(s)" value={(selected as any).deed_owner_names} />}
               {(selected as any).deed_owners_status && <Field label="Owner status" value={(selected as any).deed_owners_status} />}
               {(selected as any).relationship_to_owner && <Field label="Relationship to owner" value={(selected as any).relationship_to_owner} />}
+              {(selected as any).purchase_info && <Field label="Purchase date / amount" value={(selected as any).purchase_info} />}
+              {(selected as any).bayer_entry_id && <Field label="Bayer entry #" value={(selected as any).bayer_entry_id} />}
             </div>
 
             {/* Message / details */}
