@@ -247,6 +247,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="flex items-center gap-1.5 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
                       <CustomerKindBadge kind={sKind} size="xs" />
+                      <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
