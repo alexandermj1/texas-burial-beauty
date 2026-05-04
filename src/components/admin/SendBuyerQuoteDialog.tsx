@@ -4,6 +4,7 @@ import { X, Mail, Eye, Sparkles, Plus, Check, Search, FileText } from "lucide-re
 import type { Submission } from "./SubmissionsPanel";
 import { useActiveListings, type AdminListing } from "@/hooks/useActiveListings";
 import { getCemeteryImage, getPlotImage } from "@/lib/listingImages";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   submission: Submission;
