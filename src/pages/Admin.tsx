@@ -250,7 +250,6 @@ const Admin = () => {
             <button onClick={() => setTab("customers")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "customers" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <Users className="w-4 h-4 inline mr-1" /> Customers
             </button>
-            </button>
             <button onClick={() => setTab("inventory_requests")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "inventory_requests" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
               <ClipboardList className="w-4 h-4 inline mr-1" /> Inventory Requests
             </button>
