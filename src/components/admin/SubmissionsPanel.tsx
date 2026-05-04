@@ -9,7 +9,9 @@ import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
+import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
+import { getPlotImage } from "@/lib/listingImages";
 
 export interface Submission {
   id: string;
@@ -87,6 +89,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
+  const [matchOpen, setMatchOpen] = useState(false);
   const { countFor } = useActiveListings();
 
   // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
@@ -261,6 +264,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 }`}
               >
                 <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
+                <img
+                  src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                  alt=""
+                  className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
@@ -280,6 +288,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   )}
                   <p className="text-xs text-muted-foreground truncate">
                     <span className="text-primary/80">{sourceLabel(s.source)}</span>
+                    {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
                     {s.cemetery ? ` · ${s.cemetery}` : ""}
                     {s.cemetery && countFor(s.cemetery) > 0 ? (
                       <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
@@ -311,14 +320,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
-                  <BayerBadge inquiryChannel={selected.inquiry_channel} />
-                  <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+              <div className="flex items-start gap-3 min-w-0">
+                <img
+                  src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)}
+                  alt=""
+                  className="w-14 h-14 rounded-xl object-cover bg-muted/40 shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
+                    <BayerBadge inquiryChannel={selected.inquiry_channel} />
+                    <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                  </div>
+                  <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
+                      .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
+                  </p>
                 </div>
-                <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{formatDate(selected.created_at)}</p>
               </div>
               <div className="flex flex-col items-end gap-1.5">
                 {selectedBayerStage && (
@@ -363,17 +382,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
                       <p className="text-sm font-medium text-foreground truncate">{selected.cemetery}</p>
                     </div>
-                    <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 ${
+                    <button
+                      type="button"
+                      onClick={() => setMatchOpen(true)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 transition-all hover:opacity-90 ${
                         count > 0
                           ? "bg-primary/10 text-primary border-primary/20"
                           : "bg-muted text-muted-foreground border-border"
                       }`}
-                      title={count > 0 ? `${count} active listing${count === 1 ? "" : "s"} in our inventory` : "No listings in our inventory"}
+                      title="View matched inventory and recent comps at this cemetery"
                     >
                       <Layers className="w-3 h-3" />
-                      {count} {count === 1 ? "plot" : "plots"} in inventory
-                    </span>
+                      View inventory & comps
+                    </button>
                   </div>
                   <a
                     href={cemeterySearchUrl(selected.cemetery)}
@@ -435,21 +456,32 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </div>
 
             {/* Kind-specific journey:
-                - Sellers: Bayer 8-stage pipeline (dominant) + DocuSign/document tracker
-                - Buyers:  recommended-plots tracker + notes (no DocuSign / paperwork)
+                - Sellers: Bayer 8-stage pipeline is dominant. The Dropbox Sign + document
+                  checklist only appears once they reach the L.A. issuance stage.
+                - Buyers:  recommended-plots tracker only (no Dropbox / paperwork).
                 - Other:   linked email thread only via CustomerJourney */}
-            {selectedKind === "seller" && (
-              <>
-                <BayerPipelinePanel
-                  submission={selected}
-                  onPatch={(patch) => onUpdate(selected.id, patch)}
-                />
-                <CustomerJourney
-                  submission={selected}
-                  onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
-                />
-              </>
-            )}
+            {selectedKind === "seller" && (() => {
+              const dropboxStages: BayerStage[] = [
+                "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
+                "la_confirmed_poa_issued", "awaiting_notarized_docs",
+                "file_compiled", "listing_live",
+              ];
+              const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
+              return (
+                <>
+                  <BayerPipelinePanel
+                    submission={selected}
+                    onPatch={(patch) => onUpdate(selected.id, patch)}
+                  />
+                  {showDropbox && (
+                    <CustomerJourney
+                      submission={selected}
+                      onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                    />
+                  )}
+                </>
+              );
+            })()}
 
             {selectedKind === "buyer" && (
               <BuyerJourneyPanel
@@ -534,6 +566,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             open={declineOpen}
             onClose={() => setDeclineOpen(false)}
           />
+          {selected.cemetery && (
+            <CemeteryMatchDialog
+              open={matchOpen}
+              onClose={() => setMatchOpen(false)}
+              cemetery={selected.cemetery}
+              city={(selected as any).cemetery_city || selected.region}
+              propertyType={selected.property_type}
+              spaces={selected.spaces}
+            />
+          )}
         </>
       )}
     </div>

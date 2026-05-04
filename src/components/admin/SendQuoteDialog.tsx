@@ -93,14 +93,19 @@ ${WEBSITE}`;
 const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
   const [quote, setQuote] = useState("");
   const [transferFee, setTransferFee] = useState("");
+  const [retail, setRetail] = useState("");
   const [customMessage, setCustomMessage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
+      // Auto-populate from the Stage 1 intake fields (cemetery_retail /
+      // transfer_fee_amount) so the admin doesn't have to retype them.
+      const intakeRetail = (submission as any).cemetery_retail;
       setQuote(submission.quote_amount ? String(submission.quote_amount) : "");
-      setTransferFee(submission.transfer_fee_amount ? String(submission.transfer_fee_amount) : "");
+      setTransferFee(submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : "");
+      setRetail(intakeRetail != null ? String(intakeRetail) : "");
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
     }
@@ -114,6 +119,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     await onSave(submission.id, {
       quote_amount: quote ? Number(quote) : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
+      cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
       quote_sent_at: new Date().toISOString(),
     } as any);
@@ -130,6 +136,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     await onSave(submission.id, {
       quote_amount: quote ? Number(quote) : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
+      cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
     } as any);
     setSaving(false);
@@ -179,7 +186,23 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
               {!showPreview ? (
                 <>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
+                        Cemetery retail (USD)
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                        <input
+                          type="number"
+                          value={retail}
+                          onChange={(e) => setRetail(e.target.value)}
+                          placeholder="from intake"
+                          className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">Auto-filled from Stage 1.</p>
+                    </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
                         Guaranteed net proceeds (USD)
@@ -194,11 +217,29 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
                       </div>
-                      {quote && (
-                        <p className="text-[11px] text-muted-foreground mt-1.5">
-                          Will appear as <span className="text-foreground font-medium">{formatMoney(quote)}</span>
-                        </p>
-                      )}
+                      {quote && (() => {
+                        const r = Number(retail);
+                        const q = Number(quote);
+                        if (!isFinite(r) || r <= 0 || !isFinite(q)) {
+                          return <p className="text-[11px] text-muted-foreground mt-1.5">Will appear as <span className="text-foreground font-medium">{formatMoney(quote)}</span></p>;
+                        }
+                        const pct = q / r;
+                        const pctStr = `${(pct * 100).toFixed(1)}%`;
+                        // High >= 42%, Low < 25%, Medium in between.
+                        const tone = pct >= 0.42
+                          ? { cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", label: "High" }
+                          : pct < 0.25
+                            ? { cls: "bg-rose-500/15 text-rose-700 border-rose-500/30", label: "Low" }
+                            : { cls: "bg-amber-500/15 text-amber-700 border-amber-500/30", label: "Medium" };
+                        return (
+                          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${tone.cls}`}>
+                              {pctStr} of retail · {tone.label}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">{formatMoney(quote)}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
