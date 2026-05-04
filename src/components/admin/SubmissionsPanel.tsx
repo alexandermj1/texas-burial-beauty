@@ -378,6 +378,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {selected.region && <Field label="Region" value={selected.region} />}
               {selected.spaces && <Field label="Spaces" value={selected.spaces} />}
               {selected.section && <Field label="Section / Lot" value={selected.section} />}
+              {(selected as any).cemetery_city && <Field label="Cemetery city/state" value={(selected as any).cemetery_city} />}
+              {(selected as any).deed_owner_names && <Field label="Deed owner(s)" value={(selected as any).deed_owner_names} />}
+              {(selected as any).deed_owners_status && <Field label="Owner status" value={(selected as any).deed_owners_status} />}
+              {(selected as any).relationship_to_owner && <Field label="Relationship to owner" value={(selected as any).relationship_to_owner} />}
             </div>
 
             {/* Message / details */}
