@@ -7,7 +7,7 @@ import { lazy, Suspense } from "react";
 import { AuthProvider } from "@/hooks/useAuth";
 import ScrollToTop from "@/components/ScrollToTop";
 import PageTransition from "@/components/PageTransition";
-import BottomPagePill from "@/components/BottomPagePill";
+
 
 // Eagerly load landing-priority pages — first hits for crawlers and users.
 import Index from "./pages/Index";
@@ -44,7 +44,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
-          <BottomPagePill />
+          
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route element={<PageTransition />}>

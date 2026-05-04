@@ -128,6 +128,25 @@ const CustomersPanel = () => {
           />
         </div>
         <button
+          onClick={async () => {
+            const name = window.prompt("Customer name?");
+            if (!name) return;
+            const kind = window.prompt("Customer kind? Type: seller, buyer, or general", "general");
+            const normKind = kind === "seller" || kind === "buyer" ? kind : "contact";
+            const email = window.prompt("Email (optional)") || null;
+            const phone = window.prompt("Phone (optional)") || null;
+            const { error } = await supabase.from("customer_profiles" as any).insert({
+              primary_name: name, primary_email: email, primary_phone: phone, customer_kind: normKind,
+            });
+            if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+            toast({ title: "Customer added" });
+            fetchAll();
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
+        >
+          + Add customer
+        </button>
+        <button
           onClick={handleRebuild}
           disabled={rebuilding}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"

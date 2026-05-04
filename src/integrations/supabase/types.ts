@@ -275,8 +275,10 @@ export type Database = {
           admin_notes: string | null
           authorization_confirmed: boolean | null
           authorization_notes: string | null
+          bayer_entry_id: string | null
           budget: string | null
           cemetery: string | null
+          cemetery_city: string | null
           cemetery_retail: number | null
           cemetery_verified_ownership: boolean | null
           closed_at: string | null
@@ -286,6 +288,8 @@ export type Database = {
           customer_profile_id: string | null
           death_cert_on_file: boolean | null
           deed_on_file: boolean | null
+          deed_owner_names: string | null
+          deed_owners_status: string | null
           details: string | null
           documents_requested_at: string | null
           docusign_envelope_url: string | null
@@ -333,6 +337,7 @@ export type Database = {
           quote_template: string | null
           receipt_sent_at: string | null
           region: string | null
+          relationship_to_owner: string | null
           section: string | null
           source: string
           source_email_id: string | null
@@ -348,8 +353,10 @@ export type Database = {
           admin_notes?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
+          bayer_entry_id?: string | null
           budget?: string | null
           cemetery?: string | null
+          cemetery_city?: string | null
           cemetery_retail?: number | null
           cemetery_verified_ownership?: boolean | null
           closed_at?: string | null
@@ -359,6 +366,8 @@ export type Database = {
           customer_profile_id?: string | null
           death_cert_on_file?: boolean | null
           deed_on_file?: boolean | null
+          deed_owner_names?: string | null
+          deed_owners_status?: string | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -406,6 +415,7 @@ export type Database = {
           quote_template?: string | null
           receipt_sent_at?: string | null
           region?: string | null
+          relationship_to_owner?: string | null
           section?: string | null
           source?: string
           source_email_id?: string | null
@@ -421,8 +431,10 @@ export type Database = {
           admin_notes?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
+          bayer_entry_id?: string | null
           budget?: string | null
           cemetery?: string | null
+          cemetery_city?: string | null
           cemetery_retail?: number | null
           cemetery_verified_ownership?: boolean | null
           closed_at?: string | null
@@ -432,6 +444,8 @@ export type Database = {
           customer_profile_id?: string | null
           death_cert_on_file?: boolean | null
           deed_on_file?: boolean | null
+          deed_owner_names?: string | null
+          deed_owners_status?: string | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -479,6 +493,7 @@ export type Database = {
           quote_template?: string | null
           receipt_sent_at?: string | null
           region?: string | null
+          relationship_to_owner?: string | null
           section?: string | null
           source?: string
           source_email_id?: string | null

@@ -5,6 +5,7 @@ import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
+import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
@@ -42,6 +43,7 @@ export interface Submission {
   documents_requested_at?: string | null;
   closed_at?: string | null;
   closed_outcome?: string | null;
+  inquiry_channel?: string | null;
 }
 
 interface Props {
@@ -245,6 +247,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="flex items-center gap-1.5 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
                       <CustomerKindBadge kind={sKind} size="xs" />
+                      <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
@@ -292,6 +295,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
+                  <BayerBadge inquiryChannel={selected.inquiry_channel} />
                   <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
                 </div>
                 <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
@@ -374,6 +378,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {selected.region && <Field label="Region" value={selected.region} />}
               {selected.spaces && <Field label="Spaces" value={selected.spaces} />}
               {selected.section && <Field label="Section / Lot" value={selected.section} />}
+              {(selected as any).cemetery_city && <Field label="Cemetery city/state" value={(selected as any).cemetery_city} />}
+              {(selected as any).deed_owner_names && <Field label="Deed owner(s)" value={(selected as any).deed_owner_names} />}
+              {(selected as any).deed_owners_status && <Field label="Owner status" value={(selected as any).deed_owners_status} />}
+              {(selected as any).relationship_to_owner && <Field label="Relationship to owner" value={(selected as any).relationship_to_owner} />}
             </div>
 
             {/* Message / details */}
