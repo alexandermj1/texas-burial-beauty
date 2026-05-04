@@ -270,16 +270,68 @@ Deno.serve(async (req) => {
     });
 
     let insertedCount = 0;
+    let bayerCreated = 0;
     if (rows.length > 0) {
       const { data: inserted, error: insertError } = await admin
         .from("email_messages")
         .insert(rows)
-        .select("id");
+        .select("id, gmail_message_id, subject, from_email, body_text, received_at");
       if (insertError) {
         console.error("Email insert failed", insertError);
         return json({ error: `Email insert failed: ${insertError.message}` }, 500);
       }
       insertedCount = inserted?.length ?? 0;
+
+      // Auto-create contact_submissions for Bayer "Sell a Plot" form emails.
+      for (const em of (inserted ?? []) as any[]) {
+        const parsed = parseBayerSellAPlot(em.subject ?? "", em.from_email ?? "", em.body_text ?? "");
+        if (!parsed) continue;
+        try {
+          // Skip if already imported (unique index on bayer_entry_id).
+          const { data: existingSub } = await admin
+            .from("contact_submissions")
+            .select("id")
+            .eq("bayer_entry_id", parsed.bayer_entry_id)
+            .maybeSingle();
+          if (existingSub) {
+            await admin.from("email_messages")
+              .update({ matched_submission_id: existingSub.id, match_confidence: "high" })
+              .eq("id", em.id);
+            continue;
+          }
+          const newId = crypto.randomUUID();
+          const { error: subErr } = await admin.from("contact_submissions").insert({
+            id: newId,
+            source: "seller_quote",
+            customer_kind: "seller",
+            inquiry_channel: "bayer_sell_a_plot",
+            bayer_entry_id: parsed.bayer_entry_id,
+            name: parsed.name,
+            email: parsed.email,
+            phone: parsed.phone,
+            cemetery: parsed.cemetery,
+            cemetery_city: parsed.cemetery_city,
+            spaces: parsed.spaces,
+            details: parsed.details,
+            deed_owner_names: parsed.deed_owner_names,
+            deed_owners_status: parsed.deed_owners_status,
+            relationship_to_owner: parsed.relationship_to_owner,
+            message: parsed.additional_info,
+            source_email_id: em.id,
+            created_at: em.received_at,
+          });
+          if (subErr) {
+            console.error("Bayer submission insert failed", subErr);
+            continue;
+          }
+          await admin.from("email_messages")
+            .update({ matched_submission_id: newId, match_confidence: "high" })
+            .eq("id", em.id);
+          bayerCreated++;
+        } catch (err) {
+          console.error("Bayer parse error", err);
+        }
+      }
     }
 
     return json({
