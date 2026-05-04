@@ -406,8 +406,18 @@ const SellProperty = () => {
       </section>
 
       {/* 3. How it works — editorial numbered list */}
-      <section className="py-24 md:py-32">
-        <div className="container mx-auto px-6">
+      <section className="relative py-24 md:py-32 overflow-hidden">
+        <div aria-hidden className="hidden md:block absolute right-0 top-0 bottom-0 w-1/2 -z-10">
+          <img src={heroMural} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, hsl(var(--background)) 0%, hsl(var(--background) / 0.7) 30%, transparent 100%)",
+            }}
+          />
+        </div>
+        <div className="container mx-auto px-6 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
