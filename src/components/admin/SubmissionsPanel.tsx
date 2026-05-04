@@ -320,14 +320,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
-                  <BayerBadge inquiryChannel={selected.inquiry_channel} />
-                  <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+              <div className="flex items-start gap-3 min-w-0">
+                <img
+                  src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)}
+                  alt=""
+                  className="w-14 h-14 rounded-xl object-cover bg-muted/40 shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
+                    <BayerBadge inquiryChannel={selected.inquiry_channel} />
+                    <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                  </div>
+                  <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
+                      .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
+                  </p>
                 </div>
-                <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{formatDate(selected.created_at)}</p>
               </div>
               <div className="flex flex-col items-end gap-1.5">
                 {selectedBayerStage && (
