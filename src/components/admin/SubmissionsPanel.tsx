@@ -9,7 +9,9 @@ import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
+import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
+import { getPlotImage } from "@/lib/listingImages";
 
 export interface Submission {
   id: string;
@@ -87,6 +89,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
+  const [matchOpen, setMatchOpen] = useState(false);
   const { countFor } = useActiveListings();
 
   // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
