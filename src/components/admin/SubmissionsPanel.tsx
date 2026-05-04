@@ -382,17 +382,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
                       <p className="text-sm font-medium text-foreground truncate">{selected.cemetery}</p>
                     </div>
-                    <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 ${
+                    <button
+                      type="button"
+                      onClick={() => setMatchOpen(true)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 transition-all hover:opacity-90 ${
                         count > 0
                           ? "bg-primary/10 text-primary border-primary/20"
                           : "bg-muted text-muted-foreground border-border"
                       }`}
-                      title={count > 0 ? `${count} active listing${count === 1 ? "" : "s"} in our inventory` : "No listings in our inventory"}
+                      title="View matched inventory and recent comps at this cemetery"
                     >
                       <Layers className="w-3 h-3" />
-                      {count} {count === 1 ? "plot" : "plots"} in inventory
-                    </span>
+                      View inventory & comps
+                    </button>
                   </div>
                   <a
                     href={cemeterySearchUrl(selected.cemetery)}
