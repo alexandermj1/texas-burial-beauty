@@ -316,6 +316,7 @@ Deno.serve(async (req) => {
             deed_owner_names: parsed.deed_owner_names,
             deed_owners_status: parsed.deed_owners_status,
             relationship_to_owner: parsed.relationship_to_owner,
+            purchase_info: parsed.purchase_info,
             message: parsed.additional_info,
             source_email_id: em.id,
             created_at: em.received_at,
