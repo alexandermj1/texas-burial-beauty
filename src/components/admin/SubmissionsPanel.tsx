@@ -77,9 +77,10 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId }: Props) => {
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
+  const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
   const [notesDraft, setNotesDraft] = useState("");
