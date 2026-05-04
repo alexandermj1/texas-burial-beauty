@@ -54,7 +54,7 @@ const CemeteryMatchDialog = ({ open, onClose, cemetery, city, propertyType, spac
         loadSales(),
       ]);
       if (!mounted) return;
-      setInv(rankByCemetery(cemetery, (data as InventoryRow[]) || [], { city, threshold: 0.3 }).slice(0, 25));
+      setInv(rankByCemetery(cemetery, ((data as unknown) as InventoryRow[]) || [], { city, threshold: 0.3 }).slice(0, 25));
       setSales(rankByCemetery(cemetery, salesAll, { city, threshold: 0.35 }).slice(0, 30));
       setLoading(false);
     })();
