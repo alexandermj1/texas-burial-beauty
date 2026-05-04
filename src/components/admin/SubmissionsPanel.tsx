@@ -295,6 +295,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
+                  <BayerBadge inquiryChannel={selected.inquiry_channel} />
                   <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
                 </div>
                 <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
