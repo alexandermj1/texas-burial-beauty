@@ -53,6 +53,8 @@ interface Props {
   onDelete: (id: string) => Promise<void>;
   /** Optional: focus a specific submission (used when arriving from the Gmail inbox). */
   focusSubmissionId?: string | null;
+  /** Optional: trigger a Gmail sync + reload submissions. */
+  onRefresh?: () => Promise<void>;
 }
 
 const sourceLabel = (s: string | null) => {
