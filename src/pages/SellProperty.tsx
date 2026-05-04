@@ -504,28 +504,49 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* 5. Final quiet CTA */}
-      <section className="py-32 md:py-40 border-t border-foreground/10">
+      {/* 5. Final CTA over a closing photo */}
+      <section className="relative py-40 md:py-56 overflow-hidden">
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <img src={heroCathedral} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "center 40%" }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(110deg, hsl(var(--background)) 0%, hsl(var(--background) / 0.85) 45%, hsl(var(--background) / 0.35) 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse at 0% 50%, hsl(var(--primary) / 0.18), transparent 55%)" }}
+          />
+        </div>
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl">
-            <h2 className="font-display text-3xl md:text-[44px] text-foreground leading-[1.2] font-light mb-10">
-              When you're ready, we're here. <span className="italic text-foreground/70">We'll handle the rest.</span>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7 }}
+            className="max-w-3xl"
+          >
+            <h2 className="font-display text-3xl md:text-[48px] text-foreground leading-[1.15] font-light mb-10">
+              When you're ready, we're here.{" "}
+              <span className="italic text-primary/80">We'll handle the rest.</span>
             </h2>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
               <a
                 href="#quote-form"
-                className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground rounded-md text-[14px] font-medium tracking-wide hover:opacity-90 transition-opacity"
+                className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground rounded-md text-[14px] font-medium tracking-wide hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
               >
                 Request a Free Valuation
               </a>
               <a
                 href={PHONE_HREF}
-                className="text-foreground/70 hover:text-foreground text-[14px] underline underline-offset-4 decoration-foreground/30"
+                className="text-foreground/80 hover:text-foreground text-[14px] underline underline-offset-4 decoration-foreground/30"
               >
                 Or call {PHONE_DISPLAY}
               </a>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
