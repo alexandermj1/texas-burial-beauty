@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Mail, Phone, RefreshCw, Search, Activity, FileText, Inbox as InboxIcon, MessageSquare, User } from "lucide-react";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
+import CustomerNotes from "./CustomerNotes";
 import { useAuth } from "@/hooks/useAuth";
 
 interface CustomerProfile {
