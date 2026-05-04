@@ -395,14 +395,24 @@ function parseBayerSellAPlot(subject: string, fromEmail: string, body: string): 
   const bayerEntryId = subjectMatch[1];
   const text = (body || "").replace(/&#039;/g, "'").replace(/&amp;/g, "&");
 
+  // Split into trimmed non-blank lines. Email body is label / blank / blank / value / blank...
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
   const grab = (label: string): string | null => {
-    // Lines look like:  Label\n\n\nValue  — collapse whitespace and search.
-    const re = new RegExp(
-      `${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\\s\\n\\r]+([^\\n\\r][^\\n\\r]*?)(?:\\n\\s*\\n|$)`,
-      "i",
-    );
-    const m = text.match(re);
-    return m ? m[1].trim() : null;
+    const re = new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\??$`, "i");
+    for (let i = 0; i < lines.length; i++) {
+      if (re.test(lines[i])) {
+        // Return the next non-blank line that is NOT itself a known label.
+        const next = lines[i + 1];
+        if (next && !/^(Name|Email|Phone|Cemetery name|Cemetery City and State|Number of plots\/spaces|Description and location of plots\/spaces|Plot owner.*name as it appears on the deed|Are the plot owner.*currently living or deceased|Your relationship to the plot owner|Any additional information.*)$/i.test(next)) {
+          return next;
+        }
+      }
+    }
+    return null;
   };
 
   return {
