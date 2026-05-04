@@ -250,18 +250,8 @@ const CustomersPanel = () => {
                 ))}
               </div>
 
-              {/* Pinned notes */}
-              <div>
-                <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Pinned notes (visible to whole team)</label>
-                <textarea
-                  value={notesDraft}
-                  onChange={e => setNotesDraft(e.target.value)}
-                  onBlur={saveNotes}
-                  rows={2}
-                  placeholder="Anything important about this customer…"
-                  className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                />
-              </div>
+              {/* Realtime collaborative notes */}
+              <CustomerNotes customerId={selected.id} customerName={selected.primary_name} />
 
               {/* Activity timeline */}
               <div>
