@@ -241,18 +241,44 @@ const SellProperty = () => {
           offers: { "@type": "Offer", description: "Commission-only — no upfront fees" },
         }}
       />
-      <Navbar />
+      <Navbar forceScrolled />
+
+      {/* Page-wide atmospheric background */}
+      <div aria-hidden className="fixed inset-0 -z-10 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 15% 0%, hsl(var(--primary) / 0.10), transparent 60%), radial-gradient(ellipse 70% 60% at 100% 30%, hsl(var(--accent, var(--primary)) / 0.08), transparent 60%), radial-gradient(ellipse 90% 70% at 50% 110%, hsl(var(--primary) / 0.07), transparent 60%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.5] mix-blend-multiply"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+          }}
+        />
+      </div>
 
       {/* 1. Hero — form is the centerpiece */}
       <section className="relative pt-32 md:pt-40 pb-24 md:pb-32 overflow-hidden">
-        {/* faint atmospheric texture */}
-        <div
+        {/* decorative blooms */}
+        <motion.div
           aria-hidden
-          className="absolute inset-0 -z-10 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 10%, hsl(var(--foreground)) 0, transparent 40%), radial-gradient(circle at 80% 90%, hsl(var(--primary)) 0, transparent 50%)",
-          }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.4, ease: "easeOut" }}
+          className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full blur-3xl -z-10"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 70%)" }}
+        />
+        <motion.div
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.6, delay: 0.2, ease: "easeOut" }}
+          className="absolute top-40 -right-40 w-[640px] h-[640px] rounded-full blur-3xl -z-10"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.12), transparent 70%)" }}
         />
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-12 gap-12 md:gap-20 items-start">
