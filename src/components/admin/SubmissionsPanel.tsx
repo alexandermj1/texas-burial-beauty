@@ -6,6 +6,7 @@ import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import CustomerJourney from "./CustomerJourney";
+import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { useActiveListings } from "@/hooks/useActiveListings";
 
 export interface Submission {
