@@ -478,6 +478,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             )}
 
+            {/* Bayer 8-stage seller pipeline (shown for sellers) */}
+            {resolveKind(selected.customer_kind, selected.source) === "seller" && (
+              <BayerPipelinePanel
+                submission={selected}
+                onPatch={(patch) => onUpdate(selected.id, patch)}
+              />
+            )}
+
             {/* Customer journey: DocuSign + documents + linked emails + reminders */}
             <CustomerJourney
               submission={selected}
