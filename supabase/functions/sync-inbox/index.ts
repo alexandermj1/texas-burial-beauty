@@ -382,6 +382,7 @@ interface BayerSellAPlot {
   deed_owner_names: string | null;
   deed_owners_status: string | null;
   relationship_to_owner: string | null;
+  purchase_info: string | null;
   additional_info: string | null;
 }
 
