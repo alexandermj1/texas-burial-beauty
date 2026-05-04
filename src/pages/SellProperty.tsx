@@ -241,18 +241,44 @@ const SellProperty = () => {
           offers: { "@type": "Offer", description: "Commission-only — no upfront fees" },
         }}
       />
-      <Navbar />
+      <Navbar forceScrolled />
+
+      {/* Page-wide atmospheric background */}
+      <div aria-hidden className="fixed inset-0 -z-10 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 15% 0%, hsl(var(--primary) / 0.10), transparent 60%), radial-gradient(ellipse 70% 60% at 100% 30%, hsl(var(--accent, var(--primary)) / 0.08), transparent 60%), radial-gradient(ellipse 90% 70% at 50% 110%, hsl(var(--primary) / 0.07), transparent 60%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.5] mix-blend-multiply"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+          }}
+        />
+      </div>
 
       {/* 1. Hero — form is the centerpiece */}
       <section className="relative pt-32 md:pt-40 pb-24 md:pb-32 overflow-hidden">
-        {/* faint atmospheric texture */}
-        <div
+        {/* decorative blooms */}
+        <motion.div
           aria-hidden
-          className="absolute inset-0 -z-10 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 10%, hsl(var(--foreground)) 0, transparent 40%), radial-gradient(circle at 80% 90%, hsl(var(--primary)) 0, transparent 50%)",
-          }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.4, ease: "easeOut" }}
+          className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full blur-3xl -z-10"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 70%)" }}
+        />
+        <motion.div
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.6, delay: 0.2, ease: "easeOut" }}
+          className="absolute top-40 -right-40 w-[640px] h-[640px] rounded-full blur-3xl -z-10"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.12), transparent 70%)" }}
         />
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-12 gap-12 md:gap-20 items-start">
@@ -319,17 +345,53 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* 3. How it works — editorial numbered list */}
-      <section className="py-24 md:py-32 border-t border-foreground/10">
+      {/* 2.5 Stats / trust band */}
+      <section className="py-20 border-y border-foreground/10 bg-[hsl(var(--card))]/40 backdrop-blur-sm">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-12 gap-x-8 max-w-5xl mx-auto">
+            {[
+              { n: "10,000+", l: "Texas families helped" },
+              { n: "60–120", l: "Days to close, on average" },
+              { n: "$0", l: "Upfront — commission only" },
+              { n: "48 hr", l: "Valuation turnaround" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.l}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.55, delay: i * 0.08, ease: "easeOut" }}
+                className="text-center"
+              >
+                <div className="font-display text-3xl md:text-[40px] text-foreground leading-none">
+                  {s.n}
+                </div>
+                <div className="mt-3 text-[11px] tracking-[0.2em] uppercase text-muted-foreground">
+                  {s.l}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. How it works — editorial numbered list */}
+      <section className="py-24 md:py-32">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7 }}
+            className="max-w-3xl mb-20"
+          >
             <p className="text-foreground/60 text-[11px] tracking-[0.28em] uppercase mb-5">
               The process
             </p>
             <h2 className="font-display text-3xl md:text-[44px] text-foreground leading-[1.15]">
               How selling a plot through us works.
             </h2>
-          </div>
+          </motion.div>
 
           <div className="max-w-4xl mx-auto space-y-16 md:space-y-20">
             {steps.map((s, i) => (
@@ -342,8 +404,12 @@ const SellProperty = () => {
                 className="grid grid-cols-[auto_1fr] gap-8 md:gap-16 items-start"
               >
                 <span
-                  className="font-display font-light text-foreground/15 tabular-nums leading-none select-none"
-                  style={{ fontSize: "clamp(56px, 9vw, 96px)" }}
+                  className="font-display font-light tabular-nums leading-none select-none bg-clip-text text-transparent"
+                  style={{
+                    fontSize: "clamp(56px, 9vw, 110px)",
+                    backgroundImage:
+                      "linear-gradient(180deg, hsl(var(--primary) / 0.55) 0%, hsl(var(--primary) / 0.10) 100%)",
+                  }}
                 >
                   {s.num}
                 </span>
