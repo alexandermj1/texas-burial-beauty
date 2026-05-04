@@ -226,10 +226,10 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
                         const pct = q / r;
                         const pctStr = `${(pct * 100).toFixed(1)}%`;
                         // High >= 42%, Low < 25%, Medium in between.
-                        const tone = pct >= 0.42
-                          ? { cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", label: "High" }
-                          : pct < 0.25
-                            ? { cls: "bg-rose-500/15 text-rose-700 border-rose-500/30", label: "Low" }
+                        const tone = pct < 0.25
+                          ? { cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", label: "Low" }
+                          : pct >= 0.42
+                            ? { cls: "bg-rose-500/15 text-rose-700 border-rose-500/30", label: "High" }
                             : { cls: "bg-amber-500/15 text-amber-700 border-amber-500/30", label: "Medium" };
                         return (
                           <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
