@@ -301,7 +301,7 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
         <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <div className="flex items-center gap-2">
             <FileSignature className="w-4 h-4 text-primary" />
-            <h4 className="text-sm font-medium text-foreground">DocuSign</h4>
+            <h4 className="text-sm font-medium text-foreground">Dropbox Sign</h4>
             <CustomerKindBadge kind={kind} size="xs" />
           </div>
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${dStep.cls}`}>
@@ -325,14 +325,14 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
           ))}
         </div>
 
-        <label className="text-[10px] uppercase tracking-wide text-muted-foreground block mb-1">Envelope link (optional)</label>
+        <label className="text-[10px] uppercase tracking-wide text-muted-foreground block mb-1">Dropbox Sign envelope link (optional)</label>
         <div className="flex gap-2">
           <input
             type="url"
             value={envelopeUrlDraft}
             onChange={(e) => setEnvelopeUrlDraft(e.target.value)}
             onBlur={saveEnvelopeUrl}
-            placeholder="https://app.docusign.com/..."
+            placeholder="https://www.dropbox.com/sign/..."
             className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           {submission.docusign_envelope_url && (
