@@ -181,13 +181,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
 
-  // Mark the selected submission as viewed
-  useEffect(() => { if (selected?.id) markViewed(selected.id); }, [selected?.id]);
+  // Record a view for this admin when they open a submission
+  useEffect(() => { if (selected?.id) recordView(selected.id); }, [selected?.id, myId]);
 
   // Subscribe to the same notes presence channel CustomerNotes uses, so we know when
   // somebody else is actively typing a note on this submission. We don't track ourselves
   // as typing here — we only listen.
-  const myId = user?.id ?? "anon";
   useEffect(() => {
     if (!selected?.id) { setTypingUsers([]); return; }
     const channel = supabase.channel(`notes:submission_id:${selected.id}`, {
