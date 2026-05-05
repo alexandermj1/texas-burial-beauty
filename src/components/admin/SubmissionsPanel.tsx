@@ -311,17 +311,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const sKind = resolveKind(s.customer_kind, s.source);
             const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
             const stageMeta = bayer ? BAYER_STAGE_META[bayer] : null;
+            const isUnread = !viewed.has(s.id);
             return (
               <motion.button
                 key={s.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: Math.min(i * 0.02, 0.2) }}
-                onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); }}
-                className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${
-                  isActive ? "bg-primary/5" : "hover:bg-muted/40"
+                onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); markViewed(s.id); }}
+                className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 relative ${
+                  isActive ? "bg-primary/5" : isUnread ? "bg-primary/[0.04] hover:bg-primary/10" : "hover:bg-muted/40"
                 }`}
               >
+                {isUnread && <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary" aria-label="Unread" />}
                 <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
                 <img
                   src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
@@ -331,11 +333,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
+                      <p className={`text-sm truncate ${isUnread ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
                       <CustomerKindBadge kind={sKind} size="xs" />
                       <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                     </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
+                    <span className={`text-[10px] shrink-0 ${isUnread ? "text-foreground font-semibold" : "text-muted-foreground"}`}>{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
                   {stageMeta && (
                     <div className="flex items-center gap-1.5 mb-0.5">
