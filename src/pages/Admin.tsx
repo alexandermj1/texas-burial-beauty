@@ -222,9 +222,12 @@ const Admin = () => {
               <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
               <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
             </div>
-            <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
-              <LogOut className="w-4 h-4" /> Sign Out
-            </button>
+            <div className="flex items-center gap-2">
+              <NotificationsBell />
+              <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                <LogOut className="w-4 h-4" /> Sign Out
+              </button>
+            </div>
           </div>
 
           {/* Tabs */}
