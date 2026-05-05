@@ -83,7 +83,14 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
+const VIEWED_KEY = "admin.submissions.viewed.v1";
+const loadViewed = (): Set<string> => {
+  try { return new Set(JSON.parse(localStorage.getItem(VIEWED_KEY) || "[]")); }
+  catch { return new Set(); }
+};
+
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
+  const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
   const [refreshing, setRefreshing] = useState(false);
@@ -94,7 +101,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
+  const [viewed, setViewed] = useState<Set<string>>(() => loadViewed());
+  const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
+  const [pendingAction, setPendingAction] = useState<null | { label: string; run: () => void }>(null);
+  const typingChanRef = useRef<RealtimeChannel | null>(null);
   const { countFor } = useActiveListings();
+
+  const markViewed = (id: string) => {
+    setViewed(prev => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev); next.add(id);
+      try { localStorage.setItem(VIEWED_KEY, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+  };
 
   // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
   useEffect(() => {
