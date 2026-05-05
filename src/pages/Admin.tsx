@@ -16,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
 import InboxPanel from "@/components/admin/InboxPanel";
+import NotificationsBell from "@/components/admin/NotificationsBell";
 
 interface AdminListing {
   id: string;
