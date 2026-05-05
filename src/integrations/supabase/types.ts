@@ -574,9 +574,10 @@ export type Database = {
           author_user_id: string | null
           body: string
           created_at: string
-          customer_profile_id: string
+          customer_profile_id: string | null
           id: string
           parent_note_id: string | null
+          submission_id: string | null
           updated_at: string
         }
         Insert: {
@@ -584,9 +585,10 @@ export type Database = {
           author_user_id?: string | null
           body: string
           created_at?: string
-          customer_profile_id: string
+          customer_profile_id?: string | null
           id?: string
           parent_note_id?: string | null
+          submission_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -594,9 +596,10 @@ export type Database = {
           author_user_id?: string | null
           body?: string
           created_at?: string
-          customer_profile_id?: string
+          customer_profile_id?: string | null
           id?: string
           parent_note_id?: string | null
+          submission_id?: string | null
           updated_at?: string
         }
         Relationships: [
