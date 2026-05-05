@@ -45,11 +45,12 @@ const formatWhen = (iso: string) => {
 };
 
 interface Props {
-  customerId: string;
+  customerId?: string;
+  submissionId?: string;
   customerName?: string | null;
 }
 
-const CustomerNotes = ({ customerId }: Props) => {
+const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
@@ -64,36 +65,42 @@ const CustomerNotes = ({ customerId }: Props) => {
   const myName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Someone";
   const myColor = useMemo(() => colorFor(myId), [myId]);
 
+  const scopeColumn = submissionId ? "submission_id" : "customer_profile_id";
+  const scopeId = submissionId || customerId || "";
+
   // Load notes
   useEffect(() => {
+    if (!scopeId) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
         .from("customer_notes" as any)
         .select("*")
-        .eq("customer_profile_id", customerId)
+        .eq(scopeColumn, scopeId)
         .order("created_at", { ascending: false });
       if (!cancelled && data) setNotes(data as any);
     })();
     return () => { cancelled = true; };
-  }, [customerId]);
+  }, [scopeId, scopeColumn]);
 
   // Realtime: postgres changes + presence
   useEffect(() => {
-    const channel = supabase.channel(`customer-notes:${customerId}`, {
+    if (!scopeId) return;
+    const channel = supabase.channel(`notes:${scopeColumn}:${scopeId}`, {
       config: { presence: { key: myId } },
     });
 
+    const filter = `${scopeColumn}=eq.${scopeId}`;
     channel
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "customer_notes", filter: `customer_profile_id=eq.${customerId}` }, (payload) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "customer_notes", filter }, (payload) => {
         const n = payload.new as Note;
         setNotes(prev => prev.some(x => x.id === n.id) ? prev : [n, ...prev]);
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "customer_notes", filter: `customer_profile_id=eq.${customerId}` }, (payload) => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "customer_notes", filter }, (payload) => {
         const n = payload.new as Note;
         setNotes(prev => prev.map(x => x.id === n.id ? n : x));
       })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "customer_notes", filter: `customer_profile_id=eq.${customerId}` }, (payload) => {
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "customer_notes", filter }, (payload) => {
         const n = payload.old as Note;
         setNotes(prev => prev.filter(x => x.id !== n.id));
       })
@@ -115,7 +122,7 @@ const CustomerNotes = ({ customerId }: Props) => {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [customerId, myId, myName, myColor]);
+  }, [scopeId, scopeColumn, myId, myName, myColor]);
 
   // Broadcast typing status
   const broadcastTyping = (typing: boolean) => {
@@ -131,17 +138,18 @@ const CustomerNotes = ({ customerId }: Props) => {
 
   const submitNote = async () => {
     const body = draft.trim();
-    if (!body) return;
+    if (!body || !scopeId) return;
     setDraft("");
     broadcastTyping(false);
     const parentId = replyTo?.id ?? null;
-    const { data, error } = await supabase.from("customer_notes" as any).insert({
-      customer_profile_id: customerId,
+    const insertPayload: any = {
       body,
       author_user_id: user?.id ?? null,
       author_name: myName,
       parent_note_id: parentId,
-    }).select().single();
+    };
+    insertPayload[scopeColumn] = scopeId;
+    const { data, error } = await supabase.from("customer_notes" as any).insert(insertPayload).select().single();
     if (error) {
       toast({ title: "Could not save note", description: error.message, variant: "destructive" });
       setDraft(body);
@@ -149,7 +157,9 @@ const CustomerNotes = ({ customerId }: Props) => {
     }
     setReplyTo(null);
     if (data) setNotes(prev => prev.some(x => x.id === (data as any).id) ? prev : [data as any, ...prev]);
-    await supabase.from("customer_profiles" as any).update({ last_interaction_at: new Date().toISOString() }).eq("id", customerId);
+    if (customerId) {
+      await supabase.from("customer_profiles" as any).update({ last_interaction_at: new Date().toISOString() }).eq("id", customerId);
+    }
   };
 
   const saveEdit = async (id: string) => {
