@@ -641,6 +641,36 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           )}
         </>
       )}
+
+      {/* "Someone is typing" confirmation gate */}
+      {pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPendingAction(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-xl border border-border max-w-md w-full p-5 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-display text-base text-foreground">Hold up — someone's still typing</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <span className="font-medium text-foreground">{typingUsers.map(t => t.name).join(", ") || "A teammate"}</span> {typingUsers.length === 1 ? "is" : "are"} writing a note on this submission right now. You can wait for them, or proceed with <span className="font-medium text-foreground">"{pendingAction.label}"</span> anyway.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setPendingAction(null)} className="px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50">
+                Wait
+              </button>
+              <button
+                onClick={() => { const a = pendingAction; setPendingAction(null); a.run(); }}
+                className="px-4 py-2 rounded-full text-xs font-medium bg-foreground text-background hover:opacity-90"
+              >
+                Proceed anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
