@@ -62,6 +62,8 @@ interface Props {
   customerName?: string | null;
 }
 
+interface TeamMember { id: string; name: string; handle: string; }
+
 const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
@@ -70,8 +72,12 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState("");
   const [presence, setPresence] = useState<Record<string, PresenceState>>({});
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIdx, setMentionIdx] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const typingTimerRef = useRef<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const myId = user?.id ?? "anon";
   const myName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Someone";
@@ -79,6 +85,26 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
 
   const scopeColumn = submissionId ? "submission_id" : "customer_profile_id";
   const scopeId = submissionId || customerId || "";
+
+  // Load team (admins + agents) for @mention picker
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name, email");
+      if (data) {
+        setTeam((data as any[]).map(p => {
+          const name = p.full_name || (p.email ? p.email.split("@")[0] : "user");
+          return { id: p.id, name, handle: name.replace(/\s+/g, "").toLowerCase() };
+        }));
+      }
+    })();
+  }, []);
+
+  const filteredMentions = useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    return team.filter(t => t.id !== user?.id && (t.handle.includes(q) || t.name.toLowerCase().includes(q))).slice(0, 6);
+  }, [mentionQuery, team, user?.id]);
+
 
   // Load notes
   useEffect(() => {
