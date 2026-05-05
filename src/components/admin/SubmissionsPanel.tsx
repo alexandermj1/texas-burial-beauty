@@ -83,11 +83,7 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
-const VIEWED_KEY = "admin.submissions.viewed.v1";
-const loadViewed = (): Set<string> => {
-  try { return new Set(JSON.parse(localStorage.getItem(VIEWED_KEY) || "[]")); }
-  catch { return new Set(); }
-};
+interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
   const { user } = useAuth();
@@ -101,19 +97,54 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
-  const [viewed, setViewed] = useState<Set<string>>(() => loadViewed());
+  const [views, setViews] = useState<ViewRow[]>([]);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
   const [pendingAction, setPendingAction] = useState<null | { label: string; run: () => void }>(null);
   const typingChanRef = useRef<RealtimeChannel | null>(null);
   const { countFor } = useActiveListings();
 
-  const markViewed = (id: string) => {
-    setViewed(prev => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev); next.add(id);
-      try { localStorage.setItem(VIEWED_KEY, JSON.stringify(Array.from(next))); } catch {}
-      return next;
-    });
+  const myId = user?.id ?? "";
+  const myName = (user?.user_metadata as any)?.full_name || user?.email?.split("@")[0] || "Someone";
+
+  // Stable color per viewer
+  const VIEW_COLORS = ["#0ea5e9", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6"];
+  const colorFor = (id: string) => {
+    let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return VIEW_COLORS[h % VIEW_COLORS.length];
+  };
+
+  // Load all view records (admin-scope) + subscribe to live changes
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from("submission_views" as any).select("*");
+      if (!cancelled && data) setViews(data as any);
+    })();
+    const ch = supabase.channel("submission_views_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "submission_views" }, (payload) => {
+        setViews(prev => {
+          if (payload.eventType === "DELETE") return prev.filter(v => v.submission_id !== (payload.old as any).submission_id || v.user_id !== (payload.old as any).user_id);
+          const row = payload.new as ViewRow;
+          const filtered = prev.filter(v => !(v.submission_id === row.submission_id && v.user_id === row.user_id));
+          return [...filtered, row];
+        });
+      })
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, []);
+
+  const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
+  const haveIViewed = (sid: string) => !!myId && views.some(v => v.submission_id === sid && v.user_id === myId);
+
+  const recordView = async (sid: string) => {
+    if (!sid || !myId) return;
+    if (haveIViewed(sid)) return;
+    // optimistic
+    setViews(prev => [...prev, { submission_id: sid, user_id: myId, user_name: myName, viewed_at: new Date().toISOString() }]);
+    await supabase.from("submission_views" as any).upsert(
+      { submission_id: sid, user_id: myId, user_name: myName, viewed_at: new Date().toISOString() },
+      { onConflict: "submission_id,user_id" }
+    );
   };
 
   // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
