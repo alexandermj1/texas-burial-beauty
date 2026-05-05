@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle } from "lucide-react";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
@@ -13,6 +13,9 @@ import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface Submission {
   id: string;
@@ -80,7 +83,14 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "handled";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
+const VIEWED_KEY = "admin.submissions.viewed.v1";
+const loadViewed = (): Set<string> => {
+  try { return new Set(JSON.parse(localStorage.getItem(VIEWED_KEY) || "[]")); }
+  catch { return new Set(); }
+};
+
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
+  const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("new");
   const [refreshing, setRefreshing] = useState(false);
@@ -91,7 +101,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
+  const [viewed, setViewed] = useState<Set<string>>(() => loadViewed());
+  const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
+  const [pendingAction, setPendingAction] = useState<null | { label: string; run: () => void }>(null);
+  const typingChanRef = useRef<RealtimeChannel | null>(null);
   const { countFor } = useActiveListings();
+
+  const markViewed = (id: string) => {
+    setViewed(prev => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev); next.add(id);
+      try { localStorage.setItem(VIEWED_KEY, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+  };
 
   // Honor an external focus request (e.g. clicking "Open customer" from the Gmail inbox).
   useEffect(() => {
@@ -126,6 +149,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
+
+  // Mark the selected submission as viewed
+  useEffect(() => { if (selected?.id) markViewed(selected.id); }, [selected?.id]);
+
+  // Subscribe to the same notes presence channel CustomerNotes uses, so we know when
+  // somebody else is actively typing a note on this submission. We don't track ourselves
+  // as typing here — we only listen.
+  const myId = user?.id ?? "anon";
+  useEffect(() => {
+    if (!selected?.id) { setTypingUsers([]); return; }
+    const channel = supabase.channel(`notes:submission_id:${selected.id}`, {
+      config: { presence: { key: `watcher-${myId}` } },
+    });
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState<any>();
+        const flat: any[] = [];
+        Object.values(state).forEach((arr: any) => arr.forEach((p: any) => flat.push(p)));
+        const others = flat.filter(p => p.user_id && p.user_id !== myId && p.typing);
+        // de-dupe by user_id
+        const seen = new Set<string>();
+        const uniq: { name: string; color: string }[] = [];
+        others.forEach(o => { if (!seen.has(o.user_id)) { seen.add(o.user_id); uniq.push({ name: o.name, color: o.color }); } });
+        setTypingUsers(uniq);
+      })
+      .subscribe();
+    typingChanRef.current = channel;
+    return () => { channel.unsubscribe(); supabase.removeChannel(channel); typingChanRef.current = null; };
+  }, [selected?.id, myId]);
+
+  // Guarded action wrapper — if someone else is typing, intercept with a confirmation popup.
+  const guard = (label: string, fn: () => void) => () => {
+    if (typingUsers.length > 0) { setPendingAction({ label, run: fn }); return; }
+    fn();
+  };
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
@@ -253,17 +311,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const sKind = resolveKind(s.customer_kind, s.source);
             const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
             const stageMeta = bayer ? BAYER_STAGE_META[bayer] : null;
+            const isUnread = !viewed.has(s.id);
             return (
               <motion.button
                 key={s.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: Math.min(i * 0.02, 0.2) }}
-                onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); }}
-                className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${
-                  isActive ? "bg-primary/5" : "hover:bg-muted/40"
+                onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); markViewed(s.id); }}
+                className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 relative ${
+                  isActive ? "bg-primary/5" : isUnread ? "bg-primary/[0.04] hover:bg-primary/10" : "hover:bg-muted/40"
                 }`}
               >
+                {isUnread && <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary" aria-label="Unread" />}
                 <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
                 <img
                   src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
@@ -273,11 +333,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{s.name || "Anonymous"}</p>
+                      <p className={`text-sm truncate ${isUnread ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
                       <CustomerKindBadge kind={sKind} size="xs" />
                       <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                     </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
+                    <span className={`text-[10px] shrink-0 ${isUnread ? "text-foreground font-semibold" : "text-muted-foreground"}`}>{formatDate(s.created_at).split(",")[0]}</span>
                   </div>
                   {stageMeta && (
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -485,11 +545,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
               />
             )}
+            {/* Typing banner — iMessage style */}
+            {typingUsers.length > 0 && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                <span className="inline-flex gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "120ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "240ms" }} />
+                </span>
+                <p className="text-xs text-amber-900 dark:text-amber-200">
+                  <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
+                </p>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <button
-                  onClick={() => onUpdate(selected.id, { handled: !selected.handled })}
+                  onClick={guard("Mark as handled", () => onUpdate(selected.id, { handled: !selected.handled }))}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
                     selected.handled
                       ? "border border-border text-muted-foreground hover:text-foreground"
@@ -502,7 +576,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {selected.source === "seller_quote" ? (
                   <button
-                    onClick={() => setQuoteOpen(true)}
+                    onClick={guard("Send seller quote", () => setQuoteOpen(true))}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -510,7 +584,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </button>
                 ) : (
                   <button
-                    onClick={() => setBuyerOpen(true)}
+                    onClick={guard("Send available plots", () => setBuyerOpen(true))}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -519,7 +593,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
 
                 <button
-                  onClick={() => setDeclineOpen(true)}
+                  onClick={guard("Polite decline", () => setDeclineOpen(true))}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
                 >
                   <MessageCircleX className="w-3.5 h-3.5" />
@@ -527,7 +601,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </button>
               </div>
               <button
-                onClick={() => onDelete(selected.id)}
+                onClick={guard("Delete submission", () => onDelete(selected.id))}
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -566,6 +640,36 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             />
           )}
         </>
+      )}
+
+      {/* "Someone is typing" confirmation gate */}
+      {pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPendingAction(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-xl border border-border max-w-md w-full p-5 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-display text-base text-foreground">Hold up — someone's still typing</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <span className="font-medium text-foreground">{typingUsers.map(t => t.name).join(", ") || "A teammate"}</span> {typingUsers.length === 1 ? "is" : "are"} writing a note on this submission right now. You can wait for them, or proceed with <span className="font-medium text-foreground">"{pendingAction.label}"</span> anyway.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setPendingAction(null)} className="px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50">
+                Wait
+              </button>
+              <button
+                onClick={() => { const a = pendingAction; setPendingAction(null); a.run(); }}
+                className="px-4 py-2 rounded-full text-xs font-medium bg-foreground text-background hover:opacity-90"
+              >
+                Proceed anyway
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
