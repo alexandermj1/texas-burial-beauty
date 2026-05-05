@@ -36,12 +36,24 @@ const colorFor = (id: string) => {
 
 const formatWhen = (iso: string) => {
   const d = new Date(iso);
-  const now = Date.now();
-  const diff = (now - d.getTime()) / 1000;
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const diff = (Date.now() - d.getTime()) / 1000;
+  let rel: string;
+  if (diff < 60) rel = "just now";
+  else if (diff < 3600) rel = `${Math.floor(diff / 60)}m ago`;
+  else if (diff < 86400) rel = `${Math.floor(diff / 3600)}h ago`;
+  else rel = d.toLocaleString("en-US", { month: "short", day: "numeric" });
+  const exact = d.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  return { rel, exact };
+};
+
+const renderBody = (body: string) => {
+  // Highlight @mentions visually
+  const parts = body.split(/(@[\w.\-]+(?:\s[\w.\-]+)?)/g);
+  return parts.map((p, i) =>
+    p.startsWith("@")
+      ? <span key={i} className="inline-block px-1 rounded bg-primary/15 text-primary font-medium">{p}</span>
+      : <span key={i}>{p}</span>
+  );
 };
 
 interface Props {
@@ -49,6 +61,8 @@ interface Props {
   submissionId?: string;
   customerName?: string | null;
 }
+
+interface TeamMember { id: string; name: string; handle: string; }
 
 const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const { user } = useAuth();
@@ -58,8 +72,12 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState("");
   const [presence, setPresence] = useState<Record<string, PresenceState>>({});
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIdx, setMentionIdx] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const typingTimerRef = useRef<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const myId = user?.id ?? "anon";
   const myName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Someone";
@@ -67,6 +85,26 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
 
   const scopeColumn = submissionId ? "submission_id" : "customer_profile_id";
   const scopeId = submissionId || customerId || "";
+
+  // Load team (admins + agents) for @mention picker
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name, email");
+      if (data) {
+        setTeam((data as any[]).map(p => {
+          const name = p.full_name || (p.email ? p.email.split("@")[0] : "user");
+          return { id: p.id, name, handle: name.replace(/\s+/g, "").toLowerCase() };
+        }));
+      }
+    })();
+  }, []);
+
+  const filteredMentions = useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    return team.filter(t => t.id !== user?.id && (t.handle.includes(q) || t.name.toLowerCase().includes(q))).slice(0, 6);
+  }, [mentionQuery, team, user?.id]);
+
 
   // Load notes
   useEffect(() => {
@@ -134,12 +172,36 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     broadcastTyping(true);
     if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
     typingTimerRef.current = window.setTimeout(() => broadcastTyping(false), 1500);
+    // Detect "@..." token at caret
+    const ta = textareaRef.current;
+    const pos = ta?.selectionStart ?? v.length;
+    const before = v.slice(0, pos);
+    const m = before.match(/(?:^|\s)@([\w.\-]*)$/);
+    setMentionQuery(m ? m[1] : null);
+    setMentionIdx(0);
+  };
+
+  const insertMention = (member: TeamMember) => {
+    const ta = textareaRef.current;
+    const pos = ta?.selectionStart ?? draft.length;
+    const before = draft.slice(0, pos);
+    const after = draft.slice(pos);
+    const replaced = before.replace(/@([\w.\-]*)$/, `@${member.handle} `);
+    const newDraft = replaced + after;
+    setDraft(newDraft);
+    setMentionQuery(null);
+    requestAnimationFrame(() => {
+      const newPos = replaced.length;
+      ta?.focus();
+      ta?.setSelectionRange(newPos, newPos);
+    });
   };
 
   const submitNote = async () => {
     const body = draft.trim();
     if (!body || !scopeId) return;
     setDraft("");
+    setMentionQuery(null);
     broadcastTyping(false);
     const parentId = replyTo?.id ?? null;
     const insertPayload: any = {
@@ -159,6 +221,31 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     if (data) setNotes(prev => prev.some(x => x.id === (data as any).id) ? prev : [data as any, ...prev]);
     if (customerId) {
       await supabase.from("customer_profiles" as any).update({ last_interaction_at: new Date().toISOString() }).eq("id", customerId);
+    }
+    // Notify mentioned teammates
+    const mentions = Array.from(new Set((body.match(/@([\w.\-]+)/g) || []).map(m => m.slice(1).toLowerCase())));
+    if (mentions.length > 0) {
+      const targets = team.filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id);
+      // Also notify the parent note author on a reply (if not already mentioned and not self)
+      if (parentId) {
+        const parent = notes.find(n => n.id === parentId);
+        if (parent?.author_user_id && parent.author_user_id !== user?.id && !targets.some(t => t.id === parent.author_user_id)) {
+          targets.push({ id: parent.author_user_id, name: parent.author_name || "", handle: "" });
+        }
+      }
+      if (targets.length) {
+        const link = submissionId ? `/admin?tab=submissions&submission=${submissionId}` : `/admin?tab=customers&customer=${customerId}`;
+        await supabase.from("user_notifications" as any).insert(
+          targets.map(t => ({
+            user_id: t.id,
+            title: `${myName} mentioned you in a note`,
+            body: body.slice(0, 240),
+            link_url: link,
+            source_type: "customer_note",
+            source_id: (data as any)?.id,
+          }))
+        );
+      }
     }
   };
 
@@ -215,17 +302,46 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
             </button>
           </div>
         )}
-        <textarea
-          value={draft}
-          onChange={(e) => onDraftChange(e.target.value)}
-          onBlur={() => broadcastTyping(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitNote(); }
-          }}
-          rows={2}
-          placeholder={replyTo ? "Write your reply… (Enter to send, Shift+Enter for newline)" : "Add a note for the team… (Enter to post, Shift+Enter for newline)"}
-          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
-        />
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            value={draft}
+            onChange={(e) => onDraftChange(e.target.value)}
+            onBlur={() => { broadcastTyping(false); setTimeout(() => setMentionQuery(null), 150); }}
+            onKeyDown={(e) => {
+              if (mentionQuery !== null && filteredMentions.length > 0) {
+                if (e.key === "ArrowDown") { e.preventDefault(); setMentionIdx(i => (i + 1) % filteredMentions.length); return; }
+                if (e.key === "ArrowUp") { e.preventDefault(); setMentionIdx(i => (i - 1 + filteredMentions.length) % filteredMentions.length); return; }
+                if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); insertMention(filteredMentions[mentionIdx]); return; }
+                if (e.key === "Escape") { e.preventDefault(); setMentionQuery(null); return; }
+              }
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitNote(); }
+            }}
+            rows={2}
+            placeholder={replyTo ? "Write your reply… (Enter to send, @ to mention)" : "Add a note for the team… (Enter to post, @ to mention)"}
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
+          />
+          {mentionQuery !== null && filteredMentions.length > 0 && (
+            <ul className="absolute left-0 bottom-full mb-1 w-56 max-h-48 overflow-auto bg-popover border border-border rounded-md shadow-lg z-50">
+              {filteredMentions.map((m, i) => (
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); insertMention(m); }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center gap-2 ${i === mentionIdx ? "bg-primary/10 text-foreground" : "text-foreground hover:bg-muted"}`}
+                  >
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold text-white" style={{ background: colorFor(m.id) }}>
+                      {m.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="font-medium">{m.name}</span>
+                    <span className="text-muted-foreground">@{m.handle}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <div className="flex items-center justify-between gap-2 mt-1">
           <div className="text-[10px] text-muted-foreground min-h-[14px]">
             <AnimatePresence>
@@ -275,7 +391,9 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <p className="text-xs font-medium text-foreground">{note.author_name || "Unknown"}</p>
-                          <p className="text-[10px] text-muted-foreground">{formatWhen(note.created_at)}{edited ? " · edited" : ""}</p>
+                          {(() => { const w = formatWhen(note.created_at); return (
+                            <p className="text-[10px] text-muted-foreground" title={w.exact}>{w.rel} · {w.exact}{edited ? " · edited" : ""}</p>
+                          ); })()}
                         </div>
                         {editingId === note.id ? (
                           <div className="mt-1.5">
@@ -286,7 +404,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-foreground whitespace-pre-wrap mt-0.5">{note.body}</p>
+                          <p className="text-sm text-foreground whitespace-pre-wrap mt-0.5">{renderBody(note.body)}</p>
                         )}
                         {editingId !== note.id && (
                           <div className="flex gap-3 mt-1.5">
