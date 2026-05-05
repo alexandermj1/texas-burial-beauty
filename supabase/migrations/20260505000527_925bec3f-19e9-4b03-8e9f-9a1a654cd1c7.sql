@@ -1,0 +1,2 @@
+ALTER TABLE public.customer_notes ADD COLUMN IF NOT EXISTS parent_note_id uuid REFERENCES public.customer_notes(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_customer_notes_parent ON public.customer_notes(parent_note_id);

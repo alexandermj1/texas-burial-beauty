@@ -576,6 +576,7 @@ export type Database = {
           created_at: string
           customer_profile_id: string
           id: string
+          parent_note_id: string | null
           updated_at: string
         }
         Insert: {
@@ -585,6 +586,7 @@ export type Database = {
           created_at?: string
           customer_profile_id: string
           id?: string
+          parent_note_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -594,9 +596,18 @@ export type Database = {
           created_at?: string
           customer_profile_id?: string
           id?: string
+          parent_note_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_notes_parent_note_id_fkey"
+            columns: ["parent_note_id"]
+            isOneToOne: false
+            referencedRelation: "customer_notes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_profiles: {
         Row: {
