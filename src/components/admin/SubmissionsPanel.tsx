@@ -362,7 +362,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); }}
                 className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
               >
-                <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
+                
                 <img
                   src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
                   alt=""
@@ -557,16 +557,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             )}
 
-            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-            <div>
-              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-            </div>
-
-            {/* Kind-specific journey:
-                - Sellers: Bayer 8-stage pipeline is dominant. The Dropbox Sign + document
-                  checklist only appears once they reach the L.A. issuance stage.
-                - Buyers:  recommended-plots tracker only (no Dropbox / paperwork).
-                - Other:   linked email thread only via CustomerJourney */}
+            {/* Sellers: pipeline first — most important context. */}
             {selectedKind === "seller" && (() => {
               const dropboxStages: BayerStage[] = [
                 "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
@@ -589,6 +580,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </>
               );
             })()}
+
+            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
+            <div>
+              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
+            </div>
 
             {selectedKind === "buyer" && (
               <BuyerJourneyPanel

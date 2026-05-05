@@ -184,12 +184,12 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
     (submission as any).gov_id_on_file && (submission as any).deed_on_file;
 
   return (
-    <section className="bg-gradient-to-br from-primary/5 to-transparent rounded-xl border border-primary/15 p-4 space-y-4">
+    <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl border-2 border-primary/30 p-5 space-y-4 shadow-md ring-1 ring-primary/10">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <meta.Icon className="w-4 h-4 text-primary" />
-          <h4 className="text-sm font-semibold text-foreground">Bayer pipeline</h4>
+          <meta.Icon className="w-5 h-5 text-primary" />
+          <h4 className="text-base font-bold text-foreground tracking-tight">Bayer pipeline</h4>
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${meta.cls}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
             {meta.label}
