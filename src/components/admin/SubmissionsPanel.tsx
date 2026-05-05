@@ -545,11 +545,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
               />
             )}
+            {/* Typing banner — iMessage style */}
+            {typingUsers.length > 0 && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                <span className="inline-flex gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "120ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "240ms" }} />
+                </span>
+                <p className="text-xs text-amber-900 dark:text-amber-200">
+                  <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
+                </p>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <button
-                  onClick={() => onUpdate(selected.id, { handled: !selected.handled })}
+                  onClick={guard("Mark as handled", () => onUpdate(selected.id, { handled: !selected.handled }))}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
                     selected.handled
                       ? "border border-border text-muted-foreground hover:text-foreground"
@@ -562,7 +576,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {selected.source === "seller_quote" ? (
                   <button
-                    onClick={() => setQuoteOpen(true)}
+                    onClick={guard("Send seller quote", () => setQuoteOpen(true))}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -570,7 +584,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </button>
                 ) : (
                   <button
-                    onClick={() => setBuyerOpen(true)}
+                    onClick={guard("Send available plots", () => setBuyerOpen(true))}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -579,7 +593,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
 
                 <button
-                  onClick={() => setDeclineOpen(true)}
+                  onClick={guard("Polite decline", () => setDeclineOpen(true))}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
                 >
                   <MessageCircleX className="w-3.5 h-3.5" />
@@ -587,7 +601,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </button>
               </div>
               <button
-                onClick={() => onDelete(selected.id)}
+                onClick={guard("Delete submission", () => onDelete(selected.id))}
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Delete
