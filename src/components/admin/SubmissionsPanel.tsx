@@ -362,7 +362,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); }}
                 className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
               >
-                <CustomerKindBadge kind={sKind} variant="dot" className="mt-2" />
+                
                 <img
                   src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
                   alt=""
