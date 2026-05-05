@@ -1309,6 +1309,30 @@ export type Database = {
           },
         ]
       }
+      submission_views: {
+        Row: {
+          id: string
+          submission_id: string
+          user_id: string
+          user_name: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          submission_id: string
+          user_id: string
+          user_name?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          submission_id?: string
+          user_id?: string
+          user_name?: string | null
+          viewed_at?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           body: string | null
