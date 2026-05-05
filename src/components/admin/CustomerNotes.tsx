@@ -287,7 +287,9 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <p className="text-xs font-medium text-foreground">{note.author_name || "Unknown"}</p>
-                          <p className="text-[10px] text-muted-foreground">{formatWhen(note.created_at)}{edited ? " · edited" : ""}</p>
+                          {(() => { const w = formatWhen(note.created_at); return (
+                            <p className="text-[10px] text-muted-foreground" title={w.exact}>{w.rel} · {w.exact}{edited ? " · edited" : ""}</p>
+                          ); })()}
                         </div>
                         {editingId === note.id ? (
                           <div className="mt-1.5">
