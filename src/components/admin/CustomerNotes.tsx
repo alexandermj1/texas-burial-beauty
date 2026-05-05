@@ -36,12 +36,24 @@ const colorFor = (id: string) => {
 
 const formatWhen = (iso: string) => {
   const d = new Date(iso);
-  const now = Date.now();
-  const diff = (now - d.getTime()) / 1000;
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const diff = (Date.now() - d.getTime()) / 1000;
+  let rel: string;
+  if (diff < 60) rel = "just now";
+  else if (diff < 3600) rel = `${Math.floor(diff / 60)}m ago`;
+  else if (diff < 86400) rel = `${Math.floor(diff / 3600)}h ago`;
+  else rel = d.toLocaleString("en-US", { month: "short", day: "numeric" });
+  const exact = d.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  return { rel, exact };
+};
+
+const renderBody = (body: string) => {
+  // Highlight @mentions visually
+  const parts = body.split(/(@[\w.\-]+(?:\s[\w.\-]+)?)/g);
+  return parts.map((p, i) =>
+    p.startsWith("@")
+      ? <span key={i} className="inline-block px-1 rounded bg-primary/15 text-primary font-medium">{p}</span>
+      : <span key={i}>{p}</span>
+  );
 };
 
 interface Props {
