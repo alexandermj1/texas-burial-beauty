@@ -150,6 +150,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
 
+  // Mark the selected submission as viewed
+  useEffect(() => { if (selected?.id) markViewed(selected.id); }, [selected?.id]);
+
+  // Subscribe to the same notes presence channel CustomerNotes uses, so we know when
+  // somebody else is actively typing a note on this submission. We don't track ourselves
+  // as typing here — we only listen.
+  const myId = user?.id ?? "anon";
+  useEffect(() => {
+    if (!selected?.id) { setTypingUsers([]); return; }
+    const channel = supabase.channel(`notes:submission_id:${selected.id}`, {
+      config: { presence: { key: `watcher-${myId}` } },
+    });
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState<any>();
+        const flat: any[] = [];
+        Object.values(state).forEach((arr: any) => arr.forEach((p: any) => flat.push(p)));
+        const others = flat.filter(p => p.user_id && p.user_id !== myId && p.typing);
+        // de-dupe by user_id
+        const seen = new Set<string>();
+        const uniq: { name: string; color: string }[] = [];
+        others.forEach(o => { if (!seen.has(o.user_id)) { seen.add(o.user_id); uniq.push({ name: o.name, color: o.color }); } });
+        setTypingUsers(uniq);
+      })
+      .subscribe();
+    typingChanRef.current = channel;
+    return () => { channel.unsubscribe(); supabase.removeChannel(channel); typingChanRef.current = null; };
+  }, [selected?.id, myId]);
+
+  // Guarded action wrapper — if someone else is typing, intercept with a confirmation popup.
+  const guard = (label: string, fn: () => void) => () => {
+    if (typingUsers.length > 0) { setPendingAction({ label, run: fn }); return; }
+    fn();
+  };
+
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
     if (filter === "new" && s.handled) return false;
