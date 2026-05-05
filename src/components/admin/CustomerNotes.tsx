@@ -15,6 +15,7 @@ interface Note {
   body: string;
   author_user_id: string | null;
   author_name: string | null;
+  parent_note_id: string | null;
   created_at: string;
   updated_at: string;
 }
