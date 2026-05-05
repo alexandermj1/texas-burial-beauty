@@ -12,6 +12,7 @@ import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORD
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
+import CustomerNotes from "./CustomerNotes";
 
 export interface Submission {
   id: string;
