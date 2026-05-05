@@ -557,16 +557,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             )}
 
-            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-            <div>
-              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-            </div>
-
-            {/* Kind-specific journey:
-                - Sellers: Bayer 8-stage pipeline is dominant. The Dropbox Sign + document
-                  checklist only appears once they reach the L.A. issuance stage.
-                - Buyers:  recommended-plots tracker only (no Dropbox / paperwork).
-                - Other:   linked email thread only via CustomerJourney */}
+            {/* Sellers: pipeline first — most important context. */}
             {selectedKind === "seller" && (() => {
               const dropboxStages: BayerStage[] = [
                 "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
@@ -589,6 +580,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </>
               );
             })()}
+
+            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
+            <div>
+              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
+            </div>
 
             {selectedKind === "buyer" && (
               <BuyerJourneyPanel
