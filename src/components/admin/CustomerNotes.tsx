@@ -134,19 +134,21 @@ const CustomerNotes = ({ customerId }: Props) => {
     if (!body) return;
     setDraft("");
     broadcastTyping(false);
+    const parentId = replyTo?.id ?? null;
     const { data, error } = await supabase.from("customer_notes" as any).insert({
       customer_profile_id: customerId,
       body,
       author_user_id: user?.id ?? null,
       author_name: myName,
+      parent_note_id: parentId,
     }).select().single();
     if (error) {
       toast({ title: "Could not save note", description: error.message, variant: "destructive" });
       setDraft(body);
       return;
     }
+    setReplyTo(null);
     if (data) setNotes(prev => prev.some(x => x.id === (data as any).id) ? prev : [data as any, ...prev]);
-    // bump customer last_interaction_at so the panel reflects activity
     await supabase.from("customer_profiles" as any).update({ last_interaction_at: new Date().toISOString() }).eq("id", customerId);
   };
 
