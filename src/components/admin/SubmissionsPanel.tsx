@@ -438,21 +438,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             )}
 
-            {/* Admin notes */}
+            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Internal notes</label>
-              <textarea
-                value={notesDraft}
-                onChange={e => setNotesDraft(e.target.value)}
-                onBlur={() => {
-                  if (notesDraft !== (selected.admin_notes || "")) {
-                    onUpdate(selected.id, { admin_notes: notesDraft });
-                  }
-                }}
-                rows={3}
-                placeholder="Add notes for your team…"
-                className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-              />
+              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
             </div>
 
             {/* Kind-specific journey:
