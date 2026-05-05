@@ -302,17 +302,46 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
             </button>
           </div>
         )}
-        <textarea
-          value={draft}
-          onChange={(e) => onDraftChange(e.target.value)}
-          onBlur={() => broadcastTyping(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitNote(); }
-          }}
-          rows={2}
-          placeholder={replyTo ? "Write your reply… (Enter to send, Shift+Enter for newline)" : "Add a note for the team… (Enter to post, Shift+Enter for newline)"}
-          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
-        />
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            value={draft}
+            onChange={(e) => onDraftChange(e.target.value)}
+            onBlur={() => { broadcastTyping(false); setTimeout(() => setMentionQuery(null), 150); }}
+            onKeyDown={(e) => {
+              if (mentionQuery !== null && filteredMentions.length > 0) {
+                if (e.key === "ArrowDown") { e.preventDefault(); setMentionIdx(i => (i + 1) % filteredMentions.length); return; }
+                if (e.key === "ArrowUp") { e.preventDefault(); setMentionIdx(i => (i - 1 + filteredMentions.length) % filteredMentions.length); return; }
+                if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); insertMention(filteredMentions[mentionIdx]); return; }
+                if (e.key === "Escape") { e.preventDefault(); setMentionQuery(null); return; }
+              }
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitNote(); }
+            }}
+            rows={2}
+            placeholder={replyTo ? "Write your reply… (Enter to send, @ to mention)" : "Add a note for the team… (Enter to post, @ to mention)"}
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
+          />
+          {mentionQuery !== null && filteredMentions.length > 0 && (
+            <ul className="absolute left-0 bottom-full mb-1 w-56 max-h-48 overflow-auto bg-popover border border-border rounded-md shadow-lg z-50">
+              {filteredMentions.map((m, i) => (
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); insertMention(m); }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center gap-2 ${i === mentionIdx ? "bg-primary/10 text-foreground" : "text-foreground hover:bg-muted"}`}
+                  >
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold text-white" style={{ background: colorFor(m.id) }}>
+                      {m.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="font-medium">{m.name}</span>
+                    <span className="text-muted-foreground">@{m.handle}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <div className="flex items-center justify-between gap-2 mt-1">
           <div className="text-[10px] text-muted-foreground min-h-[14px]">
             <AnimatePresence>
