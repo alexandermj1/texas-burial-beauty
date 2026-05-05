@@ -300,7 +300,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-foreground whitespace-pre-wrap mt-0.5">{note.body}</p>
+                          <p className="text-sm text-foreground whitespace-pre-wrap mt-0.5">{renderBody(note.body)}</p>
                         )}
                         {editingId !== note.id && (
                           <div className="flex gap-3 mt-1.5">
