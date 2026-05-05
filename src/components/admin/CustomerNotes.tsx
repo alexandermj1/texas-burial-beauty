@@ -246,59 +246,64 @@ const CustomerNotes = ({ customerId }: Props) => {
 
       {/* Notes list */}
       {notes.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic">No notes yet. Anything posted here is visible to your whole team in realtime.</p>
+        <p className="text-xs text-muted-foreground italic">No notes yet. Press Enter to post — your team sees it instantly.</p>
       ) : (
         <ul className="space-y-2">
           <AnimatePresence initial={false}>
-            {notes.map(n => {
-              const isMine = n.author_user_id === user?.id;
-              const color = colorFor(n.author_user_id || n.author_name || "x");
-              const edited = n.updated_at && n.updated_at !== n.created_at;
-              return (
-                <motion.li
-                  key={n.id}
-                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="bg-muted/40 rounded-lg p-3 border border-border/50"
-                >
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0" style={{ background: color }}>
-                      {(n.author_name || "?").charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <p className="text-xs font-medium text-foreground">{n.author_name || "Unknown"}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {formatWhen(n.created_at)}{edited ? " · edited" : ""}
-                        </p>
+            {notes.filter(n => !n.parent_note_id).map(n => {
+              const replies = notes.filter(r => r.parent_note_id === n.id).sort((a, b) => a.created_at.localeCompare(b.created_at));
+              const renderNote = (note: Note, isReply = false) => {
+                const isMine = note.author_user_id === user?.id;
+                const color = colorFor(note.author_user_id || note.author_name || "x");
+                const edited = note.updated_at && note.updated_at !== note.created_at;
+                return (
+                  <div key={note.id} className={`rounded-lg p-3 border border-border/50 ${isReply ? "ml-6 mt-2 bg-muted/20" : "bg-muted/40"}`}>
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0" style={{ background: color }}>
+                        {(note.author_name || "?").charAt(0).toUpperCase()}
                       </div>
-                      {editingId === n.id ? (
-                        <div className="mt-1.5">
-                          <textarea
-                            value={editingDraft}
-                            onChange={(e) => setEditingDraft(e.target.value)}
-                            rows={2}
-                            className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                          />
-                          <div className="flex justify-end gap-2 mt-1">
-                            <button onClick={() => setEditingId(null)} className="text-[11px] text-muted-foreground hover:text-foreground">Cancel</button>
-                            <button onClick={() => saveEdit(n.id)} className="text-[11px] font-medium text-primary hover:underline">Save</button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <p className="text-xs font-medium text-foreground">{note.author_name || "Unknown"}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatWhen(note.created_at)}{edited ? " · edited" : ""}</p>
+                        </div>
+                        {editingId === note.id ? (
+                          <div className="mt-1.5">
+                            <textarea value={editingDraft} onChange={(e) => setEditingDraft(e.target.value)} rows={2} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+                            <div className="flex justify-end gap-2 mt-1">
+                              <button onClick={() => setEditingId(null)} className="text-[11px] text-muted-foreground hover:text-foreground">Cancel</button>
+                              <button onClick={() => saveEdit(note.id)} className="text-[11px] font-medium text-primary hover:underline">Save</button>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-foreground whitespace-pre-wrap mt-0.5">{n.body}</p>
-                      )}
-                      {isMine && editingId !== n.id && (
-                        <div className="flex gap-3 mt-1.5">
-                          <button onClick={() => { setEditingId(n.id); setEditingDraft(n.body); }} className="text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-                            <Pencil className="w-3 h-3" /> Edit
-                          </button>
-                          <button onClick={() => deleteNote(n.id)} className="text-[10px] text-muted-foreground hover:text-destructive inline-flex items-center gap-1">
-                            <Trash2 className="w-3 h-3" /> Delete
-                          </button>
-                        </div>
-                      )}
+                        ) : (
+                          <p className="text-sm text-foreground whitespace-pre-wrap mt-0.5">{note.body}</p>
+                        )}
+                        {editingId !== note.id && (
+                          <div className="flex gap-3 mt-1.5">
+                            <button onClick={() => setReplyTo(note)} className="text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                              <Reply className="w-3 h-3" /> Reply
+                            </button>
+                            {isMine && (
+                              <>
+                                <button onClick={() => { setEditingId(note.id); setEditingDraft(note.body); }} className="text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                                  <Pencil className="w-3 h-3" /> Edit
+                                </button>
+                                <button onClick={() => deleteNote(note.id)} className="text-[10px] text-muted-foreground hover:text-destructive inline-flex items-center gap-1">
+                                  <Trash2 className="w-3 h-3" /> Delete
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
+                );
+              };
+              return (
+                <motion.li key={n.id} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  {renderNote(n)}
+                  {replies.map(r => renderNote(r, true))}
                 </motion.li>
               );
             })}
