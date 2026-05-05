@@ -172,12 +172,36 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     broadcastTyping(true);
     if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
     typingTimerRef.current = window.setTimeout(() => broadcastTyping(false), 1500);
+    // Detect "@..." token at caret
+    const ta = textareaRef.current;
+    const pos = ta?.selectionStart ?? v.length;
+    const before = v.slice(0, pos);
+    const m = before.match(/(?:^|\s)@([\w.\-]*)$/);
+    setMentionQuery(m ? m[1] : null);
+    setMentionIdx(0);
+  };
+
+  const insertMention = (member: TeamMember) => {
+    const ta = textareaRef.current;
+    const pos = ta?.selectionStart ?? draft.length;
+    const before = draft.slice(0, pos);
+    const after = draft.slice(pos);
+    const replaced = before.replace(/@([\w.\-]*)$/, `@${member.handle} `);
+    const newDraft = replaced + after;
+    setDraft(newDraft);
+    setMentionQuery(null);
+    requestAnimationFrame(() => {
+      const newPos = replaced.length;
+      ta?.focus();
+      ta?.setSelectionRange(newPos, newPos);
+    });
   };
 
   const submitNote = async () => {
     const body = draft.trim();
     if (!body || !scopeId) return;
     setDraft("");
+    setMentionQuery(null);
     broadcastTyping(false);
     const parentId = replyTo?.id ?? null;
     const insertPayload: any = {
@@ -197,6 +221,31 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     if (data) setNotes(prev => prev.some(x => x.id === (data as any).id) ? prev : [data as any, ...prev]);
     if (customerId) {
       await supabase.from("customer_profiles" as any).update({ last_interaction_at: new Date().toISOString() }).eq("id", customerId);
+    }
+    // Notify mentioned teammates
+    const mentions = Array.from(new Set((body.match(/@([\w.\-]+)/g) || []).map(m => m.slice(1).toLowerCase())));
+    if (mentions.length > 0) {
+      const targets = team.filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id);
+      // Also notify the parent note author on a reply (if not already mentioned and not self)
+      if (parentId) {
+        const parent = notes.find(n => n.id === parentId);
+        if (parent?.author_user_id && parent.author_user_id !== user?.id && !targets.some(t => t.id === parent.author_user_id)) {
+          targets.push({ id: parent.author_user_id, name: parent.author_name || "", handle: "" });
+        }
+      }
+      if (targets.length) {
+        const link = submissionId ? `/admin?tab=submissions&submission=${submissionId}` : `/admin?tab=customers&customer=${customerId}`;
+        await supabase.from("user_notifications" as any).insert(
+          targets.map(t => ({
+            user_id: t.id,
+            title: `${myName} mentioned you in a note`,
+            body: body.slice(0, 240),
+            link_url: link,
+            source_type: "customer_note",
+            source_id: (data as any)?.id,
+          }))
+        );
+      }
     }
   };
 
