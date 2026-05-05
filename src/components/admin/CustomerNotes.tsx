@@ -195,15 +195,25 @@ const CustomerNotes = ({ customerId }: Props) => {
 
       {/* Composer */}
       <div className="rounded-lg border border-border bg-background p-2 focus-within:ring-2 focus-within:ring-primary/30">
+        {replyTo && (
+          <div className="flex items-center justify-between gap-2 mb-1.5 px-2 py-1 rounded bg-muted/60 border-l-2 border-primary">
+            <div className="text-[11px] text-muted-foreground truncate">
+              Replying to <span className="font-medium text-foreground">{replyTo.author_name || "Unknown"}</span>: <span className="italic">{replyTo.body.slice(0, 80)}{replyTo.body.length > 80 ? "…" : ""}</span>
+            </div>
+            <button onClick={() => setReplyTo(null)} className="text-muted-foreground hover:text-foreground shrink-0">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
         <textarea
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
           onBlur={() => broadcastTyping(false)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitNote(); }
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitNote(); }
           }}
           rows={2}
-          placeholder="Add a note for the team… (⌘/Ctrl + Enter to post)"
+          placeholder={replyTo ? "Write your reply… (Enter to send, Shift+Enter for newline)" : "Add a note for the team… (Enter to post, Shift+Enter for newline)"}
           className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
         />
         <div className="flex items-center justify-between gap-2 mt-1">
@@ -229,7 +239,7 @@ const CustomerNotes = ({ customerId }: Props) => {
             disabled={!draft.trim()}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
           >
-            <Send className="w-3 h-3" /> Post
+            <Send className="w-3 h-3" /> {replyTo ? "Reply" : "Post"}
           </button>
         </div>
       </div>
