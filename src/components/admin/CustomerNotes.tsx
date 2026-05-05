@@ -53,6 +53,7 @@ const CustomerNotes = ({ customerId }: Props) => {
   const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
+  const [replyTo, setReplyTo] = useState<Note | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState("");
   const [presence, setPresence] = useState<Record<string, PresenceState>>({});
