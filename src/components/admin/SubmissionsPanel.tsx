@@ -308,22 +308,44 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           );
         })}
 
-        {onRefresh && (
+        <div className="ml-auto flex items-center gap-1.5">
           <button
-            onClick={async () => {
-              if (refreshing) return;
-              setRefreshing(true);
-              try { await onRefresh(); } finally { setRefreshing(false); }
-            }}
-            disabled={refreshing}
-            className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
-            title="Sync Gmail and reload submissions"
+            onClick={() => setAddOpen(true)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
+            title="Add a submission manually (e.g. info taken over the phone)"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing ? "Refreshing..." : "Refresh inbox"}
+            <UserPlus className="w-3.5 h-3.5" /> Add submission
           </button>
-        )}
+          <button
+            onClick={() => setBroadcastOpen(true)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
+            title="Send a notification to the whole team"
+          >
+            <Megaphone className="w-3.5 h-3.5" /> Message team
+          </button>
+          {onRefresh && (
+            <button
+              onClick={async () => {
+                if (refreshing) return;
+                setRefreshing(true);
+                try { await onRefresh(); } finally { setRefreshing(false); }
+              }}
+              disabled={refreshing}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+              title="Sync Gmail and reload submissions"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              {refreshing ? "Refreshing..." : "Refresh inbox"}
+            </button>
+          )}
+        </div>
       </div>
+      <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
+      <AddSubmissionDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onCreated={(id) => { setSelectedId(id); onRefresh?.(); }}
+      />
 
       {/* Pipeline stage filter intentionally removed — it duplicated the stepper inside the Bayer pipeline panel.
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
