@@ -286,14 +286,6 @@ const Admin = () => {
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
       <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
-        name={welcomeName}
-        newSubmissions={newSinceLast}
-        totalOpenSubmissions={openCount}
-        storageKey={welcomeKey}
-      />
-      <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
-      <Navbar forceScrolled />
-      <section className={focused ? "pt-24 pb-10" : "pt-28 pb-16"}>
         <div className={focused ? "container mx-auto px-4 max-w-[1600px]" : "container mx-auto px-6"}>
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
