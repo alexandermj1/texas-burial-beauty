@@ -806,11 +806,11 @@ const PipelineOverview = ({
   const totalSellers = sellers.length;
 
   return (
-    <section className="lg:col-span-12 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl border-2 border-primary/30 shadow-md ring-1 ring-primary/10 p-4">
+    <section className="lg:col-span-12 bg-card rounded-xl border border-border/50 shadow-soft p-4">
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-primary" />
-          <h3 className="text-base font-bold text-foreground tracking-tight">Seller pipeline — team view</h3>
+          <Layers className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Seller pipeline — team view</h3>
           <span className="text-[11px] text-muted-foreground">{totalSellers} active sellers</span>
         </div>
         <button
