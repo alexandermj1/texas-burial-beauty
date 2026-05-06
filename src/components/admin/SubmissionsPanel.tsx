@@ -604,7 +604,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const count = countFor(selected.cemetery);
               const contact = lookupCemeteryContact(selected.cemetery);
               return (
-                <div className="bg-muted/40 rounded-lg p-4 border border-border/50 space-y-3">
+                <div data-tour="cemetery-box" className="bg-muted/40 rounded-lg p-4 border border-border/50 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
@@ -706,7 +706,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
 
             {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-            <div>
+            <div data-tour="notes-section">
               <CustomerNotes submissionId={selected.id} customerName={selected.name} />
             </div>
 
@@ -762,7 +762,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
+            <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 {selected.source === "seller_quote" ? (
                   <button

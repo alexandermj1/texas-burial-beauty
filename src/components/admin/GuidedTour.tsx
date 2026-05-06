@@ -25,6 +25,7 @@ interface Step {
 interface TourContext {
   goToSubmissions: () => void;
   openMenu: (open: boolean) => void;
+  selectFirstSubmission: () => void;
 }
 
 const steps: Step[] = [
@@ -255,6 +256,7 @@ const steps: Step[] = [
     tag: "Submissions",
     target: '[data-tour="detail-panel"]',
     side: "left",
+    before: (ctx) => { ctx.goToSubmissions(); ctx.openMenu(false); ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>Click a card and the right-hand panel fills with everything you need:</p>
@@ -272,7 +274,9 @@ const steps: Step[] = [
     title: "Notes & @mentions",
     Icon: MessageSquare,
     tag: "Collaboration",
-    side: "center",
+    target: '[data-tour="notes-section"]',
+    side: "left",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>
@@ -288,7 +292,9 @@ const steps: Step[] = [
     title: "Send quote / DocuSign / decline",
     Icon: Send,
     tag: "Actions",
-    side: "center",
+    target: '[data-tour="actions-bar"]',
+    side: "top",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>From inside a customer's record you have three big action buttons:</p>
@@ -314,7 +320,9 @@ const steps: Step[] = [
     title: "Inventory & comps",
     Icon: Layers,
     tag: "Pricing",
-    side: "center",
+    target: '[data-tour="cemetery-box"]',
+    side: "left",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>Inside a customer record, click <strong>"View inventory & comps"</strong> in the Cemetery box. You'll see:</p>
@@ -399,19 +407,25 @@ const PADDING = 12;
 
 interface Rect { top: number; left: number; width: number; height: number; }
 
+
 interface GuidedTourProps {
   onGoToSubmissions?: () => void;
   onOpenMenu?: (open: boolean) => void;
+  onSelectFirstSubmission?: () => void;
 }
 
-const GuidedTour = ({ onGoToSubmissions, onOpenMenu }: GuidedTourProps) => {
+const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: GuidedTourProps) => {
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [taken, setTaken] = useState<boolean>(() => {
+    try { return localStorage.getItem(TOUR_KEY) === "1"; } catch { return false; }
+  });
 
   const ctx: TourContext = {
     goToSubmissions: () => onGoToSubmissions?.(),
     openMenu: (o) => onOpenMenu?.(o),
+    selectFirstSubmission: () => onSelectFirstSubmission?.(),
   };
 
   // Run before-hook + measure target each step.
@@ -477,7 +491,7 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu }: GuidedTourProps) => {
   }, [open]);
 
   const start = () => { setI(0); setOpen(true); };
-  const close = () => { setOpen(false); try { localStorage.setItem(TOUR_KEY, "1"); } catch {} };
+  const close = () => { setOpen(false); setTaken(true); try { localStorage.setItem(TOUR_KEY, "1"); } catch {} };
 
   const step = steps[i];
   const Icon = step?.Icon;
@@ -516,7 +530,11 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu }: GuidedTourProps) => {
       <button
         onClick={start}
         aria-label="Take the guided tour"
-        className="fixed bottom-6 right-32 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-soft hover:opacity-90 transition-all hover:shadow-md text-sm font-medium"
+        className={
+          taken
+            ? "inline-flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-soft hover:opacity-90 transition-all hover:shadow-md text-sm font-medium"
+            : "fixed bottom-6 right-32 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-soft hover:opacity-90 transition-all hover:shadow-md text-sm font-medium"
+        }
       >
         <Compass className="w-4 h-4" />
         Take the tour
