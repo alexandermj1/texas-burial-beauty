@@ -92,7 +92,15 @@ const NotificationsBell = () => {
                   <li key={n.id} className={`px-3 py-2.5 border-b border-border/50 hover:bg-muted/50 ${!n.read_at ? "bg-primary/5" : ""}`}>
                     <a
                       href={n.link_url || "#"}
-                      onClick={(e) => { if (!n.link_url) e.preventDefault(); setOpen(false); }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setOpen(false);
+                        if (n.link_url) {
+                          // Use SPA navigation; if already on /admin, also dispatch a popstate so Admin re-reads params
+                          navigate(n.link_url);
+                          setTimeout(() => window.dispatchEvent(new PopStateEvent("popstate")), 0);
+                        }
+                      }}
                       className="block"
                     >
                       <p className="text-xs font-medium text-foreground">{n.title}</p>
