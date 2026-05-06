@@ -87,7 +87,7 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "untouched" | "active";
+type StatusFilter = "all" | "new";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
@@ -95,7 +95,7 @@ interface ViewRow { submission_id: string; user_id: string; user_name: string | 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<StatusFilter>("untouched");
+  const [filter, setFilter] = useState<StatusFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
@@ -172,15 +172,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Bayer stages only apply to sellers; for everyone else stage filtering is a no-op.
   const isSellerView = kindFilter === "seller";
 
-  // Activity-based status: "untouched" = no admin has opened it.
-  // "active" = at least one admin has opened it (treated as the de-facto
-  // handled bucket because any action records a view).
+  // "new" = arrived today (since local midnight). These are the items the welcome
+  // overlay calls out and that show up in notifications. Everything else is just "all".
+  const startOfToday = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }, []);
+  const isNew = (s: Submission) => new Date(s.created_at).getTime() >= startOfToday;
   const isUntouched = (sid: string) => !views.some(v => v.submission_id === sid);
 
   const filtered = useMemo(() => {
     return submissions.filter(s => {
-      if (filter === "untouched" && !isUntouched(s.id)) return false;
-      if (filter === "active" && isUntouched(s.id)) return false;
+      if (filter === "new" && !isNew(s)) return false;
       if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
       if (isSellerView && stageFilter !== "all" && deriveBayerStage(s as any) !== stageFilter) return false;
       if (!searchQuery.trim()) return true;
@@ -189,7 +189,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery, views]);
+  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery, startOfToday]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
@@ -231,10 +231,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
-    if (filter === "untouched" && !isUntouched(s.id)) return false;
-    if (filter === "active" && isUntouched(s.id)) return false;
+    if (filter === "new" && !isNew(s)) return false;
     return true;
-  }), [submissions, filter, views]);
+  }), [submissions, filter, startOfToday]);
   const kindCount = (k: KindFilter) =>
     k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
 
@@ -265,13 +264,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Status pills */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["untouched", "active", "all"] as const).map(f => {
+        {(["new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
-            : f === "untouched"
-              ? submissions.filter(s => isUntouched(s.id)).length
-              : submissions.filter(s => !isUntouched(s.id)).length;
-          const labels = { untouched: "Untouched", active: "Being worked", all: "All" } as const;
+            : submissions.filter(s => isNew(s)).length;
+          const labels = { new: "New today", all: "All" } as const;
           return (
             <button
               key={f}
@@ -368,15 +365,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const rowViewers = viewersFor(s.id);
             const iViewed = haveIViewed(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
-            // Three-tone background — clearer contrast between read/unread:
+            const fresh = isNew(s);
+            // Three-tone background:
             //  • Active row wins (primary tint + left accent)
-            //  • Unviewed by me → soft blue tint, bold text, left accent bar
-            //  • I've viewed → muted neutral
+            //  • New today → soft blue tint, bold text, left accent bar
+            //  • Otherwise → muted neutral
             const bgCls = isActive
               ? "bg-primary/15 border-l-4 border-l-primary"
-              : !iViewed
+              : fresh
                 ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
-                : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent opacity-80";
+                : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
             return (
               <motion.button
                 key={s.id}
@@ -395,7 +393,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <p className={`text-sm truncate ${iViewed ? "font-medium text-foreground" : "font-bold text-foreground"}`}>{s.name || "Anonymous"}</p>
+                      <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
+                      {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-sky-500 text-white">New</span>}
                       <CustomerKindBadge kind={sKind} size="xs" />
                       <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                     </div>
@@ -496,22 +495,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
                 {(() => {
                   const sViewers = viewersFor(selected.id);
-                  if (sViewers.length === 0) {
-                    return <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">Untouched</span>;
-                  }
                   return (
-                    <div className="flex items-center gap-1.5" title={`Worked by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
-                      <span className="text-[10px] text-muted-foreground">Active —</span>
-                      <div className="flex -space-x-1">
-                        {sViewers.slice(0, 4).map(v => (
-                          <span key={v.user_id} className="w-5 h-5 rounded-full ring-1 ring-card flex items-center justify-center text-[9px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
-                            {(v.user_name || "?").charAt(0).toUpperCase()}
-                          </span>
-                        ))}
-                        {sViewers.length > 4 && (
-                          <span className="w-5 h-5 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-medium">+{sViewers.length - 4}</span>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-1.5">
+                      {isNew(selected) && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-500 text-white">New today</span>
+                      )}
+                      {sViewers.length > 0 && (
+                        <div className="flex items-center gap-1.5" title={`Viewed by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
+                          <div className="flex -space-x-1">
+                            {sViewers.slice(0, 4).map(v => (
+                              <span key={v.user_id} className="w-5 h-5 rounded-full ring-1 ring-card flex items-center justify-center text-[9px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
+                                {(v.user_name || "?").charAt(0).toUpperCase()}
+                              </span>
+                            ))}
+                            {sViewers.length > 4 && (
+                              <span className="w-5 h-5 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-medium">+{sViewers.length - 4}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
