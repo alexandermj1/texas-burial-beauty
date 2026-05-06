@@ -184,12 +184,12 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
     (submission as any).gov_id_on_file && (submission as any).deed_on_file;
 
   return (
-    <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl border-2 border-primary/30 p-5 space-y-4 shadow-md ring-1 ring-primary/10">
+    <section className="bg-card rounded-xl border border-border/50 p-5 space-y-4 shadow-soft">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <meta.Icon className="w-5 h-5 text-primary" />
-          <h4 className="text-base font-bold text-foreground tracking-tight">Bayer pipeline</h4>
+          <meta.Icon className="w-4 h-4 text-primary" />
+          <h4 className="text-sm font-semibold text-foreground tracking-tight">Bayer pipeline</h4>
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${meta.cls}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
             {meta.label}
@@ -205,7 +205,7 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
 
       {/* Stage rail (compact horizontal) */}
       <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-2 -my-1 -mx-1 px-1">
-        {(BAYER_STAGE_ORDER.filter(s => s !== "quote_morgued") as BayerStage[]).map((s, i, arr) => {
+        {(BAYER_STAGE_ORDER as BayerStage[]).map((s, i, arr) => {
           const m = BAYER_STAGE_META[s];
           const stageIdx = arr.indexOf(stage as BayerStage);
           const myIdx = i;
