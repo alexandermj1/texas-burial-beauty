@@ -105,6 +105,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
+  const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
+  const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
   const [pendingAction, setPendingAction] = useState<null | { label: string; run: () => void }>(null);
   const typingChanRef = useRef<RealtimeChannel | null>(null);
