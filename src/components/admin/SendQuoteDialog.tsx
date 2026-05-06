@@ -2,6 +2,14 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Save, Eye } from "lucide-react";
 import type { Submission } from "./SubmissionsPanel";
+import { lookupCemeteryContact } from "@/lib/cemeteryContactLookup";
+
+// Pull the first dollar amount out of a directory string like "$400 + endowment care".
+const parseDirectoryFee = (raw: string | null | undefined): string => {
+  if (!raw) return "";
+  const m = String(raw).replace(/,/g, "").match(/\$?\s*(\d{2,6})/);
+  return m ? m[1] : "";
+};
 
 interface Props {
   submission: Submission;
