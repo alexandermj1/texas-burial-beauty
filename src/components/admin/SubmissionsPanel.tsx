@@ -306,7 +306,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       />
 
       {/* Status pills */}
-      <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
+      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
         {(["new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
@@ -352,6 +352,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
         <div className="ml-auto flex items-center gap-1.5">
           <button
+            data-tour="add-submission"
             onClick={() => setAddOpen(true)}
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
             title="Add a submission manually (e.g. info taken over the phone)"
@@ -359,6 +360,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             <UserPlus className="w-3.5 h-3.5" /> Add submission
           </button>
           <button
+            data-tour="message-team"
             onClick={() => setBroadcastOpen(true)}
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
             title="Send a notification to the whole team"
@@ -393,7 +395,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto">
+      <div data-tour="submissions-list" className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="p-10 text-center">
             <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
@@ -505,7 +507,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       </div>
 
       {/* Detail */}
-      <div className="lg:col-span-7">
+      <div data-tour="detail-panel" className="lg:col-span-7">
         {!selected ? (
           <div className="bg-card rounded-xl border border-border/50 p-10 text-center text-sm text-muted-foreground">
             Select a submission to view details.

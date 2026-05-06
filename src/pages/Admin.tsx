@@ -303,6 +303,7 @@ const Admin = () => {
             <>
               <div className="mb-4 flex items-center gap-3">
                 <button
+                  data-tour="menu-button"
                   onClick={() => setMenuOpen(o => !o)}
                   className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Toggle menu"
@@ -312,7 +313,7 @@ const Admin = () => {
                 </button>
                 <h1 className="font-display text-lg text-foreground shrink-0 hidden md:block">Admin</h1>
                 <div className="flex-1 flex justify-center">
-                  <div className="relative w-full max-w-2xl">
+                  <div data-tour="search-bar" className="relative w-full max-w-2xl">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       type="text"
@@ -329,13 +330,13 @@ const Admin = () => {
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
-                <NotificationsBell />
+                <div data-tour="notifications-bell"><NotificationsBell /></div>
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
                 </button>
               </div>
               {menuOpen && (
-                <div className="flex gap-1.5 mb-4 flex-wrap p-3 bg-card rounded-xl border border-border/50">
+                <div data-tour="menu-panel" className="flex gap-1.5 mb-4 flex-wrap p-3 bg-card rounded-xl border border-border/50">
                   {tabsConfig.map(({ key, label, Icon, count }) => {
                     const active = tab === key;
                     return (
@@ -680,7 +681,10 @@ const Admin = () => {
         </div>
       </section>
       <Footer />
-      <GuidedTour />
+      <GuidedTour
+        onGoToSubmissions={() => setTab("submissions")}
+        onOpenMenu={(o) => setMenuOpen(o)}
+      />
       <HelpButton />
     </div>
   );
