@@ -829,15 +829,15 @@ const PipelineOverview = ({
             <button
               key={stage}
               onClick={() => onSelectStage(stage)}
-              className={`text-left rounded-lg border p-2.5 transition-all hover:shadow-sm ${
+              className={`text-left rounded-lg border p-2.5 transition-all hover:shadow-sm bg-card ${
                 isActive
-                  ? "border-primary bg-primary/15 ring-1 ring-primary/30"
-                  : `${m.cls} hover:brightness-105`
+                  ? "border-primary ring-1 ring-primary/30"
+                  : "border-border/60 hover:border-primary/40"
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${m.dot}`} />
-                <span className="text-[10px] font-medium truncate">{m.short}</span>
+                <span className="text-[10px] font-medium text-foreground/80 truncate">{m.short}</span>
               </div>
               <div className="flex items-end justify-between gap-1">
                 <span className="font-display text-2xl leading-none">{count}</span>
