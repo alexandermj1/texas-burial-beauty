@@ -365,15 +365,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const rowViewers = viewersFor(s.id);
             const iViewed = haveIViewed(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
-            // Three-tone background — clearer contrast between read/unread:
+            const fresh = isNew(s);
+            // Three-tone background:
             //  • Active row wins (primary tint + left accent)
-            //  • Unviewed by me → soft blue tint, bold text, left accent bar
-            //  • I've viewed → muted neutral
+            //  • New today → soft blue tint, bold text, left accent bar
+            //  • Otherwise → muted neutral
             const bgCls = isActive
               ? "bg-primary/15 border-l-4 border-l-primary"
-              : !iViewed
+              : fresh
                 ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
-                : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent opacity-80";
+                : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
             return (
               <motion.button
                 key={s.id}
