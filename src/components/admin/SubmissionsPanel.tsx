@@ -719,7 +719,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               ];
               const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
               return (
-                <>
+                <div data-tour="seller-pipeline">
                   <BayerPipelinePanel
                     submission={selected}
                     onPatch={(patch) => onUpdate(selected.id, patch)}
@@ -730,15 +730,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
                     />
                   )}
-                </>
+                </div>
               );
             })()}
 
             {selectedKind === "buyer" && (
-              <BuyerJourneyPanel
-                submission={selected}
-                onOpenSend={() => setBuyerOpen(true)}
-              />
+              <div data-tour="buyer-pipeline">
+                <BuyerJourneyPanel
+                  submission={selected}
+                  onOpenSend={() => setBuyerOpen(true)}
+                />
+              </div>
             )}
 
             {selectedKind !== "seller" && selectedKind !== "buyer" && (
@@ -788,6 +790,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 >
                   <MessageCircleX className="w-3.5 h-3.5" />
                   Polite decline
+                </button>
+
+                <button
+                  data-tour="mark-handled"
+                  onClick={() => onUpdate(selected.id, { handled: !selected.handled } as any)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-colors ${
+                    selected.handled
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-50"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  }`}
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  {selected.handled ? "Handled — undo" : "Mark handled"}
                 </button>
               </div>
               <button

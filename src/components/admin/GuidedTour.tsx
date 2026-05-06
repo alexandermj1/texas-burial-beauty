@@ -336,17 +336,58 @@ const steps: Step[] = [
     ),
   },
   {
+    title: "The Seller Pipeline",
+    Icon: Trophy,
+    tag: "Pipelines",
+    target: '[data-tour="seller-pipeline"]',
+    side: "left",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
+    body: (
+      <>
+        <p>
+          Every <strong>seller</strong> moves through a fixed pipeline shown inside their record. Each stage is a button — clicking it advances the customer and stamps the time, who did it, and adds a journey entry automatically.
+        </p>
+        <ul className="space-y-1.5 text-sm">
+          <li>• <strong>Quote sent</strong> → <strong>Quote accepted</strong></li>
+          <li>• <strong>Listing Agreement issued / signed / paid</strong></li>
+          <li>• <strong>POA issued</strong> → <strong>Notarised docs received</strong></li>
+          <li>• <strong>File compiled</strong> → <strong>Listing live</strong> → <strong>Sold</strong></li>
+        </ul>
+        <p className="text-sm text-muted-foreground">Whoever picks this customer up next can see at a glance exactly where they are — no need to ask the team.</p>
+      </>
+    ),
+  },
+  {
+    title: "The Buyer Pipeline",
+    Icon: Target,
+    tag: "Pipelines",
+    target: '[data-tour="buyer-pipeline"]',
+    side: "left",
+    body: (
+      <>
+        <p>
+          Buyers have their own simpler flow: <strong>Enquiry</strong> → <strong>Plots sent</strong> → <strong>Showing booked</strong> → <strong>Reserved</strong> → <strong>Sold</strong>.
+          You'll see this panel inside any <em>buyer</em> submission record.
+        </p>
+        <p className="text-sm">Use the <strong>"Send available plots"</strong> action to email the buyer matching inventory — it logs the email and bumps them along automatically.</p>
+        <p className="text-sm text-muted-foreground">If the customer's record is currently a seller, switch back later to a buyer card to see this panel in action.</p>
+      </>
+    ),
+  },
+  {
     title: "Marking work done",
     Icon: CheckCircle,
     tag: "Submissions",
-    side: "center",
+    target: '[data-tour="mark-handled"]',
+    side: "top",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>
           Once a customer is fully dealt with — sold, declined, or no longer interested — click
           <strong className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs ml-1"><CheckCircle className="w-3 h-3" /> Mark handled</strong>.
         </p>
-        <p className="text-sm text-muted-foreground">They drop out of the open count at the top of the tab so the team knows they no longer need attention. They're still searchable any time.</p>
+        <p className="text-sm text-muted-foreground">They drop out of the open count at the top of the tab so the team knows they no longer need attention. They're still searchable any time, and you can un-mark them with the same button.</p>
       </>
     ),
   },
@@ -418,6 +459,8 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [popH, setPopH] = useState(380);
+  const popRef = useRef<HTMLDivElement | null>(null);
   const [taken, setTaken] = useState<boolean>(() => {
     try { return localStorage.getItem(TOUR_KEY) === "1"; } catch { return false; }
   });
@@ -497,31 +540,47 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
   const Icon = step?.Icon;
   const pct = ((i + 1) / steps.length) * 100;
 
-  // Compute popover position
+  // Compute popover position with auto-flip away from the spotlight
   const popoverStyle: React.CSSProperties = (() => {
     if (!rect || !step?.target || step.side === "center") {
       return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
     }
     const vw = window.innerWidth, vh = window.innerHeight;
     const w = Math.min(POPOVER_W, vw - 32);
+    const h = Math.min(popH, vh - 32);
+    const preferred = step.side || "bottom";
+    const space = {
+      bottom: vh - (rect.top + rect.height) - PADDING * 2,
+      top: rect.top - PADDING * 2,
+      right: vw - (rect.left + rect.width) - PADDING * 2,
+      left: rect.left - PADDING * 2,
+    };
+    // Pick a side that fits the popover; fall back to the side with the most space.
+    const order: (keyof typeof space)[] = [preferred as any, "bottom", "top", "right", "left"];
+    let side: keyof typeof space = preferred as any;
+    for (const s of order) {
+      const need = (s === "top" || s === "bottom") ? h : w;
+      if (space[s] >= need) { side = s; break; }
+    }
+    if (space[side] < ((side === "top" || side === "bottom") ? h : w)) {
+      side = (Object.keys(space) as (keyof typeof space)[]).sort((a, b) => space[b] - space[a])[0];
+    }
     let top = 0, left = 0;
-    const side = step.side || "bottom";
     if (side === "bottom") {
       top = rect.top + rect.height + PADDING;
       left = rect.left + rect.width / 2 - w / 2;
     } else if (side === "top") {
-      top = rect.top - PADDING - 360;
+      top = rect.top - PADDING - h;
       left = rect.left + rect.width / 2 - w / 2;
     } else if (side === "right") {
-      top = rect.top + rect.height / 2 - 180;
+      top = rect.top + rect.height / 2 - h / 2;
       left = rect.left + rect.width + PADDING;
-    } else if (side === "left") {
-      top = rect.top + rect.height / 2 - 180;
+    } else {
+      top = rect.top + rect.height / 2 - h / 2;
       left = rect.left - PADDING - w;
     }
-    // Clamp
     left = Math.max(16, Math.min(vw - w - 16, left));
-    top = Math.max(16, Math.min(vh - 200, top));
+    top = Math.max(16, Math.min(vh - h - 16, top));
     return { top, left, width: w };
   })();
 
@@ -586,6 +645,13 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
             {/* Popover */}
             <motion.div
               key={`pop-${i}`}
+              ref={(el) => {
+                popRef.current = el;
+                if (el) {
+                  const h = el.getBoundingClientRect().height;
+                  if (h && Math.abs(h - popH) > 8) setPopH(h);
+                }
+              }}
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
