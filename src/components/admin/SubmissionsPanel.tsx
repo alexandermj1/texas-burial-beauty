@@ -856,7 +856,7 @@ const PipelineOverview = ({
                   <span className="text-[9px] text-sky-600 dark:text-sky-400 font-medium">untouched</span>
                 ) : null}
               </div>
-              <p className="text-[9px] opacity-75 mt-1 truncate">Owner: {m.owner}</p>
+              <p className="text-[9px] text-muted-foreground mt-1 truncate">Owner: {m.owner}</p>
             </button>
           );
         })}
