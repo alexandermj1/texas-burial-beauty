@@ -719,7 +719,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               ];
               const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
               return (
-                <>
+                <div data-tour="seller-pipeline">
                   <BayerPipelinePanel
                     submission={selected}
                     onPatch={(patch) => onUpdate(selected.id, patch)}
@@ -730,15 +730,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
                     />
                   )}
-                </>
+                </div>
               );
             })()}
 
             {selectedKind === "buyer" && (
-              <BuyerJourneyPanel
-                submission={selected}
-                onOpenSend={() => setBuyerOpen(true)}
-              />
+              <div data-tour="buyer-pipeline">
+                <BuyerJourneyPanel
+                  submission={selected}
+                  onOpenSend={() => setBuyerOpen(true)}
+                />
+              </div>
             )}
 
             {selectedKind !== "seller" && selectedKind !== "buyer" && (
