@@ -604,6 +604,13 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
             {/* Popover */}
             <motion.div
               key={`pop-${i}`}
+              ref={(el) => {
+                popRef.current = el;
+                if (el) {
+                  const h = el.getBoundingClientRect().height;
+                  if (h && Math.abs(h - popH) > 8) setPopH(h);
+                }
+              }}
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
