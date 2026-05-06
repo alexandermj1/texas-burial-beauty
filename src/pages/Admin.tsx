@@ -18,6 +18,7 @@ import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
 import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
+import HelpButton from "@/components/admin/HelpButton";
 
 interface AdminListing {
   id: string;
@@ -643,6 +644,7 @@ const Admin = () => {
         </div>
       </section>
       <Footer />
+      <HelpButton />
     </div>
   );
 };
