@@ -73,6 +73,7 @@ const sourceLabel = (s: string | null) => {
     case "contact": return "Contact form";
     case "seller_quote": return "Seller quote";
     case "buy_property_wizard": return "Buyer wizard";
+    case "manual_phone": return "Manually added";
     default: return s || "Unknown";
   }
 };
