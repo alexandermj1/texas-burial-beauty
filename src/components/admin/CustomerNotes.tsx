@@ -81,7 +81,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const myId = user?.id ?? "anon";
-  const myName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Someone";
+  const myName = cleanDisplayName(user?.user_metadata?.full_name) || user?.email?.split("@")[0] || "Someone";
   const myColor = useMemo(() => colorFor(myId), [myId]);
 
   const scopeColumn = submissionId ? "submission_id" : "customer_profile_id";
@@ -94,14 +94,14 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       if (data) {
         const used = new Set<string>();
         setTeam((data as any[]).map(p => {
-          const name = p.full_name || (p.email ? p.email.split("@")[0] : "user");
+          const cleaned = cleanDisplayName(p.full_name) || (p.email ? p.email.split("@")[0] : "user");
           // Handle = first word, alphanumerics only, lowercased. Disambiguate dupes with a numeric suffix.
-          const base = (name.split(/\s+/)[0] || "user").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "user";
+          const base = (cleaned.split(/\s+/)[0] || "user").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "user";
           let handle = base;
           let n = 2;
           while (used.has(handle)) handle = `${base}${n++}`;
           used.add(handle);
-          return { id: p.id, name, handle };
+          return { id: p.id, name: cleaned, handle };
         }));
       }
     })();
