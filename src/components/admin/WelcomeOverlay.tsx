@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Inbox, Mail, Sparkles } from "lucide-react";
+import { Bell, Inbox, Mail, Sparkles } from "lucide-react";
 
 interface Stat {
   label: string;
