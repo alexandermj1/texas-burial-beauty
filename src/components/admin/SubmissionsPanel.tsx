@@ -105,6 +105,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
+  const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
+  const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
   const [pendingAction, setPendingAction] = useState<null | { label: string; run: () => void }>(null);
   const typingChanRef = useRef<RealtimeChannel | null>(null);
@@ -142,7 +144,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
   }, []);
 
+  // Real-time "who is working on what" — broadcasts the currently-open submission
+  // for every admin via Supabase Presence. Updates instantly when anyone switches.
+  useEffect(() => {
+    if (!myId) return;
+    const ch = supabase.channel("submission_workers", {
+      config: { presence: { key: myId } },
+    });
+    const recompute = () => {
+      const state = ch.presenceState<any>();
+      const map: Record<string, { user_id: string; user_name: string }[]> = {};
+      Object.values(state).forEach((arr: any) => {
+        arr.forEach((p: any) => {
+          if (!p?.submission_id) return;
+          if (!map[p.submission_id]) map[p.submission_id] = [];
+          if (!map[p.submission_id].some(u => u.user_id === p.user_id)) {
+            map[p.submission_id].push({ user_id: p.user_id, user_name: p.user_name || "Teammate" });
+          }
+        });
+      });
+      setActiveWorkers(map);
+    };
+    ch.on("presence", { event: "sync" }, recompute)
+      .on("presence", { event: "join" }, recompute)
+      .on("presence", { event: "leave" }, recompute)
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await ch.track({ user_id: myId, user_name: myName, submission_id: null });
+        }
+      });
+    presenceChanRef.current = ch;
+    return () => { ch.unsubscribe(); supabase.removeChannel(ch); presenceChanRef.current = null; };
+  }, [myId, myName]);
+
   const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
+  const workersFor = (sid: string) => (activeWorkers[sid] || []).filter(w => w.user_id !== myId);
   const haveIViewed = (sid: string) => !!myId && views.some(v => v.submission_id === sid && v.user_id === myId);
 
   const recordView = async (sid: string) => {
@@ -197,6 +233,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   // Record a view for this admin when they open a submission
   useEffect(() => { if (selected?.id) recordView(selected.id); }, [selected?.id, myId]);
+
+  // Broadcast my "currently working on" submission so teammates see it instantly.
+  useEffect(() => {
+    const ch = presenceChanRef.current;
+    if (!ch || !myId) return;
+    ch.track({ user_id: myId, user_name: myName, submission_id: selected?.id || null });
+  }, [selected?.id, myId, myName]);
 
   // Subscribe to the same notes presence channel CustomerNotes uses, so we know when
   // somebody else is actively typing a note on this submission. We don't track ourselves
@@ -366,15 +409,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const iViewed = haveIViewed(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
             const fresh = isNew(s);
-            // Three-tone background:
-            //  • Active row wins (primary tint + left accent)
-            //  • New today → soft blue tint, bold text, left accent bar
-            //  • Otherwise → muted neutral
+            const workers = workersFor(s.id);
+            const beingWorked = workers.length > 0;
+            // Background priority:
+            //  • Active row (mine) → primary tint
+            //  • Teammate currently working → soft terracotta/accent tint with pulse
+            //  • New today → soft sky tint
+            //  • Otherwise → neutral
             const bgCls = isActive
               ? "bg-primary/15 border-l-4 border-l-primary"
-              : fresh
-                ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
-                : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
+              : beingWorked
+                ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
+                : fresh
+                  ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
+                  : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
             return (
               <motion.button
                 key={s.id}
@@ -395,6 +443,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="flex items-center gap-1.5 min-w-0">
                       <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
                       {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-sky-500 text-white">New</span>}
+                      {beingWorked && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
+                          title={`${workers.map(w => w.user_name).join(", ")} viewing now`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                          {workers[0].user_name}{workers.length > 1 ? ` +${workers.length - 1}` : ""}
+                        </span>
+                      )}
                       <CustomerKindBadge kind={sKind} size="xs" />
                       <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                     </div>
