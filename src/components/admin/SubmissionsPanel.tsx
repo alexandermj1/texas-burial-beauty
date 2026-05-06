@@ -762,7 +762,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
+            <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 {selected.source === "seller_quote" ? (
                   <button
