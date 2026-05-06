@@ -100,7 +100,7 @@ const HelpButton = () => {
       <button
         onClick={() => setOpen(true)}
         aria-label="Help"
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full bg-card/90 backdrop-blur border border-border shadow-soft text-foreground hover:bg-card transition-all hover:shadow-md text-sm font-medium"
+        className="inline-flex items-center gap-2 px-4 py-3 rounded-full bg-card border border-border shadow-soft text-foreground hover:bg-card transition-all hover:shadow-md text-sm font-medium"
       >
         <HelpCircle className="w-4 h-4 text-primary" />
         Help
