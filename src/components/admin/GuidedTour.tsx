@@ -25,6 +25,7 @@ interface Step {
 interface TourContext {
   goToSubmissions: () => void;
   openMenu: (open: boolean) => void;
+  selectFirstSubmission: () => void;
 }
 
 const steps: Step[] = [
