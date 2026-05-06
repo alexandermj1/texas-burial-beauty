@@ -19,6 +19,7 @@ import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
+import WelcomeOverlay from "@/components/admin/WelcomeOverlay";
 
 interface AdminListing {
   id: string;
