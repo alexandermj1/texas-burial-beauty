@@ -211,73 +211,106 @@ const Admin = () => {
     );
   }
 
+  const focused = tab === "submissions" || tab === "inbox";
+
+  const tabsConfig: { key: typeof tab; label: string; Icon: any; count?: number }[] = [
+    { key: "submissions", label: "Submissions", Icon: Inbox, count: submissions.filter(s => !s.handled).length },
+    { key: "inbox", label: "Gmail Inbox", Icon: Mail },
+    { key: "listings", label: "Listings", Icon: Building2, count: listings.length },
+    { key: "reservations", label: "Reservations", Icon: CalendarDays, count: reservations.filter(r => r.status === "active").length },
+    { key: "sales", label: "Sales", Icon: DollarSign, count: sales.length },
+    { key: "performance", label: "Performance", Icon: Trophy },
+    { key: "customers", label: "Customers", Icon: Users },
+    { key: "inventory_requests", label: "Inv. Requests", Icon: ClipboardList },
+    { key: "ca_inventory", label: "CA Inventory", Icon: Package },
+    { key: "cemeteries", label: "Cemeteries", Icon: Building2 },
+  ];
+
+  const searchPlaceholder =
+    tab === "submissions" ? "Search submissions..." :
+    tab === "inbox" ? "Search inbox..." :
+    tab === "cemeteries" ? "Search cemeteries..." :
+    tab === "listings" ? "Search listings..." :
+    "Search anything...";
+
+  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory";
+
   return (
     <div className="min-h-screen bg-background">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
-      <section className="pt-28 pb-16">
-        <div className="container mx-auto px-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
-            </div>
-            <div className="flex items-center gap-2">
+      <section className={focused ? "pt-24 pb-10" : "pt-28 pb-16"}>
+        <div className={focused ? "container mx-auto px-4 max-w-[1600px]" : "container mx-auto px-6"}>
+          {/* Header — full when not focused, compact when focused */}
+          {focused ? (
+            <div className="mb-4 flex items-center gap-3 flex-wrap">
+              <h1 className="font-display text-xl text-foreground shrink-0">Admin</h1>
+              <div className="flex-1 min-w-[220px] relative max-w-xl">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="w-full pl-10 pr-4 py-2 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
               <NotificationsBell />
-              <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
-                <LogOut className="w-4 h-4" /> Sign Out
+              <button onClick={handleSignOut} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                <LogOut className="w-3.5 h-3.5" /> Sign Out
               </button>
             </div>
+          ) : (
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
+                <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <NotificationsBell />
+                <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                  <LogOut className="w-4 h-4" /> Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Tabs — compact pills when focused */}
+          <div className={`flex gap-1.5 mb-${focused ? "4" : "6"} flex-wrap`}>
+            {tabsConfig.map(({ key, label, Icon, count }) => {
+              const active = tab === key;
+              const base = focused ? "px-3 py-1.5 text-xs" : "px-6 py-3 text-sm";
+              return (
+                <button
+                  key={key}
+                  onClick={() => setTab(key)}
+                  className={`${base} rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-muted-foreground hover:text-foreground border border-border"
+                  }`}
+                >
+                  <Icon className={focused ? "w-3.5 h-3.5" : "w-4 h-4"} />
+                  {label}{count !== undefined ? ` (${count})` : ""}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            <button onClick={() => setTab("listings")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "listings" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              All Listings ({listings.length})
-            </button>
-            <button onClick={() => setTab("reservations")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "reservations" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <CalendarDays className="w-4 h-4 inline mr-1" /> Reservations ({reservations.filter(r => r.status === "active").length})
-            </button>
-            <button onClick={() => setTab("sales")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "sales" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <DollarSign className="w-4 h-4 inline mr-1" /> Sales & Commissions ({sales.length})
-            </button>
-            <button onClick={() => setTab("submissions")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "submissions" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <Inbox className="w-4 h-4 inline mr-1" /> Submissions ({submissions.filter(s => !s.handled).length})
-            </button>
-            <button onClick={() => setTab("inbox")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "inbox" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <Mail className="w-4 h-4 inline mr-1" /> Gmail Inbox
-            </button>
-            <button onClick={() => setTab("performance")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "performance" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <Trophy className="w-4 h-4 inline mr-1" /> Agent Performance
-            </button>
-            <button onClick={() => setTab("customers")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "customers" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <Users className="w-4 h-4 inline mr-1" /> Customers
-            </button>
-            <button onClick={() => setTab("inventory_requests")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "inventory_requests" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <ClipboardList className="w-4 h-4 inline mr-1" /> Inventory Requests
-            </button>
-            <button onClick={() => setTab("ca_inventory")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "ca_inventory" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <Package className="w-4 h-4 inline mr-1" /> California Inventory
-            </button>
-            <button onClick={() => setTab("cemeteries")} className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${tab === "cemeteries" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"}`}>
-              <Building2 className="w-4 h-4 inline mr-1" /> Cemeteries
-            </button>
-          </div>
-
-          {/* Search (hidden on inbox tab) */}
-          {tab !== "inbox" && tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && (
+          {/* Search — only when NOT focused (focused mode shows it inline above) */}
+          {!focused && showSearch && (
             <div className="relative max-w-md mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder={tab === "cemeteries" ? "Search cemeteries..." : "Search listings by cemetery, city, type..."}
+                placeholder={searchPlaceholder}
                 className="w-full pl-10 pr-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
           )}
+
 
           {tab === "listings" && (
             <>
