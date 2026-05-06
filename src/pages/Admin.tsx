@@ -678,14 +678,20 @@ const Admin = () => {
               </div>
             </div>
           )}
+          <div className="mt-10 flex items-center justify-end gap-3 flex-wrap">
+            <HelpButton />
+            <GuidedTour
+              onGoToSubmissions={() => setTab("submissions")}
+              onOpenMenu={(o) => setMenuOpen(o)}
+              onSelectFirstSubmission={() => {
+                const first = submissions.find(s => !s.handled) || submissions[0];
+                if (first) { setTab("submissions"); setFocusSubmissionId(first.id); }
+              }}
+            />
+          </div>
         </div>
       </section>
       <Footer />
-      <GuidedTour
-        onGoToSubmissions={() => setTab("submissions")}
-        onOpenMenu={(o) => setMenuOpen(o)}
-      />
-      <HelpButton />
     </div>
   );
 };
