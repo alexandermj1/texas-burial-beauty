@@ -110,9 +110,17 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     if (open) {
       // Auto-populate from the Stage 1 intake fields (cemetery_retail /
       // transfer_fee_amount) so the admin doesn't have to retype them.
+      // Transfer fee falls back to the cemetery directory's known fee when
+      // nothing is set on the submission yet.
       const intakeRetail = (submission as any).cemetery_retail;
+      const directoryContact = lookupCemeteryContact(submission.cemetery);
+      const directoryFee = parseDirectoryFee(directoryContact?.transferFee);
       setQuote(submission.quote_amount ? String(submission.quote_amount) : "");
-      setTransferFee(submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : "");
+      setTransferFee(
+        submission.transfer_fee_amount != null
+          ? String(submission.transfer_fee_amount)
+          : directoryFee
+      );
       setRetail(intakeRetail != null ? String(intakeRetail) : "");
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
