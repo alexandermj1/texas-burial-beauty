@@ -459,23 +459,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               )}
             </div>
 
-            {/* Cemetery + lookup */}
+            {/* Cemetery contact directory + inventory match */}
             {selected.cemetery && (() => {
               const count = countFor(selected.cemetery);
+              const contact = lookupCemeteryContact(selected.cemetery);
               return (
-                <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
-                  <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="bg-muted/40 rounded-lg p-4 border border-border/50 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
                       <p className="text-sm font-medium text-foreground truncate">{selected.cemetery}</p>
+                      {contact?.address && <p className="text-[11px] text-muted-foreground mt-0.5">{contact.address}</p>}
                     </div>
                     <button
                       type="button"
                       onClick={() => setMatchOpen(true)}
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 transition-all hover:opacity-90 ${
-                        count > 0
-                          ? "bg-primary/10 text-primary border-primary/20"
-                          : "bg-muted text-muted-foreground border-border"
+                        count > 0 ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-border"
                       }`}
                       title="View matched inventory and recent comps at this cemetery"
                     >
@@ -483,14 +483,54 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       View inventory & comps
                     </button>
                   </div>
-                  <a
-                    href={cemeterySearchUrl(selected.cemetery)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                  >
-                    <ExternalLink className="w-3 h-3" /> Look up cemetery phone on Google
-                  </a>
+
+                  {contact ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      {contact.salesPhone && (
+                        <a href={`tel:${contact.salesPhone.replace(/[^\d+]/g, "")}`} className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
+                          <Phone className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sales</p>
+                            <p className="text-foreground font-medium">{contact.salesPhone}</p>
+                            {contact.salesHours && <p className="text-[10px] text-muted-foreground mt-0.5">{contact.salesHours}</p>}
+                          </div>
+                        </a>
+                      )}
+                      {contact.transferPhone && (
+                        <a href={`tel:${contact.transferPhone.replace(/[^\d+]/g, "")}`} className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
+                          <FileSignature className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Transfer office</p>
+                            <p className="text-foreground font-medium">{contact.transferPhone}</p>
+                            {contact.transferFee && <p className="text-[10px] text-muted-foreground mt-0.5">Fee: {contact.transferFee}</p>}
+                          </div>
+                        </a>
+                      )}
+                      {contact.website && (
+                        <a href={`https://${contact.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
+                          <ExternalLink className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Website</p>
+                            <p className="text-foreground font-medium truncate">{contact.website}</p>
+                          </div>
+                        </a>
+                      )}
+                      {contact.notes && (
+                        <div className="sm:col-span-2 text-[11px] text-muted-foreground p-2 rounded-md bg-card/50 border border-border/40">
+                          <span className="font-medium text-foreground">Notes: </span>{contact.notes}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <a
+                      href={cemeterySearchUrl(selected.cemetery)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Not in directory — search Google for phone
+                    </a>
+                  )}
                 </div>
               );
             })()}
@@ -525,7 +565,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             )}
 
-            {/* Sellers: pipeline first — most important context. */}
+            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
+            <div>
+              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
+            </div>
+
+            {/* Sellers: pipeline below notes, above listings/dropbox */}
             {selectedKind === "seller" && (() => {
               const dropboxStages: BayerStage[] = [
                 "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
@@ -548,11 +593,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </>
               );
             })()}
-
-            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-            <div>
-              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-            </div>
 
             {selectedKind === "buyer" && (
               <BuyerJourneyPanel
