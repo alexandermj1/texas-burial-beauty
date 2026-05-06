@@ -244,59 +244,87 @@ const Admin = () => {
         <div className={focused ? "container mx-auto px-4 max-w-[1600px]" : "container mx-auto px-6"}>
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
-            <div className="mb-4 flex items-center gap-3 flex-wrap">
-              <h1 className="font-display text-xl text-foreground shrink-0">Admin</h1>
-              <div className="flex-1 min-w-[220px] relative max-w-xl">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder={searchPlaceholder}
-                  className="w-full pl-10 pr-4 py-2 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
-              </div>
-              <NotificationsBell />
-              <button onClick={handleSignOut} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
-                <LogOut className="w-3.5 h-3.5" /> Sign Out
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
-                <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <NotificationsBell />
-                <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
-                  <LogOut className="w-4 h-4" /> Sign Out
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Tabs — compact pills when focused */}
-          <div className={`flex gap-1.5 mb-${focused ? "4" : "6"} flex-wrap`}>
-            {tabsConfig.map(({ key, label, Icon, count }) => {
-              const active = tab === key;
-              const base = focused ? "px-3 py-1.5 text-xs" : "px-6 py-3 text-sm";
-              return (
+            <>
+              <div className="mb-4 flex items-center gap-3">
                 <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={`${base} rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-muted-foreground hover:text-foreground border border-border"
-                  }`}
+                  onClick={() => setMenuOpen(o => !o)}
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Toggle menu"
                 >
-                  <Icon className={focused ? "w-3.5 h-3.5" : "w-4 h-4"} />
-                  {label}{count !== undefined ? ` (${count})` : ""}
+                  {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                  <span className="hidden sm:inline">Menu</span>
                 </button>
-              );
-            })}
-          </div>
+                <h1 className="font-display text-lg text-foreground shrink-0 hidden md:block">Admin</h1>
+                <div className="flex-1 flex justify-center">
+                  <div className="relative w-full max-w-2xl">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder={searchPlaceholder}
+                      className="w-full pl-11 pr-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-soft"
+                    />
+                  </div>
+                </div>
+                <NotificationsBell />
+                <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                  <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
+                </button>
+              </div>
+              {menuOpen && (
+                <div className="flex gap-1.5 mb-4 flex-wrap p-3 bg-card rounded-xl border border-border/50">
+                  {tabsConfig.map(({ key, label, Icon, count }) => {
+                    const active = tab === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => { setTab(key); if (key !== "submissions" && key !== "inbox") setMenuOpen(false); }}
+                        className={`px-3 py-1.5 text-xs rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
+                          active ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground border border-border"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {label}{count !== undefined ? ` (${count})` : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
+                  <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <NotificationsBell />
+                  <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-1.5 mb-6 flex-wrap">
+                {tabsConfig.map(({ key, label, Icon, count }) => {
+                  const active = tab === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setTab(key)}
+                      className={`px-6 py-3 text-sm rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
+                        active ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}{count !== undefined ? ` (${count})` : ""}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
           {/* Search — only when NOT focused (focused mode shows it inline above) */}
           {!focused && showSearch && (
