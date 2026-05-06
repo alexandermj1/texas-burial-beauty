@@ -323,7 +323,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[70vh] overflow-y-auto">
+      <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[calc(100vh-220px)] min-h-[70vh] overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="p-10 text-center">
             <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
