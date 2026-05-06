@@ -58,6 +58,7 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   // When admin clicks "Open customer" inside the Gmail inbox, this id flows into the
   // Submissions panel and auto-selects the matching customer.
   const [focusSubmissionId, setFocusSubmissionId] = useState<string | null>(null);
@@ -78,6 +79,14 @@ const Admin = () => {
   useEffect(() => {
     if (!authLoading && !adminLoading && user && isAdmin) {
       fetchAllListings();
+      (async () => {
+        const { count } = await supabase
+          .from("user_notifications" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .is("read_at", null);
+        setUnreadNotifs(count || 0);
+      })();
     }
   }, [user, isAdmin, authLoading, adminLoading]);
 
@@ -280,6 +289,7 @@ const Admin = () => {
       <WelcomeOverlay
         name={welcomeName}
         newSubmissions={newSinceLast}
+        unreadNotifications={unreadNotifs}
         totalOpenSubmissions={openCount}
         storageKey={welcomeKey}
       />
