@@ -29,6 +29,7 @@ const WelcomeOverlay = ({
   name,
   newSubmissions = 0,
   unreadInbox = 0,
+  unreadNotifications = 0,
   totalOpenSubmissions = 0,
   storageKey,
 }: WelcomeOverlayProps) => {
