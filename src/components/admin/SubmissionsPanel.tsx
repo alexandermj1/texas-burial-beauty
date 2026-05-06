@@ -835,10 +835,10 @@ const PipelineOverview = ({
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${m.dot}`} />
-                <span className="text-[10px] font-semibold text-foreground truncate">{m.short}</span>
+                <span className="text-[10px] font-medium text-foreground truncate">{m.short}</span>
               </div>
               <div className="flex items-end justify-between gap-1">
-                <span className="font-display text-xl text-foreground leading-none">{count}</span>
+                <span className="font-display text-xl text-foreground/90 leading-none">{count}</span>
                 {viewers.length > 0 ? (
                   <div className="flex -space-x-1" title={`Working: ${viewers.map(v => v.user_name).join(", ")}`}>
                     {viewers.slice(0, 3).map(v => (
