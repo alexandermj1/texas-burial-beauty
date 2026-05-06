@@ -643,6 +643,7 @@ const Admin = () => {
         </div>
       </section>
       <Footer />
+      <HelpButton />
     </div>
   );
 };
