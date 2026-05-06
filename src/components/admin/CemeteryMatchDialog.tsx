@@ -19,6 +19,8 @@ interface InventoryRow {
   location_details: string | null;
   retail_price: number | null;
   resale_price: number | null;
+  net_to_owner: number | null;
+  net_pct_to_owner: number | null;
   owner_name: string | null;
   status: string;
 }
