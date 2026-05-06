@@ -2,6 +2,14 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Save, Eye } from "lucide-react";
 import type { Submission } from "./SubmissionsPanel";
+import { lookupCemeteryContact } from "@/lib/cemeteryContactLookup";
+
+// Pull the first dollar amount out of a directory string like "$400 + endowment care".
+const parseDirectoryFee = (raw: string | null | undefined): string => {
+  if (!raw) return "";
+  const m = String(raw).replace(/,/g, "").match(/\$?\s*(\d{2,6})/);
+  return m ? m[1] : "";
+};
 
 interface Props {
   submission: Submission;
@@ -102,9 +110,17 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     if (open) {
       // Auto-populate from the Stage 1 intake fields (cemetery_retail /
       // transfer_fee_amount) so the admin doesn't have to retype them.
+      // Transfer fee falls back to the cemetery directory's known fee when
+      // nothing is set on the submission yet.
       const intakeRetail = (submission as any).cemetery_retail;
+      const directoryContact = lookupCemeteryContact(submission.cemetery);
+      const directoryFee = parseDirectoryFee(directoryContact?.transferFee);
       setQuote(submission.quote_amount ? String(submission.quote_amount) : "");
-      setTransferFee(submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : "");
+      setTransferFee(
+        submission.transfer_fee_amount != null
+          ? String(submission.transfer_fee_amount)
+          : directoryFee
+      );
       setRetail(intakeRetail != null ? String(intakeRetail) : "");
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
@@ -255,6 +271,15 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
                       </div>
+                      {(() => {
+                        const c = lookupCemeteryContact(submission.cemetery);
+                        if (!c?.transferFee) return null;
+                        return (
+                          <p className="text-[10px] text-muted-foreground mt-1.5">
+                            Directory: <span className="text-foreground">{c.transferFee}</span>
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
 

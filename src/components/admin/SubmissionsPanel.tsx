@@ -81,7 +81,7 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "new" | "handled";
+type StatusFilter = "all" | "untouched" | "active";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
@@ -89,7 +89,7 @@ interface ViewRow { submission_id: string; user_id: string; user_name: string | 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<StatusFilter>("new");
+  const [filter, setFilter] = useState<StatusFilter>("untouched");
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
@@ -164,10 +164,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Bayer stages only apply to sellers; for everyone else stage filtering is a no-op.
   const isSellerView = kindFilter === "seller";
 
+  // Activity-based status: "untouched" = no admin has opened it.
+  // "active" = at least one admin has opened it (treated as the de-facto
+  // handled bucket because any action records a view).
+  const isUntouched = (sid: string) => !views.some(v => v.submission_id === sid);
+
   const filtered = useMemo(() => {
     return submissions.filter(s => {
-      if (filter === "new" && s.handled) return false;
-      if (filter === "handled" && !s.handled) return false;
+      if (filter === "untouched" && !isUntouched(s.id)) return false;
+      if (filter === "active" && isUntouched(s.id)) return false;
       if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
       if (isSellerView && stageFilter !== "all" && deriveBayerStage(s as any) !== stageFilter) return false;
       if (!searchQuery.trim()) return true;
@@ -176,7 +181,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery]);
+  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery, views]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
@@ -218,10 +223,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
-    if (filter === "new" && s.handled) return false;
-    if (filter === "handled" && !s.handled) return false;
+    if (filter === "untouched" && !isUntouched(s.id)) return false;
+    if (filter === "active" && isUntouched(s.id)) return false;
     return true;
-  }), [submissions, filter]);
+  }), [submissions, filter, views]);
   const kindCount = (k: KindFilter) =>
     k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
 
@@ -233,12 +238,32 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const stageCount = (st: BayerStage | "all") =>
     st === "all" ? stageBase.length : stageBase.filter(s => deriveBayerStage(s as any) === st).length;
 
+  // Team-wide pipeline overview — all sellers regardless of current filter.
+  const sellersAll = useMemo(
+    () => submissions.filter(s => resolveKind(s.customer_kind, s.source) === "seller"),
+    [submissions],
+  );
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* === Team pipeline overview — sellers, full team view === */}
+      <PipelineOverview
+        sellers={sellersAll}
+        views={views}
+        colorFor={colorFor}
+        onSelectStage={(st) => { setKindFilter("seller"); setStageFilter(st); }}
+        activeStage={kindFilter === "seller" ? stageFilter : "all"}
+      />
+
       {/* Status pills */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["new", "handled", "all"] as const).map(f => {
-          const count = f === "all" ? submissions.length : f === "new" ? submissions.filter(s => !s.handled).length : submissions.filter(s => s.handled).length;
+        {(["untouched", "active", "all"] as const).map(f => {
+          const count = f === "all"
+            ? submissions.length
+            : f === "untouched"
+              ? submissions.filter(s => isUntouched(s.id)).length
+              : submissions.filter(s => !isUntouched(s.id)).length;
+          const labels = { untouched: "Untouched", active: "Being worked", all: "All" } as const;
           return (
             <button
               key={f}
@@ -247,7 +272,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 filter === f ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
-              {f === "new" ? "New" : f === "handled" ? "Handled" : "All"} ({count})
+              {labels[f]} ({count})
             </button>
           );
         })}
@@ -434,9 +459,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {BAYER_STAGE_META[selectedBayerStage].label}
                   </span>
                 )}
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${selected.handled ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-                  {selected.handled ? "Handled" : "New"}
-                </span>
+                {(() => {
+                  const sViewers = viewersFor(selected.id);
+                  if (sViewers.length === 0) {
+                    return <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">Untouched</span>;
+                  }
+                  return (
+                    <div className="flex items-center gap-1.5" title={`Worked by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
+                      <span className="text-[10px] text-muted-foreground">Active —</span>
+                      <div className="flex -space-x-1">
+                        {sViewers.slice(0, 4).map(v => (
+                          <span key={v.user_id} className="w-5 h-5 rounded-full ring-1 ring-card flex items-center justify-center text-[9px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
+                            {(v.user_name || "?").charAt(0).toUpperCase()}
+                          </span>
+                        ))}
+                        {sViewers.length > 4 && (
+                          <span className="w-5 h-5 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-medium">+{sViewers.length - 4}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -625,18 +668,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={guard("Mark as handled", () => onUpdate(selected.id, { handled: !selected.handled }))}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                    selected.handled
-                      ? "border border-border text-muted-foreground hover:text-foreground"
-                      : "bg-foreground text-background hover:opacity-90"
-                  }`}
-                >
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  {selected.handled ? "Mark as new" : "Mark as handled"}
-                </button>
-
                 {selected.source === "seller_quote" ? (
                   <button
                     onClick={guard("Send seller quote", () => setQuoteOpen(true))}
@@ -744,5 +775,92 @@ const Field = ({ label, value }: { label: string; value: string }) => (
     <p className="text-sm text-foreground capitalize">{value}</p>
   </div>
 );
+
+// ===========================================================================
+// PipelineOverview — full-team seller funnel that lives ABOVE the inbox.
+// Shows each Bayer stage with a count + the avatars of admins actively
+// working that stage (i.e. who has opened a submission currently in it).
+// Click a stage to filter the inbox to sellers in that stage.
+// ===========================================================================
+const PipelineOverview = ({
+  sellers, views, colorFor, onSelectStage, activeStage,
+}: {
+  sellers: Submission[];
+  views: ViewRow[];
+  colorFor: (id: string) => string;
+  onSelectStage: (st: BayerStage | "all") => void;
+  activeStage: BayerStage | "all";
+}) => {
+  const stages = BAYER_STAGE_ORDER.filter(s => s !== "quote_morgued");
+
+  const byStage = stages.map(st => {
+    const subs = sellers.filter(s => deriveBayerStage(s as any) === st);
+    const ids = new Set(subs.map(s => s.id));
+    // Distinct admins who have viewed at least one submission in this stage.
+    const viewerMap = new Map<string, string>();
+    views.forEach(v => { if (ids.has(v.submission_id)) viewerMap.set(v.user_id, v.user_name || "?"); });
+    const viewers = Array.from(viewerMap, ([user_id, user_name]) => ({ user_id, user_name }));
+    return { stage: st, count: subs.length, viewers };
+  });
+
+  const totalSellers = sellers.length;
+
+  return (
+    <section className="lg:col-span-12 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl border-2 border-primary/30 shadow-md ring-1 ring-primary/10 p-4">
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Layers className="w-5 h-5 text-primary" />
+          <h3 className="text-base font-bold text-foreground tracking-tight">Seller pipeline — team view</h3>
+          <span className="text-[11px] text-muted-foreground">{totalSellers} active sellers</span>
+        </div>
+        <button
+          onClick={() => onSelectStage("all")}
+          className={`text-[11px] px-3 py-1 rounded-full border ${activeStage === "all" ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"}`}
+        >
+          All stages
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+        {byStage.map(({ stage, count, viewers }) => {
+          const m = BAYER_STAGE_META[stage];
+          const isActive = activeStage === stage;
+          return (
+            <button
+              key={stage}
+              onClick={() => onSelectStage(stage)}
+              className={`text-left rounded-lg border p-2.5 transition-all hover:shadow-sm ${
+                isActive ? "border-primary bg-primary/10 ring-1 ring-primary/30" : "border-border/60 bg-card hover:border-primary/40"
+              }`}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${m.dot}`} />
+                <span className="text-[10px] font-semibold text-foreground truncate">{m.short}</span>
+              </div>
+              <div className="flex items-end justify-between gap-1">
+                <span className="font-display text-xl text-foreground leading-none">{count}</span>
+                {viewers.length > 0 ? (
+                  <div className="flex -space-x-1" title={`Working: ${viewers.map(v => v.user_name).join(", ")}`}>
+                    {viewers.slice(0, 3).map(v => (
+                      <span key={v.user_id} className="w-4 h-4 rounded-full ring-1 ring-card flex items-center justify-center text-[8px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
+                        {(v.user_name || "?").charAt(0).toUpperCase()}
+                      </span>
+                    ))}
+                    {viewers.length > 3 && (
+                      <span className="w-4 h-4 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[8px] font-medium">+{viewers.length - 3}</span>
+                    )}
+                  </div>
+                ) : count > 0 ? (
+                  <span className="text-[9px] text-sky-600 dark:text-sky-400 font-medium">untouched</span>
+                ) : null}
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-1 truncate">Owner: {m.owner}</p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
 export default SubmissionsPanel;
