@@ -681,7 +681,10 @@ const Admin = () => {
         </div>
       </section>
       <Footer />
-      <GuidedTour />
+      <GuidedTour
+        onGoToSubmissions={() => setTab("submissions")}
+        onOpenMenu={(o) => setMenuOpen(o)}
+      />
       <HelpButton />
     </div>
   );
