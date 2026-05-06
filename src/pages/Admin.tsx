@@ -80,15 +80,20 @@ const Admin = () => {
 
   // Honor deep links like /admin?tab=submissions&submission=<id> (e.g. notification clicks)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get("tab");
-    const sid = params.get("submission");
-    const cust = params.get("customer");
-    if (t && ["listings","cemeteries","reservations","sales","submissions","inbox","performance","customers","ca_inventory","inventory_requests"].includes(t)) {
-      setTab(t as any);
-    }
-    if (sid) { setFocusSubmissionId(sid); setTab("submissions"); }
-    else if (cust) { setTab("customers"); }
+    const apply = () => {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get("tab");
+      const sid = params.get("submission");
+      const cust = params.get("customer");
+      if (t && ["listings","cemeteries","reservations","sales","submissions","inbox","performance","customers","ca_inventory","inventory_requests"].includes(t)) {
+        setTab(t as any);
+      }
+      if (sid) { setFocusSubmissionId(sid); setTab("submissions"); }
+      else if (cust) { setTab("customers"); }
+    };
+    apply();
+    window.addEventListener("popstate", apply);
+    return () => window.removeEventListener("popstate", apply);
   }, []);
 
   const fetchAllListings = async () => {
