@@ -48,8 +48,14 @@ const WelcomeOverlay = ({
 
   useEffect(() => {
     if (!visible) return;
-    const t = window.setTimeout(() => setVisible(false), reduce ? 1200 : 3600);
-    return () => clearTimeout(t);
+    // Lock background scroll while overlay is up
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const t = window.setTimeout(() => setVisible(false), reduce ? 1400 : 5200);
+    return () => {
+      clearTimeout(t);
+      document.body.style.overflow = prev;
+    };
   }, [visible, reduce]);
 
   const greeting = useMemo(() => greetingFor(new Date()), []);
