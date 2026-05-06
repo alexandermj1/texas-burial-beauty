@@ -223,10 +223,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
-    if (filter === "new" && s.handled) return false;
-    if (filter === "handled" && !s.handled) return false;
+    if (filter === "untouched" && !isUntouched(s.id)) return false;
+    if (filter === "active" && isUntouched(s.id)) return false;
     return true;
-  }), [submissions, filter]);
+  }), [submissions, filter, views]);
   const kindCount = (k: KindFilter) =>
     k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
 
@@ -238,12 +238,32 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const stageCount = (st: BayerStage | "all") =>
     st === "all" ? stageBase.length : stageBase.filter(s => deriveBayerStage(s as any) === st).length;
 
+  // Team-wide pipeline overview — all sellers regardless of current filter.
+  const sellersAll = useMemo(
+    () => submissions.filter(s => resolveKind(s.customer_kind, s.source) === "seller"),
+    [submissions],
+  );
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* === Team pipeline overview — sellers, full team view === */}
+      <PipelineOverview
+        sellers={sellersAll}
+        views={views}
+        colorFor={colorFor}
+        onSelectStage={(st) => { setKindFilter("seller"); setStageFilter(st); }}
+        activeStage={kindFilter === "seller" ? stageFilter : "all"}
+      />
+
       {/* Status pills */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["new", "handled", "all"] as const).map(f => {
-          const count = f === "all" ? submissions.length : f === "new" ? submissions.filter(s => !s.handled).length : submissions.filter(s => s.handled).length;
+        {(["untouched", "active", "all"] as const).map(f => {
+          const count = f === "all"
+            ? submissions.length
+            : f === "untouched"
+              ? submissions.filter(s => isUntouched(s.id)).length
+              : submissions.filter(s => !isUntouched(s.id)).length;
+          const labels = { untouched: "Untouched", active: "Being worked", all: "All" } as const;
           return (
             <button
               key={f}
@@ -252,7 +272,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 filter === f ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
-              {f === "new" ? "New" : f === "handled" ? "Handled" : "All"} ({count})
+              {labels[f]} ({count})
             </button>
           );
         })}
