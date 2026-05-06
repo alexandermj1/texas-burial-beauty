@@ -791,7 +791,7 @@ const PipelineOverview = ({
   onSelectStage: (st: BayerStage | "all") => void;
   activeStage: BayerStage | "all";
 }) => {
-  const stages = BAYER_STAGE_ORDER.filter(s => s !== "quote_morgued");
+  const stages = BAYER_STAGE_ORDER;
 
   const byStage = stages.map(st => {
     const subs = sellers.filter(s => deriveBayerStage(s as any) === st);
@@ -806,11 +806,11 @@ const PipelineOverview = ({
   const totalSellers = sellers.length;
 
   return (
-    <section className="lg:col-span-12 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl border-2 border-primary/30 shadow-md ring-1 ring-primary/10 p-4">
+    <section className="lg:col-span-12 bg-card rounded-xl border border-border/50 shadow-soft p-4">
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-primary" />
-          <h3 className="text-base font-bold text-foreground tracking-tight">Seller pipeline — team view</h3>
+          <Layers className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Seller pipeline — team view</h3>
           <span className="text-[11px] text-muted-foreground">{totalSellers} active sellers</span>
         </div>
         <button
@@ -835,10 +835,10 @@ const PipelineOverview = ({
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${m.dot}`} />
-                <span className="text-[10px] font-semibold text-foreground truncate">{m.short}</span>
+                <span className="text-[10px] font-medium text-foreground truncate">{m.short}</span>
               </div>
               <div className="flex items-end justify-between gap-1">
-                <span className="font-display text-xl text-foreground leading-none">{count}</span>
+                <span className="font-display text-xl text-foreground/90 leading-none">{count}</span>
                 {viewers.length > 0 ? (
                   <div className="flex -space-x-1" title={`Working: ${viewers.map(v => v.user_name).join(", ")}`}>
                     {viewers.slice(0, 3).map(v => (
