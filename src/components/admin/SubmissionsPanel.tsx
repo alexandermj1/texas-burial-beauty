@@ -264,13 +264,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Status pills */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["untouched", "active", "all"] as const).map(f => {
+        {(["new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
-            : f === "untouched"
-              ? submissions.filter(s => isUntouched(s.id)).length
-              : submissions.filter(s => !isUntouched(s.id)).length;
-          const labels = { untouched: "Untouched", active: "Being worked", all: "All" } as const;
+            : submissions.filter(s => isNew(s)).length;
+          const labels = { new: "New today", all: "All" } as const;
           return (
             <button
               key={f}
