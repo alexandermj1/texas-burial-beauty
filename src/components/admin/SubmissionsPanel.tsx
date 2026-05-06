@@ -55,6 +55,7 @@ export interface Submission {
   closed_at?: string | null;
   closed_outcome?: string | null;
   inquiry_channel?: string | null;
+  handled_by_name?: string | null;
 }
 
 interface Props {
