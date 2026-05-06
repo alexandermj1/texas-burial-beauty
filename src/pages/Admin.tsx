@@ -680,6 +680,7 @@ const Admin = () => {
         </div>
       </section>
       <Footer />
+      <GuidedTour />
       <HelpButton />
     </div>
   );
