@@ -271,6 +271,15 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
                       </div>
+                      {(() => {
+                        const c = lookupCemeteryContact(submission.cemetery);
+                        if (!c?.transferFee) return null;
+                        return (
+                          <p className="text-[10px] text-muted-foreground mt-1.5">
+                            Directory: <span className="text-foreground">{c.transferFee}</span>
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
 
