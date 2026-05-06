@@ -256,6 +256,7 @@ const steps: Step[] = [
     tag: "Submissions",
     target: '[data-tour="detail-panel"]',
     side: "left",
+    before: (ctx) => { ctx.goToSubmissions(); ctx.openMenu(false); ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>Click a card and the right-hand panel fills with everything you need:</p>
@@ -273,7 +274,9 @@ const steps: Step[] = [
     title: "Notes & @mentions",
     Icon: MessageSquare,
     tag: "Collaboration",
-    side: "center",
+    target: '[data-tour="notes-section"]',
+    side: "left",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>
@@ -289,7 +292,9 @@ const steps: Step[] = [
     title: "Send quote / DocuSign / decline",
     Icon: Send,
     tag: "Actions",
-    side: "center",
+    target: '[data-tour="actions-bar"]',
+    side: "top",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>From inside a customer's record you have three big action buttons:</p>
@@ -315,7 +320,9 @@ const steps: Step[] = [
     title: "Inventory & comps",
     Icon: Layers,
     tag: "Pricing",
-    side: "center",
+    target: '[data-tour="cemetery-box"]',
+    side: "left",
+    before: (ctx) => { ctx.selectFirstSubmission(); },
     body: (
       <>
         <p>Inside a customer record, click <strong>"View inventory & comps"</strong> in the Cemetery box. You'll see:</p>
