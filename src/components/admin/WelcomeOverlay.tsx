@@ -48,13 +48,16 @@ const WelcomeOverlay = ({
 
   useEffect(() => {
     if (!visible) return;
-    // Lock background scroll while overlay is up
-    const prev = document.body.style.overflow;
+    // Lock background scroll (both html + body) while overlay is up so users can't scroll past the footer
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
-    const t = window.setTimeout(() => setVisible(false), reduce ? 1400 : 5200);
+    document.documentElement.style.overflow = "hidden";
+    const t = window.setTimeout(() => setVisible(false), reduce ? 1200 : 4200);
     return () => {
       clearTimeout(t);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
     };
   }, [visible, reduce]);
 
