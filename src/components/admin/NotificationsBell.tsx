@@ -24,6 +24,7 @@ const formatWhen = (iso: string) => {
 
 const NotificationsBell = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState<Notif[]>([]);
 
