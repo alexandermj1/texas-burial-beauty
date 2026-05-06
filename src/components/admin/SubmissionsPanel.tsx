@@ -323,7 +323,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[70vh] overflow-y-auto">
+      <div className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[calc(100vh-220px)] min-h-[70vh] overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="p-10 text-center">
             <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
@@ -806,12 +806,12 @@ const PipelineOverview = ({
   const totalSellers = sellers.length;
 
   return (
-    <section className="lg:col-span-12 bg-card rounded-xl border border-border/50 shadow-soft p-4">
+    <section className="lg:col-span-12 bg-gradient-to-br from-sage-light/40 via-card to-sand-light/40 rounded-xl border border-primary/15 shadow-soft p-4">
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground tracking-tight">Seller pipeline — team view</h3>
-          <span className="text-[11px] text-muted-foreground">{totalSellers} active sellers</span>
+          <h3 className="text-base font-display text-foreground leading-tight">Seller pipeline · Team view</h3>
+          <span className="text-xs text-muted-foreground ml-1">{totalSellers} active sellers</span>
         </div>
         <button
           onClick={() => onSelectStage("all")}
@@ -830,15 +830,17 @@ const PipelineOverview = ({
               key={stage}
               onClick={() => onSelectStage(stage)}
               className={`text-left rounded-lg border p-2.5 transition-all hover:shadow-sm ${
-                isActive ? "border-primary bg-primary/10 ring-1 ring-primary/30" : "border-border/60 bg-card hover:border-primary/40"
+                isActive
+                  ? "border-primary bg-primary/15 ring-1 ring-primary/30"
+                  : `${m.cls} hover:brightness-105`
               }`}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${m.dot}`} />
-                <span className="text-[10px] font-medium text-foreground truncate">{m.short}</span>
+                <span className="text-[10px] font-medium truncate">{m.short}</span>
               </div>
               <div className="flex items-end justify-between gap-1">
-                <span className="font-display text-xl text-foreground/90 leading-none">{count}</span>
+                <span className="font-display text-2xl leading-none">{count}</span>
                 {viewers.length > 0 ? (
                   <div className="flex -space-x-1" title={`Working: ${viewers.map(v => v.user_name).join(", ")}`}>
                     {viewers.slice(0, 3).map(v => (
@@ -854,7 +856,7 @@ const PipelineOverview = ({
                   <span className="text-[9px] text-sky-600 dark:text-sky-400 font-medium">untouched</span>
                 ) : null}
               </div>
-              <p className="text-[9px] text-muted-foreground mt-1 truncate">Owner: {m.owner}</p>
+              <p className="text-[9px] opacity-75 mt-1 truncate">Owner: {m.owner}</p>
             </button>
           );
         })}
