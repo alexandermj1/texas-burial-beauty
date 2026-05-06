@@ -79,6 +79,14 @@ const Admin = () => {
   useEffect(() => {
     if (!authLoading && !adminLoading && user && isAdmin) {
       fetchAllListings();
+      (async () => {
+        const { count } = await supabase
+          .from("user_notifications" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .is("read_at", null);
+        setUnreadNotifs(count || 0);
+      })();
     }
   }, [user, isAdmin, authLoading, adminLoading]);
 
