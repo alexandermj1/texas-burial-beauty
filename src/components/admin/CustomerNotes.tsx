@@ -110,7 +110,11 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const filteredMentions = useMemo(() => {
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase();
-    return team.filter(t => t.id !== user?.id && (t.handle.includes(q) || t.name.toLowerCase().includes(q))).slice(0, 6);
+    const everyone: TeamMember = { id: "__everyone__", name: "Everyone on the team", handle: "everyone" };
+    const list: TeamMember[] = [];
+    if ("everyone".includes(q) || q === "") list.push(everyone);
+    list.push(...team.filter(t => t.id !== user?.id && (t.handle.includes(q) || t.name.toLowerCase().includes(q))));
+    return list.slice(0, 6);
   }, [mentionQuery, team, user?.id]);
 
 
