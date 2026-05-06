@@ -91,9 +91,16 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     (async () => {
       const { data } = await supabase.from("profiles").select("id, full_name, email");
       if (data) {
+        const used = new Set<string>();
         setTeam((data as any[]).map(p => {
           const name = p.full_name || (p.email ? p.email.split("@")[0] : "user");
-          return { id: p.id, name, handle: name.replace(/\s+/g, "").toLowerCase() };
+          // Handle = first word, alphanumerics only, lowercased. Disambiguate dupes with a numeric suffix.
+          const base = (name.split(/\s+/)[0] || "user").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "user";
+          let handle = base;
+          let n = 2;
+          while (used.has(handle)) handle = `${base}${n++}`;
+          used.add(handle);
+          return { id: p.id, name, handle };
         }));
       }
     })();
