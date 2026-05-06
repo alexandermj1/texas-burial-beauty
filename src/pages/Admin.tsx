@@ -260,9 +260,9 @@ const Admin = () => {
   const userId = user.id;
   const lastVisitKey = `admin:lastVisit:${userId}`;
   const welcomeKey = `admin:welcome:${userId}`;
-  const lastVisit = (() => {
+  const [lastVisit] = useState<number>(() => {
     try { return Number(localStorage.getItem(lastVisitKey)) || 0; } catch { return 0; }
-  })();
+  });
   useEffect(() => {
     try { localStorage.setItem(lastVisitKey, String(Date.now())); } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
