@@ -236,9 +236,10 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     }
     // Notify mentioned teammates and (for replies) the parent author
     const mentions = Array.from(new Set((body.match(/@([\w.\-]+)/g) || []).map(m => m.slice(1).toLowerCase())));
-    const targets: { id: string; isReplyAuthor?: boolean }[] = team
-      .filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id)
-      .map(t => ({ id: t.id }));
+    const everyoneTagged = mentions.includes("everyone");
+    const targets: { id: string; isReplyAuthor?: boolean; isEveryone?: boolean }[] = everyoneTagged
+      ? team.filter(t => t.id !== user?.id).map(t => ({ id: t.id, isEveryone: true }))
+      : team.filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id).map(t => ({ id: t.id }));
     if (parentId) {
       const parent = notes.find(n => n.id === parentId);
       if (parent?.author_user_id && parent.author_user_id !== user?.id && !targets.some(t => t.id === parent.author_user_id)) {
@@ -250,7 +251,11 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       await supabase.from("user_notifications" as any).insert(
         targets.map(t => ({
           user_id: t.id,
-          title: t.isReplyAuthor ? `${myName} replied to your note` : `${myName} mentioned you in a note`,
+          title: t.isReplyAuthor
+            ? `${myName} replied to your note`
+            : t.isEveryone
+              ? `${myName} mentioned the whole team`
+              : `${myName} mentioned you in a note`,
           body: body.slice(0, 240),
           link_url: link,
           source_type: "customer_note",
