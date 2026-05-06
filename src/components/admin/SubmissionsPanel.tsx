@@ -195,7 +195,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // as typing here — we only listen.
   useEffect(() => {
     if (!selected?.id) { setTypingUsers([]); return; }
-    const channel = supabase.channel(`notes:submission_id:${selected.id}`, {
+    const channel = supabase.channel(`notes-watch:${selected.id}:${myId}`, {
       config: { presence: { key: `watcher-${myId}` } },
     });
     channel
