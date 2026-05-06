@@ -125,24 +125,33 @@ const CemeteryMatchDialog = ({ open, onClose, cemetery, city, propertyType, spac
                       <thead className="bg-muted/40 text-[10px] uppercase text-muted-foreground">
                         <tr>
                           <th className="text-left px-3 py-2">Cemetery</th>
-                          <th className="text-left px-3 py-2">Area</th>
+                          <th className="text-left px-3 py-2">Area / Lawn</th>
                           <th className="text-left px-3 py-2">Type</th>
+                          <th className="text-left px-3 py-2">Location</th>
                           <th className="text-right px-3 py-2">Retail</th>
                           <th className="text-right px-3 py-2">Resale</th>
-                          <th className="text-right px-3 py-2">Match</th>
+                          <th className="text-right px-3 py-2">Pay seller</th>
+                          <th className="text-right px-3 py-2">Seller %</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {inv.map(({ item: r, score }) => (
-                          <tr key={r.id} className="border-t border-border/40">
-                            <td className="px-3 py-2 text-foreground">{r.cemetery}</td>
-                            <td className="px-3 py-2 text-muted-foreground">{r.area || "—"}</td>
-                            <td className="px-3 py-2">{r.property_type || r.property_type_norm || "—"}</td>
-                            <td className="px-3 py-2 text-right">{fmt(r.retail_price)}</td>
-                            <td className="px-3 py-2 text-right font-medium text-emerald-700">{fmt(r.resale_price)}</td>
-                            <td className="px-3 py-2 text-right text-[10px] text-muted-foreground">{Math.round(score * 100)}%</td>
-                          </tr>
-                        ))}
+                        {inv.map(({ item: r }) => {
+                          const sellerPct = r.net_pct_to_owner != null
+                            ? Number(r.net_pct_to_owner)
+                            : (r.net_to_owner && r.retail_price ? Number(r.net_to_owner) / Number(r.retail_price) : null);
+                          return (
+                            <tr key={r.id} className="border-t border-border/40">
+                              <td className="px-3 py-2 text-foreground">{r.cemetery}</td>
+                              <td className="px-3 py-2 text-muted-foreground">{r.area || "—"}</td>
+                              <td className="px-3 py-2">{r.property_type || r.property_type_norm || "—"}</td>
+                              <td className="px-3 py-2 text-muted-foreground max-w-[180px] truncate" title={r.location_details || ""}>{r.location_details || "—"}</td>
+                              <td className="px-3 py-2 text-right">{fmt(r.retail_price)}</td>
+                              <td className="px-3 py-2 text-right font-medium text-emerald-700">{fmt(r.resale_price)}</td>
+                              <td className="px-3 py-2 text-right text-amber-700">{fmt(r.net_to_owner)}</td>
+                              <td className="px-3 py-2 text-right text-muted-foreground">{sellerPct != null ? `${(sellerPct * 100).toFixed(0)}%` : "—"}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
