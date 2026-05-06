@@ -234,6 +234,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Record a view for this admin when they open a submission
   useEffect(() => { if (selected?.id) recordView(selected.id); }, [selected?.id, myId]);
 
+  // Broadcast my "currently working on" submission so teammates see it instantly.
+  useEffect(() => {
+    const ch = presenceChanRef.current;
+    if (!ch || !myId) return;
+    ch.track({ user_id: myId, user_name: myName, submission_id: selected?.id || null });
+  }, [selected?.id, myId, myName]);
+
   // Subscribe to the same notes presence channel CustomerNotes uses, so we know when
   // somebody else is actively typing a note on this submission. We don't track ourselves
   // as typing here — we only listen.
