@@ -289,6 +289,7 @@ const Admin = () => {
       <WelcomeOverlay
         name={welcomeName}
         newSubmissions={newSinceLast}
+        unreadNotifications={unreadNotifs}
         totalOpenSubmissions={openCount}
         storageKey={welcomeKey}
       />
