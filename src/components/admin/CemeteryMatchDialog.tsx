@@ -50,7 +50,7 @@ const CemeteryMatchDialog = ({ open, onClose, cemetery, city, propertyType, spac
       const [{ data }, salesAll] = await Promise.all([
         supabase
           .from("ca_inventory" as any)
-          .select("id,cemetery,area,property_type,property_type_norm,location_details,retail_price,resale_price,owner_name,status")
+          .select("id,cemetery,area,property_type,property_type_norm,location_details,retail_price,resale_price,net_to_owner,net_pct_to_owner,owner_name,status")
           .eq("status", "active")
           .limit(2000),
         loadSales(),
