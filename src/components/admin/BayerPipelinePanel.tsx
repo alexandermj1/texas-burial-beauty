@@ -204,7 +204,7 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
       </div>
 
       {/* Stage rail (compact horizontal) */}
-      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-2 -my-1 -mx-1 px-1">
         {(BAYER_STAGE_ORDER.filter(s => s !== "quote_morgued") as BayerStage[]).map((s, i, arr) => {
           const m = BAYER_STAGE_META[s];
           const stageIdx = arr.indexOf(stage as BayerStage);
