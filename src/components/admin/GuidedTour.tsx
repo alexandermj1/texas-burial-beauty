@@ -491,7 +491,7 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
   }, [open]);
 
   const start = () => { setI(0); setOpen(true); };
-  const close = () => { setOpen(false); try { localStorage.setItem(TOUR_KEY, "1"); } catch {} };
+  const close = () => { setOpen(false); setTaken(true); try { localStorage.setItem(TOUR_KEY, "1"); } catch {} };
 
   const step = steps[i];
   const Icon = step?.Icon;
