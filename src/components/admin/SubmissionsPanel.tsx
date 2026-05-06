@@ -81,7 +81,7 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "new" | "handled";
+type StatusFilter = "all" | "untouched" | "active";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
@@ -89,7 +89,7 @@ interface ViewRow { submission_id: string; user_id: string; user_name: string | 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<StatusFilter>("new");
+  const [filter, setFilter] = useState<StatusFilter>("untouched");
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
