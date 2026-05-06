@@ -409,15 +409,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const iViewed = haveIViewed(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
             const fresh = isNew(s);
-            // Three-tone background:
-            //  • Active row wins (primary tint + left accent)
-            //  • New today → soft blue tint, bold text, left accent bar
-            //  • Otherwise → muted neutral
+            const workers = workersFor(s.id);
+            const beingWorked = workers.length > 0;
+            // Background priority:
+            //  • Active row (mine) → primary tint
+            //  • Teammate currently working → soft terracotta/accent tint with pulse
+            //  • New today → soft sky tint
+            //  • Otherwise → neutral
             const bgCls = isActive
               ? "bg-primary/15 border-l-4 border-l-primary"
-              : fresh
-                ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
-                : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
+              : beingWorked
+                ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
+                : fresh
+                  ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
+                  : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
             return (
               <motion.button
                 key={s.id}
