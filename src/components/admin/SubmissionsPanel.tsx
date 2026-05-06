@@ -231,10 +231,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
   const kindBase = useMemo(() => submissions.filter(s => {
-    if (filter === "untouched" && !isUntouched(s.id)) return false;
-    if (filter === "active" && isUntouched(s.id)) return false;
+    if (filter === "new" && !isNew(s)) return false;
     return true;
-  }), [submissions, filter, views]);
+  }), [submissions, filter, startOfToday]);
   const kindCount = (k: KindFilter) =>
     k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
 
