@@ -706,7 +706,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
 
             {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-            <div>
+            <div data-tour="notes-section">
               <CustomerNotes submissionId={selected.id} customerName={selected.name} />
             </div>
 
