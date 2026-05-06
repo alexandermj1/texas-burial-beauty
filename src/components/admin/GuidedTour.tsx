@@ -418,6 +418,8 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [popH, setPopH] = useState(380);
+  const popRef = useRef<HTMLDivElement | null>(null);
   const [taken, setTaken] = useState<boolean>(() => {
     try { return localStorage.getItem(TOUR_KEY) === "1"; } catch { return false; }
   });
