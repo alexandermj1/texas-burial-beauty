@@ -412,14 +412,24 @@ interface GuidedTourProps {
   onOpenMenu?: (open: boolean) => void;
 }
 
-const GuidedTour = ({ onGoToSubmissions, onOpenMenu }: GuidedTourProps) => {
+interface GuidedTourProps {
+  onGoToSubmissions?: () => void;
+  onOpenMenu?: (open: boolean) => void;
+  onSelectFirstSubmission?: () => void;
+}
+
+const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: GuidedTourProps) => {
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [taken, setTaken] = useState<boolean>(() => {
+    try { return localStorage.getItem(TOUR_KEY) === "1"; } catch { return false; }
+  });
 
   const ctx: TourContext = {
     goToSubmissions: () => onGoToSubmissions?.(),
     openMenu: (o) => onOpenMenu?.(o),
+    selectFirstSubmission: () => onSelectFirstSubmission?.(),
   };
 
   // Run before-hook + measure target each step.
