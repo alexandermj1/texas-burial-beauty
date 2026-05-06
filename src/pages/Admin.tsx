@@ -17,6 +17,7 @@ import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
 import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
+import { cleanDisplayName } from "@/lib/displayName";
 
 interface AdminListing {
   id: string;
