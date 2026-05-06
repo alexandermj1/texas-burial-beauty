@@ -68,6 +68,7 @@ const WelcomeOverlay = ({
 
   const stats: Stat[] = [];
   if (newSubmissions > 0) stats.push({ label: newSubmissions === 1 ? "new submission" : "new submissions", value: newSubmissions, Icon: Sparkles });
+  if (unreadNotifications > 0) stats.push({ label: unreadNotifications === 1 ? "notification" : "notifications", value: unreadNotifications, Icon: Bell });
   if (totalOpenSubmissions > 0) stats.push({ label: "open", value: totalOpenSubmissions, Icon: Inbox });
   if (unreadInbox > 0) stats.push({ label: "unread emails", value: unreadInbox, Icon: Mail });
 
