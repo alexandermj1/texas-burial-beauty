@@ -801,7 +801,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       : "bg-emerald-600 text-white hover:bg-emerald-700"
                   }`}
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle className="w-3.5 h-3.5" />
                   {selected.handled ? "Handled — undo" : "Mark handled"}
                 </button>
               </div>
