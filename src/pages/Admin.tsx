@@ -257,8 +257,30 @@ const Admin = () => {
 
   const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory";
 
+  const userId = user.id;
+  const lastVisitKey = `admin:lastVisit:${userId}`;
+  const welcomeKey = `admin:welcome:${userId}`;
+  const lastVisit = (() => {
+    try { return Number(localStorage.getItem(lastVisitKey)) || 0; } catch { return 0; }
+  })();
+  useEffect(() => {
+    try { localStorage.setItem(lastVisitKey, String(Date.now())); } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const newSinceLast = lastVisit
+    ? submissions.filter((s: any) => new Date(s.created_at).getTime() > lastVisit).length
+    : 0;
+  const openCount = submissions.filter((s: any) => !s.handled).length;
+  const welcomeName = cleanDisplayName(user.user_metadata?.full_name) || (user.email ? user.email.split("@")[0] : "");
+
   return (
     <div className="min-h-screen bg-background">
+      <WelcomeOverlay
+        name={welcomeName}
+        newSubmissions={newSinceLast}
+        totalOpenSubmissions={openCount}
+        storageKey={welcomeKey}
+      />
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
       <section className={focused ? "pt-24 pb-10" : "pt-28 pb-16"}>
