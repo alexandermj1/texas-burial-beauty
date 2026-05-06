@@ -19,6 +19,7 @@ import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
+import WelcomeOverlay from "@/components/admin/WelcomeOverlay";
 
 interface AdminListing {
   id: string;
@@ -256,8 +257,32 @@ const Admin = () => {
 
   const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory";
 
+  const userId = user.id;
+  const lastVisitKey = `admin:lastVisit:${userId}`;
+  const welcomeKey = `admin:welcome:${userId}`;
+  let lastVisit = 0;
+  try {
+    lastVisit = Number(localStorage.getItem(lastVisitKey)) || 0;
+    // Only stamp once per browser session so the "since last visit" count stays stable while navigating.
+    if (!sessionStorage.getItem(welcomeKey + ":stamped")) {
+      localStorage.setItem(lastVisitKey, String(Date.now()));
+      sessionStorage.setItem(welcomeKey + ":stamped", "1");
+    }
+  } catch {}
+  const newSinceLast = lastVisit
+    ? submissions.filter((s: any) => new Date(s.created_at).getTime() > lastVisit).length
+    : 0;
+  const openCount = submissions.filter((s: any) => !s.handled).length;
+  const welcomeName = cleanDisplayName(user.user_metadata?.full_name) || (user.email ? user.email.split("@")[0] : "");
+
   return (
     <div className="min-h-screen bg-background">
+      <WelcomeOverlay
+        name={welcomeName}
+        newSubmissions={newSinceLast}
+        totalOpenSubmissions={openCount}
+        storageKey={welcomeKey}
+      />
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
       <section className={focused ? "pt-24 pb-10" : "pt-28 pb-16"}>
