@@ -285,6 +285,12 @@ const Admin = () => {
                     />
                   </div>
                 </div>
+                <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border text-xs">
+                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-semibold">
+                    {(user.user_metadata?.full_name || user.email || "?").charAt(0).toUpperCase()}
+                  </span>
+                  <span className="text-foreground font-medium truncate max-w-[140px]">{user.user_metadata?.full_name || user.email}</span>
+                </div>
                 <NotificationsBell />
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
@@ -315,7 +321,7 @@ const Admin = () => {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
-                  <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
+                  <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{user.user_metadata?.full_name || user.email}</span></p>
                 </div>
                 <div className="flex items-center gap-2">
                   <NotificationsBell />

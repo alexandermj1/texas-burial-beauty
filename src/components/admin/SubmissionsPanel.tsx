@@ -195,7 +195,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // as typing here — we only listen.
   useEffect(() => {
     if (!selected?.id) { setTypingUsers([]); return; }
-    const channel = supabase.channel(`notes:submission_id:${selected.id}`, {
+    const channel = supabase.channel(`notes-watch:${selected.id}:${myId}`, {
       config: { presence: { key: `watcher-${myId}` } },
     });
     channel
@@ -806,7 +806,7 @@ const PipelineOverview = ({
   const totalSellers = sellers.length;
 
   return (
-    <section className="lg:col-span-12 bg-sage-light/30 rounded-xl border border-border/50 shadow-soft p-4">
+    <section className="lg:col-span-12 bg-card rounded-xl border border-border/50 shadow-soft p-4">
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-primary" />
