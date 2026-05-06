@@ -791,7 +791,7 @@ const PipelineOverview = ({
   onSelectStage: (st: BayerStage | "all") => void;
   activeStage: BayerStage | "all";
 }) => {
-  const stages = BAYER_STAGE_ORDER.filter(s => s !== "quote_morgued");
+  const stages = BAYER_STAGE_ORDER;
 
   const byStage = stages.map(st => {
     const subs = sellers.filter(s => deriveBayerStage(s as any) === st);
