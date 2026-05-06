@@ -63,6 +63,7 @@ const Admin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Inline editing
   const [editingId, setEditingId] = useState<string | null>(null);
