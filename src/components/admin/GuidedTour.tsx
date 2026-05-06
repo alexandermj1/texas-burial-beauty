@@ -530,7 +530,11 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
       <button
         onClick={start}
         aria-label="Take the guided tour"
-        className="fixed bottom-6 right-32 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-soft hover:opacity-90 transition-all hover:shadow-md text-sm font-medium"
+        className={
+          taken
+            ? "inline-flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-soft hover:opacity-90 transition-all hover:shadow-md text-sm font-medium"
+            : "fixed bottom-6 right-32 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-soft hover:opacity-90 transition-all hover:shadow-md text-sm font-medium"
+        }
       >
         <Compass className="w-4 h-4" />
         Take the tour
