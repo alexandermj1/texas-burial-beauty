@@ -20,6 +20,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 import { Megaphone, UserPlus } from "lucide-react";
+import { cleanDisplayName } from "@/lib/displayName";
 
 export interface Submission {
   id: string;
