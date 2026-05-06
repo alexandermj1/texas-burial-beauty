@@ -499,31 +499,47 @@ const GuidedTour = ({ onGoToSubmissions, onOpenMenu, onSelectFirstSubmission }: 
   const Icon = step?.Icon;
   const pct = ((i + 1) / steps.length) * 100;
 
-  // Compute popover position
+  // Compute popover position with auto-flip away from the spotlight
   const popoverStyle: React.CSSProperties = (() => {
     if (!rect || !step?.target || step.side === "center") {
       return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
     }
     const vw = window.innerWidth, vh = window.innerHeight;
     const w = Math.min(POPOVER_W, vw - 32);
+    const h = Math.min(popH, vh - 32);
+    const preferred = step.side || "bottom";
+    const space = {
+      bottom: vh - (rect.top + rect.height) - PADDING * 2,
+      top: rect.top - PADDING * 2,
+      right: vw - (rect.left + rect.width) - PADDING * 2,
+      left: rect.left - PADDING * 2,
+    };
+    // Pick a side that fits the popover; fall back to the side with the most space.
+    const order: (keyof typeof space)[] = [preferred as any, "bottom", "top", "right", "left"];
+    let side: keyof typeof space = preferred as any;
+    for (const s of order) {
+      const need = (s === "top" || s === "bottom") ? h : w;
+      if (space[s] >= need) { side = s; break; }
+    }
+    if (space[side] < ((side === "top" || side === "bottom") ? h : w)) {
+      side = (Object.keys(space) as (keyof typeof space)[]).sort((a, b) => space[b] - space[a])[0];
+    }
     let top = 0, left = 0;
-    const side = step.side || "bottom";
     if (side === "bottom") {
       top = rect.top + rect.height + PADDING;
       left = rect.left + rect.width / 2 - w / 2;
     } else if (side === "top") {
-      top = rect.top - PADDING - 360;
+      top = rect.top - PADDING - h;
       left = rect.left + rect.width / 2 - w / 2;
     } else if (side === "right") {
-      top = rect.top + rect.height / 2 - 180;
+      top = rect.top + rect.height / 2 - h / 2;
       left = rect.left + rect.width + PADDING;
-    } else if (side === "left") {
-      top = rect.top + rect.height / 2 - 180;
+    } else {
+      top = rect.top + rect.height / 2 - h / 2;
       left = rect.left - PADDING - w;
     }
-    // Clamp
     left = Math.max(16, Math.min(vw - w - 16, left));
-    top = Math.max(16, Math.min(vh - 200, top));
+    top = Math.max(16, Math.min(vh - h - 16, top));
     return { top, left, width: w };
   })();
 
