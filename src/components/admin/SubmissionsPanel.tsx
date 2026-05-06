@@ -668,18 +668,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={guard("Mark as handled", () => onUpdate(selected.id, { handled: !selected.handled }))}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                    selected.handled
-                      ? "border border-border text-muted-foreground hover:text-foreground"
-                      : "bg-foreground text-background hover:opacity-90"
-                  }`}
-                >
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  {selected.handled ? "Mark as new" : "Mark as handled"}
-                </button>
-
                 {selected.source === "seller_quote" ? (
                   <button
                     onClick={guard("Send seller quote", () => setQuoteOpen(true))}
