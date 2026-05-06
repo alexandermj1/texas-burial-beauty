@@ -135,18 +135,18 @@ const WelcomeOverlay = ({
                   key={i}
                   className="inline-block"
                   style={{ whiteSpace: "pre" }}
-                  initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14, filter: "blur(6px)" }}
+                  initial={reduce ? { opacity: 1 } : { opacity: 0, y: 16, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{ duration: 0.5, delay: 0.2 + i * 0.025, ease: [0.2, 0.8, 0.2, 1] }}
+                  transition={{ duration: 0.7, delay: 0.25 + i * 0.045, ease: [0.2, 0.8, 0.2, 1] }}
                 >
                   {c}
                 </motion.span>
               ))}
               <motion.span
                 className="inline-block ml-2 text-sage"
-                initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14, filter: "blur(8px)" }}
+                initial={reduce ? { opacity: 1 } : { opacity: 0, y: 16, filter: "blur(10px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ duration: 0.6, delay: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+                transition={{ duration: 0.85, delay: 1.1, ease: [0.2, 0.8, 0.2, 1] }}
               >
                 {firstName}.
               </motion.span>
@@ -156,7 +156,7 @@ const WelcomeOverlay = ({
               className="mt-4 text-muted-foreground text-base"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0, duration: 0.5 }}
+              transition={{ delay: 1.55, duration: 0.6 }}
             >
               {subtitle}
             </motion.p>
@@ -166,7 +166,7 @@ const WelcomeOverlay = ({
                 className="mt-7 flex flex-wrap justify-center gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.25, duration: 0.4 }}
+                transition={{ delay: 1.95, duration: 0.4 }}
               >
                 {stats.map((s, i) => (
                   <motion.div
@@ -174,7 +174,7 @@ const WelcomeOverlay = ({
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border shadow-soft"
                     initial={reduce ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: 1.3 + i * 0.1, duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+                    transition={{ delay: 2.0 + i * 0.1, duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
                   >
                     <s.Icon className="w-4 h-4 text-sage" />
                     <span className="text-foreground font-semibold tabular-nums">{s.value}</span>
@@ -188,7 +188,7 @@ const WelcomeOverlay = ({
               className="mt-8 inline-flex items-center gap-2 text-xs text-muted-foreground"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.7, duration: 0.5 }}
+              transition={{ delay: 2.4, duration: 0.5 }}
             >
               <motion.span
                 className="block w-1.5 h-1.5 rounded-full bg-sage"
