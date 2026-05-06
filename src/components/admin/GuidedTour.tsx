@@ -407,10 +407,6 @@ const PADDING = 12;
 
 interface Rect { top: number; left: number; width: number; height: number; }
 
-interface GuidedTourProps {
-  onGoToSubmissions?: () => void;
-  onOpenMenu?: (open: boolean) => void;
-}
 
 interface GuidedTourProps {
   onGoToSubmissions?: () => void;
