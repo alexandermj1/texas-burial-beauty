@@ -806,7 +806,7 @@ const PipelineOverview = ({
   const totalSellers = sellers.length;
 
   return (
-    <section className="lg:col-span-12 bg-gradient-to-br from-sage-light/40 via-card to-sand-light/40 rounded-xl border border-primary/15 shadow-soft p-4">
+    <section className="lg:col-span-12 bg-sage-light/30 rounded-xl border border-border/50 shadow-soft p-4">
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-primary" />
