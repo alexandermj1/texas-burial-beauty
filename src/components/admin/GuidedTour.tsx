@@ -375,23 +375,6 @@ const steps: Step[] = [
     ),
   },
   {
-    title: "Marking work done",
-    Icon: CheckCircle,
-    tag: "Submissions",
-    target: '[data-tour="mark-handled"]',
-    side: "top",
-    before: (ctx) => { ctx.selectFirstSubmission(); },
-    body: (
-      <>
-        <p>
-          Once a customer is fully dealt with — sold, declined, or no longer interested — click
-          <strong className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs ml-1"><CheckCircle className="w-3 h-3" /> Mark handled</strong>.
-        </p>
-        <p className="text-sm text-muted-foreground">They drop out of the open count at the top of the tab so the team knows they no longer need attention. They're still searchable any time, and you can un-mark them with the same button.</p>
-      </>
-    ),
-  },
-  {
     title: "Gmail Inbox tab",
     Icon: Mail,
     tag: "Beyond submissions",
