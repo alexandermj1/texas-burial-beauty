@@ -17,6 +17,9 @@ import CustomerNotes from "./CustomerNotes";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import BroadcastDialog from "./BroadcastDialog";
+import AddSubmissionDialog from "./AddSubmissionDialog";
+import { Megaphone, UserPlus } from "lucide-react";
 
 export interface Submission {
   id: string;
