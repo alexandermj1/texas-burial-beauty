@@ -111,7 +111,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [addOpen, setAddOpen] = useState(false);
 
   const myId = user?.id ?? "";
-  const myName = (user?.user_metadata as any)?.full_name || user?.email?.split("@")[0] || "Someone";
+  const myName = cleanDisplayName((user?.user_metadata as any)?.full_name) || user?.email?.split("@")[0] || "Someone";
 
   // Stable color per viewer
   const VIEW_COLORS = ["#0ea5e9", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6"];
