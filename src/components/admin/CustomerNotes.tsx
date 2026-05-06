@@ -229,30 +229,29 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     if (customerId) {
       await supabase.from("customer_profiles" as any).update({ last_interaction_at: new Date().toISOString() }).eq("id", customerId);
     }
-    // Notify mentioned teammates
+    // Notify mentioned teammates and (for replies) the parent author
     const mentions = Array.from(new Set((body.match(/@([\w.\-]+)/g) || []).map(m => m.slice(1).toLowerCase())));
-    if (mentions.length > 0) {
-      const targets = team.filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id);
-      // Also notify the parent note author on a reply (if not already mentioned and not self)
-      if (parentId) {
-        const parent = notes.find(n => n.id === parentId);
-        if (parent?.author_user_id && parent.author_user_id !== user?.id && !targets.some(t => t.id === parent.author_user_id)) {
-          targets.push({ id: parent.author_user_id, name: parent.author_name || "", handle: "" });
-        }
+    const targets: { id: string; isReplyAuthor?: boolean }[] = team
+      .filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id)
+      .map(t => ({ id: t.id }));
+    if (parentId) {
+      const parent = notes.find(n => n.id === parentId);
+      if (parent?.author_user_id && parent.author_user_id !== user?.id && !targets.some(t => t.id === parent.author_user_id)) {
+        targets.push({ id: parent.author_user_id, isReplyAuthor: true });
       }
-      if (targets.length) {
-        const link = submissionId ? `/admin?tab=submissions&submission=${submissionId}` : `/admin?tab=customers&customer=${customerId}`;
-        await supabase.from("user_notifications" as any).insert(
-          targets.map(t => ({
-            user_id: t.id,
-            title: `${myName} mentioned you in a note`,
-            body: body.slice(0, 240),
-            link_url: link,
-            source_type: "customer_note",
-            source_id: (data as any)?.id,
-          }))
-        );
-      }
+    }
+    if (targets.length) {
+      const link = submissionId ? `/admin?tab=submissions&submission=${submissionId}` : `/admin?tab=customers&customer=${customerId}`;
+      await supabase.from("user_notifications" as any).insert(
+        targets.map(t => ({
+          user_id: t.id,
+          title: t.isReplyAuthor ? `${myName} replied to your note` : `${myName} mentioned you in a note`,
+          body: body.slice(0, 240),
+          link_url: link,
+          source_type: "customer_note",
+          source_id: (data as any)?.id,
+        }))
+      );
     }
   };
 
