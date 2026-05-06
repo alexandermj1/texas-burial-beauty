@@ -172,15 +172,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Bayer stages only apply to sellers; for everyone else stage filtering is a no-op.
   const isSellerView = kindFilter === "seller";
 
-  // Activity-based status: "untouched" = no admin has opened it.
-  // "active" = at least one admin has opened it (treated as the de-facto
-  // handled bucket because any action records a view).
+  // "new" = arrived today (since local midnight). These are the items the welcome
+  // overlay calls out and that show up in notifications. Everything else is just "all".
+  const startOfToday = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }, []);
+  const isNew = (s: Submission) => new Date(s.created_at).getTime() >= startOfToday;
   const isUntouched = (sid: string) => !views.some(v => v.submission_id === sid);
 
   const filtered = useMemo(() => {
     return submissions.filter(s => {
-      if (filter === "untouched" && !isUntouched(s.id)) return false;
-      if (filter === "active" && isUntouched(s.id)) return false;
+      if (filter === "new" && !isNew(s)) return false;
       if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
       if (isSellerView && stageFilter !== "all" && deriveBayerStage(s as any) !== stageFilter) return false;
       if (!searchQuery.trim()) return true;
@@ -189,7 +189,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery, views]);
+  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery, startOfToday]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
