@@ -261,7 +261,14 @@ const Admin = () => {
   const lastVisitKey = `admin:lastVisit:${userId}`;
   const welcomeKey = `admin:welcome:${userId}`;
   let lastVisit = 0;
-  try { lastVisit = Number(localStorage.getItem(lastVisitKey)) || 0; } catch {}
+  try {
+    lastVisit = Number(localStorage.getItem(lastVisitKey)) || 0;
+    // Only stamp once per browser session so the "since last visit" count stays stable while navigating.
+    if (!sessionStorage.getItem(welcomeKey + ":stamped")) {
+      localStorage.setItem(lastVisitKey, String(Date.now()));
+      sessionStorage.setItem(welcomeKey + ":stamped", "1");
+    }
+  } catch {}
   const newSinceLast = lastVisit
     ? submissions.filter((s: any) => new Date(s.created_at).getTime() > lastVisit).length
     : 0;
