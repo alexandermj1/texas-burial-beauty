@@ -495,22 +495,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
                 {(() => {
                   const sViewers = viewersFor(selected.id);
-                  if (sViewers.length === 0) {
-                    return <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">Untouched</span>;
-                  }
                   return (
-                    <div className="flex items-center gap-1.5" title={`Worked by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
-                      <span className="text-[10px] text-muted-foreground">Active —</span>
-                      <div className="flex -space-x-1">
-                        {sViewers.slice(0, 4).map(v => (
-                          <span key={v.user_id} className="w-5 h-5 rounded-full ring-1 ring-card flex items-center justify-center text-[9px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
-                            {(v.user_name || "?").charAt(0).toUpperCase()}
-                          </span>
-                        ))}
-                        {sViewers.length > 4 && (
-                          <span className="w-5 h-5 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-medium">+{sViewers.length - 4}</span>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-1.5">
+                      {isNew(selected) && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-500 text-white">New today</span>
+                      )}
+                      {sViewers.length > 0 && (
+                        <div className="flex items-center gap-1.5" title={`Viewed by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
+                          <div className="flex -space-x-1">
+                            {sViewers.slice(0, 4).map(v => (
+                              <span key={v.user_id} className="w-5 h-5 rounded-full ring-1 ring-card flex items-center justify-center text-[9px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
+                                {(v.user_name || "?").charAt(0).toUpperCase()}
+                              </span>
+                            ))}
+                            {sViewers.length > 4 && (
+                              <span className="w-5 h-5 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-medium">+{sViewers.length - 4}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
