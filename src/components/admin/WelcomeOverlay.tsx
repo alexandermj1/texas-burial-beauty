@@ -12,6 +12,7 @@ interface WelcomeOverlayProps {
   name: string;
   newSubmissions?: number;
   unreadInbox?: number;
+  unreadNotifications?: number;
   totalOpenSubmissions?: number;
   storageKey: string;
 }
