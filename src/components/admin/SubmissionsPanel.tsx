@@ -87,7 +87,7 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "untouched" | "active";
+type StatusFilter = "all" | "new";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
