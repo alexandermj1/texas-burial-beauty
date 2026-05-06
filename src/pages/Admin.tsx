@@ -322,7 +322,7 @@ const Admin = () => {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
-                  <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{user.user_metadata?.full_name || user.email}</span></p>
+                  <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
                 </div>
                 <div className="flex items-center gap-2">
                   <NotificationsBell />
