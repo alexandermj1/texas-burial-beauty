@@ -443,6 +443,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="flex items-center gap-1.5 min-w-0">
                       <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
                       {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-sky-500 text-white">New</span>}
+                      {beingWorked && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
+                          title={`${workers.map(w => w.user_name).join(", ")} viewing now`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                          {workers[0].user_name}{workers.length > 1 ? ` +${workers.length - 1}` : ""}
+                        </span>
+                      )}
                       <CustomerKindBadge kind={sKind} size="xs" />
                       <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                     </div>
