@@ -144,7 +144,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
   }, []);
 
+  // Real-time "who is working on what" — broadcasts the currently-open submission
+  // for every admin via Supabase Presence. Updates instantly when anyone switches.
+  useEffect(() => {
+    if (!myId) return;
+    const ch = supabase.channel("submission_workers", {
+      config: { presence: { key: myId } },
+    });
+    const recompute = () => {
+      const state = ch.presenceState<any>();
+      const map: Record<string, { user_id: string; user_name: string }[]> = {};
+      Object.values(state).forEach((arr: any) => {
+        arr.forEach((p: any) => {
+          if (!p?.submission_id) return;
+          if (!map[p.submission_id]) map[p.submission_id] = [];
+          if (!map[p.submission_id].some(u => u.user_id === p.user_id)) {
+            map[p.submission_id].push({ user_id: p.user_id, user_name: p.user_name || "Teammate" });
+          }
+        });
+      });
+      setActiveWorkers(map);
+    };
+    ch.on("presence", { event: "sync" }, recompute)
+      .on("presence", { event: "join" }, recompute)
+      .on("presence", { event: "leave" }, recompute)
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await ch.track({ user_id: myId, user_name: myName, submission_id: null });
+        }
+      });
+    presenceChanRef.current = ch;
+    return () => { ch.unsubscribe(); supabase.removeChannel(ch); presenceChanRef.current = null; };
+  }, [myId, myName]);
+
   const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
+  const workersFor = (sid: string) => (activeWorkers[sid] || []).filter(w => w.user_id !== myId);
   const haveIViewed = (sid: string) => !!myId && views.some(v => v.submission_id === sid && v.user_id === myId);
 
   const recordView = async (sid: string) => {
