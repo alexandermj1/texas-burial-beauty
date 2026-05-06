@@ -473,6 +473,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
                     <BayerBadge inquiryChannel={selected.inquiry_channel} />
                     <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                    {selected.source === "manual_phone" && (selected as any).handled_by_name && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                        <UserPlus className="w-3 h-3" /> Added by {cleanDisplayName((selected as any).handled_by_name)}
+                      </span>
+                    )}
                   </div>
                   <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
                   <p className="text-xs text-muted-foreground mt-1">
