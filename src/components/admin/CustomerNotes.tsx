@@ -5,9 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Send, Pencil, Trash2, Reply, X } from "lucide-react";
+import { Send, Pencil, Trash2, Reply, X, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { cleanDisplayName } from "@/lib/displayName";
 
 interface Note {
   id: string;
@@ -80,7 +81,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const myId = user?.id ?? "anon";
-  const myName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Someone";
+  const myName = cleanDisplayName(user?.user_metadata?.full_name) || user?.email?.split("@")[0] || "Someone";
   const myColor = useMemo(() => colorFor(myId), [myId]);
 
   const scopeColumn = submissionId ? "submission_id" : "customer_profile_id";
@@ -93,14 +94,14 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       if (data) {
         const used = new Set<string>();
         setTeam((data as any[]).map(p => {
-          const name = p.full_name || (p.email ? p.email.split("@")[0] : "user");
+          const cleaned = cleanDisplayName(p.full_name) || (p.email ? p.email.split("@")[0] : "user");
           // Handle = first word, alphanumerics only, lowercased. Disambiguate dupes with a numeric suffix.
-          const base = (name.split(/\s+/)[0] || "user").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "user";
+          const base = (cleaned.split(/\s+/)[0] || "user").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "user";
           let handle = base;
           let n = 2;
           while (used.has(handle)) handle = `${base}${n++}`;
           used.add(handle);
-          return { id: p.id, name, handle };
+          return { id: p.id, name: cleaned, handle };
         }));
       }
     })();
@@ -109,7 +110,11 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
   const filteredMentions = useMemo(() => {
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase();
-    return team.filter(t => t.id !== user?.id && (t.handle.includes(q) || t.name.toLowerCase().includes(q))).slice(0, 6);
+    const everyone: TeamMember = { id: "__everyone__", name: "Everyone on the team", handle: "everyone" };
+    const list: TeamMember[] = [];
+    if ("everyone".includes(q) || q === "") list.push(everyone);
+    list.push(...team.filter(t => t.id !== user?.id && (t.handle.includes(q) || t.name.toLowerCase().includes(q))));
+    return list.slice(0, 6);
   }, [mentionQuery, team, user?.id]);
 
 
@@ -231,9 +236,10 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     }
     // Notify mentioned teammates and (for replies) the parent author
     const mentions = Array.from(new Set((body.match(/@([\w.\-]+)/g) || []).map(m => m.slice(1).toLowerCase())));
-    const targets: { id: string; isReplyAuthor?: boolean }[] = team
-      .filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id)
-      .map(t => ({ id: t.id }));
+    const everyoneTagged = mentions.includes("everyone");
+    const targets: { id: string; isReplyAuthor?: boolean; isEveryone?: boolean }[] = everyoneTagged
+      ? team.filter(t => t.id !== user?.id).map(t => ({ id: t.id, isEveryone: true }))
+      : team.filter(t => mentions.includes(t.handle.toLowerCase()) && t.id !== user?.id).map(t => ({ id: t.id }));
     if (parentId) {
       const parent = notes.find(n => n.id === parentId);
       if (parent?.author_user_id && parent.author_user_id !== user?.id && !targets.some(t => t.id === parent.author_user_id)) {
@@ -245,7 +251,11 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       await supabase.from("user_notifications" as any).insert(
         targets.map(t => ({
           user_id: t.id,
-          title: t.isReplyAuthor ? `${myName} replied to your note` : `${myName} mentioned you in a note`,
+          title: t.isReplyAuthor
+            ? `${myName} replied to your note`
+            : t.isEveryone
+              ? `${myName} mentioned the whole team`
+              : `${myName} mentioned you in a note`,
           body: body.slice(0, 240),
           link_url: link,
           source_type: "customer_note",

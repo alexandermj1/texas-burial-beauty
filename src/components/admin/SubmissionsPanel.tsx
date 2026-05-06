@@ -17,6 +17,10 @@ import CustomerNotes from "./CustomerNotes";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import BroadcastDialog from "./BroadcastDialog";
+import AddSubmissionDialog from "./AddSubmissionDialog";
+import { Megaphone, UserPlus } from "lucide-react";
+import { cleanDisplayName } from "@/lib/displayName";
 
 export interface Submission {
   id: string;
@@ -51,6 +55,7 @@ export interface Submission {
   closed_at?: string | null;
   closed_outcome?: string | null;
   inquiry_channel?: string | null;
+  handled_by_name?: string | null;
 }
 
 interface Props {
@@ -69,6 +74,7 @@ const sourceLabel = (s: string | null) => {
     case "contact": return "Contact form";
     case "seller_quote": return "Seller quote";
     case "buy_property_wizard": return "Buyer wizard";
+    case "manual_phone": return "Manually added";
     default: return s || "Unknown";
   }
 };
@@ -103,9 +109,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [pendingAction, setPendingAction] = useState<null | { label: string; run: () => void }>(null);
   const typingChanRef = useRef<RealtimeChannel | null>(null);
   const { countFor } = useActiveListings();
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const myId = user?.id ?? "";
-  const myName = (user?.user_metadata as any)?.full_name || user?.email?.split("@")[0] || "Someone";
+  const myName = cleanDisplayName((user?.user_metadata as any)?.full_name) || user?.email?.split("@")[0] || "Someone";
 
   // Stable color per viewer
   const VIEW_COLORS = ["#0ea5e9", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6"];
@@ -302,22 +310,44 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           );
         })}
 
-        {onRefresh && (
+        <div className="ml-auto flex items-center gap-1.5">
           <button
-            onClick={async () => {
-              if (refreshing) return;
-              setRefreshing(true);
-              try { await onRefresh(); } finally { setRefreshing(false); }
-            }}
-            disabled={refreshing}
-            className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
-            title="Sync Gmail and reload submissions"
+            onClick={() => setAddOpen(true)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
+            title="Add a submission manually (e.g. info taken over the phone)"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing ? "Refreshing..." : "Refresh inbox"}
+            <UserPlus className="w-3.5 h-3.5" /> Add submission
           </button>
-        )}
+          <button
+            onClick={() => setBroadcastOpen(true)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
+            title="Send a notification to the whole team"
+          >
+            <Megaphone className="w-3.5 h-3.5" /> Message team
+          </button>
+          {onRefresh && (
+            <button
+              onClick={async () => {
+                if (refreshing) return;
+                setRefreshing(true);
+                try { await onRefresh(); } finally { setRefreshing(false); }
+              }}
+              disabled={refreshing}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+              title="Sync Gmail and reload submissions"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              {refreshing ? "Refreshing..." : "Refresh inbox"}
+            </button>
+          )}
+        </div>
       </div>
+      <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
+      <AddSubmissionDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onCreated={(id) => { setSelectedId(id); onRefresh?.(); }}
+      />
 
       {/* Pipeline stage filter intentionally removed — it duplicated the stepper inside the Bayer pipeline panel.
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
@@ -444,6 +474,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
                     <BayerBadge inquiryChannel={selected.inquiry_channel} />
                     <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                    {selected.source === "manual_phone" && (selected as any).handled_by_name && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                        <UserPlus className="w-3 h-3" /> Added by {cleanDisplayName((selected as any).handled_by_name)}
+                      </span>
+                    )}
                   </div>
                   <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
                   <p className="text-xs text-muted-foreground mt-1">
