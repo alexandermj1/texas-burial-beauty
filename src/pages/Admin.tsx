@@ -276,7 +276,7 @@ const Admin = () => {
   const welcomeName = cleanDisplayName(user.user_metadata?.full_name) || (user.email ? user.email.split("@")[0] : "");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <WelcomeOverlay
         name={welcomeName}
         newSubmissions={newSinceLast}
@@ -285,7 +285,7 @@ const Admin = () => {
       />
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
-      <section className={focused ? "pt-24 pb-10" : "pt-28 pb-16"}>
+      <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
         <div className={focused ? "container mx-auto px-4 max-w-[1600px]" : "container mx-auto px-6"}>
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
