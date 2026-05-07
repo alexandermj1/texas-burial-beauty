@@ -602,13 +602,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Cemetery contact directory + inventory match */}
             {selected.cemetery && (() => {
               const count = countFor(selected.cemetery);
-              const contact = lookupCemeteryContact(selected.cemetery);
+              const match = lookupCemeteryContactMatch(selected.cemetery);
+              const contact = match?.contact ?? null;
+              const uncertain = match?.uncertain ?? false;
               return (
                 <div data-tour="cemetery-box" className="bg-muted/40 rounded-lg p-4 border border-border/50 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
-                      <p className="text-sm font-medium text-foreground truncate">{selected.cemetery}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery (as written by customer)</p>
+                      <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
+                      {contact && (
+                        <p className={`text-[11px] mt-1 ${uncertain ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}`}>
+                          {uncertain ? "⚠ Best guess match — please verify: " : "Matched directory entry: "}
+                          <span className="font-medium text-foreground">{contact.name}</span>
+                        </p>
+                      )}
                       {contact?.address && <p className="text-[11px] text-muted-foreground mt-0.5">{contact.address}</p>}
                     </div>
                     <button
