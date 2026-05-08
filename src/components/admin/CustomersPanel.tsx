@@ -254,6 +254,9 @@ const CustomersPanel = () => {
               {/* Realtime collaborative notes */}
               <CustomerNotes customerId={selected.id} customerName={selected.primary_name} />
 
+              {/* Files & documents */}
+              <CustomerFiles customerId={selected.id} customerName={selected.primary_name} />
+
               {/* Activity timeline */}
               <div>
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
