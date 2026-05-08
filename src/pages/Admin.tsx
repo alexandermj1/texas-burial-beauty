@@ -645,9 +645,33 @@ const Admin = () => {
                 toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new Bayer submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
               }}
               onUpdate={async (id, patch) => {
+                const before = submissions.find(s => s.id === id);
                 const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
                 if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                const after = before ? { ...before, ...patch } : null;
                 setSubmissions(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+                // Log pipeline stage transition (if any)
+                if (before && after) {
+                  try {
+                    const prevStage = deriveBayerStage(before as any);
+                    const nextStage = deriveBayerStage(after as any);
+                    if (prevStage !== nextStage) {
+                      const actorName = cleanDisplayName(user?.user_metadata?.full_name) || (user?.email?.split("@")[0]) || "admin";
+                      const fromLabel = BAYER_STAGE_META[prevStage]?.short ?? prevStage;
+                      const toLabel = BAYER_STAGE_META[nextStage]?.short ?? nextStage;
+                      const customerName = (after as any).name || (after as any).email || "customer";
+                      await supabase.from("customer_activity_log" as any).insert({
+                        customer_profile_id: (after as any).customer_profile_id ?? null,
+                        submission_id: id,
+                        actor_user_id: user?.id ?? null,
+                        actor_name: actorName,
+                        action_type: "stage_changed",
+                        action_summary: `Moved ${customerName} from "${fromLabel}" to "${toLabel}"`,
+                        details: { from: prevStage, to: nextStage } as any,
+                      });
+                    }
+                  } catch (e) { console.warn("stage log failed", e); }
+                }
               }}
               onDelete={async (id) => {
                 if (!confirm("Delete this submission?")) return;
