@@ -184,12 +184,13 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
       return;
     }
     await supabase.from("customer_files" as any).delete().eq("id", row.id);
+    const actorName = cleanDisplayName(user?.user_metadata?.full_name) || (user?.email?.split("@")[0]) || "admin";
     await supabase.from("customer_activity_log" as any).insert({
       customer_profile_id: customerId,
       actor_user_id: user?.id ?? null,
-      actor_name: user?.email ?? "admin",
+      actor_name: actorName,
       action_type: "file_deleted",
-      action_summary: `Deleted ${row.document_type || "file"}: ${row.file_name}`,
+      action_summary: `Deleted ${row.file_name} (${row.document_type || "file"})`,
     });
     toast({ title: "File deleted" });
     fetchFiles();
