@@ -91,6 +91,34 @@ const Admin = () => {
     }
   }, [user, isAdmin, authLoading, adminLoading]);
 
+  // Auto-refresh submissions inbox: polls every 15s and listens for realtime changes
+  // so newly arrived emails / submissions show up without a manual refresh.
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+    let cancelled = false;
+    const refreshSubmissions = async () => {
+      const { data } = await supabase
+        .from("contact_submissions" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!cancelled && data) setSubmissions(data as any);
+    };
+    const interval = setInterval(refreshSubmissions, 15000);
+    const channel = supabase
+      .channel("admin-submissions-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contact_submissions" },
+        () => { refreshSubmissions(); },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAdmin]);
+
   // Honor deep links like /admin?tab=submissions&submission=<id> (e.g. notification clicks)
   useEffect(() => {
     const apply = () => {
