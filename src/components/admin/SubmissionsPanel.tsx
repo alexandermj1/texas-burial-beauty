@@ -14,6 +14,7 @@ import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
+import CustomerFiles from "./CustomerFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -717,6 +718,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             <div data-tour="notes-section">
               <CustomerNotes submissionId={selected.id} customerName={selected.name} />
             </div>
+
+            {/* Per-customer files (PoA, deeds, IDs, etc.) */}
+            {(selected as any).customer_profile_id ? (
+              <div data-tour="files-section" className="border-t border-border/40 pt-4">
+                <CustomerFiles
+                  customerId={(selected as any).customer_profile_id}
+                  customerName={selected.name}
+                />
+              </div>
+            ) : (
+              <div className="border-t border-border/40 pt-4">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Files & documents</p>
+                <p className="text-xs text-muted-foreground">
+                  This submission isn't linked to a customer profile yet. Files attach to a customer profile so they appear across all of their submissions.
+                </p>
+              </div>
+            )}
 
             {/* Sellers: pipeline below notes, above listings/dropbox */}
             {selectedKind === "seller" && (() => {
