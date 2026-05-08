@@ -115,8 +115,8 @@ Deno.serve(async (req) => {
     const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const sinceISO = since.toISOString();
 
-    const [subsRes, activityRes, profilesRes, allSubsRes, allProfilesRes, notesRes, filesRes, quotesAllRes, quotesNewRes] = await Promise.all([
-      supabase.from("contact_submissions").select("id,name,email,phone,source,cemetery,property_type,spaces,message,created_at,handled,pipeline_stage_override").gte("created_at", sinceISO).order("created_at", { ascending: false }),
+    const [subsRes, activityRes, profilesRes, allSubsRes, allProfilesRes, notesRes, filesRes, quotesAllRes, listingsLiveRes, listingsCompletedRes, quoteOutcomeRes] = await Promise.all([
+      supabase.from("contact_submissions").select("id,name,email,phone,source,cemetery,property_type,spaces,message,created_at,handled,pipeline_stage_override,quote_sent_at,quote_amount,quote_net_amount,quote_response,quote_responded_at,closed_at,closed_outcome,listing_live_at,listing_url,listing_number").gte("created_at", sinceISO).order("created_at", { ascending: false }),
       supabase.from("customer_activity_log").select("*").gte("created_at", sinceISO).order("created_at", { ascending: false }),
       supabase.from("customer_profiles").select("id,primary_name,primary_email,primary_phone,customer_kind,created_at").gte("created_at", sinceISO),
       supabase.from("contact_submissions").select("*"),
@@ -124,13 +124,17 @@ Deno.serve(async (req) => {
       supabase.from("customer_notes").select("*"),
       supabase.from("customer_files").select("*"),
       supabase.from("quote_estimates").select("*"),
-      supabase.from("quote_estimates").select("*").gte("created_at", sinceISO).order("created_at", { ascending: false }),
+      supabase.from("contact_submissions").select("id,name,email,phone,cemetery,property_type,spaces,listing_live_at,listing_url,listing_number").gte("listing_live_at", sinceISO).order("listing_live_at", { ascending: false }),
+      supabase.from("contact_submissions").select("id,name,email,phone,cemetery,property_type,spaces,closed_at,closed_outcome,listing_number,listing_url").gte("closed_at", sinceISO).order("closed_at", { ascending: false }),
+      supabase.from("contact_submissions").select("id,name,email,phone,cemetery,property_type,spaces,quote_response,quote_responded_at,quote_amount,quote_net_amount").gte("quote_responded_at", sinceISO).order("quote_responded_at", { ascending: false }),
     ]);
 
     const subs = subsRes.data ?? [];
     const activity = activityRes.data ?? [];
     const newProfiles = profilesRes.data ?? [];
-    const newQuotes = quotesNewRes.data ?? [];
+    const listingsLive = listingsLiveRes.data ?? [];
+    const listingsCompleted = listingsCompletedRes.data ?? [];
+    const quoteOutcomes = (quoteOutcomeRes.data ?? []).filter((q: any) => isFinalQuoteOutcome(q.quote_response));
 
     // Pipeline transitions from activity log (we now log stage_changed explicitly)
     const transitions = activity.filter((a: any) =>
@@ -139,7 +143,10 @@ Deno.serve(async (req) => {
     );
 
     const inquiriesBySource: Record<string, number> = {};
-    subs.forEach((s: any) => { inquiriesBySource[s.source || "unknown"] = (inquiriesBySource[s.source || "unknown"] || 0) + 1; });
+    subs.forEach((s: any) => {
+      const label = sourceLabel(s.source || "unknown");
+      inquiriesBySource[label] = (inquiriesBySource[label] || 0) + 1;
+    });
 
     const dateStamp = now.toISOString().slice(0, 10);
 
