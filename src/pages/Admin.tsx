@@ -358,21 +358,6 @@ const Admin = () => {
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
-                <button
-                  onClick={async () => {
-                    toast({ title: "Sending daily summary…" });
-                    const { data, error } = await supabase.functions.invoke("daily-summary-email", { body: {} });
-                    if (error || (data as any)?.ok === false) {
-                      toast({ title: "Send failed", description: error?.message || (data as any)?.error || "Unknown error", variant: "destructive" });
-                    } else {
-                      toast({ title: "Daily summary sent", description: `${(data as any)?.inquiries ?? 0} inquiries · ${(data as any)?.transitions ?? 0} pipeline moves` });
-                    }
-                  }}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors"
-                  title="Send daily summary email now"
-                >
-                  📧 <span className="hidden sm:inline">Send summary</span>
-                </button>
                 <div data-tour="notifications-bell"><NotificationsBell /></div>
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
