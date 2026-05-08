@@ -568,6 +568,48 @@ export type Database = {
           },
         ]
       }
+      customer_files: {
+        Row: {
+          created_at: string
+          customer_profile_id: string
+          document_type: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          notes: string | null
+          uploaded_by_name: string | null
+          uploaded_by_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_profile_id: string
+          document_type?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          uploaded_by_name?: string | null
+          uploaded_by_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_profile_id?: string
+          document_type?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          uploaded_by_name?: string | null
+          uploaded_by_user_id?: string | null
+        }
+        Relationships: []
+      }
       customer_notes: {
         Row: {
           author_name: string | null
