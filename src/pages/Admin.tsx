@@ -732,6 +732,20 @@ const Admin = () => {
             </div>
           )}
           <div className="mt-10 flex items-center justify-end gap-3 flex-wrap">
+            <button
+              onClick={async () => {
+                toast({ title: "Sending daily summary…" });
+                const { data, error } = await supabase.functions.invoke("daily-summary-email", { body: {} });
+                if (error || (data as any)?.ok === false) {
+                  toast({ title: "Send failed", description: error?.message || (data as any)?.error || "Unknown error", variant: "destructive" });
+                } else {
+                  toast({ title: "Daily summary sent", description: `${(data as any)?.inquiries ?? 0} inquiries · ${(data as any)?.transitions ?? 0} pipeline moves` });
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors"
+            >
+              📧 Send daily summary now
+            </button>
             <HelpButton />
             <GuidedTour
               onGoToSubmissions={() => setTab("submissions")}
