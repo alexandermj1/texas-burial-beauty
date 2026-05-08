@@ -195,7 +195,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      sent_to: TO_EMAIL,
+      sent_to: TO_EMAILS,
       inquiries: subs.length,
       profiles: newProfiles.length,
       transitions: transitions.length,
