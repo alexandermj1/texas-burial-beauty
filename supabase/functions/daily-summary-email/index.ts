@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
   ${transitions.length ? `<ul style="font-size:13px;">${transitions.map((t: any) => `<li><strong>${prettyActor(t.actor_name)}:</strong> ${t.action_summary}</li>`).join("")}</ul>` : "<p><em>No pipeline movements.</em></p>"}
 
   <h2 style="color:#6b8e5a;">All tracked actions (${activity.length})</h2>
-  ${activity.length ? `<ul style="font-size:12px;color:#555;">${activity.slice(0, 80).map((a: any) => `<li>[${new Date(a.created_at).toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles"})}] <strong>${prettyActor(a.actor_name)}</strong> &mdash; ${a.action_summary}</li>`).join("")}</ul>` : "<p><em>No actions logged.</em></p>"}
+  ${activity.length ? `<ul style="font-size:12px;color:#555;">${activity.slice(0, 80).map((a: any) => `<li>[${fmtTime(a.created_at)}] <strong>${prettyActor(a.actor_name)}</strong> &mdash; ${a.action_summary}</li>`).join("")}</ul>` : "<p><em>No actions logged.</em></p>"}
 
   <hr style="margin:32px 0;">
   <p style="font-size:12px;color:#888;">A complete CSV backup of customer data is attached. Generated automatically at 5:00 PM PT.</p>
@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
 
     const filename = `tcb-backup-${dateStamp}.csv`;
     const boundary = "----=_Part_" + crypto.randomUUID();
-    const rawSubject = `Form Submission ${dateStamp} - ${subs.length} inquiries, ${newQuotes.length} quotes, ${transitions.length} movements`;
+    const rawSubject = `Daily Summary ${dateStamp} - ${subs.length} inquiries, ${quoteOutcomes.length} quote outcomes, ${listingsLive.length + listingsCompleted.length} listings, ${transitions.length} movements`;
     const subject = encodeSubject(rawSubject);
 
     const csvB64 = btoa(unescape(encodeURIComponent(backup)));
