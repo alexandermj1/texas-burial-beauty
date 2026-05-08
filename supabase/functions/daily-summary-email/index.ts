@@ -152,13 +152,16 @@ Deno.serve(async (req) => {
 
     const html = `
 <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;color:#222;">
-  <h1 style="border-bottom:2px solid #6b8e5a;padding-bottom:8px;">Form Submission &mdash; ${fmtDate(now)}</h1>
+  <h1 style="border-bottom:2px solid #6b8e5a;padding-bottom:8px;">Daily Summary &mdash; ${fmtDate(now)}</h1>
   <p>Activity for the last 24 hours.</p>
 
   <h2 style="color:#6b8e5a;">Highlights</h2>
   <ul>
     <li><strong>${subs.length}</strong> new inquiries</li>
-    <li><strong>${newQuotes.length}</strong> quotes generated</li>
+    <li><strong>${subs.filter((s: any) => Boolean(s.quote_sent_at)).length}</strong> new inquiries with quotes sent</li>
+    <li><strong>${listingsLive.length}</strong> listings went live</li>
+    <li><strong>${listingsCompleted.length}</strong> listings completed</li>
+    <li><strong>${quoteOutcomes.length}</strong> quotes accepted/rejected</li>
     <li><strong>${newProfiles.length}</strong> new customer profiles</li>
     <li><strong>${transitions.length}</strong> pipeline movements</li>
     <li><strong>${activity.length}</strong> total tracked actions</li>
@@ -170,29 +173,48 @@ Deno.serve(async (req) => {
 
   <h2 style="color:#6b8e5a;">New inquiries (${subs.length})</h2>
   ${subs.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
-    <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Source</th><th>Cemetery</th><th>Plot type</th><th>Contact</th></tr>
+    <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Source</th><th>Cemetery</th><th>Plot type</th><th>Quote sent?</th><th>Contact</th></tr>
     ${subs.map((s: any) => `<tr>
-      <td>${new Date(s.created_at).toLocaleString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit",month:"short",day:"numeric"})}</td>
+      <td>${fmtShortDateTime(s.created_at)}</td>
       <td>${s.name ?? "—"}</td>
-      <td>${s.source ?? "—"}</td>
+      <td>${sourceLabel(s.source)}</td>
       <td>${s.cemetery ?? "—"}</td>
       <td>${plotDescriptor(s)}</td>
+      <td>${quoteSentLabel(s)}</td>
       <td>${s.email ?? ""}${s.email && s.phone ? "<br>" : ""}${s.phone ?? ""}</td>
     </tr>`).join("")}
   </table>` : "<p><em>No new inquiries.</em></p>"}
 
-  <h2 style="color:#6b8e5a;">Quotes sent today (${newQuotes.length})</h2>
-  ${newQuotes.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
-    <tr style="background:#f0ede4;"><th>Time</th><th>Cemetery</th><th>Plot type</th><th>Range (low / mid / high)</th><th>Outcome</th><th>By</th></tr>
-    ${newQuotes.map((q: any) => `<tr>
-      <td>${new Date(q.created_at).toLocaleString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit",month:"short",day:"numeric"})}</td>
+  <h2 style="color:#6b8e5a;">Listings live or completed today (${listingsLive.length + listingsCompleted.length})</h2>
+  ${listingsLive.length || listingsCompleted.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
+    <tr style="background:#f0ede4;"><th>Time</th><th>Status</th><th>Name</th><th>Cemetery</th><th>Plot type</th><th>Listing</th><th>Contact</th></tr>
+    ${[
+      ...listingsLive.map((l: any) => ({ ...l, summary_status: "Went live", summary_time: l.listing_live_at })),
+      ...listingsCompleted.map((l: any) => ({ ...l, summary_status: outcomeLabel(l.closed_outcome) === "—" ? "Completed" : `Completed: ${outcomeLabel(l.closed_outcome)}`, summary_time: l.closed_at })),
+    ].sort((a: any, b: any) => new Date(b.summary_time).getTime() - new Date(a.summary_time).getTime()).map((l: any) => `<tr>
+      <td>${fmtShortDateTime(l.summary_time)}</td>
+      <td>${l.summary_status}</td>
+      <td>${l.name ?? "—"}</td>
+      <td>${l.cemetery ?? "—"}</td>
+      <td>${plotDescriptor(l)}</td>
+      <td>${l.listing_url ? `<a href="${l.listing_url}">${l.listing_number || "Open listing"}</a>` : (l.listing_number ?? "—")}</td>
+      <td>${l.email ?? ""}${l.email && l.phone ? "<br>" : ""}${l.phone ?? ""}</td>
+    </tr>`).join("")}
+  </table>` : "<p><em>No listings went live or completed today.</em></p>"}
+
+  <h2 style="color:#6b8e5a;">Quotes accepted or rejected today (${quoteOutcomes.length})</h2>
+  ${quoteOutcomes.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
+    <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Outcome</th><th>Cemetery</th><th>Plot type</th><th>Quote amount</th><th>Contact</th></tr>
+    ${quoteOutcomes.map((q: any) => `<tr>
+      <td>${fmtShortDateTime(q.quote_responded_at)}</td>
+      <td>${q.name ?? "—"}</td>
+      <td>${outcomeLabel(q.quote_response)}</td>
       <td>${q.cemetery ?? "—"}</td>
       <td>${plotDescriptor(q)}</td>
-      <td>${fmtMoney(q.estimated_low)} / ${fmtMoney(q.estimated_mid)} / ${fmtMoney(q.estimated_high)}</td>
-      <td>${q.outcome ?? "pending"}${q.outcome_amount ? ` (${fmtMoney(q.outcome_amount)})` : ""}</td>
-      <td>${prettyActor(q.generated_by_name)}</td>
+      <td>${fmtMoney(q.quote_net_amount ?? q.quote_amount)}</td>
+      <td>${q.email ?? ""}${q.email && q.phone ? "<br>" : ""}${q.phone ?? ""}</td>
     </tr>`).join("")}
-  </table>` : "<p><em>No quotes generated.</em></p>"}
+  </table>` : "<p><em>No quotes were accepted or rejected today.</em></p>"}
 
   <h2 style="color:#6b8e5a;">Pipeline movements (${transitions.length})</h2>
   ${transitions.length ? `<ul style="font-size:13px;">${transitions.map((t: any) => `<li><strong>${prettyActor(t.actor_name)}:</strong> ${t.action_summary}</li>`).join("")}</ul>` : "<p><em>No pipeline movements.</em></p>"}
