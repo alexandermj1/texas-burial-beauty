@@ -10,7 +10,11 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const FROM_EMAIL = "texascemeterybrokers@gmail.com";
-const TO_EMAIL = "alexandermaclarenjames@gmail.com";
+const TO_EMAILS = [
+  "alexandermaclarenjames@gmail.com",
+  "simonjamesphd@gmail.com",
+  "emmamaclaren@gmail.com",
+];
 
 function fmtDate(d: Date) {
   return d.toLocaleString("en-US", { timeZone: "America/Los_Angeles", dateStyle: "full", timeStyle: "short" });
@@ -150,7 +154,7 @@ Deno.serve(async (req) => {
 
     const mime = [
       `From: Texas Cemetery Brokers <${FROM_EMAIL}>`,
-      `To: ${TO_EMAIL}`,
+      `To: ${TO_EMAILS.join(", ")}`,
       `Subject: ${subject}`,
       `MIME-Version: 1.0`,
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
@@ -191,7 +195,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      sent_to: TO_EMAIL,
+      sent_to: TO_EMAILS,
       inquiries: subs.length,
       profiles: newProfiles.length,
       transitions: transitions.length,
