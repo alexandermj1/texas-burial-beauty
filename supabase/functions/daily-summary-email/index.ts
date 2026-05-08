@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
 
     const mime = [
       `From: Texas Cemetery Brokers <${FROM_EMAIL}>`,
-      `To: ${TO_EMAIL}`,
+      `To: ${TO_EMAILS.join(", ")}`,
       `Subject: ${subject}`,
       `MIME-Version: 1.0`,
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
