@@ -66,6 +66,36 @@ function fmtMoney(n: any): string {
   if (!Number.isFinite(v)) return "—";
   return `$${v.toLocaleString("en-US")}`;
 }
+function sourceLabel(source: any): string {
+  const raw = String(source ?? "").trim();
+  const normalized = raw.toLowerCase().replace(/[\s-]+/g, "_");
+  if (normalized === "seller_quote") return "Form Submission";
+  if (!raw) return "—";
+  return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+function fmtShortDateTime(value: any): string {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit", month: "short", day: "numeric" });
+}
+function fmtTime(value: any): string {
+  if (!value) return "—";
+  return new Date(value).toLocaleTimeString("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit" });
+}
+function quoteSentLabel(s: any): string {
+  if (!s.quote_sent_at) return "No";
+  const amount = s.quote_net_amount ?? s.quote_amount;
+  return `Yes (${fmtShortDateTime(s.quote_sent_at)}${amount ? `, ${fmtMoney(amount)}` : ""})`;
+}
+function outcomeLabel(value: any): string {
+  const normalized = String(value ?? "").toLowerCase();
+  if (["accepted", "accept", "approved", "yes"].includes(normalized)) return "Accepted";
+  if (["rejected", "reject", "declined", "decline", "no"].includes(normalized)) return "Rejected";
+  return value ? String(value) : "—";
+}
+function isFinalQuoteOutcome(value: any): boolean {
+  const normalized = String(value ?? "").toLowerCase();
+  return ["accepted", "accept", "approved", "yes", "rejected", "reject", "declined", "decline", "no"].includes(normalized);
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
