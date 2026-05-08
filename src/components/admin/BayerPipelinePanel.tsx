@@ -271,6 +271,18 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
             />
             <RevisionList revs={revs} />
             <div className="flex gap-2 flex-wrap pt-1">
+              <button
+                onClick={() => advance({ quote_response: "accepted", quote_responded_at: nowIso() } as any, "Quote accepted — moved to stage 3")}
+                className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-emerald-600 text-white hover:opacity-90"
+              >
+                <ThumbsUp className="w-3 h-3 inline mr-1" /> Mark quote accepted
+              </button>
+              <button
+                onClick={() => advance({ quote_response: "declined", quote_responded_at: nowIso(), morgued_at: nowIso() } as any, "Politely declined — archived")}
+                className="px-3 py-1.5 rounded-full text-[11px] font-medium border border-border text-foreground hover:bg-muted/50"
+              >
+                <Archive className="w-3 h-3 inline mr-1" /> Polite decline
+              </button>
               <button onClick={() => advance({ morgued_at: nowIso() } as any, "Morgued")} className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-muted text-foreground border border-border">
                 <Archive className="w-3 h-3 inline mr-1" /> Morgue manually
               </button>
