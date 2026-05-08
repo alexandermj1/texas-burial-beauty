@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
   <h2 style="color:#6b8e5a;">Highlights</h2>
   <ul>
     <li><strong>${subs.length}</strong> new inquiries</li>
-    <li><strong>${subs.filter((s: any) => Boolean(s.quote_sent_at)).length}</strong> new inquiries with quotes sent</li>
+    <li><strong>${quotesSent.length}</strong> quotes sent</li>
     <li><strong>${listingsLive.length}</strong> listings went live</li>
     <li><strong>${listingsCompleted.length}</strong> listings completed</li>
     <li><strong>${quoteOutcomes.length}</strong> quotes accepted/rejected</li>
@@ -194,25 +194,42 @@ Deno.serve(async (req) => {
   <h2 style="color:#6b8e5a;">New inquiries (${subs.length})</h2>
   ${subs.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
     <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Source</th><th>Cemetery</th><th>Plot type</th><th>Quote sent?</th><th>Contact</th></tr>
-    ${subs.map((s: any) => `<tr>
+    ${subs.map((s: any) => {
+      const quoteSentToday = quotesSentSubIds.has(s.id);
+      const quoteCell = s.quote_sent_at ? quoteSentLabel(s) : (quoteSentToday ? "Yes (today)" : "No");
+      return `<tr>
       <td>${fmtShortDateTime(s.created_at)}</td>
       <td>${s.name ?? "—"}</td>
       <td>${sourceLabel(s.source)}</td>
       <td>${s.cemetery ?? "—"}</td>
       <td>${plotDescriptor(s)}</td>
-      <td>${quoteSentLabel(s)}</td>
+      <td>${quoteCell}</td>
       <td>${s.email ?? ""}${s.email && s.phone ? "<br>" : ""}${s.phone ?? ""}</td>
-    </tr>`).join("")}
+    </tr>`;
+    }).join("")}
   </table>` : "<p><em>No new inquiries.</em></p>"}
+
+  <h2 style="color:#6b8e5a;">Quotes sent today (${quotesSent.length})</h2>
+  ${quotesSent.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
+    <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Cemetery</th><th>Plot type</th><th>Quote amount</th><th>Contact</th></tr>
+    ${quotesSent.map((q: any) => `<tr>
+      <td>${fmtShortDateTime(q._at)}</td>
+      <td>${q.name ?? "—"}</td>
+      <td>${q.cemetery ?? "—"}</td>
+      <td>${plotDescriptor(q)}</td>
+      <td>${fmtMoney(q.quote_net_amount ?? q.quote_amount)}</td>
+      <td>${q.email ?? ""}${q.email && q.phone ? "<br>" : ""}${q.phone ?? ""}</td>
+    </tr>`).join("")}
+  </table>` : "<p><em>No quotes were sent today.</em></p>"}
 
   <h2 style="color:#6b8e5a;">Listings live or completed today (${listingsLive.length + listingsCompleted.length})</h2>
   ${listingsLive.length || listingsCompleted.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
     <tr style="background:#f0ede4;"><th>Time</th><th>Status</th><th>Name</th><th>Cemetery</th><th>Plot type</th><th>Listing</th><th>Contact</th></tr>
     ${[
-      ...listingsLive.map((l: any) => ({ ...l, summary_status: "Went live", summary_time: l.listing_live_at })),
-      ...listingsCompleted.map((l: any) => ({ ...l, summary_status: outcomeLabel(l.closed_outcome) === "—" ? "Completed" : `Completed: ${outcomeLabel(l.closed_outcome)}`, summary_time: l.closed_at })),
-    ].sort((a: any, b: any) => new Date(b.summary_time).getTime() - new Date(a.summary_time).getTime()).map((l: any) => `<tr>
-      <td>${fmtShortDateTime(l.summary_time)}</td>
+      ...listingsLive.map((l: any) => ({ ...l, summary_status: "Went live" })),
+      ...listingsCompleted.map((l: any) => ({ ...l, summary_status: outcomeLabel(l.closed_outcome) === "—" ? "Completed" : `Completed: ${outcomeLabel(l.closed_outcome)}` })),
+    ].sort((a: any, b: any) => new Date(b._at).getTime() - new Date(a._at).getTime()).map((l: any) => `<tr>
+      <td>${fmtShortDateTime(l._at)}</td>
       <td>${l.summary_status}</td>
       <td>${l.name ?? "—"}</td>
       <td>${l.cemetery ?? "—"}</td>
@@ -225,15 +242,18 @@ Deno.serve(async (req) => {
   <h2 style="color:#6b8e5a;">Quotes accepted or rejected today (${quoteOutcomes.length})</h2>
   ${quoteOutcomes.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
     <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Outcome</th><th>Cemetery</th><th>Plot type</th><th>Quote amount</th><th>Contact</th></tr>
-    ${quoteOutcomes.map((q: any) => `<tr>
-      <td>${fmtShortDateTime(q.quote_responded_at)}</td>
+    ${quoteOutcomes.map((q: any) => {
+      const outcome = (q._to === "quote_accepted" || q._to === "accepted") ? "Accepted" : "Rejected";
+      return `<tr>
+      <td>${fmtShortDateTime(q._at)}</td>
       <td>${q.name ?? "—"}</td>
-      <td>${outcomeLabel(q.quote_response)}</td>
+      <td>${outcome}</td>
       <td>${q.cemetery ?? "—"}</td>
       <td>${plotDescriptor(q)}</td>
       <td>${fmtMoney(q.quote_net_amount ?? q.quote_amount)}</td>
       <td>${q.email ?? ""}${q.email && q.phone ? "<br>" : ""}${q.phone ?? ""}</td>
-    </tr>`).join("")}
+    </tr>`;
+    }).join("")}
   </table>` : "<p><em>No quotes were accepted or rejected today.</em></p>"}
 
   <h2 style="color:#6b8e5a;">Pipeline movements (${transitions.length})</h2>
