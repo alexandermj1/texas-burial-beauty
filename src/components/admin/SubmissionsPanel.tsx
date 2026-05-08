@@ -14,6 +14,7 @@ import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
+import CustomerFiles from "./CustomerFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
