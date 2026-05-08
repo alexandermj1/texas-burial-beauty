@@ -347,11 +347,31 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
         {/* STAGE 5a — Awaiting payment */}
         {stage === "la_signed_awaiting_payment" && (
           <>
-            <p className="text-xs text-foreground font-medium">$99 listing — awaiting Stax payment.</p>
+            <p className="text-xs text-foreground font-medium">$99 listing — awaiting payment.</p>
+            <div className="bg-muted/40 border border-border/40 rounded-lg p-2 flex items-center gap-2 text-[11px]">
+              <CreditCard className="w-3.5 h-3.5 text-primary" />
+              <span className="text-muted-foreground">Payment link:</span>
+              <a href="https://paymnt.io/0hd7ep" target="_blank" rel="noreferrer" className="font-mono text-primary hover:underline truncate">https://paymnt.io/0hd7ep</a>
+              <button
+                onClick={() => { navigator.clipboard.writeText("https://paymnt.io/0hd7ep"); }}
+                className="ml-auto px-2 py-0.5 rounded bg-foreground text-background text-[10px]"
+              >
+                Copy
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2">
+              {submission.email && (
+                <a
+                  href={`mailto:${submission.email}?subject=${encodeURIComponent("Your $99 listing payment link — Texas Cemetery Brokers")}&body=${encodeURIComponent(`Hi ${submission.name || "there"},\n\nThanks for signing your Listing Agreement. Please complete your $99 listing fee using the secure link below:\n\nhttps://paymnt.io/0hd7ep\n\nOnce payment is received we'll countersign and take your listing live.\n\nThank you,\nTexas Cemetery Brokers\n(424) 234-1678`)}`}
+                  onClick={() => advance({ payment_link_sent_at: nowIso() } as any, "Payment link emailed")}
+                  className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary text-primary-foreground"
+                >
+                  <CreditCard className="w-3 h-3 inline mr-1" /> Email payment link
+                </a>
+              )}
               {!(submission as any).payment_link_sent_at && (
-                <button onClick={() => advance({ payment_link_sent_at: nowIso() } as any, "Stax link sent")} className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-foreground text-background">
-                  <CreditCard className="w-3 h-3 inline mr-1" /> Mark Stax link sent
+                <button onClick={() => advance({ payment_link_sent_at: nowIso() } as any, "Payment link sent")} className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-foreground text-background">
+                  Mark link sent
                 </button>
               )}
               <button onClick={() => advance({ payment_received_at: nowIso() } as any, "Payment received (YM)")} className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-emerald-600 text-white">
