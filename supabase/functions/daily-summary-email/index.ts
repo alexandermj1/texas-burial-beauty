@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
     const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const sinceISO = since.toISOString();
 
-    const [subsRes, activityRes, profilesRes, allSubsRes, allProfilesRes, notesRes, filesRes, quotesAllRes, listingsLiveRes, listingsCompletedRes, quoteOutcomeRes] = await Promise.all([
+    const [subsRes, activityRes, profilesRes, allSubsRes, allProfilesRes, notesRes, filesRes, quotesAllRes] = await Promise.all([
       supabase.from("contact_submissions").select("id,name,email,phone,source,cemetery,property_type,spaces,message,created_at,handled,pipeline_stage_override,quote_sent_at,quote_amount,quote_net_amount,quote_response,quote_responded_at,closed_at,closed_outcome,listing_live_at,listing_url,listing_number").gte("created_at", sinceISO).order("created_at", { ascending: false }),
       supabase.from("customer_activity_log").select("*").gte("created_at", sinceISO).order("created_at", { ascending: false }),
       supabase.from("customer_profiles").select("id,primary_name,primary_email,primary_phone,customer_kind,created_at").gte("created_at", sinceISO),
@@ -124,23 +124,43 @@ Deno.serve(async (req) => {
       supabase.from("customer_notes").select("*"),
       supabase.from("customer_files").select("*"),
       supabase.from("quote_estimates").select("*"),
-      supabase.from("contact_submissions").select("id,name,email,phone,cemetery,property_type,spaces,listing_live_at,listing_url,listing_number").gte("listing_live_at", sinceISO).order("listing_live_at", { ascending: false }),
-      supabase.from("contact_submissions").select("id,name,email,phone,cemetery,property_type,spaces,closed_at,closed_outcome,listing_number,listing_url").gte("closed_at", sinceISO).order("closed_at", { ascending: false }),
-      supabase.from("contact_submissions").select("id,name,email,phone,cemetery,property_type,spaces,quote_response,quote_responded_at,quote_amount,quote_net_amount").gte("quote_responded_at", sinceISO).order("quote_responded_at", { ascending: false }),
     ]);
 
     const subs = subsRes.data ?? [];
     const activity = activityRes.data ?? [];
     const newProfiles = profilesRes.data ?? [];
-    const listingsLive = listingsLiveRes.data ?? [];
-    const listingsCompleted = listingsCompletedRes.data ?? [];
-    const quoteOutcomes = (quoteOutcomeRes.data ?? []).filter((q: any) => isFinalQuoteOutcome(q.quote_response));
+    const allSubs = allSubsRes.data ?? [];
+    const subsById: Record<string, any> = {};
+    allSubs.forEach((s: any) => { subsById[s.id] = s; });
 
-    // Pipeline transitions from activity log (we now log stage_changed explicitly)
+    // Stage transitions from activity log are the source of truth (pipeline uses pipeline_stage_override)
     const transitions = activity.filter((a: any) =>
       ["stage_changed", "pipeline_advanced", "stage_change", "pipeline"].some(k => (a.action_type || "").toLowerCase().includes(k))
         || /stage|pipeline|moved/i.test(a.action_summary || "")
     );
+
+    // Helper: latest stage_changed event per submission with destination stage matching predicate
+    function transitionsTo(predicate: (toStage: string) => boolean) {
+      const seen = new Set<string>();
+      const out: any[] = [];
+      // activity is already sorted desc; take the most recent transition per submission
+      for (const t of transitions) {
+        const to = String(t.details?.to ?? "").toLowerCase();
+        if (!predicate(to)) continue;
+        const sid = t.submission_id;
+        if (!sid || seen.has(sid)) continue;
+        seen.add(sid);
+        const sub = subsById[sid] ?? {};
+        out.push({ ...sub, ...t, _to: to, _at: t.created_at });
+      }
+      return out;
+    }
+
+    const listingsLive = transitionsTo((to) => to === "listing_live");
+    const listingsCompleted = transitionsTo((to) => to === "listing_completed" || to === "closed" || to === "completed");
+    const quotesSent = transitionsTo((to) => to === "quote_issued" || to === "quote_sent");
+    const quotesSentSubIds = new Set(quotesSent.map((q: any) => q.submission_id));
+    const quoteOutcomes = transitionsTo((to) => ["quote_accepted", "accepted", "quote_declined", "declined", "rejected", "morgued"].includes(to));
 
     const inquiriesBySource: Record<string, number> = {};
     subs.forEach((s: any) => {
@@ -158,7 +178,7 @@ Deno.serve(async (req) => {
   <h2 style="color:#6b8e5a;">Highlights</h2>
   <ul>
     <li><strong>${subs.length}</strong> new inquiries</li>
-    <li><strong>${subs.filter((s: any) => Boolean(s.quote_sent_at)).length}</strong> new inquiries with quotes sent</li>
+    <li><strong>${quotesSent.length}</strong> quotes sent</li>
     <li><strong>${listingsLive.length}</strong> listings went live</li>
     <li><strong>${listingsCompleted.length}</strong> listings completed</li>
     <li><strong>${quoteOutcomes.length}</strong> quotes accepted/rejected</li>
@@ -174,25 +194,42 @@ Deno.serve(async (req) => {
   <h2 style="color:#6b8e5a;">New inquiries (${subs.length})</h2>
   ${subs.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
     <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Source</th><th>Cemetery</th><th>Plot type</th><th>Quote sent?</th><th>Contact</th></tr>
-    ${subs.map((s: any) => `<tr>
+    ${subs.map((s: any) => {
+      const quoteSentToday = quotesSentSubIds.has(s.id);
+      const quoteCell = s.quote_sent_at ? quoteSentLabel(s) : (quoteSentToday ? "Yes (today)" : "No");
+      return `<tr>
       <td>${fmtShortDateTime(s.created_at)}</td>
       <td>${s.name ?? "—"}</td>
       <td>${sourceLabel(s.source)}</td>
       <td>${s.cemetery ?? "—"}</td>
       <td>${plotDescriptor(s)}</td>
-      <td>${quoteSentLabel(s)}</td>
+      <td>${quoteCell}</td>
       <td>${s.email ?? ""}${s.email && s.phone ? "<br>" : ""}${s.phone ?? ""}</td>
-    </tr>`).join("")}
+    </tr>`;
+    }).join("")}
   </table>` : "<p><em>No new inquiries.</em></p>"}
+
+  <h2 style="color:#6b8e5a;">Quotes sent today (${quotesSent.length})</h2>
+  ${quotesSent.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
+    <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Cemetery</th><th>Plot type</th><th>Quote amount</th><th>Contact</th></tr>
+    ${quotesSent.map((q: any) => `<tr>
+      <td>${fmtShortDateTime(q._at)}</td>
+      <td>${q.name ?? "—"}</td>
+      <td>${q.cemetery ?? "—"}</td>
+      <td>${plotDescriptor(q)}</td>
+      <td>${fmtMoney(q.quote_net_amount ?? q.quote_amount)}</td>
+      <td>${q.email ?? ""}${q.email && q.phone ? "<br>" : ""}${q.phone ?? ""}</td>
+    </tr>`).join("")}
+  </table>` : "<p><em>No quotes were sent today.</em></p>"}
 
   <h2 style="color:#6b8e5a;">Listings live or completed today (${listingsLive.length + listingsCompleted.length})</h2>
   ${listingsLive.length || listingsCompleted.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
     <tr style="background:#f0ede4;"><th>Time</th><th>Status</th><th>Name</th><th>Cemetery</th><th>Plot type</th><th>Listing</th><th>Contact</th></tr>
     ${[
-      ...listingsLive.map((l: any) => ({ ...l, summary_status: "Went live", summary_time: l.listing_live_at })),
-      ...listingsCompleted.map((l: any) => ({ ...l, summary_status: outcomeLabel(l.closed_outcome) === "—" ? "Completed" : `Completed: ${outcomeLabel(l.closed_outcome)}`, summary_time: l.closed_at })),
-    ].sort((a: any, b: any) => new Date(b.summary_time).getTime() - new Date(a.summary_time).getTime()).map((l: any) => `<tr>
-      <td>${fmtShortDateTime(l.summary_time)}</td>
+      ...listingsLive.map((l: any) => ({ ...l, summary_status: "Went live" })),
+      ...listingsCompleted.map((l: any) => ({ ...l, summary_status: outcomeLabel(l.closed_outcome) === "—" ? "Completed" : `Completed: ${outcomeLabel(l.closed_outcome)}` })),
+    ].sort((a: any, b: any) => new Date(b._at).getTime() - new Date(a._at).getTime()).map((l: any) => `<tr>
+      <td>${fmtShortDateTime(l._at)}</td>
       <td>${l.summary_status}</td>
       <td>${l.name ?? "—"}</td>
       <td>${l.cemetery ?? "—"}</td>
@@ -205,15 +242,18 @@ Deno.serve(async (req) => {
   <h2 style="color:#6b8e5a;">Quotes accepted or rejected today (${quoteOutcomes.length})</h2>
   ${quoteOutcomes.length ? `<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;font-size:13px;">
     <tr style="background:#f0ede4;"><th>Time</th><th>Name</th><th>Outcome</th><th>Cemetery</th><th>Plot type</th><th>Quote amount</th><th>Contact</th></tr>
-    ${quoteOutcomes.map((q: any) => `<tr>
-      <td>${fmtShortDateTime(q.quote_responded_at)}</td>
+    ${quoteOutcomes.map((q: any) => {
+      const outcome = (q._to === "quote_accepted" || q._to === "accepted") ? "Accepted" : "Rejected";
+      return `<tr>
+      <td>${fmtShortDateTime(q._at)}</td>
       <td>${q.name ?? "—"}</td>
-      <td>${outcomeLabel(q.quote_response)}</td>
+      <td>${outcome}</td>
       <td>${q.cemetery ?? "—"}</td>
       <td>${plotDescriptor(q)}</td>
       <td>${fmtMoney(q.quote_net_amount ?? q.quote_amount)}</td>
       <td>${q.email ?? ""}${q.email && q.phone ? "<br>" : ""}${q.phone ?? ""}</td>
-    </tr>`).join("")}
+    </tr>`;
+    }).join("")}
   </table>` : "<p><em>No quotes were accepted or rejected today.</em></p>"}
 
   <h2 style="color:#6b8e5a;">Pipeline movements (${transitions.length})</h2>
