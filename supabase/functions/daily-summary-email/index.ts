@@ -10,7 +10,11 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const FROM_EMAIL = "texascemeterybrokers@gmail.com";
-const TO_EMAIL = "alexandermaclarenjames@gmail.com";
+const TO_EMAILS = [
+  "alexandermaclarenjames@gmail.com",
+  "simonjamesphd@gmail.com",
+  "emmamaclaren@gmail.com",
+];
 
 function fmtDate(d: Date) {
   return d.toLocaleString("en-US", { timeZone: "America/Los_Angeles", dateStyle: "full", timeStyle: "short" });
