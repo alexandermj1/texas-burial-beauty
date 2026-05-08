@@ -15,6 +15,7 @@ import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
+import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipelinePanel";
 import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
@@ -358,21 +359,6 @@ const Admin = () => {
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
-                <button
-                  onClick={async () => {
-                    toast({ title: "Sending daily summary…" });
-                    const { data, error } = await supabase.functions.invoke("daily-summary-email", { body: {} });
-                    if (error || (data as any)?.ok === false) {
-                      toast({ title: "Send failed", description: error?.message || (data as any)?.error || "Unknown error", variant: "destructive" });
-                    } else {
-                      toast({ title: "Daily summary sent", description: `${(data as any)?.inquiries ?? 0} inquiries · ${(data as any)?.transitions ?? 0} pipeline moves` });
-                    }
-                  }}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors"
-                  title="Send daily summary email now"
-                >
-                  📧 <span className="hidden sm:inline">Send summary</span>
-                </button>
                 <div data-tour="notifications-bell"><NotificationsBell /></div>
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
@@ -406,20 +392,6 @@ const Admin = () => {
                   <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={async () => {
-                      toast({ title: "Sending daily summary…" });
-                      const { data, error } = await supabase.functions.invoke("daily-summary-email", { body: {} });
-                      if (error || (data as any)?.ok === false) {
-                        toast({ title: "Send failed", description: error?.message || (data as any)?.error || "Unknown error", variant: "destructive" });
-                      } else {
-                        toast({ title: "Daily summary sent", description: `${(data as any)?.inquiries ?? 0} inquiries · ${(data as any)?.transitions ?? 0} pipeline moves` });
-                      }
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors"
-                  >
-                    📧 Send daily summary
-                  </button>
                   <NotificationsBell />
                   <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                     <LogOut className="w-4 h-4" /> Sign Out
@@ -673,9 +645,33 @@ const Admin = () => {
                 toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new Bayer submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
               }}
               onUpdate={async (id, patch) => {
+                const before = submissions.find(s => s.id === id);
                 const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
                 if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                const after = before ? { ...before, ...patch } : null;
                 setSubmissions(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+                // Log pipeline stage transition (if any)
+                if (before && after) {
+                  try {
+                    const prevStage = deriveBayerStage(before as any);
+                    const nextStage = deriveBayerStage(after as any);
+                    if (prevStage !== nextStage) {
+                      const actorName = cleanDisplayName(user?.user_metadata?.full_name) || (user?.email?.split("@")[0]) || "admin";
+                      const fromLabel = BAYER_STAGE_META[prevStage]?.short ?? prevStage;
+                      const toLabel = BAYER_STAGE_META[nextStage]?.short ?? nextStage;
+                      const customerName = (after as any).name || (after as any).email || "customer";
+                      await supabase.from("customer_activity_log" as any).insert({
+                        customer_profile_id: (after as any).customer_profile_id ?? null,
+                        submission_id: id,
+                        actor_user_id: user?.id ?? null,
+                        actor_name: actorName,
+                        action_type: "stage_changed",
+                        action_summary: `Moved ${customerName} from "${fromLabel}" to "${toLabel}"`,
+                        details: { from: prevStage, to: nextStage } as any,
+                      });
+                    }
+                  } catch (e) { console.warn("stage log failed", e); }
+                }
               }}
               onDelete={async (id) => {
                 if (!confirm("Delete this submission?")) return;
@@ -736,6 +732,20 @@ const Admin = () => {
             </div>
           )}
           <div className="mt-10 flex items-center justify-end gap-3 flex-wrap">
+            <button
+              onClick={async () => {
+                toast({ title: "Sending daily summary…" });
+                const { data, error } = await supabase.functions.invoke("daily-summary-email", { body: {} });
+                if (error || (data as any)?.ok === false) {
+                  toast({ title: "Send failed", description: error?.message || (data as any)?.error || "Unknown error", variant: "destructive" });
+                } else {
+                  toast({ title: "Daily summary sent", description: `${(data as any)?.inquiries ?? 0} inquiries · ${(data as any)?.transitions ?? 0} pipeline moves` });
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors"
+            >
+              📧 Send daily summary now
+            </button>
             <HelpButton />
             <GuidedTour
               onGoToSubmissions={() => setTab("submissions")}

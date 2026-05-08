@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { cleanDisplayName } from "@/lib/displayName";
 import { Paperclip, Upload, Trash2, Download, FileText, Loader2, Image as ImageIcon, FileQuestion } from "lucide-react";
 
 interface CustomerFileRow {
@@ -101,12 +102,15 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
 
   const doUpload = async () => {
     if (!pendingFile) return;
-    const finalDocType = docType === "Other" ? (otherType.trim() || "Other") : docType;
+    const finalDocType = docType === "Other"
+      ? (otherType.trim() || "File")
+      : docType;
     const ext = pendingFile.name.includes(".") ? pendingFile.name.split(".").pop() : "";
     const baseDisplay = (displayName.trim() || pendingFile.name).replace(/\.[^/.]+$/, "");
     const finalDisplayName = ext && !baseDisplay.toLowerCase().endsWith("." + ext.toLowerCase())
       ? `${baseDisplay}.${ext}`
       : baseDisplay;
+    const actorName = cleanDisplayName(user?.user_metadata?.full_name) || (user?.email?.split("@")[0]) || "admin";
     setUploading(true);
     try {
       const safeName = finalDisplayName.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -119,7 +123,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
       const { error: insErr } = await supabase.from("customer_files" as any).insert({
         customer_profile_id: customerId,
         uploaded_by_user_id: user?.id ?? null,
-        uploaded_by_name: user?.email ?? "admin",
+        uploaded_by_name: actorName,
         file_name: finalDisplayName,
         file_path: path,
         file_size: pendingFile.size,
@@ -127,12 +131,13 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         document_type: finalDocType,
       });
       if (insErr) throw insErr;
+      const destination = customerName ? `to ${customerName}'s file` : "to customer file";
       await supabase.from("customer_activity_log" as any).insert({
         customer_profile_id: customerId,
         actor_user_id: user?.id ?? null,
-        actor_name: user?.email ?? "admin",
+        actor_name: actorName,
         action_type: "file_uploaded",
-        action_summary: `Uploaded ${finalDocType}: ${finalDisplayName}`,
+        action_summary: `Uploaded ${finalDisplayName} (${finalDocType}) ${destination}`,
       });
       toast({ title: "File uploaded", description: finalDisplayName });
       setPendingFile(null);
@@ -179,12 +184,13 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
       return;
     }
     await supabase.from("customer_files" as any).delete().eq("id", row.id);
+    const actorName = cleanDisplayName(user?.user_metadata?.full_name) || (user?.email?.split("@")[0]) || "admin";
     await supabase.from("customer_activity_log" as any).insert({
       customer_profile_id: customerId,
       actor_user_id: user?.id ?? null,
-      actor_name: user?.email ?? "admin",
+      actor_name: actorName,
       action_type: "file_deleted",
-      action_summary: `Deleted ${row.document_type || "file"}: ${row.file_name}`,
+      action_summary: `Deleted ${row.file_name} (${row.document_type || "file"})`,
     });
     toast({ title: "File deleted" });
     fetchFiles();
