@@ -23,7 +23,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
   const links = [
     { to: "/property-types", label: "Property Types" },
-    { to: "/properties", label: "Properties" },
+    { to: "/cemeteries", label: "Cemeteries" },
     { to: "/sell", label: "Sell Property" },
     { to: "/team", label: "Our Team" },
     { to: "/partners", label: "Partners" },

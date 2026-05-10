@@ -29,6 +29,8 @@ const Admin = lazy(() => import("./pages/Admin"));
 const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 const Home2 = lazy(() => import("./pages/Home2"));
 const Partners = lazy(() => import("./pages/Partners"));
+const CemeteryDirectory = lazy(() => import("./pages/CemeteryDirectory"));
+const CemeteryDetail = lazy(() => import("./pages/CemeteryDetail"));
 
 const queryClient = new QueryClient();
 
@@ -65,9 +67,10 @@ const App = () => (
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/agent" element={<AgentDashboard />} />
                 <Route path="/partners" element={<Partners />} />
+                <Route path="/cemeteries" element={<CemeteryDirectory />} />
+                <Route path="/cemeteries/:slug" element={<CemeteryDetail />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
-                <Route path="/cemeteries" element={<Navigate to="/properties" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Route>
