@@ -162,7 +162,7 @@ const CemeteryDetail = () => {
         <div className="relative container mx-auto px-6 pt-32 pb-16 flex flex-col justify-end min-h-[60vh]">
           <Link
             to="/cemeteries"
-            className="inline-flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground text-sm mb-6 w-fit drop-shadow"
+            className="inline-flex items-center gap-2 px-4 py-2 mb-6 w-fit rounded-full bg-background/15 hover:bg-background/25 backdrop-blur-md border border-primary-foreground/30 text-primary-foreground text-sm font-medium shadow-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> All Texas cemeteries
           </Link>
