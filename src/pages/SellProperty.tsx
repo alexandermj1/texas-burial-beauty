@@ -34,7 +34,7 @@ const faqs = [
 
 const SellProperty = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Sell Your Cemetery Plot in Texas | Free Valuation, No Upfront Fees"
         description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees, 30–60 day average close. Serving Dallas, Houston, Austin & San Antonio."

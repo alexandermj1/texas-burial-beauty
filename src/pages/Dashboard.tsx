@@ -66,7 +66,7 @@ const Dashboard = () => {
   if (authLoading || !user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo title="My Dashboard | Texas Cemetery Brokers" description="Manage your Texas Cemetery Brokers listings and account." path="/dashboard" noindex />
       <Navbar forceScrolled />
       <section className="pt-28 pb-16">

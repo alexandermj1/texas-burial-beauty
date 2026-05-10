@@ -214,7 +214,7 @@ const AgentDashboard = () => {
 
   if (!user || !isAgent) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
         <Navbar forceScrolled />
         <section className="pt-28 pb-16 flex items-center justify-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-8 shadow-soft w-full max-w-sm">
@@ -241,7 +241,7 @@ const AgentDashboard = () => {
   const mySoldReservations = reservations.filter(r => r.agent_id === user.id && r.status === "sold");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo title="Agent Dashboard | Texas Cemetery Brokers" description="Sales agent portal." path="/agent" noindex />
       <Navbar forceScrolled />
       <section className="pt-28 pb-16">

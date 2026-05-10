@@ -299,7 +299,7 @@ const getObjectPosition = (name: string) => PHOTO_OBJECT_POSITION[name] ?? "cent
 
 const Team = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Our Team & Texas Partner Network | Texas Cemetery Brokers"
         description="Meet the leadership and Texas partner network behind Texas Cemetery Brokers — decades of cemetery resale experience supporting Dallas, Houston, Austin and San Antonio families."

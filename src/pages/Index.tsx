@@ -143,7 +143,7 @@ const Index = () => {
   }, [scrollYProgress, active]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Texas Cemetery Brokers | Buy & Sell Cemetery Plots in Texas"
         description="Buy and sell cemetery plots, niches and crypts across Texas — Dallas, Houston, Austin, San Antonio. Below-market resale. Partnered with Bayer Cemetery Brokers (27+ yrs)."

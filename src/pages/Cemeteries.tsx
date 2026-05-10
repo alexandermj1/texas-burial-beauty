@@ -49,7 +49,7 @@ const Cemeteries = () => {
   const getImage = (name: string) => cemeteryImages[name] || "/images/cemetery-default.jpg";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Navbar />
 
       {/* Hero — cinematic photo with white text overlay */}
