@@ -194,7 +194,7 @@ const Home2 = () => {
   const listingsScale = useTransform(progress, [LISTINGS_START, 1], [0.78, 1]);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Texas Cemetery Brokers — Premium Cemetery Plot Resale"
         description="Premium cemetery plot resale across Texas — Dallas, Houston, Austin, San Antonio. Below-market plots, concierge service, partnered with Bayer Cemetery Brokers."
