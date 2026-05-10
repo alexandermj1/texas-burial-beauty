@@ -100,7 +100,7 @@ const Partners = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers"
         description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — 27+ years, 4.9★ rated, 10,000+ transactions and 2,500+ active plots. Trusted Texas resale."

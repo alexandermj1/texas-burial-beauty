@@ -137,7 +137,7 @@ const CreateListing = () => {
   const inputClass = "w-full px-4 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo title="Create Listing | Texas Cemetery Brokers" description="Create or edit a cemetery property listing." path="/create-listing" noindex />
       <Navbar />
       <section className="pt-28 pb-16">

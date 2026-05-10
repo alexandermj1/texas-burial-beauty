@@ -331,7 +331,7 @@ const Properties2 = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Navbar />
       <Properties2Browser />
       <Footer />

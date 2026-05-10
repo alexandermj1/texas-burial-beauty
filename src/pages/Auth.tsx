@@ -52,7 +52,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo title="Sign In | Texas Cemetery Brokers" description="Sign in to your Texas Cemetery Brokers account." path="/auth" noindex />
       <Navbar forceScrolled />
       <section className="pt-32 pb-16">

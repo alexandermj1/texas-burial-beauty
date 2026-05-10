@@ -84,7 +84,7 @@ const BuyProperty = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Buy a Cemetery Plot in Texas | Guided Buyer Concierge"
         description="A guided 5-step concierge to help you buy the right cemetery plot in Texas — Dallas, Houston, Austin, San Antonio. Save 30–50% versus buying direct from a cemetery."

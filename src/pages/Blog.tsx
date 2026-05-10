@@ -67,7 +67,7 @@ const blogPosts: BlogPost[] = [
 ];
 
 const BlogIndex = () => (
-  <div className="min-h-screen bg-background">
+  <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
       title="The Journal | Texas Cemetery Brokers Insights & Guidance"
       description="Expert advice on Texas cemetery property, estate planning, the resale process, and helping families navigate end-of-life decisions with care."
@@ -119,7 +119,7 @@ const BlogIndex = () => (
 );
 
 const BlogArticle = ({ post }: { post: BlogPost }) => (
-  <div className="min-h-screen bg-background">
+  <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
       title={`${post.title} | Texas Cemetery Brokers Journal`}
       description={post.excerpt}
