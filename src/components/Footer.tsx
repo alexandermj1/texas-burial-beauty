@@ -29,7 +29,7 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-sm text-foreground mb-3">Quick Links</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <Link to="/properties" className="block hover:text-foreground transition-colors">Browse Properties</Link>
+              <Link to="/cemeteries" className="block hover:text-foreground transition-colors">Cemeteries We Serve</Link>
               <Link to="/sell" className="block hover:text-foreground transition-colors">Sell Property</Link>
               <Link to="/partners" className="block hover:text-foreground transition-colors">Our Partners</Link>
               <Link to="/auth" className="block hover:text-foreground transition-colors">Sign In</Link>
