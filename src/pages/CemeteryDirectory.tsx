@@ -1,24 +1,47 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Search, ArrowUpRight, Phone, Sparkles } from "lucide-react";
+import { MapPin, Search, ArrowUpRight, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
-import heroBg from "@/assets/hero/cemetery-hillside.jpg";
-import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
-import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
-import imgMural from "@/assets/hero/cemetery-mural.jpg";
-import imgPalms from "@/assets/hero/cemetery-palms.jpg";
-import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
 
-const cardImages = [imgHillside, imgCathedral, imgMountains, imgMural, imgPalms];
-const pickImage = (key: string) => {
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  return cardImages[h % cardImages.length];
+// Decorative SVG glyph rotated per card for variety (Vogue-style line art).
+const CardGlyph = ({ variant, className = "" }: { variant: number; className?: string }) => {
+  const stroke = "hsl(var(--primary))";
+  switch (variant % 4) {
+    case 0:
+      return (
+        <svg viewBox="0 0 120 60" className={className} fill="none" stroke={stroke} strokeWidth="1.2">
+          <path d="M2 50 Q30 10 60 30 T118 20" strokeLinecap="round" />
+          <circle cx="100" cy="14" r="6" fill={stroke} fillOpacity="0.15" />
+        </svg>
+      );
+    case 1:
+      return (
+        <svg viewBox="0 0 120 60" className={className} fill="none" stroke={stroke} strokeWidth="1.2">
+          <path d="M2 55 L30 30 L55 45 L80 18 L118 35" strokeLinejoin="round" strokeLinecap="round" />
+          <circle cx="80" cy="18" r="3" fill={stroke} />
+        </svg>
+      );
+    case 2:
+      return (
+        <svg viewBox="0 0 120 60" className={className} fill="none" stroke={stroke} strokeWidth="1.2">
+          <path d="M2 45 Q40 5 80 45 T118 30" strokeLinecap="round" />
+          <path d="M2 55 Q40 25 80 55 T118 45" strokeLinecap="round" strokeOpacity="0.45" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 120 60" className={className} fill="none" stroke={stroke} strokeWidth="1.2">
+          <circle cx="60" cy="30" r="22" strokeOpacity="0.5" />
+          <circle cx="60" cy="30" r="12" />
+          <line x1="60" y1="2" x2="60" y2="58" strokeOpacity="0.25" />
+        </svg>
+      );
+  }
 };
 
 const CemeteryDirectory = () => {
@@ -72,93 +95,75 @@ const CemeteryDirectory = () => {
       />
       <Navbar />
 
-      {/* HERO — cinematic image with centered minimalist search */}
-      <section className="relative min-h-[78vh] overflow-hidden">
-        <motion.img
-          src={heroBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          initial={{ scale: 1.08 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.6, ease: "easeOut" }}
-        />
-        {/* layered washes for depth */}
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/55 to-foreground/85" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,hsl(var(--foreground)/0.35)_75%)]" />
+      {/* HERO — minimalist editorial */}
+      <section className="relative pt-28 pb-10 md:pt-32 md:pb-14 border-b border-border/60 overflow-hidden">
+        {/* Subtle decorative line art */}
+        <svg
+          className="absolute -right-10 top-16 w-[480px] h-[200px] opacity-[0.08] pointer-events-none hidden md:block"
+          viewBox="0 0 480 200"
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="1"
+        >
+          <path d="M0 180 Q120 40 240 130 T480 80" />
+          <path d="M0 195 Q120 60 240 150 T480 100" />
+        </svg>
 
-        <div className="relative container mx-auto px-6 pt-32 pb-20 min-h-[78vh] flex flex-col items-center justify-center text-center">
+        <div className="container mx-auto px-6 max-w-5xl">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
           >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 backdrop-blur-md mb-7">
-              <Sparkles className="w-3.5 h-3.5 text-primary-foreground/90" />
-              <span className="text-[11px] tracking-[0.18em] uppercase text-primary-foreground/90 font-medium">
-                Statewide coverage · {total}+ cemeteries
-              </span>
-            </div>
-            <h1 className="font-display text-5xl md:text-7xl text-primary-foreground mb-5 leading-[1.05] drop-shadow-lg max-w-4xl">
-              Every cemetery in Texas,<br className="hidden md:block" />
-              <em className="italic font-normal opacity-90">one trusted broker.</em>
+            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-4">
+              The directory · {total}+ cemeteries
+            </p>
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.05] mb-4">
+              Every cemetery in Texas, <em className="italic font-normal text-primary">one trusted broker.</em>
             </h1>
-            <p className="text-primary-foreground/85 text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10 drop-shadow">
+            <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto mb-8">
               Find your cemetery — or the one you want to buy into — and we'll guide the rest.
             </p>
-          </motion.div>
 
-          {/* Centered minimalist search */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="w-full max-w-xl"
-          >
-            <div className="group relative">
-              <div className="absolute inset-0 rounded-full bg-primary-foreground/10 blur-xl opacity-60 group-focus-within:opacity-100 transition-opacity" />
-              <div className="relative flex items-center bg-background/95 backdrop-blur-md rounded-full border border-primary-foreground/30 shadow-2xl overflow-hidden">
-                <Search className="w-5 h-5 text-muted-foreground ml-6 shrink-0" />
+            <div className="max-w-xl mx-auto">
+              <div className="relative flex items-center bg-card rounded-full border border-border shadow-sm hover:shadow-md focus-within:shadow-md focus-within:border-primary/50 transition-all overflow-hidden">
+                <Search className="w-4 h-4 text-muted-foreground ml-5 shrink-0" />
                 <input
                   type="text"
                   placeholder="Search by cemetery, city, or region…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent px-4 py-5 text-foreground placeholder:text-muted-foreground/80 focus:outline-none text-[15px]"
+                  className="flex-1 bg-transparent px-3 py-3.5 text-foreground placeholder:text-muted-foreground/70 focus:outline-none text-sm"
                 />
                 {query && (
                   <button
                     onClick={() => setQuery("")}
-                    className="text-xs text-muted-foreground hover:text-foreground px-4 mr-2"
+                    className="text-xs text-muted-foreground hover:text-foreground px-4 mr-1"
                   >
                     Clear
                   </button>
                 )}
               </div>
             </div>
-            <p className="text-primary-foreground/60 text-xs mt-4 tracking-wide">
-              Try “Restland”, “Houston”, or “Austin”
-            </p>
           </motion.div>
         </div>
-
-        {/* soft fade into next section */}
-        <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-b from-transparent to-background pointer-events-none" />
       </section>
 
       {/* Region filter strip */}
-      <section className="sticky top-[72px] z-30 bg-background/85 backdrop-blur-xl border-b border-border/60">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
-            <span className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-medium shrink-0 mr-2">
+      <section className="sticky top-[72px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium shrink-0 mr-2">
               Region
             </span>
             {regions.map((r) => (
               <button
                 key={r}
                 onClick={() => setRegion(r)}
-                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                   region === r
-                    ? "bg-foreground text-background shadow-md"
+                    ? "bg-foreground text-background"
                     : "bg-transparent text-muted-foreground hover:text-foreground border border-border hover:border-foreground/30"
                 }`}
               >
@@ -169,8 +174,8 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Grouped list */}
-      <section className="py-16 md:py-20">
+      {/* Grouped editorial card list */}
+      <section className="py-14 md:py-20">
         <div className="container mx-auto px-6">
           {grouped.length === 0 && (
             <div className="text-center py-24">
@@ -197,8 +202,17 @@ const CemeteryDirectory = () => {
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {list.map((c, i) => {
-                  const img = pickImage(c.name);
-                  const monogram = c.name.replace(/^(The|St\.|Saint)\s+/i, "").charAt(0);
+                  const monogram = c.name.replace(/^(The|St\.|Saint|Mt\.|Mount)\s+/i, "").charAt(0).toUpperCase();
+                  // Hash for variant per card so each is unique.
+                  let h = 0;
+                  for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
+                  const variant = h % 4;
+                  const tints = [
+                    "from-sage-light to-card",
+                    "from-sand-light to-card",
+                    "from-terracotta-light/40 to-card",
+                    "from-card to-sage-light/60",
+                  ];
                   return (
                     <motion.div
                       key={c.name}
@@ -209,44 +223,34 @@ const CemeteryDirectory = () => {
                     >
                       <Link
                         to={`/cemeteries/${slugify(c.name)}`}
-                        className="group relative block bg-card rounded-3xl overflow-hidden border border-border/70 hover:border-primary/50 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35)]"
+                        className={`group relative block rounded-3xl overflow-hidden border border-border/70 hover:border-primary/50 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35)] bg-gradient-to-br ${tints[variant]}`}
                       >
-                        {/* Image header — fades into card via mask */}
-                        <div className="relative h-40 overflow-hidden">
-                          <img
-                            src={img}
-                            alt=""
-                            loading="lazy"
-                            className="absolute inset-0 w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-700 ease-out"
-                            style={{
-                              maskImage:
-                                "linear-gradient(to bottom, black 30%, transparent 100%)",
-                              WebkitMaskImage:
-                                "linear-gradient(to bottom, black 30%, transparent 100%)",
-                            }}
-                          />
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              background:
-                                "linear-gradient(to bottom, hsl(var(--card)/0) 40%, hsl(var(--card)) 100%)",
-                            }}
-                          />
-                          {/* Oversized monogram */}
-                          <div className="absolute bottom-2 right-4 font-display text-[120px] leading-none text-foreground/[0.07] group-hover:text-primary/15 transition-colors duration-500 select-none pointer-events-none">
-                            {monogram}
+                        {/* Top metadata row */}
+                        <div className="relative px-6 pt-6 pb-2 flex items-start justify-between">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-foreground text-[11px] font-medium border border-border/60">
+                            <MapPin className="w-3 h-3 text-primary" />
+                            {c.city}
+                          </span>
+                          <span className="font-display text-[11px] tracking-[0.2em] uppercase text-muted-foreground">
+                            {String((i + 1)).padStart(2, "0")}
+                          </span>
+                        </div>
+
+                        {/* Centerpiece monogram + glyph */}
+                        <div className="relative px-6 pt-2 pb-4 flex items-center gap-4">
+                          <div className="relative shrink-0">
+                            <div className="w-20 h-20 rounded-2xl bg-background/80 border border-border/70 flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:border-primary transition-colors duration-500">
+                              <span className="font-display text-4xl text-foreground group-hover:text-primary-foreground transition-colors duration-500">
+                                {monogram}
+                              </span>
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary/15 border border-primary/30" />
                           </div>
-                          {/* City pill */}
-                          <div className="absolute top-4 left-4">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-md text-foreground text-[11px] font-medium shadow-sm">
-                              <MapPin className="w-3 h-3 text-primary" />
-                              {c.city}
-                            </span>
-                          </div>
+                          <CardGlyph variant={variant} className="flex-1 h-14" />
                         </div>
 
                         {/* Body */}
-                        <div className="relative px-6 pb-6 -mt-2">
+                        <div className="relative px-6 pb-6">
                           <h3 className="font-display text-xl text-foreground mb-2 leading-snug group-hover:text-primary transition-colors">
                             {c.name}
                           </h3>
@@ -254,10 +258,15 @@ const CemeteryDirectory = () => {
                             {c.address}
                           </p>
                           <div className="flex items-center justify-between pt-3 border-t border-border/60">
-                            <span className="text-sm font-medium text-foreground">
-                              Buy or sell here
-                            </span>
-                            <span className="w-9 h-9 rounded-full bg-muted group-hover:bg-primary group-hover:text-primary-foreground text-foreground flex items-center justify-center transition-all duration-300 group-hover:rotate-45">
+                            <div className="flex gap-1.5">
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-background/70 border border-border/60 text-muted-foreground">
+                                Buy
+                              </span>
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-background/70 border border-border/60 text-muted-foreground">
+                                Sell
+                              </span>
+                            </div>
+                            <span className="w-9 h-9 rounded-full bg-background/80 border border-border group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground text-foreground flex items-center justify-center transition-all duration-300 group-hover:rotate-45">
                               <ArrowUpRight className="w-4 h-4" />
                             </span>
                           </div>
