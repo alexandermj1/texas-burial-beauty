@@ -571,7 +571,7 @@ const CemeteryDetail = () => {
       )}
 
       {/* Contact CTA */}
-      <section id="contact" className="py-20 scroll-mt-32">
+      <section id="contact" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
