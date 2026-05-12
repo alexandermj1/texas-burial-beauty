@@ -18,10 +18,10 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
 import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
-import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
 import imgPalms from "@/assets/hero/cemetery-palms.jpg";
 
