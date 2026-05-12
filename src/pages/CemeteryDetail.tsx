@@ -361,7 +361,7 @@ const CemeteryDetail = () => {
       </section>
 
       {/* BUYING — bold, dark editorial band */}
-      <section id="buying" className="relative py-20 md:py-28 bg-foreground text-background overflow-hidden scroll-mt-32">
+      <section id="buying" className="relative py-14 md:py-20 bg-foreground text-background overflow-hidden scroll-mt-32">
         <LeafAccent className="absolute -top-10 -right-10 w-72 h-72 opacity-60" />
         <div className="container mx-auto px-6 relative">
           <div className="max-w-3xl mb-14">
