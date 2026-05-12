@@ -488,8 +488,15 @@ const CemeteryDetail = () => {
         </div>
       </section>
 
+      {/* Embedded valuation form — sellers convert here without leaving */}
+      <section id="valuation" className="py-14 md:py-20 scroll-mt-32 bg-background border-y border-border/50">
+        <div className="container mx-auto px-6">
+          <SellerQuoteForm compact defaultCemetery={cemetery.name} />
+        </div>
+      </section>
+
       {/* Why us — feature ribbon */}
-      <section id="why" className="py-20 md:py-24 scroll-mt-32">
+      <section id="why" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="text-center mb-12">
             <Sparkles className="w-5 h-5 text-primary mx-auto mb-3" />
