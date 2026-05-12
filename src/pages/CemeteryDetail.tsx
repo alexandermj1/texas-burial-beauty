@@ -18,10 +18,10 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
 import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
-import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
 import imgPalms from "@/assets/hero/cemetery-palms.jpg";
 
@@ -195,11 +195,21 @@ const CemeteryDetail = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo title={title} description={description} path={`/cemeteries/${slugify(cemetery.name)}`} jsonLd={jsonLd} />
-      <Navbar />
+      <Navbar forceScrolled />
 
-      {/* Hero — editorial split: type left, image right */}
-      <section className="relative pt-28 md:pt-32 pb-12 md:pb-16 overflow-hidden border-b border-border/60">
-        <div className="container mx-auto px-6">
+      {/* Hero — editorial split with ambient nature backdrop (hills + drifting leaves) */}
+      <section className="relative pt-28 md:pt-32 pb-12 md:pb-14 overflow-hidden border-b border-border/60">
+        {/* Ambient backdrop — sits behind everything, doesn't change layout */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-sage-light/50 via-sand-light/30 to-transparent" />
+          <div className="absolute -top-16 -left-20 w-[420px] h-[420px] rounded-full bg-sage-light/60 blur-3xl" />
+          <div className="absolute top-20 right-0 w-[360px] h-[360px] rounded-full bg-terracotta-light/30 blur-3xl" />
+          <HillsScene className="absolute bottom-0 inset-x-0 w-full h-40 opacity-40" />
+          <LeafAccent className="absolute top-24 right-[8%] w-40 h-40 opacity-50 hidden md:block" />
+          <LeafAccent className="absolute bottom-10 left-[6%] w-32 h-32 opacity-40 hidden md:block" />
+        </div>
+
+        <div className="container mx-auto px-6 relative">
           <Link
             to="/cemeteries"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
@@ -216,7 +226,7 @@ const CemeteryDetail = () => {
               <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-4">
                 {cemetery.region} · Cemetery profile
               </p>
-              <h1 className="font-display text-4xl md:text-6xl lg:text-[68px] text-foreground leading-[1.02] mb-5">
+              <h1 className="font-display text-4xl md:text-6xl lg:text-[64px] text-foreground leading-[1.02] mb-5 tracking-tight">
                 {cemetery.name}
               </h1>
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-xl flex items-start gap-2 mb-7">
@@ -224,7 +234,6 @@ const CemeteryDetail = () => {
                 {cemetery.address}
               </p>
 
-              {/* Two clear, equal CTAs */}
               <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
                 <Link
                   to={`/buy?cemetery=${encodeURIComponent(cemetery.name)}`}
@@ -272,19 +281,20 @@ const CemeteryDetail = () => {
       </section>
 
       {/* Anchor jump bar */}
-      <nav className="sticky top-[72px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
-        <div className="container mx-auto px-6 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
+      <nav className="sticky top-[68px] z-30 bg-background/85 backdrop-blur-xl border-y border-border/50">
+        <div className="container mx-auto px-6 py-3 flex gap-2 overflow-x-auto no-scrollbar">
           {[
             { href: "#about", label: "About" },
             { href: "#buying", label: "Buying" },
             { href: "#selling", label: "Selling" },
+            { href: "#valuation", label: "Free valuation" },
             { href: "#why", label: "Why us" },
             { href: "#contact", label: "Contact" },
           ].map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/30 transition-colors"
+              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               {l.label}
             </a>
@@ -293,7 +303,7 @@ const CemeteryDetail = () => {
       </nav>
 
       {/* About — editorial intro with side stat */}
-      <section id="about" className="py-16 md:py-24 scroll-mt-32">
+      <section id="about" className="py-12 md:py-16 scroll-mt-32">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-[1.5fr_1fr] gap-12 items-start">
             <motion.div
@@ -351,7 +361,7 @@ const CemeteryDetail = () => {
       </section>
 
       {/* BUYING — bold, dark editorial band */}
-      <section id="buying" className="relative py-20 md:py-28 bg-foreground text-background overflow-hidden scroll-mt-32">
+      <section id="buying" className="relative py-14 md:py-20 bg-foreground text-background overflow-hidden scroll-mt-32">
         <LeafAccent className="absolute -top-10 -right-10 w-72 h-72 opacity-60" />
         <div className="container mx-auto px-6 relative">
           <div className="max-w-3xl mb-14">
@@ -407,7 +417,7 @@ const CemeteryDetail = () => {
       </section>
 
       {/* SELLING — light editorial with image inset */}
-      <section id="selling" className="py-20 md:py-28 scroll-mt-32 bg-sand-light/30">
+      <section id="selling" className="py-14 md:py-20 scroll-mt-32 bg-sand-light/30">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 items-center mb-14">
             <motion.div
@@ -478,8 +488,15 @@ const CemeteryDetail = () => {
         </div>
       </section>
 
+      {/* Embedded valuation form — sellers convert here without leaving */}
+      <section id="valuation" className="py-14 md:py-20 scroll-mt-32 bg-background border-y border-border/50">
+        <div className="container mx-auto px-6">
+          <SellerQuoteForm compact defaultCemetery={cemetery.name} />
+        </div>
+      </section>
+
       {/* Why us — feature ribbon */}
-      <section id="why" className="py-20 md:py-24 scroll-mt-32">
+      <section id="why" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="text-center mb-12">
             <Sparkles className="w-5 h-5 text-primary mx-auto mb-3" />
@@ -554,7 +571,7 @@ const CemeteryDetail = () => {
       )}
 
       {/* Contact CTA */}
-      <section id="contact" className="py-20 scroll-mt-32">
+      <section id="contact" className="py-14 md:py-20 scroll-mt-32">
         <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
