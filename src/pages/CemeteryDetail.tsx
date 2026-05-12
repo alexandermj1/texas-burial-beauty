@@ -281,19 +281,20 @@ const CemeteryDetail = () => {
       </section>
 
       {/* Anchor jump bar */}
-      <nav className="sticky top-[72px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
-        <div className="container mx-auto px-6 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
+      <nav className="sticky top-[68px] z-30 bg-background/85 backdrop-blur-xl border-y border-border/50">
+        <div className="container mx-auto px-6 py-3 flex gap-2 overflow-x-auto no-scrollbar">
           {[
             { href: "#about", label: "About" },
             { href: "#buying", label: "Buying" },
             { href: "#selling", label: "Selling" },
+            { href: "#valuation", label: "Free valuation" },
             { href: "#why", label: "Why us" },
             { href: "#contact", label: "Contact" },
           ].map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/30 transition-colors"
+              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               {l.label}
             </a>
@@ -302,7 +303,7 @@ const CemeteryDetail = () => {
       </nav>
 
       {/* About — editorial intro with side stat */}
-      <section id="about" className="py-16 md:py-24 scroll-mt-32">
+      <section id="about" className="py-12 md:py-16 scroll-mt-32">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-[1.5fr_1fr] gap-12 items-start">
             <motion.div
