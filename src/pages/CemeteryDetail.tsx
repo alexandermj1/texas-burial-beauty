@@ -195,11 +195,21 @@ const CemeteryDetail = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo title={title} description={description} path={`/cemeteries/${slugify(cemetery.name)}`} jsonLd={jsonLd} />
-      <Navbar />
+      <Navbar forceScrolled />
 
-      {/* Hero — editorial split: type left, image right */}
-      <section className="relative pt-28 md:pt-32 pb-12 md:pb-16 overflow-hidden border-b border-border/60">
-        <div className="container mx-auto px-6">
+      {/* Hero — editorial split with ambient nature backdrop (hills + drifting leaves) */}
+      <section className="relative pt-28 md:pt-32 pb-12 md:pb-14 overflow-hidden border-b border-border/60">
+        {/* Ambient backdrop — sits behind everything, doesn't change layout */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-sage-light/50 via-sand-light/30 to-transparent" />
+          <div className="absolute -top-16 -left-20 w-[420px] h-[420px] rounded-full bg-sage-light/60 blur-3xl" />
+          <div className="absolute top-20 right-0 w-[360px] h-[360px] rounded-full bg-terracotta-light/30 blur-3xl" />
+          <HillsScene className="absolute bottom-0 inset-x-0 w-full h-40 opacity-40" />
+          <LeafAccent className="absolute top-24 right-[8%] w-40 h-40 opacity-50 hidden md:block" />
+          <LeafAccent className="absolute bottom-10 left-[6%] w-32 h-32 opacity-40 hidden md:block" />
+        </div>
+
+        <div className="container mx-auto px-6 relative">
           <Link
             to="/cemeteries"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
@@ -216,7 +226,7 @@ const CemeteryDetail = () => {
               <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-4">
                 {cemetery.region} · Cemetery profile
               </p>
-              <h1 className="font-display text-4xl md:text-6xl lg:text-[68px] text-foreground leading-[1.02] mb-5">
+              <h1 className="font-display text-4xl md:text-6xl lg:text-[64px] text-foreground leading-[1.02] mb-5 tracking-tight">
                 {cemetery.name}
               </h1>
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-xl flex items-start gap-2 mb-7">
@@ -224,7 +234,6 @@ const CemeteryDetail = () => {
                 {cemetery.address}
               </p>
 
-              {/* Two clear, equal CTAs */}
               <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
                 <Link
                   to={`/buy?cemetery=${encodeURIComponent(cemetery.name)}`}
