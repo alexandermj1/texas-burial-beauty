@@ -12,14 +12,14 @@ const guarantees = [
   "Guaranteed net proceeds offer",
 ];
 
-const SellerQuoteForm = () => {
+const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-    cemetery: "",
+    cemetery: defaultCemetery,
     propertyType: "",
     spaces: "",
     section: "",
@@ -66,8 +66,8 @@ const SellerQuoteForm = () => {
   const labelCls = "block text-[11px] font-medium tracking-[0.12em] uppercase text-muted-foreground mb-2";
 
   return (
-    <section className="py-24 bg-background" id="quote-form">
-      <div className="container mx-auto px-6">
+    <section className={compact ? "" : "py-24 bg-background"} id="quote-form">
+      <div className={compact ? "" : "container mx-auto px-6"}>
         {/* Centered intro */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
