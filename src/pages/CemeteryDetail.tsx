@@ -417,7 +417,7 @@ const CemeteryDetail = () => {
       </section>
 
       {/* SELLING — light editorial with image inset */}
-      <section id="selling" className="py-20 md:py-28 scroll-mt-32 bg-sand-light/30">
+      <section id="selling" className="py-14 md:py-20 scroll-mt-32 bg-sand-light/30">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 items-center mb-14">
             <motion.div
