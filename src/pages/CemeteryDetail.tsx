@@ -197,16 +197,42 @@ const CemeteryDetail = () => {
       <Seo title={title} description={description} path={`/cemeteries/${slugify(cemetery.name)}`} jsonLd={jsonLd} />
       <Navbar forceScrolled />
 
-      {/* Hero — editorial split with ambient nature backdrop (hills + drifting leaves) */}
-      <section className="relative pt-28 md:pt-32 pb-12 md:pb-14 overflow-hidden border-b border-border/60">
-        {/* Ambient backdrop — sits behind everything, doesn't change layout */}
+      {/* Hero — editorial split with integrated landscape backdrop */}
+      <section className="relative pt-28 md:pt-32 pb-14 md:pb-20 overflow-hidden border-b border-border/60">
+        {/* Integrated landscape backdrop — full bleed, faded into the page */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
-          <div className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-sage-light/50 via-sand-light/30 to-transparent" />
-          <div className="absolute -top-16 -left-20 w-[420px] h-[420px] rounded-full bg-sage-light/60 blur-3xl" />
+          <img
+            src={imgMountains}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-[0.18]"
+          />
+          {/* Wash to keep text legible and merge into page */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/60 to-background" />
+          <div className="absolute inset-x-0 top-0 h-[55%] bg-gradient-to-b from-sage-light/55 via-sand-light/30 to-transparent" />
+          <div className="absolute -top-16 -left-24 w-[420px] h-[420px] rounded-full bg-sage-light/55 blur-3xl" />
           <div className="absolute top-20 right-0 w-[360px] h-[360px] rounded-full bg-terracotta-light/30 blur-3xl" />
-          <HillsScene className="absolute bottom-0 inset-x-0 w-full h-40 opacity-40" />
-          <LeafAccent className="absolute top-24 right-[8%] w-40 h-40 opacity-50 hidden md:block" />
-          <LeafAccent className="absolute bottom-10 left-[6%] w-32 h-32 opacity-40 hidden md:block" />
+          {/* Stretched hill silhouette anchored to the bottom */}
+          <svg
+            viewBox="0 0 600 220"
+            preserveAspectRatio="none"
+            className="absolute bottom-0 inset-x-0 w-full h-32 md:h-40 opacity-40"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="hilo1" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--sage))" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="hsl(var(--sage))" stopOpacity="0.18" />
+              </linearGradient>
+              <linearGradient id="hilo2" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.22" />
+              </linearGradient>
+            </defs>
+            <path d="M0 150 Q150 90 300 140 T600 120 V220 H0 Z" fill="url(#hilo1)" />
+            <path d="M0 185 Q120 135 260 170 T520 160 T600 170 V220 H0 Z" fill="url(#hilo2)" />
+          </svg>
+          <LeafAccent className="absolute top-24 right-[6%] w-40 h-40 opacity-50 hidden md:block" />
+          <LeafAccent className="absolute bottom-12 left-[5%] w-32 h-32 opacity-40 hidden md:block" />
         </div>
 
         <div className="container mx-auto px-6 relative">
