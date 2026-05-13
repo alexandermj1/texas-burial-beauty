@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Search, ArrowUpRight, Phone, X, ArrowRight, ShieldCheck } from "lucide-react";
+import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck, Trees } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
+import { getCemeteryImage, getPlotImage } from "@/lib/listingImages";
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgPalms from "@/assets/hero/cemetery-palms.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
