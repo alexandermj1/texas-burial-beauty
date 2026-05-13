@@ -230,73 +230,98 @@ const CemeteryDirectory = () => {
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {list.map((c, i) => {
-                    const monogram = c.name
-                      .replace(/^(The|St\.|Saint|Mt\.|Mount)\s+/i, "")
-                      .charAt(0)
-                      .toUpperCase();
+                    const cemImg = getCemeteryImage(c.name);
+                    const plotSamples: Array<[string, number]> = [
+                      ["Single", 1],
+                      ["Companion", 2],
+                      ["Mausoleum", 2],
+                      ["Cremation Niche", 1],
+                      ["Family Estate", 4],
+                      ["Lawn Crypt", 2],
+                      ["Veteran", 1],
+                      ["Single", 3],
+                    ];
                     let h = 0;
                     for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
-                    // Deeper, more saturated tints — vogue color
-                    const tints = [
-                      "from-sage-light/80 via-card to-sand-light/40",
-                      "from-terracotta-light/40 via-card to-sand-light/60",
-                      "from-sand-light via-card to-sage-light/60",
-                      "from-card via-sage-light/50 to-terracotta-light/30",
-                    ];
-                    const tint = tints[h % 4];
+                    const [sampleType, sampleSpaces] = plotSamples[h % plotSamples.length];
+                    const plotImg = getPlotImage(sampleType, sampleSpaces);
+
                     return (
                       <motion.div
-                        key={c.name}
-                        initial={{ opacity: 0, y: 12 }}
+                        key={`${c.name}-${c.city}`}
+                        initial={{ opacity: 0, y: 16 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-30px" }}
                         transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
                       >
                         <Link
                           to={`/cemeteries/${slugify(c.name)}`}
-                          className={`group relative block rounded-2xl overflow-hidden border border-border/60 hover:border-primary/50 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_28px_60px_-28px_hsl(var(--primary)/0.45)] bg-gradient-to-br ${tint}`}
+                          className="group relative block bg-card rounded-2xl overflow-hidden shadow-[0_2px_16px_-4px_hsl(var(--primary)/0.08),0_1px_3px_-1px_hsl(var(--foreground)/0.06)] hover:shadow-[0_12px_36px_-10px_hsl(var(--primary)/0.22),0_2px_8px_-2px_hsl(var(--foreground)/0.08)] hover:-translate-y-1 transition-all duration-300 border border-border/60"
                         >
-                          {/* Editorial monogram watermark */}
-                          <span
-                            aria-hidden
-                            className="absolute -top-6 -right-2 font-display text-[200px] leading-none text-foreground/[0.05] group-hover:text-primary/[0.12] transition-colors duration-700 select-none pointer-events-none"
-                          >
-                            {monogram}
-                          </span>
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-secondary/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                          {/* subtle texture hairline */}
-                          <span aria-hidden className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent" />
-
-                          <div className="relative p-6 md:p-7 min-h-[230px] flex flex-col">
-                            <div className="flex items-center justify-between mb-10">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm text-foreground text-[11px] font-medium border border-border/50">
-                                <MapPin className="w-3 h-3 text-primary" />
-                                {c.city}
-                              </span>
-                              <span className="font-display text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80">
-                                {String(i + 1).padStart(2, "0")} / {String(list.length).padStart(2, "0")}
+                          <div className="h-44 overflow-hidden relative bg-gradient-to-br from-accent/30 via-secondary/20 to-primary/5">
+                            <img
+                              src={cemImg}
+                              alt={c.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/10 to-transparent" />
+                            <div className="absolute top-3 left-3">
+                              <span className="text-[10px] tracking-[0.16em] uppercase px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-sm text-foreground font-medium border border-border/50">
+                                {c.region}
                               </span>
                             </div>
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <h3 className="font-display text-xl text-background leading-tight tracking-tight drop-shadow-md line-clamp-2">
+                                {c.name}
+                              </h3>
+                            </div>
+                          </div>
 
-                            <h3 className="font-display text-[22px] md:text-[24px] text-foreground leading-[1.15] mb-2 group-hover:text-primary transition-colors duration-300 tracking-tight">
-                              {c.name}
-                            </h3>
-                            <p className="text-xs text-muted-foreground leading-relaxed mb-6 line-clamp-1">
-                              {c.address}
-                            </p>
+                          <div className="relative p-5">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                                    {sampleType}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                                    <Trees className="w-3 h-3" /> Active
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1 mb-1">
+                                  <MapPin className="w-3.5 h-3.5 shrink-0" /> {c.city}, TX
+                                </p>
+                                <p className="text-xs text-muted-foreground/80 line-clamp-1 mb-3">{c.address}</p>
 
-                            <div className="mt-auto flex items-center justify-between pt-4 border-t border-border/60">
-                              <div className="flex gap-1.5">
-                                <span className="text-[11px] px-2.5 py-1 rounded-full bg-foreground text-background font-medium">
-                                  Buy
-                                </span>
-                                <span className="text-[11px] px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-medium">
-                                  Sell
-                                </span>
+                                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                                  <div className="flex gap-1.5">
+                                    <span className="text-[11px] px-2.5 py-1 rounded-full bg-foreground text-background font-medium">Buy</span>
+                                    <span className="text-[11px] px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-medium">Sell</span>
+                                  </div>
+                                  <span className="inline-flex items-center gap-1.5 text-primary font-medium text-sm group-hover:gap-2 transition-all">
+                                    View <ArrowRight className="w-3.5 h-3.5" />
+                                  </span>
+                                </div>
                               </div>
-                              <span className="w-10 h-10 rounded-full bg-background/80 border border-border/60 group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground text-foreground flex items-center justify-center transition-all duration-300 group-hover:rotate-45">
-                                <ArrowUpRight className="w-4 h-4" />
-                              </span>
+
+                              {plotImg && (
+                                <>
+                                  <div className="w-px h-24 bg-gradient-to-b from-primary/30 via-border to-transparent shrink-0 mt-1" />
+                                  <div className="shrink-0 w-24 h-24 flex items-center justify-center relative">
+                                    <div className="absolute inset-2 rounded-full bg-primary/10 blur-xl opacity-70" />
+                                    <img
+                                      src={plotImg}
+                                      alt={`${sampleType} plot example`}
+                                      className="relative h-20 w-auto object-contain drop-shadow-lg mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         </Link>
