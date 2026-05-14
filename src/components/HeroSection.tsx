@@ -127,7 +127,8 @@ const HeroSection = () => {
           transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="font-display text-primary-foreground text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl leading-[1.02] tracking-tight drop-shadow-2xl"
         >
-          Cemetery property,{" "}
+          Cemetery property,
+          <br />
           <span className="italic font-light">
             {typed}
             <span className="inline-block w-[0.05em] -mb-[0.1em] ml-1 h-[0.85em] bg-primary-foreground/80 animate-pulse align-baseline" aria-hidden="true" />
