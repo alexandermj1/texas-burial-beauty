@@ -23,11 +23,10 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
   const links = [
     { to: "/property-types", label: "Property Types" },
-    { to: "/cemeteries", label: "Cemeteries" },
+    { to: "/cemeteries", label: "Buy Property" },
     { to: "/sell", label: "Sell Property" },
     { to: "/team", label: "Our Team" },
     { to: "/partners", label: "Partners" },
-    { to: "/blog", label: "Blog" },
   ];
 
   const rolesLoading = authLoading || adminLoading || agentLoading;
