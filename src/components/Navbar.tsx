@@ -6,12 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAgent } from "@/hooks/useAgent";
 
-const Navbar = ({ forceScrolled = false, transparentOnTop = false }: { forceScrolled?: boolean; transparentOnTop?: boolean }) => {
-  // Default to "scrolled" (solid) state so light-background pages never flash
-  // a transparent navbar with white-on-white text during route transitions.
-  // Pages with a dark hero (e.g. the homepage) opt-in via `transparentOnTop`.
+const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const computeScrolled = () =>
-    forceScrolled || !transparentOnTop || (typeof window !== "undefined" && window.scrollY > 40);
+    forceScrolled || (typeof window !== "undefined" && window.scrollY > 40);
   const [scrolled, setScrolled] = useState(computeScrolled);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
@@ -20,14 +17,15 @@ const Navbar = ({ forceScrolled = false, transparentOnTop = false }: { forceScro
   const { isAgent, loading: agentLoading } = useAgent();
 
   useEffect(() => {
-    // Reset immediately on route change so prior page's transparent state
-    // doesn't bleed into a new page that needs a solid navbar.
+    // Reset immediately on route change so the previous page's scrolled
+    // (solid) navbar doesn't bleed onto the new page before its scroll
+    // position settles back to the top.
     setScrolled(computeScrolled());
     const onScroll = () => setScrolled(computeScrolled());
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [forceScrolled, transparentOnTop, location.pathname]);
+  }, [forceScrolled, location.pathname]);
 
   const links = [
     { to: "/property-types", label: "Property Types" },

@@ -150,7 +150,7 @@ const Index = () => {
         path="/"
         jsonLd={HOME_FAQ_JSONLD}
       />
-      <Navbar transparentOnTop />
+      <Navbar />
       <HeroSection />
 
       {/* Featured Available Plots — emerges from background as you scroll in */}
