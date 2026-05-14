@@ -135,7 +135,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     </nav>
   );
 
-  return createPortal(navContent, document.body);
+  return navContent;
 };
 
 export default Navbar;
