@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/useAdmin";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { bayCemeteries } from "@/data/cemeteries";
 
 import singlePlotImg from "@/assets/property-types/single-plot.png";
@@ -332,6 +333,11 @@ const Properties2 = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
+      <Seo
+        title="Browse Texas Cemetery Plots & Cemeteries"
+        description="Search Texas cemetery plots and memorial parks by city, type and price. Discover below-market listings across Dallas, Houston, Austin and San Antonio."
+        path="/properties-2"
+      />
       <Navbar />
       <Properties2Browser />
       <Footer />

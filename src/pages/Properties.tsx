@@ -250,8 +250,8 @@ const Properties = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
-        title="Available Cemetery Plots for Sale in Texas | Browse Listings"
-        description="Browse discounted burial plots, niches, mausoleums and crypts for sale across Texas — Dallas, Fort Worth, Houston, Austin and San Antonio. Below-market resale plots."
+        title="Cemetery Plots for Sale in Texas | Browse Listings"
+        description="Browse discounted burial plots, niches, mausoleums and crypts across Texas — Dallas, Houston, Austin and San Antonio. Below-market resale."
         path="/properties"
         jsonLd={{
           "@context": "https://schema.org",
