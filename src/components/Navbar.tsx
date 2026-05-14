@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { useState, useLayoutEffect } from "react";
 import { Phone, Menu, X, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,12 +15,12 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { isAgent, loading: agentLoading } = useAgent();
 
-  useEffect(() => {
-    // Reset immediately on route change so the previous page's scrolled
-    // (solid) navbar doesn't bleed onto the new page before its scroll
-    // position settles back to the top.
-    setScrolled(computeScrolled());
+  useLayoutEffect(() => {
+    // Sync before paint so the light navbar background and dark text always
+    // change together, including after route transitions and fast scrolling.
+    setMenuOpen(false);
     const onScroll = () => setScrolled(computeScrolled());
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,11 +37,9 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const rolesLoading = authLoading || adminLoading || agentLoading;
   const dashboardLink = rolesLoading ? "/dashboard" : isAdmin ? "/admin" : isAgent ? "/agent" : "/dashboard";
 
-  if (typeof document === "undefined") return null;
-
   const navContent = (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,backdrop-filter,box-shadow,border-color] duration-300 ${
         scrolled
           ? "bg-background/95 backdrop-blur-lg shadow-soft border-b border-border"
           : "bg-transparent"
@@ -50,16 +47,16 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     >
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-baseline gap-2">
-          <span className={`font-display text-2xl transition-colors duration-500 ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
+          <span className={`font-display text-2xl ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
             Texas Cemetery
           </span>
-          <span className={`text-xs tracking-[0.2em] uppercase font-body hidden sm:inline transition-colors duration-500 ${scrolled ? "text-muted-foreground" : "text-primary-foreground/60"}`}>
+          <span className={`text-xs tracking-[0.2em] uppercase font-body hidden sm:inline ${scrolled ? "text-muted-foreground" : "text-primary-foreground/60"}`}>
             Brokers
           </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <a href="tel:+14242341678" className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-500 ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
+          <a href="tel:+14242341678" className={`inline-flex items-center gap-1.5 text-sm font-medium ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
             <Phone className="w-3.5 h-3.5" />
             (424) 234-1678
           </a>
@@ -67,7 +64,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
             <Link
               key={link.to}
               to={link.to}
-              className={`text-sm transition-colors duration-500 ${
+              className={`text-sm ${
                 location.pathname === link.to
                   ? scrolled ? "text-foreground font-medium" : "text-primary-foreground font-medium"
                   : scrolled ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
@@ -138,7 +135,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     </nav>
   );
 
-  return createPortal(navContent, document.body);
+  return navContent;
 };
 
 export default Navbar;
