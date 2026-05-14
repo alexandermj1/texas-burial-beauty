@@ -22,6 +22,23 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import partnersHeroBg from "@/assets/hero/cemetery-mountains.jpg";
+import lorenBayerPhoto from "@/assets/partners/loren-bayer.png";
+import simonJamesPhoto from "@/assets/partners/simon-james.png";
+
+const bayerTeam = [
+  {
+    name: "Loren Bayer",
+    title: "Founder, Bayer Cemetery Brokers",
+    photo: lorenBayerPhoto,
+    bio: "Loren founded Bayer Cemetery Brokers in 1998, pioneering a transparent resale model that has since helped more than 10,000 families navigate cemetery property transactions with honesty and care.",
+  },
+  {
+    name: "Simon James",
+    title: "CEO, Bayer Cemetery Brokers",
+    photo: simonJamesPhoto,
+    bio: "Simon leads Bayer Cemetery Brokers today, carrying forward 27 years of brokerage expertise while expanding the company's national reach — including the Texas Cemetery Brokers partnership.",
+  },
+];
 
 const BAYER_URL = "https://bayercemeterybrokers.com";
 
