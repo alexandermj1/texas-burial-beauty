@@ -466,7 +466,52 @@ const Partners = () => {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Bayer Leadership */}
+      <section className="py-20 md:py-24">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">The Bayer Leadership</span>
+            <h2 className="font-display text-3xl md:text-4xl text-foreground">The people behind 27 years of trust</h2>
+            <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+              Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {bayerTeam.map((member, i) => (
+              <motion.div
+                key={member.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-soft hover:shadow-hover transition-all"
+              >
+                <div className="aspect-[4/5] bg-muted overflow-hidden">
+                  <img
+                    src={member.photo}
+                    alt={member.name}
+                    className="w-full h-full object-cover object-top"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="font-display text-xl text-foreground">{member.name}</h3>
+                  <p className="text-sm text-primary font-medium mt-1">{member.title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mt-3">{member.bio}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 bg-gradient-sage">
         <div className="container mx-auto px-6 text-center max-w-2xl">
           <motion.div
