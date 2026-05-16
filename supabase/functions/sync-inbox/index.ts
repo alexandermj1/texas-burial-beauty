@@ -423,6 +423,23 @@ function parseBayerSellAPlot(subject: string, fromEmail: string, body: string): 
 
   // Collect every non-label line between this label and the next known label,
   // so multi-line answers (e.g. long "additional information") aren't truncated.
+  // Lines that look like form metadata appended by the website (URL of the page,
+  // browser user-agent, IP address). These are NOT customer content and must be
+  // stripped from every captured field.
+  const isJunkLine = (s: string): boolean => {
+    const t = s.trim();
+    if (!t) return true;
+    // URL
+    if (/^https?:\/\/\S+$/i.test(t)) return true;
+    // IPv4
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(t)) return true;
+    // IPv6 (loose)
+    if (/^[0-9a-f]{0,4}(:[0-9a-f]{0,4}){2,7}$/i.test(t)) return true;
+    // User-Agent strings
+    if (/Mozilla\/\d|AppleWebKit\/|Chrome\/|Safari\/|Firefox\/|Edge\/|Gecko\//i.test(t)) return true;
+    return false;
+  };
+
   const grab = (...labels: string[]): string | null => {
     for (const label of labels) {
       const target = label.toLowerCase();
@@ -431,6 +448,7 @@ function parseBayerSellAPlot(subject: string, fromEmail: string, body: string): 
           const collected: string[] = [];
           for (let j = i + 1; j < lines.length; j++) {
             if (isLabel(lines[j])) break;
+            if (isJunkLine(lines[j])) continue;
             collected.push(lines[j]);
           }
           if (collected.length) return collected.join("\n");
