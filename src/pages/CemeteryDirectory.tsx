@@ -193,50 +193,6 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Floating region scroll-spy — Apple-style vertical rail, only when viewing All */}
-      {region === "All" && grouped.length > 1 && (
-        <motion.aside
-          initial={{ opacity: 0, x: 12 }}
-          animate={{ opacity: activeRegion ? 1 : 0, x: activeRegion ? 0 : 12 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="hidden lg:flex fixed right-6 xl:right-10 top-1/2 -translate-y-1/2 z-20 pointer-events-auto"
-          aria-label="Region navigation"
-        >
-          <div className="flex flex-col gap-1 p-2 rounded-full bg-background/80 backdrop-blur-xl border border-border/70 shadow-[0_12px_40px_-12px_hsl(var(--foreground)/0.2)]">
-            {grouped.map(([r]) => {
-              const isActive = activeRegion === r;
-              return (
-                <button
-                  key={r}
-                  onClick={() => scrollToRegion(r)}
-                  className="group relative flex items-center justify-end gap-3 h-8 pr-2 pl-3"
-                  aria-label={`Jump to ${r}`}
-                  aria-current={isActive ? "true" : undefined}
-                >
-                  <span
-                    className={`text-[11px] font-medium tracking-tight whitespace-nowrap transition-all duration-300 ${
-                      isActive
-                        ? "text-foreground opacity-100 translate-x-0"
-                        : "text-muted-foreground opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0"
-                    }`}
-                  >
-                    {r}
-                  </span>
-                  <span
-                    className={`block rounded-full transition-all duration-300 ${
-                      isActive
-                        ? "w-2.5 h-2.5 bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]"
-                        : "w-1.5 h-1.5 bg-muted-foreground/40 group-hover:bg-foreground/70"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </motion.aside>
-      )}
-
-
       {/* Cards grid — soft muted bg for card contrast */}
       <section className="py-14 md:py-20 bg-muted/40">
         <div className="container mx-auto px-6">
@@ -247,7 +203,50 @@ const CemeteryDirectory = () => {
             </div>
           )}
 
-          {grouped.map(([groupRegion, list], gIdx) => {
+          <div className="lg:grid lg:grid-cols-[200px_1fr] lg:gap-12 xl:gap-16">
+            {/* Integrated side rail — quiet, editorial, sticky in column */}
+            {region === "All" && grouped.length > 1 && (
+              <aside className="hidden lg:block" aria-label="Region navigation">
+                <div className="sticky top-[148px]">
+                  <p className="font-display text-[10px] tracking-[0.28em] uppercase text-muted-foreground/80 mb-5 pl-4">
+                    Regions
+                  </p>
+                  <nav className="relative border-l border-border/70">
+                    {/* Active indicator line */}
+                    <motion.span
+                      aria-hidden="true"
+                      className="absolute left-[-1px] w-px bg-primary"
+                      animate={{
+                        top: `${grouped.findIndex(([r]) => r === activeRegion) * 38}px`,
+                        opacity: activeRegion ? 1 : 0,
+                      }}
+                      transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                      style={{ height: "38px" }}
+                    />
+                    {grouped.map(([r]) => {
+                      const isActive = activeRegion === r;
+                      return (
+                        <button
+                          key={r}
+                          onClick={() => scrollToRegion(r)}
+                          className={`group flex items-center w-full h-[38px] pl-4 pr-2 text-left text-[13px] tracking-tight transition-colors duration-200 ${
+                            isActive
+                              ? "text-foreground font-medium"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                          aria-current={isActive ? "true" : undefined}
+                        >
+                          <span className="truncate">{r}</span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+              </aside>
+            )}
+
+            <div className="min-w-0">
+
             return (
               <div
                 key={groupRegion}
