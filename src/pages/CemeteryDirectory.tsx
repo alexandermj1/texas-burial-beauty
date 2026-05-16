@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -38,6 +38,49 @@ const CemeteryDirectory = () => {
   }, [region, query]);
 
   const total = bayCemeteries.length;
+
+  // Scroll spy: track which region group is currently in view
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const [activeRegion, setActiveRegion] = useState<string>("");
+
+  useEffect(() => {
+    const els = Object.entries(sectionRefs.current).filter(([, el]) => el) as [string, HTMLDivElement][];
+    if (els.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) {
+          const name = (visible[0].target as HTMLElement).dataset.region!;
+          setActiveRegion(name);
+        }
+      },
+      { rootMargin: "-140px 0px -55% 0px", threshold: [0, 0.1, 0.5, 1] }
+    );
+    els.forEach(([, el]) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [grouped]);
+
+  // Auto-scroll the rail to keep active pill visible
+  useEffect(() => {
+    if (!activeRegion || !railRef.current) return;
+    const pill = railRef.current.querySelector<HTMLElement>(`[data-pill="${CSS.escape(activeRegion)}"]`);
+    if (pill) {
+      const rail = railRef.current;
+      const left = pill.offsetLeft - rail.clientWidth / 2 + pill.clientWidth / 2;
+      rail.scrollTo({ left, behavior: "smooth" });
+    }
+  }, [activeRegion]);
+
+  const scrollToRegion = (name: string) => {
+    const el = sectionRefs.current[name];
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 130;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  };
+
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -102,19 +145,19 @@ const CemeteryDirectory = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="flex items-center bg-background rounded-full border border-background/30 shadow-[0_24px_60px_-20px_hsl(var(--foreground)/0.6)] focus-within:shadow-[0_28px_70px_-20px_hsl(var(--primary)/0.5)] transition-shadow duration-300">
-                <Search className="w-5 h-5 text-muted-foreground ml-7 shrink-0" strokeWidth={2} />
+              <div className="flex items-center bg-background rounded-full border border-background/20 shadow-[0_20px_50px_-20px_hsl(var(--foreground)/0.55)] focus-within:shadow-[0_24px_60px_-20px_hsl(var(--primary)/0.45)] transition-shadow duration-300">
+                <Search className="w-[18px] h-[18px] text-muted-foreground ml-6 shrink-0" strokeWidth={2} />
                 <input
                   type="text"
                   placeholder="Search cemeteries, cities, or regions"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent px-5 py-5 md:py-6 text-foreground placeholder:text-muted-foreground/60 focus:outline-none text-base tracking-tight"
+                  className="flex-1 bg-transparent px-4 py-3.5 md:py-4 text-foreground placeholder:text-muted-foreground/55 focus:outline-none text-[15px] tracking-tight"
                 />
                 {query ? (
                   <button
                     onClick={() => setQuery("")}
-                    className="mr-2 w-10 h-10 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                    className="mr-1.5 w-9 h-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                     aria-label="Clear search"
                   >
                     <X className="w-4 h-4" />
@@ -122,44 +165,70 @@ const CemeteryDirectory = () => {
                 ) : (
                   <Link
                     to="/buy"
-                    className="hidden sm:inline-flex mr-2 items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                    className="hidden sm:inline-flex mr-1.5 items-center gap-1.5 px-4 py-2 rounded-full bg-foreground text-background text-[13px] font-medium hover:bg-foreground/85 transition-colors"
                   >
-                    Find a plot <ArrowRight className="w-4 h-4" />
+                    Find a plot <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 )}
               </div>
 
-              <div className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-6 px-5 py-2.5 rounded-full bg-foreground/30 backdrop-blur-md border border-background/15 text-background text-[11px] tracking-[0.2em] uppercase font-medium">
-                <span>Licensed Texas brokerage</span>
-                <span className="text-background/50">·</span>
-                <span>30–60% below retail</span>
-                <span className="text-background/50">·</span>
-                <a href="tel:+14242341678" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
-                  <Phone className="w-3.5 h-3.5" /> (424) 234-1678
+              {/* Apple-style ultra-minimal supporting line — no pill */}
+              <p className="mt-5 text-[12px] text-background/75 font-light tracking-wide">
+                Licensed Texas brokerage · 30–60% below retail ·{" "}
+                <a href="tel:+14242341678" className="text-background hover:text-primary transition-colors underline-offset-4 hover:underline">
+                  (424) 234-1678
                 </a>
-              </div>
+              </p>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Region filter strip — centered, sticky, integrated */}
-      <section className="sticky top-[68px] z-30 bg-background/95 backdrop-blur-xl border-y border-border/60">
-        <div className="container mx-auto px-6 py-3.5">
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            {regions.map((r) => (
-              <button
-                key={r}
-                onClick={() => setRegion(r)}
-                className={`px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
-                  region === r
-                    ? "bg-foreground text-background shadow-sm"
-                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
+      {/* Region scroll-spy rail — sticky, Apple-style segmented */}
+      <section className="sticky top-[68px] z-30 bg-background/85 backdrop-blur-xl border-b border-border/50">
+        <div className="container mx-auto px-3 md:px-6">
+          <div
+            ref={railRef}
+            className="flex items-center gap-1 overflow-x-auto no-scrollbar py-2.5 snap-x snap-mandatory"
+          >
+            <button
+              key="All"
+              data-pill="All"
+              onClick={() => {
+                setRegion("All");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className={`shrink-0 snap-start px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 ${
+                region === "All"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              All regions
+            </button>
+            {regions.filter(r => r !== "All").map((r) => {
+              const isActive = region === r || (region === "All" && activeRegion === r);
+              return (
+                <button
+                  key={r}
+                  data-pill={r}
+                  onClick={() => {
+                    if (region !== "All" && region !== r) setRegion(r);
+                    else scrollToRegion(r);
+                  }}
+                  className={`shrink-0 snap-start px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {isActive && region === "All" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  )}
+                  {r}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -176,7 +245,12 @@ const CemeteryDirectory = () => {
 
           {grouped.map(([groupRegion, list], gIdx) => {
             return (
-              <div key={groupRegion} className="mb-16 last:mb-0">
+              <div
+                key={groupRegion}
+                data-region={groupRegion}
+                ref={(el) => { sectionRefs.current[groupRegion] = el; }}
+                className="mb-16 last:mb-0 scroll-mt-32"
+              >
                 {/* Region header — quiet editorial band, matches card vocabulary */}
                 <div className="flex items-end justify-between gap-6 mb-6 pb-5 border-b border-border/70">
                   <div className="flex items-baseline gap-4">
@@ -207,6 +281,7 @@ const CemeteryDirectory = () => {
                     const refNum = String((h % 999) + 1).padStart(3, "0");
                     const slug = slugify(c.name);
 
+
                     return (
                       <motion.article
                         key={`${c.name}-${c.city}`}
@@ -214,7 +289,7 @@ const CemeteryDirectory = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-30px" }}
                         transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border border-border shadow-[0_4px_18px_-8px_hsl(var(--foreground)/0.12),0_1px_3px_-1px_hsl(var(--foreground)/0.08)] hover:shadow-[0_24px_50px_-18px_hsl(var(--primary)/0.32)] hover:-translate-y-1 hover:border-primary/40 transition-all duration-300"
+                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-border/80 shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18),0_2px_6px_-2px_hsl(var(--foreground)/0.1)] hover:shadow-[0_28px_56px_-18px_hsl(var(--primary)/0.38)] hover:-translate-y-1 hover:ring-primary/50 transition-all duration-300 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/40 before:to-transparent before:opacity-60 group-hover:before:opacity-100 after:absolute after:inset-0 after:rounded-2xl after:pointer-events-none after:bg-gradient-to-b after:from-foreground/[0.02] after:to-transparent"
                       >
                         {/* Top: editorial header with monogram backdrop */}
                         <Link
