@@ -145,7 +145,7 @@ const PageTransition = () => {
   const exitState = { opacity: 0 };
 
   return (
-    <div className="grid min-h-screen bg-background isolate overflow-hidden">
+    <div className="grid min-h-screen bg-background isolate overflow-x-hidden">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}
@@ -164,7 +164,7 @@ const PageTransition = () => {
           style={{
             willChange: "opacity",
           }}
-          className="col-start-1 row-start-1 overflow-hidden bg-background"
+          className="col-start-1 row-start-1 overflow-x-hidden bg-background"
         >
           {outlet}
         </motion.div>
