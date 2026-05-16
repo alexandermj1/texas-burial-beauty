@@ -67,84 +67,80 @@ const CemeteryDirectory = () => {
       />
       <Navbar />
 
-      {/* HERO — minimal, integrated, readable */}
-      <section className="relative min-h-[68vh] flex items-end overflow-hidden">
+      {/* HERO — centered, minimal, integrated with directory */}
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden">
         <motion.img
           src={heroBg}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
-          initial={{ scale: 1.06 }}
+          className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
+          initial={{ scale: 1.04 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.6, ease: "easeOut" }}
         />
-        {/* Single soft gradient — readable but quiet */}
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/55 via-foreground/35 to-background" />
-        {/* Bottom fade into page bg for seamless integration */}
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+        {/* Strong readability scrim, soft fade into the page */}
+        <div className="absolute inset-0 bg-foreground/55" />
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/30 to-background" />
 
-        <div className="relative container mx-auto px-6 pb-16 md:pb-20 pt-32">
+        <div className="relative container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="max-w-3xl"
+            className="max-w-4xl mx-auto text-center"
           >
-            <p className="text-[11px] tracking-[0.32em] uppercase text-background/75 font-medium mb-5">
+            <p className="text-[11px] tracking-[0.32em] uppercase text-background/85 font-medium mb-6">
               The Texas Directory · {total}+ cemeteries
             </p>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-background leading-[1.02] tracking-tight mb-5">
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-background leading-[1.05] tracking-tight mb-6">
               Every cemetery in Texas.
               <br />
-              <em className="italic font-light text-background/80">One trusted broker.</em>
+              <em className="italic font-light text-background/85">One trusted broker.</em>
             </h1>
-            <p className="text-background/85 text-base md:text-lg max-w-xl mb-8 leading-relaxed font-light">
+            <p className="text-background text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed font-light">
               Browse the cemeteries we serve, find available plots, or list the one you already own — handled end-to-end.
             </p>
 
+            {/* Big centered search bar */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="max-w-xl"
+              className="max-w-2xl mx-auto"
             >
-              <div className="group relative flex items-center bg-background/95 backdrop-blur-xl rounded-full border border-background/20 shadow-[0_16px_48px_-16px_hsl(var(--foreground)/0.5)] transition-all duration-300">
-                <Search className="w-[18px] h-[18px] text-muted-foreground ml-6 shrink-0" strokeWidth={2} />
+              <div className="flex items-center bg-background rounded-full border border-background/30 shadow-[0_24px_60px_-20px_hsl(var(--foreground)/0.6)] focus-within:shadow-[0_28px_70px_-20px_hsl(var(--primary)/0.5)] transition-shadow duration-300">
+                <Search className="w-5 h-5 text-muted-foreground ml-7 shrink-0" strokeWidth={2} />
                 <input
                   type="text"
                   placeholder="Search cemeteries, cities, or regions"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent px-4 py-[16px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none text-[15px] tracking-tight"
+                  className="flex-1 bg-transparent px-5 py-5 md:py-6 text-foreground placeholder:text-muted-foreground/60 focus:outline-none text-base tracking-tight"
                 />
-                {query && (
+                {query ? (
                   <button
                     onClick={() => setQuery("")}
-                    className="mr-2 w-9 h-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                    className="mr-2 w-10 h-10 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                     aria-label="Clear search"
                   >
                     <X className="w-4 h-4" />
                   </button>
+                ) : (
+                  <Link
+                    to="/buy"
+                    className="hidden sm:inline-flex mr-2 items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Find a plot <ArrowRight className="w-4 h-4" />
+                  </Link>
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2.5 mt-5">
-                <Link
-                  to="/buy"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Find a plot <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/sell"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-background/10 backdrop-blur-md border border-background/30 text-background text-sm font-medium hover:bg-background/20 transition-colors"
-                >
-                  Sell my plot
-                </Link>
-                <a
-                  href="tel:+14242341678"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-background/80 text-sm font-medium hover:text-background transition-colors"
-                >
-                  <Phone className="w-4 h-4" /> (424) 234-1678
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-6 text-background/85 text-xs tracking-[0.18em] uppercase font-medium">
+                <span>Licensed Texas brokerage</span>
+                <span className="opacity-40">·</span>
+                <span>30–60% below retail</span>
+                <span className="opacity-40">·</span>
+                <a href="tel:+14242341678" className="inline-flex items-center gap-1.5 hover:text-background transition-colors">
+                  <Phone className="w-3.5 h-3.5" /> (424) 234-1678
                 </a>
               </div>
             </motion.div>
@@ -152,18 +148,15 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Region filter strip — sticky, dark refined */}
-      <section className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/60">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <span className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground font-medium shrink-0 mr-2">
-              Region
-            </span>
+      {/* Region filter strip — centered, sticky, integrated */}
+      <section className="sticky top-[68px] z-30 bg-background/95 backdrop-blur-xl border-y border-border/60">
+        <div className="container mx-auto px-6 py-3.5">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             {regions.map((r) => (
               <button
                 key={r}
                 onClick={() => setRegion(r)}
-                className={`shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+                className={`px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
                   region === r
                     ? "bg-foreground text-background shadow-sm"
                     : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
