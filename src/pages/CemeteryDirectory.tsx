@@ -276,7 +276,6 @@ const CemeteryDirectory = () => {
             <div ref={listRef} className="min-w-0">
               {grouped.map(([groupRegion, list], gIdx) => {
                 return (
-                return (
               <div
                 key={groupRegion}
                 data-region={groupRegion}
