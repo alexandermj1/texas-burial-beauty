@@ -205,14 +205,9 @@ const CemeteryDirectory = () => {
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {list.map((c, i) => {
-                    // Deterministic hash: decides which cards show a hero image vs text-only
                     let h = 0;
                     for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
-                    // Roughly 1 in 3 cards gets a full hero photo; rest are clean text-forward cards
-                    const showPhoto = h % 3 === 0;
-                    const cemImg = showPhoto ? getCemeteryImage(c.name) : null;
 
-                    // Suggest the breadth of inventory rather than a single plot type
                     const offeringSets: string[][] = [
                       ["Plots", "Niches", "Mausoleums"],
                       ["Plots", "Companion", "Cremation"],
@@ -220,97 +215,90 @@ const CemeteryDirectory = () => {
                       ["Plots", "Niches", "Veteran"],
                     ];
                     const offerings = offeringSets[h % offeringSets.length];
+                    const refNum = String((h % 999) + 1).padStart(3, "0");
+                    const slug = slugify(c.name);
 
                     return (
-                      <motion.div
+                      <motion.article
                         key={`${c.name}-${c.city}`}
                         initial={{ opacity: 0, y: 16 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-30px" }}
                         transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
+                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 shadow-[0_1px_2px_-1px_hsl(var(--foreground)/0.05)] hover:shadow-[0_22px_50px_-18px_hsl(var(--primary)/0.28)] hover:-translate-y-1 hover:border-primary/40 transition-all duration-300"
                       >
+                        {/* Top: editorial header with monogram backdrop */}
                         <Link
-                          to={`/cemeteries/${slugify(c.name)}`}
-                          className="group relative flex flex-col h-full bg-card rounded-2xl overflow-hidden border border-border/60 shadow-[0_1px_2px_-1px_hsl(var(--foreground)/0.06)] hover:shadow-[0_18px_44px_-16px_hsl(var(--primary)/0.22)] hover:-translate-y-1 hover:border-primary/30 transition-all duration-300"
+                          to={`/cemeteries/${slug}`}
+                          className="relative block px-6 pt-6 pb-5 bg-gradient-to-br from-secondary/40 via-card to-card overflow-hidden"
                         >
-                          {showPhoto && cemImg ? (
-                            <div className="h-48 overflow-hidden relative">
-                              <img
-                                src={cemImg}
-                                alt={`${c.name} grounds`}
-                                className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
-                                loading="lazy"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/20 to-transparent" />
-                              <div className="absolute top-3.5 left-3.5">
-                                <span className="text-[10px] tracking-[0.18em] uppercase px-2.5 py-1 rounded-full bg-background/95 backdrop-blur-sm text-foreground font-medium">
-                                  {c.region}
-                                </span>
-                              </div>
-                              <div className="absolute bottom-3.5 left-4 right-4">
-                                <h3 className="font-display text-xl text-background leading-tight tracking-tight drop-shadow-md line-clamp-2">
-                                  {c.name}
-                                </h3>
-                                <p className="text-background/85 text-xs flex items-center gap-1 mt-1 drop-shadow">
-                                  <MapPin className="w-3 h-3" /> {c.city}, TX
-                                </p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="relative px-6 pt-7 pb-5 border-b border-border/50 bg-gradient-to-br from-secondary/30 via-card to-card overflow-hidden">
-                              {/* Decorative monogram letter */}
-                              <span
-                                aria-hidden="true"
-                                className="absolute -top-4 right-2 font-display text-[120px] leading-none text-primary/[0.06] select-none pointer-events-none"
-                              >
-                                {c.name.charAt(0)}
-                              </span>
-                              <div className="relative">
-                                <div className="flex items-center justify-between mb-4">
-                                  <span className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground font-medium">
-                                    {c.region}
-                                  </span>
-                                  <span className="inline-flex items-center gap-1 text-[10px] tracking-[0.14em] uppercase text-primary font-medium">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Active
-                                  </span>
-                                </div>
-                                <h3 className="font-display text-2xl text-foreground leading-[1.1] tracking-tight mb-2 line-clamp-2">
-                                  {c.name}
-                                </h3>
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <MapPin className="w-3.5 h-3.5 shrink-0" /> {c.city}, TX
-                                </p>
-                              </div>
-                            </div>
-                          )}
+                          <span
+                            aria-hidden="true"
+                            className="absolute -top-6 -right-2 font-display text-[150px] leading-none text-primary/[0.07] select-none pointer-events-none tracking-tighter"
+                          >
+                            {c.name.charAt(0)}
+                          </span>
 
-                          <div className="flex flex-col flex-1 p-5">
-                            <p className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground/80 font-medium mb-2.5">
-                              Available inventory
+                          <div className="relative">
+                            <div className="flex items-center justify-between mb-5">
+                              <span className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground font-medium">
+                                {c.region}
+                              </span>
+                              <span className="font-display text-[11px] text-muted-foreground/70 tabular-nums tracking-wider">
+                                №&nbsp;{refNum}
+                              </span>
+                            </div>
+
+                            <h3 className="font-display text-[22px] leading-[1.15] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                              {c.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
+                              {c.city}, TX
                             </p>
-                            <div className="flex flex-wrap gap-1.5 mb-5">
-                              {offerings.map((o) => (
-                                <span
-                                  key={o}
-                                  className="text-[11px] px-2.5 py-1 rounded-full bg-muted/70 text-foreground/80 font-medium"
-                                >
-                                  {o}
-                                </span>
-                              ))}
-                            </div>
-
-                            <div className="mt-auto flex items-center justify-between pt-4 border-t border-border/50">
-                              <div className="flex gap-1.5">
-                                <span className="text-[10px] tracking-wider uppercase px-2.5 py-1 rounded-full bg-foreground text-background font-medium">Buy</span>
-                                <span className="text-[10px] tracking-wider uppercase px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-medium">Sell</span>
-                              </div>
-                              <span className="inline-flex items-center gap-1.5 text-primary font-medium text-sm group-hover:gap-2.5 transition-all">
-                                View <ArrowRight className="w-3.5 h-3.5" />
-                              </span>
-                            </div>
                           </div>
                         </Link>
-                      </motion.div>
+
+                        {/* Middle: inventory + status */}
+                        <div className="px-6 pt-4 pb-5 flex-1 flex flex-col">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-medium">
+                              Inventory
+                            </p>
+                            <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase text-primary font-medium">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Active
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {offerings.map((o) => (
+                              <span
+                                key={o}
+                                className="text-[11px] px-2.5 py-1 rounded-full bg-muted text-foreground/75 font-medium"
+                              >
+                                {o}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Footer: integrated Buy / Sell split */}
+                        <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
+                          <Link
+                            to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
+                            className="group/buy flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-foreground hover:bg-foreground hover:text-background transition-colors"
+                          >
+                            Buy here
+                            <ArrowRight className="w-3.5 h-3.5 opacity-0 -ml-1 group-hover/buy:opacity-100 group-hover/buy:ml-0 transition-all" />
+                          </Link>
+                          <Link
+                            to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
+                            className="group/sell flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                          >
+                            Sell mine
+                            <ArrowRight className="w-3.5 h-3.5 opacity-0 -ml-1 group-hover/sell:opacity-100 group-hover/sell:ml-0 transition-all" />
+                          </Link>
+                        </div>
+                      </motion.article>
                     );
                   })}
                 </div>
