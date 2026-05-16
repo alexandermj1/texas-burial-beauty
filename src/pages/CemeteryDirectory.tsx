@@ -289,7 +289,7 @@ const CemeteryDirectory = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-30px" }}
                         transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border border-border shadow-[0_4px_18px_-8px_hsl(var(--foreground)/0.12),0_1px_3px_-1px_hsl(var(--foreground)/0.08)] hover:shadow-[0_24px_50px_-18px_hsl(var(--primary)/0.32)] hover:-translate-y-1 hover:border-primary/40 transition-all duration-300"
+                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-border/80 shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18),0_2px_6px_-2px_hsl(var(--foreground)/0.1)] hover:shadow-[0_28px_56px_-18px_hsl(var(--primary)/0.38)] hover:-translate-y-1 hover:ring-primary/50 transition-all duration-300 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/40 before:to-transparent before:opacity-60 group-hover:before:opacity-100 after:absolute after:inset-0 after:rounded-2xl after:pointer-events-none after:bg-gradient-to-b after:from-foreground/[0.02] after:to-transparent"
                       >
                         {/* Top: editorial header with monogram backdrop */}
                         <Link
