@@ -146,7 +146,7 @@ const PageTransition = () => {
 
   return (
     <div className="grid min-h-screen bg-background isolate overflow-hidden">
-      <AnimatePresence mode="sync" initial={false}>
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}
           initial={initialState}

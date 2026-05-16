@@ -9,12 +9,7 @@ import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
-import imgPalms from "@/assets/hero/cemetery-palms.jpg";
-import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
-import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
-
-const ambientImages = [imgMountains, imgHillside, imgPalms, imgCathedral];
 
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
@@ -134,12 +129,12 @@ const CemeteryDirectory = () => {
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-6 text-background/85 text-xs tracking-[0.18em] uppercase font-medium">
+              <div className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-6 px-5 py-2.5 rounded-full bg-foreground/30 backdrop-blur-md border border-background/15 text-background text-[11px] tracking-[0.2em] uppercase font-medium">
                 <span>Licensed Texas brokerage</span>
-                <span className="opacity-40">·</span>
+                <span className="text-background/50">·</span>
                 <span>30–60% below retail</span>
-                <span className="opacity-40">·</span>
-                <a href="tel:+14242341678" className="inline-flex items-center gap-1.5 hover:text-background transition-colors">
+                <span className="text-background/50">·</span>
+                <a href="tel:+14242341678" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
                   <Phone className="w-3.5 h-3.5" /> (424) 234-1678
                 </a>
               </div>
@@ -169,8 +164,8 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Cards grid — editorial with integrated tone */}
-      <section className="py-14 md:py-20">
+      {/* Cards grid — soft muted bg for card contrast */}
+      <section className="py-14 md:py-20 bg-muted/40">
         <div className="container mx-auto px-6">
           {grouped.length === 0 && (
             <div className="text-center py-24">
@@ -180,27 +175,21 @@ const CemeteryDirectory = () => {
           )}
 
           {grouped.map(([groupRegion, list], gIdx) => {
-            // ambient image rotates per region for editorial variety
-            const ambient = ambientImages[gIdx % ambientImages.length];
             return (
-              <div key={groupRegion} className="mb-20 last:mb-0">
-                {/* Region header — editorial band with integrated photo */}
-                <div className="relative mb-8 rounded-3xl overflow-hidden border border-border/60">
-                  <img src={ambient} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/60 to-foreground/30" />
-                  <div className="relative px-7 py-8 md:px-10 md:py-10 flex items-end justify-between gap-6">
-                    <div>
-                      <p className="text-[10px] tracking-[0.28em] uppercase text-background/75 font-medium mb-2">
-                        Region · {String(gIdx + 1).padStart(2, "0")}
-                      </p>
-                      <h2 className="font-display text-3xl md:text-5xl text-background tracking-tight leading-none">
-                        {groupRegion}
-                      </h2>
-                    </div>
-                    <span className="font-display text-background/85 text-sm md:text-base tabular-nums shrink-0">
-                      {list.length.toString().padStart(2, "0")} {list.length === 1 ? "cemetery" : "cemeteries"}
+              <div key={groupRegion} className="mb-16 last:mb-0">
+                {/* Region header — quiet editorial band, matches card vocabulary */}
+                <div className="flex items-end justify-between gap-6 mb-6 pb-5 border-b border-border/70">
+                  <div className="flex items-baseline gap-4">
+                    <span className="font-display text-xs text-primary tabular-nums tracking-[0.2em] uppercase">
+                      №&nbsp;{String(gIdx + 1).padStart(2, "0")}
                     </span>
+                    <h2 className="font-display text-2xl md:text-4xl text-foreground tracking-tight leading-none">
+                      {groupRegion}
+                    </h2>
                   </div>
+                  <span className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground font-medium tabular-nums shrink-0 pb-1">
+                    {list.length.toString().padStart(2, "0")} {list.length === 1 ? "cemetery" : "cemeteries"}
+                  </span>
                 </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -225,7 +214,7 @@ const CemeteryDirectory = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-30px" }}
                         transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 shadow-[0_1px_2px_-1px_hsl(var(--foreground)/0.05)] hover:shadow-[0_22px_50px_-18px_hsl(var(--primary)/0.28)] hover:-translate-y-1 hover:border-primary/40 transition-all duration-300"
+                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border border-border shadow-[0_4px_18px_-8px_hsl(var(--foreground)/0.12),0_1px_3px_-1px_hsl(var(--foreground)/0.08)] hover:shadow-[0_24px_50px_-18px_hsl(var(--primary)/0.32)] hover:-translate-y-1 hover:border-primary/40 transition-all duration-300"
                       >
                         {/* Top: editorial header with monogram backdrop */}
                         <Link
