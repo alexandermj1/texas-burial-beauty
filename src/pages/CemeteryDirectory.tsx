@@ -134,12 +134,12 @@ const CemeteryDirectory = () => {
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-6 text-background/85 text-xs tracking-[0.18em] uppercase font-medium">
+              <div className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-6 px-5 py-2.5 rounded-full bg-foreground/30 backdrop-blur-md border border-background/15 text-background text-[11px] tracking-[0.2em] uppercase font-medium">
                 <span>Licensed Texas brokerage</span>
-                <span className="opacity-40">·</span>
+                <span className="text-background/50">·</span>
                 <span>30–60% below retail</span>
-                <span className="opacity-40">·</span>
-                <a href="tel:+14242341678" className="inline-flex items-center gap-1.5 hover:text-background transition-colors">
+                <span className="text-background/50">·</span>
+                <a href="tel:+14242341678" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
                   <Phone className="w-3.5 h-3.5" /> (424) 234-1678
                 </a>
               </div>
