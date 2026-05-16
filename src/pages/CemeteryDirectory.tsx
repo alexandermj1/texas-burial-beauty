@@ -197,26 +197,63 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Region filter strip — centered, sticky to top of page */}
-      <section className="sticky top-[68px] z-30 bg-background/95 backdrop-blur-xl border-y border-border/60">
-        <div className="container mx-auto px-6 py-3.5">
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            {regions.map((r) => (
-              <button
-                key={r}
-                onClick={() => setRegion(r)}
-                className={`px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
-                  region === r
-                    ? "bg-foreground text-background shadow-sm"
-                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
+      {/* Region filter strip — sticky, doubles as scroll-spy with progress line */}
+      <section className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-y border-border/60">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+            {regions.map((r) => {
+              const isFiltered = region === r;
+              const isCurrent = region === "All" && r !== "All" && activeRegion === r;
+              const highlighted = isFiltered || isCurrent;
+              return (
+                <button
+                  key={r}
+                  onClick={() => {
+                    if (r === "All") {
+                      setRegion("All");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    } else if (region === "All") {
+                      scrollToRegion(r);
+                    } else {
+                      setRegion(r);
+                    }
+                  }}
+                  className={`relative px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
+                    highlighted
+                      ? "bg-foreground text-background shadow-sm"
+                      : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                  aria-current={isCurrent ? "true" : undefined}
+                >
+                  {isCurrent && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  )}
+                  {r}
+                </button>
+              );
+            })}
           </div>
         </div>
+        {/* Scroll progress underline */}
+        <div className="absolute left-0 bottom-0 h-px w-full bg-transparent">
+          <div
+            className="h-px bg-primary transition-[width] duration-150 ease-out"
+            style={{ width: `${progress * 100}%` }}
+          />
+        </div>
       </section>
+
+      {/* Cards grid — soft muted bg for card contrast */}
+      <section className="py-14 md:py-20 bg-muted/40">
+        <div className="container mx-auto px-6">
+          {grouped.length === 0 && (
+            <div className="text-center py-24">
+              <p className="font-display text-2xl text-foreground mb-2">No cemeteries match</p>
+              <p className="text-sm text-muted-foreground">Try a different search or region.</p>
+            </div>
+          )}
+
+          <div ref={listRef}>
 
       {/* Cards grid — soft muted bg for card contrast */}
       <section className="py-14 md:py-20 bg-muted/40">
