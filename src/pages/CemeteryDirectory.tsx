@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
-import { getCemeteryImage } from "@/lib/listingImages";
+
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgPalms from "@/assets/hero/cemetery-palms.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
