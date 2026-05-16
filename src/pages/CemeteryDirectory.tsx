@@ -9,12 +9,7 @@ import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
-import imgPalms from "@/assets/hero/cemetery-palms.jpg";
-import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
-import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
-
-const ambientImages = [imgMountains, imgHillside, imgPalms, imgCathedral];
 
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
