@@ -421,13 +421,19 @@ function parseBayerSellAPlot(subject: string, fromEmail: string, body: string): 
   ];
   const isLabel = (s: string) => KNOWN_LABELS.some((l) => l.toLowerCase() === s.toLowerCase().replace(/\s+/g, " ").trim());
 
+  // Collect every non-label line between this label and the next known label,
+  // so multi-line answers (e.g. long "additional information") aren't truncated.
   const grab = (...labels: string[]): string | null => {
     for (const label of labels) {
       const target = label.toLowerCase();
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].toLowerCase() === target) {
-          const next = lines[i + 1];
-          if (next && !isLabel(next)) return next;
+          const collected: string[] = [];
+          for (let j = i + 1; j < lines.length; j++) {
+            if (isLabel(lines[j])) break;
+            collected.push(lines[j]);
+          }
+          if (collected.length) return collected.join("\n");
         }
       }
     }
