@@ -69,6 +69,31 @@ const CemeteryDirectory = () => {
     window.scrollTo({ top: y, behavior: "smooth" });
   };
 
+  // Smooth scroll progress through the regions list (0 → 1)
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const el = listRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewportAnchor = window.innerHeight * 0.35;
+      const traveled = viewportAnchor - rect.top;
+      const total = Math.max(rect.height - viewportAnchor, 1);
+      const p = Math.min(1, Math.max(0, traveled / total));
+      setProgress(p);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [grouped]);
+
+
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -211,17 +236,20 @@ const CemeteryDirectory = () => {
                   <p className="font-display text-[10px] tracking-[0.28em] uppercase text-muted-foreground/80 mb-5 pl-4">
                     Regions
                   </p>
-                  <nav className="relative border-l border-border/70">
-                    {/* Active indicator line */}
-                    <motion.span
+                  <nav className="relative">
+                    {/* Track */}
+                    <span aria-hidden="true" className="absolute left-0 top-1 bottom-1 w-px bg-border/70" />
+                    {/* Progress fill — grows downward as you scroll */}
+                    <span
                       aria-hidden="true"
-                      className="absolute left-[-1px] w-px bg-primary"
-                      animate={{
-                        top: `${grouped.findIndex(([r]) => r === activeRegion) * 38}px`,
-                        opacity: activeRegion ? 1 : 0,
-                      }}
-                      transition={{ type: "spring", stiffness: 260, damping: 30 }}
-                      style={{ height: "38px" }}
+                      className="absolute left-0 top-1 w-px bg-foreground/80 origin-top transition-[height] duration-150 ease-out"
+                      style={{ height: `calc(${progress * 100}% - 8px)` }}
+                    />
+                    {/* Traveling dot at scroll head */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-[-3px] w-[7px] h-[7px] rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-[top] duration-150 ease-out"
+                      style={{ top: `calc(${progress * 100}% - 3px)` }}
                     />
                     {grouped.map(([r]) => {
                       const isActive = activeRegion === r;
@@ -245,7 +273,7 @@ const CemeteryDirectory = () => {
               </aside>
             )}
 
-            <div className="min-w-0">
+            <div ref={listRef} className="min-w-0">
               {grouped.map(([groupRegion, list], gIdx) => {
                 return (
               <div
