@@ -254,63 +254,7 @@ const CemeteryDirectory = () => {
           )}
 
           <div ref={listRef}>
-
-      {/* Cards grid — soft muted bg for card contrast */}
-      <section className="py-14 md:py-20 bg-muted/40">
-        <div className="container mx-auto px-6">
-          {grouped.length === 0 && (
-            <div className="text-center py-24">
-              <p className="font-display text-2xl text-foreground mb-2">No cemeteries match</p>
-              <p className="text-sm text-muted-foreground">Try a different search or region.</p>
-            </div>
-          )}
-
-          <div className="lg:grid lg:grid-cols-[200px_1fr] lg:gap-12 xl:gap-16">
-            {/* Integrated side rail — quiet, editorial, sticky in column */}
-            {region === "All" && grouped.length > 1 && (
-              <aside className="hidden lg:block" aria-label="Region navigation">
-                <div className="sticky top-[148px]">
-                  <p className="font-display text-[10px] tracking-[0.28em] uppercase text-muted-foreground/80 mb-5 pl-4">
-                    Regions
-                  </p>
-                  <nav className="relative">
-                    {/* Track */}
-                    <span aria-hidden="true" className="absolute left-0 top-1 bottom-1 w-px bg-border/70" />
-                    {/* Progress fill — grows downward as you scroll */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-0 top-1 w-px bg-foreground/80 origin-top transition-[height] duration-150 ease-out"
-                      style={{ height: `calc(${progress * 100}% - 8px)` }}
-                    />
-                    {/* Traveling dot at scroll head */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-[-3px] w-[7px] h-[7px] rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-[top] duration-150 ease-out"
-                      style={{ top: `calc(${progress * 100}% - 3px)` }}
-                    />
-                    {grouped.map(([r]) => {
-                      const isActive = activeRegion === r;
-                      return (
-                        <button
-                          key={r}
-                          onClick={() => scrollToRegion(r)}
-                          className={`group flex items-center w-full h-[38px] pl-4 pr-2 text-left text-[13px] tracking-tight transition-colors duration-200 ${
-                            isActive
-                              ? "text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                          aria-current={isActive ? "true" : undefined}
-                        >
-                          <span className="truncate">{r}</span>
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </div>
-              </aside>
-            )}
-
-            <div ref={listRef} className="min-w-0">
+            <div className="min-w-0">
               {grouped.map(([groupRegion, list], gIdx) => {
                 return (
               <div
