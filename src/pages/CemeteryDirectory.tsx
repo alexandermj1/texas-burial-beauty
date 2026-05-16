@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
