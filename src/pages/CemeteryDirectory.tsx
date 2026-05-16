@@ -197,31 +197,10 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Sticky directory controls — search + region scroll-spy */}
-      <section className="sticky top-[68px] z-40 bg-background/95 backdrop-blur-2xl border-y border-border/70 shadow-[0_18px_45px_-32px_hsl(var(--foreground)/0.45)]">
+      {/* Region filter strip — sticky, doubles as scroll-spy with progress line */}
+      <section className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-y border-border/60">
         <div className="container mx-auto px-6 py-3">
-          <div className="mx-auto max-w-6xl flex flex-col lg:flex-row lg:items-center gap-3">
-            <div className="flex items-center min-w-0 lg:w-[320px] bg-card/90 rounded-full border border-border/80 ring-1 ring-background shadow-[0_6px_22px_-16px_hsl(var(--foreground)/0.35)] focus-within:border-primary/50 focus-within:shadow-[0_12px_32px_-18px_hsl(var(--primary)/0.45)] transition-all duration-300">
-              <Search className="w-4 h-4 text-muted-foreground ml-4 shrink-0" strokeWidth={2} />
-              <input
-                type="text"
-                placeholder="Search cemeteries or cities"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent px-3 py-2 text-foreground placeholder:text-muted-foreground/60 focus:outline-none text-[13px] tracking-tight"
-              />
-              {query && (
-                <button
-                  onClick={() => setQuery("")}
-                  className="mr-1 w-7 h-7 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-                  aria-label="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center justify-start lg:justify-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:flex-1">
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
             {regions.map((r) => {
               const isFiltered = region === r;
               const isCurrent = region === "All" && r !== "All" && activeRegion === r;
@@ -239,7 +218,7 @@ const CemeteryDirectory = () => {
                       setRegion(r);
                     }
                   }}
-                  className={`relative shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
+                  className={`relative px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
                     highlighted
                       ? "bg-foreground text-background shadow-sm"
                       : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -253,7 +232,6 @@ const CemeteryDirectory = () => {
                 </button>
               );
             })}
-            </div>
           </div>
         </div>
         {/* Scroll progress underline */}
