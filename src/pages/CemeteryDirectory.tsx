@@ -197,24 +197,49 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Region filter strip — centered, sticky to top of page */}
-      <section className="sticky top-[68px] z-30 bg-background/95 backdrop-blur-xl border-y border-border/60">
-        <div className="container mx-auto px-6 py-3.5">
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            {regions.map((r) => (
-              <button
-                key={r}
-                onClick={() => setRegion(r)}
-                className={`px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
-                  region === r
-                    ? "bg-foreground text-background shadow-sm"
-                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
+      {/* Region filter strip — sticky, doubles as scroll-spy with progress line */}
+      <section className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-y border-border/60">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+            {regions.map((r) => {
+              const isFiltered = region === r;
+              const isCurrent = region === "All" && r !== "All" && activeRegion === r;
+              const highlighted = isFiltered || isCurrent;
+              return (
+                <button
+                  key={r}
+                  onClick={() => {
+                    if (r === "All") {
+                      setRegion("All");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    } else if (region === "All") {
+                      scrollToRegion(r);
+                    } else {
+                      setRegion(r);
+                    }
+                  }}
+                  className={`relative px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
+                    highlighted
+                      ? "bg-foreground text-background shadow-sm"
+                      : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                  aria-current={isCurrent ? "true" : undefined}
+                >
+                  {isCurrent && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  )}
+                  {r}
+                </button>
+              );
+            })}
           </div>
+        </div>
+        {/* Scroll progress underline */}
+        <div className="absolute left-0 bottom-0 h-px w-full bg-transparent">
+          <div
+            className="h-px bg-primary transition-[width] duration-150 ease-out"
+            style={{ width: `${progress * 100}%` }}
+          />
         </div>
       </section>
 
@@ -228,52 +253,8 @@ const CemeteryDirectory = () => {
             </div>
           )}
 
-          <div className="lg:grid lg:grid-cols-[200px_1fr] lg:gap-12 xl:gap-16">
-            {/* Integrated side rail — quiet, editorial, sticky in column */}
-            {region === "All" && grouped.length > 1 && (
-              <aside className="hidden lg:block" aria-label="Region navigation">
-                <div className="sticky top-[148px]">
-                  <p className="font-display text-[10px] tracking-[0.28em] uppercase text-muted-foreground/80 mb-5 pl-4">
-                    Regions
-                  </p>
-                  <nav className="relative">
-                    {/* Track */}
-                    <span aria-hidden="true" className="absolute left-0 top-1 bottom-1 w-px bg-border/70" />
-                    {/* Progress fill — grows downward as you scroll */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-0 top-1 w-px bg-foreground/80 origin-top transition-[height] duration-150 ease-out"
-                      style={{ height: `calc(${progress * 100}% - 8px)` }}
-                    />
-                    {/* Traveling dot at scroll head */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-[-3px] w-[7px] h-[7px] rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-[top] duration-150 ease-out"
-                      style={{ top: `calc(${progress * 100}% - 3px)` }}
-                    />
-                    {grouped.map(([r]) => {
-                      const isActive = activeRegion === r;
-                      return (
-                        <button
-                          key={r}
-                          onClick={() => scrollToRegion(r)}
-                          className={`group flex items-center w-full h-[38px] pl-4 pr-2 text-left text-[13px] tracking-tight transition-colors duration-200 ${
-                            isActive
-                              ? "text-foreground font-medium"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                          aria-current={isActive ? "true" : undefined}
-                        >
-                          <span className="truncate">{r}</span>
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </div>
-              </aside>
-            )}
-
-            <div ref={listRef} className="min-w-0">
+          <div ref={listRef}>
+            <div className="min-w-0">
               {grouped.map(([groupRegion, list], gIdx) => {
                 return (
               <div
