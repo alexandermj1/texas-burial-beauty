@@ -39,6 +39,49 @@ const CemeteryDirectory = () => {
 
   const total = bayCemeteries.length;
 
+  // Scroll spy: track which region group is currently in view
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const [activeRegion, setActiveRegion] = useState<string>("");
+
+  useEffect(() => {
+    const els = Object.entries(sectionRefs.current).filter(([, el]) => el) as [string, HTMLDivElement][];
+    if (els.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) {
+          const name = (visible[0].target as HTMLElement).dataset.region!;
+          setActiveRegion(name);
+        }
+      },
+      { rootMargin: "-140px 0px -55% 0px", threshold: [0, 0.1, 0.5, 1] }
+    );
+    els.forEach(([, el]) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [grouped]);
+
+  // Auto-scroll the rail to keep active pill visible
+  useEffect(() => {
+    if (!activeRegion || !railRef.current) return;
+    const pill = railRef.current.querySelector<HTMLElement>(`[data-pill="${CSS.escape(activeRegion)}"]`);
+    if (pill) {
+      const rail = railRef.current;
+      const left = pill.offsetLeft - rail.clientWidth / 2 + pill.clientWidth / 2;
+      rail.scrollTo({ left, behavior: "smooth" });
+    }
+  }, [activeRegion]);
+
+  const scrollToRegion = (name: string) => {
+    const el = sectionRefs.current[name];
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 130;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  };
+
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
