@@ -41,7 +41,6 @@ const CemeteryDirectory = () => {
 
   // Scroll spy: track which region group is currently in view
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const railRef = useRef<HTMLDivElement | null>(null);
   const [activeRegion, setActiveRegion] = useState<string>("");
 
   useEffect(() => {
@@ -62,17 +61,6 @@ const CemeteryDirectory = () => {
     els.forEach(([, el]) => observer.observe(el));
     return () => observer.disconnect();
   }, [grouped]);
-
-  // Auto-scroll the rail to keep active pill visible
-  useEffect(() => {
-    if (!activeRegion || !railRef.current) return;
-    const pill = railRef.current.querySelector<HTMLElement>(`[data-pill="${CSS.escape(activeRegion)}"]`);
-    if (pill) {
-      const rail = railRef.current;
-      const left = pill.offsetLeft - rail.clientWidth / 2 + pill.clientWidth / 2;
-      rail.scrollTo({ left, behavior: "smooth" });
-    }
-  }, [activeRegion]);
 
   const scrollToRegion = (name: string) => {
     const el = sectionRefs.current[name];
