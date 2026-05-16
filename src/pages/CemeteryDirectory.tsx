@@ -67,61 +67,54 @@ const CemeteryDirectory = () => {
       />
       <Navbar />
 
-      {/* HERO — cinematic full-bleed editorial */}
-      <section className="relative min-h-[88vh] flex items-end overflow-hidden">
-        {/* Integrated background photo */}
+      {/* HERO — minimal, integrated, readable */}
+      <section className="relative min-h-[68vh] flex items-end overflow-hidden">
         <motion.img
           src={heroBg}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          initial={{ scale: 1.08 }}
+          className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
+          initial={{ scale: 1.06 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.6, ease: "easeOut" }}
         />
-        {/* Layered gradients for depth (Vogue/editorial feel) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/30 to-foreground/85" />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 via-transparent to-foreground/40" />
-        {/* Subtle vignette + grain */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,hsl(var(--foreground)/0.6)_100%)]" />
+        {/* Single soft gradient — readable but quiet */}
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/55 via-foreground/35 to-background" />
+        {/* Bottom fade into page bg for seamless integration */}
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="relative container mx-auto px-6 pb-20 md:pb-28 pt-32">
+        <div className="relative container mx-auto px-6 pb-16 md:pb-20 pt-32">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="max-w-5xl"
+            className="max-w-3xl"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <span className="h-px w-12 bg-background/60" />
-              <p className="text-[11px] tracking-[0.4em] uppercase text-background/80 font-medium">
-                The Texas Directory · {total}+ cemeteries
-              </p>
-            </div>
-            <h1 className="font-display text-[44px] sm:text-6xl md:text-7xl lg:text-[88px] text-background leading-[0.98] tracking-tight mb-6">
-              Every cemetery
+            <p className="text-[11px] tracking-[0.32em] uppercase text-background/75 font-medium mb-5">
+              The Texas Directory · {total}+ cemeteries
+            </p>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-background leading-[1.02] tracking-tight mb-5">
+              Every cemetery in Texas.
               <br />
-              in Texas. <em className="italic font-normal text-background/75">One trusted broker.</em>
+              <em className="italic font-light text-background/80">One trusted broker.</em>
             </h1>
-            <p className="text-background/80 text-base md:text-lg max-w-xl mb-10 leading-relaxed">
-              Discover the cemetery you want to buy into — or list the plot you already own. We handle valuation,
-              matching, payment and the official transfer end-to-end.
+            <p className="text-background/85 text-base md:text-lg max-w-xl mb-8 leading-relaxed font-light">
+              Browse the cemeteries we serve, find available plots, or list the one you already own — handled end-to-end.
             </p>
 
-            {/* Minimal centered-style search bar (left aligned in hero) */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="max-w-xl"
             >
-              <div className="group relative flex items-center bg-background/95 backdrop-blur-2xl rounded-full border border-background/20 shadow-[0_20px_60px_-20px_hsl(var(--foreground)/0.6)] focus-within:shadow-[0_24px_80px_-20px_hsl(var(--primary)/0.5)] transition-all duration-300">
+              <div className="group relative flex items-center bg-background/95 backdrop-blur-xl rounded-full border border-background/20 shadow-[0_16px_48px_-16px_hsl(var(--foreground)/0.5)] transition-all duration-300">
                 <Search className="w-[18px] h-[18px] text-muted-foreground ml-6 shrink-0" strokeWidth={2} />
                 <input
                   type="text"
                   placeholder="Search cemeteries, cities, or regions"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent px-4 py-[18px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none text-[15px] tracking-tight"
+                  className="flex-1 bg-transparent px-4 py-[16px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none text-[15px] tracking-tight"
                 />
                 {query && (
                   <button
@@ -134,39 +127,28 @@ const CemeteryDirectory = () => {
                 )}
               </div>
 
-              {/* Dual conversion CTAs directly under search */}
-              <div className="flex flex-wrap gap-3 mt-5">
-                <a
-                  href="tel:+14242341678"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-background text-foreground text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <Phone className="w-4 h-4" /> (424) 234-1678
-                </a>
-                <Link
-                  to="/sell"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-transparent border border-background/40 text-background text-sm font-medium hover:bg-background/10 transition-colors"
-                >
-                  Sell my plot <ArrowRight className="w-4 h-4" />
-                </Link>
+              <div className="flex flex-wrap gap-2.5 mt-5">
                 <Link
                   to="/buy"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   Find a plot <ArrowRight className="w-4 h-4" />
                 </Link>
+                <Link
+                  to="/sell"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-background/10 backdrop-blur-md border border-background/30 text-background text-sm font-medium hover:bg-background/20 transition-colors"
+                >
+                  Sell my plot
+                </Link>
+                <a
+                  href="tel:+14242341678"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-background/80 text-sm font-medium hover:text-background transition-colors"
+                >
+                  <Phone className="w-4 h-4" /> (424) 234-1678
+                </a>
               </div>
             </motion.div>
           </motion.div>
-        </div>
-
-        {/* Bottom marquee strip — editorial detail */}
-        <div className="absolute bottom-0 inset-x-0 border-t border-background/15 bg-foreground/40 backdrop-blur-md">
-          <div className="container mx-auto px-6 py-3 flex items-center justify-between text-background/70 text-[11px] tracking-[0.25em] uppercase font-medium">
-            <span className="hidden sm:inline">Licensed Texas brokerage</span>
-            <span className="hidden md:inline">No upfront fees · Sellers</span>
-            <span>30–60% below retail · Buyers</span>
-            <span className="hidden md:inline">29+ years experience</span>
-          </div>
         </div>
       </section>
 
