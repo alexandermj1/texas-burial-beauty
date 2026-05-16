@@ -236,17 +236,20 @@ const CemeteryDirectory = () => {
                   <p className="font-display text-[10px] tracking-[0.28em] uppercase text-muted-foreground/80 mb-5 pl-4">
                     Regions
                   </p>
-                  <nav className="relative border-l border-border/70">
-                    {/* Active indicator line */}
-                    <motion.span
+                  <nav className="relative">
+                    {/* Track */}
+                    <span aria-hidden="true" className="absolute left-0 top-1 bottom-1 w-px bg-border/70" />
+                    {/* Progress fill — grows downward as you scroll */}
+                    <span
                       aria-hidden="true"
-                      className="absolute left-[-1px] w-px bg-primary"
-                      animate={{
-                        top: `${grouped.findIndex(([r]) => r === activeRegion) * 38}px`,
-                        opacity: activeRegion ? 1 : 0,
-                      }}
-                      transition={{ type: "spring", stiffness: 260, damping: 30 }}
-                      style={{ height: "38px" }}
+                      className="absolute left-0 top-1 w-px bg-foreground/80 origin-top transition-[height] duration-150 ease-out"
+                      style={{ height: `calc(${progress * 100}% - 8px)` }}
+                    />
+                    {/* Traveling dot at scroll head */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-[-3px] w-[7px] h-[7px] rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-[top] duration-150 ease-out"
+                      style={{ top: `calc(${progress * 100}% - 3px)` }}
                     />
                     {grouped.map(([r]) => {
                       const isActive = activeRegion === r;
@@ -269,6 +272,8 @@ const CemeteryDirectory = () => {
                 </div>
               </aside>
             )}
+
+            <div ref={listRef} className="min-w-0">
 
             <div className="min-w-0">
               {grouped.map(([groupRegion, list], gIdx) => {
