@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2 } from "lucide-react";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
 import { bayCemeteries, regions, CemeteryInfo } from "@/data/cemeteries";
@@ -58,6 +58,7 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 const BuyProperty = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [locating, setLocating] = useState(false);
@@ -73,6 +74,22 @@ const BuyProperty = () => {
     email: "",
     contactPref: "either" as "phone" | "email" | "either",
   });
+
+  // Pre-fill from query params (e.g. ?cemetery=...&region=...) — set on first load.
+  useEffect(() => {
+    const cemParam = searchParams.get("cemetery") || "";
+    const regionParam = searchParams.get("region") || "";
+    if (cemParam || regionParam) {
+      // If passed a cemetery, look up its region from the registry so both align.
+      const match = cemParam ? bayCemeteries.find(c => c.name.toLowerCase() === cemParam.toLowerCase()) : null;
+      setSelections(prev => ({
+        ...prev,
+        cemetery: cemParam,
+        region: match?.region || regionParam || prev.region,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = (key: string, value: string) => setSelections(prev => ({ ...prev, [key]: value }));
 
@@ -90,7 +107,7 @@ const BuyProperty = () => {
     return m;
   }, []);
 
-  // Ordered regions: by distance if we have coords, else by count
+  // Ordered regions: by distance if we have coords, else Houston/Dallas first then by cemetery count
   const orderedRegions = useMemo(() => {
     const list = regions.filter(r => r !== "All");
     if (userCoords) {
@@ -101,7 +118,14 @@ const BuyProperty = () => {
                haversine(userCoords.lat, userCoords.lng, cb.lat, cb.lng);
       });
     }
-    return [...list].sort((a, b) => (regionCounts[b] || 0) - (regionCounts[a] || 0));
+    // Most Texas buyers come from Houston or Dallas — surface those first.
+    const priority: Record<string, number> = { "Greater Houston": 0, "Dallas–Fort Worth": 1 };
+    return [...list].sort((a, b) => {
+      const pa = priority[a] ?? 99;
+      const pb = priority[b] ?? 99;
+      if (pa !== pb) return pa - pb;
+      return (regionCounts[b] || 0) - (regionCounts[a] || 0);
+    });
   }, [userCoords, regionCounts]);
 
   const filteredCemeteries: CemeteryInfo[] = useMemo(() => {

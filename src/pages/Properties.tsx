@@ -377,7 +377,16 @@ const Properties = () => {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-display text-base text-foreground mb-1 truncate">{cem.name}</h3>
                         <p className="text-xs text-muted-foreground mb-2 truncate">{cem.address}</p>
-                        <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">{cem.region}</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">{cem.region}</span>
+                          <Link
+                            to={`/buy?cemetery=${encodeURIComponent(cem.name)}&region=${encodeURIComponent(cem.region)}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-foreground text-background text-xs font-medium hover:opacity-90 transition-opacity"
+                          >
+                            Buy here <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        </div>
                       </div>
                       <div className="shrink-0 w-16 h-16 rounded-lg overflow-hidden relative">
                         <img src={getCemeteryImage(cem.name)} alt={cem.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" loading="lazy" width={64} height={64} />
