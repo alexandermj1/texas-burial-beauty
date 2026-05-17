@@ -123,26 +123,27 @@ const BuyProperty = () => {
   const cardActive = "border-primary bg-primary/5 shadow-soft";
 
   return (
-    <div className="h-svh bg-background flex flex-col overflow-hidden">
+    <div className="min-h-svh bg-background flex flex-col">
       <Seo
         title="Find a Cemetery Plot in Texas | Guided Buyer Concierge"
         description="A clean 5-step concierge to help you buy the right cemetery plot in Texas — Dallas, Houston, Austin, San Antonio. Save 30–50% versus buying direct."
         path="/buy"
       />
-      <Navbar />
+      <Navbar forceScrolled />
 
-      {/* Compact header — replaces big hero. Title + progress only. */}
-      <header className="pt-24 sm:pt-28 pb-3 sm:pb-4 border-b border-border bg-gradient-warm">
+      {/* Compact header — title, subtitle, progress. No big image. */}
+      <header className="pt-20 sm:pt-24 pb-3 sm:pb-4 border-b border-border bg-gradient-warm">
         <div className="container mx-auto px-5 max-w-3xl">
           <div className="flex items-center justify-between gap-3 mb-2">
-            <p className="text-primary font-medium text-[11px] tracking-[0.18em] uppercase">Find Your Property</p>
+            <p className="text-primary font-medium text-[11px] tracking-[0.18em] uppercase">Find Your Property · Step {step} of 5</p>
             <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
               <List className="w-3 h-3" /> Browse all
             </Link>
           </div>
-          <h1 className="font-display text-lg sm:text-2xl text-foreground leading-snug">
+          <h1 className="font-display text-xl sm:text-2xl text-foreground leading-snug">
             {titles[step]}
           </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitles[step]}</p>
 
           {/* Step pips */}
           <div className="flex items-center gap-1.5 mt-3">
@@ -168,23 +169,32 @@ const BuyProperty = () => {
         </div>
       </header>
 
-      {/* Quiz body — fills remaining viewport, scrolls internally only if absolutely needed */}
-      <main className="flex-1 min-h-0 overflow-y-auto">
+      {/* Quiz body — fills remaining viewport. */}
+      <main className="flex-1 min-h-0">
         <div className="container mx-auto px-5 max-w-3xl py-4 sm:py-6">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-                className="grid grid-cols-2 gap-2.5 sm:gap-3"
+                className="grid grid-cols-2 gap-2.5 sm:gap-4"
               >
                 {propertyTypes.map(t => (
                   <button
                     key={t.id}
                     onClick={() => pick("propertyType", t.id, 2)}
-                    className={`${cardBase} p-3 sm:p-4 ${selections.propertyType === t.id ? cardActive : cardIdle}`}
+                    className={`${cardBase} overflow-hidden ${selections.propertyType === t.id ? cardActive : cardIdle}`}
                   >
-                    <span className="text-xl sm:text-2xl block mb-1">{t.icon}</span>
-                    <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
-                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
+                    <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
+                      <img
+                        src={t.image}
+                        alt={t.label}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+                    <div className="p-3 sm:p-3.5">
+                      <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
+                      <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
+                    </div>
                   </button>
                 ))}
               </motion.div>
