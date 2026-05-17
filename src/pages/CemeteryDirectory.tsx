@@ -199,7 +199,15 @@ const CemeteryDirectory = () => {
 
       {/* Region filter strip — sticky, doubles as scroll-spy with progress line */}
       <section className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-y border-border/60">
-        <div className="container mx-auto px-6 py-3">
+        <div className="container mx-auto px-6 py-2.5">
+          {/* Current region indicator */}
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Currently viewing</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              {region !== "All" ? region : (activeRegion || "All Texas regions")}
+            </span>
+          </div>
           <div className="flex items-center justify-center gap-1.5 flex-wrap">
             {regions.map((r) => {
               const isFiltered = region === r;
@@ -212,10 +220,10 @@ const CemeteryDirectory = () => {
                     if (r === "All") {
                       setRegion("All");
                       window.scrollTo({ top: 0, behavior: "smooth" });
-                    } else if (region === "All") {
-                      scrollToRegion(r);
                     } else {
                       setRegion(r);
+                      // After filter applies, the matching section will be the only one — scroll up to it
+                      setTimeout(() => scrollToRegion(r), 50);
                     }
                   }}
                   className={`relative px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
@@ -225,9 +233,6 @@ const CemeteryDirectory = () => {
                   }`}
                   aria-current={isCurrent ? "true" : undefined}
                 >
-                  {isCurrent && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  )}
                   {r}
                 </button>
               );
