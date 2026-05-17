@@ -317,8 +317,8 @@ const Properties = () => {
             </button>
           </div>
 
-          {/* Search & Filters — sticky on all screens */}
-          <div className="sticky top-[64px] sm:top-[72px] z-30 bg-background/95 backdrop-blur-md py-3 sm:py-4 -mx-6 px-6 border-b border-border mb-6 shadow-soft">
+          {/* Search & Filters — NOT sticky on mobile */}
+          <div className="sm:sticky sm:top-[72px] z-30 bg-background/95 backdrop-blur-sm py-4 -mx-6 px-6 border-b border-border mb-6">
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
               <div className="relative flex-1 w-full sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
