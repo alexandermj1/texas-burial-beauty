@@ -110,7 +110,7 @@ const HeroSection = () => {
       {/* Headline sits low in the blurred zone, aligned with the Buy column below */}
       <motion.div
         style={{ y: textY, opacity: textOpacity }}
-        className="relative container mx-auto px-6 sm:px-10 mt-auto pb-2 sm:pb-4"
+        className="relative container mx-auto px-6 sm:px-10 mt-[22vh] sm:mt-auto pb-2 sm:pb-4"
       >
         <motion.span
           initial={{ opacity: 0, y: 10 }}
