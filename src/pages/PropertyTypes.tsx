@@ -298,7 +298,7 @@ const Section1 = () => {
   const numY = useParallax(ref, [100, -100]);
 
   return (
-    <div ref={ref} className="relative py-8 md:py-12">
+    <div ref={ref} className="relative pt-2 pb-8 md:pt-4 md:pb-12">
       <FloatingLeaves />
       <div className="container mx-auto px-6 max-w-7xl">
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
@@ -605,28 +605,28 @@ const PropertyTypes = () => {
       <Navbar />
 
       {/* Hero */}
-      <section ref={heroRef} className="relative h-[44vh] md:h-[48vh] flex items-start pt-24 md:pt-28 overflow-hidden">
+      <section ref={heroRef} className="relative h-[40vh] md:h-[44vh] flex items-start pt-24 md:pt-28 overflow-hidden">
         <motion.div style={{ scale: heroImgScale }} className="absolute inset-0">
           <img src="/images/cemetery-greenhills.jpg" alt="Peaceful coastal memorial landscape" className="w-full h-full object-cover object-[center_15%]" />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/50 via-foreground/25 to-background" />
+        {/* Stronger scrim for readable hero text without losing the photo */}
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/75 via-foreground/45 to-background" />
         <motion.div style={{ opacity: heroOpacity, y: heroTextY }} className="relative container mx-auto px-6">
           <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="max-w-3xl">
             <div className="flex items-center gap-3 mb-3">
-              <div className="h-px w-8 bg-primary-foreground/40" />
-              <span className="text-primary-foreground/70 text-xs tracking-[0.25em] uppercase font-medium">Understanding Your Options</span>
+              <div className="h-px w-8 bg-primary-foreground/60" />
+              <span className="text-primary-foreground text-xs tracking-[0.25em] uppercase font-medium drop-shadow">Understanding Your Options</span>
             </div>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-tight drop-shadow-lg mb-3">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] mb-3">
               Types of cemetery <span className="italic">property</span>
             </h1>
-            <p className="text-primary-foreground/80 text-base md:text-lg font-light leading-relaxed max-w-2xl drop-shadow-md">
+            <p className="text-primary-foreground/95 text-base md:text-lg font-light leading-relaxed max-w-2xl drop-shadow-[0_1px_8px_rgba(0,0,0,0.4)]">
               A guide to the different memorial options available across Texas.
             </p>
           </motion.div>
         </motion.div>
       </section>
 
-      <ImageStrip direction={1} />
       <Section1 />
       <Divider />
       <Section2And3 />
