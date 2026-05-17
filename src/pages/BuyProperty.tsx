@@ -312,47 +312,51 @@ const BuyProperty = () => {
 
             {step === 5 && (
               <motion.div key="s5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-                <div className="space-y-2.5 mb-4">
+                <form
+                  onSubmit={(e) => { e.preventDefault(); if (canSubmit && !submitting) submit(); }}
+                  className="space-y-2.5 mb-4"
+                >
                   <input
+                    autoFocus
                     type="text"
                     value={selections.name}
                     onChange={e => update("name", e.target.value)}
                     placeholder="Full name *"
-                    className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
                   <input
                     type="tel"
                     value={selections.phone}
                     onChange={e => update("phone", e.target.value)}
                     placeholder="Phone number"
-                    className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
                   <input
                     type="email"
                     value={selections.email}
                     onChange={e => update("email", e.target.value)}
                     placeholder="Email"
-                    className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
-                  <p className="text-[11px] text-muted-foreground">Phone or email — at least one required.</p>
-                </div>
+                  <p className="text-[11px] text-muted-foreground">Phone or email — at least one required. We never share your info.</p>
 
-                <div className="p-3 rounded-xl bg-gradient-sage border border-primary/10 mb-4">
-                  <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:text-xs">
-                    <div><span className="text-muted-foreground">Type:</span> <span className="text-foreground font-medium">{propertyTypes.find(t => t.id === selections.propertyType)?.label || "—"}</span></div>
-                    <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground font-medium">{timelines.find(t => t.id === selections.timeline)?.label || "—"}</span></div>
-                    <div><span className="text-muted-foreground">Budget:</span> <span className="text-foreground font-medium">{budgets.find(b => b.id === selections.budget)?.label || "—"}</span></div>
-                    <div><span className="text-muted-foreground">Location:</span> <span className="text-foreground font-medium truncate">{selections.cemetery || selections.region || "—"}</span></div>
+                  <div className="p-3 rounded-xl bg-gradient-sage border border-primary/10 !mt-4">
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:text-xs">
+                      <div><span className="text-muted-foreground">Type:</span> <span className="text-foreground font-medium">{propertyTypes.find(t => t.id === selections.propertyType)?.label || "—"}</span></div>
+                      <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground font-medium">{timelines.find(t => t.id === selections.timeline)?.label || "—"}</span></div>
+                      <div><span className="text-muted-foreground">Budget:</span> <span className="text-foreground font-medium">{budgets.find(b => b.id === selections.budget)?.label || "—"}</span></div>
+                      <div><span className="text-muted-foreground">Location:</span> <span className="text-foreground font-medium truncate">{selections.cemetery || selections.region || "—"}</span></div>
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  disabled={!canSubmit || submitting}
-                  onClick={submit}
-                  className="w-full inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {submitting ? "Submitting..." : "Submit Request"}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={!canSubmit || submitting}
+                    className="w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed !mt-4 shadow-soft"
+                  >
+                    {submitting ? "Submitting..." : "Submit Request"}
+                  </button>
+                </form>
               </motion.div>
             )}
           </AnimatePresence>
