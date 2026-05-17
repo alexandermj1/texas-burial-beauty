@@ -345,22 +345,22 @@ const BuyProperty = () => {
             {/* STEP 4 — Location (organized cards + nearest-to-me) */}
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-                {/* Nearest to me */}
-                <button
-                  onClick={findNearest}
-                  disabled={locating}
-                  className="w-full mb-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shadow-soft disabled:opacity-60"
-                >
-                  {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
-                  {locating ? "Finding your location…" : userCoords ? "Re-sort by my location" : "Find nearest to me"}
-                </button>
-
                 {!selections.region && (
                   <>
-                    <p className="text-[11px] text-muted-foreground mb-2 uppercase tracking-wider">
-                      {userCoords ? "Closest regions" : "Choose a region"}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
+                        {userCoords ? "Closest regions to you" : "Choose a region"}
+                      </p>
+                      <button
+                        onClick={findNearest}
+                        disabled={locating}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-all shadow-soft disabled:opacity-60 self-start sm:self-auto"
+                      >
+                        {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+                        {locating ? "Locating…" : userCoords ? "Re-sort by location" : "Find nearest to me"}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                       {orderedRegions.map(r => {
                         const meta = regionCenters[r];
                         const count = regionCounts[r] || 0;
@@ -370,15 +370,14 @@ const BuyProperty = () => {
                             onClick={() => update("region", r)}
                             className={`${cardBase} group relative overflow-hidden ${cardIdle}`}
                           >
-                            <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                            <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                               {meta?.image && (
                                 <img src={meta.image} alt={r} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 via-foreground/10 to-transparent" />
-                              <div className="absolute bottom-0 left-0 right-0 p-2">
-                                <h3 className="font-display text-xs sm:text-sm text-background leading-tight">{r}</h3>
-                                <p className="text-[10px] text-background/80">{count} cemeteries</p>
-                              </div>
+                            </div>
+                            <div className="p-3">
+                              <h3 className="font-display text-sm sm:text-base text-foreground leading-tight">{r}</h3>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{count} cemeteries</p>
                             </div>
                           </button>
                         );
@@ -389,7 +388,7 @@ const BuyProperty = () => {
 
                 {selections.region && (
                   <>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-3">
                       <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
                         {selections.region} · {filteredCemeteries.length} options
                       </p>
@@ -400,7 +399,7 @@ const BuyProperty = () => {
                         Change region
                       </button>
                     </div>
-                    <div className="space-y-1.5 max-h-[46vh] overflow-y-auto pr-1">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[55vh] overflow-y-auto pr-1">
                       <button
                         onClick={() => pick("cemetery", "", 5)}
                         className={`${cardBase} p-3 ${selections.cemetery === "" ? cardActive : cardIdle}`}
