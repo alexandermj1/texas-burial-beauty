@@ -290,46 +290,50 @@ const BuyProperty = () => {
             {/* STEP 2 — Timeline (financing tip BEFORE choices) */}
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-                className="space-y-2"
+                className="max-w-3xl"
               >
-                <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-2.5 mb-3">
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-3 mb-4">
                   <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <p className="text-[11px] sm:text-xs text-foreground leading-snug">
+                  <p className="text-xs sm:text-sm text-foreground leading-snug">
                     <strong>Planning ahead?</strong> Pre-need buyers get our best prices plus <strong>interest-free financing</strong> — 20% down, 0% interest.
                   </p>
                 </div>
-                {timelines.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => pick("timeline", t.id, 3)}
-                    className={`${cardBase} p-3 sm:p-4 ${selections.timeline === t.id ? cardActive : cardIdle}`}
-                  >
-                    <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
-                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">{t.desc}</p>
-                  </button>
-                ))}
+                <div className="grid sm:grid-cols-3 gap-3">
+                  {timelines.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => pick("timeline", t.id, 3)}
+                      className={`${cardBase} p-4 sm:p-5 ${selections.timeline === t.id ? cardActive : cardIdle}`}
+                    >
+                      <h3 className="font-display text-base sm:text-lg text-foreground">{t.label}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">{t.desc}</p>
+                    </button>
+                  ))}
+                </div>
               </motion.div>
             )}
 
             {/* STEP 3 — Budget */}
             {step === 3 && (
-              <motion.div key="s3" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-                <div className="mb-3 p-2.5 rounded-lg bg-gradient-sage border border-primary/10 flex items-center gap-2">
+              <motion.div key="s3" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+                className="max-w-4xl"
+              >
+                <div className="mb-4 p-3 rounded-lg bg-gradient-sage border border-primary/10 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                  <p className="text-[11px] sm:text-xs text-foreground">
+                  <p className="text-xs sm:text-sm text-foreground">
                     Our prices are <strong>30–50% below</strong> what cemeteries charge directly.
                   </p>
                 </div>
-                <div className="space-y-2">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {budgets.map(b => (
                     <button
                       key={b.id}
                       onClick={() => pick("budget", b.id, 4)}
-                      className={`${cardBase} p-3 sm:p-3.5 flex items-center justify-between ${selections.budget === b.id ? cardActive : cardIdle}`}
+                      className={`${cardBase} p-4 flex items-center justify-between ${selections.budget === b.id ? cardActive : cardIdle}`}
                     >
                       <div>
-                        <h3 className="font-display text-sm sm:text-base text-foreground">{b.label}</h3>
-                        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">{b.range}</p>
+                        <h3 className="font-display text-base text-foreground">{b.label}</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">{b.range}</p>
                       </div>
                       {selections.budget === b.id && <CheckCircle className="w-4 h-4 text-primary shrink-0" />}
                     </button>
