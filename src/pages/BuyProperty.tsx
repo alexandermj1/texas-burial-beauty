@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, HelpCircle } from "lucide-react";
-import singlePlotImg from "@/assets/property-types/single-plot.jpg";
-import nicheImg from "@/assets/property-types/cremation-niche.jpg";
-import cryptImg from "@/assets/property-types/mausoleum-crypt.jpg";
-import cemeteryPathImg from "@/assets/property-types/cemetery-path.jpg";
+import singlePlotImg from "@/assets/property-types/single-plot.png";
+import nicheImg from "@/assets/property-types/cremation-niche.png";
+import cryptImg from "@/assets/property-types/mausoleum.png";
+import familyEstateImg from "@/assets/property-types/family-estate.png";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
@@ -18,7 +18,7 @@ const propertyTypes = [
   { id: "plot", label: "Burial Plot", desc: "Traditional in-ground burial", image: singlePlotImg },
   { id: "niche", label: "Niche", desc: "For cremated remains in a columbarium", image: nicheImg },
   { id: "crypt", label: "Crypt / Mausoleum", desc: "Above-ground entombment space", image: cryptImg },
-  { id: "unsure", label: "Not Sure Yet", desc: "We'll help you decide", image: cemeteryPathImg },
+  { id: "unsure", label: "Not Sure Yet", desc: "We'll help you decide", image: familyEstateImg },
 ];
 
 const timelines = [
@@ -136,14 +136,17 @@ const BuyProperty = () => {
         <div className="container mx-auto px-5 max-w-3xl">
           <div className="flex items-center justify-between gap-3 mb-2">
             <p className="text-primary font-medium text-[11px] tracking-[0.18em] uppercase">Find Your Property · Step {step} of 5</p>
-            <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
-              <List className="w-3 h-3" /> Browse all
-            </Link>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline text-[11px] text-muted-foreground">⏱ Takes ~60 seconds</span>
+              <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                <List className="w-3 h-3" /> Browse all
+              </Link>
+            </div>
           </div>
-          <h1 className="font-display text-xl sm:text-2xl text-foreground leading-snug">
+          <h1 className="font-display text-xl sm:text-3xl text-foreground leading-tight tracking-tight">
             {titles[step]}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitles[step]}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5">{subtitles[step]}</p>
 
           {/* Step pips */}
           <div className="flex items-center gap-1.5 mt-3">
@@ -177,26 +180,35 @@ const BuyProperty = () => {
               <motion.div key="s1" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
                 className="grid grid-cols-2 gap-2.5 sm:gap-4"
               >
-                {propertyTypes.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => pick("propertyType", t.id, 2)}
-                    className={`${cardBase} overflow-hidden ${selections.propertyType === t.id ? cardActive : cardIdle}`}
-                  >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
-                      <img
-                        src={t.image}
-                        alt={t.label}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      />
-                    </div>
-                    <div className="p-3 sm:p-3.5">
-                      <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
-                      <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
-                    </div>
-                  </button>
-                ))}
+                {propertyTypes.map(t => {
+                  const isActive = selections.propertyType === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => pick("propertyType", t.id, 2)}
+                      className={`${cardBase} group relative overflow-hidden ${isActive ? cardActive : cardIdle}`}
+                    >
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                        <img
+                          src={t.image}
+                          alt={t.label}
+                          loading="lazy"
+                          className={`w-full h-full object-cover transition-transform duration-500 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent" />
+                        {isActive && (
+                          <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-soft">
+                            <CheckCircle className="w-4 h-4" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3 sm:p-4">
+                        <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
+                        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </motion.div>
             )}
 
@@ -300,54 +312,58 @@ const BuyProperty = () => {
 
             {step === 5 && (
               <motion.div key="s5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-                <div className="space-y-2.5 mb-4">
+                <form
+                  onSubmit={(e) => { e.preventDefault(); if (canSubmit && !submitting) submit(); }}
+                  className="space-y-2.5 mb-4"
+                >
                   <input
+                    autoFocus
                     type="text"
                     value={selections.name}
                     onChange={e => update("name", e.target.value)}
                     placeholder="Full name *"
-                    className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
                   <input
                     type="tel"
                     value={selections.phone}
                     onChange={e => update("phone", e.target.value)}
                     placeholder="Phone number"
-                    className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
                   <input
                     type="email"
                     value={selections.email}
                     onChange={e => update("email", e.target.value)}
                     placeholder="Email"
-                    className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
-                  <p className="text-[11px] text-muted-foreground">Phone or email — at least one required.</p>
-                </div>
+                  <p className="text-[11px] text-muted-foreground">Phone or email — at least one required. We never share your info.</p>
 
-                <div className="p-3 rounded-xl bg-gradient-sage border border-primary/10 mb-4">
-                  <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:text-xs">
-                    <div><span className="text-muted-foreground">Type:</span> <span className="text-foreground font-medium">{propertyTypes.find(t => t.id === selections.propertyType)?.label || "—"}</span></div>
-                    <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground font-medium">{timelines.find(t => t.id === selections.timeline)?.label || "—"}</span></div>
-                    <div><span className="text-muted-foreground">Budget:</span> <span className="text-foreground font-medium">{budgets.find(b => b.id === selections.budget)?.label || "—"}</span></div>
-                    <div><span className="text-muted-foreground">Location:</span> <span className="text-foreground font-medium truncate">{selections.cemetery || selections.region || "—"}</span></div>
+                  <div className="p-3 rounded-xl bg-gradient-sage border border-primary/10 !mt-4">
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:text-xs">
+                      <div><span className="text-muted-foreground">Type:</span> <span className="text-foreground font-medium">{propertyTypes.find(t => t.id === selections.propertyType)?.label || "—"}</span></div>
+                      <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground font-medium">{timelines.find(t => t.id === selections.timeline)?.label || "—"}</span></div>
+                      <div><span className="text-muted-foreground">Budget:</span> <span className="text-foreground font-medium">{budgets.find(b => b.id === selections.budget)?.label || "—"}</span></div>
+                      <div><span className="text-muted-foreground">Location:</span> <span className="text-foreground font-medium truncate">{selections.cemetery || selections.region || "—"}</span></div>
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  disabled={!canSubmit || submitting}
-                  onClick={submit}
-                  className="w-full inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {submitting ? "Submitting..." : "Submit Request"}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={!canSubmit || submitting}
+                    className="w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed !mt-4 shadow-soft"
+                  >
+                    {submitting ? "Submitting..." : "Submit Request"}
+                  </button>
+                </form>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </main>
 
-      {/* Bottom bar — Back + call. Sticky at bottom. */}
+      {/* Bottom bar — Back + trust + call. Sticky. */}
       <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
         <div className="container mx-auto px-5 max-w-3xl py-3 flex items-center justify-between gap-3">
           <button
@@ -357,6 +373,7 @@ const BuyProperty = () => {
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
+          <span className="hidden sm:inline text-[11px] text-muted-foreground">Private · No spam · Texas-licensed brokers</span>
           <a
             href="tel:+14242341678"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary font-medium hover:underline"
