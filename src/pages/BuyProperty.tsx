@@ -107,7 +107,7 @@ const BuyProperty = () => {
     return m;
   }, []);
 
-  // Ordered regions: by distance if we have coords, else by count
+  // Ordered regions: by distance if we have coords, else Houston/Dallas first then by cemetery count
   const orderedRegions = useMemo(() => {
     const list = regions.filter(r => r !== "All");
     if (userCoords) {
@@ -118,7 +118,14 @@ const BuyProperty = () => {
                haversine(userCoords.lat, userCoords.lng, cb.lat, cb.lng);
       });
     }
-    return [...list].sort((a, b) => (regionCounts[b] || 0) - (regionCounts[a] || 0));
+    // Most Texas buyers come from Houston or Dallas — surface those first.
+    const priority: Record<string, number> = { "Greater Houston": 0, "Dallas–Fort Worth": 1 };
+    return [...list].sort((a, b) => {
+      const pa = priority[a] ?? 99;
+      const pb = priority[b] ?? 99;
+      if (pa !== pb) return pa - pb;
+      return (regionCounts[b] || 0) - (regionCounts[a] || 0);
+    });
   }, [userCoords, regionCounts]);
 
   const filteredCemeteries: CemeteryInfo[] = useMemo(() => {
