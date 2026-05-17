@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck } from "lucide-react";
+import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
