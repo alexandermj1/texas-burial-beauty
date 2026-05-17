@@ -604,27 +604,35 @@ const PropertyTypes = () => {
       />
       <Navbar />
 
-      {/* Hero */}
-      <section ref={heroRef} className="relative h-[30vh] md:h-[36vh] min-h-[260px] flex items-center pt-16 md:pt-20 overflow-hidden">
-        <motion.div style={{ scale: heroImgScale }} className="absolute inset-0">
-          <img src="/images/cemetery-greenhills.jpg" alt="Peaceful coastal memorial landscape" className="w-full h-full object-cover object-[center_15%]" />
-        </motion.div>
-        {/* Stronger scrim for readable hero text without losing the photo */}
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/75 via-foreground/45 to-background" />
-        <motion.div style={{ opacity: heroOpacity, y: heroTextY }} className="relative container mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="max-w-3xl">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-px w-8 bg-primary-foreground/60" />
-              <span className="text-primary-foreground text-xs tracking-[0.25em] uppercase font-medium drop-shadow">Understanding Your Options</span>
+      {/* Editorial Hero — magazine-style, no photo overlay */}
+      <section className="relative pt-28 md:pt-36 pb-10 md:pb-14 bg-background overflow-hidden">
+        {/* subtle decorative rule */}
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="max-w-4xl"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px w-10 bg-primary/60" />
+              <span className="text-foreground/55 text-[11px] tracking-[0.3em] uppercase font-medium">
+                A Field Guide · Vol. 01
+              </span>
             </div>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] mb-3">
-              Types of cemetery <span className="italic">property</span>
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.02] tracking-tight mb-6">
+              Types of cemetery <span className="italic text-primary/90">property</span>
             </h1>
-            <p className="text-primary-foreground/95 text-base md:text-lg font-light leading-relaxed max-w-2xl drop-shadow-[0_1px_8px_rgba(0,0,0,0.4)]">
-              A guide to the different memorial options available across Texas.
+            <p className="text-foreground/70 text-base md:text-lg font-light leading-relaxed max-w-2xl">
+              A considered guide to the memorial options available across Texas — from single plots and companion sites to mausoleum crypts, cremation niches and family estates.
             </p>
           </motion.div>
-        </motion.div>
+        </div>
+        {/* bottom hairline divider, magazine-style */}
+        <div className="container mx-auto px-6 mt-10 md:mt-14">
+          <div className="h-px w-full bg-foreground/10" />
+        </div>
       </section>
 
       <Section1 />
