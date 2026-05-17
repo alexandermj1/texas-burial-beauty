@@ -366,6 +366,9 @@ const BuyProperty = () => {
       {/* Bottom bar — Back + call. Sticky at bottom. */}
       <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
         <div className="container mx-auto px-5 max-w-3xl py-3 flex items-center justify-between gap-3">
+      {/* Bottom bar — Back + trust + call. Sticky. */}
+      <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
+        <div className="container mx-auto px-5 max-w-3xl py-3 flex items-center justify-between gap-3">
           <button
             onClick={back}
             disabled={step === 1}
@@ -373,6 +376,7 @@ const BuyProperty = () => {
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
+          <span className="hidden sm:inline text-[11px] text-muted-foreground">Private · No spam · Texas-licensed brokers</span>
           <a
             href="tel:+14242341678"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary font-medium hover:underline"
