@@ -298,7 +298,7 @@ const Section1 = () => {
   const numY = useParallax(ref, [100, -100]);
 
   return (
-    <div ref={ref} className="relative py-8 md:py-12">
+    <div ref={ref} className="relative pt-2 pb-8 md:pt-4 md:pb-12">
       <FloatingLeaves />
       <div className="container mx-auto px-6 max-w-7xl">
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
