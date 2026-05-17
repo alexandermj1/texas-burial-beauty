@@ -136,14 +136,17 @@ const BuyProperty = () => {
         <div className="container mx-auto px-5 max-w-3xl">
           <div className="flex items-center justify-between gap-3 mb-2">
             <p className="text-primary font-medium text-[11px] tracking-[0.18em] uppercase">Find Your Property · Step {step} of 5</p>
-            <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
-              <List className="w-3 h-3" /> Browse all
-            </Link>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline text-[11px] text-muted-foreground">⏱ Takes ~60 seconds</span>
+              <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                <List className="w-3 h-3" /> Browse all
+              </Link>
+            </div>
           </div>
-          <h1 className="font-display text-xl sm:text-2xl text-foreground leading-snug">
+          <h1 className="font-display text-xl sm:text-3xl text-foreground leading-tight tracking-tight">
             {titles[step]}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitles[step]}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5">{subtitles[step]}</p>
 
           {/* Step pips */}
           <div className="flex items-center gap-1.5 mt-3">
