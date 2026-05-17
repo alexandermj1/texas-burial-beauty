@@ -212,33 +212,33 @@ const BuyProperty = () => {
       />
       <Navbar forceScrolled />
 
-      {/* Compact header */}
-      <header className="pt-20 sm:pt-24 pb-3 sm:pb-4 border-b border-border bg-gradient-warm">
-        <div className="container mx-auto px-5 max-w-3xl">
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <p className="text-primary font-medium text-[11px] tracking-[0.18em] uppercase">Find Your Property · Step {step} of 5</p>
-            <div className="flex items-center gap-3">
-              <span className="hidden sm:inline text-[11px] text-muted-foreground">⏱ Takes ~60 seconds</span>
+      {/* Integrated header — no hard border, blends into page */}
+      <header className="pt-24 sm:pt-28 pb-4 sm:pb-6 bg-background">
+        <div className="container mx-auto px-6 lg:px-10 max-w-6xl">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <p className="text-primary font-medium text-[11px] tracking-[0.2em] uppercase">Find Your Property · Step {step} of 5</p>
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:inline text-[11px] text-muted-foreground">⏱ ~60 seconds</span>
               <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
                 <List className="w-3 h-3" /> Browse all
               </Link>
             </div>
           </div>
-          <h1 className="font-display text-lg sm:text-2xl text-foreground leading-tight tracking-tight">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl text-foreground leading-tight tracking-tight">
             {titles[step]}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitles[step]}</p>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1.5 max-w-2xl">{subtitles[step]}</p>
 
-          <div className="flex items-center gap-1.5 mt-2.5">
+          <div className="flex items-center gap-2 mt-5">
             {steps.map(s => (
               <button
                 key={s.num}
                 onClick={() => { if (s.num < step) setStep(s.num as Step); }}
                 disabled={s.num > step}
-                className="group flex-1 flex flex-col items-start gap-1"
+                className="group flex-1 flex flex-col items-start gap-1.5"
                 aria-label={`Step ${s.num}: ${s.label}`}
               >
-                <span className={`h-1 w-full rounded-full transition-all ${s.num <= step ? "bg-primary" : "bg-muted"}`} />
+                <span className={`h-[3px] w-full rounded-full transition-all ${s.num <= step ? "bg-primary" : "bg-muted"}`} />
                 <span className={`text-[10px] tracking-wide ${s.num === step ? "text-foreground font-medium" : "text-muted-foreground"} hidden sm:inline`}>
                   {s.num}. {s.label}
                 </span>
@@ -249,7 +249,7 @@ const BuyProperty = () => {
       </header>
 
       <main className="flex-1 min-h-0">
-        <div className="container mx-auto px-5 max-w-3xl py-3 sm:py-4">
+        <div className="container mx-auto px-6 lg:px-10 max-w-6xl py-4 sm:py-6">
           <AnimatePresence mode="wait">
             {/* STEP 1 — Type */}
             {step === 1 && (
