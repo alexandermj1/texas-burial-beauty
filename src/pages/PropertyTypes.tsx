@@ -659,14 +659,6 @@ const PropertyTypes = () => {
         </div>
       </section>
 
-          {/* hairline footer */}
-          <div className="mt-10 md:mt-12 pt-4 border-t border-background/15 flex items-center justify-between text-[10px] tracking-[0.28em] uppercase text-background/45">
-            <span>Edited in Texas</span>
-            <span className="hidden sm:inline">Plots · Crypts · Niches · Estates</span>
-          </div>
-        </div>
-      </section>
-
 
       <Section1 />
       <Divider />
