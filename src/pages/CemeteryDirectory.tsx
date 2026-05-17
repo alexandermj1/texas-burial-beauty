@@ -66,7 +66,7 @@ const CemeteryDirectory = () => {
   const scrollToRegion = (name: string) => {
     const el = sectionRefs.current[name];
     if (!el) return;
-    const y = el.getBoundingClientRect().top + window.scrollY - 130;
+    const y = el.getBoundingClientRect().top + window.scrollY - 180;
     window.scrollTo({ top: y, behavior: "smooth" });
   };
 
@@ -79,7 +79,7 @@ const CemeteryDirectory = () => {
   // the viewport). We fall back to fixed positioning toggled by scroll.
   const barAnchorRef = useRef<HTMLDivElement | null>(null);
   const [barPinned, setBarPinned] = useState(false);
-  const NAV_OFFSET = 68; // navbar height
+  const [navHeight, setNavHeight] = useState(64);
 
   useEffect(() => {
     const onScroll = () => {
