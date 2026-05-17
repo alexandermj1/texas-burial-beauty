@@ -18,7 +18,7 @@ const propertyTypes = [
   { id: "plot", label: "Burial Plot", desc: "Traditional in-ground burial", image: singlePlotImg },
   { id: "niche", label: "Niche", desc: "For cremated remains in a columbarium", image: nicheImg },
   { id: "crypt", label: "Crypt / Mausoleum", desc: "Above-ground entombment space", image: cryptImg },
-  { id: "unsure", label: "Not Sure Yet", desc: "We'll help you decide", image: cemeteryPathImg },
+  { id: "unsure", label: "Not Sure Yet", desc: "We'll help you decide", image: familyEstateImg },
 ];
 
 const timelines = [
