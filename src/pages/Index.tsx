@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import AboutSeoSection from "@/components/AboutSeoSection";
 import { BuyerPromoAnimation, SellerPromoAnimation } from "@/components/PromoAnimation";
 import PriceComparison from "@/components/PriceComparison";
 import HowItWorksSection from "@/components/HowItWorksSection";
@@ -191,6 +192,7 @@ const Index = () => {
         </section>
       )}
 
+      <AboutSeoSection />
       <BuyerPromoAnimation />
       <SellerPromoAnimation />
       <PriceComparison />

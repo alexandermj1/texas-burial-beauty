@@ -155,17 +155,17 @@ const HeroSection = () => {
         <div className="container mx-auto px-6 grid grid-cols-2 divide-x divide-primary-foreground/25">
           <Link
             to="/buy"
-            className="group flex items-center justify-between py-7 sm:py-10 pr-4 sm:pr-8 text-primary-foreground"
+            className="group flex items-center justify-between py-9 sm:py-10 pr-4 sm:pr-8 text-primary-foreground"
           >
-            <span className="font-display text-3xl sm:text-5xl tracking-tight drop-shadow-lg px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Buy</span>
-            <ArrowUpRight className="w-7 h-7 sm:w-10 sm:h-10 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="font-display text-5xl sm:text-5xl md:text-6xl tracking-tight drop-shadow-lg px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Buy</span>
+            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
           <Link
             to="/sell"
-            className="group flex items-center justify-between py-7 sm:py-10 pl-4 sm:pl-8 text-primary-foreground"
+            className="group flex items-center justify-between py-9 sm:py-10 pl-4 sm:pl-8 text-primary-foreground"
           >
-            <span className="font-display text-3xl sm:text-5xl tracking-tight italic font-light drop-shadow-lg px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
-            <ArrowUpRight className="w-7 h-7 sm:w-10 sm:h-10 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="font-display text-5xl sm:text-5xl md:text-6xl tracking-tight italic font-light drop-shadow-lg px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
+            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
         </div>
       </motion.div>
