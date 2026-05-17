@@ -12,7 +12,6 @@ import mausoleumImg from "@/assets/property-types/mausoleum.png";
 import cremationNicheImg from "@/assets/property-types/cremation-niche.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
 import veteransGardenImg from "@/assets/property-types/veterans-garden.png";
-import cemeteryPathImg from "@/assets/property-types/cemetery-path.jpg";
 import Seo from "@/components/Seo";
 
 /* ─── Data ────────────────────────────────────────────────────── */
@@ -605,10 +604,13 @@ const PropertyTypes = () => {
       />
       <Navbar />
 
-      {/* Editorial Hero — Vogue × Apple, compact */}
-      <section className="relative pt-20 md:pt-24 pb-6 md:pb-8 overflow-hidden">
+      {/* Editorial Hero — Vogue × Apple, compact and refined */}
+      <section className="relative pt-24 md:pt-28 pb-10 md:pb-12 overflow-hidden">
+        {/* warm taupe wash — earthy, mid-tone so navbar reads */}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(25_18%_22%)_0%,hsl(28_16%_28%)_55%,hsl(30_14%_34%)_100%)]" />
+        {/* subtle warm vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.18),transparent_60%)]" />
+        {/* fine paper grain */}
         <div
           className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none"
           style={{
@@ -618,43 +620,30 @@ const PropertyTypes = () => {
         />
 
         <div className="container mx-auto px-6 relative">
-          <div className="flex items-center justify-between text-[10px] tracking-[0.32em] uppercase text-background/55 font-medium mb-5">
+          {/* Masthead */}
+          <div className="flex items-center justify-between text-[10px] tracking-[0.32em] uppercase text-background/55 font-medium mb-8 md:mb-10">
             <span>A Field Guide</span>
             <span className="hidden sm:inline">Vol. 01 — Property</span>
           </div>
 
-          <div className="grid grid-cols-12 gap-6 md:gap-8 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="col-span-12 md:col-span-7"
-            >
-              <h1 className="font-display text-background text-3xl sm:text-4xl md:text-5xl leading-[1.05] tracking-[-0.015em] mb-3">
-                Types of <span className="italic font-light text-background/80">cemetery</span> property.
-              </h1>
-              <p className="text-background/70 text-sm md:text-[15px] font-light leading-relaxed max-w-xl">
-                A considered guide to memorial options across Texas — plots, crypts, niches, and family estates.
-              </p>
-            </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="max-w-3xl"
+          >
+            <h1 className="font-display text-background text-4xl sm:text-5xl md:text-6xl leading-[1.02] tracking-[-0.015em] mb-5">
+              Types of <span className="italic font-light text-background/80">cemetery</span> property.
+            </h1>
+            <p className="text-background/70 text-sm md:text-base font-light leading-relaxed max-w-xl">
+              A considered guide to memorial options across Texas — single plots, companion sites, mausoleum crypts, cremation niches, and family estates.
+            </p>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="col-span-12 md:col-span-5"
-            >
-              <div className="relative aspect-[16/10] md:aspect-[4/3] overflow-hidden rounded-sm shadow-[0_20px_40px_-20px_rgba(0,0,0,0.5)]">
-                <img
-                  src={cemeteryPathImg}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{ filter: "saturate(0.7) contrast(1.05) sepia(0.18) brightness(0.92)" }}
-                  loading="eager"
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-foreground/30 via-transparent to-transparent mix-blend-multiply" />
-              </div>
-            </motion.div>
+          {/* hairline footer */}
+          <div className="mt-10 md:mt-12 pt-4 border-t border-background/15 flex items-center justify-between text-[10px] tracking-[0.28em] uppercase text-background/45">
+            <span>Edited in Texas</span>
+            <span className="hidden sm:inline">Plots · Crypts · Niches · Estates</span>
           </div>
         </div>
       </section>
