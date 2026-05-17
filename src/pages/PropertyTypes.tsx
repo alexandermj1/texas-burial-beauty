@@ -604,75 +604,46 @@ const PropertyTypes = () => {
       />
       <Navbar />
 
-      {/* Editorial Hero — dark, magazine cover styling */}
-      <section className="relative pt-32 md:pt-40 pb-16 md:pb-24 overflow-hidden bg-foreground text-background">
-        {/* warm tonal wash */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.28),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--accent)/0.22),transparent_60%)]" />
-        {/* paper grain */}
+      {/* Editorial Hero — Vogue × Apple, compact and refined */}
+      <section className="relative pt-24 md:pt-28 pb-10 md:pb-12 overflow-hidden">
+        {/* warm taupe wash — earthy, mid-tone so navbar reads */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(25_18%_22%)_0%,hsl(28_16%_28%)_55%,hsl(30_14%_34%)_100%)]" />
+        {/* subtle warm vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.18),transparent_60%)]" />
+        {/* fine paper grain */}
         <div
-          className="absolute inset-0 opacity-[0.07] mix-blend-overlay pointer-events-none"
+          className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none"
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
           }}
         />
-        {/* top + bottom hairlines */}
-        <div className="absolute top-0 inset-x-0 h-px bg-background/15" />
-        <div className="absolute bottom-0 inset-x-0 h-px bg-background/10" />
 
         <div className="container mx-auto px-6 relative">
-          {/* Masthead row */}
-          <div className="flex items-center justify-between text-[10px] md:text-[11px] tracking-[0.35em] uppercase text-background/55 font-medium mb-12 md:mb-16">
-            <span>Texas Cemetery Brokers</span>
-            <span className="hidden md:inline">A Field Guide</span>
-            <span>Vol. 01 — Property</span>
+          {/* Masthead */}
+          <div className="flex items-center justify-between text-[10px] tracking-[0.32em] uppercase text-background/55 font-medium mb-8 md:mb-10">
+            <span>A Field Guide</span>
+            <span className="hidden sm:inline">Vol. 01 — Property</span>
           </div>
 
-          <div className="grid grid-cols-12 gap-6 md:gap-10 items-end">
-            {/* Side numeral / metadata column */}
-            <motion.aside
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="hidden md:flex col-span-2 flex-col gap-6 pt-3 border-t border-background/15"
-            >
-              <span className="font-display italic text-background/40 text-7xl leading-none">N°1</span>
-              <p className="text-background/55 text-[11px] tracking-[0.22em] uppercase">
-                Seven<br/>memorial<br/>typologies
-              </p>
-            </motion.aside>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="max-w-3xl"
+          >
+            <h1 className="font-display text-background text-4xl sm:text-5xl md:text-6xl leading-[1.02] tracking-[-0.015em] mb-5">
+              Types of <span className="italic font-light text-background/80">cemetery</span> property.
+            </h1>
+            <p className="text-background/70 text-sm md:text-base font-light leading-relaxed max-w-xl">
+              A considered guide to memorial options across Texas — single plots, companion sites, mausoleum crypts, cremation niches, and family estates.
+            </p>
+          </motion.div>
 
-            {/* Main headline */}
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9 }}
-              className="col-span-12 md:col-span-10"
-            >
-              <div className="flex items-center gap-3 mb-5">
-                <div className="h-px w-12 bg-background/50" />
-                <span className="text-background/65 text-[11px] tracking-[0.32em] uppercase">
-                  The Field Guide
-                </span>
-              </div>
-              <h1 className="font-display text-[44px] sm:text-6xl md:text-7xl lg:text-[88px] text-background leading-[0.95] tracking-[-0.01em] mb-6">
-                Types of <span className="italic font-light text-background/85">cemetery</span><br className="hidden sm:block"/>
-                <span className="italic font-light text-background/85"> </span>property.
-              </h1>
-              <div className="flex items-start gap-6 max-w-3xl">
-                <span className="hidden md:block font-display italic text-background/35 text-5xl leading-none translate-y-1">"</span>
-                <p className="text-background/75 text-base md:text-lg font-light leading-relaxed">
-                  A considered guide to the memorial options available across Texas — from single plots and companion sites to mausoleum crypts, cremation niches and family estates.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Footer caption */}
-          <div className="mt-14 md:mt-20 flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-background/15 text-[11px] tracking-[0.28em] uppercase text-background/50">
+          {/* hairline footer */}
+          <div className="mt-10 md:mt-12 pt-4 border-t border-background/15 flex items-center justify-between text-[10px] tracking-[0.28em] uppercase text-background/45">
             <span>Edited in Texas</span>
             <span className="hidden sm:inline">Plots · Crypts · Niches · Estates</span>
-            <span>Est. MMXXIV</span>
           </div>
         </div>
       </section>
