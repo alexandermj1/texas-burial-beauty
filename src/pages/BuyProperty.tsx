@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, HelpCircle } from "lucide-react";
+import singlePlotImg from "@/assets/property-types/single-plot.jpg";
+import nicheImg from "@/assets/property-types/cremation-niche.jpg";
+import cryptImg from "@/assets/property-types/mausoleum-crypt.jpg";
+import cemeteryPathImg from "@/assets/property-types/cemetery-path.jpg";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
