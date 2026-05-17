@@ -73,16 +73,31 @@ const CemeteryDirectory = () => {
   const listRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
 
+  // Pinned-bar state. Sticky doesn't work because PageTransition wraps the
+  // page in overflow-hidden containers (which break position:sticky against
+  // the viewport). We fall back to fixed positioning toggled by scroll.
+  const barAnchorRef = useRef<HTMLDivElement | null>(null);
+  const [barPinned, setBarPinned] = useState(false);
+  const NAV_OFFSET = 68; // navbar height
+
   useEffect(() => {
     const onScroll = () => {
+      // progress
       const el = listRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const viewportAnchor = window.innerHeight * 0.35;
-      const traveled = viewportAnchor - rect.top;
-      const total = Math.max(rect.height - viewportAnchor, 1);
-      const p = Math.min(1, Math.max(0, traveled / total));
-      setProgress(p);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const viewportAnchor = window.innerHeight * 0.35;
+        const traveled = viewportAnchor - rect.top;
+        const total = Math.max(rect.height - viewportAnchor, 1);
+        const p = Math.min(1, Math.max(0, traveled / total));
+        setProgress(p);
+      }
+      // pin/unpin the region bar based on its anchor position
+      const anchor = barAnchorRef.current;
+      if (anchor) {
+        const top = anchor.getBoundingClientRect().top;
+        setBarPinned(top <= NAV_OFFSET);
+      }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
