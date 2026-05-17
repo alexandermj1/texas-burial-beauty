@@ -225,13 +225,6 @@ const CemeteryDirectory = () => {
           escapes PageTransition's transform/overflow containing block. */}
       {(() => {
         const BarInner = (
-          <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-2.5">
-            <div className="flex items-center justify-center gap-2 mb-1.5 sm:mb-2">
-      {/* Region filter strip — rendered inline (anchor for scroll detection),
-          AND portaled to <body> as a fixed bar once scrolled past, so it
-          escapes PageTransition's transform/overflow containing block. */}
-      {(() => {
-        const BarInner = (
           <div className="relative container mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
             {/* Row 1: status + compact search */}
             <div className="flex items-center gap-2 sm:gap-3 mb-2">
