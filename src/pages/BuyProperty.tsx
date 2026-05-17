@@ -250,9 +250,6 @@ const BuyProperty = () => {
           <div className="flex items-center justify-between gap-3 mb-3">
             <p className="text-primary font-medium text-[11px] tracking-[0.2em] uppercase">Find Your Property · Step {step} of 5</p>
             <div className="flex items-center gap-4">
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
-                Save 30–50%
-              </span>
               <span className="hidden sm:inline text-[11px] text-muted-foreground">⏱ ~60 seconds</span>
               <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
                 <List className="w-3 h-3" /> Browse all
@@ -263,6 +260,26 @@ const BuyProperty = () => {
             {titles[step]}
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1.5 max-w-2xl">{subtitles[step]}</p>
+
+          {/* Prominent savings banner — explains the real value of going through us */}
+          <div className="mt-5 flex items-stretch gap-3 sm:gap-4 rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/[0.08] via-primary/[0.04] to-transparent p-4 sm:p-5">
+            <div className="shrink-0 hidden sm:flex w-12 h-12 rounded-full bg-primary/15 items-center justify-center">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
+                <span className="font-display text-2xl sm:text-3xl text-primary leading-none tracking-tight">
+                  Save 30–50%
+                </span>
+                <span className="text-sm sm:text-base text-foreground font-medium">
+                  vs. buying direct from the cemetery
+                </span>
+              </div>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-snug">
+                We work the private resale market — same plots, same cemeteries, thousands less. No fees to use this concierge.
+              </p>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2 mt-5">
             {steps.map(s => (
