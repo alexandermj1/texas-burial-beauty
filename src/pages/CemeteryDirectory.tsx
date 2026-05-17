@@ -359,7 +359,7 @@ const CemeteryDirectory = () => {
                 key={groupRegion}
                 data-region={groupRegion}
                 ref={(el) => { sectionRefs.current[groupRegion] = el; }}
-                className="mb-16 last:mb-0 scroll-mt-32"
+                className="mb-16 last:mb-0 scroll-mt-[200px]"
               >
                 {/* Region header — quiet editorial band, matches card vocabulary */}
                 <div className="flex items-end justify-between gap-6 mb-6 pb-5 border-b border-border/70">
