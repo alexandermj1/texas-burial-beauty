@@ -45,15 +45,15 @@ const budgets = [
 
 // Region anchor coordinates for "Nearest to me" matching
 const regionCenters: Record<string, { lat: number; lng: number; image: string; blurb: string }> = {
-  "Dallas–Fort Worth": { lat: 32.7767, lng: -96.7970, image: cemeteryAerial, blurb: "Dallas, Fort Worth, Plano, Arlington" },
-  "Greater Houston":   { lat: 29.7604, lng: -95.3698, image: cemeteryPath, blurb: "Houston, Sugar Land, The Woodlands" },
-  "Austin":            { lat: 30.2672, lng: -97.7431, image: estateSection, blurb: "Austin, Round Rock, Cedar Park" },
-  "San Antonio":       { lat: 29.4241, lng: -98.4936, image: mausoleumExterior, blurb: "San Antonio & surrounding hill country" },
-  "El Paso & West Texas": { lat: 31.7619, lng: -106.4850, image: veteransGarden, blurb: "El Paso, Midland, Odessa, Lubbock" },
-  "Central Texas":     { lat: 31.5493, lng: -97.1467, image: columbariumGarden, blurb: "Waco, Killeen, Temple, College Station" },
-  "East Texas":        { lat: 32.3513, lng: -95.3011, image: cemeteryPath, blurb: "Tyler, Longview, Marshall" },
-  "South Texas":       { lat: 27.8006, lng: -97.3964, image: estateSection, blurb: "Corpus Christi, Brownsville, McAllen" },
-  "West & North Texas":{ lat: 33.5779, lng: -101.8552, image: cemeteryAerial, blurb: "Lubbock, Amarillo, Abilene" },
+  "Dallas–Fort Worth": { lat: 32.7767, lng: -96.7970, image: hillsideImg, blurb: "Dallas, Fort Worth, Plano, Arlington" },
+  "Greater Houston":   { lat: 29.7604, lng: -95.3698, image: chapelImg, blurb: "Houston, Sugar Land, The Woodlands" },
+  "Austin":            { lat: 30.2672, lng: -97.7431, image: naturalImg, blurb: "Austin, Round Rock, Cedar Park" },
+  "San Antonio":       { lat: 29.4241, lng: -98.4936, image: mausoleumCemImg, blurb: "San Antonio & surrounding hill country" },
+  "El Paso & West Texas": { lat: 31.7619, lng: -106.4850, image: veteransCemImg, blurb: "El Paso, Midland, Odessa, Lubbock" },
+  "Central Texas":     { lat: 31.5493, lng: -97.1467, image: italianImg, blurb: "Waco, Killeen, Temple, College Station" },
+  "East Texas":        { lat: 32.3513, lng: -95.3011, image: greekImg, blurb: "Tyler, Longview, Marshall" },
+  "South Texas":       { lat: 27.8006, lng: -97.3964, image: defaultCemImg, blurb: "Corpus Christi, Brownsville, McAllen" },
+  "West & North Texas":{ lat: 33.5779, lng: -101.8552, image: hillsideImg, blurb: "Lubbock, Amarillo, Abilene" },
 };
 
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
