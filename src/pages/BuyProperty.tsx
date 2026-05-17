@@ -527,7 +527,7 @@ const BuyProperty = () => {
 
       {/* Sticky footer */}
       <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
-        <div className="container mx-auto px-5 max-w-3xl py-3 flex items-center justify-between gap-3">
+        <div className="container mx-auto px-6 lg:px-10 max-w-6xl py-3 flex items-center justify-between gap-3">
           <button
             onClick={back}
             disabled={step === 1}
