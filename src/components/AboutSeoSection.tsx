@@ -56,19 +56,19 @@ const AboutSeoSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="mt-12 grid grid-cols-3 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60"
+          className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60"
         >
           {[
             { stat: "30–50%", label: "Below cemetery retail", icon: TrendingDown },
             { stat: "Since 1996", label: "Texas-licensed brokerage", icon: ShieldCheck },
-            { stat: "5 Regions", label: "DFW · Houston · Austin · SA · El Paso", icon: MapPin },
+            { stat: "5 Regions", label: "DFW, Houston, Austin, San Antonio & El Paso", icon: MapPin },
           ].map((s) => (
-            <div key={s.label} className="bg-card/80 backdrop-blur-sm p-6 sm:p-8 flex flex-col">
+            <div key={s.label} className="bg-card/80 backdrop-blur-sm p-5 sm:p-7 md:p-8 flex flex-col">
               <s.icon className="w-5 h-5 text-primary mb-3" />
-              <div className="font-display text-3xl sm:text-4xl text-foreground tracking-tight leading-none mb-2">
+              <div className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground tracking-tight leading-none mb-2">
                 {s.stat}
               </div>
-              <div className="text-xs sm:text-sm text-muted-foreground font-light leading-snug">
+              <div className="text-[13px] sm:text-sm text-muted-foreground font-light leading-snug">
                 {s.label}
               </div>
             </div>

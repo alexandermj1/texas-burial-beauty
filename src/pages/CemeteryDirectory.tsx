@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck } from "lucide-react";
+import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -66,7 +66,7 @@ const CemeteryDirectory = () => {
   const scrollToRegion = (name: string) => {
     const el = sectionRefs.current[name];
     if (!el) return;
-    const y = el.getBoundingClientRect().top + window.scrollY - 130;
+    const y = el.getBoundingClientRect().top + window.scrollY - 180;
     window.scrollTo({ top: y, behavior: "smooth" });
   };
 
@@ -79,10 +79,17 @@ const CemeteryDirectory = () => {
   // the viewport). We fall back to fixed positioning toggled by scroll.
   const barAnchorRef = useRef<HTMLDivElement | null>(null);
   const [barPinned, setBarPinned] = useState(false);
-  const NAV_OFFSET = 68; // navbar height
+  const [navHeight, setNavHeight] = useState(64);
 
   useEffect(() => {
+    // Measure navbar height so the pinned bar tucks flush under it (no gap).
+    const measureNav = () => {
+      const nav = document.querySelector("nav");
+      if (nav) setNavHeight((nav as HTMLElement).offsetHeight);
+    };
+    measureNav();
     const onScroll = () => {
+      measureNav();
       // progress
       const el = listRef.current;
       if (el) {
@@ -97,7 +104,7 @@ const CemeteryDirectory = () => {
       const anchor = barAnchorRef.current;
       if (anchor) {
         const top = anchor.getBoundingClientRect().top;
-        setBarPinned(top <= NAV_OFFSET);
+        setBarPinned(top <= navHeight);
       }
     };
     onScroll();
@@ -107,7 +114,7 @@ const CemeteryDirectory = () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [grouped]);
+  }, [grouped, navHeight]);
 
 
 
@@ -218,44 +225,78 @@ const CemeteryDirectory = () => {
           escapes PageTransition's transform/overflow containing block. */}
       {(() => {
         const BarInner = (
-          <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-2.5">
-            <div className="flex items-center justify-center gap-2 mb-1.5 sm:mb-2">
-              <span className="hidden sm:inline text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Currently viewing</span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-medium">
+          <div className="relative container mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
+            {/* Row 1: status + compact search */}
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] sm:text-[12px] font-medium shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                {region !== "All" ? region : (activeRegion || "All Texas regions")}
+                <span className="hidden xs:inline">Viewing:</span>{" "}
+                {region !== "All" ? region : (activeRegion || "All Texas")}
               </span>
-              <span className="hidden md:inline text-[10px] text-muted-foreground/70">· 30–50% below retail</span>
-            </div>
-            <div className="flex items-center justify-start sm:justify-center gap-1.5 flex-nowrap sm:flex-wrap overflow-x-auto no-scrollbar -mx-1 px-1">
-              {regions.map((r) => {
-                const isFiltered = region === r;
-                const isCurrent = region === "All" && r !== "All" && activeRegion === r;
-                const highlighted = isFiltered || isCurrent;
-                return (
+              <div className="flex-1 flex items-center bg-muted/60 rounded-full border border-border/60 focus-within:border-primary/40 focus-within:bg-card transition-colors min-w-0">
+                <Search className="w-3.5 h-3.5 text-muted-foreground ml-3 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search cemeteries…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="flex-1 min-w-0 bg-transparent px-2 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                />
+                {query && (
                   <button
-                    key={r}
-                    onClick={() => {
-                      if (r === "All") {
-                        setRegion("All");
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      } else {
-                        setRegion(r);
-                        setTimeout(() => scrollToRegion(r), 50);
-                      }
-                    }}
-                    className={`shrink-0 relative px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
-                      highlighted
-                        ? "bg-foreground text-background shadow-sm"
-                        : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                    aria-current={isCurrent ? "true" : undefined}
+                    onClick={() => setQuery("")}
+                    className="mr-1 w-6 h-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                    aria-label="Clear search"
                   >
-                    {r}
+                    <X className="w-3 h-3" />
                   </button>
-                );
-              })}
+                )}
+              </div>
+              <span className="hidden md:inline text-[10px] text-muted-foreground/70 shrink-0">30–50% below retail</span>
             </div>
+
+            {/* Row 2: region chips with mobile affordance */}
+            <div className="flex items-center gap-2">
+              <span className="sm:hidden text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium shrink-0">
+                Region
+              </span>
+              <div className="relative flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap sm:justify-center overflow-x-auto no-scrollbar -mx-1 px-1 scroll-smooth">
+                  {regions.map((r) => {
+                    const isFiltered = region === r;
+                    const isCurrent = region === "All" && r !== "All" && activeRegion === r;
+                    const highlighted = isFiltered || isCurrent;
+                    return (
+                      <button
+                        key={r}
+                        onClick={() => {
+                          if (r === "All") {
+                            setRegion("All");
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          } else {
+                            setRegion(r);
+                            setTimeout(() => scrollToRegion(r), 50);
+                          }
+                        }}
+                        className={`shrink-0 relative px-3 sm:px-3.5 py-1.5 sm:py-1.5 rounded-full text-[12px] sm:text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 border ${
+                          highlighted
+                            ? "bg-foreground text-background border-foreground shadow-sm"
+                            : "bg-card text-muted-foreground hover:text-foreground hover:bg-muted border-border/70"
+                        }`}
+                        aria-current={isCurrent ? "true" : undefined}
+                      >
+                        {r}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Mobile right-edge fade + chevron hint */}
+                <div className="sm:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent flex items-center justify-end pr-1">
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/70" />
+                </div>
+              </div>
+            </div>
+
             {/* Scroll progress underline */}
             <div className="absolute left-0 bottom-0 h-px w-full bg-transparent">
               <div
@@ -268,21 +309,30 @@ const CemeteryDirectory = () => {
 
         return (
           <>
-            {/* Inline anchor copy — sits in the flow, used by scroll detection */}
+            {/* Inline anchor copy — sits in the flow, used by scroll detection.
+                Distinct from navbar: muted/secondary tone + primary top accent. */}
             <section
               ref={barAnchorRef as any}
-              className="relative z-20 bg-background/92 backdrop-blur-xl border-y border-border/60"
+              className="relative z-20 bg-secondary/40 backdrop-blur-xl border-t-2 border-t-primary/60 border-b border-border/60"
             >
               {BarInner}
             </section>
 
-            {/* Portaled fixed copy — appears under the navbar when scrolled past */}
+            {/* Portaled fixed copy — appears flush under the navbar when scrolled past.
+                The bar's top sits at 0 with padding equal to navbar height so the
+                navbar (z-50) overlays the top portion — guarantees no visible gap. */}
             {barPinned && typeof document !== "undefined" &&
               createPortal(
                 <div
-                  className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/60 shadow-soft animate-in fade-in slide-in-from-top-2 duration-200"
-                  style={{ top: `${NAV_OFFSET}px` }}
+                  className="fixed left-0 right-0 z-40 bg-secondary/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.18)] animate-in fade-in slide-in-from-top-2 duration-200"
+                  style={{ top: 0, paddingTop: `${navHeight}px` }}
                 >
+                  {/* Primary accent strip tucked just below navbar to clearly separate the two */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute left-0 right-0 h-[2px] bg-primary/70"
+                    style={{ top: `${navHeight}px` }}
+                  />
                   {BarInner}
                 </div>,
                 document.body
@@ -309,7 +359,7 @@ const CemeteryDirectory = () => {
                 key={groupRegion}
                 data-region={groupRegion}
                 ref={(el) => { sectionRefs.current[groupRegion] = el; }}
-                className="mb-16 last:mb-0 scroll-mt-32"
+                className="mb-16 last:mb-0 scroll-mt-[200px]"
               >
                 {/* Region header — quiet editorial band, matches card vocabulary */}
                 <div className="flex items-end justify-between gap-6 mb-6 pb-5 border-b border-border/70">
