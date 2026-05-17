@@ -458,7 +458,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       )}
                       <CustomerKindBadge kind={sKind} size="xs" />
                       <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
-                      <TexasBadge inquiryChannel={s.inquiry_channel} state={s.state} size="xs" />
+                      <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} size="xs" />
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {otherViewers.length > 0 && (
@@ -534,7 +534,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
                     <BayerBadge inquiryChannel={selected.inquiry_channel} />
-                    <TexasBadge inquiryChannel={selected.inquiry_channel} state={selected.state} />
+                    <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} />
                     <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
                     {selected.source === "manual_phone" && (selected as any).handled_by_name && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
