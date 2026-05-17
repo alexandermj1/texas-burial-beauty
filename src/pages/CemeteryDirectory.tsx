@@ -225,34 +225,31 @@ const CemeteryDirectory = () => {
           escapes PageTransition's transform/overflow containing block. */}
       {(() => {
         const BarInner = (
-          <div className="relative container mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
-            {/* Row 1: status + compact search */}
+          <div className="container mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
+            {/* Row 1: search + prominent savings */}
             <div className="flex items-center gap-2 sm:gap-3 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] sm:text-[12px] font-medium shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                <span className="hidden xs:inline">Viewing:</span>{" "}
-                {region !== "All" ? region : (activeRegion || "All Texas")}
-              </span>
-              <div className="flex-1 flex items-center bg-muted/60 rounded-full border border-border/60 focus-within:border-primary/40 focus-within:bg-card transition-colors min-w-0">
-                <Search className="w-3.5 h-3.5 text-muted-foreground ml-3 shrink-0" />
+              <div className="flex-1 flex items-center bg-card rounded-full border border-border focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 transition-all min-w-0 shadow-sm">
+                <Search className="w-4 h-4 text-muted-foreground ml-3.5 shrink-0" />
                 <input
                   type="text"
-                  placeholder="Search cemeteries…"
+                  placeholder="Search cemeteries or cities…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 min-w-0 bg-transparent px-2 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent px-2.5 py-2 text-[13px] sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
                 />
                 {query && (
                   <button
                     onClick={() => setQuery("")}
-                    className="mr-1 w-6 h-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                    className="mr-1.5 w-6 h-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                     aria-label="Clear search"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 )}
               </div>
-              <span className="hidden md:inline text-[10px] text-muted-foreground/70 shrink-0">30–50% below retail</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] sm:text-xs font-semibold tracking-tight shrink-0">
+                30–50% off
+              </span>
             </div>
 
             {/* Row 2: region chips with mobile affordance */}
@@ -278,10 +275,10 @@ const CemeteryDirectory = () => {
                             setTimeout(() => scrollToRegion(r), 50);
                           }
                         }}
-                        className={`shrink-0 relative px-3 sm:px-3.5 py-1.5 sm:py-1.5 rounded-full text-[12px] sm:text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 border ${
+                        className={`shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 border ${
                           highlighted
-                            ? "bg-foreground text-background border-foreground shadow-sm"
-                            : "bg-card text-muted-foreground hover:text-foreground hover:bg-muted border-border/70"
+                            ? "bg-foreground text-background border-foreground"
+                            : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted border-border/60"
                         }`}
                         aria-current={isCurrent ? "true" : undefined}
                       >
@@ -296,43 +293,27 @@ const CemeteryDirectory = () => {
                 </div>
               </div>
             </div>
-
-            {/* Scroll progress underline */}
-            <div className="absolute left-0 bottom-0 h-px w-full bg-transparent">
-              <div
-                className="h-px bg-primary transition-[width] duration-150 ease-out"
-                style={{ width: `${progress * 100}%` }}
-              />
-            </div>
           </div>
         );
 
         return (
           <>
-            {/* Inline anchor copy — sits in the flow, used by scroll detection.
-                Distinct from navbar: muted/secondary tone + primary top accent. */}
+            {/* Inline anchor — sits in flow, used for scroll detection */}
             <section
               ref={barAnchorRef as any}
-              className="relative z-20 bg-secondary/40 backdrop-blur-xl border-t-2 border-t-primary/60 border-b border-border/60"
+              className="relative z-20 bg-background border-b border-border"
             >
               {BarInner}
             </section>
 
-            {/* Portaled fixed copy — appears flush under the navbar when scrolled past.
-                The bar's top sits at 0 with padding equal to navbar height so the
-                navbar (z-50) overlays the top portion — guarantees no visible gap. */}
+            {/* Portaled fixed copy — sits cleanly BELOW the navbar (top = measured nav height)
+                so it never covers the menu. Subtle shadow distinguishes it from the navbar. */}
             {barPinned && typeof document !== "undefined" &&
               createPortal(
                 <div
-                  className="fixed left-0 right-0 z-40 bg-secondary/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.18)] animate-in fade-in slide-in-from-top-2 duration-200"
-                  style={{ top: 0, paddingTop: `${navHeight}px` }}
+                  className="fixed left-0 right-0 z-40 bg-background/97 backdrop-blur-xl border-b border-border shadow-[0_6px_20px_-10px_hsl(var(--foreground)/0.2)] animate-in fade-in slide-in-from-top-2 duration-200"
+                  style={{ top: `${navHeight}px` }}
                 >
-                  {/* Primary accent strip tucked just below navbar to clearly separate the two */}
-                  <div
-                    aria-hidden="true"
-                    className="absolute left-0 right-0 h-[2px] bg-primary/70"
-                    style={{ top: `${navHeight}px` }}
-                  />
                   {BarInner}
                 </div>,
                 document.body
