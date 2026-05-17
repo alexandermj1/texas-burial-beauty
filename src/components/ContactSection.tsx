@@ -24,6 +24,8 @@ const ContactSection = () => {
       email: form.email.trim(),
       phone: form.phone.trim() || null,
       message: form.message.trim(),
+      state: "TX",
+      inquiry_channel: "texas_contact",
       created_at: new Date().toISOString(),
     });
     if (error) {

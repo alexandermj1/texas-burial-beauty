@@ -4,12 +4,17 @@ import { MapPin } from "lucide-react";
 
 interface Props {
   inquiryChannel?: string | null;
+  state?: string | null;
   size?: "xs" | "sm";
   className?: string;
 }
 
-const TexasBadge = ({ inquiryChannel, size = "sm", className = "" }: Props) => {
-  if (inquiryChannel !== "texas_buy_wizard") return null;
+const TX_CHANNELS = new Set(["texas_buy_wizard", "texas_contact"]);
+
+const TexasBadge = ({ inquiryChannel, state, size = "sm", className = "" }: Props) => {
+  const isTexas =
+    (inquiryChannel && TX_CHANNELS.has(inquiryChannel)) || state === "TX";
+  if (!isTexas) return null;
   const sizeCls = size === "xs"
     ? "px-1.5 py-0.5 text-[10px] gap-0.5"
     : "px-2 py-0.5 text-[11px] gap-1";
