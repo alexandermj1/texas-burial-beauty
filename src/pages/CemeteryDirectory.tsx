@@ -213,56 +213,83 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Region filter strip — sticky, doubles as scroll-spy with progress line */}
-      <section className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-y border-border/60">
-        <div className="container mx-auto px-6 py-2.5">
-          {/* Current region indicator */}
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Currently viewing</span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              {region !== "All" ? region : (activeRegion || "All Texas regions")}
-            </span>
+      {/* Region filter strip — rendered inline (anchor for scroll detection),
+          AND portaled to <body> as a fixed bar once scrolled past, so it
+          escapes PageTransition's transform/overflow containing block. */}
+      {(() => {
+        const BarInner = (
+          <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-2.5">
+            <div className="flex items-center justify-center gap-2 mb-1.5 sm:mb-2">
+              <span className="hidden sm:inline text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Currently viewing</span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                {region !== "All" ? region : (activeRegion || "All Texas regions")}
+              </span>
+              <span className="hidden md:inline text-[10px] text-muted-foreground/70">· 30–50% below retail</span>
+            </div>
+            <div className="flex items-center justify-start sm:justify-center gap-1.5 flex-nowrap sm:flex-wrap overflow-x-auto no-scrollbar -mx-1 px-1">
+              {regions.map((r) => {
+                const isFiltered = region === r;
+                const isCurrent = region === "All" && r !== "All" && activeRegion === r;
+                const highlighted = isFiltered || isCurrent;
+                return (
+                  <button
+                    key={r}
+                    onClick={() => {
+                      if (r === "All") {
+                        setRegion("All");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } else {
+                        setRegion(r);
+                        setTimeout(() => scrollToRegion(r), 50);
+                      }
+                    }}
+                    className={`shrink-0 relative px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
+                      highlighted
+                        ? "bg-foreground text-background shadow-sm"
+                        : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                    aria-current={isCurrent ? "true" : undefined}
+                  >
+                    {r}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Scroll progress underline */}
+            <div className="absolute left-0 bottom-0 h-px w-full bg-transparent">
+              <div
+                className="h-px bg-primary transition-[width] duration-150 ease-out"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-1.5 flex-wrap">
-            {regions.map((r) => {
-              const isFiltered = region === r;
-              const isCurrent = region === "All" && r !== "All" && activeRegion === r;
-              const highlighted = isFiltered || isCurrent;
-              return (
-                <button
-                  key={r}
-                  onClick={() => {
-                    if (r === "All") {
-                      setRegion("All");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    } else {
-                      setRegion(r);
-                      // After filter applies, the matching section will be the only one — scroll up to it
-                      setTimeout(() => scrollToRegion(r), 50);
-                    }
-                  }}
-                  className={`relative px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 inline-flex items-center gap-1.5 ${
-                    highlighted
-                      ? "bg-foreground text-background shadow-sm"
-                      : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                  aria-current={isCurrent ? "true" : undefined}
+        );
+
+        return (
+          <>
+            {/* Inline anchor copy — sits in the flow, used by scroll detection */}
+            <section
+              ref={barAnchorRef as any}
+              className="relative z-20 bg-background/92 backdrop-blur-xl border-y border-border/60"
+            >
+              {BarInner}
+            </section>
+
+            {/* Portaled fixed copy — appears under the navbar when scrolled past */}
+            {barPinned && typeof document !== "undefined" &&
+              createPortal(
+                <div
+                  className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/60 shadow-soft animate-in fade-in slide-in-from-top-2 duration-200"
+                  style={{ top: `${NAV_OFFSET}px` }}
                 >
-                  {r}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        {/* Scroll progress underline */}
-        <div className="absolute left-0 bottom-0 h-px w-full bg-transparent">
-          <div
-            className="h-px bg-primary transition-[width] duration-150 ease-out"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
-      </section>
+                  {BarInner}
+                </div>,
+                document.body
+              )}
+          </>
+        );
+      })()}
 
       {/* Cards grid — soft muted bg for card contrast */}
       <section className="py-14 md:py-20 bg-muted/40">
