@@ -5,14 +5,6 @@ import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
-import hillsideImg from "@/assets/cemeteries/hillside-cemetery.png";
-import naturalImg from "@/assets/cemeteries/natural-cemetery.png";
-import mausoleumCemImg from "@/assets/cemeteries/mausoleum-cemetery.png";
-import chapelImg from "@/assets/cemeteries/chapel-cemetery.png";
-import italianImg from "@/assets/cemeteries/italian-cemetery.png";
-import greekImg from "@/assets/cemeteries/greek-cemetery.png";
-import veteransCemImg from "@/assets/cemeteries/veterans-cemetery.png";
-import defaultCemImg from "@/assets/cemeteries/default-cemetery.png";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
@@ -44,16 +36,16 @@ const budgets = [
 ];
 
 // Region anchor coordinates for "Nearest to me" matching
-const regionCenters: Record<string, { lat: number; lng: number; image: string; blurb: string }> = {
-  "Dallas–Fort Worth": { lat: 32.7767, lng: -96.7970, image: hillsideImg, blurb: "Dallas, Fort Worth, Plano, Arlington" },
-  "Greater Houston":   { lat: 29.7604, lng: -95.3698, image: chapelImg, blurb: "Houston, Sugar Land, The Woodlands" },
-  "Austin":            { lat: 30.2672, lng: -97.7431, image: naturalImg, blurb: "Austin, Round Rock, Cedar Park" },
-  "San Antonio":       { lat: 29.4241, lng: -98.4936, image: mausoleumCemImg, blurb: "San Antonio & surrounding hill country" },
-  "El Paso & West Texas": { lat: 31.7619, lng: -106.4850, image: veteransCemImg, blurb: "El Paso, Midland, Odessa, Lubbock" },
-  "Central Texas":     { lat: 31.5493, lng: -97.1467, image: italianImg, blurb: "Waco, Killeen, Temple, College Station" },
-  "East Texas":        { lat: 32.3513, lng: -95.3011, image: greekImg, blurb: "Tyler, Longview, Marshall" },
-  "South Texas":       { lat: 27.8006, lng: -97.3964, image: defaultCemImg, blurb: "Corpus Christi, Brownsville, McAllen" },
-  "West & North Texas":{ lat: 33.5779, lng: -101.8552, image: hillsideImg, blurb: "Lubbock, Amarillo, Abilene" },
+const regionCenters: Record<string, { lat: number; lng: number }> = {
+  "Dallas–Fort Worth": { lat: 32.7767, lng: -96.7970 },
+  "Greater Houston":   { lat: 29.7604, lng: -95.3698 },
+  "Austin":            { lat: 30.2672, lng: -97.7431 },
+  "San Antonio":       { lat: 29.4241, lng: -98.4936 },
+  "El Paso & West Texas": { lat: 31.7619, lng: -106.4850 },
+  "Central Texas":     { lat: 31.5493, lng: -97.1467 },
+  "East Texas":        { lat: 32.3513, lng: -95.3011 },
+  "South Texas":       { lat: 27.8006, lng: -97.3964 },
+  "West & North Texas":{ lat: 33.5779, lng: -101.8552 },
 };
 
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -178,17 +170,33 @@ const BuyProperty = () => {
 
   const submit = async () => {
     setSubmitting(true);
+    const typeLabel = propertyTypes.find(t => t.id === selections.propertyType)?.label || selections.propertyType;
+    const timelineLabel = timelines.find(t => t.id === selections.timeline)?.label || selections.timeline;
+    const budgetLabel = budgets.find(b => b.id === selections.budget)?.label || selections.budget;
+    const prefLabel = selections.contactPref === "phone" ? "Call" : selections.contactPref === "email" ? "Email" : "Either";
+    const details = [
+      `Property type: ${typeLabel}`,
+      `Timeline: ${timelineLabel}`,
+      `Budget: ${budgetLabel}`,
+      `Region: ${selections.region || "—"}`,
+      selections.cemetery ? `Cemetery: ${selections.cemetery}` : null,
+      `Preferred contact: ${prefLabel}`,
+    ].filter(Boolean).join("\n");
+
     const { error } = await supabase.from("contact_submissions" as any).insert({
       source: "buy_property_wizard",
+      inquiry_channel: "texas_buy_wizard",
+      state: "TX",
       name: selections.name.trim(),
       email: selections.email.trim() || null,
       phone: selections.phone.trim() || null,
-      property_type: selections.propertyType,
-      timeline: selections.timeline,
-      budget: selections.budget,
+      property_type: typeLabel,
+      timeline: timelineLabel,
+      budget: budgetLabel,
       region: selections.region,
       cemetery: selections.cemetery || null,
-      contact_preference: selections.contactPref,
+      details,
+      message: details,
       created_at: new Date().toISOString(),
     });
     setSubmitting(false);
@@ -360,25 +368,17 @@ const BuyProperty = () => {
                         {locating ? "Locating…" : userCoords ? "Re-sort by location" : "Find nearest to me"}
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                       {orderedRegions.map(r => {
-                        const meta = regionCenters[r];
                         const count = regionCounts[r] || 0;
                         return (
                           <button
                             key={r}
                             onClick={() => update("region", r)}
-                            className={`${cardBase} group relative overflow-hidden ${cardIdle}`}
+                            className={`${cardBase} p-3 sm:p-4 text-left ${cardIdle}`}
                           >
-                            <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-                              {meta?.image && (
-                                <img src={meta.image} alt={r} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                              )}
-                            </div>
-                            <div className="p-3">
-                              <h3 className="font-display text-sm sm:text-base text-foreground leading-tight">{r}</h3>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">{count} cemeteries</p>
-                            </div>
+                            <h3 className="font-display text-[13px] sm:text-sm text-foreground leading-snug">{r}</h3>
+                            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{count} cemeteries</p>
                           </button>
                         );
                       })}
