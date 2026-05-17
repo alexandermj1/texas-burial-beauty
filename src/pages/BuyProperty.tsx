@@ -551,6 +551,23 @@ const BuyProperty = () => {
 
       {/* Sticky footer */}
       <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
+        {selections.region && step !== 4 && (
+          <div className="border-b border-border/60 bg-primary/5">
+            <div className="container mx-auto px-6 lg:px-10 max-w-6xl py-2 flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-foreground min-w-0">
+                <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-muted-foreground">Region:</span>
+                <span className="font-medium truncate">{selections.cemetery || selections.region}</span>
+              </span>
+              <button
+                onClick={() => { update("cemetery", ""); update("region", ""); setStep(4); }}
+                className="text-[11px] sm:text-xs text-primary font-medium hover:underline shrink-0"
+              >
+                Change region
+              </button>
+            </div>
+          </div>
+        )}
         <div className="container mx-auto px-6 lg:px-10 max-w-6xl py-3 flex items-center justify-between gap-3">
           <button
             onClick={back}

@@ -388,8 +388,9 @@ const Properties = () => {
                           </Link>
                         </div>
                       </div>
-                      <div className="shrink-0 w-16 h-16 rounded-lg overflow-hidden relative">
-                        <img src={getCemeteryImage(cem.name)} alt={cem.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" loading="lazy" width={64} height={64} />
+                      <div className="shrink-0 w-16 h-16 rounded-lg overflow-hidden relative" title="Representative illustration — not the actual cemetery photo">
+                        <img src={getCemeteryImage(cem.name)} alt={`${cem.name} (representative illustration)`} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" loading="lazy" width={64} height={64} />
+                        <span className="absolute bottom-0 inset-x-0 bg-foreground/65 text-primary-foreground text-[7px] leading-none py-0.5 text-center tracking-wide uppercase">Illustrative</span>
                       </div>
                     </div>
                   </motion.div>
