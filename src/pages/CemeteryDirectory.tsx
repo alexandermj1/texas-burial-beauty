@@ -42,7 +42,7 @@ const CemeteryDirectory = () => {
 
   // Scroll spy: track which region group is currently in view
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [activeRegion, setActiveRegion] = useState<string>("");
+  const [activeRegion, setActiveRegion] = useState<string>("Dallas–Fort Worth");
 
   useEffect(() => {
     const els = Object.entries(sectionRefs.current).filter(([, el]) => el) as [string, HTMLDivElement][];
