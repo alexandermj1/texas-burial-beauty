@@ -58,6 +58,7 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 const BuyProperty = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [locating, setLocating] = useState(false);
@@ -73,6 +74,22 @@ const BuyProperty = () => {
     email: "",
     contactPref: "either" as "phone" | "email" | "either",
   });
+
+  // Pre-fill from query params (e.g. ?cemetery=...&region=...) — set on first load.
+  useEffect(() => {
+    const cemParam = searchParams.get("cemetery") || "";
+    const regionParam = searchParams.get("region") || "";
+    if (cemParam || regionParam) {
+      // If passed a cemetery, look up its region from the registry so both align.
+      const match = cemParam ? bayCemeteries.find(c => c.name.toLowerCase() === cemParam.toLowerCase()) : null;
+      setSelections(prev => ({
+        ...prev,
+        cemetery: cemParam,
+        region: match?.region || regionParam || prev.region,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = (key: string, value: string) => setSelections(prev => ({ ...prev, [key]: value }));
 
