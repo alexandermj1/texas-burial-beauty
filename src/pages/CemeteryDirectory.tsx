@@ -82,7 +82,14 @@ const CemeteryDirectory = () => {
   const [navHeight, setNavHeight] = useState(64);
 
   useEffect(() => {
+    // Measure navbar height so the pinned bar tucks flush under it (no gap).
+    const measureNav = () => {
+      const nav = document.querySelector("nav");
+      if (nav) setNavHeight((nav as HTMLElement).offsetHeight);
+    };
+    measureNav();
     const onScroll = () => {
+      measureNav();
       // progress
       const el = listRef.current;
       if (el) {
@@ -97,7 +104,7 @@ const CemeteryDirectory = () => {
       const anchor = barAnchorRef.current;
       if (anchor) {
         const top = anchor.getBoundingClientRect().top;
-        setBarPinned(top <= NAV_OFFSET);
+        setBarPinned(top <= navHeight);
       }
     };
     onScroll();
@@ -107,7 +114,7 @@ const CemeteryDirectory = () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [grouped]);
+  }, [grouped, navHeight]);
 
 
 
