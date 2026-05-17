@@ -334,13 +334,15 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <WelcomeOverlay
-        name={welcomeName}
-        newSubmissions={newSinceLast}
-        unreadNotifications={unreadNotifs}
-        totalOpenSubmissions={openCount}
-        storageKey={welcomeKey}
-      />
+      {welcomeReady && (
+        <WelcomeOverlay
+          name={welcomeName}
+          newSubmissions={newSinceLast}
+          unreadNotifications={unreadNotifs}
+          totalOpenSubmissions={openCount}
+          storageKey={welcomeKey}
+        />
+      )}
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
       <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
