@@ -603,8 +603,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               )}
             </div>
 
-            {/* Cemetery contact directory + inventory match */}
-            {selected.cemetery && (() => {
+            {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
+            {selected.cemetery && (((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (
+              <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery (as written by customer)</p>
+                <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
+                {selected.region && (
+                  <p className="text-[11px] text-muted-foreground mt-1">Region: {selected.region}</p>
+                )}
+              </div>
+            )}
+
+            {/* Cemetery contact directory + inventory match — CA submissions only */}
+            {selected.cemetery && !(((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (() => {
               const count = countFor(selected.cemetery);
               const match = lookupCemeteryContactMatch(selected.cemetery);
               const contact = match?.contact ?? null;
