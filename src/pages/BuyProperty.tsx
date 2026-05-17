@@ -180,26 +180,35 @@ const BuyProperty = () => {
               <motion.div key="s1" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
                 className="grid grid-cols-2 gap-2.5 sm:gap-4"
               >
-                {propertyTypes.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => pick("propertyType", t.id, 2)}
-                    className={`${cardBase} overflow-hidden ${selections.propertyType === t.id ? cardActive : cardIdle}`}
-                  >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
-                      <img
-                        src={t.image}
-                        alt={t.label}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      />
-                    </div>
-                    <div className="p-3 sm:p-3.5">
-                      <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
-                      <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
-                    </div>
-                  </button>
-                ))}
+                {propertyTypes.map(t => {
+                  const isActive = selections.propertyType === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => pick("propertyType", t.id, 2)}
+                      className={`${cardBase} group relative overflow-hidden ${isActive ? cardActive : cardIdle}`}
+                    >
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                        <img
+                          src={t.image}
+                          alt={t.label}
+                          loading="lazy"
+                          className={`w-full h-full object-cover transition-transform duration-500 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent" />
+                        {isActive && (
+                          <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-soft">
+                            <CheckCircle className="w-4 h-4" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3 sm:p-4">
+                        <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
+                        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </motion.div>
             )}
 
