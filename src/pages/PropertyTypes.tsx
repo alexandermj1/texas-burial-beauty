@@ -605,7 +605,7 @@ const PropertyTypes = () => {
       <Navbar />
 
       {/* Hero */}
-      <section ref={heroRef} className="relative h-[40vh] md:h-[44vh] flex items-start pt-24 md:pt-28 overflow-hidden">
+      <section ref={heroRef} className="relative h-[30vh] md:h-[36vh] min-h-[260px] flex items-center pt-16 md:pt-20 overflow-hidden">
         <motion.div style={{ scale: heroImgScale }} className="absolute inset-0">
           <img src="/images/cemetery-greenhills.jpg" alt="Peaceful coastal memorial landscape" className="w-full h-full object-cover object-[center_15%]" />
         </motion.div>
