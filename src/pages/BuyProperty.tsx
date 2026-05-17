@@ -178,17 +178,33 @@ const BuyProperty = () => {
 
   const submit = async () => {
     setSubmitting(true);
+    const typeLabel = propertyTypes.find(t => t.id === selections.propertyType)?.label || selections.propertyType;
+    const timelineLabel = timelines.find(t => t.id === selections.timeline)?.label || selections.timeline;
+    const budgetLabel = budgets.find(b => b.id === selections.budget)?.label || selections.budget;
+    const prefLabel = selections.contactPref === "phone" ? "Call" : selections.contactPref === "email" ? "Email" : "Either";
+    const details = [
+      `Property type: ${typeLabel}`,
+      `Timeline: ${timelineLabel}`,
+      `Budget: ${budgetLabel}`,
+      `Region: ${selections.region || "—"}`,
+      selections.cemetery ? `Cemetery: ${selections.cemetery}` : null,
+      `Preferred contact: ${prefLabel}`,
+    ].filter(Boolean).join("\n");
+
     const { error } = await supabase.from("contact_submissions" as any).insert({
       source: "buy_property_wizard",
+      inquiry_channel: "texas_buy_wizard",
+      state: "TX",
       name: selections.name.trim(),
       email: selections.email.trim() || null,
       phone: selections.phone.trim() || null,
-      property_type: selections.propertyType,
-      timeline: selections.timeline,
-      budget: selections.budget,
+      property_type: typeLabel,
+      timeline: timelineLabel,
+      budget: budgetLabel,
       region: selections.region,
       cemetery: selections.cemetery || null,
-      contact_preference: selections.contactPref,
+      details,
+      message: details,
       created_at: new Date().toISOString(),
     });
     setSubmitting(false);
