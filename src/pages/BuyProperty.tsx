@@ -85,6 +85,14 @@ const BuyProperty = () => {
     5: "How can we reach you?",
   };
 
+  const subtitles: Record<Step, string> = {
+    1: "Pick one — we'll tailor the options to suit.",
+    2: "This helps us prioritize what to show you.",
+    3: "Our prices are 30–50% below cemeteries.",
+    4: "Choose a region, then a specific cemetery if you'd like.",
+    5: "We'll get back to you within 24 hours.",
+  };
+
   const canSubmit = selections.name.trim() && (selections.phone.trim() || selections.email.trim());
 
   const submit = async () => {
