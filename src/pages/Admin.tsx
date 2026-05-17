@@ -64,6 +64,9 @@ const Admin = () => {
   // When admin clicks "Open customer" inside the Gmail inbox, this id flows into the
   // Submissions panel and auto-selects the matching customer.
   const [focusSubmissionId, setFocusSubmissionId] = useState<string | null>(null);
+  // Welcome overlay is gated until the Gmail inbox has been synced + submissions
+  // refetched, so the "while you were away" stats reflect just-arrived emails.
+  const [welcomeReady, setWelcomeReady] = useState(false);
 
   // Login form
   const [email, setEmail] = useState("");
@@ -80,7 +83,22 @@ const Admin = () => {
 
   useEffect(() => {
     if (!authLoading && !adminLoading && user && isAdmin) {
-      fetchAllListings();
+      (async () => {
+        // Sync the Gmail inbox on login (once per browser session) so any
+        // contact-form emails that arrived while the admin was away get
+        // promoted to submissions BEFORE the welcome overlay reads counts.
+        const syncKey = `admin:loginSync:${user.id}`;
+        if (!sessionStorage.getItem(syncKey)) {
+          try {
+            await supabase.functions.invoke("sync-inbox", { body: { maxResults: 100 } });
+            sessionStorage.setItem(syncKey, "1");
+          } catch (e) {
+            console.warn("Login sync-inbox failed (non-fatal):", e);
+          }
+        }
+        await fetchAllListings();
+        setWelcomeReady(true);
+      })();
       (async () => {
         const { count } = await supabase
           .from("user_notifications" as any)
@@ -316,13 +334,15 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <WelcomeOverlay
-        name={welcomeName}
-        newSubmissions={newSinceLast}
-        unreadNotifications={unreadNotifs}
-        totalOpenSubmissions={openCount}
-        storageKey={welcomeKey}
-      />
+      {welcomeReady && (
+        <WelcomeOverlay
+          name={welcomeName}
+          newSubmissions={newSinceLast}
+          unreadNotifications={unreadNotifs}
+          totalOpenSubmissions={openCount}
+          storageKey={welcomeKey}
+        />
+      )}
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
       <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>

@@ -111,6 +111,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Sync the Gmail inbox first so any contact-form emails that arrived
+    // since the last run are promoted to submissions and included in today's
+    // digest. Non-fatal: a failure here shouldn't block the summary email.
+    try {
+      const syncUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/sync-inbox`;
+      const syncRes = await fetch(syncUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ maxResults: 200 }),
+      });
+      console.log("Pre-summary sync-inbox status:", syncRes.status);
+    } catch (e) {
+      console.warn("Pre-summary sync-inbox failed (non-fatal):", e);
+    }
+
     const now = new Date();
     const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const sinceISO = since.toISOString();
