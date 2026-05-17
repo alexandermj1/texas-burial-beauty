@@ -376,25 +376,17 @@ const BuyProperty = () => {
                         {locating ? "Locating…" : userCoords ? "Re-sort by location" : "Find nearest to me"}
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                       {orderedRegions.map(r => {
-                        const meta = regionCenters[r];
                         const count = regionCounts[r] || 0;
                         return (
                           <button
                             key={r}
                             onClick={() => update("region", r)}
-                            className={`${cardBase} group relative overflow-hidden ${cardIdle}`}
+                            className={`${cardBase} p-3 sm:p-4 text-left ${cardIdle}`}
                           >
-                            <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-                              {meta?.image && (
-                                <img src={meta.image} alt={r} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                              )}
-                            </div>
-                            <div className="p-3">
-                              <h3 className="font-display text-sm sm:text-base text-foreground leading-tight">{r}</h3>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">{count} cemeteries</p>
-                            </div>
+                            <h3 className="font-display text-[13px] sm:text-sm text-foreground leading-snug">{r}</h3>
+                            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{count} cemeteries</p>
                           </button>
                         );
                       })}
