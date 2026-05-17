@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, HelpCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2 } from "lucide-react";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
+import cemeteryAerial from "@/assets/property-types/cemetery-aerial.jpg";
+import cemeteryPath from "@/assets/property-types/cemetery-path.jpg";
+import estateSection from "@/assets/property-types/estate-section.jpg";
+import veteransGarden from "@/assets/property-types/veterans-garden.jpg";
+import columbariumGarden from "@/assets/property-types/columbarium-garden.jpg";
+import mausoleumExterior from "@/assets/property-types/mausoleum-exterior.jpg";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
-import { bayCemeteries, regions } from "@/data/cemeteries";
+import { bayCemeteries, regions, CemeteryInfo } from "@/data/cemeteries";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,8 +22,8 @@ type Step = 1 | 2 | 3 | 4 | 5;
 
 const propertyTypes = [
   { id: "plot", label: "Burial Plot", desc: "Traditional in-ground burial", image: singlePlotImg },
-  { id: "niche", label: "Niche", desc: "For cremated remains in a columbarium", image: nicheImg },
-  { id: "crypt", label: "Crypt / Mausoleum", desc: "Above-ground entombment space", image: cryptImg },
+  { id: "niche", label: "Niche", desc: "Cremated remains in a columbarium", image: nicheImg },
+  { id: "crypt", label: "Crypt / Mausoleum", desc: "Above-ground entombment", image: cryptImg },
   { id: "unsure", label: "Not Sure Yet", desc: "We'll help you decide", image: familyEstateImg },
 ];
 
@@ -35,10 +41,33 @@ const budgets = [
   { id: "flexible", label: "Flexible / Not Sure", range: "Options for any budget" },
 ];
 
+// Region anchor coordinates for "Nearest to me" matching
+const regionCenters: Record<string, { lat: number; lng: number; image: string; blurb: string }> = {
+  "Dallas–Fort Worth": { lat: 32.7767, lng: -96.7970, image: cemeteryAerial, blurb: "Dallas, Fort Worth, Plano, Arlington" },
+  "Greater Houston":   { lat: 29.7604, lng: -95.3698, image: cemeteryPath, blurb: "Houston, Sugar Land, The Woodlands" },
+  "Austin":            { lat: 30.2672, lng: -97.7431, image: estateSection, blurb: "Austin, Round Rock, Cedar Park" },
+  "San Antonio":       { lat: 29.4241, lng: -98.4936, image: mausoleumExterior, blurb: "San Antonio & surrounding hill country" },
+  "El Paso & West Texas": { lat: 31.7619, lng: -106.4850, image: veteransGarden, blurb: "El Paso, Midland, Odessa, Lubbock" },
+  "Central Texas":     { lat: 31.5493, lng: -97.1467, image: columbariumGarden, blurb: "Waco, Killeen, Temple, College Station" },
+  "East Texas":        { lat: 32.3513, lng: -95.3011, image: cemeteryPath, blurb: "Tyler, Longview, Marshall" },
+  "South Texas":       { lat: 27.8006, lng: -97.3964, image: estateSection, blurb: "Corpus Christi, Brownsville, McAllen" },
+  "West & North Texas":{ lat: 33.5779, lng: -101.8552, image: cemeteryAerial, blurb: "Lubbock, Amarillo, Abilene" },
+};
+
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 3959;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 const BuyProperty = () => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>(1);
+  const [locating, setLocating] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selections, setSelections] = useState({
     propertyType: "",
     timeline: "",
@@ -48,26 +77,76 @@ const BuyProperty = () => {
     name: "",
     phone: "",
     email: "",
+    contactPref: "either" as "phone" | "email" | "either",
   });
 
-  const update = (key: string, value: string) => {
-    setSelections(prev => ({ ...prev, [key]: value }));
-  };
+  const update = (key: string, value: string) => setSelections(prev => ({ ...prev, [key]: value }));
 
-  // Auto-advance helper for single-pick steps
   const pick = (key: string, value: string, nextStep?: Step) => {
     update(key, value);
-    if (nextStep) {
-      // small delay so user sees their selection animate
-      setTimeout(() => setStep(nextStep), 180);
-    }
+    if (nextStep) setTimeout(() => setStep(nextStep), 180);
   };
 
   const back = () => { if (step > 1) setStep((step - 1) as Step); };
 
-  const filteredCemeteries = selections.region && selections.region !== "All"
-    ? bayCemeteries.filter(c => c.region === selections.region)
-    : bayCemeteries;
+  // Region counts
+  const regionCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    bayCemeteries.forEach(c => { m[c.region] = (m[c.region] || 0) + 1; });
+    return m;
+  }, []);
+
+  // Ordered regions: by distance if we have coords, else by count
+  const orderedRegions = useMemo(() => {
+    const list = regions.filter(r => r !== "All");
+    if (userCoords) {
+      return [...list].sort((a, b) => {
+        const ca = regionCenters[a], cb = regionCenters[b];
+        if (!ca || !cb) return 0;
+        return haversine(userCoords.lat, userCoords.lng, ca.lat, ca.lng) -
+               haversine(userCoords.lat, userCoords.lng, cb.lat, cb.lng);
+      });
+    }
+    return [...list].sort((a, b) => (regionCounts[b] || 0) - (regionCounts[a] || 0));
+  }, [userCoords, regionCounts]);
+
+  const filteredCemeteries: CemeteryInfo[] = useMemo(() => {
+    if (!selections.region) return [];
+    const inRegion = bayCemeteries.filter(c => c.region === selections.region);
+    if (userCoords) {
+      return [...inRegion].sort((a, b) =>
+        haversine(userCoords.lat, userCoords.lng, a.lat, a.lng) -
+        haversine(userCoords.lat, userCoords.lng, b.lat, b.lng)
+      );
+    }
+    return inRegion;
+  }, [selections.region, userCoords]);
+
+  const findNearest = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Location unavailable", description: "Your browser doesn't support geolocation." });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserCoords(coords);
+        // Auto-select nearest region
+        const nearest = [...Object.entries(regionCenters)].sort(([, a], [, b]) =>
+          haversine(coords.lat, coords.lng, a.lat, a.lng) - haversine(coords.lat, coords.lng, b.lat, b.lng)
+        )[0]?.[0];
+        if (nearest) update("region", nearest);
+        setLocating(false);
+        toast({ title: "Found you", description: nearest ? `Showing options nearest ${nearest}.` : "Showing nearest options." });
+      },
+      () => {
+        setLocating(false);
+        toast({ title: "Location blocked", description: "Allow location access or pick a region below.", variant: "destructive" });
+      },
+      { timeout: 8000 }
+    );
+  };
 
   const steps = [
     { num: 1, label: "Type" },
@@ -89,8 +168,8 @@ const BuyProperty = () => {
     1: "Pick one — we'll tailor the options to suit.",
     2: "This helps us prioritize what to show you.",
     3: "Our prices are 30–50% below cemeteries.",
-    4: "Choose a region, then a specific cemetery if you'd like.",
-    5: "We'll get back to you within 24 hours.",
+    4: "Find your area or use your location.",
+    5: "Choose how you'd prefer we contact you.",
   };
 
   const canSubmit = selections.name.trim() && (selections.phone.trim() || selections.email.trim());
@@ -107,6 +186,7 @@ const BuyProperty = () => {
       budget: selections.budget,
       region: selections.region,
       cemetery: selections.cemetery || null,
+      contact_preference: selections.contactPref,
       created_at: new Date().toISOString(),
     });
     setSubmitting(false);
@@ -117,7 +197,6 @@ const BuyProperty = () => {
     toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (424) 234-1678." });
   };
 
-  // Card variants
   const cardBase = "text-left rounded-xl border-2 transition-all duration-200 w-full";
   const cardIdle = "border-border bg-card hover:border-primary/40";
   const cardActive = "border-primary bg-primary/5 shadow-soft";
@@ -131,7 +210,7 @@ const BuyProperty = () => {
       />
       <Navbar forceScrolled />
 
-      {/* Compact header — title, subtitle, progress. No big image. */}
+      {/* Compact header */}
       <header className="pt-20 sm:pt-24 pb-3 sm:pb-4 border-b border-border bg-gradient-warm">
         <div className="container mx-auto px-5 max-w-3xl">
           <div className="flex items-center justify-between gap-3 mb-2">
@@ -143,13 +222,12 @@ const BuyProperty = () => {
               </Link>
             </div>
           </div>
-          <h1 className="font-display text-xl sm:text-3xl text-foreground leading-tight tracking-tight">
+          <h1 className="font-display text-lg sm:text-2xl text-foreground leading-tight tracking-tight">
             {titles[step]}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5">{subtitles[step]}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitles[step]}</p>
 
-          {/* Step pips */}
-          <div className="flex items-center gap-1.5 mt-3">
+          <div className="flex items-center gap-1.5 mt-2.5">
             {steps.map(s => (
               <button
                 key={s.num}
@@ -158,11 +236,7 @@ const BuyProperty = () => {
                 className="group flex-1 flex flex-col items-start gap-1"
                 aria-label={`Step ${s.num}: ${s.label}`}
               >
-                <span
-                  className={`h-1 w-full rounded-full transition-all ${
-                    s.num < step ? "bg-primary" : s.num === step ? "bg-primary" : "bg-muted"
-                  }`}
-                />
+                <span className={`h-1 w-full rounded-full transition-all ${s.num <= step ? "bg-primary" : "bg-muted"}`} />
                 <span className={`text-[10px] tracking-wide ${s.num === step ? "text-foreground font-medium" : "text-muted-foreground"} hidden sm:inline`}>
                   {s.num}. {s.label}
                 </span>
@@ -172,13 +246,13 @@ const BuyProperty = () => {
         </div>
       </header>
 
-      {/* Quiz body — fills remaining viewport. */}
       <main className="flex-1 min-h-0">
-        <div className="container mx-auto px-5 max-w-3xl py-4 sm:py-6">
+        <div className="container mx-auto px-5 max-w-3xl py-3 sm:py-4">
           <AnimatePresence mode="wait">
+            {/* STEP 1 — Type */}
             {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-                className="grid grid-cols-2 gap-2.5 sm:gap-4"
+                className="grid grid-cols-2 gap-2 sm:gap-3"
               >
                 {propertyTypes.map(t => {
                   const isActive = selections.propertyType === t.id;
@@ -188,7 +262,7 @@ const BuyProperty = () => {
                       onClick={() => pick("propertyType", t.id, 2)}
                       className={`${cardBase} group relative overflow-hidden ${isActive ? cardActive : cardIdle}`}
                     >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
                         <img
                           src={t.image}
                           alt={t.label}
@@ -202,8 +276,8 @@ const BuyProperty = () => {
                           </span>
                         )}
                       </div>
-                      <div className="p-3 sm:p-4">
-                        <h3 className="font-display text-sm sm:text-base text-foreground">{t.label}</h3>
+                      <div className="p-2.5 sm:p-3">
+                        <h3 className="font-display text-sm sm:text-base text-foreground leading-tight">{t.label}</h3>
                         <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
                       </div>
                     </button>
@@ -212,10 +286,17 @@ const BuyProperty = () => {
               </motion.div>
             )}
 
+            {/* STEP 2 — Timeline (financing tip BEFORE choices) */}
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
                 className="space-y-2"
               >
+                <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-2.5 mb-3">
+                  <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-[11px] sm:text-xs text-foreground leading-snug">
+                    <strong>Planning ahead?</strong> Pre-need buyers get our best prices plus <strong>interest-free financing</strong> — 20% down, 0% interest.
+                  </p>
+                </div>
                 {timelines.map(t => (
                   <button
                     key={t.id}
@@ -226,17 +307,10 @@ const BuyProperty = () => {
                     <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">{t.desc}</p>
                   </button>
                 ))}
-                {selections.timeline === "preneed" && (
-                  <div className="mt-2 p-3 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-2">
-                    <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-[11px] sm:text-xs text-foreground">
-                      <strong>Interest-free financing</strong> available — 20% down, 0% interest.
-                    </p>
-                  </div>
-                )}
               </motion.div>
             )}
 
+            {/* STEP 3 — Budget */}
             {step === 3 && (
               <motion.div key="s3" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
                 <div className="mb-3 p-2.5 rounded-lg bg-gradient-sage border border-primary/10 flex items-center gap-2">
@@ -263,58 +337,110 @@ const BuyProperty = () => {
               </motion.div>
             )}
 
+            {/* STEP 4 — Location (organized cards + nearest-to-me) */}
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {regions.filter(r => r !== "All").map(r => (
-                    <button
-                      key={r}
-                      onClick={() => { update("region", r); update("cemetery", ""); }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                        selections.region === r
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card text-muted-foreground border border-border hover:text-foreground"
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
+                {/* Nearest to me */}
+                <button
+                  onClick={findNearest}
+                  disabled={locating}
+                  className="w-full mb-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shadow-soft disabled:opacity-60"
+                >
+                  {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+                  {locating ? "Finding your location…" : userCoords ? "Re-sort by my location" : "Find nearest to me"}
+                </button>
+
+                {!selections.region && (
+                  <>
+                    <p className="text-[11px] text-muted-foreground mb-2 uppercase tracking-wider">
+                      {userCoords ? "Closest regions" : "Choose a region"}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                      {orderedRegions.map(r => {
+                        const meta = regionCenters[r];
+                        const count = regionCounts[r] || 0;
+                        return (
+                          <button
+                            key={r}
+                            onClick={() => update("region", r)}
+                            className={`${cardBase} group relative overflow-hidden ${cardIdle}`}
+                          >
+                            <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                              {meta?.image && (
+                                <img src={meta.image} alt={r} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 via-foreground/10 to-transparent" />
+                              <div className="absolute bottom-0 left-0 right-0 p-2">
+                                <h3 className="font-display text-xs sm:text-sm text-background leading-tight">{r}</h3>
+                                <p className="text-[10px] text-background/80">{count} cemeteries</p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
 
                 {selections.region && (
-                  <div className="space-y-1.5 max-h-[42vh] overflow-y-auto pr-1">
-                    <button
-                      onClick={() => pick("cemetery", "", 5)}
-                      className={`${cardBase} p-3 ${selections.cemetery === "" ? cardActive : cardIdle}`}
-                    >
-                      <h3 className="font-display text-sm text-foreground">Any cemetery in {selections.region}</h3>
-                      <p className="text-[11px] text-muted-foreground">Show me all options →</p>
-                    </button>
-                    {filteredCemeteries.map(c => (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
+                        {selections.region} · {filteredCemeteries.length} options
+                      </p>
                       <button
-                        key={c.name}
-                        onClick={() => pick("cemetery", c.name, 5)}
-                        className={`${cardBase} p-3 ${selections.cemetery === c.name ? cardActive : cardIdle}`}
+                        onClick={() => { update("region", ""); update("cemetery", ""); }}
+                        className="text-[11px] text-primary hover:underline"
                       >
-                        <h3 className="font-display text-sm text-foreground">{c.name}</h3>
-                        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> {c.address}
-                        </p>
+                        Change region
                       </button>
-                    ))}
-                  </div>
-                )}
-                {!selections.region && (
-                  <p className="text-xs text-muted-foreground">Pick a region to continue.</p>
+                    </div>
+                    <div className="space-y-1.5 max-h-[46vh] overflow-y-auto pr-1">
+                      <button
+                        onClick={() => pick("cemetery", "", 5)}
+                        className={`${cardBase} p-3 ${selections.cemetery === "" ? cardActive : cardIdle}`}
+                      >
+                        <h3 className="font-display text-sm text-foreground">Any cemetery in {selections.region}</h3>
+                        <p className="text-[11px] text-muted-foreground">Show me all options →</p>
+                      </button>
+                      {filteredCemeteries.map(c => (
+                        <button
+                          key={c.name}
+                          onClick={() => pick("cemetery", c.name, 5)}
+                          className={`${cardBase} p-3 ${selections.cemetery === c.name ? cardActive : cardIdle}`}
+                        >
+                          <h3 className="font-display text-sm text-foreground">{c.name}</h3>
+                          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {c.address}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </motion.div>
             )}
 
+            {/* STEP 5 — Contact */}
             {step === 5 && (
               <motion.div key="s5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+                {/* Prominent call-now option */}
+                <a
+                  href="tel:+14242341678"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 mb-3 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90 transition-all shadow-soft"
+                >
+                  <Phone className="w-4 h-4" />
+                  Or call us now — (424) 234-1678
+                </a>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Or send a request</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
                 <form
                   onSubmit={(e) => { e.preventDefault(); if (canSubmit && !submitting) submit(); }}
-                  className="space-y-2.5 mb-4"
+                  className="space-y-2.5"
                 >
                   <input
                     autoFocus
@@ -338,9 +464,39 @@ const BuyProperty = () => {
                     placeholder="Email"
                     className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   />
+
+                  {/* Contact preference */}
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-1.5">How would you prefer we reach out?</p>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { id: "phone", label: "Call", icon: Phone },
+                        { id: "email", label: "Email", icon: Mail },
+                        { id: "either", label: "Either", icon: MessageSquare },
+                      ].map(o => {
+                        const Icon = o.icon;
+                        const active = selections.contactPref === o.id;
+                        return (
+                          <button
+                            key={o.id}
+                            type="button"
+                            onClick={() => setSelections(p => ({ ...p, contactPref: o.id as any }))}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                              active
+                                ? "border-primary bg-primary/5 text-foreground"
+                                : "border-border bg-card text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <Icon className="w-3.5 h-3.5" /> {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <p className="text-[11px] text-muted-foreground">Phone or email — at least one required. We never share your info.</p>
 
-                  <div className="p-3 rounded-xl bg-gradient-sage border border-primary/10 !mt-4">
+                  <div className="p-3 rounded-xl bg-gradient-sage border border-primary/10 !mt-3">
                     <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:text-xs">
                       <div><span className="text-muted-foreground">Type:</span> <span className="text-foreground font-medium">{propertyTypes.find(t => t.id === selections.propertyType)?.label || "—"}</span></div>
                       <div><span className="text-muted-foreground">Timeline:</span> <span className="text-foreground font-medium">{timelines.find(t => t.id === selections.timeline)?.label || "—"}</span></div>
@@ -352,7 +508,7 @@ const BuyProperty = () => {
                   <button
                     type="submit"
                     disabled={!canSubmit || submitting}
-                    className="w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed !mt-4 shadow-soft"
+                    className="w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed !mt-3 shadow-soft"
                   >
                     {submitting ? "Submitting..." : "Submit Request"}
                   </button>
@@ -363,7 +519,7 @@ const BuyProperty = () => {
         </div>
       </main>
 
-      {/* Bottom bar — Back + trust + call. Sticky. */}
+      {/* Sticky footer */}
       <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
         <div className="container mx-auto px-5 max-w-3xl py-3 flex items-center justify-between gap-3">
           <button
