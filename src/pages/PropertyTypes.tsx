@@ -12,6 +12,7 @@ import mausoleumImg from "@/assets/property-types/mausoleum.png";
 import cremationNicheImg from "@/assets/property-types/cremation-niche.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
 import veteransGardenImg from "@/assets/property-types/veterans-garden.png";
+import cemeteryPathImg from "@/assets/property-types/cemetery-path.jpg";
 import Seo from "@/components/Seo";
 
 /* ─── Data ────────────────────────────────────────────────────── */
@@ -626,19 +627,50 @@ const PropertyTypes = () => {
             <span className="hidden sm:inline">Vol. 01 — Property</span>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-3xl"
-          >
-            <h1 className="font-display text-background text-4xl sm:text-5xl md:text-6xl leading-[1.02] tracking-[-0.015em] mb-5">
-              Types of <span className="italic font-light text-background/80">cemetery</span> property.
-            </h1>
-            <p className="text-background/70 text-sm md:text-base font-light leading-relaxed max-w-xl">
-              A considered guide to memorial options across Texas — single plots, companion sites, mausoleum crypts, cremation niches, and family estates.
-            </p>
-          </motion.div>
+          <div className="grid grid-cols-12 gap-8 md:gap-10 items-end">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="col-span-12 md:col-span-7"
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-px w-10 bg-background/40" />
+                <span className="text-background/55 text-[10px] tracking-[0.32em] uppercase">Chapter One</span>
+              </div>
+              <h1 className="font-display text-background text-4xl sm:text-5xl md:text-6xl leading-[1.02] tracking-[-0.015em] mb-5">
+                Types of <span className="italic font-light text-background/80">cemetery</span> property.
+              </h1>
+              <p className="text-background/70 text-sm md:text-base font-light leading-relaxed max-w-xl">
+                A considered guide to memorial options across Texas — single plots, companion sites, mausoleum crypts, cremation niches, and family estates.
+              </p>
+            </motion.div>
+
+            <motion.figure
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.15 }}
+              className="col-span-12 md:col-span-5 relative"
+            >
+              <div className="relative aspect-[4/5] overflow-hidden rounded-sm shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5)]">
+                <img
+                  src={cemeteryPathImg}
+                  alt="A quiet cemetery pathway lined with mature trees"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="eager"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent" />
+                <span className="absolute top-2 left-2 w-3 h-3 border-t border-l border-background/70" />
+                <span className="absolute top-2 right-2 w-3 h-3 border-t border-r border-background/70" />
+                <span className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-background/70" />
+                <span className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-background/70" />
+              </div>
+              <figcaption className="mt-3 flex items-center gap-2 text-[10px] tracking-[0.28em] uppercase text-background/55">
+                <span className="h-px w-6 bg-background/30" />
+                Plate I · Memorial grounds, Texas
+              </figcaption>
+            </motion.figure>
+          </div>
 
           {/* hairline footer */}
           <div className="mt-10 md:mt-12 pt-4 border-t border-background/15 flex items-center justify-between text-[10px] tracking-[0.28em] uppercase text-background/45">
