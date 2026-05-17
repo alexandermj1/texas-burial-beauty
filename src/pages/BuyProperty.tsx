@@ -347,20 +347,19 @@ const BuyProperty = () => {
         </div>
       </main>
 
-      {/* Bottom bar — Back + call. Fixed at bottom of viewport. */}
-      <footer className="border-t border-border bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-5 max-w-3xl py-2.5 flex items-center justify-between">
-          {step > 1 ? (
-            <button
-              onClick={back}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back
-            </button>
-          ) : <span />}
+      {/* Bottom bar — Back + call. Sticky at bottom. */}
+      <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
+        <div className="container mx-auto px-5 max-w-3xl py-3 flex items-center justify-between gap-3">
+          <button
+            onClick={back}
+            disabled={step === 1}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm text-foreground font-medium hover:bg-muted hover:border-primary/40 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
           <a
             href="tel:+14242341678"
-            className="inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary font-medium hover:underline"
           >
             <Phone className="w-3.5 h-3.5" />
             (424) 234-1678
