@@ -29,7 +29,7 @@ const AboutSeoSection = () => {
       <div className="absolute -bottom-40 -left-40 w-[32rem] h-[32rem] rounded-full bg-secondary/30 blur-3xl pointer-events-none" aria-hidden="true" />
 
       {/* Wider container — break out of the cramped 5xl */}
-      <div className="relative container mx-auto px-6 lg:px-10 max-w-5xl">
+      <div className="relative container mx-auto px-6 lg:px-10 max-w-6xl">
         {/* Editorial header — left-aligned, generous, mirrors other sections */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
