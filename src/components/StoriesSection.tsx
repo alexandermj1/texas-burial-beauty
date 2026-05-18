@@ -27,7 +27,7 @@ const stories = [
     img: mobileImg,
     eyebrow: "On the go",
     title: "Texas cemetery property, in the palm of your hand.",
-    to: "/",
+    to: "/sell",
     span: "md:col-span-5",
     aspect: "md:aspect-[4/5]",
   },
