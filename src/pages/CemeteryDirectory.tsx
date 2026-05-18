@@ -12,6 +12,192 @@ import { slugify } from "@/lib/cemeterySlug";
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
 
+type Cem = (typeof bayCemeteries)[number];
+
+const OFFERING_SETS: string[][] = [
+  ["Plots", "Niches", "Mausoleums"],
+  ["Plots", "Companion", "Cremation"],
+  ["Plots", "Lawn Crypts", "Family Estates"],
+  ["Plots", "Niches", "Veteran"],
+];
+
+const RegionRow = ({
+  groupRegion,
+  list,
+  gIdx,
+  setRef,
+}: {
+  groupRegion: string;
+  list: Cem[];
+  gIdx: number;
+  setRef: (el: HTMLDivElement | null) => void;
+}) => {
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+
+  const updateArrows = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 4);
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  useEffect(() => {
+    updateArrows();
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      window.removeEventListener("resize", updateArrows);
+    };
+  }, [list]);
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const amount = Math.max(el.clientWidth * 0.85, 320);
+    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  };
+
+  return (
+    <div
+      data-region={groupRegion}
+      ref={setRef}
+      className="mb-14 last:mb-0 scroll-mt-[200px]"
+    >
+      {/* Region header — quiet editorial band with carousel arrows */}
+      <div className="flex items-end justify-between gap-6 mb-5">
+        <div className="flex items-baseline gap-4 min-w-0">
+          <span className="font-display text-xs text-primary tabular-nums tracking-[0.2em] uppercase shrink-0">
+            №&nbsp;{String(gIdx + 1).padStart(2, "0")}
+          </span>
+          <h2 className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-none truncate">
+            {groupRegion}
+          </h2>
+          <span className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-medium tabular-nums shrink-0 hidden sm:inline">
+            · {list.length.toString().padStart(2, "0")} {list.length === 1 ? "cemetery" : "cemeteries"}
+          </span>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => scrollBy(-1)}
+            disabled={!canPrev}
+            aria-label="Scroll left"
+            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scrollBy(1)}
+            disabled={!canNext}
+            aria-label="Scroll right"
+            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Horizontal scroll row — Airbnb-style */}
+      <div className="relative -mx-6 px-6">
+        <div
+          ref={scrollerRef}
+          className="flex gap-5 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth pb-2"
+        >
+          {list.map((c, i) => {
+            let h = 0;
+            for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
+            const offerings = OFFERING_SETS[h % OFFERING_SETS.length];
+            const refNum = String((h % 999) + 1).padStart(3, "0");
+            const slug = slugify(c.name);
+
+            return (
+              <motion.article
+                key={`${c.name}-${c.city}`}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
+                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-border/80 shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18),0_2px_6px_-2px_hsl(var(--foreground)/0.1)] hover:shadow-[0_28px_56px_-18px_hsl(var(--primary)/0.38)] hover:-translate-y-1 hover:ring-primary/50 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+              >
+                <Link
+                  to={`/cemeteries/${slug}`}
+                  className="relative block px-6 pt-6 pb-5 bg-gradient-to-br from-secondary/40 via-card to-card overflow-hidden"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-6 -right-2 font-display text-[150px] leading-none text-primary/[0.07] select-none pointer-events-none tracking-tighter"
+                  >
+                    {c.name.charAt(0)}
+                  </span>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground font-medium">
+                        {c.region}
+                      </span>
+                      <span className="font-display text-[11px] text-muted-foreground/70 tabular-nums tracking-wider">
+                        №&nbsp;{refNum}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-[20px] leading-[1.15] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      {c.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
+                      {c.city}, TX
+                    </p>
+                  </div>
+                </Link>
+
+                <div className="px-6 pt-4 pb-5 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-medium">
+                      Inventory
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase text-primary font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Active
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {offerings.map((o) => (
+                      <span
+                        key={o}
+                        className="text-[11px] px-2.5 py-1 rounded-full bg-muted text-foreground/75 font-medium"
+                      >
+                        {o}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
+                  <Link
+                    to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
+                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-foreground hover:bg-foreground hover:text-background transition-colors"
+                  >
+                    Buy here
+                  </Link>
+                  <Link
+                    to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
+                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                  >
+                    Sell mine
+                  </Link>
+                </div>
+              </motion.article>
+            );
+          })}
+        </div>
+        {/* Edge fade hints (mobile primarily) */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-muted/40 to-transparent" />
+      </div>
+    </div>
+  );
+};
+
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
   const [query, setQuery] = useState("");
