@@ -224,6 +224,13 @@ const CemeteryDirectory = () => {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [region, query]);
 
+  // Chip order — stable, matches alphabetical section order on the page so
+  // the chips never reshuffle while scrolling or filtering.
+  const chipOrder = useMemo(
+    () => ["All", ...regions.filter((r) => r !== "All").sort((a, b) => a.localeCompare(b))],
+    []
+  );
+
   const total = bayCemeteries.length;
 
   // Scroll spy: track which region group is currently in view
