@@ -9,7 +9,7 @@ const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Famil
 const guarantees = [
   "100% free, no obligation",
   "Response within 24 hours",
-  "Guaranteed net proceeds offer",
+  "Net offer or consignment — you choose",
 ];
 
 const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
