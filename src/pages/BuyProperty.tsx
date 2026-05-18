@@ -492,7 +492,7 @@ const BuyProperty = () => {
                     <Phone className="w-4 h-4" />
                     Or call us now — (424) 234-1678
                   </a>
-                  <p className="text-[11px] text-muted-foreground text-center">Texas-licensed brokers · We respond within 24 hours</p>
+                  <p className="text-[11px] text-muted-foreground text-center">Partnered with Bayer Cemetery Brokers (CA licensed) · We respond within 24 hours</p>
                 </div>
 
                 {/* Right column — form */}
@@ -579,7 +579,7 @@ const BuyProperty = () => {
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
-          <span className="hidden sm:inline text-[11px] text-muted-foreground">Private · No spam · Texas-licensed brokers</span>
+          <span className="hidden sm:inline text-[11px] text-muted-foreground">Private · No spam · Partnered with Bayer Cemetery Brokers (CA licensed)</span>
           <a
             href="tel:+14242341678"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary font-medium hover:underline"

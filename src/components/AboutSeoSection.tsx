@@ -65,7 +65,7 @@ const AboutSeoSection = () => {
           <dl className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/60 py-8 sm:py-10">
             {[
               { stat: "30–50", suffix: "%", icon: TrendingDown, label: "Below cemetery retail pricing" },
-              { stat: "1996", suffix: "", prefix: "Est.", icon: ShieldCheck, label: "Texas-licensed brokerage" },
+              { stat: "1996", suffix: "", prefix: "Est.", icon: ShieldCheck, label: "Partnered brokerage since" },
               { stat: "5", suffix: "", icon: MapPin, label: "Major regions across Texas" },
             ].map((s, i) => (
               <motion.div
@@ -127,8 +127,8 @@ const AboutSeoSection = () => {
               interest-free financing.
             </p>
             <p>
-              Every transaction is handled by a Texas-licensed broker. We've quietly closed thousands of cemetery
-              property transfers since 1996 — and we'd be honored to help with yours.
+              Every transaction is handled in partnership with Bayer Cemetery Brokers, a licensed California brokerage.
+              We've quietly closed thousands of cemetery property transfers since 1996 — and we'd be honored to help with yours.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-4">

@@ -347,8 +347,8 @@ const CemeteryDetail = () => {
               <p className="text-muted-foreground text-lg leading-relaxed mb-4">
                 {cemetery.name} is one of the cemeteries we actively serve in {cemetery.region}.
                 Whether you're looking to <strong className="text-foreground">purchase a plot for less than retail</strong> or
-                <strong className="text-foreground"> sell a plot you no longer need</strong>, our licensed Texas brokerage handles
-                the full process — from valuation and matching to payment and the official cemetery title transfer.
+                <strong className="text-foreground"> sell a plot you no longer need</strong>, our team — partnered with Bayer Cemetery Brokers, a licensed California brokerage — handles
+                the full process from valuation and matching to payment and the official cemetery title transfer.
               </p>
               <p className="text-muted-foreground leading-relaxed">
                 Resale plots at established cemeteries like {cemetery.name} typically trade well below the cemetery's current retail
@@ -533,7 +533,7 @@ const CemeteryDetail = () => {
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
             {[
-              { icon: ShieldCheck, title: "Licensed & insured", body: "Fully licensed Texas cemetery brokerage." },
+              { icon: ShieldCheck, title: "Licensed & insured", body: "Partnered with Bayer Cemetery Brokers, a licensed California brokerage." },
               { icon: Banknote, title: "No upfront fees", body: "Sellers pay nothing until the plot is sold." },
               { icon: FileCheck, title: "Full title transfer", body: "We handle all cemetery paperwork end-to-end." },
             ].map((b, i) => (
