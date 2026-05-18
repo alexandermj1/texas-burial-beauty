@@ -348,7 +348,7 @@ const CemeteryDirectory = () => {
         />
         {/* Strong readability scrim, soft fade into the page */}
         <div className="absolute inset-0 bg-foreground/55" />
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/30 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/20 to-background" />
 
         <div className="relative container mx-auto px-6">
           <motion.div
