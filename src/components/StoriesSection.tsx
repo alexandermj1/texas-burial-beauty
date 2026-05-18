@@ -43,9 +43,9 @@ const stories = [
 
 const StoriesSection = () => {
   return (
-    <section className="relative pt-6 pb-16 sm:pt-8 sm:pb-20 bg-background">
-      <div className="container mx-auto px-6">
-        <div className="mb-8 sm:mb-12 max-w-3xl">
+    <section className="relative pt-10 pb-20 sm:pt-14 sm:pb-28 bg-background">
+      <div className="container mx-auto px-6 sm:px-10 lg:px-16 max-w-[1400px]">
+        <div className="mb-10 sm:mb-14 max-w-3xl">
           <span className="block text-[11px] font-medium uppercase tracking-[0.3em] text-primary mb-3">
             Stories
           </span>
@@ -54,7 +54,7 @@ const StoriesSection = () => {
           </h2>
         </div>
 
-        <div className="grid gap-5 sm:gap-6 md:grid-cols-12">
+        <div className="grid gap-8 sm:gap-10 lg:gap-12 md:grid-cols-12">
           {stories.map((s, i) => (
             <motion.div
               key={s.eyebrow}
