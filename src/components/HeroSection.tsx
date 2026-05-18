@@ -118,7 +118,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="block text-primary-foreground/90 text-xs tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-md"
         >
-          Est. 1996 · All of Texas
+          Partnered with Bayer Cemetery Brokers · Est. 1996 · All of Texas
         </motion.span>
 
         <motion.h1
