@@ -417,37 +417,40 @@ const CemeteryDirectory = () => {
           condensed Airbnb-style pinned bar. */}
       <div ref={barAnchorRef as any} aria-hidden="true" />
 
-      {/* Condensed pinned bar — visually the SAME hero search bar, just
-          shrunken. Animates in from the top with a smooth scale so it reads
-          as "the hero bar collapsing", not a separate control. */}
+      {/* Sticky search bar — the hero search itself, smoothly transitioning
+          to a slightly condensed sticky state at the top of the viewport. */}
       {typeof document !== "undefined" &&
         createPortal(
           <AnimatePresence>
             {barPinned && (
               <motion.div
-                key="condensed-bar"
-                initial={{ y: -20, opacity: 0, scale: 0.96 }}
+                key="sticky-search"
+                initial={{ y: -28, opacity: 0, scale: 0.97 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: -16, opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ y: -20, opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
                 className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.22)]"
                 style={{ top: `${navHeight}px`, transformOrigin: "center top" }}
               >
-                <div className="container mx-auto px-4 sm:px-6 pt-2.5 pb-2 flex flex-col items-center gap-2">
-                  {/* Shrunken hero pill — same markup language as hero */}
-                  <div className="w-full max-w-xl flex items-center bg-card rounded-full border border-border shadow-[0_8px_24px_-14px_hsl(var(--foreground)/0.35)] focus-within:shadow-[0_12px_28px_-14px_hsl(var(--primary)/0.4)] transition-shadow duration-300">
-                    <Search className="w-4 h-4 text-muted-foreground ml-4 shrink-0" strokeWidth={2} />
+                <div className="container mx-auto px-6 py-3 flex justify-center">
+                  {/* Same hero pill design, condensed ~15% in padding & type */}
+                  <motion.div
+                    layout
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full max-w-2xl flex items-center bg-background rounded-full border border-border shadow-[0_10px_28px_-16px_hsl(var(--foreground)/0.4)] focus-within:shadow-[0_14px_32px_-16px_hsl(var(--primary)/0.45)] transition-shadow duration-300"
+                  >
+                    <Search className="w-[17px] h-[17px] text-muted-foreground ml-5 shrink-0" strokeWidth={2} />
                     <input
                       type="text"
                       placeholder="Search cemeteries, cities, or regions"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 min-w-0 bg-transparent px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none tracking-tight"
+                      className="flex-1 min-w-0 bg-transparent px-3.5 py-2.5 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none tracking-tight"
                     />
                     {query ? (
                       <button
                         onClick={() => setQuery("")}
-                        className="mr-1 w-7 h-7 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                        className="mr-1.5 w-8 h-8 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                         aria-label="Clear search"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -455,46 +458,12 @@ const CemeteryDirectory = () => {
                     ) : (
                       <Link
                         to="/buy"
-                        className="hidden sm:inline-flex mr-1 items-center gap-1 px-3 py-1.5 rounded-full bg-foreground text-background text-[12px] font-medium hover:bg-foreground/85 transition-colors"
+                        className="hidden sm:inline-flex mr-1.5 items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background text-[12.5px] font-medium hover:bg-foreground/85 transition-colors"
                       >
                         Find a plot <ArrowRight className="w-3 h-3" />
                       </Link>
                     )}
-                  </div>
-
-                  {/* Region chips — ordered exactly as the sections appear */}
-                  <div className="relative w-full">
-                    <div className="flex items-center justify-center gap-1.5 flex-nowrap overflow-x-auto no-scrollbar scroll-smooth px-6">
-                      {chipOrder.map((r) => {
-                        const highlighted =
-                          region === r || (region === "All" && r !== "All" && activeRegion === r);
-                        return (
-                          <button
-                            key={r}
-                            onClick={() => {
-                              if (r === "All") {
-                                setRegion("All");
-                                window.scrollTo({ top: 0, behavior: "smooth" });
-                              } else {
-                                setRegion("All");
-                                setTimeout(() => scrollToRegion(r), 50);
-                              }
-                            }}
-                            className={`shrink-0 px-3 py-1 rounded-full text-[11.5px] font-medium tracking-tight transition-colors border ${
-                              highlighted
-                                ? "bg-foreground text-background border-foreground"
-                                : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted border-transparent"
-                            }`}
-                          >
-                            {r}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {/* Edge fades */}
-                    <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent" />
-                    <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent" />
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
             )}
