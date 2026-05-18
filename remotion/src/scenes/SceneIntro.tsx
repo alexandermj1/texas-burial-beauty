@@ -114,11 +114,11 @@ export const SceneIntro: React.FC = () => {
             fontSize: 52,
             color: colors.primary,
           }}>
-            ~90
+            8
           </div>
           <div style={{ textAlign: "left" }}>
-            <div style={{ fontFamily: fonts.body, fontSize: 20, color: colors.foreground, fontWeight: 500 }}>Days</div>
-            <div style={{ fontFamily: fonts.body, fontSize: 15, color: colors.muted }}>Approximate timeline</div>
+            <div style={{ fontFamily: fonts.body, fontSize: 20, color: colors.foreground, fontWeight: 500 }}>Steps</div>
+            <div style={{ fontFamily: fonts.body, fontSize: 15, color: colors.muted }}>From first call to closing</div>
           </div>
         </div>
       </div>

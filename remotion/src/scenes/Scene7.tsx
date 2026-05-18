@@ -49,7 +49,7 @@ export const Scene7Processing: React.FC = () => {
       <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
-            Days 60–80
+            Processing & Logistics
           </div>
           <div style={{ fontFamily: fonts.display, fontSize: 92, color: colors.foreground, lineHeight: 1.05, opacity: titleOpacity, transform: `translateY(${titleY}px)` }}>
             Processing &{"\n"}

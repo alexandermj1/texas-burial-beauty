@@ -49,7 +49,7 @@ export const Scene8Closing: React.FC = () => {
       <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
-            Day ~90
+            Closing Day
           </div>
           <div style={{ fontFamily: fonts.display, fontSize: 88, color: colors.foreground, lineHeight: 1.1, opacity: titleOpacity, transform: `translateY(${titleY}px)` }}>
             Sale{"\n"}
