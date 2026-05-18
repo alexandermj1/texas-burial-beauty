@@ -189,7 +189,7 @@ const Index = () => {
             </motion.div>
 
             <div className="text-center mt-10">
-              <Link to="/properties" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
+              <Link to="/cemeteries" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
                 View All Available Plots <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -197,14 +197,56 @@ const Index = () => {
         </section>
       )}
 
+      <StoryStrip
+        img={featuredImg}
+        eyebrow="Browsing"
+        title="Finding the right plot, from the comfort of home."
+        body="Browse below-market cemetery property listings across Texas, refreshed daily."
+        to="/cemeteries"
+        cta="See available plots"
+        side="left"
+      />
+
       <AboutSeoSection />
       <BuyerPromoAnimation />
+
+      <StoryStrip
+        img={propertyTypesImg}
+        eyebrow="Comparing"
+        title="Understanding every type of resting place."
+        body="Plots, niches, crypts and family estates — see the differences and decide what fits."
+        to="/property-types"
+        cta="Explore property types"
+        side="right"
+      />
+
       <SellerPromoAnimation />
       <PriceComparison />
       <HowItWorksSection />
-      <StoriesSection />
+
+      <StoryStrip
+        img={cemeteriesImg}
+        eyebrow="Researching"
+        title="Every cemetery in Texas, one trusted partner."
+        body="From Dallas to Houston, search the cemeteries that matter to your family."
+        to="/cemeteries"
+        cta="Browse cemeteries"
+        side="left"
+      />
+
       <WhyUsSection />
       <TestimonialsSection />
+
+      <StoryStrip
+        img={mobileImg}
+        eyebrow="On the go"
+        title="Cemetery property, in the palm of your hand."
+        body="Start your search or list a plot from anywhere — designed to work beautifully on every device."
+        to="/buy"
+        cta="Get a personal match"
+        side="right"
+      />
+
       <FAQSection />
       <ContactSection />
       <Footer />
