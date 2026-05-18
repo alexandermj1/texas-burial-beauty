@@ -121,8 +121,10 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-border/80 shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18),0_2px_6px_-2px_hsl(var(--foreground)/0.1)] hover:shadow-[0_28px_56px_-18px_hsl(var(--primary)/0.38)] hover:-translate-y-1 hover:ring-primary/50 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-foreground/15 shadow-[0_10px_30px_-12px_hsl(var(--foreground)/0.22),0_2px_6px_-2px_hsl(var(--foreground)/0.12)] hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.45)] hover:-translate-y-1 hover:ring-primary/60 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
+                {/* Accent top bar — adds liveliness + clearer card separation */}
+                <span aria-hidden className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary via-primary/70 to-primary/30 opacity-80 group-hover:opacity-100 transition-opacity" />
                 <Link
                   to={`/cemeteries/${slug}`}
                   className="relative block px-6 pt-6 pb-5 bg-gradient-to-br from-secondary/40 via-card to-card overflow-hidden"
