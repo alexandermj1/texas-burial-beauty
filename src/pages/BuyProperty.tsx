@@ -342,7 +342,7 @@ const BuyProperty = () => {
             {/* STEP 2 — Timeline (financing tip BEFORE choices) */}
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-                className="max-w-3xl"
+                className="w-full"
               >
                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-3 mb-4">
                   <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
