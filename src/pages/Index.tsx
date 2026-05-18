@@ -14,7 +14,11 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
-import StoriesSection from "@/components/StoriesSection";
+import StoryStrip from "@/components/StoryStrip";
+import featuredImg from "@/assets/story-featured.png";
+import cemeteriesImg from "@/assets/story-cemeteries.png";
+import propertyTypesImg from "@/assets/story-property-types.png";
+import mobileImg from "@/assets/story-mobile.png";
 import Seo from "@/components/Seo";
 import { ListingCard } from "@/pages/Properties";
 
