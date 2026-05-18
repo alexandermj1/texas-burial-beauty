@@ -376,7 +376,7 @@ const BuyProperty = () => {
                     Our prices are <strong>30–50% below</strong> what cemeteries charge directly.
                   </p>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   {budgets.map(b => (
                     <button
                       key={b.id}
