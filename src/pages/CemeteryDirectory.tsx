@@ -105,7 +105,7 @@ const RegionRow = ({
       <div className="relative -mx-6 px-6">
         <div
           ref={scrollerRef}
-          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth pb-2 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto]"
+          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-6 pb-2 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto]"
         >
           {list.map((c, i) => {
             let h = 0;
