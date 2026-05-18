@@ -136,7 +136,7 @@ export const Scene6Buyer: React.FC = () => {
   );
 };
 
-const CARD_SIZE_INNER = 140;
+const CARD_SIZE_INNER = 180;
 
 const MatchCard: React.FC<{ icon: string; title: string; subtitle: string }> = ({ icon, title, subtitle }) => {
   return (
