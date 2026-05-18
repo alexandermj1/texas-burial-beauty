@@ -473,9 +473,12 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
-      {/* Cards grid — soft muted bg for card contrast */}
-      <section className="py-14 md:py-20 bg-muted/40">
-        <div className="container mx-auto px-6">
+      {/* Cards grid — soft layered bg with warm tint for liveliness */}
+      <section className="relative py-14 md:py-20 bg-gradient-to-b from-secondary/30 via-muted/40 to-background overflow-hidden">
+        {/* Decorative warm wash */}
+        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 w-[480px] h-[480px] rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-1/3 -left-32 w-[420px] h-[420px] rounded-full bg-secondary/40 blur-3xl" />
+        <div className="relative container mx-auto px-6">
           {grouped.length === 0 && (
             <div className="text-center py-24">
               <p className="font-display text-2xl text-foreground mb-2">No cemeteries match</p>
