@@ -45,7 +45,7 @@ const SellProperty = () => {
           serviceType: "Cemetery Plot Resale",
           provider: { "@id": "https://texascemeterybrokers.com/#organization" },
           areaServed: "Texas, United States",
-          offers: { "@type": "Offer", description: "Commission-only — no upfront fees" },
+          offers: { "@type": "Offer", description: "Free listing or $99 premium listing" },
         }}
       />
       <Navbar />
