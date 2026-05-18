@@ -8,9 +8,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const [scrolled, setScrolled] = useState(computeScrolled);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdmin();
-  const { isAgent, loading: agentLoading } = useAgent();
 
   useLayoutEffect(() => {
     // Sync before paint so the light navbar background and dark text always
@@ -25,14 +22,11 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
   const links = [
     { to: "/property-types", label: "Property Types" },
-    { to: "/cemeteries", label: "Buy Property" },
+    { to: "/cemeteries", label: "Cemeteries" },
+    { to: "/buy", label: "Buy Property" },
     { to: "/sell", label: "Sell Property" },
-    { to: "/team", label: "Our Team" },
     { to: "/partners", label: "Partners" },
   ];
-
-  const rolesLoading = authLoading || adminLoading || agentLoading;
-  const dashboardLink = rolesLoading ? "/dashboard" : isAdmin ? "/admin" : isAgent ? "/agent" : "/dashboard";
 
   const navContent = (
     <nav
