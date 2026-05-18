@@ -193,12 +193,12 @@ const Index = () => {
         </section>
       )}
 
-      <StoriesSection />
       <AboutSeoSection />
       <BuyerPromoAnimation />
       <SellerPromoAnimation />
       <PriceComparison />
       <HowItWorksSection />
+      <StoriesSection />
       <WhyUsSection />
       <TestimonialsSection />
       <FAQSection />
