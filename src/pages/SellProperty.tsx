@@ -101,7 +101,7 @@ const SellProperty = () => {
       <section className="py-16 bg-gradient-warm">
         <div className="container mx-auto px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
-            <p className="text-primary font-medium text-sm tracking-wide mb-3">Your 90-Day Journey</p>
+            <p className="text-primary font-medium text-sm tracking-wide mb-3">The Seller Journey</p>
             <h2 className="font-display text-3xl md:text-4xl text-foreground">See what happens behind the scenes</h2>
             <p className="text-muted-foreground mt-3 max-w-lg mx-auto">From your first call to final payment — watch the entire process we handle on your behalf.</p>
           </motion.div>
