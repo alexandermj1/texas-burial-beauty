@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "Are there any upfront fees to sell my property?",
-    a: "No. We only charge a commission when your property successfully sells. There are no listing fees, appraisal charges, or hidden costs.",
+    a: "We offer a free listing option and a premium $99 listing option — choose whichever fits you best. No appraisal charges or hidden costs.",
   },
   {
     q: "How long does it take to buy or sell?",

@@ -27,7 +27,7 @@ const steps = [
 
 const faqs = [
   { q: "What types of property can I sell?", a: "We help sell all types of cemetery property: single plots, side-by-side plots, family estates, crypts, mausoleum spaces, niches, and more." },
-  { q: "How much does it cost to list?", a: "Nothing upfront. We work on a commission basis — we only get paid when your property sells. There are no listing fees, marketing costs, or hidden charges." },
+  { q: "How much does it cost to list?", a: "We offer two options: a free listing and a premium $99 listing. No marketing costs or hidden charges." },
   { q: "How do you determine the value of my property?", a: "We research recent sales of similar properties in the same cemetery, considering factors like location within the cemetery, property type, and current market demand." },
   { q: "What if I inherited property and don't have the deed?", a: "No problem. We can help you navigate the process of obtaining a replacement deed or the necessary documentation from the cemetery." },
 ];
@@ -45,7 +45,7 @@ const SellProperty = () => {
           serviceType: "Cemetery Plot Resale",
           provider: { "@id": "https://texascemeterybrokers.com/#organization" },
           areaServed: "Texas, United States",
-          offers: { "@type": "Offer", description: "Commission-only — no upfront fees" },
+          offers: { "@type": "Offer", description: "Free listing or $99 premium listing" },
         }}
       />
       <Navbar />

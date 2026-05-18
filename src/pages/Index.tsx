@@ -43,7 +43,7 @@ const HOME_FAQ_JSONLD = {
       name: "Are there upfront fees to sell my cemetery plot?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "No. We work on commission and only get paid when your plot sells. No listing or appraisal fees.",
+        text: "We offer a free listing option and a premium $99 listing option. No appraisal charges or hidden fees.",
       },
     },
     {
