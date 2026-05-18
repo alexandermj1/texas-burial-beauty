@@ -3,9 +3,7 @@ import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
 
 const SYMBOL_SIZE = 240;
-const CARD_SIZE = 180;
-const CARD_GAP = 80;
-const LINE_LENGTH = CARD_GAP;
+const BADGE_WIDTH = 210;
 
 export const Scene6Buyer: React.FC = () => {
   const frame = useCurrentFrame();
@@ -15,19 +13,12 @@ export const Scene6Buyer: React.FC = () => {
   const titleOpacity = interpolate(titleSpring, [0, 1], [0, 1]);
   const titleY = interpolate(titleSpring, [0, 1], [40, 0]);
 
-  const leftCard = spring({ frame: frame - 36, fps, config: { damping: 20, stiffness: 110 } });
-  const rightCard = spring({ frame: frame - 46, fps, config: { damping: 20, stiffness: 110 } });
-  const leftX = interpolate(leftCard, [0, 1], [-30, 0]);
-  const rightX = interpolate(rightCard, [0, 1], [30, 0]);
-
-  const lineWidth = interpolate(frame - 58, [0, 26], [0, LINE_LENGTH], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-
-  const matchSpring = spring({ frame: frame - 82, fps, config: { damping: 12, stiffness: 240 } });
-  const matchScale = interpolate(matchSpring, [0, 1], [0, 1]);
+  const iconSpring = spring({ frame: frame - 30, fps, config: { damping: 16, stiffness: 180 } });
+  const iconScale = interpolate(iconSpring, [0, 1], [0.72, 1]);
+  const pulse = Math.sin(frame / 10) * 0.03 + 1;
+  const offerProgress = interpolate(frame - 46, [0, 66], [0, 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   const numSpring = spring({ frame, fps, config: { damping: 20, stiffness: 200 } });
-
-  const totalWidth = CARD_SIZE * 2 + CARD_GAP;
 
   return (
     <AbsoluteFill
@@ -49,8 +40,8 @@ export const Scene6Buyer: React.FC = () => {
         <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.muted, letterSpacing: 2, textTransform: "uppercase" }}>Step Six</span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 80, padding: "0 180px" }}>
-        <div style={{ flex: "0 1 auto", maxWidth: 620 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 96, padding: "0 180px" }}>
+        <div style={{ flex: "0 0 620px", maxWidth: 620 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
             Days 30–60
           </div>
@@ -63,68 +54,39 @@ export const Scene6Buyer: React.FC = () => {
           </div>
         </div>
 
-        {/* Property → Line → Buyer visual — compact layout */}
-        <div style={{ flex: 0, position: "relative", width: totalWidth, height: SYMBOL_SIZE }}>
-          {/* Property card */}
-          <div style={{
-            position: "absolute", left: 0, top: (SYMBOL_SIZE - CARD_SIZE) / 2,
-            transform: `translateX(${leftX}px)`, opacity: interpolate(leftCard, [0, 1], [0, 1]),
-          }}>
-            <MatchCard icon="🏠" title="Property" subtitle="Listed" />
+        <div style={{ flex: 0, position: "relative", width: SYMBOL_SIZE + BADGE_WIDTH + 26, height: SYMBOL_SIZE + 64 }}>
+          <div style={{ marginBottom: 18, width: SYMBOL_SIZE, opacity: interpolate(frame - 44, [0, 8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontFamily: fonts.body, fontSize: 17, color: colors.muted }}>Buyer terms</span>
+              <span style={{ fontFamily: fonts.body, fontSize: 17, color: colors.primary, fontWeight: 600 }}>{Math.round(offerProgress)}%</span>
+            </div>
+            <div style={{ height: 8, borderRadius: 999, background: colors.sand, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${offerProgress}%`, borderRadius: 999, background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})` }} />
+            </div>
           </div>
 
-          {/* Connecting line background */}
           <div style={{
-            position: "absolute",
-            left: CARD_SIZE,
-            top: SYMBOL_SIZE / 2 - 2,
-            width: CARD_GAP, height: 4,
-            borderRadius: 2, background: colors.sand,
-          }} />
-          {/* Connecting line animated */}
-          <div style={{
-            position: "absolute",
-            left: CARD_SIZE,
-            top: SYMBOL_SIZE / 2 - 2,
-            width: lineWidth, height: 4,
-            borderRadius: 2,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
-          }} />
-
-          {/* Match checkmark in center */}
-          <div style={{
-            position: "absolute",
-            left: CARD_SIZE + (CARD_GAP - 50) / 2,
-            top: SYMBOL_SIZE / 2 - 25,
-            width: 50, height: 50, borderRadius: "50%",
+            width: SYMBOL_SIZE, height: SYMBOL_SIZE, borderRadius: "50%",
             background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            transform: `scale(${matchScale})`,
-            boxShadow: `0 12px 30px -8px ${colors.primary}45`,
-            zIndex: 2,
+            transform: `scale(${iconScale * pulse})`,
+            boxShadow: `0 20px 60px -15px ${colors.primary}60`,
           }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.background} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
+            <svg width="124" height="124" viewBox="0 0 24 24" fill="none" stroke={colors.background} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12.5V7.8A2.8 2.8 0 0 1 6.8 5h4.4A2.8 2.8 0 0 1 14 7.8v4.7" />
+              <path d="M7 12.5v-2.2A2 2 0 0 1 9 8.3h3" />
+              <path d="M3 14.5h5.2l2 2h3.1" />
+              <path d="M21 14.5h-5.2l-2 2" />
+              <path d="M8 18.8h8" />
+              <path d="m15.5 10.8 1.6 1.6 3.2-3.4" />
             </svg>
           </div>
 
-          {/* Buyer card */}
-          <div style={{
-            position: "absolute", left: CARD_SIZE + CARD_GAP, top: (SYMBOL_SIZE - CARD_SIZE) / 2,
-            transform: `translateX(${rightX}px)`, opacity: interpolate(rightCard, [0, 1], [0, 1]),
-          }}>
-            <MatchCard icon="👤" title="Buyer" subtitle="Qualified" />
-          </div>
-
-          {/* Match confirmed label */}
-          <Sequence from={90}>
-            <div style={{
-              position: "absolute", left: (totalWidth - 220) / 2, bottom: -50,
-              background: colors.white, borderRadius: 999, padding: "12px 24px",
-              boxShadow: `0 14px 30px -12px ${colors.foreground}22`,
-            }}>
-              <span style={{ fontFamily: fonts.body, fontSize: 22, color: colors.foreground, fontWeight: 500 }}>Match Confirmed</span>
-            </div>
+          <Sequence from={54}>
+            <BuyerBadge label="Buyer found" top={78} />
+          </Sequence>
+          <Sequence from={74}>
+            <BuyerBadge label="Terms locked" top={156} />
           </Sequence>
         </div>
       </div>
@@ -136,19 +98,27 @@ export const Scene6Buyer: React.FC = () => {
   );
 };
 
-const CARD_SIZE_INNER = 180;
+const BuyerBadge: React.FC<{ label: string; top: number }> = ({ label, top }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({ frame, fps, config: { damping: 16, stiffness: 180 } });
+  const opacity = interpolate(s, [0, 1], [0, 1]);
+  const x = interpolate(s, [0, 1], [24, 0]);
 
-const MatchCard: React.FC<{ icon: string; title: string; subtitle: string }> = ({ icon, title, subtitle }) => {
   return (
     <div style={{
-      width: CARD_SIZE_INNER, minHeight: CARD_SIZE_INNER, background: colors.white, borderRadius: 28,
-      padding: "22px 16px", boxShadow: `0 16px 36px -14px ${colors.foreground}24`, textAlign: "center",
+      position: "absolute", top, left: 260,
+      display: "flex", alignItems: "center", gap: 10,
+      background: colors.white, borderRadius: 999, width: BADGE_WIDTH, padding: "11px 18px",
+      boxShadow: `0 15px 30px -14px ${colors.foreground}24`,
+      opacity, transform: `translateX(${x}px)`,
     }}>
-      <div style={{ width: 64, height: 64, borderRadius: "50%", background: colors.primaryLight, margin: "0 auto 12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 30 }}>{icon}</span>
+      <div style={{ width: 24, height: 24, borderRadius: "50%", background: colors.primaryLight, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
       </div>
-      <div style={{ fontFamily: fonts.display, fontSize: 26, color: colors.foreground, lineHeight: 1 }}>{title}</div>
-      <div style={{ fontFamily: fonts.body, fontSize: 17, color: colors.muted, marginTop: 6 }}>{subtitle}</div>
+      <span style={{ fontFamily: fonts.body, fontSize: 21, color: colors.foreground, fontWeight: 500 }}>{label}</span>
     </div>
   );
 };
