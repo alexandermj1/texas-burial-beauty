@@ -220,107 +220,93 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Region filter strip — rendered inline (anchor for scroll detection),
-          AND portaled to <body> as a fixed bar once scrolled past, so it
-          escapes PageTransition's transform/overflow containing block. */}
-      {(() => {
-        const BarInner = (
-          <div className="container mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
-            {/* Row 1: search + prominent savings */}
-            <div className="flex items-center gap-2 sm:gap-3 mb-2">
-              <div className="flex-1 flex items-center bg-card rounded-full border border-border focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 transition-all min-w-0 shadow-sm">
-                <Search className="w-4 h-4 text-muted-foreground ml-3.5 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Search cemeteries or cities…"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 min-w-0 bg-transparent px-2.5 py-2 text-[13px] sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
-                />
-                {query && (
-                  <button
-                    onClick={() => setQuery("")}
-                    className="mr-1.5 w-6 h-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-                    aria-label="Clear search"
+      {/* Anchor that marks where the hero search ends — used to trigger the
+          condensed Airbnb-style pinned bar. */}
+      <div ref={barAnchorRef as any} aria-hidden="true" />
+
+      {/* Condensed pinned bar — only appears after scrolling past the hero
+          search. Smoothly slides in from the top. Single search + region chips. */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {barPinned && (
+              <motion.div
+                key="condensed-bar"
+                initial={{ y: -8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -8, opacity: 0 }}
+                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_6px_20px_-10px_hsl(var(--foreground)/0.2)]"
+                style={{ top: `${navHeight}px` }}
+              >
+                <div className="container mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-3">
+                  {/* Compact pill search — same vocabulary as hero, miniaturized */}
+                  <motion.div
+                    layout
+                    className="flex items-center bg-card rounded-full border border-border shadow-sm hover:shadow-md transition-shadow w-full max-w-[340px] shrink-0"
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] sm:text-xs font-semibold tracking-tight shrink-0">
-                30–50% off
-              </span>
-            </div>
-
-            {/* Row 2: region chips with mobile affordance */}
-            <div className="flex items-center gap-2">
-              <span className="sm:hidden text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium shrink-0">
-                Region
-              </span>
-              <div className="relative flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap sm:justify-center overflow-x-auto no-scrollbar -mx-1 px-1 scroll-smooth">
-                  {regions.map((r) => {
-                    const isFiltered = region === r;
-                    const isCurrent = region === "All" && r !== "All" && activeRegion === r;
-                    const highlighted = isFiltered || isCurrent;
-                    return (
+                    <Search className="w-3.5 h-3.5 text-muted-foreground ml-3.5 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search cemeteries or cities…"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="flex-1 min-w-0 bg-transparent px-2.5 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                    />
+                    {query && (
                       <button
-                        key={r}
-                        onClick={() => {
-                          if (r === "All") {
-                            setRegion("All");
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          } else {
-                            setRegion(r);
-                            setTimeout(() => scrollToRegion(r), 50);
-                          }
-                        }}
-                        className={`shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 border ${
-                          highlighted
-                            ? "bg-foreground text-background border-foreground"
-                            : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted border-border/60"
-                        }`}
-                        aria-current={isCurrent ? "true" : undefined}
+                        onClick={() => setQuery("")}
+                        className="mr-1.5 w-6 h-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                        aria-label="Clear search"
                       >
-                        {r}
+                        <X className="w-3 h-3" />
                       </button>
-                    );
-                  })}
-                </div>
-                {/* Mobile right-edge fade + chevron hint */}
-                <div className="sm:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent flex items-center justify-end pr-1">
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/70" />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+                    )}
+                  </motion.div>
 
-        return (
-          <>
-            {/* Inline anchor — sits in flow, used for scroll detection */}
-            <section
-              ref={barAnchorRef as any}
-              className="relative z-20 bg-background border-b border-border"
-            >
-              {BarInner}
-            </section>
+                  {/* Region chips — horizontal scroll, minimal */}
+                  <div className="relative flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto no-scrollbar scroll-smooth">
+                      {regions.map((r) => {
+                        const isFiltered = region === r;
+                        const isCurrent = region === "All" && r !== "All" && activeRegion === r;
+                        const highlighted = isFiltered || isCurrent;
+                        return (
+                          <button
+                            key={r}
+                            onClick={() => {
+                              if (r === "All") {
+                                setRegion("All");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              } else {
+                                setRegion("All");
+                                setTimeout(() => scrollToRegion(r), 50);
+                              }
+                            }}
+                            className={`shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-colors border ${
+                              highlighted
+                                ? "bg-foreground text-background border-foreground"
+                                : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted border-border/60"
+                            }`}
+                            aria-current={isCurrent ? "true" : undefined}
+                          >
+                            {r}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent" />
+                  </div>
 
-            {/* Portaled fixed copy — sits cleanly BELOW the navbar (top = measured nav height)
-                so it never covers the menu. Subtle shadow distinguishes it from the navbar. */}
-            {barPinned && typeof document !== "undefined" &&
-              createPortal(
-                <div
-                  className="fixed left-0 right-0 z-40 bg-background/97 backdrop-blur-xl border-b border-border shadow-[0_6px_20px_-10px_hsl(var(--foreground)/0.2)] animate-in fade-in slide-in-from-top-2 duration-200"
-                  style={{ top: `${navHeight}px` }}
-                >
-                  {BarInner}
-                </div>,
-                document.body
-              )}
-          </>
-        );
-      })()}
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold tracking-tight shrink-0">
+                    30–50% off
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
       {/* Cards grid — soft muted bg for card contrast */}
       <section className="py-14 md:py-20 bg-muted/40">
