@@ -37,7 +37,7 @@ const SellProperty = () => {
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Sell Your Cemetery Plot in Texas | Free Valuation"
-        description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees, 30–60 day average close. Serving Dallas, Houston, Austin & San Antonio."
+        description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees, 6 - 12 Month average close. Serving Dallas, Houston, Austin & San Antonio."
         path="/sell"
         jsonLd={{
           "@context": "https://schema.org",
@@ -79,7 +79,7 @@ const SellProperty = () => {
               <div className="bg-primary-foreground/5 border border-primary-foreground/10 rounded-2xl p-8 backdrop-blur-sm">
                 <div className="space-y-5">
                   {[
-                    { label: "Average sale time", value: "30–60 days" },
+                    { label: "Average sale time", value: "6 - 12 Months" },
                     { label: "Upfront cost to you", value: "$0" },
                     { label: "Families helped (network)", value: "10,000+" },
                   ].map((stat, i) => (
