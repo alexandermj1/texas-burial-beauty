@@ -473,11 +473,25 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
-      {/* Cards grid — soft layered bg with warm tint for liveliness */}
-      <section className="relative py-14 md:py-20 bg-gradient-to-b from-secondary/30 via-muted/40 to-background overflow-hidden">
-        {/* Decorative warm wash */}
-        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 w-[480px] h-[480px] rounded-full bg-primary/10 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute top-1/3 -left-32 w-[420px] h-[420px] rounded-full bg-secondary/40 blur-3xl" />
+      {/* Cards grid — layered editorial bg with warm color washes */}
+      <section className="relative pt-24 md:pt-32 pb-14 md:pb-20 bg-gradient-to-b from-secondary/40 via-muted/30 to-background overflow-hidden">
+        {/* Subtle grid texture */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+          }}
+        />
+        {/* Decorative warm washes — positioned to NOT overlap card tops */}
+        <div aria-hidden className="pointer-events-none absolute top-[55%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/15 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-[20%] -left-40 w-[460px] h-[460px] rounded-full bg-secondary/50 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute bottom-[10%] left-1/3 w-[360px] h-[360px] rounded-full bg-accent/20 blur-3xl" />
+        {/* Hairline separator at the very top so cards feel anchored */}
+        <div aria-hidden className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
         <div className="relative container mx-auto px-6">
           {grouped.length === 0 && (
             <div className="text-center py-24">
