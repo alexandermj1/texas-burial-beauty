@@ -405,7 +405,7 @@ const CemeteryDirectory = () => {
 
               {/* Apple-style ultra-minimal supporting line — no pill */}
               <p className="mt-5 text-[12px] text-background/75 font-light tracking-wide">
-                Licensed Texas brokerage · 30–60% below retail ·{" "}
+                Partnered with Bayer Cemetery Brokers (CA licensed) · 30–60% below retail ·{" "}
                 <a href="tel:+14242341678" className="text-background hover:text-primary transition-colors underline-offset-4 hover:underline">
                   (424) 234-1678
                 </a>

@@ -162,10 +162,10 @@ const Partners = () => {
                 Sell Your Property <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                to="/properties"
+                to="/cemeteries"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground font-medium rounded-full text-sm hover:bg-primary-foreground/20 transition-all backdrop-blur-sm"
               >
-                Browse Properties
+                Browse Cemeteries
               </Link>
               <a
                 href={BAYER_URL}

@@ -1,9 +1,6 @@
 import { useState, useLayoutEffect } from "react";
-import { Phone, Menu, X, User } from "lucide-react";
+import { Phone, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useAdmin } from "@/hooks/useAdmin";
-import { useAgent } from "@/hooks/useAgent";
 
 const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const computeScrolled = () =>
@@ -11,9 +8,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const [scrolled, setScrolled] = useState(computeScrolled);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdmin();
-  const { isAgent, loading: agentLoading } = useAgent();
 
   useLayoutEffect(() => {
     // Sync before paint so the light navbar background and dark text always
@@ -28,14 +22,11 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
   const links = [
     { to: "/property-types", label: "Property Types" },
-    { to: "/cemeteries", label: "Buy Property" },
+    { to: "/cemeteries", label: "Cemeteries" },
+    { to: "/buy", label: "Buy Property" },
     { to: "/sell", label: "Sell Property" },
-    { to: "/team", label: "Our Team" },
     { to: "/partners", label: "Partners" },
   ];
-
-  const rolesLoading = authLoading || adminLoading || agentLoading;
-  const dashboardLink = rolesLoading ? "/dashboard" : isAdmin ? "/admin" : isAgent ? "/agent" : "/dashboard";
 
   const navContent = (
     <nav
@@ -70,31 +61,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
               {link.label}
             </Link>
           ))}
-          {user ? (
-            <Link
-              to={dashboardLink}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-500 ${
-                scrolled
-                  ? "bg-primary text-primary-foreground hover:opacity-90"
-                  : "bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/20 hover:bg-primary-foreground/25"
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              to="/auth"
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-500 ${
-                scrolled
-                  ? "bg-primary text-primary-foreground hover:opacity-90"
-                  : "bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/20 hover:bg-primary-foreground/25"
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              Sign In
-            </Link>
-          )}
         </div>
 
         <button
@@ -116,17 +82,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
               {link.label}
             </Link>
           ))}
-          {user ? (
-            <Link to={dashboardLink} onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-full w-fit">
-              <User className="w-3.5 h-3.5" />
-              Dashboard
-            </Link>
-          ) : (
-            <Link to="/auth" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-full w-fit">
-              <User className="w-3.5 h-3.5" />
-              Sign In
-            </Link>
-          )}
         </div>
       )}
     </nav>
