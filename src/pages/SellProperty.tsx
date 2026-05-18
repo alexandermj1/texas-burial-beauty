@@ -160,7 +160,7 @@ const SellProperty = () => {
               <a href="tel:+14242341678" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
                 <Phone className="w-4 h-4" /> (424) 234-1678
               </a>
-              <a href="mailto:Help@TexasCemeteryBrokers.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
+              <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
                 <Mail className="w-4 h-4" /> Email Us <ArrowRight className="w-4 h-4" />
               </a>
             </div>

@@ -535,7 +535,7 @@ const Partners = () => {
                 <Phone className="w-4 h-4" /> (424) 234-1678
               </a>
               <a
-                href="mailto:Help@TexasCemeteryBrokers.com"
+                href="mailto:info@texascemeterybrokers.com"
                 className="inline-flex items-center gap-2 px-7 py-3.5 border border-foreground/15 text-foreground font-medium rounded-full text-sm hover:bg-foreground/5 transition-all"
               >
                 <Mail className="w-4 h-4" /> Email Us
