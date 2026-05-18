@@ -322,132 +322,13 @@ const CemeteryDirectory = () => {
             <div className="min-w-0">
               {grouped.map(([groupRegion, list], gIdx) => {
                 return (
-              <div
+              <RegionRow
                 key={groupRegion}
-                data-region={groupRegion}
-                ref={(el) => { sectionRefs.current[groupRegion] = el; }}
-                className="mb-16 last:mb-0 scroll-mt-[200px]"
-              >
-                {/* Region header — quiet editorial band, matches card vocabulary */}
-                <div className="flex items-end justify-between gap-6 mb-6 pb-5 border-b border-border/70">
-                  <div className="flex items-baseline gap-4">
-                    <span className="font-display text-xs text-primary tabular-nums tracking-[0.2em] uppercase">
-                      №&nbsp;{String(gIdx + 1).padStart(2, "0")}
-                    </span>
-                    <h2 className="font-display text-2xl md:text-4xl text-foreground tracking-tight leading-none">
-                      {groupRegion}
-                    </h2>
-                  </div>
-                  <span className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground font-medium tabular-nums shrink-0 pb-1">
-                    {list.length.toString().padStart(2, "0")} {list.length === 1 ? "cemetery" : "cemeteries"}
-                  </span>
-                </div>
-
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {list.map((c, i) => {
-                    let h = 0;
-                    for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
-
-                    const offeringSets: string[][] = [
-                      ["Plots", "Niches", "Mausoleums"],
-                      ["Plots", "Companion", "Cremation"],
-                      ["Plots", "Lawn Crypts", "Family Estates"],
-                      ["Plots", "Niches", "Veteran"],
-                    ];
-                    const offerings = offeringSets[h % offeringSets.length];
-                    const refNum = String((h % 999) + 1).padStart(3, "0");
-                    const slug = slugify(c.name);
-
-
-                    return (
-                      <motion.article
-                        key={`${c.name}-${c.city}`}
-                        initial={{ opacity: 0, y: 16 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-30px" }}
-                        transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-border/80 shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18),0_2px_6px_-2px_hsl(var(--foreground)/0.1)] hover:shadow-[0_28px_56px_-18px_hsl(var(--primary)/0.38)] hover:-translate-y-1 hover:ring-primary/50 transition-all duration-300 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/40 before:to-transparent before:opacity-60 group-hover:before:opacity-100 after:absolute after:inset-0 after:rounded-2xl after:pointer-events-none after:bg-gradient-to-b after:from-foreground/[0.02] after:to-transparent"
-                      >
-                        {/* Top: editorial header with monogram backdrop */}
-                        <Link
-                          to={`/cemeteries/${slug}`}
-                          className="relative block px-6 pt-6 pb-5 bg-gradient-to-br from-secondary/40 via-card to-card overflow-hidden"
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="absolute -top-6 -right-2 font-display text-[150px] leading-none text-primary/[0.07] select-none pointer-events-none tracking-tighter"
-                          >
-                            {c.name.charAt(0)}
-                          </span>
-
-                          <div className="relative">
-                            <div className="flex items-center justify-between mb-5">
-                              <span className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground font-medium">
-                                {c.region}
-                              </span>
-                              <span className="font-display text-[11px] text-muted-foreground/70 tabular-nums tracking-wider">
-                                №&nbsp;{refNum}
-                              </span>
-                            </div>
-
-                            <h3 className="font-display text-[22px] leading-[1.15] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                              {c.name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                              {c.city}, TX
-                            </p>
-                          </div>
-                        </Link>
-
-                        {/* Middle: inventory + status */}
-                        <div className="px-6 pt-4 pb-5 flex-1 flex flex-col">
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-medium">
-                              Inventory
-                            </p>
-                            <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase text-primary font-medium">
-                              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Active
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {offerings.map((o) => (
-                              <span
-                                key={o}
-                                className="text-[11px] px-2.5 py-1 rounded-full bg-muted text-foreground/75 font-medium"
-                              >
-                                {o}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Footer: integrated Buy / Sell split */}
-                        <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
-                          <Link
-                            to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
-                            className="group/buy flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-foreground hover:bg-foreground hover:text-background transition-colors"
-                          >
-                            Buy here
-                            <ArrowRight className="w-3.5 h-3.5 opacity-0 -ml-1 group-hover/buy:opacity-100 group-hover/buy:ml-0 transition-all" />
-                          </Link>
-                          <Link
-                            to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
-                            className="group/sell flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-                          >
-                            Sell mine
-                            <ArrowRight className="w-3.5 h-3.5 opacity-0 -ml-1 group-hover/sell:opacity-100 group-hover/sell:ml-0 transition-all" />
-                          </Link>
-                        </div>
-                      </motion.article>
-                    );
-                  })}
-                </div>
-              </div>
-                );
-              })}
-            </div>
-          </div>
+                groupRegion={groupRegion}
+                list={list}
+                gIdx={gIdx}
+                setRef={(el) => { sectionRefs.current[groupRegion] = el; }}
+              />
 
 
           {/* Conversion-driving CTA — dark editorial, dual action */}
