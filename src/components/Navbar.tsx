@@ -47,10 +47,10 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     >
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-baseline gap-2">
-          <span className={`font-display font-bold text-2xl ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
+          <span className={`font-display text-2xl ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
             Texas Cemetery
           </span>
-          <span className={`font-display font-bold text-2xl hidden sm:inline ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
+          <span className={`font-display text-2xl hidden sm:inline ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
             Brokers
           </span>
         </Link>
