@@ -16,7 +16,7 @@ const PageTransition = () => {
   const shouldShowSplash = isHome && !hasShownSplash;
 
   const [splashVisible, setSplashVisible] = useState(shouldShowSplash);
-  const splashHoldMs = shouldReduceMotion ? 150 : 2400;
+  const splashHoldMs = shouldReduceMotion ? 150 : 2900;
 
   useEffect(() => {
     if (!shouldShowSplash) return;
@@ -91,6 +91,57 @@ const PageTransition = () => {
             )}
 
             <div className="relative flex flex-col items-center text-foreground max-w-full">
+              {/* Minimalist arch monument — draws itself in */}
+              {!shouldReduceMotion && (
+                <motion.svg
+                  width="64"
+                  height="80"
+                  viewBox="0 0 64 80"
+                  fill="none"
+                  className="mb-8 sm:mb-10 text-foreground/70"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                >
+                  {/* Arched marker silhouette */}
+                  <motion.path
+                    d="M12 78 L12 32 Q12 8 32 8 Q52 8 52 32 L52 78"
+                    stroke="currentColor"
+                    strokeWidth="1.25"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                  {/* Center engraved line */}
+                  <motion.line
+                    x1="32"
+                    y1="34"
+                    x2="32"
+                    y2="58"
+                    stroke="currentColor"
+                    strokeWidth="0.75"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 0.6 }}
+                    transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
+                  />
+                  {/* Ground line */}
+                  <motion.line
+                    x1="0"
+                    y1="79"
+                    x2="64"
+                    y2="79"
+                    stroke="currentColor"
+                    strokeWidth="0.75"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.2, delay: 0.05, ease: "easeOut" }}
+                  />
+                </motion.svg>
+              )}
+
               {/* Wordmark — large, serif, calm */}
               <h1 className="font-display tracking-tight text-center leading-[1.05] text-3xl sm:text-5xl md:text-6xl lg:text-7xl flex flex-wrap justify-center gap-x-[0.32em] max-w-[92vw]">
                 {words.map((word, wi) => (
@@ -107,7 +158,7 @@ const PageTransition = () => {
                         animate={{ y: "0%", opacity: 1 }}
                         transition={{
                           duration: 0.85,
-                          delay: 0.15 + wi * 0.12 + ci * 0.025,
+                          delay: 0.5 + wi * 0.12 + ci * 0.025,
                           ease: [0.22, 1, 0.36, 1],
                         }}
                       >
@@ -124,7 +175,7 @@ const PageTransition = () => {
                 className="mt-7 sm:mt-9 h-px bg-foreground/25"
                 initial={shouldReduceMotion ? { width: 80 } : { width: 0 }}
                 animate={{ width: 80 }}
-                transition={{ duration: 0.9, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.9, delay: 1.45, ease: [0.22, 1, 0.36, 1] }}
               />
 
               {/* Tagline */}
@@ -132,9 +183,9 @@ const PageTransition = () => {
                 className="mt-5 text-[10px] sm:text-xs uppercase tracking-[0.4em] text-muted-foreground"
                 initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.7, delay: 1.7, ease: [0.22, 1, 0.36, 1] }}
               >
-                Est. 1996 · All of Texas
+                Serving all of Texas
               </motion.span>
             </div>
           </motion.div>
