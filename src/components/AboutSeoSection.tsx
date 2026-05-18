@@ -50,29 +50,53 @@ const AboutSeoSection = () => {
           </h2>
         </motion.div>
 
-        {/* Three-stat band — adds rhythm + makes the savings concrete */}
+        {/* Editorial stat strip — typography-led, no boxes */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-px bg-border/60 rounded-2xl overflow-hidden border border-border/60"
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="mt-14 sm:mt-16 relative"
         >
-          {[
-            { stat: "30–50%", label: "Below cemetery retail", icon: TrendingDown },
-            { stat: "Since 1996", label: "Texas-licensed brokerage", icon: ShieldCheck },
-            { stat: "5 Regions", label: "DFW, Houston, Austin, San Antonio & El Paso", icon: MapPin },
-          ].map((s) => (
-            <div key={s.label} className="bg-card/80 backdrop-blur-sm p-5 sm:p-7 md:p-8 flex flex-col">
-              <s.icon className="w-5 h-5 text-primary mb-3" />
-              <div className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground tracking-tight leading-none mb-2">
-                {s.stat}
-              </div>
-              <div className="text-[13px] sm:text-sm text-muted-foreground font-light leading-snug">
-                {s.label}
-              </div>
-            </div>
-          ))}
+          {/* hairlines */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent" aria-hidden="true" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent" aria-hidden="true" />
+
+          <dl className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/60 py-8 sm:py-10">
+            {[
+              { stat: "30–50", suffix: "%", icon: TrendingDown, label: "Below cemetery retail pricing" },
+              { stat: "1996", suffix: "", prefix: "Est.", icon: ShieldCheck, label: "Texas-licensed brokerage" },
+              { stat: "5", suffix: "", icon: MapPin, label: "Major regions across Texas" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.6, delay: 0.15 + i * 0.1 }}
+                className="px-2 sm:px-8 first:sm:pl-0 last:sm:pr-0 py-4 sm:py-2 flex flex-col"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <s.icon className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                    {["Savings", "Heritage", "Coverage"][i]}
+                  </span>
+                </div>
+                <dt className="font-display text-foreground leading-none flex items-baseline gap-1.5">
+                  {s.prefix && (
+                    <span className="text-base sm:text-lg font-light text-foreground/60 italic">{s.prefix}</span>
+                  )}
+                  <span className="text-5xl sm:text-6xl md:text-7xl tracking-tight">{s.stat}</span>
+                  {s.suffix && (
+                    <span className="text-2xl sm:text-3xl font-light text-primary/80">{s.suffix}</span>
+                  )}
+                </dt>
+                <dd className="mt-3 text-sm text-muted-foreground font-light leading-snug max-w-[18ch]">
+                  {s.label}
+                </dd>
+              </motion.div>
+            ))}
+          </dl>
         </motion.div>
 
         {/* Two-column editorial body — wider columns, more air */}
