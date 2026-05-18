@@ -16,7 +16,7 @@ const PageTransition = () => {
   const shouldShowSplash = isHome && !hasShownSplash;
 
   const [splashVisible, setSplashVisible] = useState(shouldShowSplash);
-  const splashHoldMs = shouldReduceMotion ? 150 : 2400;
+  const splashHoldMs = shouldReduceMotion ? 150 : 2900;
 
   useEffect(() => {
     if (!shouldShowSplash) return;
