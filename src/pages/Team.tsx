@@ -36,7 +36,7 @@ const leadership: TeamMember[] = [
     name: "Michael Schepers",
     title: "Licensed & Bonded Broker, Licensed Cemetery Salesperson",
     photo: michaelPhoto,
-    bio: `Michael became our licensed and bonded broker CEB 1421 in 2018. Michael has been general manager with Cemetery Property Resales since January 2000, marking his 28th year with the company. You will notice his German accent upon meeting him, and he is also fluent in Spanish. Michael specializes in properties in the South Bay at Oak Hill Memorial Park and Los Gatos Memorial Park in San Jose, and in San Mateo at Skylawn Memorial Park. Michael is a deacon at his church, a proud father and grandfather.`,
+    bio: `Michael became our licensed and bonded broker CEB 1512 in 2018. Michael has been general manager with Cemetery Property Resales since January 2000, marking his 28th year with the company. You will notice his German accent upon meeting him, and he is also fluent in Spanish. Michael specializes in properties in the South Bay at Oak Hill Memorial Park and Los Gatos Memorial Park in San Jose, and in San Mateo at Skylawn Memorial Park. Michael is a deacon at his church, a proud father and grandfather.`,
   },
 ];
 
@@ -353,7 +353,7 @@ const Team = () => {
               An Ethical Approach & Teamwork
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Texas Cemetery Brokers operates in close partnership with Bayer Cemetery Brokers — the licensed brokerage (CEB 1421) that has been serving families since 1996. Together, our teams bring 30+ years of cemetery resale expertise to Texas families, with growing on-the-ground coverage of Dallas–Fort Worth, Greater Houston, Austin and San Antonio.
+              Texas Cemetery Brokers operates in close partnership with Bayer Cemetery Brokers — the licensed brokerage (CEB 1512) that has been serving families since 1996. Together, our teams bring 30+ years of cemetery resale expertise to Texas families, with growing on-the-ground coverage of Dallas–Fort Worth, Greater Houston, Austin and San Antonio.
             </p>
             <p className="text-muted-foreground leading-relaxed text-sm">
               Our partner network is well known to Funeral Directors, hospices, churches and Veteran organizations across two states — combining the trust of a long-established brokerage with a Texas-first focus on speed and local service.

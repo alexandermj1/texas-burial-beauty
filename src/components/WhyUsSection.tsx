@@ -5,7 +5,7 @@ const reasons = [
   {
     icon: Shield,
     title: "Licensed & Bonded",
-    description: "In partnership with Bayer Cemetery Brokers (CEB 1421), a licensed California brokerage. Full legal protection on every transaction.",
+    description: "In partnership with Bayer Cemetery Brokers (CEB 1512), a licensed California brokerage. Full legal protection on every transaction.",
   },
   {
     icon: Clock,
