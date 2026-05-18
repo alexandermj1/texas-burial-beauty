@@ -329,7 +329,10 @@ const CemeteryDirectory = () => {
                 gIdx={gIdx}
                 setRef={(el) => { sectionRefs.current[groupRegion] = el; }}
               />
-
+                );
+              })}
+            </div>
+          </div>
 
           {/* Conversion-driving CTA — dark editorial, dual action */}
           <motion.div
