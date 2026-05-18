@@ -205,6 +205,7 @@ const Index = () => {
         to="/cemeteries"
         cta="See available plots"
         side="left"
+        variant="split"
       />
 
       <AboutSeoSection />
@@ -218,6 +219,7 @@ const Index = () => {
         to="/property-types"
         cta="Explore property types"
         side="right"
+        variant="compact"
       />
 
       <SellerPromoAnimation />
@@ -232,6 +234,7 @@ const Index = () => {
         to="/cemeteries"
         cta="Browse cemeteries"
         side="left"
+        variant="wide"
       />
 
       <WhyUsSection />
@@ -245,6 +248,7 @@ const Index = () => {
         to="/buy"
         cta="Get a personal match"
         side="right"
+        variant="overlay"
       />
 
       <FAQSection />

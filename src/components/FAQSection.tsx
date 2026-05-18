@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Is the transfer process legally binding and secure?",
-    a: "Absolutely. All transfers go through the cemetery's official process with proper documentation, ensuring full legal protection for both parties. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1421) — for back-office expertise and shared buyer networks.",
+    a: "Absolutely. All transfers go through the cemetery's official process with proper documentation, ensuring full legal protection for both parties. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) — for back-office expertise and shared buyer networks.",
   },
 ];
 
