@@ -337,7 +337,7 @@ const CemeteryDirectory = () => {
       <Navbar />
 
       {/* HERO — centered, minimal, integrated with directory */}
-      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden">
+      <section className="relative pt-32 pb-4 md:pt-40 md:pb-6 overflow-hidden">
         <motion.img
           src={heroBg}
           alt=""
