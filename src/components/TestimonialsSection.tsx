@@ -49,7 +49,7 @@ const TestimonialsSection = () => {
                 <Star key={j} className="w-4 h-4 fill-accent text-accent" />
               ))}
             </div>
-            <p className="text-sm text-muted-foreground">4.9 average · 70+ verified Google reviews</p>
+            <p className="text-sm text-muted-foreground">4.9 average · 50+ verified Google reviews</p>
           </div>
         </motion.div>
 
