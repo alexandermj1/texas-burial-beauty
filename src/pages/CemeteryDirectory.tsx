@@ -478,7 +478,7 @@ const CemeteryDirectory = () => {
         {/* Tinted background, masked to fade in from the hero and out to the footer */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-secondary/20 to-background"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-secondary/30 to-background"
           style={{
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
@@ -486,14 +486,14 @@ const CemeteryDirectory = () => {
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
           }}
         />
-        {/* Soft dotted texture — editorial, also softly masked */}
+        {/* Dotted grid texture — editorial, softly masked */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.18]"
+          className="pointer-events-none absolute inset-0 opacity-[0.55]"
           style={{
             backgroundImage:
-              "radial-gradient(hsl(var(--primary) / 0.18) 1px, transparent 1px)",
-            backgroundSize: "26px 26px",
+              "radial-gradient(hsl(var(--primary) / 0.45) 1.4px, transparent 1.4px)",
+            backgroundSize: "24px 24px",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
             maskImage:
