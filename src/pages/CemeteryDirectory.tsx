@@ -121,7 +121,7 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-foreground/25 shadow-[0_14px_36px_-14px_hsl(var(--foreground)/0.3),0_2px_8px_-2px_hsl(var(--foreground)/0.16)] hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.5)] hover:-translate-y-1 hover:ring-primary/70 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-foreground/35 hover:ring-primary/70 hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.5)] hover:-translate-y-1 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
                 {/* Accent top bar — adds liveliness + clearer card separation */}
                 <span aria-hidden className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary via-primary/70 to-primary/30 opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -478,7 +478,7 @@ const CemeteryDirectory = () => {
         {/* Tinted background, masked to fade in from the hero and out to the footer */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-secondary/20 to-background"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-secondary/30 to-background"
           style={{
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
@@ -486,14 +486,14 @@ const CemeteryDirectory = () => {
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
           }}
         />
-        {/* Soft dotted texture — editorial, also softly masked */}
+        {/* Dotted grid texture — editorial, softly masked */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.18]"
+          className="pointer-events-none absolute inset-0 opacity-[0.55]"
           style={{
             backgroundImage:
-              "radial-gradient(hsl(var(--primary) / 0.18) 1px, transparent 1px)",
-            backgroundSize: "26px 26px",
+              "radial-gradient(hsl(var(--primary) / 0.45) 1.4px, transparent 1.4px)",
+            backgroundSize: "24px 24px",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
             maskImage:
