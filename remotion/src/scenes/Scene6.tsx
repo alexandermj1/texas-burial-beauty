@@ -3,8 +3,8 @@ import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
 
 const SYMBOL_SIZE = 240;
-const CARD_SIZE = 140;
-const CARD_GAP = 60;
+const CARD_SIZE = 180;
+const CARD_GAP = 80;
 const LINE_LENGTH = CARD_GAP;
 
 export const Scene6Buyer: React.FC = () => {
