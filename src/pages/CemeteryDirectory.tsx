@@ -102,10 +102,10 @@ const RegionRow = ({
       </div>
 
       {/* Horizontal scroll row — Airbnb-style, x-only */}
-      <div className="relative -mx-6 px-6">
+      <div className="relative -mx-6 pl-8 pr-6 md:-mx-8 md:pl-10 md:pr-8">
         <div
           ref={scrollerRef}
-          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-6 pb-2 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto]"
+          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-8 md:scroll-pl-10 py-3 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto]"
         >
           {list.map((c, i) => {
             let h = 0;
@@ -473,9 +473,20 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
-      {/* Cards grid — warm cream wash with subtle earthy color accents */}
-      <section className="relative pt-6 md:pt-10 pb-14 md:pb-20 bg-gradient-to-b from-background via-secondary/15 to-background overflow-hidden">
-        {/* Soft dotted texture — editorial, not grey */}
+      {/* Cards grid — warm cream wash that fades softly into the page */}
+      <section className="relative pt-14 md:pt-20 pb-20 md:pb-28 overflow-hidden">
+        {/* Tinted background, masked to fade in from the hero and out to the footer */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-secondary/20 to-background"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
+          }}
+        />
+        {/* Soft dotted texture — editorial, also softly masked */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.18]"
@@ -483,12 +494,16 @@ const CemeteryDirectory = () => {
             backgroundImage:
               "radial-gradient(hsl(var(--primary) / 0.18) 1px, transparent 1px)",
             backgroundSize: "26px 26px",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
           }}
         />
         {/* Decorative warm washes — terracotta + sage */}
-        <div aria-hidden className="pointer-events-none absolute top-[10%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/12 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute top-[45%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute bottom-[8%] right-1/3 w-[360px] h-[360px] rounded-full bg-secondary/40 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-[18%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/12 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-[50%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute bottom-[15%] right-1/3 w-[360px] h-[360px] rounded-full bg-secondary/40 blur-3xl" />
 
         <div className="relative container mx-auto px-6">
           {grouped.length === 0 && (
