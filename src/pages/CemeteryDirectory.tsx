@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
-import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,6 +11,192 @@ import { slugify } from "@/lib/cemeterySlug";
 
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
+
+type Cem = (typeof bayCemeteries)[number];
+
+const OFFERING_SETS: string[][] = [
+  ["Plots", "Niches", "Mausoleums"],
+  ["Plots", "Companion", "Cremation"],
+  ["Plots", "Lawn Crypts", "Family Estates"],
+  ["Plots", "Niches", "Veteran"],
+];
+
+const RegionRow = ({
+  groupRegion,
+  list,
+  gIdx,
+  setRef,
+}: {
+  groupRegion: string;
+  list: Cem[];
+  gIdx: number;
+  setRef: (el: HTMLDivElement | null) => void;
+}) => {
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+
+  const updateArrows = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 4);
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  useEffect(() => {
+    updateArrows();
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      window.removeEventListener("resize", updateArrows);
+    };
+  }, [list]);
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const amount = Math.max(el.clientWidth * 0.85, 320);
+    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  };
+
+  return (
+    <div
+      data-region={groupRegion}
+      ref={setRef}
+      className="mb-14 last:mb-0 scroll-mt-[200px]"
+    >
+      {/* Region header — quiet editorial band with carousel arrows */}
+      <div className="flex items-end justify-between gap-6 mb-5">
+        <div className="flex items-baseline gap-4 min-w-0">
+          <span className="font-display text-xs text-primary tabular-nums tracking-[0.2em] uppercase shrink-0">
+            №&nbsp;{String(gIdx + 1).padStart(2, "0")}
+          </span>
+          <h2 className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-none truncate">
+            {groupRegion}
+          </h2>
+          <span className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-medium tabular-nums shrink-0 hidden sm:inline">
+            · {list.length.toString().padStart(2, "0")} {list.length === 1 ? "cemetery" : "cemeteries"}
+          </span>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => scrollBy(-1)}
+            disabled={!canPrev}
+            aria-label="Scroll left"
+            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scrollBy(1)}
+            disabled={!canNext}
+            aria-label="Scroll right"
+            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Horizontal scroll row — Airbnb-style */}
+      <div className="relative -mx-6 px-6">
+        <div
+          ref={scrollerRef}
+          className="flex gap-5 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth pb-2"
+        >
+          {list.map((c, i) => {
+            let h = 0;
+            for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
+            const offerings = OFFERING_SETS[h % OFFERING_SETS.length];
+            const refNum = String((h % 999) + 1).padStart(3, "0");
+            const slug = slugify(c.name);
+
+            return (
+              <motion.article
+                key={`${c.name}-${c.city}`}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
+                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-border/80 shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18),0_2px_6px_-2px_hsl(var(--foreground)/0.1)] hover:shadow-[0_28px_56px_-18px_hsl(var(--primary)/0.38)] hover:-translate-y-1 hover:ring-primary/50 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+              >
+                <Link
+                  to={`/cemeteries/${slug}`}
+                  className="relative block px-6 pt-6 pb-5 bg-gradient-to-br from-secondary/40 via-card to-card overflow-hidden"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-6 -right-2 font-display text-[150px] leading-none text-primary/[0.07] select-none pointer-events-none tracking-tighter"
+                  >
+                    {c.name.charAt(0)}
+                  </span>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground font-medium">
+                        {c.region}
+                      </span>
+                      <span className="font-display text-[11px] text-muted-foreground/70 tabular-nums tracking-wider">
+                        №&nbsp;{refNum}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-[20px] leading-[1.15] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      {c.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
+                      {c.city}, TX
+                    </p>
+                  </div>
+                </Link>
+
+                <div className="px-6 pt-4 pb-5 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-medium">
+                      Inventory
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase text-primary font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Active
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {offerings.map((o) => (
+                      <span
+                        key={o}
+                        className="text-[11px] px-2.5 py-1 rounded-full bg-muted text-foreground/75 font-medium"
+                      >
+                        {o}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
+                  <Link
+                    to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
+                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-foreground hover:bg-foreground hover:text-background transition-colors"
+                  >
+                    Buy here
+                  </Link>
+                  <Link
+                    to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
+                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                  >
+                    Sell mine
+                  </Link>
+                </div>
+              </motion.article>
+            );
+          })}
+        </div>
+        {/* Edge fade hints (mobile primarily) */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-muted/40 to-transparent" />
+      </div>
+    </div>
+  );
+};
 
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
@@ -220,107 +406,93 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* Region filter strip — rendered inline (anchor for scroll detection),
-          AND portaled to <body> as a fixed bar once scrolled past, so it
-          escapes PageTransition's transform/overflow containing block. */}
-      {(() => {
-        const BarInner = (
-          <div className="container mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
-            {/* Row 1: search + prominent savings */}
-            <div className="flex items-center gap-2 sm:gap-3 mb-2">
-              <div className="flex-1 flex items-center bg-card rounded-full border border-border focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 transition-all min-w-0 shadow-sm">
-                <Search className="w-4 h-4 text-muted-foreground ml-3.5 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Search cemeteries or cities…"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 min-w-0 bg-transparent px-2.5 py-2 text-[13px] sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
-                />
-                {query && (
-                  <button
-                    onClick={() => setQuery("")}
-                    className="mr-1.5 w-6 h-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-                    aria-label="Clear search"
+      {/* Anchor that marks where the hero search ends — used to trigger the
+          condensed Airbnb-style pinned bar. */}
+      <div ref={barAnchorRef as any} aria-hidden="true" />
+
+      {/* Condensed pinned bar — only appears after scrolling past the hero
+          search. Smoothly slides in from the top. Single search + region chips. */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {barPinned && (
+              <motion.div
+                key="condensed-bar"
+                initial={{ y: -8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -8, opacity: 0 }}
+                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_6px_20px_-10px_hsl(var(--foreground)/0.2)]"
+                style={{ top: `${navHeight}px` }}
+              >
+                <div className="container mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-3">
+                  {/* Compact pill search — same vocabulary as hero, miniaturized */}
+                  <motion.div
+                    layout
+                    className="flex items-center bg-card rounded-full border border-border shadow-sm hover:shadow-md transition-shadow w-full max-w-[340px] shrink-0"
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] sm:text-xs font-semibold tracking-tight shrink-0">
-                30–50% off
-              </span>
-            </div>
-
-            {/* Row 2: region chips with mobile affordance */}
-            <div className="flex items-center gap-2">
-              <span className="sm:hidden text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium shrink-0">
-                Region
-              </span>
-              <div className="relative flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap sm:justify-center overflow-x-auto no-scrollbar -mx-1 px-1 scroll-smooth">
-                  {regions.map((r) => {
-                    const isFiltered = region === r;
-                    const isCurrent = region === "All" && r !== "All" && activeRegion === r;
-                    const highlighted = isFiltered || isCurrent;
-                    return (
+                    <Search className="w-3.5 h-3.5 text-muted-foreground ml-3.5 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search cemeteries or cities…"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="flex-1 min-w-0 bg-transparent px-2.5 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                    />
+                    {query && (
                       <button
-                        key={r}
-                        onClick={() => {
-                          if (r === "All") {
-                            setRegion("All");
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          } else {
-                            setRegion(r);
-                            setTimeout(() => scrollToRegion(r), 50);
-                          }
-                        }}
-                        className={`shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-all duration-200 border ${
-                          highlighted
-                            ? "bg-foreground text-background border-foreground"
-                            : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted border-border/60"
-                        }`}
-                        aria-current={isCurrent ? "true" : undefined}
+                        onClick={() => setQuery("")}
+                        className="mr-1.5 w-6 h-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                        aria-label="Clear search"
                       >
-                        {r}
+                        <X className="w-3 h-3" />
                       </button>
-                    );
-                  })}
-                </div>
-                {/* Mobile right-edge fade + chevron hint */}
-                <div className="sm:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent flex items-center justify-end pr-1">
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/70" />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+                    )}
+                  </motion.div>
 
-        return (
-          <>
-            {/* Inline anchor — sits in flow, used for scroll detection */}
-            <section
-              ref={barAnchorRef as any}
-              className="relative z-20 bg-background border-b border-border"
-            >
-              {BarInner}
-            </section>
+                  {/* Region chips — horizontal scroll, minimal */}
+                  <div className="relative flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto no-scrollbar scroll-smooth">
+                      {regions.map((r) => {
+                        const isFiltered = region === r;
+                        const isCurrent = region === "All" && r !== "All" && activeRegion === r;
+                        const highlighted = isFiltered || isCurrent;
+                        return (
+                          <button
+                            key={r}
+                            onClick={() => {
+                              if (r === "All") {
+                                setRegion("All");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              } else {
+                                setRegion("All");
+                                setTimeout(() => scrollToRegion(r), 50);
+                              }
+                            }}
+                            className={`shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium tracking-tight transition-colors border ${
+                              highlighted
+                                ? "bg-foreground text-background border-foreground"
+                                : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted border-border/60"
+                            }`}
+                            aria-current={isCurrent ? "true" : undefined}
+                          >
+                            {r}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent" />
+                  </div>
 
-            {/* Portaled fixed copy — sits cleanly BELOW the navbar (top = measured nav height)
-                so it never covers the menu. Subtle shadow distinguishes it from the navbar. */}
-            {barPinned && typeof document !== "undefined" &&
-              createPortal(
-                <div
-                  className="fixed left-0 right-0 z-40 bg-background/97 backdrop-blur-xl border-b border-border shadow-[0_6px_20px_-10px_hsl(var(--foreground)/0.2)] animate-in fade-in slide-in-from-top-2 duration-200"
-                  style={{ top: `${navHeight}px` }}
-                >
-                  {BarInner}
-                </div>,
-                document.body
-              )}
-          </>
-        );
-      })()}
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold tracking-tight shrink-0">
+                    30–50% off
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
       {/* Cards grid — soft muted bg for card contrast */}
       <section className="py-14 md:py-20 bg-muted/40">
@@ -336,133 +508,17 @@ const CemeteryDirectory = () => {
             <div className="min-w-0">
               {grouped.map(([groupRegion, list], gIdx) => {
                 return (
-              <div
+              <RegionRow
                 key={groupRegion}
-                data-region={groupRegion}
-                ref={(el) => { sectionRefs.current[groupRegion] = el; }}
-                className="mb-16 last:mb-0 scroll-mt-[200px]"
-              >
-                {/* Region header — quiet editorial band, matches card vocabulary */}
-                <div className="flex items-end justify-between gap-6 mb-6 pb-5 border-b border-border/70">
-                  <div className="flex items-baseline gap-4">
-                    <span className="font-display text-xs text-primary tabular-nums tracking-[0.2em] uppercase">
-                      №&nbsp;{String(gIdx + 1).padStart(2, "0")}
-                    </span>
-                    <h2 className="font-display text-2xl md:text-4xl text-foreground tracking-tight leading-none">
-                      {groupRegion}
-                    </h2>
-                  </div>
-                  <span className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground font-medium tabular-nums shrink-0 pb-1">
-                    {list.length.toString().padStart(2, "0")} {list.length === 1 ? "cemetery" : "cemeteries"}
-                  </span>
-                </div>
-
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {list.map((c, i) => {
-                    let h = 0;
-                    for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
-
-                    const offeringSets: string[][] = [
-                      ["Plots", "Niches", "Mausoleums"],
-                      ["Plots", "Companion", "Cremation"],
-                      ["Plots", "Lawn Crypts", "Family Estates"],
-                      ["Plots", "Niches", "Veteran"],
-                    ];
-                    const offerings = offeringSets[h % offeringSets.length];
-                    const refNum = String((h % 999) + 1).padStart(3, "0");
-                    const slug = slugify(c.name);
-
-
-                    return (
-                      <motion.article
-                        key={`${c.name}-${c.city}`}
-                        initial={{ opacity: 0, y: 16 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-30px" }}
-                        transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                        className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-border/80 shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18),0_2px_6px_-2px_hsl(var(--foreground)/0.1)] hover:shadow-[0_28px_56px_-18px_hsl(var(--primary)/0.38)] hover:-translate-y-1 hover:ring-primary/50 transition-all duration-300 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/40 before:to-transparent before:opacity-60 group-hover:before:opacity-100 after:absolute after:inset-0 after:rounded-2xl after:pointer-events-none after:bg-gradient-to-b after:from-foreground/[0.02] after:to-transparent"
-                      >
-                        {/* Top: editorial header with monogram backdrop */}
-                        <Link
-                          to={`/cemeteries/${slug}`}
-                          className="relative block px-6 pt-6 pb-5 bg-gradient-to-br from-secondary/40 via-card to-card overflow-hidden"
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="absolute -top-6 -right-2 font-display text-[150px] leading-none text-primary/[0.07] select-none pointer-events-none tracking-tighter"
-                          >
-                            {c.name.charAt(0)}
-                          </span>
-
-                          <div className="relative">
-                            <div className="flex items-center justify-between mb-5">
-                              <span className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground font-medium">
-                                {c.region}
-                              </span>
-                              <span className="font-display text-[11px] text-muted-foreground/70 tabular-nums tracking-wider">
-                                №&nbsp;{refNum}
-                              </span>
-                            </div>
-
-                            <h3 className="font-display text-[22px] leading-[1.15] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                              {c.name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                              {c.city}, TX
-                            </p>
-                          </div>
-                        </Link>
-
-                        {/* Middle: inventory + status */}
-                        <div className="px-6 pt-4 pb-5 flex-1 flex flex-col">
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-medium">
-                              Inventory
-                            </p>
-                            <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase text-primary font-medium">
-                              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Active
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {offerings.map((o) => (
-                              <span
-                                key={o}
-                                className="text-[11px] px-2.5 py-1 rounded-full bg-muted text-foreground/75 font-medium"
-                              >
-                                {o}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Footer: integrated Buy / Sell split */}
-                        <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
-                          <Link
-                            to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
-                            className="group/buy flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-foreground hover:bg-foreground hover:text-background transition-colors"
-                          >
-                            Buy here
-                            <ArrowRight className="w-3.5 h-3.5 opacity-0 -ml-1 group-hover/buy:opacity-100 group-hover/buy:ml-0 transition-all" />
-                          </Link>
-                          <Link
-                            to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
-                            className="group/sell flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-                          >
-                            Sell mine
-                            <ArrowRight className="w-3.5 h-3.5 opacity-0 -ml-1 group-hover/sell:opacity-100 group-hover/sell:ml-0 transition-all" />
-                          </Link>
-                        </div>
-                      </motion.article>
-                    );
-                  })}
-                </div>
-              </div>
+                groupRegion={groupRegion}
+                list={list}
+                gIdx={gIdx}
+                setRef={(el) => { sectionRefs.current[groupRegion] = el; }}
+              />
                 );
               })}
             </div>
           </div>
-
 
           {/* Conversion-driving CTA — dark editorial, dual action */}
           <motion.div
