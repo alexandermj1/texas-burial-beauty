@@ -61,31 +61,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
               {link.label}
             </Link>
           ))}
-          {user ? (
-            <Link
-              to={dashboardLink}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-500 ${
-                scrolled
-                  ? "bg-primary text-primary-foreground hover:opacity-90"
-                  : "bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/20 hover:bg-primary-foreground/25"
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              to="/auth"
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-500 ${
-                scrolled
-                  ? "bg-primary text-primary-foreground hover:opacity-90"
-                  : "bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/20 hover:bg-primary-foreground/25"
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              Sign In
-            </Link>
-          )}
         </div>
 
         <button
@@ -107,17 +82,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
               {link.label}
             </Link>
           ))}
-          {user ? (
-            <Link to={dashboardLink} onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-full w-fit">
-              <User className="w-3.5 h-3.5" />
-              Dashboard
-            </Link>
-          ) : (
-            <Link to="/auth" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-full w-fit">
-              <User className="w-3.5 h-3.5" />
-              Sign In
-            </Link>
-          )}
         </div>
       )}
     </nav>
