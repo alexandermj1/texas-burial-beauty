@@ -157,7 +157,7 @@ const Index = () => {
 
       {/* Featured Available Plots — emerges from background as you scroll in */}
       {featuredListings.length > 0 && (
-        <section ref={featuredRef} className="relative py-20 sm:py-28 bg-gradient-warm overflow-hidden">
+        <section ref={featuredRef} className="relative py-14 sm:py-20 bg-gradient-warm overflow-hidden">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
               <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
