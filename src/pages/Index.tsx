@@ -14,6 +14,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
+import StoriesSection from "@/components/StoriesSection";
 import Seo from "@/components/Seo";
 import { ListingCard } from "@/pages/Properties";
 
@@ -192,6 +193,7 @@ const Index = () => {
         </section>
       )}
 
+      <StoriesSection />
       <AboutSeoSection />
       <BuyerPromoAnimation />
       <SellerPromoAnimation />
