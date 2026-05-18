@@ -101,11 +101,11 @@ const RegionRow = ({
         </div>
       </div>
 
-      {/* Horizontal scroll row — Airbnb-style */}
+      {/* Horizontal scroll row — Airbnb-style, x-only */}
       <div className="relative -mx-6 px-6">
         <div
           ref={scrollerRef}
-          className="flex gap-5 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth pb-2"
+          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth pb-2 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto]"
         >
           {list.map((c, i) => {
             let h = 0;
@@ -121,7 +121,7 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-foreground/15 shadow-[0_10px_30px_-12px_hsl(var(--foreground)/0.22),0_2px_6px_-2px_hsl(var(--foreground)/0.12)] hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.45)] hover:-translate-y-1 hover:ring-primary/60 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-foreground/25 shadow-[0_14px_36px_-14px_hsl(var(--foreground)/0.3),0_2px_8px_-2px_hsl(var(--foreground)/0.16)] hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.5)] hover:-translate-y-1 hover:ring-primary/70 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
                 {/* Accent top bar — adds liveliness + clearer card separation */}
                 <span aria-hidden className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary via-primary/70 to-primary/30 opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -194,7 +194,7 @@ const RegionRow = ({
           })}
         </div>
         {/* Edge fade hints (mobile primarily) */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-muted/40 to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-background to-transparent" />
       </div>
     </div>
   );
@@ -337,7 +337,7 @@ const CemeteryDirectory = () => {
       <Navbar />
 
       {/* HERO — centered, minimal, integrated with directory */}
-      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden">
+      <section className="relative pt-32 pb-4 md:pt-40 md:pb-6 overflow-hidden">
         <motion.img
           src={heroBg}
           alt=""
@@ -348,7 +348,7 @@ const CemeteryDirectory = () => {
         />
         {/* Strong readability scrim, soft fade into the page */}
         <div className="absolute inset-0 bg-foreground/55" />
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/30 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/20 to-background" />
 
         <div className="relative container mx-auto px-6">
           <motion.div
@@ -473,24 +473,22 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
-      {/* Cards grid — layered editorial bg with warm color washes */}
-      <section className="relative pt-24 md:pt-32 pb-14 md:pb-20 bg-gradient-to-b from-secondary/40 via-muted/30 to-background overflow-hidden">
+      {/* Cards grid — flows directly from hero, warm decorative washes */}
+      <section className="relative pt-6 md:pt-10 pb-14 md:pb-20 bg-background overflow-hidden">
         {/* Subtle grid texture */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          className="pointer-events-none absolute inset-0 opacity-[0.035]"
           style={{
             backgroundImage:
               "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
             backgroundSize: "44px 44px",
           }}
         />
-        {/* Decorative warm washes — positioned to NOT overlap card tops */}
-        <div aria-hidden className="pointer-events-none absolute top-[55%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/15 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute top-[20%] -left-40 w-[460px] h-[460px] rounded-full bg-secondary/50 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute bottom-[10%] left-1/3 w-[360px] h-[360px] rounded-full bg-accent/20 blur-3xl" />
-        {/* Hairline separator at the very top so cards feel anchored */}
-        <div aria-hidden className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        {/* Decorative warm washes — softer, no grey band */}
+        <div aria-hidden className="pointer-events-none absolute top-[55%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-[20%] -left-40 w-[460px] h-[460px] rounded-full bg-secondary/30 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute bottom-[10%] left-1/3 w-[360px] h-[360px] rounded-full bg-accent/15 blur-3xl" />
 
         <div className="relative container mx-auto px-6">
           {grouped.length === 0 && (
