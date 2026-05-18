@@ -21,8 +21,8 @@ const Footer = () => {
               <a href="tel:+14242341678" className="flex items-center gap-2 hover:text-foreground transition-colors">
                 <Phone className="w-3.5 h-3.5" /> (424) 234-1678
               </a>
-              <a href="mailto:Help@TexasCemeteryBrokers.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Mail className="w-3.5 h-3.5" /> Help@TexasCemeteryBrokers.com
+              <a href="mailto:info@texascemeterybrokers.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Mail className="w-3.5 h-3.5" /> info@texascemeterybrokers.com
               </a>
             </div>
           </div>

@@ -71,7 +71,7 @@ const ContactSection = () => {
                 </div>
               </a>
               <a
-                href="mailto:Help@TexasCemeteryBrokers.com"
+                href="mailto:info@texascemeterybrokers.com"
                 className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -79,7 +79,7 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email us</p>
-                  <p className="font-medium">Help@TexasCemeteryBrokers.com</p>
+                  <p className="font-medium">info@texascemeterybrokers.com</p>
                 </div>
               </a>
             </div>

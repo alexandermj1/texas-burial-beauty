@@ -479,11 +479,11 @@ const Team = () => {
                 (424) 234-1678
               </a>
               <a
-                href="mailto:Help@TexasCemeteryBrokers.com"
+                href="mailto:info@texascemeterybrokers.com"
                 className="inline-flex items-center gap-2 px-8 py-3.5 border border-border text-foreground rounded-full font-medium hover:bg-muted transition-colors"
               >
                 <Mail className="w-4 h-4" />
-                Help@TexasCemeteryBrokers.com
+                info@texascemeterybrokers.com
               </a>
             </div>
           </motion.div>
