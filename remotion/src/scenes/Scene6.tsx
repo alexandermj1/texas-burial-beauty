@@ -3,8 +3,8 @@ import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
 
 const SYMBOL_SIZE = 240;
-const CARD_SIZE = 140;
-const CARD_GAP = 60;
+const CARD_SIZE = 180;
+const CARD_GAP = 80;
 const LINE_LENGTH = CARD_GAP;
 
 export const Scene6Buyer: React.FC = () => {
@@ -49,7 +49,7 @@ export const Scene6Buyer: React.FC = () => {
         <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.muted, letterSpacing: 2, textTransform: "uppercase" }}>Step Six</span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 100, padding: "0 180px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
             Days 30–60
@@ -136,19 +136,19 @@ export const Scene6Buyer: React.FC = () => {
   );
 };
 
-const CARD_SIZE_INNER = 140;
+const CARD_SIZE_INNER = 180;
 
 const MatchCard: React.FC<{ icon: string; title: string; subtitle: string }> = ({ icon, title, subtitle }) => {
   return (
     <div style={{
-      width: CARD_SIZE_INNER, minHeight: CARD_SIZE_INNER, background: colors.white, borderRadius: 24,
-      padding: "16px 12px", boxShadow: `0 16px 36px -14px ${colors.foreground}24`, textAlign: "center",
+      width: CARD_SIZE_INNER, minHeight: CARD_SIZE_INNER, background: colors.white, borderRadius: 28,
+      padding: "22px 16px", boxShadow: `0 16px 36px -14px ${colors.foreground}24`, textAlign: "center",
     }}>
-      <div style={{ width: 50, height: 50, borderRadius: "50%", background: colors.primaryLight, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 24 }}>{icon}</span>
+      <div style={{ width: 64, height: 64, borderRadius: "50%", background: colors.primaryLight, margin: "0 auto 12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: 30 }}>{icon}</span>
       </div>
-      <div style={{ fontFamily: fonts.display, fontSize: 20, color: colors.foreground, lineHeight: 1 }}>{title}</div>
-      <div style={{ fontFamily: fonts.body, fontSize: 15, color: colors.muted, marginTop: 4 }}>{subtitle}</div>
+      <div style={{ fontFamily: fonts.display, fontSize: 26, color: colors.foreground, lineHeight: 1 }}>{title}</div>
+      <div style={{ fontFamily: fonts.body, fontSize: 17, color: colors.muted, marginTop: 6 }}>{subtitle}</div>
     </div>
   );
 };
