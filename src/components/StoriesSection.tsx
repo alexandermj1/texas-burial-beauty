@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import featuredImg from "@/assets/story-featured.png";
 import cemeteriesImg from "@/assets/story-cemeteries.png";
 import propertyTypesImg from "@/assets/story-property-types.png";
+import mobileImg from "@/assets/story-mobile.png";
 
 const stories = [
   {
@@ -23,24 +24,32 @@ const stories = [
     aspect: "md:aspect-[4/5]",
   },
   {
+    img: mobileImg,
+    eyebrow: "On the go",
+    title: "Texas cemetery property, in the palm of your hand.",
+    to: "/",
+    span: "md:col-span-5",
+    aspect: "md:aspect-[4/5]",
+  },
+  {
     img: cemeteriesImg,
     eyebrow: "Researching",
     title: "Every cemetery in Texas, one trusted broker.",
     to: "/cemeteries",
-    span: "md:col-span-12",
-    aspect: "md:aspect-[21/9]",
+    span: "md:col-span-7",
+    aspect: "md:aspect-[16/10]",
   },
 ];
 
 const StoriesSection = () => {
   return (
-    <section className="relative py-16 sm:py-20 bg-background">
+    <section className="relative pt-6 pb-16 sm:pt-8 sm:pb-20 bg-background">
       <div className="container mx-auto px-6">
-        <div className="mb-10 sm:mb-14 max-w-3xl">
+        <div className="mb-8 sm:mb-12 max-w-3xl">
           <span className="block text-[11px] font-medium uppercase tracking-[0.3em] text-primary mb-3">
             Stories
           </span>
-          <h2 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.05] tracking-tight text-foreground">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-[1.05] tracking-tight text-foreground">
             Real people, real moments.
           </h2>
         </div>
@@ -48,7 +57,7 @@ const StoriesSection = () => {
         <div className="grid gap-5 sm:gap-6 md:grid-cols-12">
           {stories.map((s, i) => (
             <motion.div
-              key={s.to}
+              key={s.eyebrow}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
