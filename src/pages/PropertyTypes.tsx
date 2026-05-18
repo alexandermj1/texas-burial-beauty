@@ -676,7 +676,7 @@ const PropertyTypes = () => {
               </a>
             </div>
             <div className="mt-8">
-              <Link to="/properties" className="inline-flex items-center gap-2 text-primary font-medium text-sm hover:gap-3 transition-all">
+              <Link to="/cemeteries" className="inline-flex items-center gap-2 text-primary font-medium text-sm hover:gap-3 transition-all">
                 Browse Available Properties <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

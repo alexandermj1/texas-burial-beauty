@@ -251,7 +251,7 @@ const BuyProperty = () => {
             <p className="text-primary font-medium text-[11px] tracking-[0.2em] uppercase">Find Your Property · Step {step} of 5</p>
             <div className="flex items-center gap-4">
               <span className="hidden sm:inline text-[11px] text-muted-foreground">⏱ ~60 seconds</span>
-              <Link to="/properties" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+              <Link to="/cemeteries" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
                 <List className="w-3 h-3" /> Browse all
               </Link>
             </div>
