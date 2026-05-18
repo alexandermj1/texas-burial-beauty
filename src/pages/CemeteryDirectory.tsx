@@ -458,7 +458,7 @@ const CemeteryDirectory = () => {
                   {/* Region chips — ordered exactly as the sections appear */}
                   <div className="relative w-full">
                     <div className="flex items-center justify-center gap-1.5 flex-nowrap overflow-x-auto no-scrollbar scroll-smooth px-6">
-                      {(["All", ...grouped.map(([r]) => r)] as string[]).map((r) => {
+                      {chipOrder.map((r) => {
                         const highlighted =
                           region === r || (region === "All" && r !== "All" && activeRegion === r);
                         return (
