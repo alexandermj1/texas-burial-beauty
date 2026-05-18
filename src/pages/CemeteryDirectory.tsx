@@ -473,22 +473,22 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
-      {/* Cards grid — flows directly from hero, warm decorative washes */}
-      <section className="relative pt-6 md:pt-10 pb-14 md:pb-20 bg-background overflow-hidden">
-        {/* Subtle grid texture */}
+      {/* Cards grid — warm cream wash with subtle earthy color accents */}
+      <section className="relative pt-6 md:pt-10 pb-14 md:pb-20 bg-gradient-to-b from-background via-secondary/15 to-background overflow-hidden">
+        {/* Soft dotted texture — editorial, not grey */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.035]"
+          className="pointer-events-none absolute inset-0 opacity-[0.18]"
           style={{
             backgroundImage:
-              "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
-            backgroundSize: "44px 44px",
+              "radial-gradient(hsl(var(--primary) / 0.18) 1px, transparent 1px)",
+            backgroundSize: "26px 26px",
           }}
         />
-        {/* Decorative warm washes — softer, no grey band */}
-        <div aria-hidden className="pointer-events-none absolute top-[55%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/10 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute top-[20%] -left-40 w-[460px] h-[460px] rounded-full bg-secondary/30 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute bottom-[10%] left-1/3 w-[360px] h-[360px] rounded-full bg-accent/15 blur-3xl" />
+        {/* Decorative warm washes — terracotta + sage */}
+        <div aria-hidden className="pointer-events-none absolute top-[10%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/12 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-[45%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute bottom-[8%] right-1/3 w-[360px] h-[360px] rounded-full bg-secondary/40 blur-3xl" />
 
         <div className="relative container mx-auto px-6">
           {grouped.length === 0 && (
