@@ -167,7 +167,7 @@ const RegionRow = ({
                     {offerings.map((o) => (
                       <span
                         key={o}
-                        className="text-[11px] px-2.5 py-1 rounded-full bg-muted text-foreground/75 font-medium"
+                        className="text-[11px] px-2.5 py-1 rounded-full bg-primary/10 text-primary ring-1 ring-primary/15 font-medium"
                       >
                         {o}
                       </span>
