@@ -49,7 +49,7 @@ export const Scene6Buyer: React.FC = () => {
         <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.muted, letterSpacing: 2, textTransform: "uppercase" }}>Step Six</span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 100, padding: "0 180px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
             Days 30–60
