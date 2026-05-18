@@ -80,13 +80,15 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
             Free Valuation
           </p>
           <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight mb-5">
-            Get your guaranteed
+            Get your net offer
             <br />
-            <span className="italic text-foreground/70">net offer.</span>
+            <span className="italic text-foreground/70">or consignment quote.</span>
           </h2>
           <p className="text-muted-foreground text-lg font-light leading-relaxed">
-            Tell us about your property. We'll respond within 24 hours with a free,
-            no-obligation guaranteed net proceeds quote.
+            Tell us about your property and we'll respond within 24 hours with both a
+            net cash offer (what we'd pay you directly) and a consignment quote (your
+            net proceeds if we list it for you). Average time to sale on consignment is
+            around <span className="text-foreground/80 font-medium">six months</span>.
           </p>
 
           <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8">
