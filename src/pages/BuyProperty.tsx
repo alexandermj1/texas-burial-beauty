@@ -368,7 +368,7 @@ const BuyProperty = () => {
             {/* STEP 3 — Budget */}
             {step === 3 && (
               <motion.div key="s3" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-                className="max-w-4xl"
+                className="w-full"
               >
                 <div className="mb-4 p-3 rounded-lg bg-gradient-sage border border-primary/10 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary shrink-0" />
