@@ -1,9 +1,6 @@
 import { useState, useLayoutEffect } from "react";
-import { Phone, Menu, X, User } from "lucide-react";
+import { Phone, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useAdmin } from "@/hooks/useAdmin";
-import { useAgent } from "@/hooks/useAgent";
 
 const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const computeScrolled = () =>
