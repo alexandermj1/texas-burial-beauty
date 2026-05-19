@@ -93,6 +93,7 @@ const HeroSection = () => {
           muted
           loop
           playsInline
+          preload="none"
           className="w-full h-full object-cover blur-[3px] scale-110"
         />
       </motion.div>
