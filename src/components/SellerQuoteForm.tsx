@@ -229,7 +229,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
               disabled={loading}
               className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-soft"
             >
-              {loading ? "Submitting…" : "Request my net offer & quote"}
+              {loading ? "Submitting…" : "Request my consignment quote"}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
             <p className="text-[11px] text-muted-foreground/70">
