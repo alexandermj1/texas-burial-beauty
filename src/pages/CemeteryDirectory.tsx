@@ -121,53 +121,63 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border-2 border-primary/25 ring-1 ring-foreground/10 shadow-[0_12px_28px_-12px_hsl(var(--foreground)/0.28)] hover:border-primary/60 hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.5)] hover:-translate-y-1 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border border-border/70 shadow-[0_8px_30px_-12px_hsl(var(--foreground)/0.12)] hover:shadow-[0_24px_50px_-18px_hsl(var(--primary)/0.35)] hover:-translate-y-1 hover:border-primary/40 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
-                {/* Accent top bar — adds liveliness + clearer card separation */}
-                <span aria-hidden className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary via-primary/70 to-primary/30 opacity-80 group-hover:opacity-100 transition-opacity" />
                 <Link
                   to={`/cemeteries/${slug}`}
-                  className="relative block px-6 pt-6 pb-5 bg-gradient-to-br from-secondary/40 via-card to-card overflow-hidden"
+                  className="relative block px-7 pt-7 pb-6 overflow-hidden"
                 >
+                  {/* Oversized italic reference number watermark */}
                   <span
                     aria-hidden="true"
-                    className="absolute -top-6 -right-2 font-display text-[150px] leading-none text-primary/[0.07] select-none pointer-events-none tracking-tighter"
+                    className="absolute top-3 right-4 font-display italic text-[88px] leading-none text-primary/[0.06] select-none pointer-events-none tabular-nums tracking-tight"
                   >
-                    {c.name.charAt(0)}
+                    {refNum}
                   </span>
                   <div className="relative">
-                    <div className="flex items-center justify-between mb-5">
-                      <span className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground font-medium">
-                        {c.region}
-                      </span>
-                      <span className="font-display text-[11px] text-muted-foreground/70 tabular-nums tracking-wider">
-                        №&nbsp;{refNum}
+                    {/* Header meta: region + mono № + active pill */}
+                    <div className="flex items-start justify-between mb-9">
+                      <div className="space-y-1">
+                        <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-semibold">
+                          {c.region}
+                        </p>
+                        <p className="font-mono text-[11px] text-primary/70 tabular-nums">
+                          №&nbsp;{refNum}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-background border border-border/60">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-40" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+                        </span>
+                        <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-muted-foreground">
+                          Active
+                        </span>
                       </span>
                     </div>
-                    <h3 className="font-display text-[20px] leading-[1.15] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                      {c.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                      {c.city}, TX
-                    </p>
+
+                    {/* Name + city */}
+                    <div className="mb-8">
+                      <h3 className="font-display text-[22px] leading-[1.12] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        {c.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
+                        <span className="font-medium tracking-tight">{c.city}, TX</span>
+                      </p>
+                    </div>
                   </div>
                 </Link>
 
-                <div className="px-6 pt-4 pb-5 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-medium">
-                      Inventory
-                    </p>
-                    <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase text-primary font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Active
-                    </span>
-                  </div>
+                <div className="px-7 pb-6 flex-1 flex flex-col">
+                  <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-bold mb-3">
+                    Inventory Available
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {offerings.map((o) => (
                       <span
                         key={o}
-                        className="text-[11px] px-2.5 py-1 rounded-full bg-primary/10 text-primary ring-1 ring-primary/15 font-medium"
+                        className="text-[11px] px-3 py-1.5 rounded-lg bg-primary/5 text-primary ring-1 ring-primary/10 font-semibold"
                       >
                         {o}
                       </span>
@@ -178,15 +188,15 @@ const RegionRow = ({
                 <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
                   <Link
                     to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
-                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-foreground hover:bg-foreground hover:text-background transition-colors"
+                    className="group/btn flex items-center justify-center gap-1.5 py-4 text-sm font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
                   >
-                    Buy here
+                    Buy <span className="font-normal opacity-60 group-hover/btn:opacity-100">here</span>
                   </Link>
                   <Link
                     to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
-                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="group/btn flex items-center justify-center gap-1.5 py-4 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300"
                   >
-                    Sell mine
+                    Sell <span className="font-normal opacity-60 group-hover/btn:opacity-100">mine</span>
                   </Link>
                 </div>
               </motion.article>
