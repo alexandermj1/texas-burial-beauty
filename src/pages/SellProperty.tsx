@@ -59,7 +59,7 @@ const SellProperty = () => {
           {
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            mainEntity: FAQS.map((f) => ({
+            mainEntity: faqs.map((f) => ({
               "@type": "Question",
               name: f.q,
               acceptedAnswer: { "@type": "Answer", text: f.a },
