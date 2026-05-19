@@ -3,7 +3,13 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { STATIC_ROUTES, type RouteMeta } from "./route-meta";
 import { bayCemeteries } from "../src/data/cemeteries";
-import { slugify } from "../src/lib/cemeterySlug";
+
+const slugify = (name: string): string =>
+  name
+    .toLowerCase()
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
 const SITE_URL = "https://texascemeterybrokers.com";
 const DEFAULT_OG = `${SITE_URL}/images/og-default.jpg`;
