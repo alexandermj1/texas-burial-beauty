@@ -9,7 +9,7 @@ const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Famil
 const guarantees = [
   "100% free, no obligation",
   "Response within 24 hours",
-  "Net offer or consignment — you choose",
+  "Consignment listing — you stay in control",
 ];
 
 const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
@@ -52,7 +52,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     }
     toast({
       title: "Quote request submitted",
-      description: "We'll review your property and respond within 24 hours with your net offer and consignment quote.",
+      description: "We'll review your property and respond within 24 hours with your consignment quote.",
     });
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "" });
     setLoading(false);
@@ -80,15 +80,15 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
             Free Valuation
           </p>
           <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight mb-5">
-            Get your net offer
+            Get your
             <br />
-            <span className="italic text-foreground/70">or consignment quote.</span>
+            <span className="italic text-foreground/70">consignment quote.</span>
           </h2>
           <p className="text-muted-foreground text-lg font-light leading-relaxed">
-            Tell us about your property and we'll respond within 24 hours with both a
-            net cash offer (what we'd pay you directly) and a consignment quote (your
-            net proceeds if we list it for you). Average time to sale on consignment is
-            around <span className="text-foreground/80 font-medium">six months</span>.
+            Tell us about your property and we'll respond within 24 hours with a
+            consignment quote showing your net proceeds if we list it for you.
+            Average time to sale is around{" "}
+            <span className="text-foreground/80 font-medium">six months</span>.
           </p>
 
           <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8">
@@ -229,7 +229,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
               disabled={loading}
               className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-soft"
             >
-              {loading ? "Submitting…" : "Request my net offer & quote"}
+              {loading ? "Submitting…" : "Request my consignment quote"}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
             <p className="text-[11px] text-muted-foreground/70">

@@ -12,7 +12,7 @@ const benefits = [
   { icon: DollarSign, title: "No Upfront Fees", desc: "We only earn when you do. Zero listing fees, zero appraisal costs." },
   { icon: FileText, title: "Free Valuation", desc: "Get an honest, no-obligation market value for your property." },
   { icon: ShieldCheck, title: "We Handle Everything", desc: "From paperwork to cemetery coordination to buyer matching — we do it all." },
-  { icon: CheckCircle, title: "Two Ways to Sell", desc: "Take an immediate net cash offer from us, or list on consignment — average sale time around six months." },
+  { icon: CheckCircle, title: "Consignment Listing", desc: "List your property on consignment and stay in control — we handle the marketing, buyers, and paperwork. Average sale time around six months." },
   { icon: Users, title: "Texas Buyer Network", desc: "Access to thousands of qualified buyers across Dallas, Houston, Austin and San Antonio looking for Texas cemetery property." },
   { icon: TrendingUp, title: "Best Market Prices", desc: "We research comparables to ensure you get the best possible price." },
 ];
