@@ -69,6 +69,8 @@ const HeroSection = () => {
           loop
           playsInline
           preload="auto"
+          // @ts-expect-error - fetchpriority is valid HTML attr
+          fetchpriority="high"
           aria-hidden="true"
           className="w-full h-full object-cover"
         />
