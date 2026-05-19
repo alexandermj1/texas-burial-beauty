@@ -39,14 +39,33 @@ const SellProperty = () => {
         title="Sell Your Cemetery Plot in Texas | Free Valuation"
         description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees, 6 - 12 Month average close. Serving Dallas, Houston, Austin & San Antonio."
         path="/sell"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Service",
-          serviceType: "Cemetery Plot Resale",
-          provider: { "@id": "https://texascemeterybrokers.com/#organization" },
-          areaServed: "Texas, United States",
-          offers: { "@type": "Offer", description: "Free listing or $99 premium listing" },
-        }}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            serviceType: "Cemetery Plot Resale",
+            provider: { "@id": "https://texascemeterybrokers.com/#organization" },
+            areaServed: "Texas, United States",
+            offers: { "@type": "Offer", description: "Free listing or $99 premium listing" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://texascemeterybrokers.com/" },
+              { "@type": "ListItem", position: 2, name: "Sell Property", item: "https://texascemeterybrokers.com/sell" },
+            ],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          },
+        ]}
       />
       <Navbar />
 

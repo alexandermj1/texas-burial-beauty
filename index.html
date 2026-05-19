@@ -41,7 +41,7 @@
     <meta name="twitter:description" content="Trusted Texas cemetery plot resale across Dallas, Houston, Austin & San Antonio. Below-market plots; concierge selling service." />
     <meta name="twitter:image" content="https://texascemeterybrokers.com/images/og-default.jpg" />
 
-    <!-- Organization JSON-LD (site-wide) -->
+    <!-- Sitewide LocalBusiness JSON-LD. Claims kept narrow & verifiable. -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -51,7 +51,9 @@
       "alternateName": "TCB",
       "url": "https://texascemeterybrokers.com/",
       "logo": "https://texascemeterybrokers.com/favicon.ico",
-      "description": "Cemetery property brokerage serving Texas families, partnered with Bayer Cemetery Brokers (CEB 1512, licensed in California). Buy and sell burial plots, niches, mausoleums and crypts at below-market prices across Dallas, Houston, Austin and San Antonio.",
+      "description": "Cemetery property brokerage serving Texas families, operating in partnership with Bayer Cemetery Brokers (CEB 1512, licensed in California). Helping buyers and sellers transact cemetery plots, niches, mausoleums and crypts across Dallas, Houston, Austin, San Antonio, Fort Worth and El Paso.",
+      "telephone": "+1-424-234-1678",
+      "email": "info@texascemeterybrokers.com",
       "priceRange": "$$",
       "areaServed": [
         { "@type": "State", "name": "Texas" },
@@ -62,14 +64,50 @@
         { "@type": "City", "name": "San Antonio" },
         { "@type": "City", "name": "El Paso" }
       ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "TX",
+        "addressCountry": "US"
+      },
       "geo": {
         "@type": "GeoCoordinates",
         "latitude": 32.7831,
         "longitude": -96.8067
       },
+      "openingHoursSpecification": [{
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+        "opens": "09:00",
+        "closes": "18:00"
+      }],
+      "contactPoint": [{
+        "@type": "ContactPoint",
+        "telephone": "+1-424-234-1678",
+        "email": "info@texascemeterybrokers.com",
+        "contactType": "customer service",
+        "areaServed": "US-TX",
+        "availableLanguage": ["English"]
+      }],
       "sameAs": [
         "https://www.bayercemeterybrokers.com/"
       ]
+    }
+    </script>
+
+    <!-- WebSite JSON-LD enables sitelinks search box in Google. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": "https://texascemeterybrokers.com/#website",
+      "url": "https://texascemeterybrokers.com/",
+      "name": "Texas Cemetery Brokers",
+      "publisher": { "@id": "https://texascemeterybrokers.com/#organization" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://texascemeterybrokers.com/cemeteries?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
     }
     </script>
   </head>

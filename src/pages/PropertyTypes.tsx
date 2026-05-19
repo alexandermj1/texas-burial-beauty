@@ -601,6 +601,14 @@ const PropertyTypes = () => {
         title="Cemetery Property Types Explained | Plots, Niches, Crypts & Mausoleums"
         description="A guide to cemetery property types in Texas: single & companion plots, lawn crypts, mausoleums, cremation niches, family estates and veterans options."
         path="/property-types"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://texascemeterybrokers.com/" },
+            { "@type": "ListItem", position: 2, name: "Property Types", item: "https://texascemeterybrokers.com/property-types" },
+          ],
+        }}
       />
       <Navbar />
 
