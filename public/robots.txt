@@ -7,6 +7,11 @@ Disallow: /dashboard
 Disallow: /auth
 Disallow: /create-listing
 Disallow: /edit-listing/
+Disallow: /properties
+Disallow: /properties-2
+Disallow: /home2
+Disallow: /team
+Disallow: /blog
 
 User-agent: Googlebot
 Allow: /
@@ -14,6 +19,13 @@ Disallow: /admin
 Disallow: /agent
 Disallow: /dashboard
 Disallow: /auth
+Disallow: /create-listing
+Disallow: /edit-listing/
+Disallow: /properties
+Disallow: /properties-2
+Disallow: /home2
+Disallow: /team
+Disallow: /blog
 
 User-agent: Bingbot
 Allow: /
@@ -21,6 +33,13 @@ Disallow: /admin
 Disallow: /agent
 Disallow: /dashboard
 Disallow: /auth
+Disallow: /create-listing
+Disallow: /edit-listing/
+Disallow: /properties
+Disallow: /properties-2
+Disallow: /home2
+Disallow: /team
+Disallow: /blog
 
 User-agent: GPTBot
 Allow: /
