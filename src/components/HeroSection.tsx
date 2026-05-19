@@ -98,12 +98,12 @@ const HeroSection = () => {
         />
       </motion.div>
 
-      {/* Color grading — darker overall so white text reads anywhere */}
-      <div className="absolute inset-0 bg-foreground/40 pointer-events-none" />
+      {/* Color grading — slightly lighter so video shows through, text still reads via drop-shadows */}
+      <div className="absolute inset-0 bg-foreground/30 pointer-events-none" />
       {/* Top gradient — strong, tall, opaque at the very top so the navbar always reads */}
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground via-foreground/70 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/80 via-foreground/50 to-transparent pointer-events-none" />
       {/* Bottom gradient — deep shade behind headline + Buy/Sell row */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/90 via-foreground/55 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/80 via-foreground/45 to-transparent pointer-events-none" />
       {/* Parallax merge — fades into the page background as the user scrolls, blending hero into next section */}
       <motion.div
         style={{ opacity: mergeOpacity }}
