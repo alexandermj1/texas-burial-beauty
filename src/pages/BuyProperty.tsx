@@ -241,6 +241,24 @@ const BuyProperty = () => {
         title="Find a Cemetery Plot in Texas | Guided Buyer Concierge"
         description="A clean 5-step concierge to help you buy the right cemetery plot in Texas — Dallas, Houston, Austin, San Antonio. Save 30–50% versus buying direct."
         path="/buy"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            serviceType: "Cemetery Plot Buyer Concierge",
+            provider: { "@id": "https://texascemeterybrokers.com/#organization" },
+            areaServed: "Texas, United States",
+            description: "Guided concierge that matches Texas buyers with privately resold cemetery plots, niches, mausoleums and crypts at below-market prices.",
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://texascemeterybrokers.com/" },
+              { "@type": "ListItem", position: 2, name: "Buy Property", item: "https://texascemeterybrokers.com/buy" },
+            ],
+          },
+        ]}
       />
       <Navbar forceScrolled />
 
