@@ -499,11 +499,11 @@ const CemeteryDirectory = () => {
         {/* Dotted grid texture — editorial, softly masked */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.55]"
+          className="pointer-events-none absolute inset-0 opacity-90"
           style={{
             backgroundImage:
-              "radial-gradient(hsl(var(--primary) / 0.45) 1.4px, transparent 1.4px)",
-            backgroundSize: "24px 24px",
+              "radial-gradient(hsl(var(--foreground) / 0.28) 1.8px, transparent 1.9px)",
+            backgroundSize: "22px 22px",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
             maskImage:
