@@ -496,14 +496,14 @@ const CemeteryDirectory = () => {
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
           }}
         />
-        {/* Dotted grid texture — editorial, softly masked */}
+        {/* Fine line grid — editorial, softly masked */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-90"
+          className="pointer-events-none absolute inset-0 opacity-80"
           style={{
             backgroundImage:
-              "radial-gradient(hsl(var(--foreground) / 0.28) 1.8px, transparent 1.9px)",
-            backgroundSize: "22px 22px",
+              "linear-gradient(to right, hsl(var(--foreground) / 0.16) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground) / 0.16) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
             maskImage:
