@@ -55,7 +55,7 @@ const blogPosts: BlogPost[] = [
         <h2 className="font-display text-2xl md:text-3xl text-foreground mb-4">Start This Spring with One Less Thing to Worry About</h2>
         <p className="text-lg leading-relaxed text-foreground/80 mb-6">As you look at your to-do list this spring, consider adding — and checking off — this important task. A fresh start begins with letting go of what no longer fits, and spring is the perfect time to do just that.</p>
         <div className="bg-card rounded-2xl p-8 shadow-soft border border-border/50 my-10">
-          <p className="text-lg text-foreground mb-4">Please reach out to us. We can help turn your unwanted cemetery property into cash.</p>
+          <p className="text-lg text-foreground mb-4">Please reach out to us. We can list your unwanted cemetery property on consignment and handle the sale for you.</p>
           <div className="flex flex-col sm:flex-row gap-4">
             <a href="tel:+14242341678" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all"><Phone className="w-4 h-4" /> (424) 234-1678</a>
             <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all"><Mail className="w-4 h-4" /> info@texascemeterybrokers.com</a>
