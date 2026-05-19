@@ -120,8 +120,28 @@ const Partners = () => {
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers"
-        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — 27+ years, 4.9★ rated, 10,000+ transactions and 2,500+ active plots. Trusted Texas resale."
+        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) with 29+ years of cemetery resale experience. Trusted resale across Texas."
         path="/partners"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": "https://www.bayercemeterybrokers.com/#organization",
+            "name": "Bayer Cemetery Brokers",
+            "url": "https://www.bayercemeterybrokers.com/",
+            "description": "Licensed California cemetery brokerage (CEB 1512) with 29+ years of experience facilitating cemetery property resales.",
+            "address": { "@type": "PostalAddress", "addressRegion": "CA", "addressCountry": "US" },
+            "identifier": "CEB 1512"
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://texascemeterybrokers.com/" },
+              { "@type": "ListItem", "position": 2, "name": "Partners", "item": "https://texascemeterybrokers.com/partners" }
+            ]
+          }
+        ]}
       />
       <Navbar />
 
