@@ -108,7 +108,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="max-w-3xl mx-auto bg-card rounded-3xl border border-border/40 shadow-soft p-8 md:p-12"
+          className="max-w-3xl mx-auto bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-12"
         >
           {/* Section: You */}
           <div className="mb-10">
