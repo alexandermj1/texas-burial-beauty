@@ -79,7 +79,7 @@ const SellProperty = () => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <p className="text-primary-foreground/40 font-medium text-xs tracking-[0.3em] uppercase mb-4">Sell With Confidence</p>
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-[1.1] mb-6">
-                Turn unused plots into <span className="italic text-primary-foreground/70">cash</span>
+                List your plot on <span className="italic text-primary-foreground/70">consignment</span>
               </h1>
               <p className="text-primary-foreground/60 text-lg font-light leading-relaxed mb-8 max-w-lg">
                 No upfront costs. No hassle. We handle the entire selling process — you only pay when the sale is complete.
