@@ -72,7 +72,7 @@ const SellProperty = () => {
       {/* Hero — editorial split layout with photo background */}
       <section className="relative pt-28 pb-16 overflow-hidden">
         <img src={sellHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/90 via-foreground/75 to-foreground/55" />
+        <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/55 to-foreground/35" />
 
         <div className="relative container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
