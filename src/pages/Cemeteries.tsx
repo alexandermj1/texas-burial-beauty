@@ -88,9 +88,10 @@ const Cemeteries = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((cem, i) => (
-              <motion.div key={cem.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }} className="bg-card rounded-2xl overflow-hidden border border-border/60 shadow-soft hover:shadow-hover transition-all duration-300 group">
-                <div className="h-44 overflow-hidden">
+              <motion.div key={cem.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }} className="bg-card rounded-2xl overflow-hidden border-2 border-primary/15 ring-1 ring-foreground/5 shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.18)] hover:shadow-[0_20px_40px_-16px_hsl(var(--primary)/0.35)] hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 group">
+                <div className="h-44 overflow-hidden relative">
                   <img src={getImage(cem.name)} alt={cem.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80" />
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-3">
