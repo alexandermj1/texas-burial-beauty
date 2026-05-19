@@ -14,12 +14,6 @@
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/properties</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://texascemeterybrokers.com/buy</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -42,24 +36,6 @@
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/team</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/blog</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/blog/spring-cleaning-cemetery-property</loc>
-    <lastmod>2026-02-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://texascemeterybrokers.com/cemeteries/restland-memorial-park</loc>
