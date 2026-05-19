@@ -121,7 +121,7 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden ring-1 ring-foreground/35 hover:ring-primary/70 hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.5)] hover:-translate-y-1 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border-2 border-primary/25 ring-1 ring-foreground/10 shadow-[0_12px_28px_-12px_hsl(var(--foreground)/0.28)] hover:border-primary/60 hover:shadow-[0_30px_60px_-18px_hsl(var(--primary)/0.5)] hover:-translate-y-1 transition-all duration-300 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
                 {/* Accent top bar — adds liveliness + clearer card separation */}
                 <span aria-hidden className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary via-primary/70 to-primary/30 opacity-80 group-hover:opacity-100 transition-opacity" />
