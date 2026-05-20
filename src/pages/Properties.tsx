@@ -102,7 +102,7 @@ interface ListingRow {
 }
 
 /* Reusable listing card for use on home page too */
-export const ListingCard = ({ listing, isAdmin, index = 0 }: { listing: ListingRow; isAdmin: boolean; index?: number }) => {
+export const ListingCard = ({ listing, isAdmin, index = 0, hidePrice = false }: { listing: ListingRow; isAdmin: boolean; index?: number; hidePrice?: boolean }) => {
   const typeImg = getPlotImage(listing.plot_type, listing.spaces);
   const hasPhoto = listing.photos && listing.photos.length > 0;
   return (
@@ -136,7 +136,9 @@ export const ListingCard = ({ listing, isAdmin, index = 0 }: { listing: ListingR
             <p className="text-xs text-muted-foreground mb-0">Section: {listing.section}</p>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
               <div className="flex items-center gap-3">
-                {listing.asking_price ? (
+                {hidePrice ? (
+                  <span className="text-xs text-primary font-medium">View details</span>
+                ) : listing.asking_price ? (
                   <span className="text-sm font-semibold text-foreground">${listing.asking_price.toLocaleString()}</span>
                 ) : (
                   <span className="text-xs text-primary font-medium">Contact for pricing</span>

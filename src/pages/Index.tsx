@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,13 +133,11 @@ const Index = () => {
       )
     : [];
 
-  // Drive an emergence animation as the user scrolls into the featured section.
+  // Trigger the typewriter when section comes into view (no opacity/scale fade).
   const { scrollYProgress } = useScroll({
     target: featuredRef,
     offset: ["start end", "center center"],
   });
-  const cardsOpacity = useTransform(scrollYProgress, [0, 0.35], [0, 1]);
-  const cardsScale = useTransform(scrollYProgress, [0, 0.6], [0.92, 1]);
 
   useEffect(() => {
     const unsub = scrollYProgress.on("change", (v) => {
@@ -179,14 +177,14 @@ const Index = () => {
               </p>
             </div>
 
-            <motion.div
-              style={{ opacity: cardsOpacity, scale: cardsScale }}
-              className="home2-static-cards grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto"
-            >
+            {/* Mobile: horizontal swipe carousel. sm+: grid */}
+            <div className="-mx-6 px-6 sm:mx-0 sm:px-0 flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none scroll-pl-6 pb-4 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {featuredListings.map((listing, i) => (
-                <ListingCard key={listing.id} listing={listing} isAdmin={false} index={i} />
+                <div key={listing.id} className="snap-start shrink-0 w-[85%] sm:w-auto">
+                  <ListingCard listing={listing} isAdmin={false} index={i} hidePrice />
+                </div>
               ))}
-            </motion.div>
+            </div>
 
             <div className="text-center mt-10">
               <Link to="/cemeteries" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
