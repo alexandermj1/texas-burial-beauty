@@ -515,44 +515,45 @@ const CemeteryDirectory = () => {
         <div aria-hidden className="pointer-events-none absolute top-[50%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute bottom-[15%] right-1/3 w-[360px] h-[360px] rounded-full bg-secondary/40 blur-3xl" />
 
-        {/* Stylized floral / leaf accents */}
-        <svg aria-hidden className="pointer-events-none absolute top-[6%] left-[4%] w-40 h-40 md:w-56 md:h-56 text-primary/15 -rotate-12" viewBox="0 0 200 200" fill="none">
-          <path d="M100 20 C 130 60, 130 140, 100 180 C 70 140, 70 60, 100 20 Z" stroke="currentColor" strokeWidth="1.2" />
-          <path d="M100 30 C 60 70, 60 130, 100 170" stroke="currentColor" strokeWidth="0.8" />
-          <path d="M100 30 C 140 70, 140 130, 100 170" stroke="currentColor" strokeWidth="0.8" />
-          <circle cx="100" cy="100" r="3" fill="currentColor" />
+        {/* Stylized floral / leaf accents — visible in side gutters & between rows */}
+        <svg aria-hidden className="pointer-events-none absolute top-[4%] left-[2%] w-48 h-48 md:w-72 md:h-72 text-primary/40 -rotate-12" viewBox="0 0 200 200" fill="none">
+          <path d="M100 20 C 130 60, 130 140, 100 180 C 70 140, 70 60, 100 20 Z" stroke="currentColor" strokeWidth="2" />
+          <path d="M100 30 C 60 70, 60 130, 100 170" stroke="currentColor" strokeWidth="1.4" />
+          <path d="M100 30 C 140 70, 140 130, 100 170" stroke="currentColor" strokeWidth="1.4" />
+          <circle cx="100" cy="100" r="4" fill="currentColor" />
         </svg>
-        <svg aria-hidden className="pointer-events-none absolute top-[28%] right-[3%] w-44 h-44 md:w-64 md:h-64 text-accent/20 rotate-[18deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1" strokeLinecap="round">
+        <svg aria-hidden className="pointer-events-none absolute top-[20%] right-[1%] w-52 h-52 md:w-80 md:h-80 text-accent/45 rotate-[18deg]" viewBox="0 0 200 200" fill="none">
+          <g stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <path d="M100 100 C 80 60, 60 50, 30 60 C 50 75, 70 90, 100 100 Z" />
             <path d="M100 100 C 120 60, 140 50, 170 60 C 150 75, 130 90, 100 100 Z" />
             <path d="M100 100 C 80 140, 60 150, 30 140 C 50 125, 70 110, 100 100 Z" />
             <path d="M100 100 C 120 140, 140 150, 170 140 C 150 125, 130 110, 100 100 Z" />
-            <circle cx="100" cy="100" r="6" fill="currentColor" fillOpacity="0.4" />
+            <circle cx="100" cy="100" r="7" fill="currentColor" fillOpacity="0.5" />
           </g>
         </svg>
-        <svg aria-hidden className="pointer-events-none absolute top-[55%] left-[2%] w-36 h-36 md:w-48 md:h-48 text-primary/12 rotate-[25deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1" fill="none">
+        <svg aria-hidden className="pointer-events-none absolute top-[42%] left-[1%] w-44 h-44 md:w-64 md:h-64 text-primary/35 rotate-[25deg]" viewBox="0 0 200 200" fill="none">
+          <g stroke="currentColor" strokeWidth="1.6" fill="none">
             <path d="M40 160 Q 100 80 160 40" />
-            <path d="M60 150 Q 70 130 90 130 Q 80 140 60 150 Z" />
-            <path d="M85 125 Q 95 105 115 105 Q 105 115 85 125 Z" />
-            <path d="M110 100 Q 120 80 140 80 Q 130 90 110 100 Z" />
-            <path d="M135 75 Q 145 55 165 55 Q 155 65 135 75 Z" />
+            <path d="M60 150 Q 70 125 95 125 Q 82 145 60 150 Z" />
+            <path d="M85 125 Q 95 100 120 100 Q 107 120 85 125 Z" />
+            <path d="M110 100 Q 120 75 145 75 Q 132 95 110 100 Z" />
+            <path d="M135 75 Q 145 50 170 50 Q 157 70 135 75 Z" />
           </g>
         </svg>
-        <svg aria-hidden className="pointer-events-none absolute bottom-[8%] right-[6%] w-44 h-44 md:w-60 md:h-60 text-accent/15 -rotate-[15deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1.1" fill="none">
-            <circle cx="100" cy="100" r="14" />
-            <path d="M100 86 C 110 60, 130 50, 140 60 C 130 80, 115 86, 100 86 Z" />
-            <path d="M100 114 C 110 140, 130 150, 140 140 C 130 120, 115 114, 100 114 Z" />
-            <path d="M86 100 C 60 90, 50 70, 60 60 C 80 70, 86 85, 86 100 Z" />
-            <path d="M114 100 C 140 90, 150 70, 140 60 C 120 70, 114 85, 114 100 Z" />
-            <path d="M86 100 C 60 110, 50 130, 60 140 C 80 130, 86 115, 86 100 Z" />
-            <path d="M114 100 C 140 110, 150 130, 140 140 C 120 130, 114 115, 114 100 Z" />
+        <svg aria-hidden className="pointer-events-none absolute top-[62%] right-[2%] w-52 h-52 md:w-72 md:h-72 text-accent/40 -rotate-[15deg]" viewBox="0 0 200 200" fill="none">
+          <g stroke="currentColor" strokeWidth="1.8" fill="none">
+            <circle cx="100" cy="100" r="16" />
+            <path d="M100 84 C 112 56, 134 46, 144 58 C 132 80, 116 86, 100 84 Z" />
+            <path d="M100 116 C 112 144, 134 154, 144 142 C 132 120, 116 114, 100 116 Z" />
+            <path d="M84 100 C 56 88, 46 66, 58 56 C 80 68, 86 84, 84 100 Z" />
+            <path d="M116 100 C 144 88, 154 66, 142 56 C 120 68, 114 84, 116 100 Z" />
+            <path d="M84 100 C 56 112, 46 134, 58 144 C 80 132, 86 116, 84 100 Z" />
+            <path d="M116 100 C 144 112, 154 134, 142 144 C 120 132, 114 116, 116 100 Z" />
+            <circle cx="100" cy="100" r="3" fill="currentColor" />
           </g>
         </svg>
-        <svg aria-hidden className="pointer-events-none absolute top-[75%] left-[40%] w-32 h-32 md:w-40 md:h-40 text-primary/10 rotate-[8deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1">
+        <svg aria-hidden className="pointer-events-none absolute bottom-[4%] left-[3%] w-44 h-44 md:w-60 md:h-60 text-primary/35 rotate-[8deg]" viewBox="0 0 200 200" fill="none">
+          <g stroke="currentColor" strokeWidth="1.6">
             <path d="M100 30 L 100 170" />
             <path d="M100 60 Q 70 60 60 80 Q 85 80 100 70 Z" />
             <path d="M100 60 Q 130 60 140 80 Q 115 80 100 70 Z" />
