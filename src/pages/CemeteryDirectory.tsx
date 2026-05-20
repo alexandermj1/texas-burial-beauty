@@ -568,7 +568,7 @@ const CemeteryDirectory = () => {
                 top: s.top,
                 left: s.left,
                 right: s.right,
-                width: `${s.size}px`,
+                width: `${Math.round(s.size * 1.55)}px`,
                 height: "auto",
                 opacity: s.opacity,
                 transform: `rotate(${s.rotate}deg)`,
