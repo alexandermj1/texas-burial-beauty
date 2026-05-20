@@ -506,7 +506,7 @@ const CemeteryDirectory = () => {
                       placeholder="Search cemeteries, cities, or regions"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 min-w-0 bg-transparent px-3.5 py-2.5 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none tracking-tight"
+                      className="flex-1 min-w-0 bg-transparent px-3.5 py-2.5 text-base md:text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none tracking-tight"
                     />
                     {query ? (
                       <button
