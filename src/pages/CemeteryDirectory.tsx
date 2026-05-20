@@ -19,31 +19,40 @@ const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
 }) as Record<string, string>;
 const LEAVES = Object.values(LEAF_MODULES);
 const LEAF_SCATTER: Array<{ top: string; left?: string; right?: string; size: number; rotate: number; opacity: number; idx: number }> = [
-  { top: "2%",  left: "1%",   size: 110, rotate: -14, opacity: 0.55, idx: 0 },
-  { top: "5%",  right: "2%",  size: 130, rotate: 18,  opacity: 0.5,  idx: 5 },
-  { top: "9%",  left: "46%",  size: 70,  rotate: 30,  opacity: 0.35, idx: 11 },
-  { top: "14%", left: "22%",  size: 80,  rotate: -25, opacity: 0.45, idx: 2 },
-  { top: "16%", right: "28%", size: 90,  rotate: 10,  opacity: 0.4,  idx: 7 },
-  { top: "22%", left: "3%",   size: 100, rotate: 40,  opacity: 0.5,  idx: 14 },
-  { top: "26%", right: "4%",  size: 120, rotate: -30, opacity: 0.55, idx: 18 },
-  { top: "30%", left: "38%",  size: 64,  rotate: 65,  opacity: 0.3,  idx: 21 },
-  { top: "34%", left: "12%",  size: 95,  rotate: -8,  opacity: 0.5,  idx: 9 },
-  { top: "38%", right: "14%", size: 105, rotate: 22,  opacity: 0.45, idx: 24 },
-  { top: "44%", left: "2%",   size: 130, rotate: -45, opacity: 0.55, idx: 3 },
-  { top: "46%", right: "3%",  size: 90,  rotate: 12,  opacity: 0.5,  idx: 12 },
-  { top: "50%", left: "30%",  size: 70,  rotate: 90,  opacity: 0.32, idx: 17 },
-  { top: "54%", right: "32%", size: 80,  rotate: -20, opacity: 0.4,  idx: 26 },
-  { top: "58%", left: "18%",  size: 110, rotate: 35,  opacity: 0.5,  idx: 4 },
-  { top: "62%", right: "20%", size: 120, rotate: -18, opacity: 0.5,  idx: 8 },
-  { top: "66%", left: "4%",   size: 100, rotate: 55,  opacity: 0.55, idx: 15 },
-  { top: "70%", right: "5%",  size: 95,  rotate: -38, opacity: 0.5,  idx: 19 },
-  { top: "74%", left: "40%",  size: 65,  rotate: 12,  opacity: 0.32, idx: 22 },
-  { top: "78%", left: "24%",  size: 85,  rotate: -55, opacity: 0.45, idx: 6 },
-  { top: "82%", right: "26%", size: 110, rotate: 28,  opacity: 0.5,  idx: 10 },
+  // Austin (~0-11%) — moved big terracotta monstera from left to right side
+  { top: "2%",  right: "1%",  size: 130, rotate: 14,  opacity: 0.55, idx: 0 },
+  { top: "5%",  left: "2%",   size: 110, rotate: -8,  opacity: 0.5,  idx: 5 },
+  { top: "9%",  right: "44%", size: 70,  rotate: 30,  opacity: 0.35, idx: 11 },
+  // Central Texas (~11-22%)
+  { top: "14%", left: "3%",   size: 95,  rotate: -25, opacity: 0.45, idx: 2 },
+  { top: "16%", right: "4%",  size: 100, rotate: 10,  opacity: 0.45, idx: 7 },
+  { top: "22%", left: "30%",  size: 70,  rotate: 40,  opacity: 0.35, idx: 14 },
+  // Dallas–Fort Worth (~22-33%)
+  { top: "26%", right: "2%",  size: 125, rotate: -30, opacity: 0.55, idx: 16 }, // teal hibiscus (favorite)
+  { top: "30%", left: "3%",   size: 95,  rotate: 12,  opacity: 0.5,  idx: 18 },
+  // East Texas (~33-44%) — leaf next to heading enlarged
+  { top: "34%", left: "2%",   size: 145, rotate: -8,  opacity: 0.55, idx: 9 },  // bigger palm fan
+  { top: "38%", right: "3%",  size: 155, rotate: 12,  opacity: 0.55, idx: 21 }, // bigger leaf
+  { top: "44%", left: "38%",  size: 80,  rotate: -10, opacity: 0.4,  idx: 3 },
+  // El Paso & West Texas (~44-55%)
+  { top: "46%", right: "32%", size: 110, rotate: 12,  opacity: 0.5,  idx: 16 }, // teal hibiscus (favorite)
+  { top: "50%", left: "2%",   size: 130, rotate: -20, opacity: 0.55, idx: 17 },
+  { top: "54%", right: "2%",  size: 120, rotate: 20,  opacity: 0.5,  idx: 12 },
+  // Greater Houston (~55-66%) — rotated so leaves face up
+  { top: "58%", left: "3%",   size: 130, rotate: 0,   opacity: 0.55, idx: 4 },  // caladium upright
+  { top: "62%", right: "20%", size: 120, rotate: -8,  opacity: 0.5,  idx: 8 },
+  { top: "66%", left: "38%",  size: 80,  rotate: 6,   opacity: 0.4,  idx: 16 }, // teal hibiscus (favorite)
+  // San Antonio (~66-77%) — caladium enlarged, leaves up / stalks down
+  { top: "70%", right: "2%",  size: 200, rotate: 0,   opacity: 0.6,  idx: 15 }, // BIG upright caladium
+  { top: "74%", left: "3%",   size: 110, rotate: -10, opacity: 0.5,  idx: 19 },
+  // South Texas (~77-88%)
+  { top: "78%", right: "3%",  size: 130, rotate: 8,   opacity: 0.55, idx: 20 },
+  { top: "82%", left: "30%",  size: 90,  rotate: -15, opacity: 0.45, idx: 16 }, // teal hibiscus (favorite)
   { top: "86%", left: "2%",   size: 125, rotate: -10, opacity: 0.55, idx: 13 },
-  { top: "88%", right: "2%",  size: 115, rotate: 45,  opacity: 0.55, idx: 16 },
-  { top: "92%", left: "36%",  size: 75,  rotate: -28, opacity: 0.4,  idx: 20 },
-  { top: "95%", right: "38%", size: 90,  rotate: 20,  opacity: 0.45, idx: 25 },
+  // West & North Texas (~88-100%)
+  { top: "88%", right: "2%",  size: 140, rotate: 0,   opacity: 0.6,  idx: 16 }, // teal hibiscus (favorite, original)
+  { top: "92%", left: "20%",  size: 110, rotate: -8,  opacity: 0.5,  idx: 16 }, // teal hibiscus (favorite)
+  { top: "95%", right: "38%", size: 95,  rotate: 14,  opacity: 0.45, idx: 6 },
 ];
 
 type Cem = (typeof bayCemeteries)[number];
