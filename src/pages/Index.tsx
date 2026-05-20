@@ -133,13 +133,11 @@ const Index = () => {
       )
     : [];
 
-  // Drive an emergence animation as the user scrolls into the featured section.
+  // Trigger the typewriter when section comes into view (no opacity/scale fade).
   const { scrollYProgress } = useScroll({
     target: featuredRef,
     offset: ["start end", "center center"],
   });
-  const cardsOpacity = useTransform(scrollYProgress, [0, 0.35], [0, 1]);
-  const cardsScale = useTransform(scrollYProgress, [0, 0.6], [0.92, 1]);
 
   useEffect(() => {
     const unsub = scrollYProgress.on("change", (v) => {
