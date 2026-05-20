@@ -163,13 +163,13 @@ export const ListingCard = ({ listing, isAdmin, index = 0, hidePrice = false }: 
           </div>
           {typeImg && (
             <>
-              <div className="w-px h-24 bg-gradient-to-b from-primary/30 via-border to-transparent shrink-0 mt-1" />
+              <div className="hidden sm:block w-px h-24 bg-gradient-to-b from-primary/30 via-border to-transparent shrink-0 mt-1" />
               <motion.div
                 initial={{ opacity: 0, x: 8 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.35, delay: 0.08 }}
-                className="shrink-0 w-28 h-28 flex items-center justify-center relative"
+                className="hidden sm:flex shrink-0 w-28 h-28 items-center justify-center relative"
               >
                 <div className="absolute inset-2 rounded-full bg-primary/10 blur-xl opacity-70" />
                 <img
