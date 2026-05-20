@@ -102,7 +102,7 @@ interface ListingRow {
 }
 
 /* Reusable listing card for use on home page too */
-export const ListingCard = ({ listing, isAdmin, index = 0 }: { listing: ListingRow; isAdmin: boolean; index?: number }) => {
+export const ListingCard = ({ listing, isAdmin, index = 0, hidePrice = false }: { listing: ListingRow; isAdmin: boolean; index?: number; hidePrice?: boolean }) => {
   const typeImg = getPlotImage(listing.plot_type, listing.spaces);
   const hasPhoto = listing.photos && listing.photos.length > 0;
   return (
