@@ -442,7 +442,7 @@ const CemeteryDirectory = () => {
                   placeholder="Search cemeteries, cities, or regions"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent px-4 py-3.5 md:py-4 text-foreground placeholder:text-muted-foreground/55 focus:outline-none text-[15px] tracking-tight"
+                  className="flex-1 min-w-0 bg-transparent px-4 py-3.5 md:py-4 text-foreground placeholder:text-muted-foreground/55 focus:outline-none text-base md:text-[15px] tracking-tight"
                 />
                 {query ? (
                   <button
@@ -490,7 +490,7 @@ const CemeteryDirectory = () => {
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: -20, opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.22)]"
+                className="hidden md:block fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.22)]"
                 style={{ top: `${navHeight}px`, transformOrigin: "center top" }}
               >
                 <div className="container mx-auto px-6 py-3 flex justify-center">
@@ -506,7 +506,7 @@ const CemeteryDirectory = () => {
                       placeholder="Search cemeteries, cities, or regions"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 min-w-0 bg-transparent px-3.5 py-2.5 text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none tracking-tight"
+                      className="flex-1 min-w-0 bg-transparent px-3.5 py-2.5 text-base md:text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none tracking-tight"
                     />
                     {query ? (
                       <button
