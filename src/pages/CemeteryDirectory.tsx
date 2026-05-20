@@ -12,6 +12,40 @@ import { slugify } from "@/lib/cemeterySlug";
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
 
+// Botanical leaf accents (scattered decoratively across the page background)
+const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+const LEAVES = Object.values(LEAF_MODULES);
+const LEAF_SCATTER: Array<{ top: string; left?: string; right?: string; size: number; rotate: number; opacity: number; idx: number }> = [
+  { top: "2%",  left: "1%",   size: 110, rotate: -14, opacity: 0.55, idx: 0 },
+  { top: "5%",  right: "2%",  size: 130, rotate: 18,  opacity: 0.5,  idx: 5 },
+  { top: "9%",  left: "46%",  size: 70,  rotate: 30,  opacity: 0.35, idx: 11 },
+  { top: "14%", left: "22%",  size: 80,  rotate: -25, opacity: 0.45, idx: 2 },
+  { top: "16%", right: "28%", size: 90,  rotate: 10,  opacity: 0.4,  idx: 7 },
+  { top: "22%", left: "3%",   size: 100, rotate: 40,  opacity: 0.5,  idx: 14 },
+  { top: "26%", right: "4%",  size: 120, rotate: -30, opacity: 0.55, idx: 18 },
+  { top: "30%", left: "38%",  size: 64,  rotate: 65,  opacity: 0.3,  idx: 21 },
+  { top: "34%", left: "12%",  size: 95,  rotate: -8,  opacity: 0.5,  idx: 9 },
+  { top: "38%", right: "14%", size: 105, rotate: 22,  opacity: 0.45, idx: 24 },
+  { top: "44%", left: "2%",   size: 130, rotate: -45, opacity: 0.55, idx: 3 },
+  { top: "46%", right: "3%",  size: 90,  rotate: 12,  opacity: 0.5,  idx: 12 },
+  { top: "50%", left: "30%",  size: 70,  rotate: 90,  opacity: 0.32, idx: 17 },
+  { top: "54%", right: "32%", size: 80,  rotate: -20, opacity: 0.4,  idx: 26 },
+  { top: "58%", left: "18%",  size: 110, rotate: 35,  opacity: 0.5,  idx: 4 },
+  { top: "62%", right: "20%", size: 120, rotate: -18, opacity: 0.5,  idx: 8 },
+  { top: "66%", left: "4%",   size: 100, rotate: 55,  opacity: 0.55, idx: 15 },
+  { top: "70%", right: "5%",  size: 95,  rotate: -38, opacity: 0.5,  idx: 19 },
+  { top: "74%", left: "40%",  size: 65,  rotate: 12,  opacity: 0.32, idx: 22 },
+  { top: "78%", left: "24%",  size: 85,  rotate: -55, opacity: 0.45, idx: 6 },
+  { top: "82%", right: "26%", size: 110, rotate: 28,  opacity: 0.5,  idx: 10 },
+  { top: "86%", left: "2%",   size: 125, rotate: -10, opacity: 0.55, idx: 13 },
+  { top: "88%", right: "2%",  size: 115, rotate: 45,  opacity: 0.55, idx: 16 },
+  { top: "92%", left: "36%",  size: 75,  rotate: -28, opacity: 0.4,  idx: 20 },
+  { top: "95%", right: "38%", size: 90,  rotate: 20,  opacity: 0.45, idx: 25 },
+];
+
 type Cem = (typeof bayCemeteries)[number];
 
 const OFFERING_SETS: string[][] = [
@@ -521,54 +555,29 @@ const CemeteryDirectory = () => {
         <div aria-hidden className="pointer-events-none absolute top-[50%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute bottom-[15%] right-1/3 w-[360px] h-[360px] rounded-full bg-secondary/40 blur-3xl" />
 
-        {/* Stylized floral / leaf accents — visible in side gutters & between rows */}
-        <svg aria-hidden className="pointer-events-none absolute top-[4%] left-[2%] w-48 h-48 md:w-72 md:h-72 text-primary/40 -rotate-12" viewBox="0 0 200 200" fill="none">
-          <path d="M100 20 C 130 60, 130 140, 100 180 C 70 140, 70 60, 100 20 Z" stroke="currentColor" strokeWidth="2" />
-          <path d="M100 30 C 60 70, 60 130, 100 170" stroke="currentColor" strokeWidth="1.4" />
-          <path d="M100 30 C 140 70, 140 130, 100 170" stroke="currentColor" strokeWidth="1.4" />
-          <circle cx="100" cy="100" r="4" fill="currentColor" />
-        </svg>
-        <svg aria-hidden className="pointer-events-none absolute top-[20%] right-[1%] w-52 h-52 md:w-80 md:h-80 text-accent/45 rotate-[18deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-            <path d="M100 100 C 80 60, 60 50, 30 60 C 50 75, 70 90, 100 100 Z" />
-            <path d="M100 100 C 120 60, 140 50, 170 60 C 150 75, 130 90, 100 100 Z" />
-            <path d="M100 100 C 80 140, 60 150, 30 140 C 50 125, 70 110, 100 100 Z" />
-            <path d="M100 100 C 120 140, 140 150, 170 140 C 150 125, 130 110, 100 100 Z" />
-            <circle cx="100" cy="100" r="7" fill="currentColor" fillOpacity="0.5" />
-          </g>
-        </svg>
-        <svg aria-hidden className="pointer-events-none absolute top-[42%] left-[1%] w-44 h-44 md:w-64 md:h-64 text-primary/35 rotate-[25deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1.6" fill="none">
-            <path d="M40 160 Q 100 80 160 40" />
-            <path d="M60 150 Q 70 125 95 125 Q 82 145 60 150 Z" />
-            <path d="M85 125 Q 95 100 120 100 Q 107 120 85 125 Z" />
-            <path d="M110 100 Q 120 75 145 75 Q 132 95 110 100 Z" />
-            <path d="M135 75 Q 145 50 170 50 Q 157 70 135 75 Z" />
-          </g>
-        </svg>
-        <svg aria-hidden className="pointer-events-none absolute top-[62%] right-[2%] w-52 h-52 md:w-72 md:h-72 text-accent/40 -rotate-[15deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1.8" fill="none">
-            <circle cx="100" cy="100" r="16" />
-            <path d="M100 84 C 112 56, 134 46, 144 58 C 132 80, 116 86, 100 84 Z" />
-            <path d="M100 116 C 112 144, 134 154, 144 142 C 132 120, 116 114, 100 116 Z" />
-            <path d="M84 100 C 56 88, 46 66, 58 56 C 80 68, 86 84, 84 100 Z" />
-            <path d="M116 100 C 144 88, 154 66, 142 56 C 120 68, 114 84, 116 100 Z" />
-            <path d="M84 100 C 56 112, 46 134, 58 144 C 80 132, 86 116, 84 100 Z" />
-            <path d="M116 100 C 144 112, 154 134, 142 144 C 120 132, 114 116, 116 100 Z" />
-            <circle cx="100" cy="100" r="3" fill="currentColor" />
-          </g>
-        </svg>
-        <svg aria-hidden className="pointer-events-none absolute bottom-[4%] left-[3%] w-44 h-44 md:w-60 md:h-60 text-primary/35 rotate-[8deg]" viewBox="0 0 200 200" fill="none">
-          <g stroke="currentColor" strokeWidth="1.6">
-            <path d="M100 30 L 100 170" />
-            <path d="M100 60 Q 70 60 60 80 Q 85 80 100 70 Z" />
-            <path d="M100 60 Q 130 60 140 80 Q 115 80 100 70 Z" />
-            <path d="M100 100 Q 65 100 55 125 Q 85 125 100 110 Z" />
-            <path d="M100 100 Q 135 100 145 125 Q 115 125 100 110 Z" />
-            <path d="M100 140 Q 75 140 70 160 Q 90 160 100 150 Z" />
-            <path d="M100 140 Q 125 140 130 160 Q 110 160 100 150 Z" />
-          </g>
-        </svg>
+        {/* Botanical scatter — real painted leaves & flowers, freely arranged */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          {LEAVES.length > 0 && LEAF_SCATTER.map((s, i) => (
+            <img
+              key={i}
+              src={LEAVES[s.idx % LEAVES.length]}
+              alt=""
+              loading="lazy"
+              className="absolute select-none"
+              style={{
+                top: s.top,
+                left: s.left,
+                right: s.right,
+                width: `${s.size}px`,
+                height: "auto",
+                opacity: s.opacity,
+                transform: `rotate(${s.rotate}deg)`,
+                filter: "saturate(0.85)",
+              }}
+            />
+          ))}
+        </div>
+
 
         <div className="relative container mx-auto px-6">
           {grouped.length === 0 && (
