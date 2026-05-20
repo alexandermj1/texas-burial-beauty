@@ -74,7 +74,13 @@ const RegionRow = ({
           <span className="font-display text-xs text-primary tabular-nums tracking-[0.2em] uppercase shrink-0">
             №&nbsp;{String(gIdx + 1).padStart(2, "0")}
           </span>
-          <h2 className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-none truncate">
+          <h2 className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-none truncate flex items-center gap-3">
+            <svg aria-hidden viewBox="0 0 40 40" className="w-6 h-6 md:w-7 md:h-7 text-primary/70 shrink-0">
+              <g fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                <path d="M20 4 C 28 14, 28 26, 20 36 C 12 26, 12 14, 20 4 Z" />
+                <path d="M20 6 L 20 34" />
+              </g>
+            </svg>
             {groupRegion}
           </h2>
           <span className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-medium tabular-nums shrink-0 hidden sm:inline">
