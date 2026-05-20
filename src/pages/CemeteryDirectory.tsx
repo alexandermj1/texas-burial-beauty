@@ -490,7 +490,7 @@ const CemeteryDirectory = () => {
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: -20, opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.22)]"
+                className="hidden md:block fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.22)]"
                 style={{ top: `${navHeight}px`, transformOrigin: "center top" }}
               >
                 <div className="container mx-auto px-6 py-3 flex justify-center">
