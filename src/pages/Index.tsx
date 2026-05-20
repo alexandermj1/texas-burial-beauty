@@ -178,12 +178,14 @@ const Index = () => {
             </div>
 
             {/* Mobile: horizontal swipe carousel. sm+: grid */}
-            <div className="-mx-6 px-6 sm:mx-0 sm:px-0 flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none scroll-pl-6 pb-4 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {featuredListings.map((listing, i) => (
-                <div key={listing.id} className="snap-start shrink-0 w-[85%] sm:w-auto">
-                  <ListingCard listing={listing} isAdmin={false} index={i} hidePrice />
-                </div>
-              ))}
+            <div className="max-w-6xl mx-auto">
+              <div className="-mx-6 px-6 sm:mx-0 sm:px-0 flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none scroll-pl-6 pb-4 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {featuredListings.map((listing, i) => (
+                  <div key={listing.id} className="snap-start shrink-0 w-[85%] sm:w-auto">
+                    <ListingCard listing={listing} isAdmin={false} index={i} hidePrice />
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="text-center mt-10">
