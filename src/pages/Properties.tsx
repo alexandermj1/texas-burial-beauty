@@ -202,14 +202,17 @@ const Properties = () => {
   useEffect(() => { fetchListings(); }, []);
 
   const fetchListings = async () => {
+    const baseCols = "id, cemetery, city, plot_type, section, spaces, asking_price, photos, description, contact_name, contact_phone, contact_email";
+    const cols = isAdmin ? `${baseCols}, profit, cost_price` : baseCols;
     const { data } = await supabase
       .from("listings")
-      .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, description, contact_name, contact_phone, contact_email, profit, cost_price")
+      .select(cols)
       .eq("status", "active")
       .order("created_at", { ascending: false });
     if (data) setDbListings(data as any);
     setLoadingListings(false);
   };
+
 
   const filteredCemeteries = useMemo(() => {
     let result = bayCemeteries;
