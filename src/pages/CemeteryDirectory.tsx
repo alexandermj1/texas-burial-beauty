@@ -398,7 +398,7 @@ const CemeteryDirectory = () => {
         <motion.img
           src={heroBg}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
+          className="absolute inset-0 w-full h-full object-cover object-[54%_30%]"
           initial={{ scale: 1.04 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.6, ease: "easeOut" }}
