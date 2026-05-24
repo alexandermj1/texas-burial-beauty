@@ -170,7 +170,7 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border border-primary/20 ring-1 ring-foreground/[0.04] shadow-[0_18px_40px_-16px_hsl(var(--foreground)/0.22),0_4px_12px_-6px_hsl(var(--foreground)/0.12)] hover:shadow-[0_30px_60px_-20px_hsl(var(--primary)/0.45)] hover:-translate-y-1 hover:border-primary/50 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border-2 border-primary/45 shadow-[0_18px_40px_-16px_hsl(var(--foreground)/0.22),0_4px_12px_-6px_hsl(var(--foreground)/0.12)] hover:shadow-[0_30px_60px_-20px_hsl(var(--primary)/0.45)] hover:-translate-y-1 hover:border-primary/70 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
                 <Link
                   to={`/cemeteries/${slug}`}
@@ -252,8 +252,6 @@ const RegionRow = ({
             );
           })}
         </div>
-        {/* Edge fade hints (mobile primarily) */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-background to-transparent" />
       </div>
     </div>
   );
@@ -534,31 +532,7 @@ const CemeteryDirectory = () => {
 
       {/* Cards grid — warm cream wash that fades softly into the page */}
       <section className="relative pt-14 md:pt-20 pb-20 md:pb-28 overflow-hidden">
-        {/* Tinted background, masked to fade in from the hero and out to the footer */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-secondary/30 to-background"
-          style={{
-            WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
-          }}
-        />
-        {/* Dotted grid texture — editorial, softly masked */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.55]"
-          style={{
-            backgroundImage:
-              "radial-gradient(hsl(var(--primary) / 0.45) 1.4px, transparent 1.4px)",
-            backgroundSize: "24px 24px",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
-          }}
-        />
+
         {/* Decorative warm washes — terracotta + sage */}
         <div aria-hidden className="pointer-events-none absolute top-[18%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/12 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute top-[50%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
