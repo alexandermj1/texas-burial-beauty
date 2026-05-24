@@ -453,7 +453,7 @@ const CemeteryDirectory = () => {
                 ) : (
                   <Link
                     to="/buy"
-                    className="hidden sm:inline-flex mr-1.5 items-center gap-1.5 px-4 py-2 rounded-full bg-foreground text-background text-[13px] font-medium hover:bg-foreground/85 transition-colors"
+                    className="hidden sm:inline-flex mr-1.5 items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-[13px] font-medium hover:bg-accent/90 transition-colors"
                   >
                     Find a plot <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
