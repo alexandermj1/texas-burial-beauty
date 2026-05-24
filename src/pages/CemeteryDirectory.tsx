@@ -532,31 +532,7 @@ const CemeteryDirectory = () => {
 
       {/* Cards grid — warm cream wash that fades softly into the page */}
       <section className="relative pt-14 md:pt-20 pb-20 md:pb-28 overflow-hidden">
-        {/* Tinted background, masked to fade in from the hero and out to the footer */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-secondary/30 to-background"
-          style={{
-            WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 120px, hsl(0 0% 0%) calc(100% - 160px), transparent 100%)",
-          }}
-        />
-        {/* Dotted grid texture — editorial, softly masked */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.55]"
-          style={{
-            backgroundImage:
-              "radial-gradient(hsl(var(--primary) / 0.45) 1.4px, transparent 1.4px)",
-            backgroundSize: "24px 24px",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
-          }}
-        />
+
         {/* Decorative warm washes — terracotta + sage */}
         <div aria-hidden className="pointer-events-none absolute top-[18%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/12 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute top-[50%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
