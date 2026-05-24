@@ -252,8 +252,6 @@ const RegionRow = ({
             );
           })}
         </div>
-        {/* Edge fade hints (mobile primarily) */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-background to-transparent" />
       </div>
     </div>
   );
