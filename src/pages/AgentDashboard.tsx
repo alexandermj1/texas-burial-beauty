@@ -77,10 +77,15 @@ const AgentDashboard = () => {
 
   const fetchData = async () => {
     const [listingsRes, reservationsRes] = await Promise.all([
-      supabase.from("listings").select("*").order("cemetery"),
+      supabase.rpc("get_listings_with_internal" as any),
       supabase.from("plot_reservations" as any).select("*"),
     ]);
-    if (listingsRes.data) setListings(listingsRes.data as any);
+    if (listingsRes.data) {
+      const sorted = [...(listingsRes.data as any[])].sort((a, b) =>
+        (a.cemetery || "").localeCompare(b.cemetery || "")
+      );
+      setListings(sorted as any);
+    }
     if (reservationsRes.data) setReservations(reservationsRes.data as any);
     setLoading(false);
   };

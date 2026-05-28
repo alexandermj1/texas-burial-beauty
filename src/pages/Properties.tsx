@@ -202,14 +202,19 @@ const Properties = () => {
   useEffect(() => { fetchListings(); }, []);
 
   const fetchListings = async () => {
-    const baseCols = "id, cemetery, city, plot_type, section, spaces, asking_price, photos, description, contact_name, contact_phone, contact_email";
-    const cols = isAdmin ? `${baseCols}, profit, cost_price` : baseCols;
-    const { data } = await supabase
-      .from("listings")
-      .select(cols)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
-    if (data) setDbListings(data as any);
+    if (isAdmin) {
+      const { data } = await supabase.rpc("get_listings_with_internal" as any);
+      const active = ((data as any[]) || []).filter((l) => l.status === "active");
+      setDbListings(active as any);
+    } else {
+      const cols = "id, cemetery, city, plot_type, section, spaces, asking_price, photos, description, contact_name, contact_phone, contact_email";
+      const { data } = await supabase
+        .from("listings")
+        .select(cols)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+      if (data) setDbListings(data as any);
+    }
     setLoadingListings(false);
   };
 

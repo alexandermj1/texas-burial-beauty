@@ -158,7 +158,7 @@ const Admin = () => {
 
   const fetchAllListings = async () => {
     const [listingsRes, reservationsRes, salesRes, submissionsRes] = await Promise.all([
-      supabase.from("listings").select("*").order("created_at", { ascending: false }),
+      supabase.rpc("get_listings_with_internal" as any),
       supabase.from("plot_reservations" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("sales" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false }),
