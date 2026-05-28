@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   Phone,
@@ -116,6 +116,25 @@ const Partners = () => {
     document.title = "Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers";
   }, []);
 
+  // Hero parallax — image drifts slower than the page scroll.
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroImgY = useTransform(heroProgress, [0, 1], ["0%", "40%"]);
+  const heroImgScale = useTransform(heroProgress, [0, 1], [1.05, 1.2]);
+  const heroContentY = useTransform(heroProgress, [0, 1], ["0%", "-15%"]);
+  const heroContentOpacity = useTransform(heroProgress, [0, 0.8], [1, 0]);
+
+  // Quote section parallax backdrop.
+  const quoteRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: quoteProgress } = useScroll({
+    target: quoteRef,
+    offset: ["start end", "end start"],
+  });
+  const quoteBgY = useTransform(quoteProgress, [0, 1], ["-15%", "15%"]);
+
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
@@ -145,18 +164,23 @@ const Partners = () => {
       />
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <motion.img
-          src={partnersHeroBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.6, ease: "easeOut" }}
-        />
+      {/* Hero — parallax: image drifts slower than copy */}
+      <section ref={heroRef} className="relative overflow-hidden">
+        <motion.div
+          className="absolute inset-0 will-change-transform"
+          style={{ y: heroImgY, scale: heroImgScale }}
+        >
+          <img
+            src={partnersHeroBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </motion.div>
         <div className="absolute inset-0 bg-gradient-to-br from-foreground/90 via-foreground/75 to-foreground/55" />
-        <div className="relative container mx-auto px-6 pt-36 pb-24 md:pt-40 md:pb-32">
+        <motion.div
+          style={{ y: heroContentY, opacity: heroContentOpacity }}
+          className="relative container mx-auto px-6 pt-36 pb-24 md:pt-40 md:pb-32"
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -197,7 +221,7 @@ const Partners = () => {
               </a>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Stat strip */}
@@ -434,54 +458,68 @@ const Partners = () => {
         </div>
       </section>
 
-      {/* Timeline */}
-      <section className="py-20">
-        <div className="container mx-auto px-6 max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">A shared history</span>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">Built on nearly three decades of trust</h2>
-          </motion.div>
-
-          <div className="relative">
-            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-border to-transparent" />
-            {milestones.map((m, i) => (
+      {/* Timeline — sticky heading pins while milestones scroll past */}
+      <section className="py-20 md:py-28">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid md:grid-cols-[1fr_1.2fr] gap-12 md:gap-16 items-start">
+            <div className="md:sticky md:top-28 self-start">
               <motion.div
-                key={m.year}
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="relative pl-10 pb-8 last:pb-0"
+                transition={{ duration: 0.6 }}
               >
-                <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm" />
-                <p className="font-display text-lg text-foreground mb-1">{m.year}</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">{m.text}</p>
+                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">A shared history</span>
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                  Built on nearly three decades of trust
+                </h2>
+                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                  Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families.
+                </p>
               </motion.div>
-            ))}
+            </div>
+
+            <div className="relative">
+              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-border to-transparent" />
+              {milestones.map((m, i) => (
+                <motion.div
+                  key={m.year}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-10% 0px" }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                  className="relative pl-10 pb-14 last:pb-0"
+                >
+                  <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm" />
+                  <p className="font-display text-xl text-foreground mb-1">{m.year}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{m.text}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Quote */}
-      <section className="py-20 md:py-24 bg-card border-y border-border/40">
-        <div className="container mx-auto px-6 max-w-3xl text-center">
+      {/* Quote — fixed-attachment parallax backdrop, copy scrolls over it */}
+      <section ref={quoteRef} className="relative py-28 md:py-36 border-y border-border/40 overflow-hidden">
+        <motion.div
+          aria-hidden="true"
+          style={{ y: quoteBgY, backgroundImage: `url(${partnersHeroBg})` }}
+          className="absolute inset-0 -top-[15%] -bottom-[15%] bg-cover bg-center will-change-transform"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-foreground/85 via-foreground/75 to-foreground/85" />
+        <div className="relative container mx-auto px-6 max-w-3xl text-center">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <Quote className="w-8 h-8 text-primary/40 mx-auto mb-6" />
-            <blockquote className="font-display text-2xl md:text-3xl text-foreground/85 italic leading-relaxed">
+            <Quote className="w-8 h-8 text-primary-foreground/60 mx-auto mb-6" />
+            <blockquote className="font-display text-2xl md:text-3xl text-primary-foreground/95 italic leading-relaxed drop-shadow-lg">
               "Our partnership is simple — combine the experience of a 27-year, 4.9-star brokerage with a Texas team that lives and works alongside the families it serves. The outcome is faster sales, fairer prices, and total peace of mind."
             </blockquote>
-            <p className="text-sm text-muted-foreground mt-6 tracking-wide">— Texas Cemetery Brokers · Bayer Cemetery Brokers</p>
+            <p className="text-sm text-primary-foreground/75 mt-6 tracking-wide">— Texas Cemetery Brokers · Bayer Cemetery Brokers</p>
           </motion.div>
         </div>
       </section>
