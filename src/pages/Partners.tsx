@@ -221,7 +221,7 @@ const Partners = () => {
               </a>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Stat strip */}
