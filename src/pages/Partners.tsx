@@ -116,6 +116,25 @@ const Partners = () => {
     document.title = "Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers";
   }, []);
 
+  // Hero parallax — image drifts slower than the page scroll.
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroImgY = useTransform(heroProgress, [0, 1], ["0%", "40%"]);
+  const heroImgScale = useTransform(heroProgress, [0, 1], [1.05, 1.2]);
+  const heroContentY = useTransform(heroProgress, [0, 1], ["0%", "-15%"]);
+  const heroContentOpacity = useTransform(heroProgress, [0, 0.8], [1, 0]);
+
+  // Quote section parallax backdrop.
+  const quoteRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: quoteProgress } = useScroll({
+    target: quoteRef,
+    offset: ["start end", "end start"],
+  });
+  const quoteBgY = useTransform(quoteProgress, [0, 1], ["-15%", "15%"]);
+
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
