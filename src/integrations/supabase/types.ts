@@ -1498,6 +1498,35 @@ export type Database = {
     Functions: {
       canonical_cemetery: { Args: { name: string }; Returns: string }
       canonical_property_type: { Args: { pt: string }; Returns: string }
+      get_listings_with_internal: {
+        Args: never
+        Returns: {
+          asking_price: number | null
+          cemetery: string
+          city: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          cost_price: number | null
+          created_at: string
+          description: string | null
+          id: string
+          photos: string[] | null
+          plot_type: string
+          profit: number | null
+          section: string
+          spaces: number
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "listings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
