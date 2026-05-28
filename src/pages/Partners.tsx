@@ -127,13 +127,6 @@ const Partners = () => {
   const heroContentY = useTransform(heroProgress, [0, 1], ["0%", "-15%"]);
   const heroContentOpacity = useTransform(heroProgress, [0, 0.8], [1, 0]);
 
-  // Quote section parallax backdrop.
-  const quoteRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: quoteProgress } = useScroll({
-    target: quoteRef,
-    offset: ["start end", "end start"],
-  });
-  const quoteBgY = useTransform(quoteProgress, [0, 1], ["-15%", "15%"]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
