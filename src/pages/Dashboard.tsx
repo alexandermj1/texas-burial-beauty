@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 
 interface Listing {
   id: string;
@@ -83,6 +84,7 @@ const Dashboard = () => {
               >
                 <Plus className="w-4 h-4" /> New Listing
               </Link>
+              <ChangePasswordDialog variant="icon" />
               <button
                 onClick={handleSignOut}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors"
