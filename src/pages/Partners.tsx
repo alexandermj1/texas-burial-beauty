@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useRef } from "react";
-import { MotionValue, motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   Phone,
@@ -111,95 +111,10 @@ const testimonialPoints = [
   "Local Texas operations team",
 ];
 
-/**
- * Scroll-jacked section: heading stays pinned in viewport while items
- * fade/slide in as the user scrolls through the section's tall outer wrapper.
- */
-type PinnedSectionProps = {
-  eyebrow: string;
-  heading: ReactNode;
-  sub: ReactNode;
-  count: number;
-  className?: string;
-  innerClassName?: string;
-  rightClassName?: string;
-  /** Vertical scroll length, multiplied by viewport height. */
-  scrollLength?: number;
-  children: (progress: MotionValue<number>) => ReactNode;
-};
-
-const PinnedSection = ({
-  eyebrow,
-  heading,
-  sub,
-  count,
-  className = "",
-  innerClassName = "",
-  rightClassName = "",
-  scrollLength,
-  children,
-}: PinnedSectionProps) => {
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end end"],
-  });
-  // Default: ~80vh per item, min 180vh, so there's real scroll runway.
-  const vh = Math.max(180, count * 80);
-
-  return (
-    <section
-      ref={ref}
-      className={`relative ${className}`}
-      style={{ height: scrollLength ? `${scrollLength}vh` : `${vh}vh` }}
-    >
-      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
-        <div className={`container mx-auto px-6 max-w-7xl w-full ${innerClassName}`}>
-          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-center">
-            <div>
-              <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">
-                {eyebrow}
-              </span>
-              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                {heading}
-              </h2>
-              <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">{sub}</p>
-            </div>
-            <div className={rightClassName}>{children(scrollYProgress)}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-type RevealItemProps = {
-  progress: MotionValue<number>;
-  index: number;
-  total: number;
-  className?: string;
-  children: ReactNode;
-};
-
-const RevealItem = ({ progress, index, total, className = "", children }: RevealItemProps) => {
-  // Stagger reveals across the first ~85% of scroll, holding visible for the rest.
-  const span = 0.85 / total;
-  const start = index * span;
-  const end = start + span * 0.7;
-  const opacity = useTransform(progress, [start, end], [0, 1]);
-  const y = useTransform(progress, [start, end], [70, 0]);
-  return (
-    <motion.div style={{ opacity, y }} className={className}>
-      {children}
-    </motion.div>
-  );
-};
-
 const Partners = () => {
   useEffect(() => {
     document.title = "Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers";
   }, []);
-
 
   // Hero parallax — image drifts slower than the page scroll.
   const heroRef = useRef<HTMLElement>(null);
@@ -212,6 +127,13 @@ const Partners = () => {
   const heroContentY = useTransform(heroProgress, [0, 1], ["0%", "-15%"]);
   const heroContentOpacity = useTransform(heroProgress, [0, 0.8], [1, 0]);
 
+  // Quote section parallax backdrop.
+  const quoteRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: quoteProgress } = useScroll({
+    target: quoteRef,
+    offset: ["start end", "end start"],
+  });
+  const quoteBgY = useTransform(quoteProgress, [0, 1], ["-15%", "15%"]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
@@ -421,66 +343,81 @@ const Partners = () => {
         </div>
       </section>
 
-      {/* Pillars — scroll-jacked: heading pinned, cards reveal as you scroll */}
-      <PinnedSection
-        className="bg-gradient-warm"
-        eyebrow="What we bring together"
-        heading="Four pillars of the partnership"
-        sub="Each pillar is a piece of infrastructure built over nearly three decades — now applied to every Texas transaction."
-        count={pillars.length}
-        rightClassName="grid sm:grid-cols-2 gap-5"
-      >
-        {(progress) =>
-          pillars.map((p, i) => (
-            <RevealItem
-              key={p.title}
-              progress={progress}
-              index={i}
-              total={pillars.length}
-              className="group relative bg-card rounded-2xl p-7 border border-border/60 shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
-            >
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-secondary/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <p.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <span className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground font-medium">{p.label}</span>
-                </div>
-                <h3 className="font-display text-xl text-foreground mb-2">{p.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
-              </div>
-            </RevealItem>
-          ))
-        }
-      </PinnedSection>
+      {/* Pillars */}
+      <section className="py-20 bg-gradient-warm">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-14 max-w-2xl mx-auto"
+          >
+            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What we bring together</span>
+            <h2 className="font-display text-3xl md:text-4xl text-foreground">Four pillars of the partnership</h2>
+          </motion.div>
 
-      {/* Advantages — scroll-jacked reveals */}
-      <PinnedSection
-        eyebrow="What it means for you"
-        heading="A measurable advantage on every sale"
-        sub="Scroll through the concrete ways our partnership shows up in your transaction."
-        count={advantages.length}
-        rightClassName="grid gap-6"
-      >
-        {(progress) =>
-          advantages.map((a, i) => (
-            <RevealItem
-              key={a.title}
-              progress={progress}
-              index={i}
-              total={advantages.length}
-              className="border-l-2 border-primary/40 pl-6 py-2"
-            >
-              <h3 className="font-display text-xl text-foreground mb-2 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                {a.title}
-              </h3>
-              <p className="text-base text-muted-foreground leading-relaxed">{a.desc}</p>
-            </RevealItem>
-          ))
-        }
-      </PinnedSection>
+          <div className="grid sm:grid-cols-2 gap-5 max-w-5xl mx-auto">
+            {pillars.map((p, i) => (
+              <motion.div
+                key={p.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="group relative bg-card rounded-2xl p-7 border border-border/60 shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+              >
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-secondary/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                      <p.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground font-medium">{p.label}</span>
+                  </div>
+                  <h3 className="font-display text-xl text-foreground mb-2">{p.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Advantages */}
+      <section className="py-20 md:py-24">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What it means for you</span>
+            <h2 className="font-display text-3xl md:text-4xl text-foreground">A measurable advantage on every sale</h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {advantages.map((a, i) => (
+              <motion.div
+                key={a.title}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="border-l-2 border-primary/40 pl-6 py-2"
+              >
+                <h3 className="font-display text-lg text-foreground mb-2 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  {a.title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{a.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Trust checklist */}
       <section className="py-20 bg-muted/30 border-y border-border/40">
@@ -521,86 +458,117 @@ const Partners = () => {
         </div>
       </section>
 
-      {/* Timeline — scroll-jacked milestones */}
-      <PinnedSection
-        eyebrow="A shared history"
-        heading="Built on nearly three decades of trust"
-        sub="Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families."
-        count={milestones.length}
-        rightClassName="relative"
-      >
-        {(progress) => (
-          <>
-            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-border to-transparent" />
-            {milestones.map((m, i) => (
-              <RevealItem
-                key={m.year}
-                progress={progress}
-                index={i}
-                total={milestones.length}
-                className="relative pl-10 pb-10 last:pb-0"
+      {/* Timeline — sticky heading pins while milestones scroll past */}
+      <section className="py-20 md:py-28">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid md:grid-cols-[1fr_1.2fr] gap-12 md:gap-16 items-start">
+            <div className="md:sticky md:top-28 self-start">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
               >
-                <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm" />
-                <p className="font-display text-xl text-foreground mb-1">{m.year}</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">{m.text}</p>
-              </RevealItem>
-            ))}
-          </>
-        )}
-      </PinnedSection>
+                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">A shared history</span>
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                  Built on nearly three decades of trust
+                </h2>
+                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                  Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families.
+                </p>
+              </motion.div>
+            </div>
 
-      {/* Quote — clean, no backdrop */}
-      <section className="py-24 md:py-32 bg-card border-y border-border/40">
-        <div className="container mx-auto px-6 max-w-4xl text-center">
+            <div className="relative">
+              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-border to-transparent" />
+              {milestones.map((m, i) => (
+                <motion.div
+                  key={m.year}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-10% 0px" }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                  className="relative pl-10 pb-14 last:pb-0"
+                >
+                  <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm" />
+                  <p className="font-display text-xl text-foreground mb-1">{m.year}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{m.text}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quote — fixed-attachment parallax backdrop, copy scrolls over it */}
+      <section ref={quoteRef} className="relative py-28 md:py-36 border-y border-border/40 overflow-hidden">
+        <motion.div
+          aria-hidden="true"
+          style={{ y: quoteBgY, backgroundImage: `url(${partnersHeroBg})` }}
+          className="absolute inset-0 -top-[15%] -bottom-[15%] bg-cover bg-center will-change-transform"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-foreground/85 via-foreground/75 to-foreground/85" />
+        <div className="relative container mx-auto px-6 max-w-3xl text-center">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <Quote className="w-8 h-8 text-primary/40 mx-auto mb-6" />
-            <blockquote className="font-display text-2xl md:text-3xl lg:text-4xl text-foreground/85 italic leading-relaxed">
+            <Quote className="w-8 h-8 text-primary-foreground/60 mx-auto mb-6" />
+            <blockquote className="font-display text-2xl md:text-3xl text-primary-foreground/95 italic leading-relaxed drop-shadow-lg">
               "Our partnership is simple — combine the experience of a 27-year, 4.9-star brokerage with a Texas team that lives and works alongside the families it serves. The outcome is faster sales, fairer prices, and total peace of mind."
             </blockquote>
-            <p className="text-sm text-muted-foreground mt-6 tracking-wide">— Texas Cemetery Brokers · Bayer Cemetery Brokers</p>
+            <p className="text-sm text-primary-foreground/75 mt-6 tracking-wide">— Texas Cemetery Brokers · Bayer Cemetery Brokers</p>
           </motion.div>
         </div>
       </section>
 
-      {/* Bayer Leadership — scroll-jacked profiles */}
-      <PinnedSection
-        eyebrow="The Bayer Leadership"
-        heading="The people behind 27 years of trust"
-        sub="Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction."
-        count={bayerTeam.length}
-        rightClassName="grid sm:grid-cols-2 gap-6"
-      >
-        {(progress) =>
-          bayerTeam.map((member, i) => (
-            <RevealItem
-              key={member.name}
-              progress={progress}
-              index={i}
-              total={bayerTeam.length}
-              className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-soft hover:shadow-hover transition-all"
-            >
-              <div className="aspect-[4/5] bg-muted overflow-hidden">
-                <img
-                  src={member.photo}
-                  alt={member.name}
-                  className="w-full h-full object-cover object-top"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="font-display text-xl text-foreground">{member.name}</h3>
-                <p className="text-sm text-primary font-medium mt-1">{member.title}</p>
-                <p className="text-sm text-muted-foreground leading-relaxed mt-3">{member.bio}</p>
-              </div>
-            </RevealItem>
-          ))
-        }
-      </PinnedSection>
+      {/* Bayer Leadership */}
+      <section className="py-20 md:py-24">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">The Bayer Leadership</span>
+            <h2 className="font-display text-3xl md:text-4xl text-foreground">The people behind 27 years of trust</h2>
+            <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+              Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {bayerTeam.map((member, i) => (
+              <motion.div
+                key={member.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-soft hover:shadow-hover transition-all"
+              >
+                <div className="aspect-[4/5] bg-muted overflow-hidden">
+                  <img
+                    src={member.photo}
+                    alt={member.name}
+                    className="w-full h-full object-cover object-top"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="font-display text-xl text-foreground">{member.name}</h3>
+                  <p className="text-sm text-primary font-medium mt-1">{member.title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mt-3">{member.bio}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="py-20 bg-gradient-sage">
         <div className="container mx-auto px-6 text-center max-w-2xl">
