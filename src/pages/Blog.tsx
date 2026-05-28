@@ -57,7 +57,7 @@ const blogPosts: BlogPost[] = [
         <div className="bg-card rounded-2xl p-8 shadow-soft border border-border/50 my-10">
           <p className="text-lg text-foreground mb-4">Please reach out to us. We can list your unwanted cemetery property on consignment and handle the sale for you.</p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all"><Phone className="w-4 h-4" /> (214) 230-4740</a>
+            <a href="tel:+13108049586" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all"><Phone className="w-4 h-4" /> (310) 804-9586</a>
             <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all"><Mail className="w-4 h-4" /> info@texascemeterybrokers.com</a>
           </div>
         </div>

@@ -228,7 +228,7 @@ const BuyProperty = () => {
       toast({ title: "Something went wrong", description: "Please call or email us directly.", variant: "destructive" });
       return;
     }
-    toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (214) 230-4740." });
+    toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (310) 804-9586." });
   };
 
   const cardBase = "text-left rounded-xl border-2 transition-all duration-200 w-full";
@@ -504,11 +504,11 @@ const BuyProperty = () => {
                     </div>
                   </div>
                   <a
-                    href="tel:+12142304740"
+                    href="tel:+13108049586"
                     className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90 transition-all shadow-soft"
                   >
                     <Phone className="w-4 h-4" />
-                    Or call us now — (214) 230-4740
+                    Or call us now — (310) 804-9586
                   </a>
                   <p className="text-[11px] text-muted-foreground text-center">Partnered with Bayer Cemetery Brokers (CA licensed) · We respond within 24 hours</p>
                 </div>
@@ -599,11 +599,11 @@ const BuyProperty = () => {
           </button>
           <span className="hidden sm:inline text-[11px] text-muted-foreground">Private · No spam · Partnered with Bayer Cemetery Brokers (CA licensed)</span>
           <a
-            href="tel:+12142304740"
+            href="tel:+13108049586"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary font-medium hover:underline"
           >
             <Phone className="w-3.5 h-3.5" />
-            (214) 230-4740
+            (310) 804-9586
           </a>
         </div>
       </footer>

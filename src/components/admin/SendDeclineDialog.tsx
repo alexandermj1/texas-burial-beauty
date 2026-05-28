@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-const PHONE = "(214) 230-4740";
+const PHONE = "(310) 804-9586";
 const WEBSITE = "TexasCemeteryBrokers.com";
 
 type Reason = "outside_area" | "no_inventory" | "not_our_service" | "ownership_unclear" | "custom";

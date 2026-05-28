@@ -18,8 +18,8 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-sm text-foreground mb-3">Contact</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="tel:+12142304740" className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Phone className="w-3.5 h-3.5" /> (214) 230-4740
+              <a href="tel:+13108049586" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Phone className="w-3.5 h-3.5" /> (310) 804-9586
               </a>
               <a href="mailto:info@texascemeterybrokers.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
                 <Mail className="w-3.5 h-3.5" /> info@texascemeterybrokers.com

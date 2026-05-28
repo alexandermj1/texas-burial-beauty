@@ -433,7 +433,7 @@ const CemeteryDetail = () => {
               Request matching plots <ArrowRight className="w-4 h-4" />
             </Link>
             <a
-              href="tel:+12142304740"
+              href="tel:+13108049586"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/10 border border-background/20 text-background font-medium rounded-full text-sm hover:bg-background/20 transition-colors"
             >
               <Phone className="w-4 h-4" /> Talk to a broker
@@ -617,10 +617,10 @@ const CemeteryDetail = () => {
               </p>
               <div className="flex flex-wrap gap-3">
                 <a
-                  href="tel:+12142304740"
+                  href="tel:+13108049586"
                   className="inline-flex items-center gap-2 px-7 py-3.5 bg-foreground text-background font-medium rounded-full text-sm hover:bg-primary transition-colors"
                 >
-                  <Phone className="w-4 h-4" /> (214) 230-4740
+                  <Phone className="w-4 h-4" /> (310) 804-9586
                 </a>
                 <Link
                   to={`/sell?cemetery=${encodeURIComponent(cemetery.name)}`}

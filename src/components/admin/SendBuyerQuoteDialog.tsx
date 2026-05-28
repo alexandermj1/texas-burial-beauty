@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
-const PHONE = "(214) 230-4740";
+const PHONE = "(310) 804-9586";
 const WEBSITE = "TexasCemeteryBrokers.com";
 
 const formatMoney = (v: number | null | undefined) => {

@@ -59,7 +59,7 @@ const ContactSection = () => {
 
             <div className="space-y-4 mb-8">
               <a
-                href="tel:+12142304740"
+                href="tel:+13108049586"
                 className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -67,7 +67,7 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Call us</p>
-                  <p className="font-medium">(214) 230-4740</p>
+                  <p className="font-medium">(310) 804-9586</p>
                 </div>
               </a>
               <a
