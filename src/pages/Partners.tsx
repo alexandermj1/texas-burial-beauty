@@ -336,78 +336,94 @@ const Partners = () => {
         </div>
       </section>
 
-      {/* Pillars */}
-      <section className="py-20 bg-gradient-warm">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-14 max-w-2xl mx-auto"
-          >
-            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What we bring together</span>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">Four pillars of the partnership</h2>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 gap-5 max-w-5xl mx-auto">
-            {pillars.map((p, i) => (
+      {/* Pillars — sticky heading, scrolling cards */}
+      <section className="py-24 md:py-32 bg-gradient-warm">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-start">
+            <div className="md:sticky md:top-28 self-start">
               <motion.div
-                key={p.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="group relative bg-card rounded-2xl p-7 border border-border/60 shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                transition={{ duration: 0.6 }}
               >
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-secondary/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                      <p.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <span className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground font-medium">{p.label}</span>
-                  </div>
-                  <h3 className="font-display text-xl text-foreground mb-2">{p.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
-                </div>
+                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What we bring together</span>
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                  Four pillars of the partnership
+                </h2>
+                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                  Each pillar is a piece of infrastructure built over nearly three decades — now applied to every Texas transaction.
+                </p>
               </motion.div>
-            ))}
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-5">
+              {pillars.map((p, i) => (
+                <motion.div
+                  key={p.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-10% 0px" }}
+                  transition={{ duration: 0.5, delay: i * 0.08 }}
+                  className="group relative bg-card rounded-2xl p-7 border border-border/60 shadow-soft hover:shadow-hover hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-secondary/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <p.icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <span className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground font-medium">{p.label}</span>
+                    </div>
+                    <h3 className="font-display text-xl text-foreground mb-2">{p.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Advantages */}
-      <section className="py-20 md:py-24">
-        <div className="container mx-auto px-6 max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What it means for you</span>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">A measurable advantage on every sale</h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {advantages.map((a, i) => (
+      {/* Advantages — sticky heading, scrolling list */}
+      <section className="py-24 md:py-32">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-start">
+            <div className="md:sticky md:top-28 self-start">
               <motion.div
-                key={a.title}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="border-l-2 border-primary/40 pl-6 py-2"
+                transition={{ duration: 0.6 }}
               >
-                <h3 className="font-display text-lg text-foreground mb-2 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  {a.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{a.desc}</p>
+                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What it means for you</span>
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                  A measurable advantage on every sale
+                </h2>
+                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                  Scroll through the concrete ways our partnership shows up in your transaction.
+                </p>
               </motion.div>
-            ))}
+            </div>
+
+            <div className="grid gap-8">
+              {advantages.map((a, i) => (
+                <motion.div
+                  key={a.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-10% 0px" }}
+                  transition={{ duration: 0.5, delay: i * 0.06 }}
+                  className="border-l-2 border-primary/40 pl-6 py-2"
+                >
+                  <h3 className="font-display text-xl text-foreground mb-2 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    {a.title}
+                  </h3>
+                  <p className="text-base text-muted-foreground leading-relaxed">{a.desc}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
