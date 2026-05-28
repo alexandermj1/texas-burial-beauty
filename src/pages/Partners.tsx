@@ -339,8 +339,8 @@ const Partners = () => {
       {/* Pillars — sticky heading, scrolling cards */}
       <section className="py-24 md:py-32 bg-gradient-warm">
         <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-start">
-            <div className="md:sticky md:top-28 self-start">
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 ">
+            <div className="md:sticky md:top-28">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -388,8 +388,8 @@ const Partners = () => {
       {/* Advantages — sticky heading, scrolling list */}
       <section className="py-24 md:py-32">
         <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-start">
-            <div className="md:sticky md:top-28 self-start">
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 ">
+            <div className="md:sticky md:top-28">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -470,8 +470,8 @@ const Partners = () => {
       {/* Timeline — sticky heading pins while milestones scroll past */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-6 max-w-6xl">
-          <div className="grid md:grid-cols-[1fr_1.2fr] gap-12 md:gap-16 items-start">
-            <div className="md:sticky md:top-28 self-start">
+          <div className="grid md:grid-cols-[1fr_1.2fr] gap-12 md:gap-16 ">
+            <div className="md:sticky md:top-28">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -530,8 +530,8 @@ const Partners = () => {
       {/* Bayer Leadership — sticky heading, scrolling profiles */}
       <section className="py-24 md:py-32">
         <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-start">
-            <div className="md:sticky md:top-28 self-start">
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 ">
+            <div className="md:sticky md:top-28">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
