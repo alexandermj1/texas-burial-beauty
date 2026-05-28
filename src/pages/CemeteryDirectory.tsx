@@ -463,8 +463,8 @@ const CemeteryDirectory = () => {
               {/* Apple-style ultra-minimal supporting line — no pill */}
               <p className="mt-5 text-[12px] text-background/75 font-light tracking-wide">
                 Partnered with Bayer Cemetery Brokers (CA licensed) · 30–60% below retail ·{" "}
-                <a href="tel:+14242341678" className="text-background hover:text-primary transition-colors underline-offset-4 hover:underline">
-                  (424) 234-1678
+                <a href="tel:+12142304740" className="text-background hover:text-primary transition-colors underline-offset-4 hover:underline">
+                  (214) 230-4740
                 </a>
               </p>
             </motion.div>
@@ -631,10 +631,10 @@ const CemeteryDirectory = () => {
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
-                    href="tel:+14242341678"
+                    href="tel:+12142304740"
                     className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity"
                   >
-                    <Phone className="w-4 h-4" /> (424) 234-1678
+                    <Phone className="w-4 h-4" /> (214) 230-4740
                   </a>
                   <Link
                     to="/sell"

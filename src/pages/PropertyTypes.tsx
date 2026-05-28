@@ -676,8 +676,8 @@ const PropertyTypes = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Not Sure Which Type Is Right?</h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">Our team will walk you through every option and help you find the perfect property for your needs and budget.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href="tel:+14242341678" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Phone className="w-4 h-4" /> (424) 234-1678
+              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
+                <Phone className="w-4 h-4" /> (214) 230-4740
               </a>
               <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-6 py-3 border-2 border-foreground/15 text-foreground font-medium rounded-full text-sm hover:bg-foreground/5 transition-all">
                 <Mail className="w-4 h-4" /> info@texascemeterybrokers.com
