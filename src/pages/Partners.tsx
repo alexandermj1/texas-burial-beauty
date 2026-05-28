@@ -509,72 +509,71 @@ const Partners = () => {
         </div>
       </section>
 
-      {/* Quote — fixed-attachment parallax backdrop, copy scrolls over it */}
-      <section ref={quoteRef} className="relative py-28 md:py-36 border-y border-border/40 overflow-hidden">
-        <motion.div
-          aria-hidden="true"
-          style={{ y: quoteBgY, backgroundImage: `url(${partnersHeroBg})` }}
-          className="absolute inset-0 -top-[15%] -bottom-[15%] bg-cover bg-center will-change-transform"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-foreground/85 via-foreground/75 to-foreground/85" />
-        <div className="relative container mx-auto px-6 max-w-3xl text-center">
+      {/* Quote — clean, no backdrop */}
+      <section className="py-24 md:py-32 bg-card border-y border-border/40">
+        <div className="container mx-auto px-6 max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <Quote className="w-8 h-8 text-primary-foreground/60 mx-auto mb-6" />
-            <blockquote className="font-display text-2xl md:text-3xl text-primary-foreground/95 italic leading-relaxed drop-shadow-lg">
+            <Quote className="w-8 h-8 text-primary/40 mx-auto mb-6" />
+            <blockquote className="font-display text-2xl md:text-3xl lg:text-4xl text-foreground/85 italic leading-relaxed">
               "Our partnership is simple — combine the experience of a 27-year, 4.9-star brokerage with a Texas team that lives and works alongside the families it serves. The outcome is faster sales, fairer prices, and total peace of mind."
             </blockquote>
-            <p className="text-sm text-primary-foreground/75 mt-6 tracking-wide">— Texas Cemetery Brokers · Bayer Cemetery Brokers</p>
+            <p className="text-sm text-muted-foreground mt-6 tracking-wide">— Texas Cemetery Brokers · Bayer Cemetery Brokers</p>
           </motion.div>
         </div>
       </section>
 
-      {/* Bayer Leadership */}
-      <section className="py-20 md:py-24">
-        <div className="container mx-auto px-6 max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">The Bayer Leadership</span>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">The people behind 27 years of trust</h2>
-            <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-              Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction.
-            </p>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {bayerTeam.map((member, i) => (
+      {/* Bayer Leadership — sticky heading, scrolling profiles */}
+      <section className="py-24 md:py-32">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-start">
+            <div className="md:sticky md:top-28 self-start">
               <motion.div
-                key={member.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-soft hover:shadow-hover transition-all"
+                transition={{ duration: 0.6 }}
               >
-                <div className="aspect-[4/5] bg-muted overflow-hidden">
-                  <img
-                    src={member.photo}
-                    alt={member.name}
-                    className="w-full h-full object-cover object-top"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="font-display text-xl text-foreground">{member.name}</h3>
-                  <p className="text-sm text-primary font-medium mt-1">{member.title}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed mt-3">{member.bio}</p>
-                </div>
+                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">The Bayer Leadership</span>
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                  The people behind 27 years of trust
+                </h2>
+                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                  Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction.
+                </p>
               </motion.div>
-            ))}
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-6">
+              {bayerTeam.map((member, i) => (
+                <motion.div
+                  key={member.name}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-10% 0px" }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-soft hover:shadow-hover transition-all"
+                >
+                  <div className="aspect-[4/5] bg-muted overflow-hidden">
+                    <img
+                      src={member.photo}
+                      alt={member.name}
+                      className="w-full h-full object-cover object-top"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-display text-xl text-foreground">{member.name}</h3>
+                    <p className="text-sm text-primary font-medium mt-1">{member.title}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-3">{member.bio}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
