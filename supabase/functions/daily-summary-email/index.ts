@@ -111,9 +111,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Sync the Gmail inbox first so any contact-form emails that arrived
-    // since the last run are promoted to submissions and included in today's
-    // digest. Non-fatal: a failure here shouldn't block the summary email.
+    // Refresh inbox + submissions FIRST so the digest counts are accurate.
+    // We fully await the response body (not just headers) so any new
+    // contact-form emails / submissions have landed before we query.
+    // Non-fatal: a failure here shouldn't block the summary email.
     try {
       const syncUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/sync-inbox`;
       const syncRes = await fetch(syncUrl, {
@@ -124,7 +125,12 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({ maxResults: 200 }),
       });
-      console.log("Pre-summary sync-inbox status:", syncRes.status);
+      // Drain the response so the function fully completes before we proceed.
+      const syncBody = await syncRes.text();
+      console.log("Pre-summary sync-inbox status:", syncRes.status, syncBody.slice(0, 200));
+      // Small settle delay so any DB writes triggered by sync are visible to
+      // the subsequent SELECTs (replica lag / write propagation guard).
+      await new Promise((r) => setTimeout(r, 1500));
     } catch (e) {
       console.warn("Pre-summary sync-inbox failed (non-fatal):", e);
     }
