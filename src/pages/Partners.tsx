@@ -521,49 +521,33 @@ const Partners = () => {
         </div>
       </section>
 
-      {/* Timeline — sticky heading pins while milestones scroll past */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-6 max-w-6xl">
-          <div className="grid md:grid-cols-[1fr_1.2fr] gap-12 md:gap-16 ">
-            <div>
-              <div className="md:sticky md:top-28">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">A shared history</span>
-                  <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                    Built on nearly three decades of trust
-                  </h2>
-                  <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
-                    Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families.
-                  </p>
-                </motion.div>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-border to-transparent" />
-              {milestones.map((m, i) => (
-                <motion.div
-                  key={m.year}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-10% 0px" }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
-                  className="relative pl-10 pb-14 last:pb-0"
-                >
-                  <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm" />
-                  <p className="font-display text-xl text-foreground mb-1">{m.year}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{m.text}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Timeline — scroll-jacked milestones */}
+      <PinnedSection
+        eyebrow="A shared history"
+        heading="Built on nearly three decades of trust"
+        sub="Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families."
+        count={milestones.length}
+        rightClassName="relative"
+      >
+        {(progress) => (
+          <>
+            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-border to-transparent" />
+            {milestones.map((m, i) => (
+              <RevealItem
+                key={m.year}
+                progress={progress}
+                index={i}
+                total={milestones.length}
+                className="relative pl-10 pb-10 last:pb-0"
+              >
+                <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm" />
+                <p className="font-display text-xl text-foreground mb-1">{m.year}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{m.text}</p>
+              </RevealItem>
+            ))}
+          </>
+        )}
+      </PinnedSection>
 
       {/* Quote — clean, no backdrop */}
       <section className="py-24 md:py-32 bg-card border-y border-border/40">
