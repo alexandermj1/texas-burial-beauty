@@ -88,8 +88,8 @@ const SellProperty = () => {
                 <a href="#quote-form" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
                   Get a Free Valuation <ArrowRight className="w-4 h-4" />
                 </a>
-                <a href="tel:+14242341678" className="inline-flex items-center gap-2 px-6 py-3 border border-primary-foreground/20 text-primary-foreground/80 font-medium rounded-full text-sm hover:bg-primary-foreground/5 transition-all">
-                  <Phone className="w-4 h-4" /> (424) 234-1678
+                <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-6 py-3 border border-primary-foreground/20 text-primary-foreground/80 font-medium rounded-full text-sm hover:bg-primary-foreground/5 transition-all">
+                  <Phone className="w-4 h-4" /> (214) 230-4740
                 </a>
               </div>
             </motion.div>
@@ -176,8 +176,8 @@ const SellProperty = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Ready to sell your property?</h2>
             <p className="text-muted-foreground mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours and there's never any pressure.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="tel:+14242341678" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Phone className="w-4 h-4" /> (424) 234-1678
+              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
+                <Phone className="w-4 h-4" /> (214) 230-4740
               </a>
               <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
                 <Mail className="w-4 h-4" /> Email Us <ArrowRight className="w-4 h-4" />
