@@ -164,18 +164,23 @@ const Partners = () => {
       />
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <motion.img
-          src={partnersHeroBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.6, ease: "easeOut" }}
-        />
+      {/* Hero — parallax: image drifts slower than copy */}
+      <section ref={heroRef} className="relative overflow-hidden">
+        <motion.div
+          className="absolute inset-0 will-change-transform"
+          style={{ y: heroImgY, scale: heroImgScale }}
+        >
+          <img
+            src={partnersHeroBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </motion.div>
         <div className="absolute inset-0 bg-gradient-to-br from-foreground/90 via-foreground/75 to-foreground/55" />
-        <div className="relative container mx-auto px-6 pt-36 pb-24 md:pt-40 md:pb-32">
+        <motion.div
+          style={{ y: heroContentY, opacity: heroContentOpacity }}
+          className="relative container mx-auto px-6 pt-36 pb-24 md:pt-40 md:pb-32"
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
