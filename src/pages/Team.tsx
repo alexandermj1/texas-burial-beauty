@@ -472,11 +472,11 @@ const Team = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="tel:+12142304740"
+                href="tel:+13108049586"
                 className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
               >
                 <Phone className="w-4 h-4" />
-                (214) 230-4740
+                (310) 804-9586
               </a>
               <a
                 href="mailto:info@texascemeterybrokers.com"

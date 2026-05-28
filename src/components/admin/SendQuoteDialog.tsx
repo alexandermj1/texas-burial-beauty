@@ -18,7 +18,7 @@ interface Props {
   onSave: (id: string, patch: Partial<Submission>) => Promise<void>;
 }
 
-const PHONE = "(214) 230-4740";
+const PHONE = "(310) 804-9586";
 const WEBSITE = "TexasCemeteryBrokers.com";
 
 const formatMoney = (v: string | number | null | undefined) => {
