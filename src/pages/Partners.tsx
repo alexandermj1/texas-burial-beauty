@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { ReactNode, useEffect, useRef } from "react";
+import { MotionValue, motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   Phone,
