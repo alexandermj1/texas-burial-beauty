@@ -111,10 +111,95 @@ const testimonialPoints = [
   "Local Texas operations team",
 ];
 
+/**
+ * Scroll-jacked section: heading stays pinned in viewport while items
+ * fade/slide in as the user scrolls through the section's tall outer wrapper.
+ */
+type PinnedSectionProps = {
+  eyebrow: string;
+  heading: ReactNode;
+  sub: ReactNode;
+  count: number;
+  className?: string;
+  innerClassName?: string;
+  rightClassName?: string;
+  /** Vertical scroll length, multiplied by viewport height. */
+  scrollLength?: number;
+  children: (progress: MotionValue<number>) => ReactNode;
+};
+
+const PinnedSection = ({
+  eyebrow,
+  heading,
+  sub,
+  count,
+  className = "",
+  innerClassName = "",
+  rightClassName = "",
+  scrollLength,
+  children,
+}: PinnedSectionProps) => {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end end"],
+  });
+  // Default: ~80vh per item, min 180vh, so there's real scroll runway.
+  const vh = Math.max(180, count * 80);
+
+  return (
+    <section
+      ref={ref}
+      className={`relative ${className}`}
+      style={{ height: scrollLength ? `${scrollLength}vh` : `${vh}vh` }}
+    >
+      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+        <div className={`container mx-auto px-6 max-w-7xl w-full ${innerClassName}`}>
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 items-center">
+            <div>
+              <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">
+                {eyebrow}
+              </span>
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                {heading}
+              </h2>
+              <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">{sub}</p>
+            </div>
+            <div className={rightClassName}>{children(scrollYProgress)}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+type RevealItemProps = {
+  progress: MotionValue<number>;
+  index: number;
+  total: number;
+  className?: string;
+  children: ReactNode;
+};
+
+const RevealItem = ({ progress, index, total, className = "", children }: RevealItemProps) => {
+  // Stagger reveals across the first ~85% of scroll, holding visible for the rest.
+  const span = 0.85 / total;
+  const start = index * span;
+  const end = start + span * 0.7;
+  const opacity = useTransform(progress, [start, end], [0, 1]);
+  const y = useTransform(progress, [start, end], [70, 0]);
+  return (
+    <motion.div style={{ opacity, y }} className={className}>
+      {children}
+    </motion.div>
+  );
+};
+
 const Partners = () => {
   useEffect(() => {
     document.title = "Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers";
   }, []);
+
 
   // Hero parallax — image drifts slower than the page scroll.
   const heroRef = useRef<HTMLElement>(null);
