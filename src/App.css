@@ -1,7 +1,8 @@
 html, body {
   /* Stop iOS rubber-band / wheel-overshoot from revealing space below the footer. */
   overscroll-behavior-y: none;
-  overflow-x: hidden;
+  /* `clip` instead of `hidden` — `hidden` creates a scroll container that breaks position:sticky descendants. */
+  overflow-x: clip;
 }
 
 #root {
