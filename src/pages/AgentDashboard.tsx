@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, isAfter } from "date-fns";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 
 interface Listing {
   id: string;
@@ -257,9 +258,12 @@ const AgentDashboard = () => {
               <h1 className="font-display text-3xl text-foreground">Agent Dashboard</h1>
               <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
             </div>
-            <button onClick={async () => { await signOut(); navigate("/"); }} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
-              <LogOut className="w-4 h-4" /> Sign Out
-            </button>
+            <div className="flex items-center gap-2">
+              <ChangePasswordDialog variant="icon" />
+              <button onClick={async () => { await signOut(); navigate("/"); }} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                <LogOut className="w-4 h-4" /> Sign Out
+              </button>
+            </div>
           </div>
 
           {/* Tabs */}

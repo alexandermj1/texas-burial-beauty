@@ -22,6 +22,7 @@ import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
 import GuidedTour from "@/components/admin/GuidedTour";
 import WelcomeOverlay from "@/components/admin/WelcomeOverlay";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 
 interface AdminListing {
   id: string;
@@ -380,6 +381,7 @@ const Admin = () => {
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
                 <div data-tour="notifications-bell"><NotificationsBell /></div>
+                <ChangePasswordDialog variant="icon" />
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
                 </button>
@@ -413,6 +415,7 @@ const Admin = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <NotificationsBell />
+                  <ChangePasswordDialog variant="icon" />
                   <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>
