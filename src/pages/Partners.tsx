@@ -455,50 +455,32 @@ const Partners = () => {
         }
       </PinnedSection>
 
-      {/* Advantages — sticky heading, scrolling list */}
-      <section className="py-24 md:py-32">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 ">
-            <div>
-              <div className="md:sticky md:top-28">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What it means for you</span>
-                  <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                    A measurable advantage on every sale
-                  </h2>
-                  <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
-                    Scroll through the concrete ways our partnership shows up in your transaction.
-                  </p>
-                </motion.div>
-              </div>
-            </div>
-
-            <div className="grid gap-8">
-              {advantages.map((a, i) => (
-                <motion.div
-                  key={a.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-10% 0px" }}
-                  transition={{ duration: 0.5, delay: i * 0.06 }}
-                  className="border-l-2 border-primary/40 pl-6 py-2"
-                >
-                  <h3 className="font-display text-xl text-foreground mb-2 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    {a.title}
-                  </h3>
-                  <p className="text-base text-muted-foreground leading-relaxed">{a.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Advantages — scroll-jacked reveals */}
+      <PinnedSection
+        eyebrow="What it means for you"
+        heading="A measurable advantage on every sale"
+        sub="Scroll through the concrete ways our partnership shows up in your transaction."
+        count={advantages.length}
+        rightClassName="grid gap-6"
+      >
+        {(progress) =>
+          advantages.map((a, i) => (
+            <RevealItem
+              key={a.title}
+              progress={progress}
+              index={i}
+              total={advantages.length}
+              className="border-l-2 border-primary/40 pl-6 py-2"
+            >
+              <h3 className="font-display text-xl text-foreground mb-2 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                {a.title}
+              </h3>
+              <p className="text-base text-muted-foreground leading-relaxed">{a.desc}</p>
+            </RevealItem>
+          ))
+        }
+      </PinnedSection>
 
       {/* Trust checklist */}
       <section className="py-20 bg-muted/30 border-y border-border/40">
