@@ -340,21 +340,23 @@ const Partners = () => {
       <section className="py-24 md:py-32 bg-gradient-warm">
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 ">
-            <div className="md:sticky md:top-28">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
-                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What we bring together</span>
-                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                  Four pillars of the partnership
-                </h2>
-                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
-                  Each pillar is a piece of infrastructure built over nearly three decades — now applied to every Texas transaction.
-                </p>
-              </motion.div>
+            <div>
+              <div className="md:sticky md:top-28">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What we bring together</span>
+                  <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                    Four pillars of the partnership
+                  </h2>
+                  <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                    Each pillar is a piece of infrastructure built over nearly three decades — now applied to every Texas transaction.
+                  </p>
+                </motion.div>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-5">
@@ -389,21 +391,23 @@ const Partners = () => {
       <section className="py-24 md:py-32">
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 ">
-            <div className="md:sticky md:top-28">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
-                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What it means for you</span>
-                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                  A measurable advantage on every sale
-                </h2>
-                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
-                  Scroll through the concrete ways our partnership shows up in your transaction.
-                </p>
-              </motion.div>
+            <div>
+              <div className="md:sticky md:top-28">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">What it means for you</span>
+                  <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                    A measurable advantage on every sale
+                  </h2>
+                  <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                    Scroll through the concrete ways our partnership shows up in your transaction.
+                  </p>
+                </motion.div>
+              </div>
             </div>
 
             <div className="grid gap-8">
@@ -471,21 +475,23 @@ const Partners = () => {
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid md:grid-cols-[1fr_1.2fr] gap-12 md:gap-16 ">
-            <div className="md:sticky md:top-28">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
-                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">A shared history</span>
-                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                  Built on nearly three decades of trust
-                </h2>
-                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
-                  Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families.
-                </p>
-              </motion.div>
+            <div>
+              <div className="md:sticky md:top-28">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">A shared history</span>
+                  <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                    Built on nearly three decades of trust
+                  </h2>
+                  <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                    Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families.
+                  </p>
+                </motion.div>
+              </div>
             </div>
 
             <div className="relative">
@@ -531,21 +537,23 @@ const Partners = () => {
       <section className="py-24 md:py-32">
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid md:grid-cols-[1fr_1.4fr] gap-12 md:gap-20 ">
-            <div className="md:sticky md:top-28">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
-                <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">The Bayer Leadership</span>
-                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                  The people behind 27 years of trust
-                </h2>
-                <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
-                  Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction.
-                </p>
-              </motion.div>
+            <div>
+              <div className="md:sticky md:top-28">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">The Bayer Leadership</span>
+                  <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
+                    The people behind 27 years of trust
+                  </h2>
+                  <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
+                    Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction.
+                  </p>
+                </motion.div>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-6">
