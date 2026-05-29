@@ -139,7 +139,7 @@ const Partners = () => {
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers"
-        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) with 29+ years of cemetery resale experience. Trusted resale across Texas."
+        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) with 27+ years of cemetery resale experience. Trusted resale across Texas."
         path="/partners"
         jsonLd={[
           {
@@ -148,7 +148,7 @@ const Partners = () => {
             "@id": "https://www.bayercemeterybrokers.com/#organization",
             "name": "Bayer Cemetery Brokers",
             "url": "https://www.bayercemeterybrokers.com/",
-            "description": "Licensed California cemetery brokerage (CEB 1512) with 29+ years of experience facilitating cemetery property resales.",
+            "description": "Licensed California cemetery brokerage (CEB 1512) with 27+ years of experience facilitating cemetery property resales.",
             "address": { "@type": "PostalAddress", "addressRegion": "CA", "addressCountry": "US" },
             "identifier": "CEB 1512"
           },

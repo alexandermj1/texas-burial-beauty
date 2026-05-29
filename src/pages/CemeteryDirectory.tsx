@@ -653,7 +653,7 @@ const CemeteryDirectory = () => {
 
               <div className="hidden md:grid grid-cols-2 gap-3">
                 {[
-                  { k: "29+", v: "Years brokering Texas plots" },
+                  { k: "27+", v: "Years brokering Texas plots" },
                   { k: "$0", v: "Upfront cost to sellers" },
                   { k: "30–60%", v: "Avg. buyer savings vs retail" },
                   { k: "24h", v: "Valuation response time" },

@@ -24,7 +24,7 @@ const buyerStats = [
   { icon: TrendingDown, value: 40, suffix: "%", label: "Average Savings", prefix: "Up to " },
   { icon: Home, value: 10000, suffix: "+", label: "Properties Sold", prefix: "" },
   { icon: DollarSign, value: 0, suffix: "%", label: "Interest Financing", prefix: "", staticValue: "0%" },
-  { icon: Clock, value: 29, suffix: "+", label: "Years Experience", prefix: "" },
+  { icon: Clock, value: 27, suffix: "+", label: "Years Experience", prefix: "" },
 ];
 
 const sellerStats = [

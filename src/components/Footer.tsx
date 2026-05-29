@@ -12,7 +12,7 @@ const Footer = () => {
               <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Brokers</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Cemetery brokerage serving Texas families in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) drawing on 29+ years of resale experience.
+              Cemetery brokerage serving Texas families in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) drawing on 27+ years of resale experience.
             </p>
           </div>
           <div>
