@@ -154,7 +154,7 @@ const RegionRow = ({
       <div className="relative -mx-6 pl-8 pr-6 md:-mx-8 md:pl-10 md:pr-8">
         <div
           ref={scrollerRef}
-          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-8 md:scroll-pl-10 py-3 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto] [mask-image:linear-gradient(to_right,transparent_0,#000_28px,#000_calc(100%-56px),transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0,#000_28px,#000_calc(100%-56px),transparent_100%)]"
+          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-8 md:scroll-pl-10 py-3 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto] [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)]"
         >
           {list.map((c, i) => {
             let h = 0;
