@@ -24,7 +24,7 @@ const steps = [
     icon: CheckCircle,
     step: "04",
     title: "Close with Confidence",
-    description: "We manage the paperwork and transfer. You're done in 30–60 days.",
+    description: "We manage the paperwork and transfer from start to finish, keeping you informed every step of the way.",
   },
 ];
 
