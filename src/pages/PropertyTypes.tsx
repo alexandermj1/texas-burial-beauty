@@ -614,15 +614,20 @@ const PropertyTypes = () => {
 
       {/* Editorial opener — light, continuous, flows straight into the first spread */}
       <section className="relative pt-24 md:pt-28 pb-2 md:pb-4 overflow-hidden bg-background">
-        {/* soft warm washes that dissolve into the page */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.09),transparent_55%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.07),transparent_55%)] pointer-events-none" />
+        {/* layered warm washes — a splash more colour, still editorial */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.18),transparent_55%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.16),transparent_55%)] pointer-events-none" />
+        <div className="absolute -top-24 right-[12%] w-[28rem] h-[28rem] rounded-full bg-[hsl(var(--primary)/0.10)] blur-3xl pointer-events-none" />
+        <div className="absolute top-10 left-[-6rem] w-[22rem] h-[22rem] rounded-full bg-[hsl(var(--accent)/0.12)] blur-3xl pointer-events-none" />
 
         <div className="container mx-auto px-6 max-w-7xl relative">
-          {/* Masthead row — quiet, editorial, no hard divider below */}
-          <div className="flex items-center gap-4 text-[10px] tracking-[0.32em] uppercase text-muted-foreground/60 font-medium mb-6">
-            <span>A Field Guide</span>
-            <span className="h-px flex-1 bg-border/40" />
+          {/* Masthead row — quiet, editorial, with a coloured marker */}
+          <div className="flex items-center gap-4 text-[10px] tracking-[0.32em] uppercase text-muted-foreground/70 font-medium mb-6">
+            <span className="inline-flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className="text-primary/80">A Field Guide</span>
+            </span>
+            <span className="h-px flex-1 bg-gradient-to-r from-primary/30 via-border/40 to-accent/30" />
             <span className="hidden sm:inline">Vol. 01 — Property</span>
           </div>
 
@@ -634,9 +639,9 @@ const PropertyTypes = () => {
             className="grid lg:grid-cols-12 gap-6 lg:gap-10 items-end pb-4 md:pb-6"
           >
             <h1 className="lg:col-span-8 font-display text-foreground text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] leading-[0.95] tracking-[-0.02em]">
-              Types of <span className="italic font-light text-foreground/55">cemetery</span> property.
+              Types of <span className="italic font-light text-primary/75">cemetery</span> property.
             </h1>
-            <p className="lg:col-span-4 text-muted-foreground text-sm md:text-base font-light leading-relaxed lg:pb-3 lg:border-l lg:border-border/50 lg:pl-6">
+            <p className="lg:col-span-4 text-muted-foreground text-sm md:text-base font-light leading-relaxed lg:pb-3 lg:border-l lg:border-primary/30 lg:pl-6">
               A considered guide to memorial options across Texas — plots, crypts, niches, and estates.
             </p>
           </motion.div>
