@@ -327,7 +327,7 @@ const Partners = () => {
             className="prose prose-lg max-w-none text-muted-foreground space-y-5 leading-relaxed"
           >
             <p>
-              Texas families deserve the same caliber of cemetery resale expertise that families across the country have relied on for nearly three decades. Rather than start from scratch, we partnered with one of the nation's most established cemetery brokerages —{" "}
+              We partnered with one of the nation's most established cemetery brokerages —{" "}
               <a href={BAYER_URL} target="_blank" rel="noopener noreferrer" className="text-foreground font-medium underline-offset-4 hover:underline">
                 Bayer Cemetery Brokers
               </a>{" "}
