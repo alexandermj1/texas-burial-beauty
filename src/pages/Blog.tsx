@@ -72,6 +72,7 @@ const BlogIndex = () => (
       title="The Journal | Texas Cemetery Brokers Insights & Guidance"
       description="Expert advice on Texas cemetery property, estate planning, the resale process, and helping families navigate end-of-life decisions with care."
       path="/blog"
+      noindex
     />
     <Navbar forceScrolled />
 
