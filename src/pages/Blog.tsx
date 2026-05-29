@@ -126,6 +126,7 @@ const BlogArticle = ({ post }: { post: BlogPost }) => (
       description={post.excerpt}
       path={`/blog/${post.slug}`}
       type="article"
+      noindex
       image={post.image}
       jsonLd={{
         "@context": "https://schema.org",
