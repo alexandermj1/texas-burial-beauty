@@ -9,7 +9,7 @@ const reasons = [
   },
   {
     icon: Clock,
-    title: "29+ Years Experience",
+    title: "27+ Years Experience",
     description: "Backed by a partner brokerage that has helped over 10,000 families since 1996 — now bringing that expertise to Texas.",
   },
   {
