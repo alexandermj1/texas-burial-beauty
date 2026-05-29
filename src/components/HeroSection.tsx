@@ -76,29 +76,6 @@ const HeroSection = () => {
         />
       </motion.div>
 
-      {/* Blurred copy — only behind the Buy/Sell buttons row at the very bottom */}
-      <motion.div
-        className="absolute inset-x-0 bottom-0 h-32 sm:h-40 pointer-events-none overflow-hidden"
-        style={{
-          scale: videoScale,
-          y: videoY,
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 60%)",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 60%)",
-        }}
-        aria-hidden="true"
-      >
-        <video
-          src="/videos/hero-trees.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          className="w-full h-full object-cover blur-[3px] scale-110"
-        />
-      </motion.div>
-
-      {/* Color grading — slightly lighter so video shows through, text still reads via drop-shadows */}
       <div className="absolute inset-0 bg-foreground/30 pointer-events-none" />
       {/* Top gradient — strong, tall, opaque at the very top so the navbar always reads */}
       <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/80 via-foreground/50 to-transparent pointer-events-none" />
