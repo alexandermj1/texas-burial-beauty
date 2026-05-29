@@ -52,7 +52,7 @@ const HOME_FAQ_JSONLD = {
     },
     {
       "@type": "Question",
-      name: "How long does a typical Texas cemetery plot transaction take?",
+      name: "What is the buying or selling process for a Texas cemetery plot?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "Every transaction is different. We handle all the coordination with the cemetery to keep things moving as smoothly as possible, and we keep you updated throughout the process.",
