@@ -612,47 +612,34 @@ const PropertyTypes = () => {
       />
       <Navbar />
 
-      {/* Editorial Hero — Vogue × Apple, compact and refined */}
-      <section className="relative pt-24 md:pt-28 pb-10 md:pb-12 overflow-hidden">
-        {/* warm taupe wash — earthy, mid-tone so navbar reads */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(25_18%_22%)_0%,hsl(28_16%_28%)_55%,hsl(30_14%_34%)_100%)]" />
-        {/* subtle warm vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.18),transparent_60%)]" />
-        {/* fine paper grain */}
-        <div
-          className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
-          }}
-        />
+      {/* Editorial opener — light, continuous, flows straight into the first spread */}
+      <section className="relative pt-24 md:pt-28 pb-2 md:pb-4 overflow-hidden bg-background">
+        {/* soft warm washes that dissolve into the page */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.09),transparent_55%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.07),transparent_55%)] pointer-events-none" />
 
-        <div className="container mx-auto px-6 relative">
-          {/* Masthead */}
-          <div className="flex items-center justify-between text-[10px] tracking-[0.32em] uppercase text-background/55 font-medium mb-8 md:mb-10">
+        <div className="container mx-auto px-6 max-w-7xl relative">
+          {/* Masthead row — quiet, editorial, no hard divider below */}
+          <div className="flex items-center gap-4 text-[10px] tracking-[0.32em] uppercase text-muted-foreground/60 font-medium mb-6">
             <span>A Field Guide</span>
+            <span className="h-px flex-1 bg-border/40" />
             <span className="hidden sm:inline">Vol. 01 — Property</span>
           </div>
 
+          {/* Headline grid — display title left, lede right share a baseline */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="max-w-3xl"
+            className="grid lg:grid-cols-12 gap-6 lg:gap-10 items-end pb-4 md:pb-6"
           >
-            <h1 className="font-display text-background text-4xl sm:text-5xl md:text-6xl leading-[1.02] tracking-[-0.015em] mb-5">
-              Types of <span className="italic font-light text-background/80">cemetery</span> property.
+            <h1 className="lg:col-span-8 font-display text-foreground text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] leading-[0.95] tracking-[-0.02em]">
+              Types of <span className="italic font-light text-foreground/55">cemetery</span> property.
             </h1>
-            <p className="text-background/70 text-sm md:text-base font-light leading-relaxed max-w-xl">
-              A considered guide to memorial options across Texas — single plots, companion sites, mausoleum crypts, cremation niches, and family estates.
+            <p className="lg:col-span-4 text-muted-foreground text-sm md:text-base font-light leading-relaxed lg:pb-3 lg:border-l lg:border-border/50 lg:pl-6">
+              A considered guide to memorial options across Texas — plots, crypts, niches, and estates.
             </p>
           </motion.div>
-
-          {/* hairline footer */}
-          <div className="mt-10 md:mt-12 pt-4 border-t border-background/15 flex items-center justify-between text-[10px] tracking-[0.28em] uppercase text-background/45">
-            <span>Edited in Texas</span>
-            <span className="hidden sm:inline">Plots · Crypts · Niches · Estates</span>
-          </div>
         </div>
       </section>
 
