@@ -304,6 +304,7 @@ const Team = () => {
         title="Our Team & Texas Partner Network | Texas Cemetery Brokers"
         description="Meet the leadership and Texas partner network behind Texas Cemetery Brokers — decades of cemetery resale experience supporting Dallas, Houston, Austin and San Antonio families."
         path="/team"
+        noindex
       />
       <Navbar forceScrolled />
 
