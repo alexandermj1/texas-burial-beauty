@@ -60,7 +60,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
 
   const inputCls =
     "w-full h-12 px-4 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
-    "placeholder:text-muted-foreground/50 transition-all " +
+    "placeholder:text-muted-foreground transition-all " +
     "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40";
 
   const labelCls = "block text-[11px] font-medium tracking-[0.12em] uppercase text-muted-foreground mb-2";
@@ -138,7 +138,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelCls}>Phone <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px]">— optional</span></label>
+                <label className={labelCls}>Phone <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— optional</span></label>
                 <input
                   className={inputCls}
                   value={form.phone}
@@ -195,7 +195,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelCls}>Section / Lot # <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px]">— if known</span></label>
+                <label className={labelCls}>Section / Lot # <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— if known</span></label>
                 <input
                   className={inputCls}
                   value={form.section}
@@ -214,7 +214,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
                   maxLength={1000}
                   className={
                     "w-full px-4 py-3 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
-                    "placeholder:text-muted-foreground/50 transition-all resize-none " +
+                    "placeholder:text-muted-foreground transition-all resize-none " +
                     "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                   }
                 />

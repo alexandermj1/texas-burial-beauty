@@ -254,8 +254,8 @@ const StatRibbon = () => {
         {[...stats, ...stats].map((s, i) => (
           <div key={i} className="flex items-baseline gap-2">
             <span className="font-display text-xl text-foreground/80">{s.value}</span>
-            <span className="text-xs tracking-[0.15em] uppercase text-muted-foreground/50">{s.label}</span>
-            <span className="text-muted-foreground/20 mx-3">·</span>
+            <span className="text-xs tracking-[0.15em] uppercase text-muted-foreground">{s.label}</span>
+            <span className="text-muted-foreground/60 mx-3">·</span>
           </div>
         ))}
       </motion.div>
@@ -269,7 +269,7 @@ const Divider = ({ label }: { label?: string }) => (
   <div className="container mx-auto px-6 max-w-7xl py-1">
     <div className="flex items-center gap-4">
       <div className="flex-1 h-px bg-border/30" />
-      {label && <span className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground/40 font-medium">{label}</span>}
+      {label && <span className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-medium">{label}</span>}
       <div className="flex-1 h-px bg-border/30" />
     </div>
   </div>
@@ -325,7 +325,7 @@ const Section1 = () => {
                 </motion.div>
               ))}
             </div>
-            <p className="text-xs tracking-wider uppercase text-muted-foreground/50 border-t border-border/30 pt-3">{item.stat.detail}</p>
+            <p className="text-xs tracking-wider uppercase text-muted-foreground border-t border-border/30 pt-3">{item.stat.detail}</p>
           </motion.div>
         </div>
       </div>
@@ -505,7 +505,7 @@ const Section6 = () => {
                   className="flex flex-col items-center"
                 >
                   <div className="w-2 h-2 rounded-full bg-primary/40 mb-1" />
-                  <span className="text-[9px] tracking-wider uppercase text-muted-foreground/50">{gen}</span>
+                  <span className="text-[9px] tracking-wider uppercase text-muted-foreground">{gen}</span>
                 </motion.div>
               ))}
               <motion.div
