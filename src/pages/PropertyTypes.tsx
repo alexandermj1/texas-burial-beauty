@@ -610,7 +610,7 @@ const PropertyTypes = () => {
           ],
         }}
       />
-      <Navbar />
+      <Navbar forceScrolled />
 
       {/* Editorial opener — light, continuous, flows straight into the first spread */}
       <section className="relative pt-24 md:pt-28 pb-2 md:pb-4 overflow-hidden bg-background">
