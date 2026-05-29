@@ -87,8 +87,6 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
           <p className="text-muted-foreground text-lg font-light leading-relaxed">
             Tell us about your property and we'll respond within 24 hours with a
             consignment quote showing your net proceeds if we list it for you.
-            Average time to sale is around{" "}
-            <span className="text-foreground/80 font-medium">six months</span>.
           </p>
 
           <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8">
