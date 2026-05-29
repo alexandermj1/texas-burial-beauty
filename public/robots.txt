@@ -43,12 +43,45 @@ Disallow: /blog
 
 User-agent: GPTBot
 Allow: /
+Disallow: /admin
+Disallow: /agent
+Disallow: /dashboard
+Disallow: /auth
+Disallow: /create-listing
+Disallow: /edit-listing/
+Disallow: /properties
+Disallow: /properties-2
+Disallow: /home2
+Disallow: /team
+Disallow: /blog
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /admin
+Disallow: /agent
+Disallow: /dashboard
+Disallow: /auth
+Disallow: /create-listing
+Disallow: /edit-listing/
+Disallow: /properties
+Disallow: /properties-2
+Disallow: /home2
+Disallow: /team
+Disallow: /blog
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /admin
+Disallow: /agent
+Disallow: /dashboard
+Disallow: /auth
+Disallow: /create-listing
+Disallow: /edit-listing/
+Disallow: /properties
+Disallow: /properties-2
+Disallow: /home2
+Disallow: /team
+Disallow: /blog
 
 User-agent: Twitterbot
 Allow: /
