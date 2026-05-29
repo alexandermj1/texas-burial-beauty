@@ -12,7 +12,7 @@ const benefits = [
   { icon: DollarSign, title: "No Upfront Fees", desc: "We only earn when you do. Zero listing fees, zero appraisal costs." },
   { icon: FileText, title: "Free Valuation", desc: "Get an honest, no-obligation market value for your property." },
   { icon: ShieldCheck, title: "We Handle Everything", desc: "From paperwork to cemetery coordination to buyer matching — we do it all." },
-  { icon: CheckCircle, title: "Consignment Listing", desc: "List your property on consignment and stay in control — we handle the marketing, buyers, and paperwork. Average sale time around six months." },
+  { icon: CheckCircle, title: "Consignment Listing", desc: "List your property on consignment and stay in control — we handle the marketing, buyers, and paperwork." },
   { icon: Users, title: "Texas Buyer Network", desc: "Access to thousands of qualified buyers across Dallas, Houston, Austin and San Antonio looking for Texas cemetery property." },
   { icon: TrendingUp, title: "Best Market Prices", desc: "We research comparables to ensure you get the best possible price." },
 ];
@@ -37,7 +37,7 @@ const SellProperty = () => {
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Sell Your Cemetery Plot in Texas | Free Valuation"
-        description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees, 6 - 12 Month average close. Serving Dallas, Houston, Austin & San Antonio."
+        description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees. Serving Dallas, Houston, Austin & San Antonio."
         path="/sell"
         jsonLd={[
           {
@@ -98,7 +98,6 @@ const SellProperty = () => {
               <div className="bg-primary-foreground/5 border border-primary-foreground/10 rounded-2xl p-8 backdrop-blur-sm">
                 <div className="space-y-5">
                   {[
-                    { label: "Average sale time", value: "6 - 12 Months" },
                     { label: "Upfront cost to you", value: "$0" },
                     { label: "Families helped (network)", value: "10,000+" },
                   ].map((stat, i) => (

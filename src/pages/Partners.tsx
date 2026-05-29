@@ -78,8 +78,8 @@ const pillars = [
 
 const advantages = [
   {
-    title: "Faster Time to Sale",
-    desc: "Pooled buyer demand from a 2,500-plot national catalog means most Texas listings find a qualified buyer in 30–60 days — substantially faster than a single regional seller could achieve alone.",
+    title: "Network-Backed Reach",
+    desc: "Pooled buyer demand from a 2,500-plot national catalog means Texas listings get exposure to a much larger audience of qualified buyers than any single regional seller could achieve alone.",
   },
   {
     title: "Texas-First, Network-Backed",

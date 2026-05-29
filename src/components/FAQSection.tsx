@@ -12,8 +12,8 @@ const faqs = [
     a: "We offer a free listing option and a premium $99 listing option — choose whichever fits you best. No appraisal charges or hidden costs.",
   },
   {
-    q: "How long does it take to buy or sell?",
-    a: "Most transactions complete within 30–60 days, depending on the cemetery's transfer process. We handle all the coordination to keep things moving.",
+    q: "What is the buying or selling process?",
+    a: "Every transaction is different. We handle all the coordination with the cemetery to keep things moving as smoothly as possible, and we keep you updated throughout the process.",
   },
   {
     q: "What areas do you serve?",
