@@ -12,7 +12,7 @@ const faqs = [
     a: "We offer a free listing option and a premium $99 listing option — choose whichever fits you best. No appraisal charges or hidden costs.",
   },
   {
-    q: "How long does it take to buy or sell?",
+    q: "What is the buying or selling process?",
     a: "Every transaction is different. We handle all the coordination with the cemetery to keep things moving as smoothly as possible, and we keep you updated throughout the process.",
   },
   {
