@@ -99,7 +99,7 @@ const milestones = [
   { year: "1998", text: "Bayer Cemetery Brokers founded as a full-service cemetery resale brokerage." },
   { year: "2010s", text: "Expanded into one of the largest cemetery property marketplaces in the United States." },
   { year: "10,000+", text: "Families served — and counting — across more than 27 years of continuous operation." },
-  { year: "Today", text: "Texas Cemetery Brokers launches in Dallas, extending Bayer's trusted process to families across Texas." },
+  { year: "Partnership", text: "Texas Cemetery Brokers joins Bayer's network, extending trusted resale expertise to families across Dallas, Houston, Austin and San Antonio." },
 ];
 
 const testimonialPoints = [
