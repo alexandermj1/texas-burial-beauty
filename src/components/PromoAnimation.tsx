@@ -248,7 +248,7 @@ export const SellerPromoAnimation = () => {
               <StatPill icon={Shield} value="$0" label="Upfront Fees" delay={0.3} color="accent" />
               <StatPill icon={Users} value="50,000+" label="Buyer Network" delay={0.4} color="accent" />
               <StatPill icon={Award} value="4.9★" label="Google Rating" delay={0.5} color="accent" />
-              <StatPill icon={Heart} value="~30 days" label="Avg. Time to Sell" delay={0.6} color="accent" />
+              <StatPill icon={Heart} value="100%" label="Consignment Model" delay={0.6} color="accent" />
             </div>
 
             <Link
