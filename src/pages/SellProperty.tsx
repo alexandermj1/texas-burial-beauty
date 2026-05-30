@@ -82,7 +82,7 @@ const SellProperty = () => {
                 List your plot on <span className="italic text-primary-foreground/90">consignment</span>
               </h1>
               <p className="text-primary-foreground/95 text-lg font-light leading-relaxed mb-8 max-w-lg drop-shadow-md">
-                No upfront costs. No hassle. We handle the entire selling process — you only pay when the sale is complete.
+                Choose a free listing or our premium $99 listing. We handle the entire selling process from valuation to closing.
               </p>
               <div className="flex flex-wrap gap-3">
                 <a href="#quote-form" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
