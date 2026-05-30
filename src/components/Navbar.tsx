@@ -26,6 +26,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     { to: "/buy", label: "Buy Property" },
     { to: "/sell", label: "Sell Property" },
     { to: "/partners", label: "Partners" },
+    { to: "/contact", label: "Contact" },
   ];
 
   const navContent = (
