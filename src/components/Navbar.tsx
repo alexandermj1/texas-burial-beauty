@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect } from "react";
-import { Phone, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
@@ -26,6 +26,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     { to: "/buy", label: "Buy Property" },
     { to: "/sell", label: "Sell Property" },
     { to: "/partners", label: "Partners" },
+    { to: "/contact", label: "Contact" },
   ];
 
   const navContent = (
@@ -44,10 +45,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <a href="tel:+13108049586" className={`inline-flex items-center gap-1.5 text-sm font-medium ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
-            <Phone className="w-3.5 h-3.5" />
-            (310) 804-9586
-          </a>
+
           {links.map(link => (
             <Link
               key={link.to}
@@ -73,10 +71,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
       {menuOpen && (
         <div className="md:hidden bg-background border-t border-border px-6 py-6 flex flex-col gap-4">
-          <a href="tel:+13108049586" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
-            <Phone className="w-3.5 h-3.5" />
-            (310) 804-9586
-          </a>
+
           {links.map(link => (
             <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="text-sm text-foreground">
               {link.label}

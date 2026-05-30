@@ -31,6 +31,7 @@ const Home2 = lazy(() => import("./pages/Home2"));
 const Partners = lazy(() => import("./pages/Partners"));
 const CemeteryDirectory = lazy(() => import("./pages/CemeteryDirectory"));
 const CemeteryDetail = lazy(() => import("./pages/CemeteryDetail"));
+const Contact = lazy(() => import("./pages/Contact"));
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
                 <Route path="/partners" element={<Partners />} />
                 <Route path="/cemeteries" element={<CemeteryDirectory />} />
                 <Route path="/cemeteries/:slug" element={<CemeteryDetail />} />
+                <Route path="/contact" element={<Contact />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
