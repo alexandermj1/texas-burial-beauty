@@ -509,8 +509,8 @@ const Contact = () => {
 
       {/* ── Sell Inquiry ── */}
       <section id="sell-inquiry" className="py-16 relative overflow-hidden scroll-mt-16">
-        <div aria-hidden className="pointer-events-none absolute top-10 -left-20 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute top-10 -left-20 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
         <LeafScatter items={SELL_SCATTER} />
         <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
