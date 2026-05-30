@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect } from "react";
-import { Phone, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
