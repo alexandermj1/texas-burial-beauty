@@ -109,8 +109,8 @@ const sellingSteps = [
   {
     icon: ClipboardList,
     label: "02",
-    title: "List with no upfront cost",
-    body: "We handle photos, listing copy, marketing and buyer screening. You only pay when it sells.",
+    title: "Free or $99 listing",
+    body: "Choose a free listing or our premium $99 listing. We handle photos, listing copy, marketing and buyer screening.",
   },
   {
     icon: CheckCircle2,
