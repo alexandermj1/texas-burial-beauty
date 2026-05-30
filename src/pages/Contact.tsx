@@ -104,7 +104,7 @@ const GeneralInquiryForm = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7, delay: 0.1 }}
-      className="bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10"
+      className="relative bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10 overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-primary before:via-accent before:to-primary/60"
     >
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
@@ -215,7 +215,7 @@ const BuyInquiryForm = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7, delay: 0.1 }}
-      className="bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10"
+      className="relative bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10 overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-accent before:via-primary before:to-accent/60"
     >
       {/* About you */}
       <div className="mb-8">
