@@ -380,9 +380,9 @@ const Contact = () => {
           }}
         />
         {/* floating blurred orbs */}
-        <div className="pointer-events-none absolute -top-16 -right-16 w-80 h-80 rounded-full bg-primary/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-primary/[0.04] blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute -top-16 -right-16 w-80 h-80 rounded-full bg-primary/15 blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-accent/20 blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-primary/[0.04] blur-3xl" />
 
         {/* botanical accents on the sides */}
         <LeafScatter
@@ -430,19 +430,19 @@ const Contact = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-7 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all text-left ${item.ring}`}
+                className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-7 shadow-soft transition-shadow duration-200 [@media(hover:hover)]:hover:shadow-hover [@media(hover:hover)]:hover:-translate-y-1 text-left ${item.ring}`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity`} />
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary/60 opacity-80" />
                 <div className="relative">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${item.iconBg} group-hover:scale-110 transition-transform`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${item.iconBg} [@media(hover:hover)]:group-hover:scale-110 transition-transform`}>
                     <item.icon className="w-5 h-5" />
                   </div>
                   <h3 className="font-display text-xl text-foreground mb-1.5">{item.title}</h3>
                   <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
                     Get started
-                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform [@media(hover:hover)]:group-hover:translate-x-1" />
                   </span>
                 </div>
               </motion.a>
@@ -473,9 +473,9 @@ const Contact = () => {
 
       {/* ── Buy Inquiry ── */}
       <section id="buy-inquiry" className="py-16 bg-gradient-sage relative overflow-hidden scroll-mt-16">
-        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -top-20 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-24 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute -top-20 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute -bottom-20 -left-24 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
         <LeafScatter items={BUY_SCATTER} />
         <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
@@ -509,8 +509,8 @@ const Contact = () => {
 
       {/* ── Sell Inquiry ── */}
       <section id="sell-inquiry" className="py-16 relative overflow-hidden scroll-mt-16">
-        <div aria-hidden className="pointer-events-none absolute top-10 -left-20 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute top-10 -left-20 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
         <LeafScatter items={SELL_SCATTER} />
         <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
