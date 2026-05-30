@@ -152,7 +152,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                 Call us
               </a>
               <p className="text-center text-[11px] text-muted-foreground mt-2">
-                Licensed Texas Cemetery Brokers
+                Texas Cemetery Brokers
               </p>
             </div>
           </div>

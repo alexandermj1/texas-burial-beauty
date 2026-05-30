@@ -38,10 +38,10 @@ const TestimonialsSection = () => {
             Three decades of trusted service
           </h2>
           <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Texas Cemetery Brokers is the Texas-licensed extension of{" "}
+            Texas Cemetery Brokers is the Texas extension of{" "}
             <span className="text-foreground font-medium">Bayer Cemetery Brokers</span>, serving families
             in California since 1996. These verified Google reviews are from Bayer clients — the same team,
-            the same standards, now licensed to serve Texas.
+            the same standards, now serving Texas.
           </p>
           <div className="flex items-center justify-center gap-2 mt-4">
             <div className="flex gap-0.5">
