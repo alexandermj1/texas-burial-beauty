@@ -39,58 +39,57 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   ];
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,backdrop-filter,box-shadow,border-color] duration-300 ${
-        scrolled || menuOpen
-          ? "bg-background/95 backdrop-blur-lg shadow-soft border-b border-border"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-baseline gap-2 whitespace-nowrap shrink-0">
-          <span className={`font-display text-lg sm:text-2xl ${(scrolled || menuOpen) ? "text-foreground" : "text-primary-foreground"}`}>
-            Texas Cemetery Brokers
-          </span>
-        </Link>
-
-        <div className="hidden md:flex items-center gap-6">
-          {links.map(link => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`text-sm ${
-                location.pathname === link.to
-                  ? scrolled ? "text-foreground font-medium" : "text-primary-foreground font-medium"
-                  : scrolled ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          className={`md:hidden inline-flex items-center justify-center w-11 h-11 rounded-full border transition-colors ${
-            (scrolled || menuOpen)
-              ? "text-foreground border-border hover:bg-muted"
-              : "text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
-          }`}
-        >
-          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Mobile menu panel */}
-      <div
-        className={`md:hidden fixed inset-x-0 top-[68px] bottom-0 bg-background transition-all duration-300 ease-out ${
-          menuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
+    <>
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,backdrop-filter,box-shadow,border-color] duration-300 ${
+          scrolled || menuOpen
+            ? "bg-background/95 backdrop-blur-lg shadow-soft border-b border-border"
+            : "bg-transparent"
         }`}
       >
-        <div className="relative h-full overflow-y-auto">
-          {/* Subtle decorative gradient */}
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-baseline gap-2 whitespace-nowrap shrink-0">
+            <span className={`font-display text-lg sm:text-2xl ${(scrolled || menuOpen) ? "text-foreground" : "text-primary-foreground"}`}>
+              Texas Cemetery Brokers
+            </span>
+          </Link>
+
+          <div className="hidden md:flex items-center gap-6">
+            {links.map(link => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`text-sm ${
+                  location.pathname === link.to
+                    ? scrolled ? "text-foreground font-medium" : "text-primary-foreground font-medium"
+                    : scrolled ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            className={`md:hidden inline-flex items-center justify-center w-11 h-11 rounded-full border transition-colors ${
+              (scrolled || menuOpen)
+                ? "text-foreground border-border hover:bg-muted"
+                : "text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
+            }`}
+          >
+            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile menu panel — rendered outside nav to avoid stacking issues */}
+      {menuOpen && (
+        <div
+          className="md:hidden fixed inset-x-0 top-[68px] bottom-0 z-40 bg-background overflow-y-auto animate-fade-in"
+        >
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-accent/5 pointer-events-none" />
           <div className="relative px-6 pt-6 pb-10 flex flex-col gap-6 min-h-full">
             <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
@@ -158,8 +157,8 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
             </div>
           </div>
         </div>
-      </div>
-    </nav>
+      )}
+    </>
   );
 };
 
