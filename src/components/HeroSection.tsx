@@ -76,11 +76,26 @@ const HeroSection = () => {
         />
       </motion.div>
 
-      <div className="absolute inset-0 bg-foreground/30 pointer-events-none" />
-      {/* Top gradient — strong, tall, opaque at the very top so the navbar always reads */}
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/80 via-foreground/50 to-transparent pointer-events-none" />
-      {/* Bottom gradient — deep shade behind headline + Buy/Sell row */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/80 via-foreground/45 to-transparent pointer-events-none" />
+      {/* Layered overlays for depth & interest */}
+      <div className="absolute inset-0 bg-foreground/35 pointer-events-none" />
+      {/* Soft vignette */}
+      <div className="absolute inset-0 pointer-events-none [background:radial-gradient(ellipse_at_center,transparent_35%,hsl(var(--foreground)/0.55)_100%)]" />
+      {/* Warm accent glow from upper-left */}
+      <div className="absolute -top-32 -left-32 w-[55vw] h-[55vw] rounded-full bg-accent/25 blur-3xl pointer-events-none mix-blend-soft-light" />
+      {/* Cool primary glow from lower-right */}
+      <div className="absolute -bottom-40 -right-40 w-[60vw] h-[60vw] rounded-full bg-primary/30 blur-3xl pointer-events-none mix-blend-soft-light" />
+      {/* Subtle grain/noise texture */}
+      <div
+        className="absolute inset-0 opacity-[0.12] pointer-events-none mix-blend-overlay"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+        }}
+      />
+      {/* Top gradient */}
+      <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-foreground/85 via-foreground/55 to-transparent pointer-events-none" />
+      {/* Bottom gradient */}
+      <div className="absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-t from-foreground/90 via-foreground/55 to-transparent pointer-events-none" />
       {/* Parallax merge — fades into the page background as the user scrolls, blending hero into next section */}
       <motion.div
         style={{ opacity: mergeOpacity }}
@@ -125,27 +140,45 @@ const HeroSection = () => {
         </motion.p>
       </motion.div>
 
-      {/* Buy / Sell split — minimal text links */}
+      {/* Buy / Sell split — bolder, clearer CTAs */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 1.2 }}
-        className="relative border-t border-primary-foreground/25"
+        className="relative border-t border-primary-foreground/30 bg-foreground/25 backdrop-blur-[2px]"
       >
-        <div className="container mx-auto px-6 grid grid-cols-2 divide-x divide-primary-foreground/25">
+        <div className="container mx-auto px-6 grid grid-cols-2 divide-x divide-primary-foreground/30">
           <Link
             to="/cemeteries"
-            className="group flex items-center justify-between py-9 sm:py-10 pr-4 sm:pr-8 text-primary-foreground"
+            className="group relative flex items-center justify-between py-9 sm:py-11 pr-4 sm:pr-8 text-primary-foreground overflow-hidden"
           >
-            <span className="font-display text-5xl sm:text-5xl md:text-6xl tracking-tight drop-shadow-lg px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Buy</span>
-            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/25 to-primary/45 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <span className="absolute left-0 top-0 h-full w-1 bg-primary scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-500" />
+            <div className="relative flex flex-col">
+              <span className="text-[10px] sm:text-xs tracking-[0.35em] uppercase font-medium text-primary-foreground/75 mb-1.5">
+                Browse listings
+              </span>
+              <span className="font-display text-5xl sm:text-5xl md:text-6xl tracking-tight drop-shadow-lg transition-transform group-hover:translate-x-1">
+                Buy
+              </span>
+            </div>
+            <ArrowUpRight className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-transform duration-300 group-hover:translate-x-2 group-hover:-translate-y-2" />
           </Link>
           <Link
             to="/sell"
-            className="group flex items-center justify-between py-9 sm:py-10 pl-4 sm:pl-8 text-primary-foreground"
+            className="group relative flex items-center justify-between py-9 sm:py-11 pl-4 sm:pl-8 text-primary-foreground overflow-hidden"
           >
-            <span className="font-display text-5xl sm:text-5xl md:text-6xl tracking-tight italic font-light drop-shadow-lg px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
-            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="absolute inset-0 bg-gradient-to-l from-accent/0 via-accent/25 to-accent/45 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <span className="absolute right-0 top-0 h-full w-1 bg-accent scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-500" />
+            <div className="relative flex flex-col">
+              <span className="text-[10px] sm:text-xs tracking-[0.35em] uppercase font-medium text-primary-foreground/75 mb-1.5">
+                Get a free quote
+              </span>
+              <span className="font-display text-5xl sm:text-5xl md:text-6xl tracking-tight italic font-light drop-shadow-lg transition-transform group-hover:translate-x-1">
+                Sell
+              </span>
+            </div>
+            <ArrowUpRight className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-transform duration-300 group-hover:translate-x-2 group-hover:-translate-y-2" />
           </Link>
         </div>
       </motion.div>
