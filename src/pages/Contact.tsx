@@ -415,6 +415,9 @@ const Contact = () => {
       {/* ── Buy Inquiry ── */}
       <section id="buy-inquiry" className="py-16 bg-gradient-sage relative overflow-hidden">
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -top-20 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-24 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
+        <LeafScatter items={BUY_SCATTER} />
         <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -446,8 +449,11 @@ const Contact = () => {
       </section>
 
       {/* ── Sell Inquiry ── */}
-      <section id="sell-inquiry" className="py-16">
-        <div className="container mx-auto px-6 max-w-3xl">
+      <section id="sell-inquiry" className="py-16 relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute top-10 -left-20 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+        <LeafScatter items={SELL_SCATTER} />
+        <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
