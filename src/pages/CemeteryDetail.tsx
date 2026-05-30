@@ -472,7 +472,7 @@ const CemeteryDetail = () => {
               </p>
               <h2 className="font-display text-4xl md:text-5xl text-foreground mb-5 leading-[1.05]">
                 Sell with confidence,<br />
-                <em className="italic font-normal text-muted-foreground">no upfront fees.</em>
+                <em className="italic font-normal text-muted-foreground">free or $99 listing.</em>
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 We list and market your plot to qualified buyers, screen interest, handle payment and complete the cemetery's
