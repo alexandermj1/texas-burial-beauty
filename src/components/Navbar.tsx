@@ -45,10 +45,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <a href="tel:+13108049586" className={`inline-flex items-center gap-1.5 text-sm font-medium ${scrolled ? "text-primary" : "text-primary-foreground/80 hover:text-primary-foreground"}`}>
-            <Phone className="w-3.5 h-3.5" />
-            (310) 804-9586
-          </a>
+
           {links.map(link => (
             <Link
               key={link.to}
