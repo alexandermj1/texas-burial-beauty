@@ -534,7 +534,7 @@ const CemeteryDetail = () => {
           <div className="grid sm:grid-cols-3 gap-5">
             {[
               { icon: ShieldCheck, title: "Licensed & insured", body: "Partnered with Bayer Cemetery Brokers, a licensed California brokerage." },
-              { icon: Banknote, title: "No upfront fees", body: "Sellers pay nothing until the plot is sold." },
+              { icon: Banknote, title: "Free or $99 listing", body: "Choose a free listing or our premium $99 option — no hidden charges." },
               { icon: FileCheck, title: "Full title transfer", body: "We handle all cemetery paperwork end-to-end." },
             ].map((b, i) => (
               <motion.div
