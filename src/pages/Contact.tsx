@@ -364,10 +364,35 @@ const Contact = () => {
       <Navbar forceScrolled />
 
       {/* ── Hero ── */}
-      <section className="pt-28 pb-16 bg-gradient-sage relative overflow-hidden">
-        {/* decorative blobs */}
-        <div className="pointer-events-none absolute -top-10 -right-10 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-10 -left-10 w-64 h-64 rounded-full bg-accent/5 blur-3xl" />
+      <section className="pt-28 pb-20 bg-gradient-sage relative overflow-hidden">
+        {/* layered gradient mesh */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--accent)/0.22),transparent_55%),radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.12),transparent_60%)]" />
+        {/* subtle grid texture */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+            maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
+          }}
+        />
+        {/* floating blurred orbs */}
+        <div className="pointer-events-none absolute -top-16 -right-16 w-80 h-80 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-accent/20 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-primary/[0.04] blur-3xl" />
+
+        {/* botanical accents on the sides */}
+        <LeafScatter
+          items={[
+            { top: "12%", left: "-2%", size: 180, rotate: -18, opacity: 0.4, idx: 0 },
+            { top: "20%", right: "-2%", size: 170, rotate: 22, opacity: 0.4, idx: 16 },
+            { bottom: "-8%", left: "8%", size: 140, rotate: -10, opacity: 0.35, idx: 9 },
+            { bottom: "-6%", right: "10%", size: 150, rotate: 14, opacity: 0.35, idx: 5 },
+          ]}
+        />
 
         <div className="container mx-auto px-6 max-w-4xl text-center relative">
           <motion.div
@@ -375,7 +400,10 @@ const Contact = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <p className="text-primary font-medium text-xs tracking-[0.25em] uppercase mb-4">Contact</p>
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card/70 backdrop-blur border border-primary/20 text-primary font-medium text-[11px] tracking-[0.25em] uppercase mb-6 shadow-soft">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              Contact
+            </span>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground mb-5 leading-tight">
               We're here to help
             </h1>
@@ -387,13 +415,13 @@ const Contact = () => {
       </section>
 
       {/* ── Three column quick links ── */}
-      <section className="pb-12 -mt-6 relative z-10">
+      <section className="pb-16 -mt-12 relative z-10">
         <div className="container mx-auto px-6 max-w-5xl">
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-3 gap-5">
             {[
-              { icon: MessageSquare, title: "General question", desc: "Send us a message" },
-              { icon: Search, title: "Buy a plot", desc: "Tell us what you need" },
-              { icon: Building2, title: "Sell your property", desc: "Request a valuation" },
+              { icon: MessageSquare, title: "General question", desc: "Send us a message about anything", accent: "from-primary/15 to-primary/5", ring: "hover:border-primary/50", iconBg: "bg-primary/15 text-primary" },
+              { icon: Search, title: "Buy a plot", desc: "Tell us what you're looking for", accent: "from-accent/20 to-accent/5", ring: "hover:border-accent/60", iconBg: "bg-accent/20 text-accent-foreground" },
+              { icon: Building2, title: "Sell your property", desc: "Request a free valuation", accent: "from-primary/15 to-accent/10", ring: "hover:border-primary/50", iconBg: "bg-primary/15 text-primary" },
             ].map((item, i) => (
               <motion.a
                 key={item.title}
@@ -402,13 +430,21 @@ const Contact = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="group rounded-2xl border border-border/60 bg-card p-6 shadow-soft hover:shadow-hover hover:border-primary/30 transition-all text-left"
+                className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-7 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all text-left ${item.ring}`}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
-                  <item.icon className="w-4 h-4 text-primary" />
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary/60 opacity-80" />
+                <div className="relative">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${item.iconBg} group-hover:scale-110 transition-transform`}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-display text-xl text-foreground mb-1.5">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+                    Get started
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </span>
                 </div>
-                <h3 className="font-display text-lg text-foreground mb-1">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
               </motion.a>
             ))}
           </div>
