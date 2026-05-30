@@ -70,6 +70,7 @@ const App = () => (
                 <Route path="/partners" element={<Partners />} />
                 <Route path="/cemeteries" element={<CemeteryDirectory />} />
                 <Route path="/cemeteries/:slug" element={<CemeteryDetail />} />
+                <Route path="/contact" element={<Contact />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
