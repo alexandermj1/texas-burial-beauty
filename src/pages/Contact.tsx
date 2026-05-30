@@ -8,6 +8,54 @@ import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+/* Botanical leaf accents — same set used on the cemeteries page */
+const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+const LEAVES = Object.values(LEAF_MODULES);
+
+type Scatter = { top: string; left?: string; right?: string; size: number; rotate: number; opacity: number; idx: number };
+
+const BUY_SCATTER: Scatter[] = [
+  { top: "4%",  left: "-2%",  size: 130, rotate: -18, opacity: 0.45, idx: 0 },
+  { top: "10%", right: "-1%", size: 110, rotate: 22,  opacity: 0.4,  idx: 16 },
+  { top: "55%", left: "-3%",  size: 150, rotate: 14,  opacity: 0.45, idx: 4 },
+  { top: "72%", right: "-2%", size: 140, rotate: -10, opacity: 0.45, idx: 9 },
+  { top: "92%", left: "40%",  size: 80,  rotate: 30,  opacity: 0.35, idx: 11 },
+];
+
+const SELL_SCATTER: Scatter[] = [
+  { top: "6%",  right: "-2%", size: 130, rotate: 16,  opacity: 0.4,  idx: 5 },
+  { top: "40%", left: "-3%",  size: 145, rotate: -22, opacity: 0.45, idx: 17 },
+  { top: "78%", right: "-1%", size: 120, rotate: 8,   opacity: 0.4,  idx: 21 },
+];
+
+const LeafScatter = ({ items }: { items: Scatter[] }) => (
+  <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    {LEAVES.length > 0 &&
+      items.map((s, i) => (
+        <img
+          key={i}
+          src={LEAVES[s.idx % LEAVES.length]}
+          alt=""
+          loading="lazy"
+          className="absolute select-none"
+          style={{
+            top: s.top,
+            left: s.left,
+            right: s.right,
+            width: `${Math.round(s.size * 1.45)}px`,
+            height: "auto",
+            opacity: s.opacity,
+            transform: `rotate(${s.rotate}deg)`,
+            filter: "saturate(0.85)",
+          }}
+        />
+      ))}
+  </div>
+);
+
 /* ─── Shared form primitives ─── */
 const inputCls =
   "w-full h-12 px-4 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
@@ -56,7 +104,7 @@ const GeneralInquiryForm = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7, delay: 0.1 }}
-      className="bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10"
+      className="relative bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10 overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-primary before:via-accent before:to-primary/60"
     >
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
@@ -167,7 +215,7 @@ const BuyInquiryForm = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7, delay: 0.1 }}
-      className="bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10"
+      className="relative bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-10 overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-accent before:via-primary before:to-accent/60"
     >
       {/* About you */}
       <div className="mb-8">
@@ -367,6 +415,9 @@ const Contact = () => {
       {/* ── Buy Inquiry ── */}
       <section id="buy-inquiry" className="py-16 bg-gradient-sage relative overflow-hidden">
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -top-20 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-24 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
+        <LeafScatter items={BUY_SCATTER} />
         <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -398,8 +449,11 @@ const Contact = () => {
       </section>
 
       {/* ── Sell Inquiry ── */}
-      <section id="sell-inquiry" className="py-16">
-        <div className="container mx-auto px-6 max-w-3xl">
+      <section id="sell-inquiry" className="py-16 relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute top-10 -left-20 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute bottom-10 -right-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+        <LeafScatter items={SELL_SCATTER} />
+        <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
