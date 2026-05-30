@@ -72,16 +72,16 @@ const SellProperty = () => {
       {/* Hero — editorial split layout with photo background */}
       <section className="relative pt-28 pb-16 overflow-hidden">
         <img src={sellHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/55 to-foreground/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/70 to-foreground/55" />
 
         <div className="relative container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <p className="text-primary-foreground/40 font-medium text-xs tracking-[0.3em] uppercase mb-4">Sell With Confidence</p>
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-[1.1] mb-6">
-                List your plot on <span className="italic text-primary-foreground/70">consignment</span>
+              <p className="text-primary-foreground/80 font-medium text-xs tracking-[0.3em] uppercase mb-4 drop-shadow-md">Sell With Confidence</p>
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-[1.1] mb-6 drop-shadow-lg">
+                List your plot on <span className="italic text-primary-foreground/90">consignment</span>
               </h1>
-              <p className="text-primary-foreground/60 text-lg font-light leading-relaxed mb-8 max-w-lg">
+              <p className="text-primary-foreground/95 text-lg font-light leading-relaxed mb-8 max-w-lg drop-shadow-md">
                 No upfront costs. No hassle. We handle the entire selling process — you only pay when the sale is complete.
               </p>
               <div className="flex flex-wrap gap-3">
