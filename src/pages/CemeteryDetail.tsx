@@ -109,8 +109,8 @@ const sellingSteps = [
   {
     icon: ClipboardList,
     label: "02",
-    title: "List with no upfront cost",
-    body: "We handle photos, listing copy, marketing and buyer screening. You only pay when it sells.",
+    title: "Free or $99 listing",
+    body: "Choose a free listing or our premium $99 listing. We handle photos, listing copy, marketing and buyer screening.",
   },
   {
     icon: CheckCircle2,
@@ -456,8 +456,8 @@ const CemeteryDetail = () => {
               <img src={imgMountains} alt="" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 text-background">
-                <p className="text-[10px] tracking-[0.2em] uppercase opacity-80 mb-1">No upfront cost</p>
-                <p className="font-display text-2xl">You only pay when your plot sells.</p>
+                <p className="text-[10px] tracking-[0.2em] uppercase opacity-80 mb-1">Free or $99 listing</p>
+                <p className="font-display text-2xl">Two simple listing options to choose from.</p>
               </div>
             </motion.div>
 
@@ -472,7 +472,7 @@ const CemeteryDetail = () => {
               </p>
               <h2 className="font-display text-4xl md:text-5xl text-foreground mb-5 leading-[1.05]">
                 Sell with confidence,<br />
-                <em className="italic font-normal text-muted-foreground">no upfront fees.</em>
+                <em className="italic font-normal text-muted-foreground">free or $99 listing.</em>
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 We list and market your plot to qualified buyers, screen interest, handle payment and complete the cemetery's
@@ -534,7 +534,7 @@ const CemeteryDetail = () => {
           <div className="grid sm:grid-cols-3 gap-5">
             {[
               { icon: ShieldCheck, title: "Licensed & insured", body: "Partnered with Bayer Cemetery Brokers, a licensed California brokerage." },
-              { icon: Banknote, title: "No upfront fees", body: "Sellers pay nothing until the plot is sold." },
+              { icon: Banknote, title: "Free or $99 listing", body: "Choose a free listing or our premium $99 option — no hidden charges." },
               { icon: FileCheck, title: "Full title transfer", body: "We handle all cemetery paperwork end-to-end." },
             ].map((b, i) => (
               <motion.div

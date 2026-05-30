@@ -120,10 +120,10 @@ const AboutSeoSection = () => {
               paperwork from start to finish — so you never deal with the cemetery office yourself.
             </p>
             <p>
-              For sellers, we list cemetery plots inherited or no longer needed — with{" "}
-              <strong className="text-foreground font-medium">no upfront fees</strong> and full control over your
-              asking price. For buyers planning at-need or pre-need, we match you to verified properties at the
-              right cemetery, in the right section, for the right price. Pre-need buyers get our best pricing plus
+              For sellers, we list cemetery plots inherited or no longer needed — with a{" "}
+              <strong className="text-foreground font-medium">free or $99 listing option</strong> and full control
+              over your asking price. For buyers planning at-need or pre-need, we match you to verified properties at
+              the right cemetery, in the right section, for the right price. Pre-need buyers get our best pricing plus
               interest-free financing.
             </p>
             <p>
