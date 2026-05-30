@@ -456,8 +456,8 @@ const CemeteryDetail = () => {
               <img src={imgMountains} alt="" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 text-background">
-                <p className="text-[10px] tracking-[0.2em] uppercase opacity-80 mb-1">No upfront cost</p>
-                <p className="font-display text-2xl">You only pay when your plot sells.</p>
+                <p className="text-[10px] tracking-[0.2em] uppercase opacity-80 mb-1">Free or $99 listing</p>
+                <p className="font-display text-2xl">Two simple listing options to choose from.</p>
               </div>
             </motion.div>
 
