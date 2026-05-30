@@ -119,7 +119,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                             : "bg-muted text-foreground group-hover:bg-primary group-hover:text-primary-foreground"
                         }`}
                       >
-                        <Icon className="w-4.5 h-4.5" strokeWidth={1.75} />
+                        <Icon className="w-5 h-5" strokeWidth={1.75} />
                       </span>
                       <span className="flex flex-col flex-1 min-w-0">
                         <span className={`text-base leading-tight ${active ? "text-foreground font-semibold" : "text-foreground font-medium"}`}>
@@ -153,7 +153,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                 Call us
               </a>
               <p className="text-center text-[11px] text-muted-foreground mt-2">
-                San Francisco Bay Area · Licensed Broker
+                Licensed Texas Cemetery Brokers
               </p>
             </div>
           </div>
