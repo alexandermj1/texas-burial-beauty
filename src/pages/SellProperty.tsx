@@ -9,7 +9,7 @@ import { SellerPromoAnimation } from "@/components/PromoAnimation";
 import sellHeroBg from "@/assets/hero/cemetery-mountains.jpg";
 
 const benefits = [
-  { icon: DollarSign, title: "No Upfront Fees", desc: "We only earn when you do. Zero listing fees, zero appraisal costs." },
+  { icon: DollarSign, title: "Free or $99 Listing", desc: "Choose a free listing or our premium $99 listing — no appraisal costs, no hidden charges." },
   { icon: FileText, title: "Free Valuation", desc: "Get an honest, no-obligation market value for your property." },
   { icon: ShieldCheck, title: "We Handle Everything", desc: "From paperwork to cemetery coordination to buyer matching — we do it all." },
   { icon: CheckCircle, title: "Consignment Listing", desc: "List your property on consignment and stay in control — we handle the marketing, buyers, and paperwork." },
