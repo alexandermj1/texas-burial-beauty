@@ -71,10 +71,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
       {menuOpen && (
         <div className="md:hidden bg-background border-t border-border px-6 py-6 flex flex-col gap-4">
-          <a href="tel:+13108049586" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
-            <Phone className="w-3.5 h-3.5" />
-            (310) 804-9586
-          </a>
+
           {links.map(link => (
             <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="text-sm text-foreground">
               {link.label}
