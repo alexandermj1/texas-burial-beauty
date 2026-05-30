@@ -240,7 +240,7 @@ export const SellerPromoAnimation = () => {
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
               Fill out a simple form with your property details, and we'll provide a free valuation within 24 hours.
-              No upfront fees, no obligation — we only earn when your property sells.
+              Choose a free listing or our premium $99 listing — no obligation.
             </p>
 
             {/* Integrated stats grid */}
