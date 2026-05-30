@@ -473,9 +473,9 @@ const Contact = () => {
 
       {/* ── Buy Inquiry ── */}
       <section id="buy-inquiry" className="py-16 bg-gradient-sage relative overflow-hidden scroll-mt-16">
-        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -top-20 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-24 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute -top-20 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="hidden md:block pointer-events-none absolute -bottom-20 -left-24 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
         <LeafScatter items={BUY_SCATTER} />
         <div className="container mx-auto px-6 max-w-3xl relative">
           <motion.div
