@@ -380,9 +380,9 @@ const Contact = () => {
           }}
         />
         {/* floating blurred orbs */}
-        <div className="pointer-events-none absolute -top-16 -right-16 w-80 h-80 rounded-full bg-primary/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-primary/[0.04] blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute -top-16 -right-16 w-80 h-80 rounded-full bg-primary/15 blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-accent/20 blur-3xl" />
+        <div className="hidden md:block pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-primary/[0.04] blur-3xl" />
 
         {/* botanical accents on the sides */}
         <LeafScatter
