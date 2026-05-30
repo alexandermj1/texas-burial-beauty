@@ -66,7 +66,7 @@ const pillars = [
     icon: Users,
     label: "10,000+ Sales",
     title: "Proven at Scale",
-    desc: "Our partner network has guided more than 10,000 families through cemetery resales — saving sellers from carrying costs and saving buyers 20–80% versus direct cemetery pricing.",
+    desc: "Our partner network has guided more than 10,000 families through cemetery resales — connecting sellers with qualified buyers and helping families find the right property.",
   },
   {
     icon: Network,
@@ -86,8 +86,8 @@ const advantages = [
     desc: "Texas Cemetery Brokers is operated locally in Dallas, with deep coverage of DFW, Houston, Austin and San Antonio — fully supported by Bayer's 27-year resale playbook.",
   },
   {
-    title: "Honest, Transparent Pricing",
-    desc: "Free valuations grounded in verified comparable sales. No upfront fees, no surprises. Sellers only pay when their property closes — the same model Bayer has used since 1998.",
+    title: "Honest, Transparent Process",
+    desc: "Every valuation is grounded in verified comparable sales. We walk you through each step so you know exactly what to expect — no surprises, no hidden steps.",
   },
   {
     title: "End-to-End Coordination",
@@ -337,7 +337,7 @@ const Partners = () => {
               The result is <strong className="text-foreground font-medium">Texas Cemetery Brokers</strong>: a Dallas-headquartered operation with local representatives on the ground in Texas, fully backed by Bayer's 27-year track record, 10,000+ completed transactions, an active inventory of more than 2,500 plots, and a 4.9-star reputation built one family at a time.
             </p>
             <p>
-              For sellers, this means your property is marketed through a national buyer pool the day it's listed. For buyers, it means access to off-market inventory and 20–80% savings versus buying direct from cemeteries. For every family we serve, it means working with people who have done this thousands of times — and who care about getting it right.
+              For sellers, this means your property is marketed through a national buyer pool the day it's listed. For buyers, it means access to off-market inventory and significant savings versus buying direct from cemeteries. For every family we serve, it means working with people who have done this thousands of times — and who care about getting it right.
             </p>
           </motion.div>
         </div>
