@@ -66,7 +66,7 @@ const pillars = [
     icon: Users,
     label: "10,000+ Sales",
     title: "Proven at Scale",
-    desc: "Our partner network has guided more than 10,000 families through cemetery resales — saving sellers from carrying costs and saving buyers 20–80% versus direct cemetery pricing.",
+    desc: "Our partner network has guided more than 10,000 families through cemetery resales — connecting sellers with qualified buyers and helping families find the right property.",
   },
   {
     icon: Network,
