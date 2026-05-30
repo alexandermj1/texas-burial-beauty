@@ -31,6 +31,7 @@ const Home2 = lazy(() => import("./pages/Home2"));
 const Partners = lazy(() => import("./pages/Partners"));
 const CemeteryDirectory = lazy(() => import("./pages/CemeteryDirectory"));
 const CemeteryDetail = lazy(() => import("./pages/CemeteryDetail"));
+const Contact = lazy(() => import("./pages/Contact"));
 
 const queryClient = new QueryClient();
 
