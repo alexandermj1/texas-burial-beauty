@@ -86,8 +86,8 @@ const advantages = [
     desc: "Texas Cemetery Brokers is operated locally in Dallas, with deep coverage of DFW, Houston, Austin and San Antonio — fully supported by Bayer's 27-year resale playbook.",
   },
   {
-    title: "Honest, Transparent Pricing",
-    desc: "Free valuations grounded in verified comparable sales. No upfront fees, no surprises. Sellers only pay when their property closes — the same model Bayer has used since 1998.",
+    title: "Honest, Transparent Process",
+    desc: "Every valuation is grounded in verified comparable sales. We walk you through each step so you know exactly what to expect — no surprises, no hidden steps.",
   },
   {
     title: "End-to-End Coordination",
