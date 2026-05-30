@@ -1,5 +1,5 @@
-import { useState, useLayoutEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { useState, useLayoutEffect, useEffect } from "react";
+import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
@@ -10,8 +10,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const location = useLocation();
 
   useLayoutEffect(() => {
-    // Sync before paint so the light navbar background and dark text always
-    // change together, including after route transitions and fast scrolling.
     setMenuOpen(false);
     const onScroll = () => setScrolled(computeScrolled());
     onScroll();
@@ -20,32 +18,42 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forceScrolled, location.pathname]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [menuOpen]);
+
   const links = [
-    { to: "/property-types", label: "Property Types" },
-    { to: "/cemeteries", label: "Cemeteries" },
-    { to: "/buy", label: "Buy Property" },
-    { to: "/sell", label: "Sell Property" },
-    { to: "/partners", label: "Partners" },
-    { to: "/contact", label: "Contact" },
+    { to: "/property-types", label: "Property Types", desc: "Browse plot categories", Icon: Building2 },
+    { to: "/cemeteries", label: "Cemeteries", desc: "Find a cemetery near you", Icon: Trees },
+    { to: "/buy", label: "Buy Property", desc: "Available listings", Icon: ShoppingBag },
+    { to: "/sell", label: "Sell Property", desc: "List your plot", Icon: Tag },
+    { to: "/partners", label: "Partners", desc: "Funeral homes & agents", Icon: Handshake },
+    { to: "/contact", label: "Contact", desc: "Talk to our team", Icon: Mail },
   ];
 
-  const navContent = (
+  return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,backdrop-filter,box-shadow,border-color] duration-300 ${
-        scrolled
+        scrolled || menuOpen
           ? "bg-background/95 backdrop-blur-lg shadow-soft border-b border-border"
           : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-baseline gap-2 whitespace-nowrap shrink-0">
-          <span className={`font-display text-lg sm:text-2xl ${scrolled ? "text-foreground" : "text-primary-foreground"}`}>
+          <span className={`font-display text-lg sm:text-2xl ${(scrolled || menuOpen) ? "text-foreground" : "text-primary-foreground"}`}>
             Texas Cemetery Brokers
           </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-
           {links.map(link => (
             <Link
               key={link.to}
@@ -63,26 +71,96 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className={`md:hidden transition-colors ${scrolled ? "text-foreground" : "text-primary-foreground"}`}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          className={`md:hidden inline-flex items-center justify-center w-11 h-11 rounded-full border transition-colors ${
+            (scrolled || menuOpen)
+              ? "text-foreground border-border hover:bg-muted"
+              : "text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
+          }`}
         >
-          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
-      {menuOpen && (
-        <div className="md:hidden bg-background border-t border-border px-6 py-6 flex flex-col gap-4">
+      {/* Mobile menu panel */}
+      <div
+        className={`md:hidden fixed inset-x-0 top-[68px] bottom-0 bg-background transition-all duration-300 ease-out ${
+          menuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
+        }`}
+      >
+        <div className="relative h-full overflow-y-auto">
+          {/* Subtle decorative gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-accent/5 pointer-events-none" />
+          <div className="relative px-6 pt-6 pb-10 flex flex-col gap-6 min-h-full">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+              Menu
+            </p>
 
-          {links.map(link => (
-            <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="text-sm text-foreground">
-              {link.label}
-            </Link>
-          ))}
+            <ul className="flex flex-col gap-2">
+              {links.map(link => {
+                const active = location.pathname === link.to;
+                const Icon = link.Icon;
+                return (
+                  <li key={link.to}>
+                    <Link
+                      to={link.to}
+                      onClick={() => setMenuOpen(false)}
+                      className={`group flex items-center gap-4 rounded-2xl border px-4 py-3.5 transition-all ${
+                        active
+                          ? "border-primary/30 bg-primary/5 shadow-sm"
+                          : "border-border/60 bg-card/40 hover:border-primary/20 hover:bg-primary/5 active:scale-[0.98]"
+                      }`}
+                    >
+                      <span
+                        className={`flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-colors ${
+                          active
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-foreground group-hover:bg-primary group-hover:text-primary-foreground"
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" strokeWidth={1.75} />
+                      </span>
+                      <span className="flex flex-col flex-1 min-w-0">
+                        <span className={`text-base leading-tight ${active ? "text-foreground font-semibold" : "text-foreground font-medium"}`}>
+                          {link.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground mt-0.5 truncate">
+                          {link.desc}
+                        </span>
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="mt-auto pt-6 border-t border-border/60 flex flex-col gap-3">
+              <Link
+                to="/contact"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 font-medium shadow-soft hover:shadow-hover transition-shadow"
+              >
+                <Mail className="w-4 h-4" />
+                Get in touch
+              </Link>
+              <a
+                href="tel:+14155551234"
+                className="flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Phone className="w-4 h-4" />
+                Call us
+              </a>
+              <p className="text-center text-[11px] text-muted-foreground mt-2">
+                Licensed Texas Cemetery Brokers
+              </p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </nav>
   );
-
-  return navContent;
 };
 
 export default Navbar;
