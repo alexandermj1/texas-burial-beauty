@@ -337,7 +337,7 @@ const Partners = () => {
               The result is <strong className="text-foreground font-medium">Texas Cemetery Brokers</strong>: a Dallas-headquartered operation with local representatives on the ground in Texas, fully backed by Bayer's 27-year track record, 10,000+ completed transactions, an active inventory of more than 2,500 plots, and a 4.9-star reputation built one family at a time.
             </p>
             <p>
-              For sellers, this means your property is marketed through a national buyer pool the day it's listed. For buyers, it means access to off-market inventory and 20–80% savings versus buying direct from cemeteries. For every family we serve, it means working with people who have done this thousands of times — and who care about getting it right.
+              For sellers, this means your property is marketed through a national buyer pool the day it's listed. For buyers, it means access to off-market inventory and significant savings versus buying direct from cemeteries. For every family we serve, it means working with people who have done this thousands of times — and who care about getting it right.
             </p>
           </motion.div>
         </div>
