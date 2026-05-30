@@ -430,19 +430,19 @@ const Contact = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-7 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all text-left ${item.ring}`}
+                className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-7 shadow-soft transition-shadow duration-200 [@media(hover:hover)]:hover:shadow-hover [@media(hover:hover)]:hover:-translate-y-1 text-left ${item.ring}`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity`} />
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary/60 opacity-80" />
                 <div className="relative">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${item.iconBg} group-hover:scale-110 transition-transform`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${item.iconBg} [@media(hover:hover)]:group-hover:scale-110 transition-transform`}>
                     <item.icon className="w-5 h-5" />
                   </div>
                   <h3 className="font-display text-xl text-foreground mb-1.5">{item.title}</h3>
                   <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
                     Get started
-                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform [@media(hover:hover)]:group-hover:translate-x-1" />
                   </span>
                 </div>
               </motion.a>
