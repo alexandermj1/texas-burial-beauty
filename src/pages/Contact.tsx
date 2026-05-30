@@ -15,20 +15,41 @@ const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
 }) as Record<string, string>;
 const LEAVES = Object.values(LEAF_MODULES);
 
-type Scatter = { top: string; left?: string; right?: string; size: number; rotate: number; opacity: number; idx: number };
+type Scatter = {
+  top?: string;
+  bottom?: string;
+  left?: string;
+  right?: string;
+  size: number;
+  rotate: number;
+  opacity: number;
+  idx: number;
+};
+
+/* Approved leaves only — exclude the sage bird-of-paradise (idx 17).
+   The orange caladium (idx 4, 15) MUST be pinned to the bottom edge so the
+   stalks run off the page rather than floating mid-section. */
 
 const BUY_SCATTER: Scatter[] = [
-  { top: "4%",  left: "-2%",  size: 130, rotate: -18, opacity: 0.45, idx: 0 },
-  { top: "10%", right: "-1%", size: 110, rotate: 22,  opacity: 0.4,  idx: 16 },
-  { top: "55%", left: "-3%",  size: 150, rotate: 14,  opacity: 0.45, idx: 4 },
-  { top: "72%", right: "-2%", size: 140, rotate: -10, opacity: 0.45, idx: 9 },
-  { top: "92%", left: "40%",  size: 80,  rotate: 30,  opacity: 0.35, idx: 11 },
+  // top edges
+  { top: "2%",   left: "-3%",  size: 200, rotate: -14, opacity: 0.5,  idx: 0 },   // monstera
+  { top: "6%",   right: "-2%", size: 170, rotate: 18,  opacity: 0.5,  idx: 16 },  // hibiscus
+  // mid filler
+  { top: "32%",  left: "-2%",  size: 160, rotate: -8,  opacity: 0.45, idx: 9 },   // palm fan
+  { top: "44%",  right: "-3%", size: 190, rotate: 14,  opacity: 0.5,  idx: 5 },   // palm frond
+  { top: "62%",  left: "-1%",  size: 150, rotate: 22,  opacity: 0.4,  idx: 11 },  // small palm
+  // bottom — caladium anchored so stalks run off page
+  { bottom: "-12%", right: "-4%", size: 260, rotate: 0, opacity: 0.55, idx: 15 }, // BIG caladium
+  { bottom: "-10%", left: "-3%",  size: 220, rotate: 0, opacity: 0.5,  idx: 4 },  // caladium
 ];
 
 const SELL_SCATTER: Scatter[] = [
-  { top: "6%",  right: "-2%", size: 130, rotate: 16,  opacity: 0.4,  idx: 5 },
-  { top: "40%", left: "-3%",  size: 145, rotate: -22, opacity: 0.45, idx: 17 },
-  { top: "78%", right: "-1%", size: 120, rotate: 8,   opacity: 0.4,  idx: 21 },
+  { top: "4%",   right: "-2%", size: 180, rotate: 12,  opacity: 0.45, idx: 0 },   // monstera
+  { top: "10%",  left: "-3%",  size: 160, rotate: -16, opacity: 0.45, idx: 16 },  // hibiscus
+  { top: "48%",  right: "-3%", size: 170, rotate: 18,  opacity: 0.45, idx: 9 },   // palm fan
+  { top: "60%",  left: "-2%",  size: 150, rotate: -12, opacity: 0.4,  idx: 5 },   // palm frond
+  // bottom anchor — caladium runs off the page
+  { bottom: "-14%", right: "-3%", size: 240, rotate: 0, opacity: 0.55, idx: 15 },
 ];
 
 const LeafScatter = ({ items }: { items: Scatter[] }) => (
@@ -43,9 +64,10 @@ const LeafScatter = ({ items }: { items: Scatter[] }) => (
           className="absolute select-none"
           style={{
             top: s.top,
+            bottom: s.bottom,
             left: s.left,
             right: s.right,
-            width: `${Math.round(s.size * 1.45)}px`,
+            width: `clamp(${Math.round(s.size * 0.75)}px, ${Math.round(s.size / 9)}vw, ${Math.round(s.size * 1.6)}px)`,
             height: "auto",
             opacity: s.opacity,
             transform: `rotate(${s.rotate}deg)`,
@@ -54,6 +76,7 @@ const LeafScatter = ({ items }: { items: Scatter[] }) => (
         />
       ))}
   </div>
+
 );
 
 /* ─── Shared form primitives ─── */
