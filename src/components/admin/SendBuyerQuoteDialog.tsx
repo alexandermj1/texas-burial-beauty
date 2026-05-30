@@ -145,7 +145,7 @@ const buildBody = (
     : "";
 
   const close = closing.trim() ||
-    `If any of these interest you, simply reply to this email or call ${PHONE} and we'll arrange a private showing. We're licensed and bonded, and we handle every step of the transfer for you.`;
+    `If any of these interest you, simply reply to this email or call ${PHONE} and we'll arrange a private showing. We work in partnership with Bayer Cemetery Brokers, a licensed California brokerage, and we handle every step of the transfer for you.`;
 
   return `Dear ${name},
 
