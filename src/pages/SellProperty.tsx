@@ -95,14 +95,14 @@ const SellProperty = () => {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.3 }} className="hidden md:block">
-              <div className="bg-primary-foreground/5 border border-primary-foreground/10 rounded-2xl p-8 backdrop-blur-sm">
+              <div className="bg-foreground/30 border border-primary-foreground/20 rounded-2xl p-8 backdrop-blur-md">
                 <div className="space-y-5">
                   {[
                     { label: "Upfront cost to you", value: "$0" },
                     { label: "Families helped (network)", value: "10,000+" },
                   ].map((stat, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.15 }} className="flex items-center justify-between border-b border-primary-foreground/10 pb-4 last:border-0 last:pb-0">
-                      <span className="text-primary-foreground/50 text-sm">{stat.label}</span>
+                    <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.15 }} className="flex items-center justify-between border-b border-primary-foreground/15 pb-4 last:border-0 last:pb-0">
+                      <span className="text-primary-foreground/85 text-sm">{stat.label}</span>
                       <span className="font-display text-xl text-primary-foreground">{stat.value}</span>
                     </motion.div>
                   ))}
