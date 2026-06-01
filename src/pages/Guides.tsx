@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Navbar from "@/components/Navbar";
@@ -37,11 +37,6 @@ const FOLIAGE = {
 // Background scatter on the page (kept large + sparse, all different species)
 const SCATTER = [FOLIAGE.palm, FLORAL.pinkBranch, FOLIAGE.banana];
 
-const OUTBOUND_RESOURCES = [
-  { label: "Texas Dept. of Banking — Cemetery Regulation", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services" },
-  { label: "Texas Funeral Service Commission", href: "https://tfsc.texas.gov/ConsumerInformation.html" },
-  { label: "Texas Health & Safety Code Ch. 711", href: "https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm" },
-];
 
 interface Guide {
   slug: string;
@@ -125,6 +120,26 @@ const Guides = () => {
     onSelect();
   }, [emblaApi]);
 
+  // Mouse wheel / trackpad navigates the carousel (since the page can't scroll vertically)
+  useEffect(() => {
+    if (!emblaApi) return;
+    const node = emblaApi.rootNode();
+    let cooldown = false;
+    const handler = (e: WheelEvent) => {
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (Math.abs(delta) < 8) return;
+      e.preventDefault();
+      if (cooldown) return;
+      cooldown = true;
+      setTimeout(() => { cooldown = false; }, 420);
+      if (delta > 0) emblaApi.scrollNext();
+      else emblaApi.scrollPrev();
+    };
+    // Attach to window so the user doesn't have to hover the carousel exactly
+    window.addEventListener("wheel", handler, { passive: false });
+    return () => window.removeEventListener("wheel", handler);
+  }, [emblaApi]);
+
   // Lock body scroll so the Guides hub fits exactly in the viewport
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -156,9 +171,9 @@ const Guides = () => {
       <img src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
       <img src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
 
-      <section className="relative flex-1 flex flex-col pt-[4.5rem] pb-2 overflow-hidden z-10 min-h-0">
+      <section className="relative flex-1 flex flex-col pt-[5.5rem] pb-2 overflow-hidden z-10 min-h-0">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3">
+        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3 mt-1">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -321,7 +336,7 @@ const Guides = () => {
                 return (
                   <div
                     key={g.slug}
-                    className="flex-[0_0_96%] md:flex-[0_0_92%] lg:flex-[0_0_88%] xl:flex-[0_0_82%] min-w-0 px-3 md:px-6 h-full"
+                    className="flex-[0_0_98%] md:flex-[0_0_96%] lg:flex-[0_0_94%] xl:flex-[0_0_90%] min-w-0 px-2 md:px-4 h-full"
                   >
                     {isLive ? (
                       <Link to={`/${g.slug}`} className="block h-full">
@@ -380,26 +395,31 @@ const Guides = () => {
             Swipe →
           </p>
         </div>
-        {/* Outbound Texas-government resources — compact, inside section */}
-        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/60 backdrop-blur-sm">
-          <div className="container mx-auto px-6 max-w-[1600px] py-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-5">
-            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 shrink-0">
-              Official Texas resources
+        {/* SEO content rail — keyword-rich internal links to high-intent pages */}
+        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/70 backdrop-blur-sm">
+          <div className="container mx-auto px-6 max-w-[1600px] py-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
+            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(145_25%_36%)] shrink-0">
+              Popular in Texas
             </p>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1">
-              {OUTBOUND_RESOURCES.map((r) => (
-                <li key={r.href}>
-                  <a
-                    href={r.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-[hsl(28_20%_25%)]/85 hover:text-[hsl(145_25%_36%)] underline-offset-4 hover:underline font-medium"
-                  >
-                    {r.label} <ExternalLink className="w-2.5 h-2.5" />
-                  </a>
-                </li>
+            <nav aria-label="Popular Texas cemetery resources" className="flex flex-wrap gap-x-4 gap-y-1">
+              {[
+                { label: "Cemetery plots for sale in Dallas", to: "/cemeteries?region=Dallas" },
+                { label: "Cemetery plots for sale in Houston", to: "/cemeteries?region=Houston" },
+                { label: "Austin cemetery plots", to: "/cemeteries?region=Austin" },
+                { label: "San Antonio cemetery plots", to: "/cemeteries?region=San+Antonio" },
+                { label: "Sell my cemetery plot in Texas", to: "/sell" },
+                { label: "Free plot valuation", to: "/contact#sell-inquiry" },
+                { label: "Browse Texas cemeteries", to: "/cemeteries" },
+              ].map((r) => (
+                <Link
+                  key={r.to}
+                  to={r.to}
+                  className="text-[11px] text-[hsl(28_20%_25%)]/85 hover:text-[hsl(145_25%_36%)] underline-offset-4 hover:underline font-medium"
+                >
+                  {r.label}
+                </Link>
               ))}
-            </ul>
+            </nav>
           </div>
         </aside>
       </section>

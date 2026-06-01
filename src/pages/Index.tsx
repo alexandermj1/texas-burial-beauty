@@ -22,6 +22,7 @@ import mobileImg from "@/assets/story-mobile.png";
 import Seo from "@/components/Seo";
 import { ListingCard } from "@/pages/Properties";
 import { guides as guideEntries } from "@/pages/Guides";
+import GuidesCarousel from "@/components/GuidesCarousel";
 import hibiscusFlower from "@/assets/flowers/hibiscus-red.png.asset.json";
 import monsteraLeaf from "@/assets/flowers/monstera.png.asset.json";
 
@@ -241,6 +242,7 @@ const Index = () => {
       />
 
       <WhyUsSection />
+      <GuidesCarousel />
       <TestimonialsSection />
 
       <StoryStrip
