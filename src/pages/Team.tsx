@@ -334,7 +334,7 @@ const Team = () => {
               Meet Our Team
             </h1>
             <p className="text-primary-foreground/75 max-w-2xl mx-auto text-lg leading-relaxed drop-shadow-sm">
-              A dedicated team of cemetery property professionals — Texas-based brokers backed by a 27-year partner network — helping families across Dallas, Houston, Austin and San Antonio.
+              A dedicated team of cemetery property professionals — Texas-based brokers backed by a 30-year partner network — helping families across Dallas, Houston, Austin and San Antonio.
             </p>
           </motion.div>
         </div>

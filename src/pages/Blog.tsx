@@ -54,7 +54,7 @@ const blogPosts: BlogPost[] = [
         </div>
         <p className="text-lg leading-relaxed text-foreground/80 mb-8">For many families, it's not just about the money – it's about <em>closure and clarity</em>.</p>
         <h2 className="font-display text-2xl md:text-3xl text-foreground mb-4">How Can We Help You</h2>
-        <p className="text-lg leading-relaxed text-foreground/80 mb-6">Selling cemetery property can be complicated. Working with our team of Texas professionals — backed by 27+ years of resale experience through our partnership with Bayer Cemetery Brokers — gives you peace of mind and a stress-free process.</p>
+        <p className="text-lg leading-relaxed text-foreground/80 mb-6">Selling cemetery property can be complicated. Working with our team of Texas professionals — backed by 30+ years of resale experience through our partnership with Bayer Cemetery Brokers — gives you peace of mind and a stress-free process.</p>
         <p className="text-lg leading-relaxed text-foreground/80 mb-8">Texas Cemetery Brokers has growing knowledge of the state's leading memorial parks, including <strong className="text-foreground">Restland Memorial Park</strong> Dallas, <strong className="text-foreground">Sparkman/Hillcrest</strong> Dallas, <strong className="text-foreground">Mount Olivet Cemetery</strong> Fort Worth, <strong className="text-foreground">Forest Park Lawndale</strong> Houston, <strong className="text-foreground">Memorial Oaks</strong> Houston, <strong className="text-foreground">Glenwood Cemetery</strong> Houston, <strong className="text-foreground">Texas State Cemetery</strong> Austin, <strong className="text-foreground">Mission Burial Park</strong> San Antonio and many others across Texas.</p>
         <h2 className="font-display text-2xl md:text-3xl text-foreground mb-4">Start This Spring with One Less Thing to Worry About</h2>
         <p className="text-lg leading-relaxed text-foreground/80 mb-6">As you look at your to-do list this spring, consider adding — and checking off — this important task. A fresh start begins with letting go of what no longer fits, and spring is the perfect time to do just that.</p>
@@ -207,7 +207,7 @@ const blogPosts: BlogPost[] = [
         <ol className="relative border-l-2 border-primary/30 ml-4 space-y-8 mb-10">
           {[
             { t: "Free valuation.", d: "Tell us the cemetery, section and spaces. We assess your plot and explain what it can realistically sell for — no obligation." },
-            { t: "We market and match it.", d: "Your plot reaches our active buyer network and is cross-referenced against current inquiries from families, mortuaries and estate attorneys — backed by the nationwide reach of our partner Bayer Cemetery Brokers: family-owned, A+ BBB-accredited, 27+ years in memorial care." },
+            { t: "We market and match it.", d: "Your plot reaches our active buyer network and is cross-referenced against current inquiries from families, mortuaries and estate attorneys — backed by the nationwide reach of our partner Bayer Cemetery Brokers: family-owned, A+ BBB-accredited, 30+ years in memorial care." },
             { t: "We handle the paperwork and the showing.", d: "We meet interested buyers at the cemetery, answer their questions, and prepare and record the conveyance with the cemetery correctly." },
             { t: "You get paid.", d: "Funds are released once the transfer is confirmed and complete." },
           ].map((s, i) => (

@@ -30,20 +30,20 @@ const bayerTeam = [
     name: "Loren Bayer",
     title: "Founder, Bayer Cemetery Brokers",
     photo: lorenBayerPhoto,
-    bio: "Loren founded Bayer Cemetery Brokers in 1998, pioneering a transparent resale model that has since helped more than 10,000 families navigate cemetery property transactions with honesty and care.",
+    bio: "Loren founded Bayer Cemetery Brokers in 1996, pioneering a transparent resale model that has since helped more than 10,000 families navigate cemetery property transactions with honesty and care.",
   },
   {
     name: "Simon James",
     title: "CEO, Bayer Cemetery Brokers",
     photo: simonJamesPhoto,
-    bio: "Simon leads Bayer Cemetery Brokers today, carrying forward 27 years of brokerage expertise while expanding the company's national reach — including the Texas Cemetery Brokers partnership.",
+    bio: "Simon leads Bayer Cemetery Brokers today, carrying forward 30 years of brokerage expertise while expanding the company's national reach — including the Texas Cemetery Brokers partnership.",
   },
 ];
 
 const BAYER_URL = "https://bayercemeterybrokers.com";
 
 const stats = [
-  { value: "27", suffix: "yrs", label: "In business since 1998" },
+  { value: "27", suffix: "yrs", label: "In business since 1996" },
   { value: "4.9", suffix: "★", label: "Average client rating" },
   { value: "10,000+", suffix: "", label: "Transactions completed" },
   { value: "2,500+", suffix: "", label: "Plots currently listed" },
@@ -52,9 +52,9 @@ const stats = [
 const pillars = [
   {
     icon: Clock,
-    label: "27 Years",
+    label: "30 Years",
     title: "Established Expertise",
-    desc: "Bayer Cemetery Brokers has operated as a licensed, full-service brokerage for 27 years — nearly three decades of refining a process that protects families on both sides of every transaction.",
+    desc: "Bayer Cemetery Brokers has operated as a licensed, full-service brokerage for 30 years — nearly three decades of refining a process that protects families on both sides of every transaction.",
   },
   {
     icon: Star,
@@ -83,7 +83,7 @@ const advantages = [
   },
   {
     title: "Texas-First, Network-Backed",
-    desc: "Texas Cemetery Brokers is operated locally in Dallas, with deep coverage of DFW, Houston, Austin and San Antonio — fully supported by Bayer's 27-year resale playbook.",
+    desc: "Texas Cemetery Brokers is operated locally in Dallas, with deep coverage of DFW, Houston, Austin and San Antonio — fully supported by Bayer's 30-year resale playbook.",
   },
   {
     title: "Honest, Transparent Process",
@@ -96,9 +96,9 @@ const advantages = [
 ];
 
 const milestones = [
-  { year: "1998", text: "Bayer Cemetery Brokers founded as a full-service cemetery resale brokerage." },
+  { year: "1996", text: "Bayer Cemetery Brokers founded as a full-service cemetery resale brokerage." },
   { year: "2010s", text: "Expanded into one of the largest cemetery property marketplaces in the United States." },
-  { year: "10,000+", text: "Families served — and counting — across more than 27 years of continuous operation." },
+  { year: "10,000+", text: "Families served — and counting — across more than 30 years of continuous operation." },
   { year: "Partnership", text: "Texas Cemetery Brokers joins Bayer's network, extending trusted resale expertise to families across Dallas, Houston, Austin and San Antonio." },
 ];
 
@@ -107,7 +107,7 @@ const testimonialPoints = [
   "10,000+ completed transactions",
   "2,500+ live listings nationally",
   "4.9 ★ average client rating",
-  "27 years of resale experience",
+  "30 years of resale experience",
   "Local Texas operations team",
 ];
 
@@ -139,7 +139,7 @@ const Partners = () => {
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers"
-        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) with 27+ years of cemetery resale experience. Trusted resale across Texas."
+        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) with 30+ years of cemetery resale experience. Trusted resale across Texas."
         path="/partners"
         jsonLd={[
           {
@@ -148,7 +148,7 @@ const Partners = () => {
             "@id": "https://www.bayercemeterybrokers.com/#organization",
             "name": "Bayer Cemetery Brokers",
             "url": "https://www.bayercemeterybrokers.com/",
-            "description": "Licensed California cemetery brokerage (CEB 1512) with 27+ years of experience facilitating cemetery property resales.",
+            "description": "Licensed California cemetery brokerage (CEB 1512) with 30+ years of experience facilitating cemetery property resales.",
             "address": { "@type": "PostalAddress", "addressRegion": "CA", "addressCountry": "US" },
             "identifier": "CEB 1512"
           },
@@ -196,7 +196,7 @@ const Partners = () => {
               <span className="italic font-light">Bayer Cemetery Brokers</span>
             </h1>
             <p className="text-primary-foreground/85 text-lg md:text-xl font-light leading-relaxed max-w-2xl drop-shadow-md mb-8">
-              Two brokerages, one shared mission: help Texas families buy and sell cemetery property faster, fairer, and with the wisdom of 27 years and 10,000+ completed sales behind every transaction.
+              Two brokerages, one shared mission: help Texas families buy and sell cemetery property faster, fairer, and with the wisdom of 30 years and 10,000+ completed sales behind every transaction.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -290,13 +290,13 @@ const Partners = () => {
               transition={{ duration: 0.6 }}
               className="text-center md:text-left group"
             >
-              <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Partner Brokerage · Est. 1998</p>
+              <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Partner Brokerage · Est. 1996</p>
               <p className="font-display text-2xl md:text-3xl text-foreground leading-tight group-hover:text-primary transition-colors inline-flex items-center gap-2">
                 Bayer Cemetery Brokers
                 <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-60 transition-opacity" />
               </p>
               <p className="text-sm text-muted-foreground mt-2 flex items-center justify-center md:justify-start gap-1.5">
-                <Star className="w-3.5 h-3.5 fill-primary text-primary" /> 4.9 ★ · 27 Years · 10,000+ Sales
+                <Star className="w-3.5 h-3.5 fill-primary text-primary" /> 4.9 ★ · 30 Years · 10,000+ Sales
               </p>
             </motion.a>
           </div>
@@ -315,7 +315,7 @@ const Partners = () => {
           >
             <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-4">Why this partnership</span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-              The trust of a 27-year brokerage. The focus of a Texas team.
+              The trust of a 30-year brokerage. The focus of a Texas team.
             </h2>
           </motion.div>
 
@@ -334,7 +334,7 @@ const Partners = () => {
               — to bring their proven process to Dallas, Houston, Austin and beyond.
             </p>
             <p>
-              The result is <strong className="text-foreground font-medium">Texas Cemetery Brokers</strong>: a Dallas-headquartered operation with local representatives on the ground in Texas, fully backed by Bayer's 27-year track record, 10,000+ completed transactions, an active inventory of more than 2,500 plots, and a 4.9-star reputation built one family at a time.
+              The result is <strong className="text-foreground font-medium">Texas Cemetery Brokers</strong>: a Dallas-headquartered operation with local representatives on the ground in Texas, fully backed by Bayer's 30-year track record, 10,000+ completed transactions, an active inventory of more than 2,500 plots, and a 4.9-star reputation built one family at a time.
             </p>
             <p>
               For sellers, this means your property is marketed through a national buyer pool the day it's listed. For buyers, it means access to off-market inventory and significant savings versus buying direct from cemeteries. For every family we serve, it means working with people who have done this thousands of times — and who care about getting it right.
@@ -517,7 +517,7 @@ const Partners = () => {
           >
             <Quote className="w-8 h-8 text-primary-foreground/60 mx-auto mb-6" />
             <blockquote className="font-display text-2xl md:text-3xl text-primary-foreground/95 italic leading-relaxed drop-shadow-lg">
-              "Our partnership is simple — combine the experience of a 27-year, 4.9-star brokerage with a Texas team that lives and works alongside the families it serves. The outcome is faster sales, fairer prices, and total peace of mind."
+              "Our partnership is simple — combine the experience of a 30-year, 4.9-star brokerage with a Texas team that lives and works alongside the families it serves. The outcome is faster sales, fairer prices, and total peace of mind."
             </blockquote>
             <p className="text-sm text-primary-foreground/75 mt-6 tracking-wide">— Texas Cemetery Brokers · Bayer Cemetery Brokers</p>
           </motion.div>
@@ -535,7 +535,7 @@ const Partners = () => {
             className="text-center mb-12"
           >
             <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">The Bayer Leadership</span>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">The people behind 27 years of trust</h2>
+            <h2 className="font-display text-3xl md:text-4xl text-foreground">The people behind 30 years of trust</h2>
             <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
               Meet the leadership of Bayer Cemetery Brokers — the team whose decades of experience power every Texas Cemetery Brokers transaction.
             </p>
