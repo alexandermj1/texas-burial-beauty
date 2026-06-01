@@ -299,8 +299,8 @@ const Guides = () => {
                 return (
                   <div
                     key={g.slug}
-                    className="flex-[0_0_96%] md:flex-[0_0_92%] lg:flex-[0_0_88%] xl:flex-[0_0_82%] min-w-0 px-3 md:px-6"
-                    style={{ height: "min(72vh, 640px)" }}
+                    className="flex-[0_0_98%] md:flex-[0_0_96%] lg:flex-[0_0_94%] xl:flex-[0_0_92%] min-w-0 px-3 md:px-6"
+                    style={{ height: "min(80vh, 760px)" }}
                   >
                     {isLive ? (
                       <Link to={`/${g.slug}`} className="block h-full">
@@ -337,7 +337,7 @@ const Guides = () => {
         </div>
 
         {/* Footer rail — dots + counter */}
-        <div className="container mx-auto px-6 mt-5 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-4 max-w-[1400px]">
+        <div className="container mx-auto px-6 mt-5 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-4 max-w-[1600px]">
           <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
             {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
           </p>
@@ -363,7 +363,7 @@ const Guides = () => {
 
       {/* Outbound Texas-government resources — SEO authority + reader trust */}
       <aside className="relative z-10 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/60 backdrop-blur-sm">
-        <div className="container mx-auto px-6 max-w-[1400px] py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+        <div className="container mx-auto px-6 max-w-[1600px] py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
           <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 shrink-0">
             Official Texas resources
           </p>
