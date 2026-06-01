@@ -213,9 +213,9 @@ const Guides = () => {
                         : "shadow-[0_10px_30px_-20px_hsl(28_20%_15%/0.3)] opacity-60 scale-[0.96]"
                     }`}
                   >
-                    <div className="grid grid-cols-[1.05fr_0.95fr] h-full">
+                    <div className="grid grid-rows-[40%_60%] grid-cols-1 md:grid-rows-none md:grid-cols-[1.05fr_0.95fr] h-full">
                       {/* LEFT — editorial text panel */}
-                      <div className="relative flex flex-col p-3.5 sm:p-5 md:p-7 lg:p-8">
+                      <div className="relative flex flex-col p-5 md:p-7 lg:p-8 order-2 md:order-1">
 
                         {/* Top meta line */}
                         <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
