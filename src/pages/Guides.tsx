@@ -218,12 +218,12 @@ const Guides = () => {
                       <div className="relative flex flex-col p-3.5 sm:p-5 md:p-7 lg:p-8">
 
                         {/* Top meta line */}
-                        <div className="flex items-center justify-between mb-8">
-                          <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65">
+                        <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
+                          <p className="text-[8px] sm:text-[10px] tracking-[0.28em] sm:tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65 truncate pr-2">
                             {g.issue}
                           </p>
                           <span
-                            className={`inline-flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] font-bold px-2.5 py-1 rounded-full ${
+                            className={`inline-flex items-center gap-1.5 text-[8px] sm:text-[9px] uppercase tracking-[0.18em] sm:tracking-[0.22em] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shrink-0 ${
                               isLive
                                 ? "bg-[hsl(145_25%_36%)] text-[hsl(40_30%_97%)]"
                                 : "bg-[hsl(28_20%_25%)]/8 text-[hsl(28_20%_25%)]/70 border border-[hsl(28_20%_25%)]/15"
@@ -234,22 +234,23 @@ const Guides = () => {
                           </span>
                         </div>
 
-                        <p className="font-display italic text-[hsl(16_50%_45%)] text-base md:text-lg mb-3">
+                        <p className="font-display italic text-[hsl(16_50%_45%)] text-sm sm:text-base md:text-lg mb-2 md:mb-3">
                           {g.kicker}
                         </p>
 
-                        <h2 className="font-display text-[1.6rem] md:text-[2rem] lg:text-[2.4rem] leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-4">
+                        <h2 className="font-display text-[1.15rem] sm:text-[1.5rem] md:text-[2rem] lg:text-[2.4rem] leading-[1.05] md:leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-2 md:mb-4">
                           {g.title}{" "}
                           <span className="italic">{g.titleAccent}</span>
                         </h2>
 
-                        <div className={`w-12 h-px ${g.rule} mb-4`} />
+                        <div className={`w-10 md:w-12 h-px ${g.rule} mb-2 md:mb-4`} />
 
-                        <p className="text-[hsl(28_20%_25%)]/75 text-sm md:text-[0.95rem] leading-relaxed font-light max-w-md mb-6">
+                        <p className="hidden sm:block text-[hsl(28_20%_25%)]/75 text-sm md:text-[0.95rem] leading-relaxed font-light max-w-md mb-6">
                           {g.dek}
                         </p>
 
-                        <div className="mt-auto flex items-end justify-between gap-4 pt-4 border-t border-[hsl(28_20%_25%)]/10">
+                        <div className="mt-auto flex items-end justify-between gap-2 md:gap-4 pt-3 md:pt-4 border-t border-[hsl(28_20%_25%)]/10">
+
                           <span className="text-[10px] tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium">
                             {g.meta}
                           </span>
