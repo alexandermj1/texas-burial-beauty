@@ -69,7 +69,7 @@ const SellProperty = () => {
           },
         ]}
       />
-      <Navbar />
+      <Navbar forceScrolled />
 
       {/* Hero — editorial botanical spread inspired by the Guides cover */}
       <section className="relative pt-28 pb-16 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
@@ -224,6 +224,46 @@ const SellProperty = () => {
         </div>
       </section>
 
+      {/* Bold lead-in strip — bridges hero into the valuation form */}
+      <section className="relative bg-primary text-primary-foreground overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.08] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, hsl(var(--terracotta)) 0, transparent 40%), radial-gradient(circle at 80% 50%, hsl(var(--primary-foreground)) 0, transparent 35%)",
+          }}
+        />
+        <div className="relative container mx-auto px-6 py-10 md:py-12">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <span className="font-display text-5xl md:text-6xl italic leading-none text-accent">
+                01
+              </span>
+              <div>
+                <p className="text-[10px] tracking-[0.3em] uppercase text-primary-foreground/70 mb-1">
+                  Step one &middot; Free &amp; no obligation
+                </p>
+                <p className="font-display text-xl md:text-2xl leading-snug">
+                  Tell us about your plot &mdash; we&rsquo;ll reply within 24&nbsp;hours.
+                </p>
+              </div>
+            </div>
+            <a
+              href="#quote-form"
+              className="inline-flex items-center gap-3 px-7 py-4 bg-accent text-accent-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all shadow-soft self-start md:self-auto group"
+            >
+              Start my free valuation
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+          </div>
+        </div>
+        {/* Downward notch */}
+        <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-10 h-5 overflow-hidden">
+          <div className="w-10 h-10 rotate-45 bg-primary translate-y-[-50%] mx-auto" />
+        </div>
+      </section>
+
       <SellerQuoteForm />
 
       {/* Seller Journey Video */}
@@ -242,22 +282,59 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="py-12 bg-gradient-warm">
-        <div className="container mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">Why sell with us?</h2>
+      {/* Benefits — bold sage band, the visual anchor of the page */}
+      <section className="relative py-20 bg-foreground text-background overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(hsl(var(--background)) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        <img
+          src={plumeriaCluster.url}
+          alt=""
+          aria-hidden
+          className="hidden md:block absolute -right-16 top-8 w-72 opacity-25 pointer-events-none select-none rotate-12"
+        />
+        <div className="relative container mx-auto px-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="max-w-3xl mb-12">
+            <p className="text-[10px] tracking-[0.3em] uppercase text-accent font-semibold mb-4">Why sellers choose us</p>
+            <h2 className="font-display text-3xl md:text-5xl text-background leading-tight">
+              The fairest, fastest way to sell <span className="italic text-accent">Texas cemetery property.</span>
+            </h2>
           </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
-            {benefits.map((b, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} className="bg-card rounded-xl p-6 shadow-soft">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                  <b.icon className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-display text-base text-foreground mb-1">{b.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
-              </motion.div>
-            ))}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl">
+            {benefits.map((b, i) => {
+              const accentEvery = i % 3 === 1;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                  className={`rounded-2xl p-6 transition-all hover:-translate-y-1 ${
+                    accentEvery
+                      ? "bg-accent text-accent-foreground shadow-hover"
+                      : "bg-background text-foreground shadow-soft"
+                  }`}
+                >
+                  <div
+                    className={`w-11 h-11 rounded-full flex items-center justify-center mb-4 ${
+                      accentEvery ? "bg-accent-foreground/15" : "bg-primary/10"
+                    }`}
+                  >
+                    <b.icon className={`w-5 h-5 ${accentEvery ? "text-accent-foreground" : "text-primary"}`} />
+                  </div>
+                  <h3 className="font-display text-lg mb-2">{b.title}</h3>
+                  <p className={`text-sm leading-relaxed ${accentEvery ? "text-accent-foreground/85" : "text-muted-foreground"}`}>
+                    {b.desc}
+                  </p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
