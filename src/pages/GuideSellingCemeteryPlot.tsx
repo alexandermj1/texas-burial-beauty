@@ -312,7 +312,7 @@ const GuideSellingCemeteryPlot = () => (
           <ol className="relative space-y-8 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-px before:bg-gradient-to-b before:from-accent before:via-primary before:to-primary/30">
             {[
               { t: "Free valuation.", d: "Tell us the cemetery, section and spaces. We assess your plot and explain what it can realistically sell for — no obligation." },
-              { t: "We market and match it.", d: "Your plot reaches our active buyer network and is cross-referenced against current inquiries from families, mortuaries and estate attorneys, backed by the nationwide reach of our partner Bayer Cemetery Brokers." },
+              { t: "We market and match it.", d: <>Your plot reaches our active buyer network and is cross-referenced against current inquiries from families, mortuaries and estate attorneys, backed by the nationwide reach of our partner <Ext href="https://bayercemeterybrokers.com/">Bayer Cemetery Brokers</Ext>.</> },
               { t: "We handle the paperwork and the showings.", d: "We meet interested buyers at the cemetery, answer their questions, and prepare and record the conveyance with the cemetery correctly." },
               { t: "You get paid.", d: "Funds are released once the transfer is confirmed and complete." },
             ].map((s, i) => (
