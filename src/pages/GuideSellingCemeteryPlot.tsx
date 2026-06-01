@@ -72,7 +72,21 @@ const brokerReasons = [
       "Our team includes people specifically trained to support grieving families with patience and compassion, alongside specialists who can explain the finer points — the paperwork, the cemetery rules, and the small distinctions that matter.",
       "For a seller, that means your property is represented thoughtfully and respectfully. For a buyer, it means they feel informed, confident and looked after. That trust is the foundation of every successful sale, and it is the hardest thing to create between two strangers transacting on their own.",
     ],
+  {
+    n: "05",
+    h: "We verify ownership before a plot ever reaches a buyer",
+    p: [
+      "Before we list a single space, we confirm the seller actually holds the right of sepulture and that the cemetery will accept the transfer. We check the original deed or certificate, verify the names on file at the cemetery office, confirm any co-owners have consented, and flag right-of-first-refusal clauses up front.",
+      "That verification is what gives buyers the confidence to commit. When a family is choosing a resting place for someone they love, they need to know the plot is genuinely available, legally transferable, and that the cemetery will record the conveyance in their name once they pay. Every listing we represent has cleared that check — which is something a private seller on a classified site simply cannot offer.",
+    ],
   },
+];
+
+// Pillars shown in the dedicated verification block
+const verification = [
+  { Icon: FileSearch, t: "Deed & certificate verified", d: "We review the original purchase paperwork and confirm the listed owner matches the seller." },
+  { Icon: BadgeCheck, t: "Cemetery records confirmed", d: "We contact the cemetery office to make sure the space is on file, unused, and clear to transfer." },
+  { Icon: ShieldCheck, t: "Co-owners & ROFR cleared", d: "We secure written consent from any co-owners and resolve any right-of-first-refusal before listing." },
 ];
 
 const GuideSellingCemeteryPlot = () => (
