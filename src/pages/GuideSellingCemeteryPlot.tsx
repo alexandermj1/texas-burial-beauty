@@ -10,13 +10,34 @@ const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
 );
 
-const cities = [
-  { city: "Houston", parks: "Forest Park · Earthman Resthaven · Brookside · Memorial Oaks · San Jacinto" },
-  { city: "Dallas–Fort Worth", parks: "Restland · Sparkman–Hillcrest · Laurel Land · Bluebonnet Hills · Greenwood" },
-  { city: "San Antonio", parks: "Citywide coverage across major parks and gardens" },
-  { city: "Austin", parks: "Cook–Walden Capital Parks and surrounding memorial parks" },
-  { city: "College Station", parks: "Brazos Valley and surrounding communities" },
+// Parks → cemetery name in src/data/cemeteries.ts (slugified via cemeteryPath)
+const cities: { city: string; parks: { label: string; cemetery?: string }[] }[] = [
+  {
+    city: "Houston",
+    parks: [
+      { label: "Forest Park", cemetery: "Forest Park Lawndale Cemetery" },
+      { label: "Earthman Resthaven", cemetery: "Earthman Resthaven Cemetery" },
+      { label: "Brookside", cemetery: "Brookside Memorial Park" },
+      { label: "Memorial Oaks", cemetery: "Memorial Oaks Cemetery" },
+      { label: "San Jacinto" },
+    ],
+  },
+  {
+    city: "Dallas–Fort Worth",
+    parks: [
+      { label: "Restland", cemetery: "Restland Memorial Park" },
+      { label: "Sparkman–Hillcrest", cemetery: "Sparkman/Hillcrest Memorial Park" },
+      { label: "Laurel Land", cemetery: "Laurel Land Memorial Park (Dallas)" },
+      { label: "Bluebonnet Hills", cemetery: "Bluebonnet Hills Memorial Park" },
+      { label: "Greenwood", cemetery: "Greenwood Cemetery" },
+    ],
+  },
+  { city: "San Antonio", parks: [{ label: "Citywide coverage across major parks and gardens" }] },
+  { city: "Austin", parks: [{ label: "Cook–Walden Capital Parks and surrounding memorial parks" }] },
+  { city: "College Station", parks: [{ label: "Brazos Valley and surrounding communities" }] },
 ];
+
+
 
 const brokerReasons = [
   {
