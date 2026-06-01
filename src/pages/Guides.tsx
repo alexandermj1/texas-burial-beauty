@@ -139,7 +139,7 @@ const Guides = () => {
 
       <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-[1400px] mb-5 md:mb-8">
+        <div className="container mx-auto px-6 max-w-[1600px] mb-5 md:mb-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -147,15 +147,18 @@ const Guides = () => {
             className="flex items-end justify-between gap-6 border-b border-[hsl(28_20%_25%)]/15 pb-4"
           >
             <div>
-              <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 mb-2">
-                The Guides Library · Vol. 1
+              <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(145_25%_36%)] mb-2">
+                The Texas Cemetery Field Manual · Vol. 1
               </p>
-              <h1 className="font-display text-3xl md:text-5xl lg:text-[3.5rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
-                Plain English, <span className="italic">printed</span> for families.
+              <h1 className="font-display text-4xl md:text-6xl lg:text-[4.5rem] text-[hsl(28_20%_15%)] leading-[0.92] tracking-tight">
+                The <span className="italic text-[hsl(145_25%_36%)]">How-To</span> Guides
               </h1>
+              <p className="mt-3 text-sm md:text-base text-[hsl(28_20%_25%)]/75 font-light max-w-xl">
+                Everything Texas families actually need to know about selling, buying, and transferring cemetery property — written by the people who do it every day.
+              </p>
             </div>
             <p className="hidden lg:block text-xs tracking-[0.18em] uppercase text-[hsl(28_20%_25%)]/60 max-w-xs text-right">
-              Three complete guides on selling, buying and transferring Texas cemetery property — swipe to read.
+              Three complete editions · swipe through to read →
             </p>
           </motion.div>
         </div>
