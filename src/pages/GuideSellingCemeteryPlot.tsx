@@ -407,6 +407,32 @@ const GuideSellingCemeteryPlot = () => (
             ))}
           </div>
         </section>
+
+        {/* H2: Resources */}
+        <section id="resources" className="scroll-mt-24 mt-20">
+          <Eyebrow>Chapter 08 · Resources</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Official Texas <span className="italic text-primary">resources</span></h2>
+          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+            The authoritative sources behind everything on this page — useful if you want to verify anything yourself.
+          </p>
+          <ul className="grid sm:grid-cols-2 gap-3">
+            {resources.map((r) => (
+              <li key={r.href}>
+                <a
+                  href={r.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block h-full p-5 rounded-2xl bg-card border border-border/60 hover:border-primary/40 hover:shadow-soft transition-all"
+                >
+                  <p className="font-display text-base text-foreground group-hover:text-primary transition-colors mb-1.5 leading-snug">
+                    {r.label} <span className="inline-block align-middle ml-0.5 opacity-60 group-hover:translate-x-0.5 transition-transform">↗</span>
+                  </p>
+                  <p className="text-sm text-foreground/65 leading-relaxed">{r.note}</p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </article>
 
