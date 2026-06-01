@@ -373,30 +373,29 @@ const Guides = () => {
             Swipe →
           </p>
         </div>
+        {/* Outbound Texas-government resources — compact, inside section */}
+        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/60 backdrop-blur-sm">
+          <div className="container mx-auto px-6 max-w-[1600px] py-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-5">
+            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 shrink-0">
+              Official Texas resources
+            </p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              {OUTBOUND_RESOURCES.map((r) => (
+                <li key={r.href}>
+                  <a
+                    href={r.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-[hsl(28_20%_25%)]/85 hover:text-[hsl(145_25%_36%)] underline-offset-4 hover:underline font-medium"
+                  >
+                    {r.label} <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
       </section>
-
-      {/* Outbound Texas-government resources — SEO authority + reader trust */}
-      <aside className="relative z-10 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/60 backdrop-blur-sm">
-        <div className="container mx-auto px-6 max-w-[1600px] py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-          <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 shrink-0">
-            Official Texas resources
-          </p>
-          <ul className="flex flex-wrap gap-x-5 gap-y-2">
-            {OUTBOUND_RESOURCES.map((r) => (
-              <li key={r.href}>
-                <a
-                  href={r.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-[hsl(28_20%_25%)]/85 hover:text-[hsl(145_25%_36%)] underline-offset-4 hover:underline font-medium"
-                >
-                  {r.label} <ExternalLink className="w-3 h-3" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
     </div>
   );
 };
