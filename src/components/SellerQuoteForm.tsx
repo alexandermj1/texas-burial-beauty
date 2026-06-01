@@ -82,11 +82,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
           <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight mb-5">
             Get your
             <br />
-            <span className="italic text-foreground/70">consignment quote.</span>
+            <span className="italic text-foreground/70">free valuation.</span>
           </h2>
           <p className="text-muted-foreground text-lg font-light leading-relaxed">
             Tell us about your property and we'll respond within 24 hours with a
-            consignment quote showing your net proceeds if we list it for you.
+            quote showing your net proceeds if we list it for you.
           </p>
 
           <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8">
