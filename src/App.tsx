@@ -34,6 +34,7 @@ const CemeteryDetail = lazy(() => import("./pages/CemeteryDetail"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Guides = lazy(() => import("./pages/Guides"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
+const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
 
 const queryClient = new QueryClient();
 
