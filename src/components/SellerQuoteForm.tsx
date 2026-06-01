@@ -66,7 +66,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
   const labelCls = "block text-[11px] font-medium tracking-[0.12em] uppercase text-muted-foreground mb-2";
 
   return (
-    <section className={compact ? "" : "py-24 bg-gradient-warm"} id="quote-form">
+    <section className={compact ? "" : "pt-8 pb-20 md:pt-12 md:pb-24 bg-gradient-warm"} id="quote-form">
       <div className={compact ? "" : "container mx-auto px-6"}>
         {/* Centered intro */}
         <motion.div
