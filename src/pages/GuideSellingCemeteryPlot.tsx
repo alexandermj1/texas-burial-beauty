@@ -336,15 +336,12 @@ const GuideSellingCemeteryPlot = () => (
               Send us the cemetery and section details and we'll give you a no-obligation valuation, then handle the sale from listing to transfer.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={`tel:${PHONE_DISPLAY.replace(/\D/g, "")}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
-                <Phone className="w-4 h-4" /> Call {PHONE_DISPLAY}
-              </a>
-              <a href={`mailto:${EMAIL}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary-foreground text-primary rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
+              <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
+                Request a Free Valuation <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a href={`mailto:${EMAIL}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary-foreground/10 border border-primary-foreground/30 text-primary-foreground rounded-2xl font-medium text-[15px] hover:bg-primary-foreground/15 transition-all">
                 <Mail className="w-4 h-4" /> Email Us
               </a>
-              <Link to="/sell" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-transparent border border-primary-foreground/40 text-primary-foreground rounded-2xl font-medium text-[15px] hover:bg-primary-foreground/10 transition-all">
-                Start Online <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
             <p className="text-xs text-primary-foreground/60 italic mt-8 leading-relaxed max-w-xl">
               This guide is general information about selling cemetery property in Texas and is not legal advice. Cemetery policies and applicable rules vary by location; confirm specifics with the cemetery and, where needed, a licensed Texas attorney.
