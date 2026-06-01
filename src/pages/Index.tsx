@@ -242,6 +242,7 @@ const Index = () => {
       />
 
       <WhyUsSection />
+      <GuidesCarousel />
       <TestimonialsSection />
 
       <StoryStrip
