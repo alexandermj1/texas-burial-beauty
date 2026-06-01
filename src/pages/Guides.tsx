@@ -265,8 +265,8 @@ const Guides = () => {
                         </div>
                       </div>
 
-                      {/* RIGHT — colour panel with botanical */}
-                      <div className={`relative flex overflow-hidden ${g.panel}`}>
+                      {/* RIGHT (mobile: TOP) — colour panel with botanical */}
+                      <div className={`relative flex overflow-hidden order-1 md:order-2 ${g.panel}`}>
                         {/* Soft texture */}
                         <div
                           className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
@@ -276,55 +276,39 @@ const Guides = () => {
                             backgroundSize: "48px 48px",
                           }}
                         />
-                        {/* Hero flower — large, bottom-right; nothing else covers it */}
+                        {/* Hero flower — bottom-right of panel; placement tuned per breakpoint */}
                         <img
                           src={g.hero}
                           alt=""
                           aria-hidden
-                          className="absolute pointer-events-none select-none"
-                          style={{
-                            bottom: "-10%",
-                            right: "-8%",
-                            width: "70%",
-                            maxWidth: 420,
-                            opacity: 0.95,
-                            transform: "rotate(-8deg)",
-                            filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))",
-                          }}
+                          className="absolute pointer-events-none select-none right-[-6%] bottom-[-30%] w-[44%] max-w-[200px] rotate-[-10deg] opacity-95 md:right-[-8%] md:bottom-[-10%] md:w-[70%] md:max-w-[420px] md:rotate-[-8deg]"
+                          style={{ filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))" }}
                         />
-                        {/* Supporting leaf — small, top-left, well clear of the hero */}
+                        {/* Supporting leaf — opposite corner, well clear of the hero */}
                         <img
                           src={g.accent}
                           alt=""
                           aria-hidden
-                          className="absolute pointer-events-none select-none"
-                          style={{
-                            top: "-8%",
-                            left: "-6%",
-                            width: "38%",
-                            maxWidth: 200,
-                            opacity: 0.55,
-                            transform: "rotate(22deg)",
-                          }}
+                          className="absolute pointer-events-none select-none left-[-4%] top-[-40%] w-[26%] max-w-[120px] rotate-[18deg] opacity-55 md:left-[-6%] md:top-[-8%] md:w-[38%] md:max-w-[200px] md:rotate-[22deg]"
                         />
 
-                        {/* Issue number — huge editorial display */}
-                        <div className={`relative z-10 flex flex-col justify-between p-3.5 sm:p-5 md:p-7 lg:p-8 w-full ${g.panelInk}`}>
+                        {/* Issue number — editorial display */}
+                        <div className={`relative z-10 flex flex-col justify-between p-4 md:p-7 lg:p-8 w-full ${g.panelInk}`}>
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 truncate">
+                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80 truncate">
                               {g.kicker}
                             </p>
-                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 shrink-0">
+                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80 shrink-0">
                               {String(i + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
                             </p>
                           </div>
                           <div>
-                            <p className="font-display italic text-sm sm:text-base opacity-90 mb-1 sm:mb-2">N°0{i + 1}</p>
-                            <p className="font-display text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
+                            <p className="font-display italic text-sm md:text-base opacity-90 mb-1 md:mb-2">N°0{i + 1}</p>
+                            <p className="font-display text-[3rem] md:text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
                               {String(i + 1).padStart(2, "0")}
                             </p>
-                            <div className={`mt-2 sm:mt-4 w-10 sm:w-16 h-px ${g.rule} opacity-80`} />
-                            <p className="mt-1.5 sm:mt-3 text-[8px] sm:text-[11px] tracking-[0.22em] sm:tracking-[0.28em] uppercase opacity-85 font-semibold truncate">
+                            <div className={`mt-2 md:mt-4 w-12 md:w-16 h-px ${g.rule} opacity-80`} />
+                            <p className="mt-2 md:mt-3 text-[10px] md:text-[11px] tracking-[0.26em] md:tracking-[0.28em] uppercase opacity-85 font-semibold">
                               Texas Cemetery Brokers
                             </p>
                           </div>
