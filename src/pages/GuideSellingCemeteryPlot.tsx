@@ -228,6 +228,31 @@ const GuideSellingCemeteryPlot = () => (
             ))}
           </div>
 
+          {/* Verification pillars — buyer trust */}
+          <div className="mt-10 rounded-3xl overflow-hidden border border-primary/15 bg-gradient-to-br from-primary/8 via-background to-accent/5">
+            <div className="p-7 md:p-9 border-b border-primary/10 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]">
+                <ShieldCheck className="w-6 h-6" strokeWidth={1.75} />
+              </div>
+              <div>
+                <Eyebrow>Verified before listed</Eyebrow>
+                <p className="font-display text-2xl md:text-3xl text-foreground leading-snug">Every plot we list is verified — ownership confirmed, transfer cleared.</p>
+                <p className="text-foreground/75 leading-relaxed mt-2">Buyers transacting on a private classified have no way to know if a plot is real, available, or transferable. When you list with us, that question is already answered — which is how families feel safe committing.</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-primary/10">
+              {verification.map(({ Icon, t, d }) => (
+                <div key={t} className="p-6 md:p-7">
+                  <Icon className="w-5 h-5 text-primary mb-3" strokeWidth={1.75} />
+                  <p className="font-display text-base text-foreground mb-1.5">{t}</p>
+                  <p className="text-sm text-foreground/70 leading-relaxed">{d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+
+
           <div className="rounded-2xl p-7 md:p-8 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15 mt-10">
             <Eyebrow>In short</Eyebrow>
             <p className="text-foreground/90 leading-relaxed text-lg italic">
