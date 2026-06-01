@@ -165,7 +165,7 @@ const Index = () => {
               <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
                 Available Now · Texas
               </span>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl min-h-[1.1em] [text-wrap:balance]">
                 <span className="italic font-light">{typed || "\u00A0"}</span>
                 <span
                   className="ml-1 inline-block h-[0.85em] w-[0.05em] -mb-[0.1em] animate-pulse bg-foreground/70 align-baseline"
