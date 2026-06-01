@@ -266,7 +266,7 @@ const Guides = () => {
                       </div>
 
                       {/* RIGHT — colour panel with botanical */}
-                      <div className={`relative hidden md:flex overflow-hidden ${g.panel}`}>
+                      <div className={`relative flex overflow-hidden ${g.panel}`}>
                         {/* Soft texture */}
                         <div
                           className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
