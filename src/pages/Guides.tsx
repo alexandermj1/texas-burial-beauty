@@ -398,7 +398,7 @@ const Guides = () => {
           </p>
         </div>
         {/* SEO content rail — keyword-rich internal links to high-intent pages */}
-        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/70 backdrop-blur-sm">
+        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/70 backdrop-blur-sm hidden md:block">
           <div className="container mx-auto px-6 max-w-[1600px] py-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
             <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(145_25%_36%)] shrink-0">
               Popular in Texas
