@@ -51,7 +51,7 @@ const buyerSteps = [
 
 export const BuyerPromoAnimation = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { margin: "-80px" });
   const savings = useCountUp(4800, 2200, inView);
   const [activeStep, setActiveStep] = useState(0);
 
