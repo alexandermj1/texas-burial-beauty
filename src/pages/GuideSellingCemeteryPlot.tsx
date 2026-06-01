@@ -118,26 +118,26 @@ const GuideSellingCemeteryPlot = () => (
         className="absolute inset-0 opacity-[0.35] pointer-events-none"
         style={{ backgroundImage: "radial-gradient(hsl(28 20% 50% / 0.35) 1px, transparent 1px)", backgroundSize: "22px 22px" }}
       />
-      {/* Botanical leaf accents */}
+      {/* Botanical accents — six distinct tropicals, well spaced, no overlap */}
       {(() => {
-        const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", { eager: true, import: "default" }) as Record<string, string>;
-        const LEAVES = Object.values(LEAF_MODULES);
+        const FLOWERS = import.meta.glob("@/assets/flowers/*.asset.json", { eager: true, import: "default" }) as Record<string, { url: string }>;
+        const byName = (n: string) => Object.entries(FLOWERS).find(([k]) => k.includes(n))?.[1]?.url;
         const scatter = [
-          { top: "10%", left: "-3%", w: 200, rot: -18, op: 0.55, idx: 16 },
-          { top: "6%", right: "-4%", w: 240, rot: 22, op: 0.5, idx: 9 },
-          { bottom: "10%", right: "8%", w: 130, rot: -10, op: 0.5, idx: 4 },
-          { bottom: "18%", left: "6%", w: 110, rot: 14, op: 0.45, idx: 21 },
+          { top: "4%",  left: "-4%",  w: 220, rot: -14, op: 0.55, src: byName("palm-fan-clean") },
+          { top: "8%",  right: "-3%", w: 240, rot:  18, op: 0.55, src: byName("banana-leaf-clean") },
+          { bottom: "14%", right: "4%", w: 170, rot: -10, op: 0.6, src: byName("hibiscus-coral") },
+          { bottom: "18%", left: "3%", w: 200, rot:  12, op: 0.55, src: byName("pink-branch") },
         ];
-        return scatter.map((s, i) => (
+        return scatter.map((s, i) => s.src ? (
           <img
             key={i}
-            src={LEAVES[s.idx % LEAVES.length]}
+            src={s.src}
             alt=""
             aria-hidden
             className="absolute pointer-events-none select-none hidden md:block"
             style={{ top: s.top, bottom: s.bottom, left: s.left, right: s.right, width: s.w, opacity: s.op, transform: `rotate(${s.rot}deg)` }}
           />
-        ));
+        ) : null);
       })()}
       <svg className="absolute bottom-0 left-0 right-0 w-full pointer-events-none z-[1]" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
         <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
