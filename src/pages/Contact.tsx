@@ -419,9 +419,36 @@ const Contact = () => {
         <div className="container mx-auto px-6 max-w-5xl">
           <div className="grid sm:grid-cols-3 gap-5">
             {[
-              { icon: MessageSquare, title: "General question", desc: "Send us a message about anything", accent: "from-primary/15 to-primary/5", ring: "hover:border-primary/50", iconBg: "bg-primary/15 text-primary" },
-              { icon: Search, title: "Buy a plot", desc: "Tell us what you're looking for", accent: "from-accent/20 to-accent/5", ring: "hover:border-accent/60", iconBg: "bg-accent/20 text-accent-foreground" },
-              { icon: Building2, title: "Sell your property", desc: "Request a free valuation", accent: "from-primary/15 to-accent/10", ring: "hover:border-primary/50", iconBg: "bg-primary/15 text-primary" },
+              {
+                icon: MessageSquare,
+                title: "General question",
+                desc: "Send us a message about anything",
+                panel: "bg-[hsl(145_25%_36%)]",
+                ink: "text-[hsl(40_30%_97%)]",
+                rule: "bg-[hsl(40_45%_82%)]",
+                eyebrow: "Inquiry · N°01",
+                cta: "Start a message",
+              },
+              {
+                icon: Search,
+                title: "Buy a plot",
+                desc: "Tell us what you're looking for",
+                panel: "bg-[hsl(16_50%_58%)]",
+                ink: "text-[hsl(40_30%_97%)]",
+                rule: "bg-[hsl(40_45%_82%)]",
+                eyebrow: "Buyer · N°02",
+                cta: "Request matches",
+              },
+              {
+                icon: Building2,
+                title: "Sell your property",
+                desc: "Request a free valuation",
+                panel: "bg-[hsl(28_22%_38%)]",
+                ink: "text-[hsl(40_30%_97%)]",
+                rule: "bg-[hsl(40_45%_82%)]",
+                eyebrow: "Seller · N°03",
+                cta: "Get a valuation",
+              },
             ].map((item, i) => (
               <motion.a
                 key={item.title}
@@ -430,18 +457,30 @@ const Contact = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-7 shadow-soft transition-shadow duration-200 [@media(hover:hover)]:hover:shadow-hover [@media(hover:hover)]:hover:-translate-y-1 text-left ${item.ring}`}
+                className={`group relative overflow-hidden rounded-2xl p-7 shadow-soft transition-all duration-300 [@media(hover:hover)]:hover:shadow-hover [@media(hover:hover)]:hover:-translate-y-1 text-left ${item.panel} ${item.ink}`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity`} />
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary/60 opacity-80" />
+                {/* subtle grid texture echo from the guides */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 opacity-[0.08] mix-blend-overlay pointer-events-none"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                    backgroundSize: "44px 44px",
+                  }}
+                />
                 <div className="relative">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${item.iconBg} [@media(hover:hover)]:group-hover:scale-110 transition-transform`}>
+                  <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80 mb-5">
+                    {item.eyebrow}
+                  </p>
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 bg-[hsl(40_30%_97%)]/15 [@media(hover:hover)]:group-hover:scale-110 transition-transform">
                     <item.icon className="w-5 h-5" />
                   </div>
-                  <h3 className="font-display text-xl text-foreground mb-1.5">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-                    Get started
+                  <h3 className="font-display text-xl mb-1.5">{item.title}</h3>
+                  <p className="text-sm opacity-80 mb-4">{item.desc}</p>
+                  <div className={`w-10 h-px ${item.rule} opacity-80 mb-4`} />
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                    {item.cta}
                     <ArrowRight className="w-3.5 h-3.5 transition-transform [@media(hover:hover)]:group-hover:translate-x-1" />
                   </span>
                 </div>
