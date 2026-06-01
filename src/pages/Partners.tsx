@@ -54,7 +54,7 @@ const pillars = [
     icon: Clock,
     label: "30 Years",
     title: "Established Expertise",
-    desc: "Bayer Cemetery Brokers has operated as a licensed, full-service brokerage for 30 years — nearly three decades of refining a process that protects families on both sides of every transaction.",
+    desc: "Bayer Cemetery Brokers has operated as a licensed, full-service brokerage for three decades of refining a process that protects families on both sides of every transaction.",
   },
   {
     icon: Star,
@@ -471,7 +471,7 @@ const Partners = () => {
               >
                 <span className="inline-block text-xs tracking-[0.3em] uppercase text-primary font-medium mb-3">A shared history</span>
                 <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight">
-                  Built on nearly three decades of trust
+                  Built on three decades of trust
                 </h2>
                 <p className="text-muted-foreground mt-5 leading-relaxed max-w-md">
                   Scroll through the milestones — a quarter-century of cemetery resale, now serving Texas families.
