@@ -74,7 +74,7 @@ To begin the process, we offer flexible listing options designed to suit your pr
 • Pro — $299 One-Time Upfront Fee (Most Popular). Prepaid listing fee with no additional fees when your plot sells. Cancel anytime at no charge.
 • Custom Plus — $999 One-Time Upfront Fee. Maximum visibility with no additional fees due when your plot sells.
 
-Our offer is rooted in 27 years of unparalleled expertise in the cemetery property resale market. Unlike general listing sites that may charge upfront fees regardless of a sale, we offer a zero-cost upfront listing option, providing true peace of mind. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) — ensuring your transaction is secure and compliant.
+Our offer is rooted in 30 years of unparalleled expertise in the cemetery property resale market. Unlike general listing sites that may charge upfront fees regardless of a sale, we offer a zero-cost upfront listing option, providing true peace of mind. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) — ensuring your transaction is secure and compliant.
 
 While it's natural to compare to original purchase prices or retail listings from cemeteries, our valuations reflect the realistic, current market value based on deep industry knowledge. We understand the influence of factors like significant cemetery transfer fees, the large inventory available in the resale market, and the highly exacting and price-sensitive nature of buyers.
 

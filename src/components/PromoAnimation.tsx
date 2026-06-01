@@ -172,7 +172,7 @@ export const BuyerPromoAnimation = () => {
               <StatPill icon={TrendingDown} value="40%" label="Avg. Savings" delay={0.3} color="primary" />
               <StatPill icon={Home} value="10,000+" label="Properties Sold" delay={0.4} color="primary" />
               <StatPill icon={DollarSign} value="0%" label="Interest Financing" delay={0.5} color="primary" />
-              <StatPill icon={Clock} value="27+" label="Years Experience" delay={0.6} color="primary" />
+              <StatPill icon={Clock} value="30+" label="Years Experience" delay={0.6} color="primary" />
             </div>
 
             <Link

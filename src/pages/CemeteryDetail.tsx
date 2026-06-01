@@ -394,8 +394,8 @@ const CemeteryDetail = () => {
                     <span className="font-display text-lg text-foreground">30–60%</span>
                   </div>
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-muted-foreground">Brokerage heritage</span>
-                    <span className="font-display text-lg text-foreground">Since 1996</span>
+                    <span className="text-sm text-muted-foreground">Partner brokerage</span>
+                    <span className="font-display text-lg text-foreground">Bayer · Est. 1996</span>
                   </div>
                 </div>
               </div>

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 const stats = [
   { value: "10,000+", label: "Properties Sold" },
-  { value: "27+", label: "Years Experience" },
+  { value: "30+", label: "Years Experience" },
   { value: "4.9★", label: "Google Rating" },
   { value: "30-50%", label: "Avg. Savings" },
 ];
