@@ -74,12 +74,13 @@ const App = () => (
                 <Route path="/cemeteries/:slug" element={<CemeteryDetail />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/guides" element={<Guides />} />
-                <Route path="/guides/selling-a-cemetery-plot-in-texas" element={<GuideSellingCemeteryPlot />} />
+                <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
                 <Route path="/blog" element={<Navigate to="/guides" replace />} />
-                <Route path="/blog/sell-cemetery-plot-texas" element={<Navigate to="/guides/selling-a-cemetery-plot-in-texas" replace />} />
+                <Route path="/blog/sell-cemetery-plot-texas" element={<Navigate to="/sell-cemetery-plot-texas" replace />} />
                 <Route path="/blog/:slug" element={<Navigate to="/guides" replace />} />
+                <Route path="/guides/selling-a-cemetery-plot-in-texas" element={<Navigate to="/sell-cemetery-plot-texas" replace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Route>
