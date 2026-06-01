@@ -149,6 +149,140 @@ const GuideSellingCemeteryPlot = () => (
         </div>
       </div>
     </section>
+
+    {/* WHY A BROKER */}
+    <section id="why" className="py-24 bg-gradient-to-b from-background via-card/40 to-background border-y border-border/40">
+      <div className="container mx-auto px-6 max-w-5xl">
+        <div className="text-center mb-14">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">Chapter 03 · The case for a broker</p>
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-5 leading-[1.05]">Why sell through <span className="italic text-primary">a broker</span></h2>
+          <p className="text-foreground/70 max-w-2xl mx-auto leading-relaxed">
+            Selling back to the cemetery is simple, but many decline or pay only what you originally paid. Listing yourself puts pricing, inquiries, screening, negotiating and the cemetery's transfer paperwork on your shoulders. A broker is built to protect both your value and your peace of mind.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-5">
+          {[
+            { n: "01", t: "Reach", h: "We put your property in front of the right buyers.", d: "We cross-reference your plot against live inquiries from funeral homes, estate attorneys and families. Bulletins go to mortuaries; promotion runs across Google Ads, radio, print and in-person outreach. Your plot is marketed, not just listed." },
+            { n: "02", t: "Speed", h: "Experts in the transfer — when speed matters most.", d: "Many families need a resting place quickly. We know each cemetery's transfer process in detail and work hand in hand with cemetery offices to complete a transfer as smoothly as possible." },
+            { n: "03", t: "Presence", h: "We show the plot in person and explain every difference.", d: "Most families want to see the space before they commit. We meet buyers at the cemetery and walk the grounds, explaining sections, position and options. A plot is often shown five-plus times before the right family decides." },
+            { n: "04", t: "Care", h: "Trained to care for families, not just close a sale.", d: "Our team is trained to support grieving families with patience, alongside specialists who explain the paperwork and the small distinctions that matter." },
+          ].map((c) => (
+            <div key={c.n} className="bg-card border border-border/60 rounded-2xl p-7 hover:border-primary/30 hover:shadow-soft transition-all">
+              <div className="flex items-baseline gap-3 mb-3">
+                <span className="font-display text-3xl text-primary">{c.n}</span>
+                <span className="text-[10px] uppercase tracking-[0.24em] text-accent font-semibold">{c.t}</span>
+              </div>
+              <p className="font-display text-xl text-foreground mb-2">{c.h}</p>
+              <p className="text-sm text-foreground/70 leading-relaxed">{c.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* PROCESS TIMELINE */}
+    <section className="py-24">
+      <div className="container mx-auto px-6 max-w-4xl">
+        <div className="text-center mb-14">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">Chapter 04 · The process</p>
+          <h2 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05]">How it works with <span className="italic text-primary">us</span></h2>
+        </div>
+        <ol className="relative space-y-10 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-px before:bg-gradient-to-b before:from-accent before:via-primary before:to-primary/30">
+          {[
+            { t: "Free valuation.", d: "Tell us the cemetery, section and spaces. We assess your plot and explain what it can realistically sell for — no obligation." },
+            { t: "We market and match.", d: "Your plot reaches our active buyer network and is cross-referenced against current inquiries — backed by the nationwide reach of our partner Bayer Cemetery Brokers (A+ BBB, 27+ years)." },
+            { t: "Paperwork and showings.", d: "We meet interested buyers at the cemetery, answer their questions, and prepare and record the conveyance with the cemetery correctly." },
+            { t: "You get paid.", d: "Funds are released once the transfer is confirmed and complete." },
+          ].map((s, i) => (
+            <li key={i} className="relative pl-14">
+              <span className="absolute left-0 top-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-display shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.6)]">{i + 1}</span>
+              <p className="font-display text-xl text-foreground mb-1">{s.t}</p>
+              <p className="text-foreground/70 leading-relaxed">{s.d}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    {/* LEGAL */}
+    <section className="py-20 bg-card/40 border-y border-border/40">
+      <div className="container mx-auto px-6 max-w-3xl">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4 text-center">Chapter 05 · Legal</p>
+        <h2 className="font-display text-4xl md:text-5xl text-foreground mb-6 text-center leading-[1.05]">Selling a plot in Texas, <span className="italic text-primary">legally</span></h2>
+        <p className="text-foreground/80 leading-relaxed text-lg mb-4">
+          Selling your own plot needs <strong className="text-foreground">no license</strong>. Texas <strong className="text-foreground">repealed the third-party cemetery-broker registration requirement effective September 1, 2019</strong> (S.B. 614) — there is no state cemetery-broker license today.
+        </p>
+        <p className="text-foreground/80 mb-4">What still applies under the Texas Health &amp; Safety Code:</p>
+        <ul className="space-y-3 mb-8">
+          {[
+            "The conveyance (often a quitclaim) must be on a cemetery-accepted form and recorded with the cemetery — generally within three business days.",
+            "Cemetery transfer fees must be collected and remitted.",
+            "The seller must keep records of the sale.",
+          ].map((t, i) => (
+            <li key={i} className="flex items-start gap-3 text-foreground/80">
+              <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+              <span className="leading-relaxed">{t}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15">
+          <p className="text-foreground/85 leading-relaxed italic">
+            A sale is not truly final until the cemetery records the transfer correctly. We make sure that happens — so the buyer is protected and you are fully and cleanly released from the property.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* FAQ */}
+    <section className="py-24">
+      <div className="container mx-auto px-6 max-w-3xl">
+        <div className="text-center mb-12">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">Chapter 06 · Questions</p>
+          <h2 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05]">Frequently <span className="italic text-primary">asked</span></h2>
+        </div>
+        <div className="space-y-3">
+          {faqs.map((f, i) => (
+            <details key={i} className="group rounded-2xl bg-card border border-border/60 open:border-primary/40 open:shadow-soft transition-all">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-6 py-5 font-medium text-foreground">
+                <span>{f.q}</span>
+                <Plus className="w-5 h-5 text-primary shrink-0 group-open:rotate-45 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-foreground/75 leading-relaxed">{f.a}</div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* FINAL CTA */}
+    <section id="contact" className="pb-28">
+      <div className="container mx-auto px-6 max-w-5xl">
+        <div className="relative rounded-[2rem] overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-primary-foreground p-10 md:p-16">
+          <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-accent/40 blur-3xl" />
+          <div className="absolute -bottom-32 -left-20 w-96 h-96 rounded-full bg-primary-foreground/10 blur-3xl" />
+          <div className="relative max-w-2xl">
+            <p className="text-[11px] uppercase tracking-[0.28em] font-semibold text-primary-foreground/70 mb-4">Find out what it's worth</p>
+            <h2 className="font-display text-4xl md:text-5xl mb-5 leading-[1.05]">A free valuation — handled by humans.</h2>
+            <p className="text-primary-foreground/85 leading-relaxed mb-8 text-lg">
+              Send us the cemetery and section details and we'll give you a no-obligation valuation, then handle the sale from listing to transfer.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a href={`tel:${PHONE_DISPLAY.replace(/\D/g, "")}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
+                <Phone className="w-4 h-4" /> Call {PHONE_DISPLAY}
+              </a>
+              <a href={`mailto:${EMAIL}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary-foreground text-primary rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
+                <Mail className="w-4 h-4" /> Email Us
+              </a>
+            </div>
+            <p className="text-xs text-primary-foreground/60 italic mt-8 leading-relaxed max-w-xl">
+              This guide is general information about selling cemetery property in Texas and is not legal advice. Cemetery policies and applicable rules vary by location; confirm specifics with the cemetery and, where needed, a licensed Texas attorney.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Footer />
   </div>
 );
 
