@@ -72,7 +72,7 @@ const SellProperty = () => {
       <Navbar forceScrolled />
 
       {/* Hero — editorial botanical spread inspired by the Guides cover */}
-      <section className="relative pt-28 pb-16 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
+      <section className="relative pt-24 pb-6 md:pt-28 md:pb-8 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
         {/* Paper dot grid */}
         <div
           aria-hidden
@@ -224,45 +224,6 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* Bold lead-in strip — bridges hero into the valuation form */}
-      <section className="relative bg-primary text-primary-foreground overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-[0.08] pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 50%, hsl(var(--terracotta)) 0, transparent 40%), radial-gradient(circle at 80% 50%, hsl(var(--primary-foreground)) 0, transparent 35%)",
-          }}
-        />
-        <div className="relative container mx-auto px-6 py-10 md:py-12">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <span className="font-display text-5xl md:text-6xl italic leading-none text-accent">
-                01
-              </span>
-              <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase text-primary-foreground/70 mb-1">
-                  Step one &middot; Free &amp; no obligation
-                </p>
-                <p className="font-display text-xl md:text-2xl leading-snug">
-                  Tell us about your plot &mdash; we&rsquo;ll reply within 24&nbsp;hours.
-                </p>
-              </div>
-            </div>
-            <a
-              href="#quote-form"
-              className="inline-flex items-center gap-3 px-7 py-4 bg-accent text-accent-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all shadow-soft self-start md:self-auto group"
-            >
-              Start my free valuation
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </a>
-          </div>
-        </div>
-        {/* Downward notch */}
-        <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-10 h-5 overflow-hidden">
-          <div className="w-10 h-10 rotate-45 bg-primary translate-y-[-50%] mx-auto" />
-        </div>
-      </section>
 
       <SellerQuoteForm />
 
