@@ -173,7 +173,7 @@ const Guides = () => {
 
       <section className="relative flex-1 flex flex-col pt-[5.5rem] pb-2 overflow-hidden z-10 min-h-0">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3 mt-1">
+        <div className="container mx-auto px-6 max-w-[1600px] mb-1 md:mb-2 mt-1">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
