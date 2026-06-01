@@ -21,9 +21,19 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
 import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
-import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
-import imgPalms from "@/assets/hero/cemetery-palms.jpg";
+import cemPhoto1 from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
+import cemPhoto2 from "@/assets/cemeteries/cemetery-grounds-2.jpg.asset.json";
+import cemPhoto3 from "@/assets/cemeteries/cemetery-grounds-3.jpg.asset.json";
+
+const CEM_PHOTOS = [cemPhoto1.url, cemPhoto2.url, cemPhoto3.url];
+const pickPhotos = (name: string) => {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  const a = h % CEM_PHOTOS.length;
+  const b = (a + 1 + (h % 2)) % CEM_PHOTOS.length;
+  return [CEM_PHOTOS[a], CEM_PHOTOS[b]];
+};
 
 // Animated SVG: rolling hills with a slow drifting sun (on-theme, calm).
 const HillsScene = ({ className = "" }: { className?: string }) => (
