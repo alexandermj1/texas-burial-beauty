@@ -153,6 +153,48 @@ const Guides = () => {
         title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
         description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
         path="/guides"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "Texas Cemetery Brokers — How-To Guides",
+            description: "Field guides for Texas families on selling, buying and transferring cemetery property.",
+            url: "https://texascemeterybrokers.com/guides",
+            inLanguage: "en-US",
+            isPartOf: { "@type": "WebSite", name: "Texas Cemetery Brokers", url: "https://texascemeterybrokers.com/" },
+            publisher: { "@type": "Organization", name: "Texas Cemetery Brokers", url: "https://texascemeterybrokers.com/" },
+            hasPart: guides
+              .filter((g) => g.status === "live")
+              .map((g) => ({
+                "@type": "Article",
+                headline: `${g.title} ${g.titleAccent}`.trim(),
+                description: g.dek,
+                url: `https://texascemeterybrokers.com/${g.slug}`,
+              })),
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "Texas Cemetery Brokers Guides",
+            itemListOrder: "https://schema.org/ItemListOrderAscending",
+            itemListElement: guides.map((g, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: `${g.title} ${g.titleAccent}`.trim(),
+              url: g.status === "live"
+                ? `https://texascemeterybrokers.com/${g.slug}`
+                : "https://texascemeterybrokers.com/guides",
+            })),
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://texascemeterybrokers.com/" },
+              { "@type": "ListItem", position: 2, name: "Guides", item: "https://texascemeterybrokers.com/guides" },
+            ],
+          },
+        ]}
       />
       <Navbar forceScrolled />
 
