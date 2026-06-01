@@ -18,7 +18,7 @@ interface Guide {
 
 const guides: Guide[] = [
   {
-    slug: "selling-a-cemetery-plot-in-texas",
+    slug: "sell-cemetery-plot-texas",
     eyebrow: "For Sellers",
     title: "How to Sell a Cemetery Plot in",
     titleAccent: "Texas",
