@@ -198,9 +198,9 @@ const Guides = () => {
         </div>
 
         {/* Carousel */}
-        <div className="relative flex-1 flex items-center min-h-0">
-          <div ref={emblaRef} className="overflow-hidden w-full">
-            <div className="flex">
+        <div className="relative flex-1 flex items-stretch min-h-0 py-1">
+          <div ref={emblaRef} className="overflow-hidden w-full h-full">
+            <div className="flex h-full">
               {guides.map((g, i) => {
                 const isLive = g.status === "live";
                 const isActive = i === selected;
