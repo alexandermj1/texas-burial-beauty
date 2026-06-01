@@ -184,7 +184,7 @@ const Guides = () => {
               <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(145_25%_36%)] mb-2">
                 The Texas Cemetery Field Manual · Vol. 1
               </p>
-              <h1 className="font-display text-3xl md:text-5xl lg:text-[3.5rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
+              <h1 className="font-display text-[2.4rem] md:text-[3.5rem] lg:text-[4.25rem] xl:text-[4.75rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
                 The <span className="italic text-[hsl(145_25%_36%)]">How-To</span> Guides
               </h1>
               <p className="mt-1.5 text-sm text-[hsl(28_20%_25%)]/75 font-light max-w-xl">
