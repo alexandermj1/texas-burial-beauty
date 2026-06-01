@@ -108,34 +108,72 @@ const GuideSellingCemeteryPlot = () => (
     <Navbar forceScrolled />
 
     {/* HERO */}
-    <section className="relative pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[hsl(var(--primary)/0.12)] via-[hsl(var(--accent)/0.05)] to-background">
-      <div className="absolute top-0 right-0 w-[44rem] h-[44rem] rounded-full bg-primary/12 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-      <div className="absolute top-20 left-0 w-[32rem] h-[32rem] rounded-full bg-accent/10 blur-3xl -translate-x-1/3 pointer-events-none" />
+    <section className="relative pt-28 pb-24 overflow-hidden bg-[hsl(var(--primary)/0.04)]">
+      {/* Layered background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--accent)/0.06)] to-background" />
+      <div className="absolute top-0 right-0 w-[50rem] h-[50rem] rounded-full bg-primary/15 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+      <div className="absolute -top-10 left-0 w-[34rem] h-[34rem] rounded-full bg-accent/15 blur-3xl -translate-x-1/3 pointer-events-none" />
+      {/* Subtle grid overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.07] pointer-events-none"
+        style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "56px 56px" }}
+      />
       <svg className="absolute bottom-0 left-0 right-0 w-full pointer-events-none" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
         <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
       </svg>
 
       <div className="relative container mx-auto px-6 max-w-3xl">
-        {/* Back link — aligned with article column */}
-        <Link to="/guides" className="inline-flex items-center gap-1.5 text-xs tracking-[0.18em] uppercase text-foreground/60 hover:text-foreground mb-8 transition-colors">
+        {/* Back link */}
+        <Link to="/guides" className="inline-flex items-center gap-1.5 text-xs tracking-[0.18em] uppercase text-foreground/60 hover:text-foreground mb-10 transition-colors">
           <ArrowLeft className="w-3.5 h-3.5" /> All Guides
         </Link>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-3 mb-6">
-            <span className="w-8 h-px bg-accent" />
-            <p className="text-accent text-[11px] tracking-[0.28em] uppercase font-semibold">Guide · For Sellers</p>
+          <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <p className="text-accent text-[11px] tracking-[0.24em] uppercase font-semibold">The Seller's Guide</p>
           </div>
-          <h1 className="font-display text-4xl md:text-6xl text-foreground leading-[1.05] mb-6 tracking-tight">
+          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[5.25rem] text-foreground leading-[0.98] mb-7 tracking-tight">
             How to Sell a Cemetery Plot in <span className="italic text-primary">Texas</span>
           </h1>
-          <p className="text-foreground/65 text-sm tracking-wide mb-8">Texas Cemetery Brokers · Updated 2025 · 9 min read</p>
-          <div className="flex flex-col sm:flex-row items-start gap-3">
-            <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_8px_24px_-6px_hsl(var(--accent)/0.5)] hover:-translate-y-0.5 transition-all">
+          <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 max-w-2xl font-light">
+            Everything Texas families ask us — what your plot is really worth, the legal steps, and the fastest way to turn unwanted property into cash. Written by the brokers who handle these sales every day.
+          </p>
+
+          {/* Meta strip */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs tracking-wide text-foreground/60 mb-9">
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Texas Cemetery Brokers</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Updated 2025</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 9 min read</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 7 chapters</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start gap-3 mb-10">
+            <a href="#contact" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
               <Plus className="w-4 h-4" /> Get a Free Plot Valuation
             </a>
-            <a href="#why" className="inline-flex items-center gap-2 px-6 py-3 bg-background border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-              Why Use a Broker
+            <a href="#why" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
+              Why Use a Broker <ArrowRight className="w-4 h-4" />
             </a>
+          </div>
+
+          {/* In-this-guide chapter chips */}
+          <div className="pt-6 border-t border-border/50">
+            <p className="text-[10px] tracking-[0.28em] uppercase font-semibold text-foreground/50 mb-3">In this guide</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { href: "#can-you-sell", t: "Can you sell?" },
+                { href: "#value", t: "What it's worth" },
+                { href: "#why", t: "Why a broker" },
+                { href: "#process", t: "The process" },
+                { href: "#legal", t: "Legal side" },
+                { href: "#cities", t: "Coverage" },
+                { href: "#faq", t: "FAQ" },
+              ].map((c) => (
+                <a key={c.href} href={c.href} className="text-xs px-3 py-1.5 rounded-full bg-card border border-border/60 text-foreground/75 hover:border-primary/40 hover:text-primary transition-colors">
+                  {c.t}
+                </a>
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>
