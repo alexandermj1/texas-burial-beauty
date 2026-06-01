@@ -72,7 +72,7 @@ const SellProperty = () => {
       <Navbar forceScrolled />
 
       {/* Hero — editorial botanical spread inspired by the Guides cover */}
-      <section className="relative pt-28 pb-16 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
+      <section className="relative pt-24 pb-6 md:pt-28 md:pb-8 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
         {/* Paper dot grid */}
         <div
           aria-hidden
