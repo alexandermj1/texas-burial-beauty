@@ -416,7 +416,8 @@ const BlogArticle = ({ post }: { post: BlogPost }) => {
 
     <Footer />
   </div>
-);
+  );
+};
 
 const Blog = () => {
   const { slug } = useParams();
