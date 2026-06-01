@@ -37,11 +37,6 @@ const FOLIAGE = {
 // Background scatter on the page (kept large + sparse, all different species)
 const SCATTER = [FOLIAGE.palm, FLORAL.pinkBranch, FOLIAGE.banana];
 
-const OUTBOUND_RESOURCES = [
-  { label: "Texas Dept. of Banking — Cemetery Regulation", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services" },
-  { label: "Texas Funeral Service Commission", href: "https://tfsc.texas.gov/ConsumerInformation.html" },
-  { label: "Texas Health & Safety Code Ch. 711", href: "https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm" },
-];
 
 interface Guide {
   slug: string;
