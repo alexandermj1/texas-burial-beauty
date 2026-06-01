@@ -17,17 +17,25 @@ const LEAVES = Object.values(LEAF_MODULES);
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
-// 0: hibiscus  1: leaf  2: plumeria  3: hibiscus  4: leaf  5: plumeria  6: hibiscus  7: leaf
-const FLOWERS = [
-  hibiscusCoral.url,
-  leafVeined.url,
-  plumeriaCluster.url,
-  hibiscusCoral.url,
-  leafVeined.url,
-  plumeriaCluster.url,
-  hibiscusCoral.url,
-  leafVeined.url,
-];
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+
+// Six distinct botanicals — three flowering, three foliage.
+// Each guide pairs ONE hero flower with ONE supporting leaf so nothing
+// repeats inside a panel and foliage never sits on top of a flower head.
+const FLORAL = {
+  hibiscus: hibiscusCoral.url,
+  plumeria: plumeriaCluster.url,
+  pinkBranch: pinkBranch.url,
+} as const;
+const FOLIAGE = {
+  veined: leafVeined.url,
+  palm: palmFan.url,
+  banana: bananaLeaf.url,
+} as const;
+// Background scatter on the page (kept large + sparse, all different species)
+const SCATTER = [FOLIAGE.palm, FLORAL.pinkBranch, FOLIAGE.banana];
 
 const OUTBOUND_RESOURCES = [
   { label: "Texas Dept. of Banking — Cemetery Regulation", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services" },
@@ -47,7 +55,8 @@ interface Guide {
   panel: string;
   panelInk: string;
   rule: string;
-  flowerIdx: number[]; // index into FLOWERS for feature accents
+  hero: string;      // featured flower (large, bottom-right of panel)
+  accent: string;    // single supporting leaf (small, top-left of panel)
 }
 
 export const guides: Guide[] = [
@@ -63,7 +72,8 @@ export const guides: Guide[] = [
     panel: "bg-[hsl(145_25%_36%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    flowerIdx: [1, 3, 6, 7], // monstera, fern, banana, pink
+    hero: FLORAL.hibiscus,
+    accent: FOLIAGE.banana,
   },
   {
     slug: "buying-a-cemetery-plot-in-texas",
@@ -77,7 +87,8 @@ export const guides: Guide[] = [
     panel: "bg-[hsl(16_50%_58%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    flowerIdx: [0, 2, 5, 7], // hibiscus, plumeria, palm, pink
+    hero: FLORAL.plumeria,
+    accent: FOLIAGE.palm,
   },
   {
     slug: "cemetery-transfer-process-texas",
@@ -91,7 +102,8 @@ export const guides: Guide[] = [
     panel: "bg-[hsl(28_22%_38%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    flowerIdx: [4, 5, 1, 2], // bird-paradise, palm, monstera, plumeria
+    hero: FLORAL.pinkBranch,
+    accent: FOLIAGE.veined,
   },
 ];
 
@@ -132,10 +144,10 @@ const Guides = () => {
         }}
       />
 
-      {/* Scattered botanical accents — hand-drawn tropicals */}
-      <img src={FLOWERS[0]} alt="" aria-hidden className="hidden md:block absolute -top-14 -left-20 w-64 opacity-60 rotate-[18deg] pointer-events-none select-none" />
-      <img src={FLOWERS[1]} alt="" aria-hidden className="hidden md:block absolute top-32 -right-16 w-72 opacity-55 -rotate-[14deg] pointer-events-none select-none" />
-      <img src={FLOWERS[5]} alt="" aria-hidden className="hidden lg:block absolute bottom-32 -left-12 w-56 opacity-50 -rotate-[8deg] pointer-events-none select-none" />
+      {/* Scattered page accents — three different species, well spaced, never overlapping */}
+      <img src={SCATTER[0]} alt="" aria-hidden className="hidden md:block absolute -top-10 -left-20 w-56 opacity-50 rotate-[14deg] pointer-events-none select-none" />
+      <img src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
+      <img src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
 
       <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
         {/* Masthead */}
@@ -241,34 +253,37 @@ const Guides = () => {
                             backgroundSize: "48px 48px",
                           }}
                         />
-                        {/* Botanical leaves */}
-                        {g.flowerIdx.map((idx, k) => {
-                          const positions = [
-                            { top: "-12%", right: "-12%", size: 340, rot: 18, op: 0.9 },
-                            { bottom: "-14%", left: "-10%", size: 280, rot: -22, op: 0.75 },
-                            { top: "38%", right: "52%", size: 130, rot: 35, op: 0.6 },
-                            { top: "18%", left: "28%", size: 110, rot: -15, op: 0.5 },
-                          ];
-                          const p = positions[k];
-                          return (
-                            <img
-                              key={k}
-                              src={FLOWERS[idx % FLOWERS.length]}
-                              alt=""
-                              aria-hidden
-                              className="absolute pointer-events-none select-none"
-                              style={{
-                                top: p.top,
-                                bottom: p.bottom,
-                                left: p.left,
-                                right: p.right,
-                                width: p.size,
-                                opacity: p.op,
-                                transform: `rotate(${p.rot}deg)`,
-                              }}
-                            />
-                          );
-                        })}
+                        {/* Hero flower — large, bottom-right; nothing else covers it */}
+                        <img
+                          src={g.hero}
+                          alt=""
+                          aria-hidden
+                          className="absolute pointer-events-none select-none"
+                          style={{
+                            bottom: "-10%",
+                            right: "-8%",
+                            width: "70%",
+                            maxWidth: 420,
+                            opacity: 0.95,
+                            transform: "rotate(-8deg)",
+                            filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))",
+                          }}
+                        />
+                        {/* Supporting leaf — small, top-left, well clear of the hero */}
+                        <img
+                          src={g.accent}
+                          alt=""
+                          aria-hidden
+                          className="absolute pointer-events-none select-none"
+                          style={{
+                            top: "-8%",
+                            left: "-6%",
+                            width: "38%",
+                            maxWidth: 200,
+                            opacity: 0.55,
+                            transform: "rotate(22deg)",
+                          }}
+                        />
 
                         {/* Issue number — huge editorial display */}
                         <div className={`relative z-10 flex flex-col justify-between p-10 lg:p-12 w-full ${g.panelInk}`}>
