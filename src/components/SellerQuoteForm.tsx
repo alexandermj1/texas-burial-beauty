@@ -52,7 +52,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     }
     toast({
       title: "Quote request submitted",
-      description: "We'll review your property and respond within 24 hours with your consignment quote.",
+      description: "We'll review your property and respond within 24 hours with your quote.",
     });
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "" });
     setLoading(false);
