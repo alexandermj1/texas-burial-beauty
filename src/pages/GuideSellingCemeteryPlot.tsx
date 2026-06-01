@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Phone, Mail, Plus, CheckCircle2, MapPin, Building2, Layers, Sparkles, TrendingUp, Clock3, Eye, HeartHandshake, Scale, FileCheck2, Award, Calendar } from "lucide-react";
+import { ArrowRight, ArrowLeft, Phone, Mail, Plus, CheckCircle2, MapPin, Building2, Layers, Sparkles, TrendingUp, Clock3, Eye, HeartHandshake, FileCheck2, Award, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Navbar from "@/components/Navbar";
@@ -21,7 +21,7 @@ const faqs = [
 ];
 
 const jsonLd = [
-  { "@context": "https://schema.org", "@type": "Service", name: "Cemetery Plot Resale Brokerage", serviceType: "Cemetery property resale", areaServed: { "@type": "State", name: "Texas" }, provider: { "@type": "LocalBusiness", name: "Texas Cemetery Brokers", telephone: PHONE, email: EMAIL, sameAs: ["https://bayercemeterybrokers.com/"] } },
+  { "@context": "https://schema.org", "@type": "Service", name: "Cemetery Plot Resale Brokerage", areaServed: { "@type": "State", name: "Texas" }, provider: { "@type": "LocalBusiness", name: "Texas Cemetery Brokers", telephone: PHONE, email: EMAIL, sameAs: ["https://bayercemeterybrokers.com/"] } },
   { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
   { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
     { "@type": "ListItem", position: 1, name: "Home", item: "https://texascemeterybrokers.com/" },
@@ -31,38 +31,4 @@ const jsonLd = [
 ];
 
 const trustItems = [
-  { Icon: Award, t: "A+ BBB Accredited", d: "Through our partner, Bayer Cemetery Brokers" },
-  { Icon: Calendar, t: "27+ Years", d: "In memorial property & family care" },
-  { Icon: MapPin, t: "Statewide Coverage", d: "Houston · Dallas · San Antonio · Austin" },
-];
-
-const checks = [
-  { t: "Read your original contract.", d: "Some cemeteries include a right of first refusal, meaning you must offer the plot back to them before selling to anyone else." },
-  { t: "Confirm co-owner consent.", d: "Plots bought jointly with a spouse, sibling, or as a family group need written agreement from all owners under Texas community-property rules." },
-  { t: "Check the cemetery's transfer policy.", d: "Each cemetery has its own conveyance forms, transfer fee, and procedure for recording a resale." },
-];
-
-const valueFactors = [
-  { Icon: MapPin, t: "The cemetery & metro", d: "Established, in-demand parks in larger metros carry stronger resale value than rural or remote locations." },
-  { Icon: Building2, t: "The section & position", d: "Spaces near trees, water, chapels, gardens or entrances, and plots in well-regarded sections, are more sought after." },
-  { Icon: Layers, t: "The property type", d: "Single graves, companion or double-depth spaces, mausoleum crypts and cremation niches each have their own market." },
-  { Icon: Sparkles, t: "What's included", d: "Vaults, markers, opening-and-closing rights and transfer fees all affect the net value to a buyer." },
-  { Icon: TrendingUp, t: "Current demand", d: "What buyers are actively looking for in that exact cemetery, right now, sets the real ceiling on price." },
-];
-
-const reasons = [
-  { n: "01", Icon: TrendingUp, t: "Reach", h: "We put your property in front of the right buyers.", d: "We do far more than post a listing and wait. We cross-reference your plot against the live inquiries we already hold — from funeral homes, estate attorneys and families searching for specific cemeteries. We issue regular inventory bulletins to mortuaries and promote through Google Ads, radio, print and in-person outreach. Your plot is marketed, not just listed." },
-  { n: "02", Icon: Clock3, t: "Speed", h: "We're experts in the transfer — when speed matters most.", d: "Many families come to us at the hardest possible moment, needing a resting place quickly. Because we know each cemetery's transfer process in detail and work hand in hand with cemetery offices, we complete a transfer as quickly and smoothly as possible. When something unexpected comes up in the paperwork, our experience keeps the sale on track." },
-  { n: "03", Icon: Eye, t: "Presence", h: "We show the plot in person and explain every difference.", d: "Choosing a final resting place is deeply personal, and most families want to see the space before they commit. We meet buyers at the cemetery and walk the grounds with them, explaining sections, position and options. It's not unusual to show a single plot more than five times before the right family decides it's the place." },
-  { n: "04", Icon: HeartHandshake, t: "Care", h: "We're trained to care for families, not just close a sale.", d: "Our team includes people specifically trained to support grieving families with patience and compassion, alongside specialists who explain the paperwork, the cemetery rules and the small distinctions that matter. That trust is the foundation of every successful sale." },
-];
-
-const steps = [
-  { t: "Free valuation.", d: "Tell us the cemetery, section and spaces. We assess your plot and explain what it can realistically sell for — no obligation." },
-  { t: "We market and match it.", d: "Your plot reaches our active buyer network and is cross-referenced against current inquiries from families, mortuaries and estate attorneys — backed by the nationwide reach of our partner Bayer Cemetery Brokers: family-owned, A+ BBB-accredited, 27+ years in memorial care." },
-  { t: "We handle the paperwork and the showing.", d: "We meet interested buyers at the cemetery, answer their questions, and prepare and record the conveyance with the cemetery correctly." },
-  { t: "You get paid.", d: "Funds are released once the transfer is confirmed and complete." },
-];
-
-const areas = [
-  { city: "Houston", list: "Forest Park, Earthman Resthaven, Brookside, Mem
+  { Icon: Award, t: "A+ BBB Accredited", d: "Through our partner, Bayer Cemet
