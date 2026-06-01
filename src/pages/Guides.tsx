@@ -310,22 +310,22 @@ const Guides = () => {
                         />
 
                         {/* Issue number — huge editorial display */}
-                        <div className={`relative z-10 flex flex-col justify-between p-7 lg:p-8 w-full ${g.panelInk}`}>
-                          <div className="flex items-start justify-between">
-                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
+                        <div className={`relative z-10 flex flex-col justify-between p-3.5 sm:p-5 md:p-7 lg:p-8 w-full ${g.panelInk}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 truncate">
                               {g.kicker}
                             </p>
-                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
+                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 shrink-0">
                               {String(i + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
                             </p>
                           </div>
                           <div>
-                            <p className="font-display italic text-base opacity-90 mb-2">N°0{i + 1}</p>
-                            <p className="font-display text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
+                            <p className="font-display italic text-sm sm:text-base opacity-90 mb-1 sm:mb-2">N°0{i + 1}</p>
+                            <p className="font-display text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
                               {String(i + 1).padStart(2, "0")}
                             </p>
-                            <div className={`mt-4 w-16 h-px ${g.rule} opacity-80`} />
-                            <p className="mt-3 text-[11px] tracking-[0.28em] uppercase opacity-85 font-semibold">
+                            <div className={`mt-2 sm:mt-4 w-10 sm:w-16 h-px ${g.rule} opacity-80`} />
+                            <p className="mt-1.5 sm:mt-3 text-[8px] sm:text-[11px] tracking-[0.22em] sm:tracking-[0.28em] uppercase opacity-85 font-semibold truncate">
                               Texas Cemetery Brokers
                             </p>
                           </div>
