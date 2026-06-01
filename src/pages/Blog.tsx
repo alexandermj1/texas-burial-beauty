@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Calendar, Clock, Phone, Mail } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Phone, Mail, CheckCircle2, MapPin, Clock3, Users, Heart, Megaphone } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
@@ -15,6 +16,8 @@ interface BlogPost {
   excerpt: string;
   content: React.ReactNode;
   image: string;
+  extraJsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
 }
 
 const blogPosts: BlogPost[] = [
