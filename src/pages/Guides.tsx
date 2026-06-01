@@ -125,8 +125,15 @@ const Guides = () => {
     onSelect();
   }, [emblaApi]);
 
+  // Lock body scroll so the Guides hub fits exactly in the viewport
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[hsl(38_35%_95%)] flex flex-col relative">
+    <div className="h-screen bg-[hsl(38_35%_95%)] flex flex-col relative overflow-hidden">
       <Seo
         title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
         description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
@@ -149,9 +156,9 @@ const Guides = () => {
       <img src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
       <img src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
 
-      <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
+      <section className="relative flex-1 flex flex-col pt-[4.5rem] pb-2 overflow-hidden z-10 min-h-0">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-[1600px] mb-5 md:mb-8">
+        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -162,11 +169,11 @@ const Guides = () => {
               <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(145_25%_36%)] mb-2">
                 The Texas Cemetery Field Manual · Vol. 1
               </p>
-              <h1 className="font-display text-4xl md:text-6xl lg:text-[4.5rem] text-[hsl(28_20%_15%)] leading-[0.92] tracking-tight">
+              <h1 className="font-display text-3xl md:text-5xl lg:text-[3.5rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
                 The <span className="italic text-[hsl(145_25%_36%)]">How-To</span> Guides
               </h1>
-              <p className="mt-3 text-sm md:text-base text-[hsl(28_20%_25%)]/75 font-light max-w-xl">
-                Everything Texas families actually need to know about selling, buying, and transferring cemetery property — written by the people who do it every day.
+              <p className="mt-1.5 text-sm text-[hsl(28_20%_25%)]/75 font-light max-w-xl">
+                Everything Texas families need to know about cemetery property — written by the specialists who do it every day.
               </p>
             </div>
             <p className="hidden lg:block text-xs tracking-[0.18em] uppercase text-[hsl(28_20%_25%)]/60 max-w-xs text-right">
@@ -193,7 +200,7 @@ const Guides = () => {
                   >
                     <div className="grid md:grid-cols-[1.05fr_0.95fr] h-full">
                       {/* LEFT — editorial text panel */}
-                      <div className="relative flex flex-col p-7 md:p-10 lg:p-12">
+                      <div className="relative flex flex-col p-5 md:p-7 lg:p-8">
                         {/* Top meta line */}
                         <div className="flex items-center justify-between mb-8">
                           <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65">
@@ -215,18 +222,18 @@ const Guides = () => {
                           {g.kicker}
                         </p>
 
-                        <h2 className="font-display text-[2rem] md:text-[2.6rem] lg:text-[3.1rem] leading-[0.98] text-[hsl(28_20%_15%)] tracking-tight mb-6">
+                        <h2 className="font-display text-[1.6rem] md:text-[2rem] lg:text-[2.4rem] leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-4">
                           {g.title}{" "}
                           <span className="italic">{g.titleAccent}</span>
                         </h2>
 
-                        <div className={`w-12 h-px ${g.rule} mb-6`} />
+                        <div className={`w-12 h-px ${g.rule} mb-4`} />
 
-                        <p className="text-[hsl(28_20%_25%)]/75 text-[0.95rem] md:text-base leading-relaxed font-light max-w-md mb-8">
+                        <p className="text-[hsl(28_20%_25%)]/75 text-sm md:text-[0.95rem] leading-relaxed font-light max-w-md mb-6">
                           {g.dek}
                         </p>
 
-                        <div className="mt-auto flex items-end justify-between gap-4 pt-6 border-t border-[hsl(28_20%_25%)]/10">
+                        <div className="mt-auto flex items-end justify-between gap-4 pt-4 border-t border-[hsl(28_20%_25%)]/10">
                           <span className="text-[10px] tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium">
                             {g.meta}
                           </span>
@@ -286,7 +293,7 @@ const Guides = () => {
                         />
 
                         {/* Issue number — huge editorial display */}
-                        <div className={`relative z-10 flex flex-col justify-between p-10 lg:p-12 w-full ${g.panelInk}`}>
+                        <div className={`relative z-10 flex flex-col justify-between p-7 lg:p-8 w-full ${g.panelInk}`}>
                           <div className="flex items-start justify-between">
                             <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
                               {g.kicker}
@@ -297,11 +304,11 @@ const Guides = () => {
                           </div>
                           <div>
                             <p className="font-display italic text-base opacity-90 mb-2">N°0{i + 1}</p>
-                            <p className="font-display text-[6rem] lg:text-[8rem] leading-[0.85] tracking-tighter">
+                            <p className="font-display text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
                               {String(i + 1).padStart(2, "0")}
                             </p>
-                            <div className={`mt-6 w-16 h-px ${g.rule} opacity-80`} />
-                            <p className="mt-4 text-[11px] tracking-[0.28em] uppercase opacity-85 font-semibold">
+                            <div className={`mt-4 w-16 h-px ${g.rule} opacity-80`} />
+                            <p className="mt-3 text-[11px] tracking-[0.28em] uppercase opacity-85 font-semibold">
                               Texas Cemetery Brokers
                             </p>
                           </div>
@@ -314,8 +321,7 @@ const Guides = () => {
                 return (
                   <div
                     key={g.slug}
-                    className="flex-[0_0_96%] md:flex-[0_0_92%] lg:flex-[0_0_88%] xl:flex-[0_0_82%] min-w-0 px-3 md:px-6"
-                    style={{ height: "min(72vh, 640px)" }}
+                    className="flex-[0_0_96%] md:flex-[0_0_92%] lg:flex-[0_0_88%] xl:flex-[0_0_82%] min-w-0 px-3 md:px-6 h-full"
                   >
                     {isLive ? (
                       <Link to={`/${g.slug}`} className="block h-full">
@@ -352,7 +358,7 @@ const Guides = () => {
         </div>
 
         {/* Footer rail — dots + counter */}
-        <div className="container mx-auto px-6 mt-5 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-4 max-w-[1600px]">
+        <div className="container mx-auto px-6 mt-2 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-2 max-w-[1600px]">
           <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
             {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
           </p>
@@ -374,30 +380,29 @@ const Guides = () => {
             Swipe →
           </p>
         </div>
+        {/* Outbound Texas-government resources — compact, inside section */}
+        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/60 backdrop-blur-sm">
+          <div className="container mx-auto px-6 max-w-[1600px] py-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-5">
+            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 shrink-0">
+              Official Texas resources
+            </p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              {OUTBOUND_RESOURCES.map((r) => (
+                <li key={r.href}>
+                  <a
+                    href={r.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-[hsl(28_20%_25%)]/85 hover:text-[hsl(145_25%_36%)] underline-offset-4 hover:underline font-medium"
+                  >
+                    {r.label} <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
       </section>
-
-      {/* Outbound Texas-government resources — SEO authority + reader trust */}
-      <aside className="relative z-10 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/60 backdrop-blur-sm">
-        <div className="container mx-auto px-6 max-w-[1600px] py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-          <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 shrink-0">
-            Official Texas resources
-          </p>
-          <ul className="flex flex-wrap gap-x-5 gap-y-2">
-            {OUTBOUND_RESOURCES.map((r) => (
-              <li key={r.href}>
-                <a
-                  href={r.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-[hsl(28_20%_25%)]/85 hover:text-[hsl(145_25%_36%)] underline-offset-4 hover:underline font-medium"
-                >
-                  {r.label} <ExternalLink className="w-3 h-3" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
     </div>
   );
 };
