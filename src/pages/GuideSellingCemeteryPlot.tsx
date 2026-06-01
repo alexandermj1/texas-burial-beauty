@@ -5,7 +5,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { cemeteryPath } from "@/lib/cemeterySlug";
-import { EMAIL, jsonLd, checks, valueFactors, faqs } from "./guide-selling-data";
+import { EMAIL, jsonLd, checks, valueFactors, faqs, resources } from "./guide-selling-data";
+
+const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline font-medium">
+    {children}
+  </a>
+);
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
@@ -102,34 +108,72 @@ const GuideSellingCemeteryPlot = () => (
     <Navbar forceScrolled />
 
     {/* HERO */}
-    <section className="relative pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[hsl(var(--primary)/0.12)] via-[hsl(var(--accent)/0.05)] to-background">
-      <div className="absolute top-0 right-0 w-[44rem] h-[44rem] rounded-full bg-primary/12 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-      <div className="absolute top-20 left-0 w-[32rem] h-[32rem] rounded-full bg-accent/10 blur-3xl -translate-x-1/3 pointer-events-none" />
+    <section className="relative pt-28 pb-24 overflow-hidden bg-[hsl(var(--primary)/0.04)]">
+      {/* Layered background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--accent)/0.06)] to-background" />
+      <div className="absolute top-0 right-0 w-[50rem] h-[50rem] rounded-full bg-primary/15 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+      <div className="absolute -top-10 left-0 w-[34rem] h-[34rem] rounded-full bg-accent/15 blur-3xl -translate-x-1/3 pointer-events-none" />
+      {/* Subtle grid overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.07] pointer-events-none"
+        style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "56px 56px" }}
+      />
       <svg className="absolute bottom-0 left-0 right-0 w-full pointer-events-none" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
         <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
       </svg>
 
       <div className="relative container mx-auto px-6 max-w-3xl">
-        {/* Back link — aligned with article column */}
-        <Link to="/guides" className="inline-flex items-center gap-1.5 text-xs tracking-[0.18em] uppercase text-foreground/60 hover:text-foreground mb-8 transition-colors">
+        {/* Back link */}
+        <Link to="/guides" className="inline-flex items-center gap-1.5 text-xs tracking-[0.18em] uppercase text-foreground/60 hover:text-foreground mb-10 transition-colors">
           <ArrowLeft className="w-3.5 h-3.5" /> All Guides
         </Link>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-3 mb-6">
-            <span className="w-8 h-px bg-accent" />
-            <p className="text-accent text-[11px] tracking-[0.28em] uppercase font-semibold">Guide · For Sellers</p>
+          <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <p className="text-accent text-[11px] tracking-[0.24em] uppercase font-semibold">The Seller's Guide</p>
           </div>
-          <h1 className="font-display text-4xl md:text-6xl text-foreground leading-[1.05] mb-6 tracking-tight">
+          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[5.25rem] text-foreground leading-[0.98] mb-7 tracking-tight">
             How to Sell a Cemetery Plot in <span className="italic text-primary">Texas</span>
           </h1>
-          <p className="text-foreground/65 text-sm tracking-wide mb-8">Texas Cemetery Brokers · Updated 2025 · 9 min read</p>
-          <div className="flex flex-col sm:flex-row items-start gap-3">
-            <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_8px_24px_-6px_hsl(var(--accent)/0.5)] hover:-translate-y-0.5 transition-all">
+          <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 max-w-2xl font-light">
+            Everything Texas families ask us — what your plot is really worth, the legal steps, and the fastest way to turn unwanted property into cash. Written by the brokers who handle these sales every day.
+          </p>
+
+          {/* Meta strip */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs tracking-wide text-foreground/60 mb-9">
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Texas Cemetery Brokers</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Updated 2025</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 9 min read</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 7 chapters</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start gap-3 mb-10">
+            <a href="#contact" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
               <Plus className="w-4 h-4" /> Get a Free Plot Valuation
             </a>
-            <a href="#why" className="inline-flex items-center gap-2 px-6 py-3 bg-background border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-              Why Use a Broker
+            <a href="#why" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
+              Why Use a Broker <ArrowRight className="w-4 h-4" />
             </a>
+          </div>
+
+          {/* In-this-guide chapter chips */}
+          <div className="pt-6 border-t border-border/50">
+            <p className="text-[10px] tracking-[0.28em] uppercase font-semibold text-foreground/50 mb-3">In this guide</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { href: "#can-you-sell", t: "Can you sell?" },
+                { href: "#value", t: "What it's worth" },
+                { href: "#why", t: "Why a broker" },
+                { href: "#process", t: "The process" },
+                { href: "#legal", t: "Legal side" },
+                { href: "#cities", t: "Coverage" },
+                { href: "#faq", t: "FAQ" },
+              ].map((c) => (
+                <a key={c.href} href={c.href} className="text-xs px-3 py-1.5 rounded-full bg-card border border-border/60 text-foreground/75 hover:border-primary/40 hover:text-primary transition-colors">
+                  {c.t}
+                </a>
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>
@@ -268,7 +312,7 @@ const GuideSellingCemeteryPlot = () => (
           <ol className="relative space-y-8 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-px before:bg-gradient-to-b before:from-accent before:via-primary before:to-primary/30">
             {[
               { t: "Free valuation.", d: "Tell us the cemetery, section and spaces. We assess your plot and explain what it can realistically sell for — no obligation." },
-              { t: "We market and match it.", d: "Your plot reaches our active buyer network and is cross-referenced against current inquiries from families, mortuaries and estate attorneys, backed by the nationwide reach of our partner Bayer Cemetery Brokers." },
+              { t: "We market and match it.", d: <>Your plot reaches our active buyer network and is cross-referenced against current inquiries from families, mortuaries and estate attorneys, backed by the nationwide reach of our partner <Ext href="https://bayercemeterybrokers.com/">Bayer Cemetery Brokers</Ext>.</> },
               { t: "We handle the paperwork and the showings.", d: "We meet interested buyers at the cemetery, answer their questions, and prepare and record the conveyance with the cemetery correctly." },
               { t: "You get paid.", d: "Funds are released once the transfer is confirmed and complete." },
             ].map((s, i) => (
@@ -286,9 +330,9 @@ const GuideSellingCemeteryPlot = () => (
           <Eyebrow>Chapter 05 · Legal</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">The legal side of selling a plot in <span className="italic text-primary">Texas</span></h2>
           <p className="text-foreground/80 leading-relaxed mb-5 text-lg">
-            A common question is whether you need a license to sell. You do not — selling your own plot requires no license. And while Texas once required third-party brokers to register with the Department of Banking, that registration requirement was repealed effective <strong className="text-foreground">September 1, 2019</strong>. There is no state cemetery-broker license in Texas today.
+            A common question is whether you need a license to sell. You do not — selling your own plot requires no license. And while Texas once required third-party brokers to register with the <Ext href="https://www.dob.texas.gov/cemetery-prepaid-funeral-services">Texas Department of Banking</Ext>, that registration requirement was repealed effective <strong className="text-foreground">September 1, 2019</strong>. There is no state cemetery-broker license in Texas today.
           </p>
-          <p className="text-foreground/80 mb-4">What still applies — and what a careful broker handles for you — comes from the Texas Health &amp; Safety Code:</p>
+          <p className="text-foreground/80 mb-4">What still applies — and what a careful broker handles for you — comes from the <Ext href="https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm">Texas Health &amp; Safety Code, Chapter 711</Ext>:</p>
           <ul className="space-y-3 mb-8">
             {[
               "The conveyance (often a quitclaim) must be on a form the cemetery accepts and recorded with the cemetery, generally within three business days of the sale.",
@@ -301,11 +345,14 @@ const GuideSellingCemeteryPlot = () => (
               </li>
             ))}
           </ul>
-          <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15">
+          <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15 mb-8">
             <p className="text-foreground/85 leading-relaxed italic">
               This is why a broker matters even without a licensing requirement: a sale is not truly final until the cemetery records the transfer correctly. We make sure that happens — so the buyer is protected and you are fully and cleanly released from the property.
             </p>
           </div>
+          <p className="text-foreground/75 leading-relaxed text-sm">
+            Perpetual care cemeteries in Texas are regulated by the Department of Banking, which also publishes an <Ext href="https://www.dob.texas.gov/cemetery-prepaid-funeral-services/how-file-complaint">official complaint process</Ext> for families. Additional consumer resources are available from the <Ext href="https://tfsc.texas.gov/ConsumerInformation.html">Texas Funeral Service Commission</Ext>.
+          </p>
         </section>
 
         {/* H2: Cities */}
@@ -359,6 +406,32 @@ const GuideSellingCemeteryPlot = () => (
               </details>
             ))}
           </div>
+        </section>
+
+        {/* H2: Resources */}
+        <section id="resources" className="scroll-mt-24 mt-20">
+          <Eyebrow>Chapter 08 · Resources</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Official Texas <span className="italic text-primary">resources</span></h2>
+          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+            The authoritative sources behind everything on this page — useful if you want to verify anything yourself.
+          </p>
+          <ul className="grid sm:grid-cols-2 gap-3">
+            {resources.map((r) => (
+              <li key={r.href}>
+                <a
+                  href={r.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block h-full p-5 rounded-2xl bg-card border border-border/60 hover:border-primary/40 hover:shadow-soft transition-all"
+                >
+                  <p className="font-display text-base text-foreground group-hover:text-primary transition-colors mb-1.5 leading-snug">
+                    {r.label} <span className="inline-block align-middle ml-0.5 opacity-60 group-hover:translate-x-0.5 transition-transform">↗</span>
+                  </p>
+                  <p className="text-sm text-foreground/65 leading-relaxed">{r.note}</p>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
     </article>

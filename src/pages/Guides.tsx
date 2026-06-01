@@ -93,27 +93,50 @@ const Guides = () => (
                   ? "bg-card border-border/60 hover:border-primary/40 hover:-translate-y-1 hover:shadow-hover shadow-soft"
                   : "bg-card/60 border-border/40"
               }`}>
-                <div className={`relative h-44 px-7 pt-7 pb-6 ${
+                <div className={`relative h-52 px-7 pt-7 pb-6 overflow-hidden ${
                   isLive
-                    ? "bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10"
+                    ? "bg-gradient-to-br from-primary/25 via-primary/10 to-accent/20"
                     : "bg-gradient-to-br from-muted/60 to-muted/30"
                 }`}>
-                  <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/15 blur-2xl group-hover:bg-accent/25 transition-colors duration-500" />
+                  {/* Decorative orbs */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/25 blur-2xl group-hover:bg-accent/40 transition-colors duration-500" />
+                  {isLive && (
+                    <div className="absolute -bottom-16 -left-12 w-44 h-44 rounded-full bg-primary/25 blur-3xl" />
+                  )}
+                  {/* Subtle grid for live cards */}
+                  {isLive && (
+                    <div
+                      className="absolute inset-0 opacity-[0.08] pointer-events-none"
+                      style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "32px 32px" }}
+                    />
+                  )}
+                  {/* Faux article lines */}
+                  {isLive && (
+                    <svg className="absolute right-6 bottom-14 w-28 opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 120 80" aria-hidden>
+                      <rect x="0" y="0" width="60" height="6" rx="3" className="fill-primary/70" />
+                      <rect x="0" y="14" width="110" height="4" rx="2" className="fill-foreground/30" />
+                      <rect x="0" y="24" width="95" height="4" rx="2" className="fill-foreground/25" />
+                      <rect x="0" y="34" width="105" height="4" rx="2" className="fill-foreground/25" />
+                      <rect x="0" y="44" width="70" height="4" rx="2" className="fill-foreground/20" />
+                      <rect x="0" y="58" width="38" height="10" rx="5" className="fill-accent/70" />
+                    </svg>
+                  )}
                   <div className="relative flex items-start justify-between">
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 ${
                       isLive
-                        ? "bg-primary text-primary-foreground group-hover:scale-110 group-hover:rotate-3"
+                        ? "bg-primary text-primary-foreground group-hover:scale-110 group-hover:rotate-3 shadow-[0_10px_30px_-8px_hsl(var(--primary)/0.6)]"
                         : "bg-muted-foreground/20 text-muted-foreground"
                     }`}>
                       <g.Icon className="w-6 h-6" strokeWidth={1.75} />
                     </div>
-                    <span className={`text-[10px] uppercase tracking-[0.2em] font-semibold px-3 py-1.5 rounded-full ${
-                      isLive ? "bg-accent/15 text-accent" : "bg-foreground/5 text-muted-foreground"
+                    <span className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-semibold px-3 py-1.5 rounded-full ${
+                      isLive ? "bg-accent text-accent-foreground" : "bg-foreground/5 text-muted-foreground"
                     }`}>
+                      {isLive && <span className="w-1.5 h-1.5 rounded-full bg-accent-foreground animate-pulse" />}
                       {isLive ? "Available now" : "Coming soon"}
                     </span>
                   </div>
-                  <p className="absolute bottom-5 left-7 text-[11px] tracking-[0.22em] uppercase font-semibold text-foreground/60">
+                  <p className="absolute bottom-5 left-7 text-[11px] tracking-[0.22em] uppercase font-semibold text-foreground/70">
                     {g.eyebrow} · Guide 0{i + 1}
                   </p>
                 </div>

@@ -16,13 +16,22 @@ export const faqs = [
 
 export const jsonLd: Record<string, unknown>[] = [
   { "@context": "https://schema.org", "@type": "Article", headline: "How to Sell a Cemetery Plot in Texas", mainEntityOfPage: URL, author: { "@type": "Organization", name: "Texas Cemetery Brokers" }, publisher: { "@type": "Organization", name: "Texas Cemetery Brokers" } },
-  { "@context": "https://schema.org", "@type": "Service", name: "Cemetery Plot Resale Brokerage", areaServed: { "@type": "State", name: "Texas" }, provider: { "@type": "LocalBusiness", name: "Texas Cemetery Brokers", telephone: PHONE, email: EMAIL } },
+  { "@context": "https://schema.org", "@type": "Service", name: "Cemetery Plot Resale Brokerage", areaServed: { "@type": "State", name: "Texas" }, provider: { "@type": "LocalBusiness", name: "Texas Cemetery Brokers", telephone: PHONE, email: EMAIL, sameAs: ["https://bayercemeterybrokers.com/"] } },
   { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
   { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
     { "@type": "ListItem", position: 1, name: "Home", item: "https://www.texascemeterybrokers.com/" },
     { "@type": "ListItem", position: 2, name: "Guides", item: "https://www.texascemeterybrokers.com/guides" },
     { "@type": "ListItem", position: 3, name: "How to Sell a Cemetery Plot in Texas", item: URL },
   ] },
+];
+
+export const resources = [
+  { label: "Texas Department of Banking — Cemetery & Prepaid Funeral", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services", note: "State regulator for perpetual care cemeteries." },
+  { label: "Texas Health & Safety Code, Chapter 711", href: "https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm", note: "The official statute governing cemetery property." },
+  { label: "How to file a cemetery complaint (TX Dept. of Banking)", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services/how-file-complaint", note: "Official complaint process for perpetual care cemeteries." },
+  { label: "Texas Funeral Service Commission — Consumer Information", href: "https://tfsc.texas.gov/ConsumerInformation.html", note: "Consumer-facing resources from the state funeral commission." },
+  { label: "Texas Cemeteries & Crematories Association", href: "https://www.txcca.us/", note: "State industry association with its own review committee." },
+  { label: "Bayer Cemetery Brokers", href: "https://bayercemeterybrokers.com/", note: "Our national partner — nationwide buyer reach." },
 ];
 
 interface IconItem { Icon: LucideIcon; t: string; d: string }
