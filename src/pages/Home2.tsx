@@ -72,7 +72,7 @@ const Home2 = () => {
     (async () => {
       const { data } = await supabase
         .from("listings")
-        .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, description, contact_name, contact_phone, contact_email")
+        .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, description")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(6);
