@@ -106,8 +106,10 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="max-w-3xl mx-auto bg-card rounded-3xl border border-border/60 shadow-hover p-8 md:p-12"
+          className="max-w-3xl mx-auto bg-background rounded-3xl border border-border shadow-xl p-8 md:p-12 relative overflow-hidden"
         >
+          {/* Accent top bar */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-primary/60" />
           {/* Section: You */}
           <div className="mb-10">
             <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-5">
@@ -227,7 +229,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
               disabled={loading}
               className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-soft"
             >
-              {loading ? "Submitting…" : "Request my consignment quote"}
+              {loading ? "Submitting…" : "Request my free valuation"}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
             <p className="text-[11px] text-muted-foreground/70">
