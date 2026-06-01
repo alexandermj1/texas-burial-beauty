@@ -213,17 +213,17 @@ const Guides = () => {
                         : "shadow-[0_10px_30px_-20px_hsl(28_20%_15%/0.3)] opacity-60 scale-[0.96]"
                     }`}
                   >
-                    <div className="grid grid-cols-[1.05fr_0.95fr] h-full">
+                    <div className="grid grid-rows-[40%_60%] grid-cols-1 md:grid-rows-none md:grid-cols-[1.05fr_0.95fr] h-full">
                       {/* LEFT — editorial text panel */}
-                      <div className="relative flex flex-col p-3.5 sm:p-5 md:p-7 lg:p-8">
+                      <div className="relative flex flex-col p-5 md:p-7 lg:p-8 order-2 md:order-1">
 
                         {/* Top meta line */}
-                        <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
-                          <p className="text-[8px] sm:text-[10px] tracking-[0.28em] sm:tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65 truncate pr-2">
+                        <div className="flex items-center justify-between mb-5 md:mb-8">
+                          <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65">
                             {g.issue}
                           </p>
                           <span
-                            className={`inline-flex items-center gap-1.5 text-[8px] sm:text-[9px] uppercase tracking-[0.18em] sm:tracking-[0.22em] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shrink-0 ${
+                            className={`inline-flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] font-bold px-2.5 py-1 rounded-full ${
                               isLive
                                 ? "bg-[hsl(145_25%_36%)] text-[hsl(40_30%_97%)]"
                                 : "bg-[hsl(28_20%_25%)]/8 text-[hsl(28_20%_25%)]/70 border border-[hsl(28_20%_25%)]/15"
@@ -234,40 +234,39 @@ const Guides = () => {
                           </span>
                         </div>
 
-                        <p className="font-display italic text-[hsl(16_50%_45%)] text-sm sm:text-base md:text-lg mb-2 md:mb-3">
+                        <p className="font-display italic text-[hsl(16_50%_45%)] text-base md:text-lg mb-2 md:mb-3">
                           {g.kicker}
                         </p>
 
-                        <h2 className="font-display text-[1.15rem] sm:text-[1.5rem] md:text-[2rem] lg:text-[2.4rem] leading-[1.05] md:leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-2 md:mb-4">
+                        <h2 className="font-display text-[1.5rem] md:text-[2rem] lg:text-[2.4rem] leading-[1.05] md:leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-3 md:mb-4">
                           {g.title}{" "}
                           <span className="italic">{g.titleAccent}</span>
                         </h2>
 
-                        <div className={`w-10 md:w-12 h-px ${g.rule} mb-2 md:mb-4`} />
+                        <div className={`w-12 h-px ${g.rule} mb-3 md:mb-4`} />
 
-                        <p className="hidden sm:block text-[hsl(28_20%_25%)]/75 text-sm md:text-[0.95rem] leading-relaxed font-light max-w-md mb-6">
+                        <p className="text-[hsl(28_20%_25%)]/75 text-[13px] md:text-[0.95rem] leading-relaxed font-light max-w-md mb-4 md:mb-6 line-clamp-3 md:line-clamp-none">
                           {g.dek}
                         </p>
 
-                        <div className="mt-auto flex items-end justify-between gap-2 md:gap-4 pt-3 md:pt-4 border-t border-[hsl(28_20%_25%)]/10">
-
-                          <span className="text-[8px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium truncate">
+                        <div className="mt-auto flex items-end justify-between gap-4 pt-3 md:pt-4 border-t border-[hsl(28_20%_25%)]/10">
+                          <span className="text-[10px] tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium">
                             {g.meta}
                           </span>
                           {isLive ? (
-                            <span className="inline-flex items-center gap-1 sm:gap-2 text-[hsl(145_25%_36%)] font-semibold text-[11px] sm:text-sm tracking-wide group-hover:gap-3 transition-all shrink-0">
-                              <span className="hidden sm:inline">Read the guide</span><span className="sm:hidden">Read</span> <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="inline-flex items-center gap-2 text-[hsl(145_25%_36%)] font-semibold text-sm tracking-wide group-hover:gap-3 transition-all">
+                              Read the guide <ArrowUpRight className="w-4 h-4" />
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 sm:gap-2 text-[hsl(28_20%_25%)]/60 font-medium text-[11px] sm:text-sm tracking-wide shrink-0">
-                              <span className="hidden sm:inline">Notify me</span><span className="sm:hidden">Soon</span> <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="inline-flex items-center gap-2 text-[hsl(28_20%_25%)]/60 font-medium text-sm tracking-wide">
+                              Notify me <ArrowRight className="w-4 h-4" />
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* RIGHT — colour panel with botanical */}
-                      <div className={`relative flex overflow-hidden ${g.panel}`}>
+                      {/* RIGHT (mobile: TOP) — colour panel with botanical */}
+                      <div className={`relative flex overflow-hidden order-1 md:order-2 ${g.panel}`}>
                         {/* Soft texture */}
                         <div
                           className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
@@ -277,55 +276,39 @@ const Guides = () => {
                             backgroundSize: "48px 48px",
                           }}
                         />
-                        {/* Hero flower — large, bottom-right; nothing else covers it */}
+                        {/* Hero flower — bottom-right of panel; placement tuned per breakpoint */}
                         <img
                           src={g.hero}
                           alt=""
                           aria-hidden
-                          className="absolute pointer-events-none select-none"
-                          style={{
-                            bottom: "-10%",
-                            right: "-8%",
-                            width: "70%",
-                            maxWidth: 420,
-                            opacity: 0.95,
-                            transform: "rotate(-8deg)",
-                            filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))",
-                          }}
+                          className="absolute pointer-events-none select-none right-[-6%] bottom-[-30%] w-[44%] max-w-[200px] rotate-[-10deg] opacity-95 md:right-[-8%] md:bottom-[-10%] md:w-[70%] md:max-w-[420px] md:rotate-[-8deg]"
+                          style={{ filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))" }}
                         />
-                        {/* Supporting leaf — small, top-left, well clear of the hero */}
+                        {/* Supporting leaf — opposite corner, well clear of the hero */}
                         <img
                           src={g.accent}
                           alt=""
                           aria-hidden
-                          className="absolute pointer-events-none select-none"
-                          style={{
-                            top: "-8%",
-                            left: "-6%",
-                            width: "38%",
-                            maxWidth: 200,
-                            opacity: 0.55,
-                            transform: "rotate(22deg)",
-                          }}
+                          className="absolute pointer-events-none select-none left-[-4%] top-[-40%] w-[26%] max-w-[120px] rotate-[18deg] opacity-55 md:left-[-6%] md:top-[-8%] md:w-[38%] md:max-w-[200px] md:rotate-[22deg]"
                         />
 
-                        {/* Issue number — huge editorial display */}
-                        <div className={`relative z-10 flex flex-col justify-between p-3.5 sm:p-5 md:p-7 lg:p-8 w-full ${g.panelInk}`}>
+                        {/* Issue number — editorial display */}
+                        <div className={`relative z-10 flex flex-col justify-between p-4 md:p-7 lg:p-8 w-full ${g.panelInk}`}>
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 truncate">
+                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80 truncate">
                               {g.kicker}
                             </p>
-                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 shrink-0">
+                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80 shrink-0">
                               {String(i + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
                             </p>
                           </div>
                           <div>
-                            <p className="font-display italic text-sm sm:text-base opacity-90 mb-1 sm:mb-2">N°0{i + 1}</p>
-                            <p className="font-display text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
+                            <p className="font-display italic text-sm md:text-base opacity-90 mb-1 md:mb-2">N°0{i + 1}</p>
+                            <p className="font-display text-[3rem] md:text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
                               {String(i + 1).padStart(2, "0")}
                             </p>
-                            <div className={`mt-2 sm:mt-4 w-10 sm:w-16 h-px ${g.rule} opacity-80`} />
-                            <p className="mt-1.5 sm:mt-3 text-[8px] sm:text-[11px] tracking-[0.22em] sm:tracking-[0.28em] uppercase opacity-85 font-semibold truncate">
+                            <div className={`mt-2 md:mt-4 w-12 md:w-16 h-px ${g.rule} opacity-80`} />
+                            <p className="mt-2 md:mt-3 text-[10px] md:text-[11px] tracking-[0.26em] md:tracking-[0.28em] uppercase opacity-85 font-semibold">
                               Texas Cemetery Brokers
                             </p>
                           </div>
