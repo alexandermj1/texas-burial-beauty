@@ -125,6 +125,26 @@ const Guides = () => {
     onSelect();
   }, [emblaApi]);
 
+  // Mouse wheel / trackpad navigates the carousel (since the page can't scroll vertically)
+  useEffect(() => {
+    if (!emblaApi) return;
+    const node = emblaApi.rootNode();
+    let cooldown = false;
+    const handler = (e: WheelEvent) => {
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (Math.abs(delta) < 8) return;
+      e.preventDefault();
+      if (cooldown) return;
+      cooldown = true;
+      setTimeout(() => { cooldown = false; }, 420);
+      if (delta > 0) emblaApi.scrollNext();
+      else emblaApi.scrollPrev();
+    };
+    // Attach to window so the user doesn't have to hover the carousel exactly
+    window.addEventListener("wheel", handler, { passive: false });
+    return () => window.removeEventListener("wheel", handler);
+  }, [emblaApi]);
+
   // Lock body scroll so the Guides hub fits exactly in the viewport
   useEffect(() => {
     const prev = document.body.style.overflow;
