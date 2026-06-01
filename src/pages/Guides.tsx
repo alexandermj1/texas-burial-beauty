@@ -173,12 +173,12 @@ const Guides = () => {
 
       <section className="relative flex-1 flex flex-col pt-[5.5rem] pb-2 overflow-hidden z-10 min-h-0">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3 mt-1">
+        <div className="container mx-auto px-6 max-w-[1600px] mb-1 md:mb-2 mt-1">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-end justify-between gap-6 border-b border-[hsl(28_20%_25%)]/15 pb-4"
+            className="flex items-end justify-between gap-6 border-b border-[hsl(28_20%_25%)]/15 pb-3"
           >
             <div>
               <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(145_25%_36%)] mb-2">
@@ -373,7 +373,7 @@ const Guides = () => {
         </div>
 
         {/* Footer rail — dots + counter */}
-        <div className="container mx-auto px-6 mt-2 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-2 max-w-[1600px]">
+        <div className="container mx-auto px-6 mt-1 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-2 max-w-[1600px]">
           <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
             {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
           </p>
