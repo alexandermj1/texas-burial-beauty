@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import { PHONE_DISPLAY, EMAIL, jsonLd, trustItems, checks, valueFactors } from "./guide-selling-data";
+import { PHONE_DISPLAY, EMAIL, jsonLd, trustItems, checks, valueFactors, faqs } from "./guide-selling-data";
 
 const GuideSellingCemeteryPlot = () => (
   <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
