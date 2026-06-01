@@ -71,43 +71,152 @@ const SellProperty = () => {
       />
       <Navbar />
 
-      {/* Hero — editorial split layout with photo background */}
-      <section className="relative pt-28 pb-16 overflow-hidden">
-        <img src={sellHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/70 to-foreground/55" />
+      {/* Hero — editorial botanical spread inspired by the Guides cover */}
+      <section className="relative pt-28 pb-16 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
+        {/* Paper dot grid */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(hsl(var(--terracotta) / 0.25) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+        {/* Botanical illustrations */}
+        <motion.img
+          src={bananaLeaf.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, x: -30, rotate: -18 }}
+          animate={{ opacity: 0.55, x: 0, rotate: -12 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="hidden md:block absolute -left-24 -bottom-24 w-[28rem] pointer-events-none select-none"
+        />
+        <motion.img
+          src={hibiscusCoral.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, y: 20, rotate: 10 }}
+          animate={{ opacity: 0.85, y: 0, rotate: 6 }}
+          transition={{ duration: 1.2, delay: 0.15, ease: "easeOut" }}
+          className="hidden lg:block absolute -right-16 top-16 w-80 pointer-events-none select-none"
+        />
+        <motion.img
+          src={plumeriaCluster.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 0.7, scale: 1 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="md:hidden absolute -right-10 -top-6 w-40 pointer-events-none select-none"
+        />
 
         <div className="relative container mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <p className="text-primary-foreground/80 font-medium text-xs tracking-[0.3em] uppercase mb-4 drop-shadow-md">Sell With Confidence</p>
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-primary-foreground leading-[1.1] mb-6 drop-shadow-lg">
-                List your plot on <span className="italic text-primary-foreground/90">consignment</span>
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+            {/* Left: editorial copy */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="lg:col-span-7"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <span className="text-[10px] tracking-[0.3em] font-semibold text-primary uppercase">
+                  The Seller&rsquo;s Edition
+                </span>
+                <div className="h-px w-12 bg-border" />
+                <span className="text-[10px] tracking-[0.3em] font-medium text-accent uppercase italic">
+                  Vol. 01
+                </span>
+              </div>
+
+              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.05] tracking-tight mb-8">
+                List your plot on{" "}
+                <span className="italic font-medium text-primary">consignment</span>
               </h1>
-              <p className="text-primary-foreground/95 text-lg font-light leading-relaxed mb-8 max-w-lg drop-shadow-md">
+
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 max-w-xl font-light">
                 Choose a free listing or our premium $99 listing. We handle the entire selling process from valuation to closing.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <a href="#quote-form" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
+
+              <div className="flex flex-wrap gap-5 items-center">
+                <a
+                  href="#quote-form"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft"
+                >
                   Get a Free Valuation <ArrowRight className="w-4 h-4" />
                 </a>
-                <a href="tel:+13108049586" className="inline-flex items-center gap-2 px-6 py-3 border border-primary-foreground/20 text-primary-foreground/80 font-medium rounded-full text-sm hover:bg-primary-foreground/5 transition-all">
-                  <Phone className="w-4 h-4" /> (310) 804-9586
-                </a>
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground/80 font-semibold mb-0.5">
+                    Speak with a specialist
+                  </span>
+                  <a
+                    href="tel:+13108049586"
+                    className="font-display text-lg text-foreground hover:text-primary transition-colors inline-flex items-center gap-2"
+                  >
+                    <Phone className="w-4 h-4" /> (310) 804-9586
+                  </a>
+                </div>
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.3 }} className="hidden md:block">
-              <div className="bg-foreground/30 border border-primary-foreground/20 rounded-2xl p-8 backdrop-blur-md">
-                <div className="space-y-5">
-                  {[
-                    { label: "Upfront cost to you", value: "$0" },
-                    { label: "Families helped (network)", value: "10,000+" },
-                  ].map((stat, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.15 }} className="flex items-center justify-between border-b border-primary-foreground/15 pb-4 last:border-0 last:pb-0">
-                      <span className="text-primary-foreground/85 text-sm">{stat.label}</span>
-                      <span className="font-display text-xl text-primary-foreground">{stat.value}</span>
-                    </motion.div>
-                  ))}
+            {/* Right: framed editorial card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.25 }}
+              className="lg:col-span-5"
+            >
+              <div className="relative max-w-sm mx-auto lg:ml-auto lg:mr-0">
+                {/* Offset hairline shadow frame */}
+                <div className="absolute -inset-3 border border-border translate-x-3 translate-y-3 rounded-sm pointer-events-none" />
+
+                <div className="relative bg-card border border-border p-1.5 shadow-hover rounded-sm">
+                  <div className="border border-border p-8 md:p-10 space-y-8 bg-[hsl(var(--background))] rounded-sm">
+                    <div className="flex justify-between items-end border-b border-border pb-6">
+                      <div className="space-y-1">
+                        <span className="block text-[10px] tracking-widest text-muted-foreground/80 uppercase font-semibold">
+                          Listing cost
+                        </span>
+                        <span className="block font-display text-xl text-foreground">
+                          Upfront to you
+                        </span>
+                      </div>
+                      <span className="font-display text-4xl italic text-primary">$0</span>
+                    </div>
+
+                    <div className="flex justify-between items-end border-b border-border pb-6">
+                      <div className="space-y-1">
+                        <span className="block text-[10px] tracking-widest text-muted-foreground/80 uppercase font-semibold">
+                          Bayer partnership
+                        </span>
+                        <span className="block font-display text-xl text-foreground">
+                          Families helped
+                        </span>
+                      </div>
+                      <span className="font-display text-3xl italic text-accent">10,000+</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        <span className="text-[11px] font-semibold tracking-widest uppercase text-primary">
+                          Guaranteed proceeds
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                        <span className="text-[11px] font-semibold tracking-widest uppercase text-accent">
+                          Professional advocacy
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating badge */}
+                <div className="absolute -top-3 -right-3 bg-foreground text-background text-[9px] font-bold px-4 py-1.5 tracking-[0.2em] uppercase rounded-sm shadow-soft">
+                  Legacy Partnership
                 </div>
               </div>
             </motion.div>
