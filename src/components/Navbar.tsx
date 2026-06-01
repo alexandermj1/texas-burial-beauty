@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect, useEffect } from "react";
-import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight } from "lucide-react";
+import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
@@ -35,6 +35,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     { to: "/buy", label: "Buy Property", desc: "Available listings", Icon: ShoppingBag },
     { to: "/sell", label: "Sell Property", desc: "List your plot", Icon: Tag },
     { to: "/partners", label: "Partners", desc: "Funeral homes & agents", Icon: Handshake },
+    { to: "/guides", label: "Guides", desc: "Plain-English help", Icon: BookOpen },
     { to: "/contact", label: "Contact", desc: "Talk to our team", Icon: Mail },
   ];
 
