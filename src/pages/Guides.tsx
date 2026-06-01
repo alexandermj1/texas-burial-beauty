@@ -341,7 +341,7 @@ const Guides = () => {
                 return (
                   <div
                     key={g.slug}
-                    className="flex-[0_0_96%] md:flex-[0_0_92%] lg:flex-[0_0_88%] xl:flex-[0_0_82%] min-w-0 px-3 md:px-6 h-full"
+                    className="flex-[0_0_98%] md:flex-[0_0_96%] lg:flex-[0_0_94%] xl:flex-[0_0_90%] min-w-0 px-2 md:px-4 h-full"
                   >
                     {isLive ? (
                       <Link to={`/${g.slug}`} className="block h-full">
