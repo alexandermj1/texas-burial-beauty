@@ -1,62 +1,76 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Tag, ShoppingBag, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+
+// Botanical leaves used as editorial accents (same library as the cemetery directory)
+const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+const LEAVES = Object.values(LEAF_MODULES);
 
 interface Guide {
   slug: string;
-  eyebrow: string;
+  issue: string;
+  kicker: string;
   title: string;
-  titleAccent?: string;
-  description: string;
-  Icon: typeof Tag;
+  titleAccent: string;
+  dek: string;
   status: "live" | "coming-soon";
-  meta?: string;
-  gradient: string;
-  accentColor: string;
+  meta: string;
+  // panel = the big editorial colour block on the right
+  panel: string; // tailwind bg class
+  panelInk: string; // text colour on panel
+  rule: string; // accent rule colour
+  leafIdx: number[]; // which leaves to scatter
 }
 
 const guides: Guide[] = [
   {
     slug: "sell-cemetery-plot-texas",
-    eyebrow: "For Sellers",
+    issue: "Issue N°01",
+    kicker: "The Seller's Edition",
     title: "How to Sell a Cemetery Plot in",
     titleAccent: "Texas",
-    description:
-      "What affects a plot's value, the legal steps in Texas, and the most reliable way to turn unwanted plots, crypts and niches into cash.",
-    Icon: Tag,
+    dek: "What your plot is really worth, the legal steps in Texas, and the most reliable way to turn unwanted plots, crypts and niches into cash.",
     status: "live",
     meta: "8 chapters · 9 min read",
-    gradient: "from-[#c4654a] via-[#e8a87c] to-[#87a878]",
-    accentColor: "#c4654a",
+    panel: "bg-[hsl(145_25%_36%)]",
+    panelInk: "text-[hsl(40_30%_97%)]",
+    rule: "bg-[hsl(40_45%_82%)]",
+    leafIdx: [16, 9, 4, 21],
   },
   {
     slug: "buying-a-cemetery-plot-in-texas",
-    eyebrow: "For Buyers",
+    issue: "Issue N°02",
+    kicker: "The Buyer's Edition",
     title: "How to Buy a Cemetery Plot in",
     titleAccent: "Texas",
-    description:
-      "Choosing the right cemetery, comparing property types, understanding pricing, and securing the right plot for your family — without overpaying.",
-    Icon: ShoppingBag,
+    dek: "Choosing the right cemetery, comparing property types, understanding pricing, and securing the right plot for your family — without overpaying.",
     status: "coming-soon",
-    gradient: "from-[#4a6741] via-[#87a878] to-[#e8a87c]",
-    accentColor: "#4a6741",
+    meta: "Coming soon",
+    panel: "bg-[hsl(16_50%_58%)]",
+    panelInk: "text-[hsl(40_30%_97%)]",
+    rule: "bg-[hsl(40_45%_82%)]",
+    leafIdx: [17, 8, 12, 3],
   },
   {
     slug: "cemetery-transfer-process-texas",
-    eyebrow: "For Everyone",
+    issue: "Issue N°03",
+    kicker: "The Transfer Edition",
     title: "The Cemetery",
     titleAccent: "Transfer Process",
-    description:
-      "How ownership actually changes hands in Texas — conveyance forms, transfer fees, recording timelines, and the details that decide whether a sale closes cleanly.",
-    Icon: FileText,
+    dek: "How ownership actually changes hands in Texas — conveyance forms, transfer fees, recording timelines, and the details that decide whether a sale closes cleanly.",
     status: "coming-soon",
-    gradient: "from-[#8b6f5e] via-[#c9b99a] to-[#e8a87c]",
-    accentColor: "#8b6f5e",
+    meta: "Coming soon",
+    panel: "bg-[hsl(28_22%_38%)]",
+    panelInk: "text-[hsl(40_30%_97%)]",
+    rule: "bg-[hsl(40_45%_82%)]",
+    leafIdx: [13, 20, 6, 15],
   },
 ];
 
@@ -79,7 +93,7 @@ const Guides = () => {
   }, [emblaApi]);
 
   return (
-    <div className="h-screen overflow-hidden bg-background flex flex-col">
+    <div className="h-screen overflow-hidden bg-[hsl(38_35%_95%)] flex flex-col relative">
       <Seo
         title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
         description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
@@ -87,27 +101,49 @@ const Guides = () => {
       />
       <Navbar forceScrolled />
 
-      {/* Ambient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-0">
-        <div className="absolute top-1/4 -left-40 w-[36rem] h-[36rem] rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute bottom-0 -right-40 w-[36rem] h-[36rem] rounded-full bg-accent/15 blur-3xl" />
-      </div>
+      {/* Editorial paper texture — soft dotted grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.4]"
+        style={{
+          backgroundImage:
+            "radial-gradient(hsl(28 20% 70% / 0.35) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+        }}
+      />
 
-      <section className="relative flex-1 flex flex-col pt-24 pb-8 overflow-hidden">
-        {/* Hero header */}
-        <div className="container mx-auto px-6 max-w-6xl text-center mb-6 md:mb-10">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="inline-flex items-center gap-3 mb-3 md:mb-4">
-              <span className="w-6 h-px bg-accent" />
-              <p className="text-accent text-[10px] md:text-xs tracking-[0.28em] uppercase font-semibold">The Guides Library</p>
-              <span className="w-6 h-px bg-accent" />
+      {/* Scattered botanical accents */}
+      <img
+        src={LEAVES[16]}
+        alt=""
+        aria-hidden
+        className="hidden md:block absolute -top-10 -left-16 w-56 opacity-50 rotate-[18deg] pointer-events-none select-none"
+      />
+      <img
+        src={LEAVES[9]}
+        alt=""
+        aria-hidden
+        className="hidden md:block absolute bottom-4 -right-12 w-64 opacity-50 -rotate-[10deg] pointer-events-none select-none"
+      />
+
+      <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
+        {/* Masthead */}
+        <div className="container mx-auto px-6 max-w-6xl mb-5 md:mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-end justify-between gap-6 border-b border-[hsl(28_20%_25%)]/15 pb-4"
+          >
+            <div>
+              <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 mb-2">
+                The Guides Library · Vol. 1
+              </p>
+              <h1 className="font-display text-3xl md:text-5xl lg:text-[3.5rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
+                Plain English, <span className="italic">printed</span> for families.
+              </h1>
             </div>
-            <h1 className="font-display text-3xl md:text-5xl lg:text-6xl text-foreground leading-[1.05] mb-3">
-              Plain-English answers to the<br className="hidden md:block" />{" "}
-              <span className="italic text-primary">hardest questions</span> families ask.
-            </h1>
-            <p className="hidden md:block text-base text-foreground/65 max-w-xl mx-auto font-light">
-              Swipe through complete guides on selling, buying, and transferring Texas cemetery property.
+            <p className="hidden lg:block text-xs tracking-[0.18em] uppercase text-[hsl(28_20%_25%)]/60 max-w-xs text-right">
+              Three complete guides on selling, buying and transferring Texas cemetery property — swipe to read.
             </p>
           </motion.div>
         </div>
@@ -119,77 +155,127 @@ const Guides = () => {
               {guides.map((g, i) => {
                 const isLive = g.status === "live";
                 const isActive = i === selected;
+
                 const inner = (
                   <article
-                    className={`group relative h-full w-full flex flex-col rounded-[2rem] overflow-hidden transition-all duration-500 ${
-                      isActive ? "scale-100 opacity-100" : "scale-[0.92] opacity-50"
+                    className={`group relative h-full w-full rounded-[1.25rem] overflow-hidden bg-[hsl(40_30%_97%)] border border-[hsl(28_20%_25%)]/10 transition-all duration-500 ${
+                      isActive
+                        ? "shadow-[0_30px_60px_-30px_hsl(28_20%_15%/0.35)] opacity-100"
+                        : "shadow-[0_10px_30px_-20px_hsl(28_20%_15%/0.3)] opacity-60 scale-[0.96]"
                     }`}
-                    style={{
-                      boxShadow: isActive
-                        ? `0 30px 80px -20px ${g.accentColor}66, 0 10px 30px -10px ${g.accentColor}33`
-                        : "0 10px 30px -15px rgba(0,0,0,0.15)",
-                    }}
                   >
-                    {/* Full bleed gradient background */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${g.gradient}`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    {/* Grid overlay */}
-                    <div
-                      className="absolute inset-0 opacity-[0.08] pointer-events-none mix-blend-overlay"
-                      style={{
-                        backgroundImage:
-                          "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
-                        backgroundSize: "44px 44px",
-                      }}
-                    />
-                    {/* Decorative orbs */}
-                    <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/20 blur-3xl" />
-                    <div className="absolute -bottom-24 -left-16 w-80 h-80 rounded-full bg-black/20 blur-3xl" />
-
-                    {/* Content */}
-                    <div className="relative z-10 flex-1 flex flex-col p-8 md:p-12">
-                      <div className="flex items-start justify-between mb-8">
-                        <div className="w-16 h-16 rounded-2xl bg-white/95 backdrop-blur flex items-center justify-center shadow-xl">
-                          <g.Icon className="w-7 h-7" style={{ color: g.accentColor }} strokeWidth={1.75} />
+                    <div className="grid md:grid-cols-[1.05fr_0.95fr] h-full">
+                      {/* LEFT — editorial text panel */}
+                      <div className="relative flex flex-col p-7 md:p-10 lg:p-12">
+                        {/* Top meta line */}
+                        <div className="flex items-center justify-between mb-8">
+                          <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65">
+                            {g.issue}
+                          </p>
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] font-bold px-2.5 py-1 rounded-full ${
+                              isLive
+                                ? "bg-[hsl(145_25%_36%)] text-[hsl(40_30%_97%)]"
+                                : "bg-[hsl(28_20%_25%)]/8 text-[hsl(28_20%_25%)]/70 border border-[hsl(28_20%_25%)]/15"
+                            }`}
+                          >
+                            {isLive && <span className="w-1 h-1 rounded-full bg-[hsl(40_30%_97%)] animate-pulse" />}
+                            {isLive ? "Available" : "Soon"}
+                          </span>
                         </div>
-                        <span className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-bold px-3 py-1.5 rounded-full backdrop-blur ${
-                          isLive ? "bg-white text-foreground" : "bg-white/20 text-white border border-white/30"
-                        }`}>
-                          {isLive && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: g.accentColor }} />}
-                          {isLive ? "Available now" : "Coming soon"}
-                        </span>
+
+                        <p className="font-display italic text-[hsl(16_50%_45%)] text-base md:text-lg mb-3">
+                          {g.kicker}
+                        </p>
+
+                        <h2 className="font-display text-[2rem] md:text-[2.6rem] lg:text-[3.1rem] leading-[0.98] text-[hsl(28_20%_15%)] tracking-tight mb-6">
+                          {g.title}{" "}
+                          <span className="italic">{g.titleAccent}</span>
+                        </h2>
+
+                        <div className={`w-12 h-px ${g.rule} mb-6`} />
+
+                        <p className="text-[hsl(28_20%_25%)]/75 text-[0.95rem] md:text-base leading-relaxed font-light max-w-md mb-8">
+                          {g.dek}
+                        </p>
+
+                        <div className="mt-auto flex items-end justify-between gap-4 pt-6 border-t border-[hsl(28_20%_25%)]/10">
+                          <span className="text-[10px] tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium">
+                            {g.meta}
+                          </span>
+                          {isLive ? (
+                            <span className="inline-flex items-center gap-2 text-[hsl(145_25%_36%)] font-semibold text-sm tracking-wide group-hover:gap-3 transition-all">
+                              Read the guide <ArrowUpRight className="w-4 h-4" />
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-2 text-[hsl(28_20%_25%)]/60 font-medium text-sm tracking-wide">
+                              Notify me <ArrowRight className="w-4 h-4" />
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <p className="text-white/85 text-[11px] tracking-[0.28em] uppercase font-bold mb-4">
-                        {g.eyebrow} · Guide 0{i + 1}
-                      </p>
+                      {/* RIGHT — colour panel with botanical */}
+                      <div className={`relative hidden md:flex overflow-hidden ${g.panel}`}>
+                        {/* Soft texture */}
+                        <div
+                          className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
+                          style={{
+                            backgroundImage:
+                              "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                            backgroundSize: "48px 48px",
+                          }}
+                        />
+                        {/* Botanical leaves */}
+                        {g.leafIdx.map((idx, k) => {
+                          const positions = [
+                            { top: "-8%", right: "-10%", size: 280, rot: 18, op: 0.85 },
+                            { bottom: "-12%", left: "-8%", size: 240, rot: -22, op: 0.7 },
+                            { top: "40%", right: "55%", size: 110, rot: 35, op: 0.55 },
+                            { top: "20%", left: "30%", size: 90, rot: -15, op: 0.45 },
+                          ];
+                          const p = positions[k];
+                          return (
+                            <img
+                              key={k}
+                              src={LEAVES[idx % LEAVES.length]}
+                              alt=""
+                              aria-hidden
+                              className="absolute pointer-events-none select-none"
+                              style={{
+                                top: p.top,
+                                bottom: p.bottom,
+                                left: p.left,
+                                right: p.right,
+                                width: p.size,
+                                opacity: p.op,
+                                transform: `rotate(${p.rot}deg)`,
+                              }}
+                            />
+                          );
+                        })}
 
-                      <h2 className="font-display text-3xl md:text-5xl lg:text-6xl leading-[1.05] text-white mb-6 max-w-3xl">
-                        {g.title}{" "}
-                        {g.titleAccent && (
-                          <span className="italic text-white/95 underline decoration-white/40 decoration-[3px] underline-offset-[6px]">
-                            {g.titleAccent}
-                          </span>
-                        )}
-                      </h2>
-
-                      <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-2xl mb-8 font-light">
-                        {g.description}
-                      </p>
-
-                      <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-white/20">
-                        <span className="text-xs text-white/70 tracking-wide">
-                          {isLive ? g.meta : "Notify me when it's ready"}
-                        </span>
-                        {isLive ? (
-                          <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-foreground font-semibold text-sm group-hover:gap-3 transition-all shadow-lg">
-                            Read guide <ArrowRight className="w-4 h-4" />
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/15 backdrop-blur border border-white/30 text-white font-medium text-sm">
-                            Get notified <ArrowRight className="w-4 h-4" />
-                          </span>
-                        )}
+                        {/* Issue number — huge editorial display */}
+                        <div className={`relative z-10 flex flex-col justify-between p-10 lg:p-12 w-full ${g.panelInk}`}>
+                          <div className="flex items-start justify-between">
+                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
+                              {g.kicker}
+                            </p>
+                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
+                              {String(i + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-display italic text-base opacity-90 mb-2">N°0{i + 1}</p>
+                            <p className="font-display text-[6rem] lg:text-[8rem] leading-[0.85] tracking-tighter">
+                              {String(i + 1).padStart(2, "0")}
+                            </p>
+                            <div className={`mt-6 w-16 h-px ${g.rule} opacity-80`} />
+                            <p className="mt-4 text-[11px] tracking-[0.28em] uppercase opacity-85 font-semibold">
+                              Texas Cemetery Brokers
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -198,13 +284,17 @@ const Guides = () => {
                 return (
                   <div
                     key={g.slug}
-                    className="flex-[0_0_92%] md:flex-[0_0_72%] lg:flex-[0_0_62%] min-w-0 px-3 md:px-5"
-                    style={{ height: "min(62vh, 560px)" }}
+                    className="flex-[0_0_94%] md:flex-[0_0_82%] lg:flex-[0_0_72%] xl:flex-[0_0_64%] min-w-0 px-3 md:px-5"
+                    style={{ height: "min(64vh, 580px)" }}
                   >
                     {isLive ? (
-                      <Link to={`/${g.slug}`} className="block h-full">{inner}</Link>
+                      <Link to={`/${g.slug}`} className="block h-full">
+                        {inner}
+                      </Link>
                     ) : (
-                      <Link to="/contact" className="block h-full">{inner}</Link>
+                      <Link to="/contact" className="block h-full">
+                        {inner}
+                      </Link>
                     )}
                   </div>
                 );
@@ -217,36 +307,41 @@ const Guides = () => {
             onClick={() => emblaApi?.scrollPrev()}
             disabled={!canPrev}
             aria-label="Previous guide"
-            className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 md:w-14 md:h-14 rounded-full bg-card/90 backdrop-blur border border-border shadow-lg flex items-center justify-center text-foreground hover:scale-110 hover:bg-card transition-all disabled:opacity-30 disabled:hover:scale-100"
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 md:w-12 md:h-12 rounded-full bg-[hsl(40_30%_97%)] border border-[hsl(28_20%_25%)]/15 shadow-md flex items-center justify-center text-[hsl(28_20%_15%)] hover:bg-white hover:scale-105 transition-all disabled:opacity-25 disabled:hover:scale-100"
           >
-            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={() => emblaApi?.scrollNext()}
             disabled={!canNext}
             aria-label="Next guide"
-            className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 md:w-14 md:h-14 rounded-full bg-card/90 backdrop-blur border border-border shadow-lg flex items-center justify-center text-foreground hover:scale-110 hover:bg-card transition-all disabled:opacity-30 disabled:hover:scale-100"
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 md:w-12 md:h-12 rounded-full bg-[hsl(40_30%_97%)] border border-[hsl(28_20%_25%)]/15 shadow-md flex items-center justify-center text-[hsl(28_20%_15%)] hover:bg-white hover:scale-105 transition-all disabled:opacity-25 disabled:hover:scale-100"
           >
-            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Dots + counter */}
-        <div className="container mx-auto px-6 mt-6 flex flex-col items-center gap-3">
+        {/* Footer rail — dots + counter */}
+        <div className="container mx-auto px-6 mt-5 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-4 max-w-6xl">
+          <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
+            {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
+          </p>
           <div className="flex items-center gap-2">
             {guides.map((g, i) => (
               <button
                 key={g.slug}
                 onClick={() => emblaApi?.scrollTo(i)}
                 aria-label={`Go to guide ${i + 1}`}
-                className={`h-2 rounded-full transition-all ${
-                  i === selected ? "w-10 bg-primary" : "w-2 bg-foreground/20 hover:bg-foreground/40"
+                className={`h-1.5 rounded-full transition-all ${
+                  i === selected
+                    ? "w-10 bg-[hsl(145_25%_36%)]"
+                    : "w-1.5 bg-[hsl(28_20%_25%)]/25 hover:bg-[hsl(28_20%_25%)]/45"
                 }`}
               />
             ))}
           </div>
-          <p className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground font-semibold">
-            {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")} · Swipe to explore
+          <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold hidden md:block">
+            Swipe →
           </p>
         </div>
       </section>
