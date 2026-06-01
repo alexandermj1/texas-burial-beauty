@@ -198,9 +198,9 @@ const Guides = () => {
         </div>
 
         {/* Carousel */}
-        <div className="relative flex-1 flex items-center min-h-0">
-          <div ref={emblaRef} className="overflow-hidden w-full">
-            <div className="flex">
+        <div className="relative flex-1 flex items-stretch min-h-0 py-1">
+          <div ref={emblaRef} className="overflow-hidden w-full h-full">
+            <div className="flex h-full">
               {guides.map((g, i) => {
                 const isLive = g.status === "live";
                 const isActive = i === selected;
@@ -373,7 +373,7 @@ const Guides = () => {
         </div>
 
         {/* Footer rail — dots + counter */}
-        <div className="container mx-auto px-6 mt-1 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-2 max-w-[1600px]">
+        <div className="container mx-auto px-6 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 py-2.5 max-w-[1600px]">
           <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
             {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
           </p>
