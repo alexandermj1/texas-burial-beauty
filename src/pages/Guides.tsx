@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Tag, ShoppingBag, FileText, Sparkles } from "lucide-react";
+import { ArrowRight, Tag, ShoppingBag, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -13,8 +13,7 @@ interface Guide {
   description: string;
   Icon: typeof Tag;
   status: "live" | "coming-soon";
-  readTime?: string;
-  chapters?: number;
+  meta?: string;
 }
 
 const guides: Guide[] = [
@@ -24,11 +23,10 @@ const guides: Guide[] = [
     title: "How to Sell a Cemetery Plot in",
     titleAccent: "Texas",
     description:
-      "Everything Texas families need to know — what affects a plot's value, the legal steps, and the most reliable way to turn unwanted plots, crypts and niches into cash.",
+      "What affects a plot's value, the legal steps in Texas, and the most reliable way to turn unwanted plots, crypts and niches into cash.",
     Icon: Tag,
     status: "live",
-    readTime: "9 min read",
-    chapters: 8,
+    meta: "8 chapters · 9 min read",
   },
   {
     slug: "buying-a-cemetery-plot-in-texas",
@@ -36,7 +34,7 @@ const guides: Guide[] = [
     title: "How to Buy a Cemetery Plot in",
     titleAccent: "Texas",
     description:
-      "A complete walkthrough of choosing the right cemetery, comparing property types, understanding pricing, and securing the right plot for your family — without overpaying.",
+      "Choosing the right cemetery, comparing property types, understanding pricing, and securing the right plot for your family — without overpaying.",
     Icon: ShoppingBag,
     status: "coming-soon",
   },
@@ -46,7 +44,7 @@ const guides: Guide[] = [
     title: "The Cemetery",
     titleAccent: "Transfer Process",
     description:
-      "How ownership of cemetery property actually changes hands in Texas — conveyance forms, transfer fees, recording timelines, and the small details that decide whether a sale closes cleanly.",
+      "How ownership actually changes hands in Texas — conveyance forms, transfer fees, recording timelines, and the details that decide whether a sale closes cleanly.",
     Icon: FileText,
     status: "coming-soon",
   },
@@ -61,77 +59,57 @@ const Guides = () => (
     />
     <Navbar forceScrolled />
 
-    {/* Hero — soft sage gradient, centered editorial */}
+    {/* Hero */}
     <section className="relative pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[hsl(var(--primary)/0.10)] via-background to-background">
       <div className="absolute top-0 right-0 w-[40rem] h-[40rem] rounded-full bg-primary/10 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
       <div className="absolute top-10 left-0 w-[28rem] h-[28rem] rounded-full bg-accent/10 blur-3xl -translate-x-1/3 pointer-events-none" />
       <div className="relative container mx-auto px-6 max-w-5xl text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="inline-flex items-center gap-3 mb-6">
             <span className="w-8 h-px bg-accent" />
-            <p className="text-accent text-xs tracking-[0.28em] uppercase font-semibold">
-              The Guides Library
-            </p>
+            <p className="text-accent text-xs tracking-[0.28em] uppercase font-semibold">The Guides Library</p>
             <span className="w-8 h-px bg-accent" />
           </div>
           <h1 className="font-display text-5xl md:text-7xl text-foreground leading-[1.05] mb-8">
-            Plain-English answers to the
-            <br />
+            Plain-English answers to the<br />
             <span className="italic text-primary">hardest questions</span> families ask.
           </h1>
           <p className="text-lg md:text-xl text-foreground/75 max-w-2xl mx-auto leading-relaxed font-light">
-            Written by specialists who handle Texas cemetery property every day — three complete
-            guides that walk you through valuation, paperwork, and the realities of selling,
-            buying, and transferring a plot.
+            Written by specialists who handle Texas cemetery property every day — complete guides that walk you through valuation, paperwork, and the realities of selling, buying, and transferring a plot.
           </p>
         </motion.div>
       </div>
     </section>
 
     {/* Guide cards */}
-    <section className="pb-24 -mt-4">
+    <section className="pb-28 -mt-4">
       <div className="container mx-auto px-6 max-w-7xl">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {guides.map((g, i) => {
             const isLive = g.status === "live";
-            const Card = (
-              <article
-                className={`group relative h-full flex flex-col rounded-3xl overflow-hidden border transition-all duration-500 ${
+            const inner = (
+              <article className={`group relative h-full flex flex-col rounded-3xl overflow-hidden border transition-all duration-500 ${
+                isLive
+                  ? "bg-card border-border/60 hover:border-primary/40 hover:-translate-y-1 hover:shadow-hover shadow-soft"
+                  : "bg-card/60 border-border/40"
+              }`}>
+                <div className={`relative h-44 px-7 pt-7 pb-6 ${
                   isLive
-                    ? "bg-card border-border/60 hover:border-primary/40 hover:-translate-y-1 hover:shadow-hover shadow-soft"
-                    : "bg-card/60 border-border/40 cursor-default"
-                }`}
-              >
-                {/* Top band — sage gradient with icon */}
-                <div
-                  className={`relative h-44 px-7 pt-7 pb-6 ${
-                    isLive
-                      ? "bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10"
-                      : "bg-gradient-to-br from-muted/60 to-muted/30"
-                  }`}
-                >
+                    ? "bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10"
+                    : "bg-gradient-to-br from-muted/60 to-muted/30"
+                }`}>
                   <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/15 blur-2xl group-hover:bg-accent/25 transition-colors duration-500" />
                   <div className="relative flex items-start justify-between">
-                    <div
-                      className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 ${
-                        isLive
-                          ? "bg-primary text-primary-foreground group-hover:scale-110 group-hover:rotate-3"
-                          : "bg-muted-foreground/20 text-muted-foreground"
-                      }`}
-                    >
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 ${
+                      isLive
+                        ? "bg-primary text-primary-foreground group-hover:scale-110 group-hover:rotate-3"
+                        : "bg-muted-foreground/20 text-muted-foreground"
+                    }`}>
                       <g.Icon className="w-6 h-6" strokeWidth={1.75} />
                     </div>
-                    <span
-                      className={`text-[10px] uppercase tracking-[0.2em] font-semibold px-3 py-1.5 rounded-full ${
-                        isLive
-                          ? "bg-accent/15 text-accent"
-                          : "bg-foreground/5 text-muted-foreground"
-                      }`}
-                    >
+                    <span className={`text-[10px] uppercase tracking-[0.2em] font-semibold px-3 py-1.5 rounded-full ${
+                      isLive ? "bg-accent/15 text-accent" : "bg-foreground/5 text-muted-foreground"
+                    }`}>
                       {isLive ? "Available now" : "Coming soon"}
                     </span>
                   </div>
@@ -140,6 +118,76 @@ const Guides = () => (
                   </p>
                 </div>
 
-                {/* Body */}
                 <div className="flex-1 flex flex-col px-7 py-7">
-                  <h2 className="font-display text-2xl md:text-[1.7
+                  <h2 className="font-display text-2xl md:text-[1.7rem] leading-tight text-foreground mb-3">
+                    {g.title}{" "}
+                    {g.titleAccent && <span className="italic text-primary">{g.titleAccent}</span>}
+                  </h2>
+                  <p className="text-foreground/70 leading-relaxed text-[15px] mb-6 flex-1">
+                    {g.description}
+                  </p>
+                  <div className="flex items-center justify-between pt-5 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground">
+                      {isLive ? g.meta : "Notify me when it's ready"}
+                    </span>
+                    {isLive ? (
+                      <span className="inline-flex items-center gap-1.5 text-primary font-medium text-sm group-hover:gap-3 transition-all">
+                        Read guide <ArrowRight className="w-4 h-4" />
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">In progress</span>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+
+            return (
+              <motion.div
+                key={g.slug}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5, delay: 0.1 * i }}
+                className="h-full"
+              >
+                {isLive ? (
+                  <Link to={`/guides/${g.slug}`} className="block h-full">{inner}</Link>
+                ) : (
+                  <Link to="/contact" className="block h-full">{inner}</Link>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Closing strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mt-20 rounded-3xl bg-gradient-to-br from-primary to-primary/85 text-primary-foreground p-10 md:p-14 text-center relative overflow-hidden"
+        >
+          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-accent/30 blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 w-72 h-72 rounded-full bg-primary-foreground/10 blur-3xl" />
+          <p className="relative text-[11px] tracking-[0.28em] uppercase font-semibold text-primary-foreground/70 mb-4">Can't find your answer?</p>
+          <h2 className="relative font-display text-3xl md:text-4xl mb-4">Talk to a real specialist — free.</h2>
+          <p className="relative text-primary-foreground/85 max-w-xl mx-auto mb-8">
+            Every situation is different. Tell us about your cemetery, plot or family situation and we'll walk you through your options — no obligation.
+          </p>
+          <Link
+            to="/contact"
+            className="relative inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-full font-medium text-sm hover:opacity-90 transition-all shadow-soft"
+          >
+            Get in touch <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+
+    <Footer />
+  </div>
+);
+
+export default Guides;
