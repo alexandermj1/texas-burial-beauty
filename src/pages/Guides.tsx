@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Navbar from "@/components/Navbar";
@@ -12,6 +12,23 @@ const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
   import: "default",
 }) as Record<string, string>;
 const LEAVES = Object.values(LEAF_MODULES);
+
+// Hand-drawn tropical botanicals — used as feature accents on each guide panel
+import hibiscusRed from "@/assets/flowers/hibiscus-red.png.asset.json";
+import monstera from "@/assets/flowers/monstera.png.asset.json";
+import plumeria from "@/assets/flowers/plumeria.png.asset.json";
+import fern from "@/assets/flowers/fern.png.asset.json";
+import birdParadise from "@/assets/flowers/bird-paradise.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf.png.asset.json";
+import pinkBlossom from "@/assets/flowers/pink-blossom.png.asset.json";
+const FLOWERS = [hibiscusRed.url, monstera.url, plumeria.url, fern.url, birdParadise.url, palmFan.url, bananaLeaf.url, pinkBlossom.url];
+
+const OUTBOUND_RESOURCES = [
+  { label: "Texas Dept. of Banking — Cemetery Regulation", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services" },
+  { label: "Texas Funeral Service Commission", href: "https://tfsc.texas.gov/ConsumerInformation.html" },
+  { label: "Texas Health & Safety Code Ch. 711", href: "https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm" },
+];
 
 interface Guide {
   slug: string;
