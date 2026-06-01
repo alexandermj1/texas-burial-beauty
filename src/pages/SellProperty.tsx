@@ -88,9 +88,9 @@ const SellProperty = () => {
           alt=""
           aria-hidden
           initial={{ opacity: 0, x: -30, rotate: -18 }}
-          animate={{ opacity: 0.55, x: 0, rotate: -12 }}
+          animate={{ opacity: 0.18, x: 0, rotate: -12 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          className="hidden md:block absolute -left-24 -bottom-24 w-[28rem] pointer-events-none select-none"
+          className="hidden md:block absolute -left-40 -bottom-40 w-[26rem] pointer-events-none select-none"
         />
         <motion.img
           src={hibiscusCoral.url}
