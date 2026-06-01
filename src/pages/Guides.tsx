@@ -234,18 +234,18 @@ const Guides = () => {
                           }}
                         />
                         {/* Botanical leaves */}
-                        {g.leafIdx.map((idx, k) => {
+                        {g.flowerIdx.map((idx, k) => {
                           const positions = [
-                            { top: "-8%", right: "-10%", size: 280, rot: 18, op: 0.85 },
-                            { bottom: "-12%", left: "-8%", size: 240, rot: -22, op: 0.7 },
-                            { top: "40%", right: "55%", size: 110, rot: 35, op: 0.55 },
-                            { top: "20%", left: "30%", size: 90, rot: -15, op: 0.45 },
+                            { top: "-12%", right: "-12%", size: 340, rot: 18, op: 0.9 },
+                            { bottom: "-14%", left: "-10%", size: 280, rot: -22, op: 0.75 },
+                            { top: "38%", right: "52%", size: 130, rot: 35, op: 0.6 },
+                            { top: "18%", left: "28%", size: 110, rot: -15, op: 0.5 },
                           ];
                           const p = positions[k];
                           return (
                             <img
                               key={k}
-                              src={LEAVES[idx % LEAVES.length]}
+                              src={FLOWERS[idx % FLOWERS.length]}
                               alt=""
                               aria-hidden
                               className="absolute pointer-events-none select-none"
