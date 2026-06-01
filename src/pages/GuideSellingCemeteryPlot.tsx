@@ -280,7 +280,20 @@ const GuideSellingCemeteryPlot = () => (
                 <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" strokeWidth={1.75} />
                 <div>
                   <p className="font-display text-lg text-foreground">{c.city}</p>
-                  <p className="text-sm text-foreground/70 leading-relaxed">{c.parks}</p>
+                  <p className="text-sm text-foreground/70 leading-relaxed">
+                    {c.parks.map((p, i) => (
+                      <span key={p.label}>
+                        {i > 0 && <span className="text-foreground/40"> · </span>}
+                        {p.cemetery ? (
+                          <Link to={cemeteryPath(p.cemetery)} className="text-foreground/80 hover:text-primary underline-offset-4 hover:underline transition-colors">
+                            {p.label}
+                          </Link>
+                        ) : (
+                          p.label
+                        )}
+                      </span>
+                    ))}
+                  </p>
                 </div>
               </div>
             ))}
