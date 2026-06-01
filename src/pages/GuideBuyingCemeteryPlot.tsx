@@ -71,6 +71,18 @@ const FULL = `https://texascemeterybrokers.com${PATH}`;
 const jsonLd: Record<string, unknown>[] = [
   {
     "@context": "https://schema.org",
+    "@type": "Article",
+    headline: "Cemetery Plots for Sale in Texas",
+    description: "Buy cemetery plots, niches and crypts across Texas for 30–50% below cemetery prices — verified resale inventory, in-person showings and 0% pre-need financing.",
+    mainEntityOfPage: FULL,
+    url: FULL,
+    inLanguage: "en-US",
+    author: { "@type": "Organization", name: "Texas Cemetery Brokers", url: "https://texascemeterybrokers.com/" },
+    publisher: { "@type": "Organization", name: "Texas Cemetery Brokers", url: "https://texascemeterybrokers.com/" },
+    about: ["Cemetery plots", "Burial property resale", "Texas cemeteries"],
+  },
+  {
+    "@context": "https://schema.org",
     "@type": "Service",
     serviceType: "Cemetery plot brokerage",
     name: "Buy Cemetery Plots in Texas",
