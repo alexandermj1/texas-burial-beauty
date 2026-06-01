@@ -13,16 +13,21 @@ const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
 }) as Record<string, string>;
 const LEAVES = Object.values(LEAF_MODULES);
 
-// Hand-drawn tropical botanicals — used as feature accents on each guide panel
-import hibiscusRed from "@/assets/flowers/hibiscus-red.png.asset.json";
-import monstera from "@/assets/flowers/monstera.png.asset.json";
-import plumeria from "@/assets/flowers/plumeria.png.asset.json";
-import fern from "@/assets/flowers/fern.png.asset.json";
-import birdParadise from "@/assets/flowers/bird-paradise.png.asset.json";
-import palmFan from "@/assets/flowers/palm-fan.png.asset.json";
-import bananaLeaf from "@/assets/flowers/banana-leaf.png.asset.json";
-import pinkBlossom from "@/assets/flowers/pink-blossom.png.asset.json";
-const FLOWERS = [hibiscusRed.url, monstera.url, plumeria.url, fern.url, birdParadise.url, palmFan.url, bananaLeaf.url, pinkBlossom.url];
+// Hand-drawn tropical botanicals — individually drawn, properly cropped
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
+// 0: hibiscus  1: leaf  2: plumeria  3: hibiscus  4: leaf  5: plumeria  6: hibiscus  7: leaf
+const FLOWERS = [
+  hibiscusCoral.url,
+  leafVeined.url,
+  plumeriaCluster.url,
+  hibiscusCoral.url,
+  leafVeined.url,
+  plumeriaCluster.url,
+  hibiscusCoral.url,
+  leafVeined.url,
+];
 
 const OUTBOUND_RESOURCES = [
   { label: "Texas Dept. of Banking — Cemetery Regulation", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services" },
