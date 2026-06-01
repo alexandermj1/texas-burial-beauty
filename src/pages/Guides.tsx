@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Navbar from "@/components/Navbar";
@@ -13,6 +13,23 @@ const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
 }) as Record<string, string>;
 const LEAVES = Object.values(LEAF_MODULES);
 
+// Hand-drawn tropical botanicals — used as feature accents on each guide panel
+import hibiscusRed from "@/assets/flowers/hibiscus-red.png.asset.json";
+import monstera from "@/assets/flowers/monstera.png.asset.json";
+import plumeria from "@/assets/flowers/plumeria.png.asset.json";
+import fern from "@/assets/flowers/fern.png.asset.json";
+import birdParadise from "@/assets/flowers/bird-paradise.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf.png.asset.json";
+import pinkBlossom from "@/assets/flowers/pink-blossom.png.asset.json";
+const FLOWERS = [hibiscusRed.url, monstera.url, plumeria.url, fern.url, birdParadise.url, palmFan.url, bananaLeaf.url, pinkBlossom.url];
+
+const OUTBOUND_RESOURCES = [
+  { label: "Texas Dept. of Banking — Cemetery Regulation", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services" },
+  { label: "Texas Funeral Service Commission", href: "https://tfsc.texas.gov/ConsumerInformation.html" },
+  { label: "Texas Health & Safety Code Ch. 711", href: "https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm" },
+];
+
 interface Guide {
   slug: string;
   issue: string;
@@ -22,14 +39,13 @@ interface Guide {
   dek: string;
   status: "live" | "coming-soon";
   meta: string;
-  // panel = the big editorial colour block on the right
-  panel: string; // tailwind bg class
-  panelInk: string; // text colour on panel
-  rule: string; // accent rule colour
-  leafIdx: number[]; // which leaves to scatter
+  panel: string;
+  panelInk: string;
+  rule: string;
+  flowerIdx: number[]; // index into FLOWERS for feature accents
 }
 
-const guides: Guide[] = [
+export const guides: Guide[] = [
   {
     slug: "sell-cemetery-plot-texas",
     issue: "Issue N°01",
@@ -42,7 +58,7 @@ const guides: Guide[] = [
     panel: "bg-[hsl(145_25%_36%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    leafIdx: [16, 9, 4, 21],
+    flowerIdx: [1, 3, 6, 7], // monstera, fern, banana, pink
   },
   {
     slug: "buying-a-cemetery-plot-in-texas",
@@ -56,7 +72,7 @@ const guides: Guide[] = [
     panel: "bg-[hsl(16_50%_58%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    leafIdx: [17, 8, 12, 3],
+    flowerIdx: [0, 2, 5, 7], // hibiscus, plumeria, palm, pink
   },
   {
     slug: "cemetery-transfer-process-texas",
@@ -70,7 +86,7 @@ const guides: Guide[] = [
     panel: "bg-[hsl(28_22%_38%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    leafIdx: [13, 20, 6, 15],
+    flowerIdx: [4, 5, 1, 2], // bird-paradise, palm, monstera, plumeria
   },
 ];
 
@@ -93,7 +109,7 @@ const Guides = () => {
   }, [emblaApi]);
 
   return (
-    <div className="h-screen overflow-hidden bg-[hsl(38_35%_95%)] flex flex-col relative">
+    <div className="min-h-screen bg-[hsl(38_35%_95%)] flex flex-col relative">
       <Seo
         title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
         description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
@@ -111,23 +127,14 @@ const Guides = () => {
         }}
       />
 
-      {/* Scattered botanical accents */}
-      <img
-        src={LEAVES[16]}
-        alt=""
-        aria-hidden
-        className="hidden md:block absolute -top-10 -left-16 w-56 opacity-50 rotate-[18deg] pointer-events-none select-none"
-      />
-      <img
-        src={LEAVES[9]}
-        alt=""
-        aria-hidden
-        className="hidden md:block absolute bottom-4 -right-12 w-64 opacity-50 -rotate-[10deg] pointer-events-none select-none"
-      />
+      {/* Scattered botanical accents — hand-drawn tropicals */}
+      <img src={FLOWERS[0]} alt="" aria-hidden className="hidden md:block absolute -top-14 -left-20 w-64 opacity-60 rotate-[18deg] pointer-events-none select-none" />
+      <img src={FLOWERS[1]} alt="" aria-hidden className="hidden md:block absolute top-32 -right-16 w-72 opacity-55 -rotate-[14deg] pointer-events-none select-none" />
+      <img src={FLOWERS[5]} alt="" aria-hidden className="hidden lg:block absolute bottom-32 -left-12 w-56 opacity-50 -rotate-[8deg] pointer-events-none select-none" />
 
       <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-6xl mb-5 md:mb-8">
+        <div className="container mx-auto px-6 max-w-[1400px] mb-5 md:mb-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -227,18 +234,18 @@ const Guides = () => {
                           }}
                         />
                         {/* Botanical leaves */}
-                        {g.leafIdx.map((idx, k) => {
+                        {g.flowerIdx.map((idx, k) => {
                           const positions = [
-                            { top: "-8%", right: "-10%", size: 280, rot: 18, op: 0.85 },
-                            { bottom: "-12%", left: "-8%", size: 240, rot: -22, op: 0.7 },
-                            { top: "40%", right: "55%", size: 110, rot: 35, op: 0.55 },
-                            { top: "20%", left: "30%", size: 90, rot: -15, op: 0.45 },
+                            { top: "-12%", right: "-12%", size: 340, rot: 18, op: 0.9 },
+                            { bottom: "-14%", left: "-10%", size: 280, rot: -22, op: 0.75 },
+                            { top: "38%", right: "52%", size: 130, rot: 35, op: 0.6 },
+                            { top: "18%", left: "28%", size: 110, rot: -15, op: 0.5 },
                           ];
                           const p = positions[k];
                           return (
                             <img
                               key={k}
-                              src={LEAVES[idx % LEAVES.length]}
+                              src={FLOWERS[idx % FLOWERS.length]}
                               alt=""
                               aria-hidden
                               className="absolute pointer-events-none select-none"
@@ -284,8 +291,8 @@ const Guides = () => {
                 return (
                   <div
                     key={g.slug}
-                    className="flex-[0_0_94%] md:flex-[0_0_82%] lg:flex-[0_0_72%] xl:flex-[0_0_64%] min-w-0 px-3 md:px-5"
-                    style={{ height: "min(64vh, 580px)" }}
+                    className="flex-[0_0_96%] md:flex-[0_0_92%] lg:flex-[0_0_88%] xl:flex-[0_0_82%] min-w-0 px-3 md:px-6"
+                    style={{ height: "min(72vh, 640px)" }}
                   >
                     {isLive ? (
                       <Link to={`/${g.slug}`} className="block h-full">
@@ -322,7 +329,7 @@ const Guides = () => {
         </div>
 
         {/* Footer rail — dots + counter */}
-        <div className="container mx-auto px-6 mt-5 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-4 max-w-6xl">
+        <div className="container mx-auto px-6 mt-5 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-4 max-w-[1400px]">
           <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
             {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
           </p>
@@ -345,6 +352,29 @@ const Guides = () => {
           </p>
         </div>
       </section>
+
+      {/* Outbound Texas-government resources — SEO authority + reader trust */}
+      <aside className="relative z-10 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/60 backdrop-blur-sm">
+        <div className="container mx-auto px-6 max-w-[1400px] py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+          <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/70 shrink-0">
+            Official Texas resources
+          </p>
+          <ul className="flex flex-wrap gap-x-5 gap-y-2">
+            {OUTBOUND_RESOURCES.map((r) => (
+              <li key={r.href}>
+                <a
+                  href={r.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-[hsl(28_20%_25%)]/85 hover:text-[hsl(145_25%_36%)] underline-offset-4 hover:underline font-medium"
+                >
+                  {r.label} <ExternalLink className="w-3 h-3" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
     </div>
   );
 };

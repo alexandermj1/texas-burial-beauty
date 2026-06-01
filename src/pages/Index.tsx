@@ -21,6 +21,9 @@ import propertyTypesImg from "@/assets/story-property-types.png";
 import mobileImg from "@/assets/story-mobile.png";
 import Seo from "@/components/Seo";
 import { ListingCard } from "@/pages/Properties";
+import { guides as guideEntries } from "@/pages/Guides";
+import hibiscusFlower from "@/assets/flowers/hibiscus-red.png.asset.json";
+import monsteraLeaf from "@/assets/flowers/monstera.png.asset.json";
 
 const HOME_FAQ_JSONLD = {
   "@context": "https://schema.org",

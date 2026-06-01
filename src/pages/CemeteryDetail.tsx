@@ -21,9 +21,19 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
 import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
-import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
-import imgPalms from "@/assets/hero/cemetery-palms.jpg";
+import cemPhoto1 from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
+import cemPhoto2 from "@/assets/cemeteries/cemetery-grounds-2.jpg.asset.json";
+import cemPhoto3 from "@/assets/cemeteries/cemetery-grounds-3.jpg.asset.json";
+
+const CEM_PHOTOS = [cemPhoto1.url, cemPhoto2.url, cemPhoto3.url];
+const pickPhotos = (name: string) => {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  const a = h % CEM_PHOTOS.length;
+  const b = (a + 1 + (h % 2)) % CEM_PHOTOS.length;
+  return [CEM_PHOTOS[a], CEM_PHOTOS[b]];
+};
 
 // Animated SVG: rolling hills with a slow drifting sun (on-theme, calm).
 const HillsScene = ({ className = "" }: { className?: string }) => (
@@ -284,24 +294,32 @@ const CemeteryDetail = () => {
               </div>
             </motion.div>
 
-            {/* Editorial image collage */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7 }}
-              className="relative h-[360px] md:h-[440px] hidden md:block"
-            >
-              <div className="absolute top-0 right-0 w-[78%] h-[72%] rounded-3xl overflow-hidden shadow-xl">
-                <img src={heroBg} alt={`${cemetery.name} memorial grounds`} className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute bottom-0 left-0 w-[55%] h-[48%] rounded-3xl overflow-hidden shadow-xl border-4 border-background">
-                <img src={imgPalms} alt="" className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute -bottom-2 right-4 bg-card border border-border rounded-2xl px-4 py-3 shadow-lg backdrop-blur">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Avg. resale savings</p>
-                <p className="font-display text-2xl text-foreground">30–60%<span className="text-primary"> off</span></p>
-              </div>
-            </motion.div>
+            {/* Editorial image collage — representative cemetery photography */}
+            {(() => {
+              const [photoA, photoB] = pickPhotos(cemetery.name);
+              return (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.7 }}
+                  className="relative h-[400px] md:h-[480px] hidden md:block"
+                >
+                  <div className="absolute top-0 right-0 w-[78%] h-[72%] rounded-3xl overflow-hidden shadow-xl">
+                    <img src={photoA} alt={`Memorial grounds representative of ${cemetery.name}`} className="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                  <div className="absolute bottom-8 left-0 w-[55%] h-[48%] rounded-3xl overflow-hidden shadow-xl border-4 border-background">
+                    <img src={photoB} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                  {/* Representative-photo disclaimer */}
+                  <div className="absolute -bottom-2 right-2 max-w-[260px] bg-card/95 backdrop-blur border border-border rounded-xl px-3.5 py-2.5 shadow-md">
+                    <p className="text-[9px] tracking-[0.22em] uppercase text-primary font-semibold mb-0.5">Representative imagery</p>
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      Photos shown depict typical memorial grounds and may not be of {cemetery.name} specifically.
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })()}
           </div>
         </div>
       </section>
