@@ -354,27 +354,32 @@ const BlogIndex = () => (
   </div>
 );
 
-const BlogArticle = ({ post }: { post: BlogPost }) => (
+const BlogArticle = ({ post }: { post: BlogPost }) => {
+  const articleLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    image: post.image,
+    datePublished: post.date,
+    author: { "@type": "Organization", name: "Texas Cemetery Brokers" },
+    publisher: { "@id": "https://texascemeterybrokers.com/#organization" },
+    mainEntityOfPage: `https://texascemeterybrokers.com/blog/${post.slug}`,
+  };
+  const jsonLd = post.extraJsonLd ? [articleLd, ...post.extraJsonLd] : articleLd;
+
+  return (
   <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
       title={`${post.title} | Texas Cemetery Brokers Journal`}
       description={post.excerpt}
       path={`/blog/${post.slug}`}
       type="article"
-      noindex
+      noindex={post.noindex ?? true}
       image={post.image}
-      jsonLd={{
-        "@context": "https://schema.org",
-        "@type": "Article",
-        headline: post.title,
-        description: post.excerpt,
-        image: post.image,
-        datePublished: post.date,
-        author: { "@type": "Organization", name: "Texas Cemetery Brokers" },
-        publisher: { "@id": "https://texascemeterybrokers.com/#organization" },
-        mainEntityOfPage: `https://texascemeterybrokers.com/blog/${post.slug}`,
-      }}
+      jsonLd={jsonLd}
     />
+
     <Navbar forceScrolled />
 
     {/* Article Hero — photo with dark overlay */}
