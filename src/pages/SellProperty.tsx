@@ -14,7 +14,7 @@ const benefits = [
   { icon: DollarSign, title: "Free or $99 Listing", desc: "Choose a free listing or our premium $99 listing — no appraisal costs, no hidden charges." },
   { icon: FileText, title: "Free Valuation", desc: "Get an honest, no-obligation market value for your property." },
   { icon: ShieldCheck, title: "We Handle Everything", desc: "From paperwork to cemetery coordination to buyer matching — we do it all." },
-  { icon: CheckCircle, title: "Consignment Listing", desc: "List your property on consignment and stay in control — we handle the marketing, buyers, and paperwork." },
+  { icon: CheckCircle, title: "You Stay In Control", desc: "List with us and stay in control — we handle the marketing, buyers, and paperwork while you decide." },
   { icon: Users, title: "Texas Buyer Network", desc: "Access to thousands of qualified buyers across Dallas, Houston, Austin and San Antonio looking for Texas cemetery property." },
   { icon: TrendingUp, title: "Best Market Prices", desc: "We research comparables to ensure you get the best possible price." },
 ];
@@ -112,115 +112,70 @@ const SellProperty = () => {
         />
 
         <div className="relative container mx-auto px-6">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-            {/* Left: editorial copy */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="lg:col-span-7"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-[10px] tracking-[0.3em] font-semibold text-primary uppercase">
-                  The Seller&rsquo;s Edition
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-3xl mx-auto text-center"
+          >
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <span className="text-[10px] tracking-[0.3em] font-semibold text-primary uppercase">
+                The Seller&rsquo;s Edition
+              </span>
+              <div className="h-px w-12 bg-border" />
+              <span className="text-[10px] tracking-[0.3em] font-medium text-accent uppercase italic">
+                Vol. 01
+              </span>
+            </div>
+
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.05] tracking-tight mb-8">
+              Sell your plot{" "}
+              <span className="italic font-medium text-primary">with us today</span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto font-light">
+              Choose a free listing or our premium $99 listing. We handle the entire selling process from valuation to closing.
+            </p>
+
+            <div className="flex flex-wrap gap-5 items-center justify-center">
+              <a
+                href="#quote-form"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft"
+              >
+                Get a Free Valuation <ArrowRight className="w-4 h-4" />
+              </a>
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground/80 font-semibold mb-0.5">
+                  Speak with a specialist
                 </span>
-                <div className="h-px w-12 bg-border" />
-                <span className="text-[10px] tracking-[0.3em] font-medium text-accent uppercase italic">
-                  Vol. 01
-                </span>
-              </div>
-
-              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.05] tracking-tight mb-8">
-                List your plot on{" "}
-                <span className="italic font-medium text-primary">consignment</span>
-              </h1>
-
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 max-w-xl font-light">
-                Choose a free listing or our premium $99 listing. We handle the entire selling process from valuation to closing.
-              </p>
-
-              <div className="flex flex-wrap gap-5 items-center">
                 <a
-                  href="#quote-form"
-                  className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft"
+                  href="tel:+13108049586"
+                  className="font-display text-lg text-foreground hover:text-primary transition-colors inline-flex items-center gap-2"
                 >
-                  Get a Free Valuation <ArrowRight className="w-4 h-4" />
+                  <Phone className="w-4 h-4" /> (310) 804-9586
                 </a>
-                <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground/80 font-semibold mb-0.5">
-                    Speak with a specialist
-                  </span>
-                  <a
-                    href="tel:+13108049586"
-                    className="font-display text-lg text-foreground hover:text-primary transition-colors inline-flex items-center gap-2"
-                  >
-                    <Phone className="w-4 h-4" /> (310) 804-9586
-                  </a>
-                </div>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Right: framed editorial card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.25 }}
-              className="lg:col-span-5"
-            >
-              <div className="relative max-w-sm mx-auto lg:ml-auto lg:mr-0">
-                {/* Offset hairline shadow frame */}
-                <div className="absolute -inset-3 border border-border translate-x-3 translate-y-3 rounded-sm pointer-events-none" />
-
-                <div className="relative bg-card border border-border p-1.5 shadow-hover rounded-sm">
-                  <div className="border border-border p-8 md:p-10 space-y-8 bg-[hsl(var(--background))] rounded-sm">
-                    <div className="flex justify-between items-end border-b border-border pb-6">
-                      <div className="space-y-1">
-                        <span className="block text-[10px] tracking-widest text-muted-foreground/80 uppercase font-semibold">
-                          Listing cost
-                        </span>
-                        <span className="block font-display text-xl text-foreground">
-                          Upfront to you
-                        </span>
-                      </div>
-                      <span className="font-display text-4xl italic text-primary">$0</span>
-                    </div>
-
-                    <div className="flex justify-between items-end border-b border-border pb-6">
-                      <div className="space-y-1">
-                        <span className="block text-[10px] tracking-widest text-muted-foreground/80 uppercase font-semibold">
-                          Bayer partnership
-                        </span>
-                        <span className="block font-display text-xl text-foreground">
-                          Families helped
-                        </span>
-                      </div>
-                      <span className="font-display text-3xl italic text-accent">10,000+</span>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                        <span className="text-[11px] font-semibold tracking-widest uppercase text-primary">
-                          Guaranteed proceeds
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                        <span className="text-[11px] font-semibold tracking-widest uppercase text-accent">
-                          Professional advocacy
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating badge */}
-                <div className="absolute -top-3 -right-3 bg-foreground text-background text-[9px] font-bold px-4 py-1.5 tracking-[0.2em] uppercase rounded-sm shadow-soft">
-                  Legacy Partnership
-                </div>
+            {/* Inline editorial stat strip — keeps Bayer partnership signal */}
+            <div className="mt-12 grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto border-t border-border pt-8">
+              <div className="text-center">
+                <div className="font-display text-3xl md:text-4xl italic text-primary">$0</div>
+                <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Upfront cost</div>
               </div>
-            </motion.div>
-          </div>
+              <div className="text-center border-x border-border">
+                <div className="font-display text-3xl md:text-4xl italic text-accent">10,000+</div>
+                <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Families helped</div>
+              </div>
+              <div className="text-center">
+                <div className="font-display text-3xl md:text-4xl italic text-foreground">24h</div>
+                <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Response time</div>
+              </div>
+            </div>
+            <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground/70 font-semibold mt-4">
+              In partnership with Bayer Cemetery Brokers
+            </p>
+          </motion.div>
         </div>
       </section>
 

@@ -9,7 +9,7 @@ const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Famil
 const guarantees = [
   "100% free, no obligation",
   "Response within 24 hours",
-  "Consignment listing — you stay in control",
+  "You stay in control",
 ];
 
 const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
@@ -52,7 +52,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     }
     toast({
       title: "Quote request submitted",
-      description: "We'll review your property and respond within 24 hours with your consignment quote.",
+      description: "We'll review your property and respond within 24 hours with your quote.",
     });
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "" });
     setLoading(false);
@@ -82,11 +82,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
           <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight mb-5">
             Get your
             <br />
-            <span className="italic text-foreground/70">consignment quote.</span>
+            <span className="italic text-foreground/70">free valuation.</span>
           </h2>
           <p className="text-muted-foreground text-lg font-light leading-relaxed">
             Tell us about your property and we'll respond within 24 hours with a
-            consignment quote showing your net proceeds if we list it for you.
+            quote showing your net proceeds if we list it for you.
           </p>
 
           <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8">
