@@ -76,6 +76,8 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/guides" element={<Guides />} />
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
+                <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
+                <Route path="/buying-a-cemetery-plot-in-texas" element={<Navigate to="/cemetery-plots-for-sale-texas" replace />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
                 <Route path="/blog" element={<Navigate to="/guides" replace />} />
