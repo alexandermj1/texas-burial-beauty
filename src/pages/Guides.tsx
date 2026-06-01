@@ -251,16 +251,16 @@ const Guides = () => {
 
                         <div className="mt-auto flex items-end justify-between gap-2 md:gap-4 pt-3 md:pt-4 border-t border-[hsl(28_20%_25%)]/10">
 
-                          <span className="text-[10px] tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium">
+                          <span className="text-[8px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium truncate">
                             {g.meta}
                           </span>
                           {isLive ? (
-                            <span className="inline-flex items-center gap-2 text-[hsl(145_25%_36%)] font-semibold text-sm tracking-wide group-hover:gap-3 transition-all">
-                              Read the guide <ArrowUpRight className="w-4 h-4" />
+                            <span className="inline-flex items-center gap-1 sm:gap-2 text-[hsl(145_25%_36%)] font-semibold text-[11px] sm:text-sm tracking-wide group-hover:gap-3 transition-all shrink-0">
+                              <span className="hidden sm:inline">Read the guide</span><span className="sm:hidden">Read</span> <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-2 text-[hsl(28_20%_25%)]/60 font-medium text-sm tracking-wide">
-                              Notify me <ArrowRight className="w-4 h-4" />
+                            <span className="inline-flex items-center gap-1 sm:gap-2 text-[hsl(28_20%_25%)]/60 font-medium text-[11px] sm:text-sm tracking-wide shrink-0">
+                              <span className="hidden sm:inline">Notify me</span><span className="sm:hidden">Soon</span> <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </span>
                           )}
                         </div>
