@@ -184,7 +184,7 @@ const Guides = () => {
               <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(145_25%_36%)] mb-2">
                 The Texas Cemetery Field Manual · Vol. 1
               </p>
-              <h1 className="font-display text-3xl md:text-5xl lg:text-[3.5rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
+              <h1 className="font-display text-[2.4rem] md:text-[3.5rem] lg:text-[4.25rem] xl:text-[4.75rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
                 The <span className="italic text-[hsl(145_25%_36%)]">How-To</span> Guides
               </h1>
               <p className="mt-1.5 text-sm text-[hsl(28_20%_25%)]/75 font-light max-w-xl">
@@ -213,16 +213,17 @@ const Guides = () => {
                         : "shadow-[0_10px_30px_-20px_hsl(28_20%_15%/0.3)] opacity-60 scale-[0.96]"
                     }`}
                   >
-                    <div className="grid md:grid-cols-[1.05fr_0.95fr] h-full">
+                    <div className="grid grid-cols-[1.05fr_0.95fr] h-full">
                       {/* LEFT — editorial text panel */}
-                      <div className="relative flex flex-col p-5 md:p-7 lg:p-8">
+                      <div className="relative flex flex-col p-3.5 sm:p-5 md:p-7 lg:p-8">
+
                         {/* Top meta line */}
-                        <div className="flex items-center justify-between mb-8">
-                          <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65">
+                        <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
+                          <p className="text-[8px] sm:text-[10px] tracking-[0.28em] sm:tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65 truncate pr-2">
                             {g.issue}
                           </p>
                           <span
-                            className={`inline-flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] font-bold px-2.5 py-1 rounded-full ${
+                            className={`inline-flex items-center gap-1.5 text-[8px] sm:text-[9px] uppercase tracking-[0.18em] sm:tracking-[0.22em] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shrink-0 ${
                               isLive
                                 ? "bg-[hsl(145_25%_36%)] text-[hsl(40_30%_97%)]"
                                 : "bg-[hsl(28_20%_25%)]/8 text-[hsl(28_20%_25%)]/70 border border-[hsl(28_20%_25%)]/15"
@@ -233,39 +234,40 @@ const Guides = () => {
                           </span>
                         </div>
 
-                        <p className="font-display italic text-[hsl(16_50%_45%)] text-base md:text-lg mb-3">
+                        <p className="font-display italic text-[hsl(16_50%_45%)] text-sm sm:text-base md:text-lg mb-2 md:mb-3">
                           {g.kicker}
                         </p>
 
-                        <h2 className="font-display text-[1.6rem] md:text-[2rem] lg:text-[2.4rem] leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-4">
+                        <h2 className="font-display text-[1.15rem] sm:text-[1.5rem] md:text-[2rem] lg:text-[2.4rem] leading-[1.05] md:leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-2 md:mb-4">
                           {g.title}{" "}
                           <span className="italic">{g.titleAccent}</span>
                         </h2>
 
-                        <div className={`w-12 h-px ${g.rule} mb-4`} />
+                        <div className={`w-10 md:w-12 h-px ${g.rule} mb-2 md:mb-4`} />
 
-                        <p className="text-[hsl(28_20%_25%)]/75 text-sm md:text-[0.95rem] leading-relaxed font-light max-w-md mb-6">
+                        <p className="hidden sm:block text-[hsl(28_20%_25%)]/75 text-sm md:text-[0.95rem] leading-relaxed font-light max-w-md mb-6">
                           {g.dek}
                         </p>
 
-                        <div className="mt-auto flex items-end justify-between gap-4 pt-4 border-t border-[hsl(28_20%_25%)]/10">
-                          <span className="text-[10px] tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium">
+                        <div className="mt-auto flex items-end justify-between gap-2 md:gap-4 pt-3 md:pt-4 border-t border-[hsl(28_20%_25%)]/10">
+
+                          <span className="text-[8px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium truncate">
                             {g.meta}
                           </span>
                           {isLive ? (
-                            <span className="inline-flex items-center gap-2 text-[hsl(145_25%_36%)] font-semibold text-sm tracking-wide group-hover:gap-3 transition-all">
-                              Read the guide <ArrowUpRight className="w-4 h-4" />
+                            <span className="inline-flex items-center gap-1 sm:gap-2 text-[hsl(145_25%_36%)] font-semibold text-[11px] sm:text-sm tracking-wide group-hover:gap-3 transition-all shrink-0">
+                              <span className="hidden sm:inline">Read the guide</span><span className="sm:hidden">Read</span> <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-2 text-[hsl(28_20%_25%)]/60 font-medium text-sm tracking-wide">
-                              Notify me <ArrowRight className="w-4 h-4" />
+                            <span className="inline-flex items-center gap-1 sm:gap-2 text-[hsl(28_20%_25%)]/60 font-medium text-[11px] sm:text-sm tracking-wide shrink-0">
+                              <span className="hidden sm:inline">Notify me</span><span className="sm:hidden">Soon</span> <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </span>
                           )}
                         </div>
                       </div>
 
                       {/* RIGHT — colour panel with botanical */}
-                      <div className={`relative hidden md:flex overflow-hidden ${g.panel}`}>
+                      <div className={`relative flex overflow-hidden ${g.panel}`}>
                         {/* Soft texture */}
                         <div
                           className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
@@ -308,22 +310,22 @@ const Guides = () => {
                         />
 
                         {/* Issue number — huge editorial display */}
-                        <div className={`relative z-10 flex flex-col justify-between p-7 lg:p-8 w-full ${g.panelInk}`}>
-                          <div className="flex items-start justify-between">
-                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
+                        <div className={`relative z-10 flex flex-col justify-between p-3.5 sm:p-5 md:p-7 lg:p-8 w-full ${g.panelInk}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 truncate">
                               {g.kicker}
                             </p>
-                            <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
+                            <p className="text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.32em] uppercase font-semibold opacity-80 shrink-0">
                               {String(i + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
                             </p>
                           </div>
                           <div>
-                            <p className="font-display italic text-base opacity-90 mb-2">N°0{i + 1}</p>
-                            <p className="font-display text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
+                            <p className="font-display italic text-sm sm:text-base opacity-90 mb-1 sm:mb-2">N°0{i + 1}</p>
+                            <p className="font-display text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
                               {String(i + 1).padStart(2, "0")}
                             </p>
-                            <div className={`mt-4 w-16 h-px ${g.rule} opacity-80`} />
-                            <p className="mt-3 text-[11px] tracking-[0.28em] uppercase opacity-85 font-semibold">
+                            <div className={`mt-2 sm:mt-4 w-10 sm:w-16 h-px ${g.rule} opacity-80`} />
+                            <p className="mt-1.5 sm:mt-3 text-[8px] sm:text-[11px] tracking-[0.22em] sm:tracking-[0.28em] uppercase opacity-85 font-semibold truncate">
                               Texas Cemetery Brokers
                             </p>
                           </div>
@@ -373,7 +375,7 @@ const Guides = () => {
         </div>
 
         {/* Footer rail — dots + counter */}
-        <div className="container mx-auto px-6 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 py-2.5 max-w-[1600px]">
+        <div className="hidden md:flex container mx-auto px-6 items-center justify-between border-t border-[hsl(28_20%_25%)]/15 py-2.5 max-w-[1600px]">
           <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
             {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
           </p>
@@ -396,7 +398,7 @@ const Guides = () => {
           </p>
         </div>
         {/* SEO content rail — keyword-rich internal links to high-intent pages */}
-        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/70 backdrop-blur-sm">
+        <aside className="relative z-10 shrink-0 border-t border-[hsl(28_20%_25%)]/15 bg-[hsl(40_30%_97%)]/70 backdrop-blur-sm hidden md:block">
           <div className="container mx-auto px-6 max-w-[1600px] py-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
             <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(145_25%_36%)] shrink-0">
               Popular in Texas
