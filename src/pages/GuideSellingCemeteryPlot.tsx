@@ -5,7 +5,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { cemeteryPath } from "@/lib/cemeterySlug";
-import { EMAIL, jsonLd, checks, valueFactors, faqs } from "./guide-selling-data";
+import { EMAIL, jsonLd, checks, valueFactors, faqs, resources } from "./guide-selling-data";
+
+const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline font-medium">
+    {children}
+  </a>
+);
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
