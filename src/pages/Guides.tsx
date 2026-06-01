@@ -176,9 +176,9 @@ const Guides = () => {
       <img src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
       <img src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
 
-      <section className="relative flex-1 flex flex-col pt-[4.5rem] pb-2 overflow-hidden z-10 min-h-0">
+      <section className="relative flex-1 flex flex-col pt-[5.5rem] pb-2 overflow-hidden z-10 min-h-0">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3">
+        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3 mt-1">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
