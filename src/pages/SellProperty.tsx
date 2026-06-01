@@ -69,7 +69,7 @@ const SellProperty = () => {
           },
         ]}
       />
-      <Navbar />
+      <Navbar forceScrolled />
 
       {/* Hero — editorial botanical spread inspired by the Guides cover */}
       <section className="relative pt-28 pb-16 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
