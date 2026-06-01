@@ -144,10 +144,10 @@ const Guides = () => {
         }}
       />
 
-      {/* Scattered botanical accents — hand-drawn tropicals */}
-      <img src={FLOWERS[0]} alt="" aria-hidden className="hidden md:block absolute -top-14 -left-20 w-64 opacity-60 rotate-[18deg] pointer-events-none select-none" />
-      <img src={FLOWERS[1]} alt="" aria-hidden className="hidden md:block absolute top-32 -right-16 w-72 opacity-55 -rotate-[14deg] pointer-events-none select-none" />
-      <img src={FLOWERS[5]} alt="" aria-hidden className="hidden lg:block absolute bottom-32 -left-12 w-56 opacity-50 -rotate-[8deg] pointer-events-none select-none" />
+      {/* Scattered page accents — three different species, well spaced, never overlapping */}
+      <img src={SCATTER[0]} alt="" aria-hidden className="hidden md:block absolute -top-10 -left-20 w-56 opacity-50 rotate-[14deg] pointer-events-none select-none" />
+      <img src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
+      <img src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
 
       <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
         {/* Masthead */}
