@@ -149,9 +149,9 @@ const Guides = () => {
       <img src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
       <img src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
 
-      <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
+      <section className="relative flex-1 flex flex-col pt-[4.5rem] pb-2 overflow-hidden z-10 min-h-0">
         {/* Masthead */}
-        <div className="container mx-auto px-6 max-w-[1600px] mb-5 md:mb-8">
+        <div className="container mx-auto px-6 max-w-[1600px] mb-2 md:mb-3">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -162,11 +162,11 @@ const Guides = () => {
               <p className="text-[10px] md:text-[11px] tracking-[0.42em] uppercase font-semibold text-[hsl(145_25%_36%)] mb-2">
                 The Texas Cemetery Field Manual · Vol. 1
               </p>
-              <h1 className="font-display text-4xl md:text-6xl lg:text-[4.5rem] text-[hsl(28_20%_15%)] leading-[0.92] tracking-tight">
+              <h1 className="font-display text-3xl md:text-5xl lg:text-[3.5rem] text-[hsl(28_20%_15%)] leading-[0.95] tracking-tight">
                 The <span className="italic text-[hsl(145_25%_36%)]">How-To</span> Guides
               </h1>
-              <p className="mt-3 text-sm md:text-base text-[hsl(28_20%_25%)]/75 font-light max-w-xl">
-                Everything Texas families actually need to know about selling, buying, and transferring cemetery property — written by the people who do it every day.
+              <p className="mt-1.5 text-sm text-[hsl(28_20%_25%)]/75 font-light max-w-xl">
+                Everything Texas families need to know about cemetery property — written by the specialists who do it every day.
               </p>
             </div>
             <p className="hidden lg:block text-xs tracking-[0.18em] uppercase text-[hsl(28_20%_25%)]/60 max-w-xs text-right">
