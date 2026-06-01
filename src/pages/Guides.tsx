@@ -17,17 +17,25 @@ const LEAVES = Object.values(LEAF_MODULES);
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
-// 0: hibiscus  1: leaf  2: plumeria  3: hibiscus  4: leaf  5: plumeria  6: hibiscus  7: leaf
-const FLOWERS = [
-  hibiscusCoral.url,
-  leafVeined.url,
-  plumeriaCluster.url,
-  hibiscusCoral.url,
-  leafVeined.url,
-  plumeriaCluster.url,
-  hibiscusCoral.url,
-  leafVeined.url,
-];
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+
+// Six distinct botanicals — three flowering, three foliage.
+// Each guide pairs ONE hero flower with ONE supporting leaf so nothing
+// repeats inside a panel and foliage never sits on top of a flower head.
+const FLORAL = {
+  hibiscus: hibiscusCoral.url,
+  plumeria: plumeriaCluster.url,
+  pinkBranch: pinkBranch.url,
+} as const;
+const FOLIAGE = {
+  veined: leafVeined.url,
+  palm: palmFan.url,
+  banana: bananaLeaf.url,
+} as const;
+// Background scatter on the page (kept large + sparse, all different species)
+const SCATTER = [FOLIAGE.palm, FLORAL.pinkBranch, FOLIAGE.banana];
 
 const OUTBOUND_RESOURCES = [
   { label: "Texas Dept. of Banking — Cemetery Regulation", href: "https://www.dob.texas.gov/cemetery-prepaid-funeral-services" },
