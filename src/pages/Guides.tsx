@@ -126,7 +126,7 @@ const Guides = () => {
   }, [emblaApi]);
 
   return (
-    <div className="min-h-screen bg-[hsl(38_35%_95%)] flex flex-col relative">
+    <div className="h-screen bg-[hsl(38_35%_95%)] flex flex-col relative overflow-hidden">
       <Seo
         title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
         description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
