@@ -193,7 +193,7 @@ const Guides = () => {
                   >
                     <div className="grid md:grid-cols-[1.05fr_0.95fr] h-full">
                       {/* LEFT — editorial text panel */}
-                      <div className="relative flex flex-col p-7 md:p-10 lg:p-12">
+                      <div className="relative flex flex-col p-5 md:p-7 lg:p-8">
                         {/* Top meta line */}
                         <div className="flex items-center justify-between mb-8">
                           <p className="text-[10px] tracking-[0.32em] uppercase font-semibold text-[hsl(28_20%_25%)]/65">
@@ -215,14 +215,14 @@ const Guides = () => {
                           {g.kicker}
                         </p>
 
-                        <h2 className="font-display text-[2rem] md:text-[2.6rem] lg:text-[3.1rem] leading-[0.98] text-[hsl(28_20%_15%)] tracking-tight mb-6">
+                        <h2 className="font-display text-[1.6rem] md:text-[2rem] lg:text-[2.4rem] leading-[1] text-[hsl(28_20%_15%)] tracking-tight mb-4">
                           {g.title}{" "}
                           <span className="italic">{g.titleAccent}</span>
                         </h2>
 
-                        <div className={`w-12 h-px ${g.rule} mb-6`} />
+                        <div className={`w-12 h-px ${g.rule} mb-4`} />
 
-                        <p className="text-[hsl(28_20%_25%)]/75 text-[0.95rem] md:text-base leading-relaxed font-light max-w-md mb-8">
+                        <p className="text-[hsl(28_20%_25%)]/75 text-sm md:text-[0.95rem] leading-relaxed font-light max-w-md mb-6">
                           {g.dek}
                         </p>
 
