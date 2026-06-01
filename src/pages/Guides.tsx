@@ -39,14 +39,13 @@ interface Guide {
   dek: string;
   status: "live" | "coming-soon";
   meta: string;
-  // panel = the big editorial colour block on the right
-  panel: string; // tailwind bg class
-  panelInk: string; // text colour on panel
-  rule: string; // accent rule colour
-  leafIdx: number[]; // which leaves to scatter
+  panel: string;
+  panelInk: string;
+  rule: string;
+  flowerIdx: number[]; // index into FLOWERS for feature accents
 }
 
-const guides: Guide[] = [
+export const guides: Guide[] = [
   {
     slug: "sell-cemetery-plot-texas",
     issue: "Issue N°01",
@@ -59,7 +58,7 @@ const guides: Guide[] = [
     panel: "bg-[hsl(145_25%_36%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    leafIdx: [16, 9, 4, 21],
+    flowerIdx: [1, 3, 6, 7], // monstera, fern, banana, pink
   },
   {
     slug: "buying-a-cemetery-plot-in-texas",
@@ -73,7 +72,7 @@ const guides: Guide[] = [
     panel: "bg-[hsl(16_50%_58%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    leafIdx: [17, 8, 12, 3],
+    flowerIdx: [0, 2, 5, 7], // hibiscus, plumeria, palm, pink
   },
   {
     slug: "cemetery-transfer-process-texas",
@@ -87,7 +86,7 @@ const guides: Guide[] = [
     panel: "bg-[hsl(28_22%_38%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    leafIdx: [13, 20, 6, 15],
+    flowerIdx: [4, 5, 1, 2], // bird-paradise, palm, monstera, plumeria
   },
 ];
 
