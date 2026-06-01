@@ -143,7 +143,7 @@ const GuideSellingCemeteryPlot = () => (
         <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
       </svg>
 
-      <div className="relative container mx-auto px-6 max-w-3xl">
+      <div className="relative container mx-auto px-6 max-w-5xl">
         {/* Back link */}
         <Link to="/guides" className="inline-flex items-center gap-1.5 text-xs tracking-[0.18em] uppercase text-foreground/60 hover:text-foreground mb-10 transition-colors">
           <ArrowLeft className="w-3.5 h-3.5" /> All Guides
@@ -202,7 +202,7 @@ const GuideSellingCemeteryPlot = () => (
 
     {/* ARTICLE BODY */}
     <article className="py-16">
-      <div className="container mx-auto px-6 max-w-3xl">
+      <div className="container mx-auto px-6 max-w-5xl">
         {/* Intro */}
         <p className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
           Plans change. Families relocate, choose cremation, or inherit plots they'll never use. The good news: a cemetery plot you own can be sold — and it is often worth more than people expect. The challenge is that selling privately in Texas can be slow and uncertain. This guide explains what affects your plot's value, the legal steps, and the most reliable way to sell it.
