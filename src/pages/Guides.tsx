@@ -109,7 +109,7 @@ const Guides = () => {
   }, [emblaApi]);
 
   return (
-    <div className="h-screen overflow-hidden bg-[hsl(38_35%_95%)] flex flex-col relative">
+    <div className="min-h-screen bg-[hsl(38_35%_95%)] flex flex-col relative">
       <Seo
         title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
         description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
@@ -127,19 +127,10 @@ const Guides = () => {
         }}
       />
 
-      {/* Scattered botanical accents */}
-      <img
-        src={LEAVES[16]}
-        alt=""
-        aria-hidden
-        className="hidden md:block absolute -top-10 -left-16 w-56 opacity-50 rotate-[18deg] pointer-events-none select-none"
-      />
-      <img
-        src={LEAVES[9]}
-        alt=""
-        aria-hidden
-        className="hidden md:block absolute bottom-4 -right-12 w-64 opacity-50 -rotate-[10deg] pointer-events-none select-none"
-      />
+      {/* Scattered botanical accents — hand-drawn tropicals */}
+      <img src={FLOWERS[0]} alt="" aria-hidden className="hidden md:block absolute -top-14 -left-20 w-64 opacity-60 rotate-[18deg] pointer-events-none select-none" />
+      <img src={FLOWERS[1]} alt="" aria-hidden className="hidden md:block absolute top-32 -right-16 w-72 opacity-55 -rotate-[14deg] pointer-events-none select-none" />
+      <img src={FLOWERS[5]} alt="" aria-hidden className="hidden lg:block absolute bottom-32 -left-12 w-56 opacity-50 -rotate-[8deg] pointer-events-none select-none" />
 
       <section className="relative flex-1 flex flex-col pt-24 pb-6 overflow-hidden z-10">
         {/* Masthead */}
