@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Tag, ShoppingBag, FileText } from "lucide-react";
+import { ArrowRight, Tag, ShoppingBag, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import useEmblaCarousel from "embla-carousel-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
@@ -14,6 +16,8 @@ interface Guide {
   Icon: typeof Tag;
   status: "live" | "coming-soon";
   meta?: string;
+  gradient: string;
+  accentColor: string;
 }
 
 const guides: Guide[] = [
@@ -27,6 +31,8 @@ const guides: Guide[] = [
     Icon: Tag,
     status: "live",
     meta: "8 chapters · 9 min read",
+    gradient: "from-[#c4654a] via-[#e8a87c] to-[#87a878]",
+    accentColor: "#c4654a",
   },
   {
     slug: "buying-a-cemetery-plot-in-texas",
@@ -37,6 +43,8 @@ const guides: Guide[] = [
       "Choosing the right cemetery, comparing property types, understanding pricing, and securing the right plot for your family — without overpaying.",
     Icon: ShoppingBag,
     status: "coming-soon",
+    gradient: "from-[#4a6741] via-[#87a878] to-[#e8a87c]",
+    accentColor: "#4a6741",
   },
   {
     slug: "cemetery-transfer-process-texas",
@@ -47,170 +55,203 @@ const guides: Guide[] = [
       "How ownership actually changes hands in Texas — conveyance forms, transfer fees, recording timelines, and the details that decide whether a sale closes cleanly.",
     Icon: FileText,
     status: "coming-soon",
+    gradient: "from-[#8b6f5e] via-[#c9b99a] to-[#e8a87c]",
+    accentColor: "#8b6f5e",
   },
 ];
 
-const Guides = () => (
-  <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
-    <Seo
-      title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
-      description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
-      path="/guides"
-    />
-    <Navbar forceScrolled />
+const Guides = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "center", loop: false, containScroll: "trimSnaps" });
+  const [selected, setSelected] = useState(0);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
 
-    {/* Hero */}
-    <section className="relative pt-32 pb-20 overflow-hidden bg-gradient-to-b from-[hsl(var(--primary)/0.10)] via-background to-background">
-      <div className="absolute top-0 right-0 w-[40rem] h-[40rem] rounded-full bg-primary/10 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-      <div className="absolute top-10 left-0 w-[28rem] h-[28rem] rounded-full bg-accent/10 blur-3xl -translate-x-1/3 pointer-events-none" />
-      <div className="relative container mx-auto px-6 max-w-5xl text-center">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-3 mb-6">
-            <span className="w-8 h-px bg-accent" />
-            <p className="text-accent text-xs tracking-[0.28em] uppercase font-semibold">The Guides Library</p>
-            <span className="w-8 h-px bg-accent" />
-          </div>
-          <h1 className="font-display text-5xl md:text-7xl text-foreground leading-[1.05] mb-8">
-            Plain-English answers to the<br />
-            <span className="italic text-primary">hardest questions</span> families ask.
-          </h1>
-          <p className="text-lg md:text-xl text-foreground/75 max-w-2xl mx-auto leading-relaxed font-light">
-            Written by specialists who handle Texas cemetery property every day — complete guides that walk you through valuation, paperwork, and the realities of selling, buying, and transferring a plot.
-          </p>
-        </motion.div>
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => {
+      setSelected(emblaApi.selectedScrollSnap());
+      setCanPrev(emblaApi.canScrollPrev());
+      setCanNext(emblaApi.canScrollNext());
+    };
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    onSelect();
+  }, [emblaApi]);
+
+  return (
+    <div className="h-screen overflow-hidden bg-background flex flex-col">
+      <Seo
+        title="Guides | Texas Cemetery Brokers — Buying, Selling & Transfer"
+        description="Plain-English guides for Texas families on selling, buying, and transferring cemetery property — written by specialists who handle these transactions every day."
+        path="/guides"
+      />
+      <Navbar forceScrolled />
+
+      {/* Ambient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-0">
+        <div className="absolute top-1/4 -left-40 w-[36rem] h-[36rem] rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute bottom-0 -right-40 w-[36rem] h-[36rem] rounded-full bg-accent/15 blur-3xl" />
       </div>
-    </section>
 
-    {/* Guide cards */}
-    <section className="pb-28 -mt-4">
-      <div className="container mx-auto px-6 max-w-7xl">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {guides.map((g, i) => {
-            const isLive = g.status === "live";
-            const inner = (
-              <article className={`group relative h-full flex flex-col rounded-3xl overflow-hidden border transition-all duration-500 ${
-                isLive
-                  ? "bg-card border-border/60 hover:border-primary/40 hover:-translate-y-1 hover:shadow-hover shadow-soft"
-                  : "bg-card/60 border-border/40"
-              }`}>
-                <div className={`relative h-52 px-7 pt-7 pb-6 overflow-hidden ${
-                  isLive
-                    ? "bg-gradient-to-br from-primary/25 via-primary/10 to-accent/20"
-                    : "bg-gradient-to-br from-muted/60 to-muted/30"
-                }`}>
-                  {/* Decorative orbs */}
-                  <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/25 blur-2xl group-hover:bg-accent/40 transition-colors duration-500" />
-                  {isLive && (
-                    <div className="absolute -bottom-16 -left-12 w-44 h-44 rounded-full bg-primary/25 blur-3xl" />
-                  )}
-                  {/* Subtle grid for live cards */}
-                  {isLive && (
-                    <div
-                      className="absolute inset-0 opacity-[0.08] pointer-events-none"
-                      style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "32px 32px" }}
-                    />
-                  )}
-                  {/* Faux article lines */}
-                  {isLive && (
-                    <svg className="absolute right-6 bottom-14 w-28 opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 120 80" aria-hidden>
-                      <rect x="0" y="0" width="60" height="6" rx="3" className="fill-primary/70" />
-                      <rect x="0" y="14" width="110" height="4" rx="2" className="fill-foreground/30" />
-                      <rect x="0" y="24" width="95" height="4" rx="2" className="fill-foreground/25" />
-                      <rect x="0" y="34" width="105" height="4" rx="2" className="fill-foreground/25" />
-                      <rect x="0" y="44" width="70" height="4" rx="2" className="fill-foreground/20" />
-                      <rect x="0" y="58" width="38" height="10" rx="5" className="fill-accent/70" />
-                    </svg>
-                  )}
-                  <div className="relative flex items-start justify-between">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 ${
-                      isLive
-                        ? "bg-primary text-primary-foreground group-hover:scale-110 group-hover:rotate-3 shadow-[0_10px_30px_-8px_hsl(var(--primary)/0.6)]"
-                        : "bg-muted-foreground/20 text-muted-foreground"
-                    }`}>
-                      <g.Icon className="w-6 h-6" strokeWidth={1.75} />
-                    </div>
-                    <span className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-semibold px-3 py-1.5 rounded-full ${
-                      isLive ? "bg-accent text-accent-foreground" : "bg-foreground/5 text-muted-foreground"
-                    }`}>
-                      {isLive && <span className="w-1.5 h-1.5 rounded-full bg-accent-foreground animate-pulse" />}
-                      {isLive ? "Available now" : "Coming soon"}
-                    </span>
-                  </div>
-                  <p className="absolute bottom-5 left-7 text-[11px] tracking-[0.22em] uppercase font-semibold text-foreground/70">
-                    {g.eyebrow} · Guide 0{i + 1}
-                  </p>
-                </div>
-
-                <div className="flex-1 flex flex-col px-7 py-7">
-                  <h2 className="font-display text-2xl md:text-[1.7rem] leading-tight text-foreground mb-3">
-                    {g.title}{" "}
-                    {g.titleAccent && <span className="italic text-primary">{g.titleAccent}</span>}
-                  </h2>
-                  <p className="text-foreground/70 leading-relaxed text-[15px] mb-6 flex-1">
-                    {g.description}
-                  </p>
-                  <div className="flex items-center justify-between pt-5 border-t border-border/50">
-                    <span className="text-xs text-muted-foreground">
-                      {isLive ? g.meta : "Notify me when it's ready"}
-                    </span>
-                    {isLive ? (
-                      <span className="inline-flex items-center gap-1.5 text-primary font-medium text-sm group-hover:gap-3 transition-all">
-                        Read guide <ArrowRight className="w-4 h-4" />
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">In progress</span>
-                    )}
-                  </div>
-                </div>
-              </article>
-            );
-
-            return (
-              <motion.div
-                key={g.slug}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.5, delay: 0.1 * i }}
-                className="h-full"
-              >
-                {isLive ? (
-                  <Link to={`/${g.slug}`} className="block h-full">{inner}</Link>
-                ) : (
-                  <Link to="/contact" className="block h-full">{inner}</Link>
-                )}
-              </motion.div>
-            );
-          })}
+      <section className="relative flex-1 flex flex-col pt-24 pb-8 overflow-hidden">
+        {/* Hero header */}
+        <div className="container mx-auto px-6 max-w-6xl text-center mb-6 md:mb-10">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div className="inline-flex items-center gap-3 mb-3 md:mb-4">
+              <span className="w-6 h-px bg-accent" />
+              <p className="text-accent text-[10px] md:text-xs tracking-[0.28em] uppercase font-semibold">The Guides Library</p>
+              <span className="w-6 h-px bg-accent" />
+            </div>
+            <h1 className="font-display text-3xl md:text-5xl lg:text-6xl text-foreground leading-[1.05] mb-3">
+              Plain-English answers to the<br className="hidden md:block" />{" "}
+              <span className="italic text-primary">hardest questions</span> families ask.
+            </h1>
+            <p className="hidden md:block text-base text-foreground/65 max-w-xl mx-auto font-light">
+              Swipe through complete guides on selling, buying, and transferring Texas cemetery property.
+            </p>
+          </motion.div>
         </div>
 
-        {/* Closing strip */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mt-20 rounded-3xl bg-gradient-to-br from-primary to-primary/85 text-primary-foreground p-10 md:p-14 text-center relative overflow-hidden"
-        >
-          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-accent/30 blur-3xl" />
-          <div className="absolute -bottom-20 -left-10 w-72 h-72 rounded-full bg-primary-foreground/10 blur-3xl" />
-          <p className="relative text-[11px] tracking-[0.28em] uppercase font-semibold text-primary-foreground/70 mb-4">Can't find your answer?</p>
-          <h2 className="relative font-display text-3xl md:text-4xl mb-4">Talk to a real specialist — free.</h2>
-          <p className="relative text-primary-foreground/85 max-w-xl mx-auto mb-8">
-            Every situation is different. Tell us about your cemetery, plot or family situation and we'll walk you through your options — no obligation.
-          </p>
-          <Link
-            to="/contact"
-            className="relative inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-full font-medium text-sm hover:opacity-90 transition-all shadow-soft"
-          >
-            Get in touch <ArrowRight className="w-4 h-4" />
-          </Link>
-        </motion.div>
-      </div>
-    </section>
+        {/* Carousel */}
+        <div className="relative flex-1 flex items-center min-h-0">
+          <div ref={emblaRef} className="overflow-hidden w-full">
+            <div className="flex">
+              {guides.map((g, i) => {
+                const isLive = g.status === "live";
+                const isActive = i === selected;
+                const inner = (
+                  <article
+                    className={`group relative h-full w-full flex flex-col rounded-[2rem] overflow-hidden transition-all duration-500 ${
+                      isActive ? "scale-100 opacity-100" : "scale-[0.92] opacity-50"
+                    }`}
+                    style={{
+                      boxShadow: isActive
+                        ? `0 30px 80px -20px ${g.accentColor}66, 0 10px 30px -10px ${g.accentColor}33`
+                        : "0 10px 30px -15px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    {/* Full bleed gradient background */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${g.gradient}`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    {/* Grid overlay */}
+                    <div
+                      className="absolute inset-0 opacity-[0.08] pointer-events-none mix-blend-overlay"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                        backgroundSize: "44px 44px",
+                      }}
+                    />
+                    {/* Decorative orbs */}
+                    <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/20 blur-3xl" />
+                    <div className="absolute -bottom-24 -left-16 w-80 h-80 rounded-full bg-black/20 blur-3xl" />
 
-    <Footer />
-  </div>
-);
+                    {/* Content */}
+                    <div className="relative z-10 flex-1 flex flex-col p-8 md:p-12">
+                      <div className="flex items-start justify-between mb-8">
+                        <div className="w-16 h-16 rounded-2xl bg-white/95 backdrop-blur flex items-center justify-center shadow-xl">
+                          <g.Icon className="w-7 h-7" style={{ color: g.accentColor }} strokeWidth={1.75} />
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-bold px-3 py-1.5 rounded-full backdrop-blur ${
+                          isLive ? "bg-white text-foreground" : "bg-white/20 text-white border border-white/30"
+                        }`}>
+                          {isLive && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: g.accentColor }} />}
+                          {isLive ? "Available now" : "Coming soon"}
+                        </span>
+                      </div>
+
+                      <p className="text-white/85 text-[11px] tracking-[0.28em] uppercase font-bold mb-4">
+                        {g.eyebrow} · Guide 0{i + 1}
+                      </p>
+
+                      <h2 className="font-display text-3xl md:text-5xl lg:text-6xl leading-[1.05] text-white mb-6 max-w-3xl">
+                        {g.title}{" "}
+                        {g.titleAccent && (
+                          <span className="italic text-white/95 underline decoration-white/40 decoration-[3px] underline-offset-[6px]">
+                            {g.titleAccent}
+                          </span>
+                        )}
+                      </h2>
+
+                      <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-2xl mb-8 font-light">
+                        {g.description}
+                      </p>
+
+                      <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-white/20">
+                        <span className="text-xs text-white/70 tracking-wide">
+                          {isLive ? g.meta : "Notify me when it's ready"}
+                        </span>
+                        {isLive ? (
+                          <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-foreground font-semibold text-sm group-hover:gap-3 transition-all shadow-lg">
+                            Read guide <ArrowRight className="w-4 h-4" />
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/15 backdrop-blur border border-white/30 text-white font-medium text-sm">
+                            Get notified <ArrowRight className="w-4 h-4" />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+
+                return (
+                  <div
+                    key={g.slug}
+                    className="flex-[0_0_92%] md:flex-[0_0_72%] lg:flex-[0_0_62%] min-w-0 px-3 md:px-5"
+                    style={{ height: "min(62vh, 560px)" }}
+                  >
+                    {isLive ? (
+                      <Link to={`/${g.slug}`} className="block h-full">{inner}</Link>
+                    ) : (
+                      <Link to="/contact" className="block h-full">{inner}</Link>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Arrows */}
+          <button
+            onClick={() => emblaApi?.scrollPrev()}
+            disabled={!canPrev}
+            aria-label="Previous guide"
+            className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 md:w-14 md:h-14 rounded-full bg-card/90 backdrop-blur border border-border shadow-lg flex items-center justify-center text-foreground hover:scale-110 hover:bg-card transition-all disabled:opacity-30 disabled:hover:scale-100"
+          >
+            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+          <button
+            onClick={() => emblaApi?.scrollNext()}
+            disabled={!canNext}
+            aria-label="Next guide"
+            className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 md:w-14 md:h-14 rounded-full bg-card/90 backdrop-blur border border-border shadow-lg flex items-center justify-center text-foreground hover:scale-110 hover:bg-card transition-all disabled:opacity-30 disabled:hover:scale-100"
+          >
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+        </div>
+
+        {/* Dots + counter */}
+        <div className="container mx-auto px-6 mt-6 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            {guides.map((g, i) => (
+              <button
+                key={g.slug}
+                onClick={() => emblaApi?.scrollTo(i)}
+                aria-label={`Go to guide ${i + 1}`}
+                className={`h-2 rounded-full transition-all ${
+                  i === selected ? "w-10 bg-primary" : "w-2 bg-foreground/20 hover:bg-foreground/40"
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-[11px] tracking-[0.22em] uppercase text-muted-foreground font-semibold">
+            {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")} · Swipe to explore
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+};
 
 export default Guides;
