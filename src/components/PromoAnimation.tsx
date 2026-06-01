@@ -198,7 +198,7 @@ const sellerSteps = [
 
 export const SellerPromoAnimation = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { margin: "-80px" });
   const [activeStep, setActiveStep] = useState(0);
   const [formFields, setFormFields] = useState<number>(0);
 
