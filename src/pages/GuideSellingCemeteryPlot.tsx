@@ -1,22 +1,44 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Phone, Mail, Plus, CheckCircle2, MapPin } from "lucide-react";
+import { ArrowRight, ArrowLeft, Mail, Plus, CheckCircle2, MapPin, ShieldCheck, FileSearch, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import { PHONE_DISPLAY, EMAIL, jsonLd, checks, valueFactors, faqs } from "./guide-selling-data";
+import { cemeteryPath } from "@/lib/cemeterySlug";
+import { EMAIL, jsonLd, checks, valueFactors, faqs } from "./guide-selling-data";
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
 );
 
-const cities = [
-  { city: "Houston", parks: "Forest Park · Earthman Resthaven · Brookside · Memorial Oaks · San Jacinto" },
-  { city: "Dallas–Fort Worth", parks: "Restland · Sparkman–Hillcrest · Laurel Land · Bluebonnet Hills · Greenwood" },
-  { city: "San Antonio", parks: "Citywide coverage across major parks and gardens" },
-  { city: "Austin", parks: "Cook–Walden Capital Parks and surrounding memorial parks" },
-  { city: "College Station", parks: "Brazos Valley and surrounding communities" },
+// Parks → cemetery name in src/data/cemeteries.ts (slugified via cemeteryPath)
+const cities: { city: string; parks: { label: string; cemetery?: string }[] }[] = [
+  {
+    city: "Houston",
+    parks: [
+      { label: "Forest Park", cemetery: "Forest Park Lawndale Cemetery" },
+      { label: "Earthman Resthaven", cemetery: "Earthman Resthaven Cemetery" },
+      { label: "Brookside", cemetery: "Brookside Memorial Park" },
+      { label: "Memorial Oaks", cemetery: "Memorial Oaks Cemetery" },
+      { label: "San Jacinto" },
+    ],
+  },
+  {
+    city: "Dallas–Fort Worth",
+    parks: [
+      { label: "Restland", cemetery: "Restland Memorial Park" },
+      { label: "Sparkman–Hillcrest", cemetery: "Sparkman/Hillcrest Memorial Park" },
+      { label: "Laurel Land", cemetery: "Laurel Land Memorial Park (Dallas)" },
+      { label: "Bluebonnet Hills", cemetery: "Bluebonnet Hills Memorial Park" },
+      { label: "Greenwood", cemetery: "Greenwood Cemetery" },
+    ],
+  },
+  { city: "San Antonio", parks: [{ label: "Citywide coverage across major parks and gardens" }] },
+  { city: "Austin", parks: [{ label: "Cook–Walden Capital Parks and surrounding memorial parks" }] },
+  { city: "College Station", parks: [{ label: "Brazos Valley and surrounding communities" }] },
 ];
+
+
 
 const brokerReasons = [
   {
@@ -51,6 +73,21 @@ const brokerReasons = [
       "For a seller, that means your property is represented thoughtfully and respectfully. For a buyer, it means they feel informed, confident and looked after. That trust is the foundation of every successful sale, and it is the hardest thing to create between two strangers transacting on their own.",
     ],
   },
+  {
+    n: "05",
+    h: "We verify ownership before a plot ever reaches a buyer",
+    p: [
+      "Before we list a single space, we confirm the seller actually holds the right of sepulture and that the cemetery will accept the transfer. We check the original deed or certificate, verify the names on file at the cemetery office, confirm any co-owners have consented, and flag right-of-first-refusal clauses up front.",
+      "That verification is what gives buyers the confidence to commit. When a family is choosing a resting place for someone they love, they need to know the plot is genuinely available, legally transferable, and that the cemetery will record the conveyance in their name once they pay. Every listing we represent has cleared that check — which is something a private seller on a classified site simply cannot offer.",
+    ],
+  },
+];
+
+// Pillars shown in the dedicated verification block
+const verification = [
+  { Icon: FileSearch, t: "Deed & certificate verified", d: "We review the original purchase paperwork and confirm the listed owner matches the seller." },
+  { Icon: BadgeCheck, t: "Cemetery records confirmed", d: "We contact the cemetery office to make sure the space is on file, unused, and clear to transfer." },
+  { Icon: ShieldCheck, t: "Co-owners & ROFR cleared", d: "We secure written consent from any co-owners and resolve any right-of-first-refusal before listing." },
 ];
 
 const GuideSellingCemeteryPlot = () => (
@@ -191,6 +228,31 @@ const GuideSellingCemeteryPlot = () => (
             ))}
           </div>
 
+          {/* Verification pillars — buyer trust */}
+          <div className="mt-10 rounded-3xl overflow-hidden border border-primary/15 bg-gradient-to-br from-primary/8 via-background to-accent/5">
+            <div className="p-7 md:p-9 border-b border-primary/10 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]">
+                <ShieldCheck className="w-6 h-6" strokeWidth={1.75} />
+              </div>
+              <div>
+                <Eyebrow>Verified before listed</Eyebrow>
+                <p className="font-display text-2xl md:text-3xl text-foreground leading-snug">Every plot we list is verified — ownership confirmed, transfer cleared.</p>
+                <p className="text-foreground/75 leading-relaxed mt-2">Buyers transacting on a private classified have no way to know if a plot is real, available, or transferable. When you list with us, that question is already answered — which is how families feel safe committing.</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-primary/10">
+              {verification.map(({ Icon, t, d }) => (
+                <div key={t} className="p-6 md:p-7">
+                  <Icon className="w-5 h-5 text-primary mb-3" strokeWidth={1.75} />
+                  <p className="font-display text-base text-foreground mb-1.5">{t}</p>
+                  <p className="text-sm text-foreground/70 leading-relaxed">{d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+
+
           <div className="rounded-2xl p-7 md:p-8 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15 mt-10">
             <Eyebrow>In short</Eyebrow>
             <p className="text-foreground/90 leading-relaxed text-lg italic">
@@ -259,7 +321,20 @@ const GuideSellingCemeteryPlot = () => (
                 <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" strokeWidth={1.75} />
                 <div>
                   <p className="font-display text-lg text-foreground">{c.city}</p>
-                  <p className="text-sm text-foreground/70 leading-relaxed">{c.parks}</p>
+                  <p className="text-sm text-foreground/70 leading-relaxed">
+                    {c.parks.map((p, i) => (
+                      <span key={p.label}>
+                        {i > 0 && <span className="text-foreground/40"> · </span>}
+                        {p.cemetery ? (
+                          <Link to={cemeteryPath(p.cemetery)} className="text-foreground/80 hover:text-primary underline-offset-4 hover:underline transition-colors">
+                            {p.label}
+                          </Link>
+                        ) : (
+                          p.label
+                        )}
+                      </span>
+                    ))}
+                  </p>
                 </div>
               </div>
             ))}
@@ -301,15 +376,12 @@ const GuideSellingCemeteryPlot = () => (
               Send us the cemetery and section details and we'll give you a no-obligation valuation, then handle the sale from listing to transfer.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={`tel:${PHONE_DISPLAY.replace(/\D/g, "")}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
-                <Phone className="w-4 h-4" /> Call {PHONE_DISPLAY}
-              </a>
-              <a href={`mailto:${EMAIL}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary-foreground text-primary rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
+              <Link to="/contact" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] hover:opacity-95 transition-all">
+                Request a Free Valuation <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a href={`mailto:${EMAIL}`} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary-foreground/10 border border-primary-foreground/30 text-primary-foreground rounded-2xl font-medium text-[15px] hover:bg-primary-foreground/15 transition-all">
                 <Mail className="w-4 h-4" /> Email Us
               </a>
-              <Link to="/sell" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-transparent border border-primary-foreground/40 text-primary-foreground rounded-2xl font-medium text-[15px] hover:bg-primary-foreground/10 transition-all">
-                Start Online <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
             <p className="text-xs text-primary-foreground/60 italic mt-8 leading-relaxed max-w-xl">
               This guide is general information about selling cemetery property in Texas and is not legal advice. Cemetery policies and applicable rules vary by location; confirm specifics with the cemetery and, where needed, a licensed Texas attorney.
