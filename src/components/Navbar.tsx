@@ -35,6 +35,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     { to: "/buy", label: "Buy Property", desc: "Available listings", Icon: ShoppingBag },
     { to: "/sell", label: "Sell Property", desc: "List your plot", Icon: Tag },
     { to: "/partners", label: "Partners", desc: "Funeral homes & agents", Icon: Handshake },
+    { to: "/guides", label: "Guides", desc: "Plain-English help", Icon: BookOpen },
     { to: "/contact", label: "Contact", desc: "Talk to our team", Icon: Mail },
   ];
 
