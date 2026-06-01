@@ -137,18 +137,13 @@ const Index = () => {
       )
     : [];
 
-  // Trigger the typewriter when section comes into view (no opacity/scale fade).
-  const { scrollYProgress } = useScroll({
-    target: featuredRef,
-    offset: ["start end", "center center"],
-  });
-
+  // Trigger the typewriter only while the section is on screen — pauses when scrolled past.
+  const inView = useInView(featuredRef, { margin: "0px 0px -15% 0px" });
   useEffect(() => {
-    const unsub = scrollYProgress.on("change", (v) => {
-      if (v > 0.05 && !active) setActive(true);
-    });
-    return () => unsub();
-  }, [scrollYProgress, active]);
+    if (inView && !active) setActive(true);
+  }, [inView, active]);
+  // Pause cycling when scrolled away so the page stops reflowing in the background.
+  const typewriterActive = active && inView;
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
