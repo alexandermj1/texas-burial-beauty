@@ -330,9 +330,9 @@ const GuideSellingCemeteryPlot = () => (
           <Eyebrow>Chapter 05 · Legal</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">The legal side of selling a plot in <span className="italic text-primary">Texas</span></h2>
           <p className="text-foreground/80 leading-relaxed mb-5 text-lg">
-            A common question is whether you need a license to sell. You do not — selling your own plot requires no license. And while Texas once required third-party brokers to register with the Department of Banking, that registration requirement was repealed effective <strong className="text-foreground">September 1, 2019</strong>. There is no state cemetery-broker license in Texas today.
+            A common question is whether you need a license to sell. You do not — selling your own plot requires no license. And while Texas once required third-party brokers to register with the <Ext href="https://www.dob.texas.gov/cemetery-prepaid-funeral-services">Texas Department of Banking</Ext>, that registration requirement was repealed effective <strong className="text-foreground">September 1, 2019</strong>. There is no state cemetery-broker license in Texas today.
           </p>
-          <p className="text-foreground/80 mb-4">What still applies — and what a careful broker handles for you — comes from the Texas Health &amp; Safety Code:</p>
+          <p className="text-foreground/80 mb-4">What still applies — and what a careful broker handles for you — comes from the <Ext href="https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm">Texas Health &amp; Safety Code, Chapter 711</Ext>:</p>
           <ul className="space-y-3 mb-8">
             {[
               "The conveyance (often a quitclaim) must be on a form the cemetery accepts and recorded with the cemetery, generally within three business days of the sale.",
@@ -345,11 +345,14 @@ const GuideSellingCemeteryPlot = () => (
               </li>
             ))}
           </ul>
-          <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15">
+          <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/15 mb-8">
             <p className="text-foreground/85 leading-relaxed italic">
               This is why a broker matters even without a licensing requirement: a sale is not truly final until the cemetery records the transfer correctly. We make sure that happens — so the buyer is protected and you are fully and cleanly released from the property.
             </p>
           </div>
+          <p className="text-foreground/75 leading-relaxed text-sm">
+            Perpetual care cemeteries in Texas are regulated by the Department of Banking, which also publishes an <Ext href="https://www.dob.texas.gov/cemetery-prepaid-funeral-services/how-file-complaint">official complaint process</Ext> for families. Additional consumer resources are available from the <Ext href="https://tfsc.texas.gov/ConsumerInformation.html">Texas Funeral Service Commission</Ext>.
+          </p>
         </section>
 
         {/* H2: Cities */}
