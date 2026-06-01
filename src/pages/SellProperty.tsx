@@ -6,7 +6,9 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { SellerPromoAnimation } from "@/components/PromoAnimation";
-import sellHeroBg from "@/assets/hero/cemetery-mountains.jpg";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 
 const benefits = [
   { icon: DollarSign, title: "Free or $99 Listing", desc: "Choose a free listing or our premium $99 listing — no appraisal costs, no hidden charges." },
