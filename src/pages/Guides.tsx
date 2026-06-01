@@ -226,7 +226,7 @@ const Guides = () => {
                           {g.dek}
                         </p>
 
-                        <div className="mt-auto flex items-end justify-between gap-4 pt-6 border-t border-[hsl(28_20%_25%)]/10">
+                        <div className="mt-auto flex items-end justify-between gap-4 pt-4 border-t border-[hsl(28_20%_25%)]/10">
                           <span className="text-[10px] tracking-[0.24em] uppercase text-[hsl(28_20%_25%)]/55 font-medium">
                             {g.meta}
                           </span>
@@ -286,7 +286,7 @@ const Guides = () => {
                         />
 
                         {/* Issue number — huge editorial display */}
-                        <div className={`relative z-10 flex flex-col justify-between p-10 lg:p-12 w-full ${g.panelInk}`}>
+                        <div className={`relative z-10 flex flex-col justify-between p-7 lg:p-8 w-full ${g.panelInk}`}>
                           <div className="flex items-start justify-between">
                             <p className="text-[10px] tracking-[0.32em] uppercase font-semibold opacity-80">
                               {g.kicker}
@@ -297,11 +297,11 @@ const Guides = () => {
                           </div>
                           <div>
                             <p className="font-display italic text-base opacity-90 mb-2">N°0{i + 1}</p>
-                            <p className="font-display text-[6rem] lg:text-[8rem] leading-[0.85] tracking-tighter">
+                            <p className="font-display text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
                               {String(i + 1).padStart(2, "0")}
                             </p>
-                            <div className={`mt-6 w-16 h-px ${g.rule} opacity-80`} />
-                            <p className="mt-4 text-[11px] tracking-[0.28em] uppercase opacity-85 font-semibold">
+                            <div className={`mt-4 w-16 h-px ${g.rule} opacity-80`} />
+                            <p className="mt-3 text-[11px] tracking-[0.28em] uppercase opacity-85 font-semibold">
                               Texas Cemetery Brokers
                             </p>
                           </div>
