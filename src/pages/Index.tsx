@@ -144,6 +144,7 @@ const Index = () => {
   }, [inView, active]);
   // Pause cycling when scrolled away so the page stops reflowing in the background.
   const typewriterActive = active && inView;
+  const typed = useTypewriter(FEATURED_PHRASES, typewriterActive);
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
