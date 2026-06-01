@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Phone, Mail, Plus, CheckCircle2, MapPin } from "lucide-react";
+import { ArrowRight, ArrowLeft, Mail, Plus, CheckCircle2, MapPin, ShieldCheck, FileSearch, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import { PHONE_DISPLAY, EMAIL, jsonLd, checks, valueFactors, faqs } from "./guide-selling-data";
+import { cemeteryPath } from "@/lib/cemeterySlug";
+import { EMAIL, jsonLd, checks, valueFactors, faqs } from "./guide-selling-data";
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
