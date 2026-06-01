@@ -152,7 +152,7 @@ const Guides = () => (
                 className="h-full"
               >
                 {isLive ? (
-                  <Link to={`/guides/${g.slug}`} className="block h-full">{inner}</Link>
+                  <Link to={`/${g.slug}`} className="block h-full">{inner}</Link>
                 ) : (
                   <Link to="/contact" className="block h-full">{inner}</Link>
                 )}
