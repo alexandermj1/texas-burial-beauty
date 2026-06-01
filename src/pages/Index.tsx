@@ -107,7 +107,7 @@ const Index = () => {
   const [rotationOffset, setRotationOffset] = useState(0);
   const featuredRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
-  const typed = useTypewriter(FEATURED_PHRASES, active);
+  // typed text is set further below once inView is computed
 
   useEffect(() => {
     const fetchFeatured = async () => {
