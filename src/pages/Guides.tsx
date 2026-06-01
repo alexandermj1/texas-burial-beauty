@@ -351,7 +351,7 @@ const Guides = () => {
         </div>
 
         {/* Footer rail — dots + counter */}
-        <div className="container mx-auto px-6 mt-5 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-4 max-w-[1600px]">
+        <div className="container mx-auto px-6 mt-2 flex items-center justify-between border-t border-[hsl(28_20%_25%)]/15 pt-2 max-w-[1600px]">
           <p className="text-[10px] tracking-[0.32em] uppercase text-[hsl(28_20%_25%)]/65 font-semibold">
             {String(selected + 1).padStart(2, "0")} / {String(guides.length).padStart(2, "0")}
           </p>
