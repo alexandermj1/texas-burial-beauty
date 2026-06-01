@@ -55,7 +55,8 @@ interface Guide {
   panel: string;
   panelInk: string;
   rule: string;
-  flowerIdx: number[]; // index into FLOWERS for feature accents
+  hero: string;      // featured flower (large, bottom-right of panel)
+  accent: string;    // single supporting leaf (small, top-left of panel)
 }
 
 export const guides: Guide[] = [
@@ -71,7 +72,8 @@ export const guides: Guide[] = [
     panel: "bg-[hsl(145_25%_36%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    flowerIdx: [1, 3, 6, 7], // monstera, fern, banana, pink
+    hero: FLORAL.hibiscus,
+    accent: FOLIAGE.banana,
   },
   {
     slug: "buying-a-cemetery-plot-in-texas",
@@ -85,7 +87,8 @@ export const guides: Guide[] = [
     panel: "bg-[hsl(16_50%_58%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    flowerIdx: [0, 2, 5, 7], // hibiscus, plumeria, palm, pink
+    hero: FLORAL.plumeria,
+    accent: FOLIAGE.palm,
   },
   {
     slug: "cemetery-transfer-process-texas",
@@ -99,7 +102,8 @@ export const guides: Guide[] = [
     panel: "bg-[hsl(28_22%_38%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
-    flowerIdx: [4, 5, 1, 2], // bird-paradise, palm, monstera, plumeria
+    hero: FLORAL.pinkBranch,
+    accent: FOLIAGE.veined,
   },
 ];
 
