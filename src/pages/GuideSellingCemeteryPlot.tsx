@@ -72,6 +72,7 @@ const brokerReasons = [
       "Our team includes people specifically trained to support grieving families with patience and compassion, alongside specialists who can explain the finer points — the paperwork, the cemetery rules, and the small distinctions that matter.",
       "For a seller, that means your property is represented thoughtfully and respectfully. For a buyer, it means they feel informed, confident and looked after. That trust is the foundation of every successful sale, and it is the hardest thing to create between two strangers transacting on their own.",
     ],
+  },
   {
     n: "05",
     h: "We verify ownership before a plot ever reaches a buyer",
