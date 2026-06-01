@@ -253,34 +253,37 @@ const Guides = () => {
                             backgroundSize: "48px 48px",
                           }}
                         />
-                        {/* Botanical leaves */}
-                        {g.flowerIdx.map((idx, k) => {
-                          const positions = [
-                            { top: "-12%", right: "-12%", size: 340, rot: 18, op: 0.9 },
-                            { bottom: "-14%", left: "-10%", size: 280, rot: -22, op: 0.75 },
-                            { top: "38%", right: "52%", size: 130, rot: 35, op: 0.6 },
-                            { top: "18%", left: "28%", size: 110, rot: -15, op: 0.5 },
-                          ];
-                          const p = positions[k];
-                          return (
-                            <img
-                              key={k}
-                              src={FLOWERS[idx % FLOWERS.length]}
-                              alt=""
-                              aria-hidden
-                              className="absolute pointer-events-none select-none"
-                              style={{
-                                top: p.top,
-                                bottom: p.bottom,
-                                left: p.left,
-                                right: p.right,
-                                width: p.size,
-                                opacity: p.op,
-                                transform: `rotate(${p.rot}deg)`,
-                              }}
-                            />
-                          );
-                        })}
+                        {/* Hero flower — large, bottom-right; nothing else covers it */}
+                        <img
+                          src={g.hero}
+                          alt=""
+                          aria-hidden
+                          className="absolute pointer-events-none select-none"
+                          style={{
+                            bottom: "-10%",
+                            right: "-8%",
+                            width: "70%",
+                            maxWidth: 420,
+                            opacity: 0.95,
+                            transform: "rotate(-8deg)",
+                            filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))",
+                          }}
+                        />
+                        {/* Supporting leaf — small, top-left, well clear of the hero */}
+                        <img
+                          src={g.accent}
+                          alt=""
+                          aria-hidden
+                          className="absolute pointer-events-none select-none"
+                          style={{
+                            top: "-8%",
+                            left: "-6%",
+                            width: "38%",
+                            maxWidth: 200,
+                            opacity: 0.55,
+                            transform: "rotate(22deg)",
+                          }}
+                        />
 
                         {/* Issue number — huge editorial display */}
                         <div className={`relative z-10 flex flex-col justify-between p-10 lg:p-12 w-full ${g.panelInk}`}>
