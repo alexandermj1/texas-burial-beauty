@@ -125,6 +125,13 @@ const Guides = () => {
     onSelect();
   }, [emblaApi]);
 
+  // Lock body scroll so the Guides hub fits exactly in the viewport
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
     <div className="h-screen bg-[hsl(38_35%_95%)] flex flex-col relative overflow-hidden">
       <Seo
