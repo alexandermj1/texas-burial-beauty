@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,7 +107,7 @@ const Index = () => {
   const [rotationOffset, setRotationOffset] = useState(0);
   const featuredRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
-  const typed = useTypewriter(FEATURED_PHRASES, active);
+  // typed text is set further below once inView is computed
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -137,18 +137,14 @@ const Index = () => {
       )
     : [];
 
-  // Trigger the typewriter when section comes into view (no opacity/scale fade).
-  const { scrollYProgress } = useScroll({
-    target: featuredRef,
-    offset: ["start end", "center center"],
-  });
-
+  // Trigger the typewriter only while the section is on screen — pauses when scrolled past.
+  const inView = useInView(featuredRef, { margin: "0px 0px -15% 0px" });
   useEffect(() => {
-    const unsub = scrollYProgress.on("change", (v) => {
-      if (v > 0.05 && !active) setActive(true);
-    });
-    return () => unsub();
-  }, [scrollYProgress, active]);
+    if (inView && !active) setActive(true);
+  }, [inView, active]);
+  // Pause cycling when scrolled away so the page stops reflowing in the background.
+  const typewriterActive = active && inView;
+  const typed = useTypewriter(FEATURED_PHRASES, typewriterActive);
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
@@ -169,7 +165,7 @@ const Index = () => {
               <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
                 Available Now · Texas
               </span>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl min-h-[1.1em] [text-wrap:balance]">
                 <span className="italic font-light">{typed || "\u00A0"}</span>
                 <span
                   className="ml-1 inline-block h-[0.85em] w-[0.05em] -mb-[0.1em] animate-pulse bg-foreground/70 align-baseline"

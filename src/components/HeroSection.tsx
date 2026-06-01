@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -12,12 +12,13 @@ const TYPED_PHRASES = [
   "for your family.",
 ];
 
-const useTypewriter = (phrases: string[]) => {
+const useTypewriter = (phrases: string[], active: boolean) => {
   const [text, setText] = useState("");
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    if (!active) return;
     const current = phrases[phraseIdx];
     if (!deleting && text === current) {
       const t = setTimeout(() => setDeleting(true), 1800);
@@ -35,14 +36,15 @@ const useTypewriter = (phrases: string[]) => {
       );
     }, delay);
     return () => clearTimeout(t);
-  }, [text, deleting, phraseIdx, phrases]);
+  }, [text, deleting, phraseIdx, phrases, active]);
 
   return text;
 };
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const typed = useTypewriter(TYPED_PHRASES);
+  const inView = useInView(sectionRef, { margin: "0px 0px -20% 0px" });
+  const typed = useTypewriter(TYPED_PHRASES, inView);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
