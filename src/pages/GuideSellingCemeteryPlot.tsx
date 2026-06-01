@@ -108,17 +108,38 @@ const GuideSellingCemeteryPlot = () => (
     <Navbar forceScrolled />
 
     {/* HERO */}
-    <section className="relative pt-28 pb-24 overflow-hidden bg-[hsl(var(--primary)/0.04)]">
-      {/* Layered background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--accent)/0.06)] to-background" />
-      <div className="absolute top-0 right-0 w-[50rem] h-[50rem] rounded-full bg-primary/15 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-      <div className="absolute -top-10 left-0 w-[34rem] h-[34rem] rounded-full bg-accent/15 blur-3xl -translate-x-1/3 pointer-events-none" />
-      {/* Subtle grid overlay */}
+    <section className="relative pt-28 pb-24 overflow-hidden bg-[hsl(38_35%_95%)]">
+      {/* Fresh layered background — sage + cream wash */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(145_25%_88%)] via-[hsl(38_35%_95%)] to-[hsl(40_45%_92%)]" />
+      <div className="absolute top-0 right-0 w-[44rem] h-[44rem] rounded-full bg-[hsl(145_25%_55%)]/25 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-[34rem] h-[34rem] rounded-full bg-[hsl(16_50%_70%)]/20 blur-3xl pointer-events-none" />
+      {/* Dotted paper texture */}
       <div
-        className="absolute inset-0 opacity-[0.07] pointer-events-none"
-        style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "56px 56px" }}
+        className="absolute inset-0 opacity-[0.35] pointer-events-none"
+        style={{ backgroundImage: "radial-gradient(hsl(28 20% 50% / 0.35) 1px, transparent 1px)", backgroundSize: "22px 22px" }}
       />
-      <svg className="absolute bottom-0 left-0 right-0 w-full pointer-events-none" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
+      {/* Botanical leaf accents */}
+      {(() => {
+        const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", { eager: true, import: "default" }) as Record<string, string>;
+        const LEAVES = Object.values(LEAF_MODULES);
+        const scatter = [
+          { top: "10%", left: "-3%", w: 200, rot: -18, op: 0.55, idx: 16 },
+          { top: "6%", right: "-4%", w: 240, rot: 22, op: 0.5, idx: 9 },
+          { bottom: "10%", right: "8%", w: 130, rot: -10, op: 0.5, idx: 4 },
+          { bottom: "18%", left: "6%", w: 110, rot: 14, op: 0.45, idx: 21 },
+        ];
+        return scatter.map((s, i) => (
+          <img
+            key={i}
+            src={LEAVES[s.idx % LEAVES.length]}
+            alt=""
+            aria-hidden
+            className="absolute pointer-events-none select-none hidden md:block"
+            style={{ top: s.top, bottom: s.bottom, left: s.left, right: s.right, width: s.w, opacity: s.op, transform: `rotate(${s.rot}deg)` }}
+          />
+        ));
+      })()}
+      <svg className="absolute bottom-0 left-0 right-0 w-full pointer-events-none z-[1]" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
         <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
       </svg>
 
