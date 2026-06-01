@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import blogHeroBg from "@/assets/hero/cemetery-cathedral.jpg";
 import springCleaningImg from "@/assets/blog/spring-cleaning-hero.jpg";
+import sellPlotTexasImg from "@/assets/blog/sell-cemetery-plot-texas-hero.jpg";
 
 interface BlogPost {
   slug: string;
