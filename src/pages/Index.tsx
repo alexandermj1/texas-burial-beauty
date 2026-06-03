@@ -65,49 +65,9 @@ const HOME_FAQ_JSONLD = {
   ],
 };
 
-const FEATURED_PHRASES = [
-  "Featured plots.",
-  "Featured this week.",
-  "Featured near you.",
-  "Featured across Texas.",
-  "Featured below market.",
-];
-
-const useTypewriter = (phrases: string[], active: boolean) => {
-  const [text, setText] = useState("");
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    if (!active) return;
-    const current = phrases[phraseIdx];
-    if (!deleting && text === current) {
-      const t = setTimeout(() => setDeleting(true), 1800);
-      return () => clearTimeout(t);
-    }
-    if (deleting && text === "") {
-      setDeleting(false);
-      setPhraseIdx((i) => (i + 1) % phrases.length);
-      return;
-    }
-    const delay = deleting ? 35 : 70;
-    const t = setTimeout(() => {
-      setText((prev) =>
-        deleting ? current.slice(0, prev.length - 1) : current.slice(0, prev.length + 1)
-      );
-    }, delay);
-    return () => clearTimeout(t);
-  }, [text, deleting, phraseIdx, phrases, active]);
-
-  return text;
-};
-
 const Index = () => {
   const [allListings, setAllListings] = useState<any[]>([]);
   const [rotationOffset, setRotationOffset] = useState(0);
-  const featuredRef = useRef<HTMLElement>(null);
-  const [active, setActive] = useState(false);
-  // typed text is set further below once inView is computed
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -137,15 +97,6 @@ const Index = () => {
       )
     : [];
 
-  // Trigger the typewriter only while the section is on screen — pauses when scrolled past.
-  const inView = useInView(featuredRef, { margin: "0px 0px -15% 0px" });
-  useEffect(() => {
-    if (inView && !active) setActive(true);
-  }, [inView, active]);
-  // Pause cycling when scrolled away so the page stops reflowing in the background.
-  const typewriterActive = active && inView;
-  const typed = useTypewriter(FEATURED_PHRASES, typewriterActive);
-
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
@@ -159,18 +110,14 @@ const Index = () => {
 
       {/* Featured Available Plots — emerges from background as you scroll in */}
       {featuredListings.length > 0 && (
-        <section ref={featuredRef} className="relative py-14 sm:py-20 bg-gradient-warm overflow-hidden">
+        <section className="relative py-14 sm:py-20 bg-gradient-warm overflow-hidden">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
               <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
-                Available Now · Texas
+                Featured Listings · Texas
               </span>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl min-h-[1.1em] [text-wrap:balance]">
-                <span className="italic font-light">{typed || "\u00A0"}</span>
-                <span
-                  className="ml-1 inline-block h-[0.85em] w-[0.05em] -mb-[0.1em] animate-pulse bg-foreground/70 align-baseline"
-                  aria-hidden="true"
-                />
+              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl [text-wrap:balance]">
+                <span className="italic font-light">Featured Listings</span>
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base font-light text-muted-foreground sm:text-lg">
                 Recently listed properties at below-market prices across Texas — Dallas, Houston & beyond.
