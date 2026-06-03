@@ -65,6 +65,37 @@ const HOME_FAQ_JSONLD = {
   ],
 };
 
+const Index = () => {
+  const [allListings, setAllListings] = useState<any[]>([]);
+  const [rotationOffset, setRotationOffset] = useState(0);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      const { data } = await supabase
+        .from("listings")
+        .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, description")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(24);
+      if (data) setAllListings(data);
+    };
+    fetchFeatured();
+  }, []);
+
+  // Rotate featured plots every 5 seconds when there are more than 6 listings.
+  useEffect(() => {
+    if (allListings.length <= 6) return;
+    const interval = setInterval(() => {
+      setRotationOffset((o) => (o + 1) % allListings.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [allListings.length]);
+
+  const featuredListings = allListings.length > 0
+    ? Array.from({ length: Math.min(6, allListings.length) }, (_, i) =>
+        allListings[(rotationOffset + i) % allListings.length]
+      )
+    : [];
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
@@ -79,18 +110,14 @@ const HOME_FAQ_JSONLD = {
 
       {/* Featured Available Plots — emerges from background as you scroll in */}
       {featuredListings.length > 0 && (
-        <section ref={featuredRef} className="relative py-14 sm:py-20 bg-gradient-warm overflow-hidden">
+        <section className="relative py-14 sm:py-20 bg-gradient-warm overflow-hidden">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
               <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
-                Available Now · Texas
+                Featured Listings · Texas
               </span>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl min-h-[1.1em] [text-wrap:balance]">
-                <span className="italic font-light">{typed || "\u00A0"}</span>
-                <span
-                  className="ml-1 inline-block h-[0.85em] w-[0.05em] -mb-[0.1em] animate-pulse bg-foreground/70 align-baseline"
-                  aria-hidden="true"
-                />
+              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl [text-wrap:balance]">
+                <span className="italic font-light">Featured Listings</span>
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base font-light text-muted-foreground sm:text-lg">
                 Recently listed properties at below-market prices across Texas — Dallas, Houston & beyond.
