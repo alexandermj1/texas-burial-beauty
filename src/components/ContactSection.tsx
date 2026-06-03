@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Phone, Mail, ArrowRight, Send } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ContactSection = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
 
@@ -33,9 +35,9 @@ const ContactSection = () => {
       setLoading(false);
       return;
     }
-    toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
     setForm({ name: "", email: "", phone: "", message: "" });
     setLoading(false);
+    navigate("/thank-you");
   };
 
 

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +15,7 @@ const guarantees = [
 
 const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -50,12 +52,9 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       setLoading(false);
       return;
     }
-    toast({
-      title: "Quote request submitted",
-      description: "We'll review your property and respond within 24 hours with your quote.",
-    });
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "" });
     setLoading(false);
+    navigate("/thank-you");
   };
 
   const inputCls =
