@@ -13,7 +13,7 @@ const ThankYou = () => {
         description="Your request has been received. We'll be in touch within 24 hours."
         noindex
       />
-      <Navbar />
+      <Navbar forceScrolled />
       <main className="flex-1 flex items-center justify-center px-6 py-24 bg-gradient-warm">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

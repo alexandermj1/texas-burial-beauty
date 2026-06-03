@@ -5,7 +5,7 @@ import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
 import { bayCemeteries, regions, CemeteryInfo } from "@/data/cemeteries";
@@ -58,6 +58,7 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 const BuyProperty = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>(1);
@@ -229,6 +230,7 @@ const BuyProperty = () => {
       return;
     }
     toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (310) 804-9586." });
+    navigate("/thank-you");
   };
 
   const cardBase = "text-left rounded-xl border-2 transition-all duration-200 w-full";
