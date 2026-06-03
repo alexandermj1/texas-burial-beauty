@@ -35,6 +35,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Guides = lazy(() => import("./pages/Guides"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
+const ThankYou = lazy(() => import("./pages/ThankYou"));
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => (
                 <Route path="/guides" element={<Guides />} />
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
+                <Route path="/thank-you" element={<ThankYou />} />
                 <Route path="/buying-a-cemetery-plot-in-texas" element={<Navigate to="/cemetery-plots-for-sale-texas" replace />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
