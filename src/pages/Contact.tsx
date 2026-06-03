@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, ArrowRight, Check, Building2, DollarSign, Calendar, Search, MessageSquare, Send } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
@@ -90,6 +91,7 @@ const labelCls = "block text-[11px] font-medium tracking-[0.12em] uppercase text
 /* ─── General Inquiry Section ─── */
 const GeneralInquiryForm = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
 
@@ -118,6 +120,7 @@ const GeneralInquiryForm = () => {
     toast({ title: "Message sent", description: "We'll be in touch within 24 hours." });
     setForm({ name: "", email: "", phone: "", message: "" });
     setLoading(false);
+    navigate("/thank-you");
   };
 
   return (
@@ -176,6 +179,7 @@ const timelines = ["At-Need (Now)", "Within 6 Months", "Pre-Need (Future)"];
 
 const BuyInquiryForm = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -229,6 +233,7 @@ const BuyInquiryForm = () => {
     toast({ title: "Request submitted", description: "We'll be in touch within 24 hours with options that match your needs." });
     setForm({ name: "", email: "", phone: "", propertyType: "", budget: "", region: "", cemetery: "", timeline: "", message: "" });
     setLoading(false);
+    navigate("/thank-you");
   };
 
   return (
