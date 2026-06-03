@@ -21,7 +21,7 @@ import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
 import GuidedTour from "@/components/admin/GuidedTour";
-import WelcomeOverlay from "@/components/admin/WelcomeOverlay";
+
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 
 interface AdminListing {
@@ -65,9 +65,6 @@ const Admin = () => {
   // When admin clicks "Open customer" inside the Gmail inbox, this id flows into the
   // Submissions panel and auto-selects the matching customer.
   const [focusSubmissionId, setFocusSubmissionId] = useState<string | null>(null);
-  // Welcome overlay is gated until the Gmail inbox has been synced + submissions
-  // refetched, so the "while you were away" stats reflect just-arrived emails.
-  const [welcomeReady, setWelcomeReady] = useState(false);
 
   // Login form
   const [email, setEmail] = useState("");
@@ -87,7 +84,7 @@ const Admin = () => {
       (async () => {
         // Sync the Gmail inbox on login (once per browser session) so any
         // contact-form emails that arrived while the admin was away get
-        // promoted to submissions BEFORE the welcome overlay reads counts.
+        // promoted to submissions.
         const syncKey = `admin:loginSync:${user.id}`;
         if (!sessionStorage.getItem(syncKey)) {
           try {
@@ -98,7 +95,6 @@ const Admin = () => {
           }
         }
         await fetchAllListings();
-        setWelcomeReady(true);
       })();
       (async () => {
         const { count } = await supabase
@@ -315,35 +311,8 @@ const Admin = () => {
 
   const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory";
 
-  const userId = user.id;
-  const lastVisitKey = `admin:lastVisit:${userId}`;
-  const welcomeKey = `admin:welcome:${userId}`;
-  let lastVisit = 0;
-  try {
-    lastVisit = Number(localStorage.getItem(lastVisitKey)) || 0;
-    // Only stamp once per browser session so the "since last visit" count stays stable while navigating.
-    if (!sessionStorage.getItem(welcomeKey + ":stamped")) {
-      localStorage.setItem(lastVisitKey, String(Date.now()));
-      sessionStorage.setItem(welcomeKey + ":stamped", "1");
-    }
-  } catch {}
-  const newSinceLast = lastVisit
-    ? submissions.filter((s: any) => new Date(s.created_at).getTime() > lastVisit).length
-    : 0;
-  const openCount = submissions.filter((s: any) => !s.handled).length;
-  const welcomeName = cleanDisplayName(user.user_metadata?.full_name) || (user.email ? user.email.split("@")[0] : "");
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {welcomeReady && (
-        <WelcomeOverlay
-          name={welcomeName}
-          newSubmissions={newSinceLast}
-          unreadNotifications={unreadNotifs}
-          totalOpenSubmissions={openCount}
-          storageKey={welcomeKey}
-        />
-      )}
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <Navbar forceScrolled />
       <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
