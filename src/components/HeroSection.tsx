@@ -21,7 +21,7 @@ const useTypewriter = (phrases: string[], active: boolean) => {
     if (!active) return;
     const current = phrases[phraseIdx];
     if (!deleting && text === current) {
-      const t = setTimeout(() => setDeleting(true), 1800);
+      const t = setTimeout(() => setDeleting(true), 2500);
       return () => clearTimeout(t);
     }
     if (deleting && text === "") {
@@ -29,7 +29,7 @@ const useTypewriter = (phrases: string[], active: boolean) => {
       setPhraseIdx((i) => (i + 1) % phrases.length);
       return;
     }
-    const delay = deleting ? 40 : 75;
+    const delay = deleting ? 80 : 120;
     const t = setTimeout(() => {
       setText((prev) =>
         deleting ? current.slice(0, prev.length - 1) : current.slice(0, prev.length + 1)
