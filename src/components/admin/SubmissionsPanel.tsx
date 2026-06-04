@@ -324,7 +324,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         />
       )}
 
-      {/* Status pills */}
+      {/* Mobile: minimal toolbar — only Refresh inbox */}
+      {isMobile && onRefresh && (
+        <div className="flex items-center justify-end">
+          <button
+            onClick={async () => {
+              if (refreshing) return;
+              setRefreshing(true);
+              try { await onRefresh(); } finally { setRefreshing(false); }
+            }}
+            disabled={refreshing}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+            title="Sync Gmail and reload submissions"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Refreshing..." : "Refresh inbox"}
+          </button>
+        </div>
+      )}
+
+      {/* Status pills (desktop only) */}
+      {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
         {(["new", "all"] as const).map(f => {
           const count = f === "all"
@@ -403,6 +423,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           )}
         </div>
       </div>
+      )}
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
       <AddSubmissionDialog
         open={addOpen}
