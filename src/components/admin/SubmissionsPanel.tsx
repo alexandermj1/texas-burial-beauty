@@ -977,6 +977,58 @@ const Field = ({ label, value }: { label: string; value: string }) => (
 );
 
 // ===========================================================================
+// MobileInlineDetail — compact, read-only detail card shown directly beneath
+// the tapped submission row on mobile. No actions, no pipeline — just the info
+// needed to glance at what the person said.
+// ===========================================================================
+const MobileInlineDetail = ({ submission: s }: { submission: Submission }) => {
+  const body = s.message || s.details || "";
+  return (
+    <div className="bg-muted/30 border-b border-border/40 px-4 py-4 space-y-3">
+      {(s.email || s.phone) && (
+        <div className="flex flex-wrap gap-2">
+          {s.email && (
+            <a
+              href={`mailto:${s.email}`}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90 transition-opacity break-all"
+            >
+              <Mail className="w-3.5 h-3.5 shrink-0" /> {s.email}
+            </a>
+          )}
+          {s.phone && (
+            <a
+              href={`tel:${s.phone.replace(/[^\d+]/g, "")}`}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-foreground text-background rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              <Phone className="w-3.5 h-3.5" /> {s.phone}
+            </a>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        {s.cemetery && <Field label="Cemetery" value={s.cemetery} />}
+        {s.property_type && <Field label="Property" value={s.property_type} />}
+        {s.spaces && <Field label="Spaces" value={String(s.spaces)} />}
+        {s.section && <Field label="Section" value={s.section} />}
+        {s.budget && <Field label="Budget" value={s.budget} />}
+        {s.timeline && <Field label="Timeline" value={s.timeline} />}
+        {s.region && <Field label="Region" value={s.region} />}
+      </div>
+
+      {body && (
+        <div className="bg-card rounded-lg p-3 border border-border/50">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Message</p>
+          <p className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">{body}</p>
+        </div>
+      )}
+
+      <p className="text-[10px] text-muted-foreground">Received {formatDate(s.created_at)}</p>
+    </div>
+  );
+};
+
+// ===========================================================================
 // PipelineOverview — full-team seller funnel that lives ABOVE the inbox.
 // Shows each Bayer stage with a count + the avatars of admins actively
 // working that stage (i.e. who has opened a submission currently in it).
