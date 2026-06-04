@@ -527,7 +527,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       </div>
 
       {/* Detail */}
-      <div data-tour="detail-panel" className="lg:col-span-7">
+      <div data-tour="detail-panel" className="lg:col-span-7 order-1 lg:order-none">
         {!selected ? (
           <div className="bg-card rounded-xl border border-border/50 p-10 text-center text-sm text-muted-foreground">
             Select a submission to view details.
