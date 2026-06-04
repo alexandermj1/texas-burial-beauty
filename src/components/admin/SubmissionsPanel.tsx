@@ -458,7 +458,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       )}
                       <CustomerKindBadge kind={sKind} size="xs" />
                       <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
-                      <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} size="xs" />
+                      <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {otherViewers.length > 0 && (
