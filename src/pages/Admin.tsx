@@ -314,7 +314,9 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
-      <Navbar forceScrolled />
+      <div className={`md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
+        <Navbar forceScrolled />
+      </div>
       <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
         <div className={focused ? "container mx-auto px-4 max-w-[1600px]" : "container mx-auto px-6"}>
           {/* Header — full when not focused, compact when focused */}
