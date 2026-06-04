@@ -116,6 +116,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const { countFor } = useActiveListings();
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
 
   const myId = user?.id ?? "";
   const myName = cleanDisplayName((user?.user_metadata as any)?.full_name) || user?.email?.split("@")[0] || "Someone";
