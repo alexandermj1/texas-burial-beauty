@@ -318,24 +318,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         />
       )}
 
-      {/* Mobile: minimal toolbar — only Refresh inbox */}
-      {isMobile && onRefresh && (
-        <div className="flex items-center justify-end">
-          <button
-            onClick={async () => {
-              if (refreshing) return;
-              setRefreshing(true);
-              try { await onRefresh(); } finally { setRefreshing(false); }
-            }}
-            disabled={refreshing}
-            className="w-9 h-9 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center justify-center disabled:opacity-60"
-            title="Sync Gmail and reload submissions"
-            aria-label="Refresh inbox"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-      )}
+      {/* Mobile: refresh lives in the admin header to save space */}
 
       {/* Status pills (desktop only) */}
       {!isMobile && (
