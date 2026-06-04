@@ -1,7 +1,7 @@
 import { useState, useLayoutEffect, useEffect } from "react";
 import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import hibiscusLogo from "@/assets/hibiscus-flower.png";
+import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
 const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
   const computeScrolled = () =>
