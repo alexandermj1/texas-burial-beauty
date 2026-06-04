@@ -745,133 +745,139 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             )}
 
-            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-            <div data-tour="notes-section">
-              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-            </div>
+            {/* Mobile keeps it lean — view-only. Notes, pipelines, reply/action buttons and files
+                are hidden on mobile since admin work is done from desktop. */}
+            {!isMobile && (
+              <>
+                {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
+                <div data-tour="notes-section">
+                  <CustomerNotes submissionId={selected.id} customerName={selected.name} />
+                </div>
 
-            {/* Sellers: pipeline below notes, above listings/dropbox */}
-            {selectedKind === "seller" && (() => {
-              const dropboxStages: BayerStage[] = [
-                "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
-                "la_confirmed_poa_issued", "awaiting_notarized_docs",
-                "file_compiled", "listing_live",
-              ];
-              const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
-              return (
-                <div data-tour="seller-pipeline">
-                  <BayerPipelinePanel
-                    submission={selected}
-                    onPatch={(patch) => onUpdate(selected.id, patch)}
-                  />
-                  {showDropbox && (
-                    <CustomerJourney
+                {/* Sellers: pipeline below notes, above listings/dropbox */}
+                {selectedKind === "seller" && (() => {
+                  const dropboxStages: BayerStage[] = [
+                    "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
+                    "la_confirmed_poa_issued", "awaiting_notarized_docs",
+                    "file_compiled", "listing_live",
+                  ];
+                  const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
+                  return (
+                    <div data-tour="seller-pipeline">
+                      <BayerPipelinePanel
+                        submission={selected}
+                        onPatch={(patch) => onUpdate(selected.id, patch)}
+                      />
+                      {showDropbox && (
+                        <CustomerJourney
+                          submission={selected}
+                          onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                        />
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {selectedKind === "buyer" && (
+                  <div data-tour="buyer-pipeline">
+                    <BuyerJourneyPanel
                       submission={selected}
-                      onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                      onOpenSend={() => setBuyerOpen(true)}
                     />
-                  )}
-                </div>
-              );
-            })()}
-
-            {selectedKind === "buyer" && (
-              <div data-tour="buyer-pipeline">
-                <BuyerJourneyPanel
-                  submission={selected}
-                  onOpenSend={() => setBuyerOpen(true)}
-                />
-              </div>
-            )}
-
-            {selectedKind !== "seller" && selectedKind !== "buyer" && (
-              <CustomerJourney
-                submission={selected}
-                onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
-              />
-            )}
-            {/* Typing banner — iMessage style */}
-            {typingUsers.length > 0 && (
-              <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
-                <span className="inline-flex gap-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "120ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "240ms" }} />
-                </span>
-                <p className="text-xs text-amber-900 dark:text-amber-200">
-                  <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
-                </p>
-              </div>
-            )}
-
-            {/* Actions — sellers: only show quote/decline before/at the quote stages.
-                Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
-            {(() => {
-              const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
-              const sellerCanQuote = selectedKind === "seller" && (!selectedBayerStage || sellerEarlyStages.includes(selectedBayerStage));
-              const showQuoteBtn = selectedKind !== "seller" || sellerCanQuote;
-              const showDeclineBtn = selectedKind !== "seller" || sellerCanQuote;
-              return (
-                <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {showQuoteBtn && (selectedKind === "seller" ? (
-                      <button
-                        onClick={guard("Send seller quote", () => setQuoteOpen(true))}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={guard("Send available plots", () => setBuyerOpen(true))}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        Send available plots
-                      </button>
-                    ))}
-
-                    {showDeclineBtn && (
-                      <button
-                        onClick={guard("Polite decline", () => setDeclineOpen(true))}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
-                      >
-                        <MessageCircleX className="w-3.5 h-3.5" />
-                        Polite decline
-                      </button>
-                    )}
-
-                    {selectedKind === "seller" && !sellerCanQuote && (
-                      <span className="text-[11px] text-muted-foreground italic">
-                        Seller is past the quote stage — use the pipeline above to advance.
-                      </span>
-                    )}
                   </div>
-                  <button
-                    onClick={guard("Delete submission", () => onDelete(selected.id))}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete
-                  </button>
-                </div>
-              );
-            })()}
+                )}
 
-            {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
-            {(selected as any).customer_profile_id ? (
-              <div data-tour="files-section" className="border-t border-border/40 pt-4">
-                <CustomerFiles
-                  customerId={(selected as any).customer_profile_id}
-                  customerName={selected.name}
-                />
-              </div>
-            ) : (
-              <div className="border-t border-border/40 pt-4">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Files & documents</p>
-                <p className="text-xs text-muted-foreground">
-                  This submission isn't linked to a customer profile yet. Files attach to a customer profile so they appear across all of their submissions.
-                </p>
-              </div>
+                {selectedKind !== "seller" && selectedKind !== "buyer" && (
+                  <CustomerJourney
+                    submission={selected}
+                    onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                  />
+                )}
+                {/* Typing banner — iMessage style */}
+                {typingUsers.length > 0 && (
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                    <span className="inline-flex gap-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "120ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "240ms" }} />
+                    </span>
+                    <p className="text-xs text-amber-900 dark:text-amber-200">
+                      <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
+                    </p>
+                  </div>
+                )}
+
+                {/* Actions — sellers: only show quote/decline before/at the quote stages.
+                    Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
+                {(() => {
+                  const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
+                  const sellerCanQuote = selectedKind === "seller" && (!selectedBayerStage || sellerEarlyStages.includes(selectedBayerStage));
+                  const showQuoteBtn = selectedKind !== "seller" || sellerCanQuote;
+                  const showDeclineBtn = selectedKind !== "seller" || sellerCanQuote;
+                  return (
+                    <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {showQuoteBtn && (selectedKind === "seller" ? (
+                          <button
+                            onClick={guard("Send seller quote", () => setQuoteOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={guard("Send available plots", () => setBuyerOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            Send available plots
+                          </button>
+                        ))}
+
+                        {showDeclineBtn && (
+                          <button
+                            onClick={guard("Polite decline", () => setDeclineOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
+                          >
+                            <MessageCircleX className="w-3.5 h-3.5" />
+                            Polite decline
+                          </button>
+                        )}
+
+                        {selectedKind === "seller" && !sellerCanQuote && (
+                          <span className="text-[11px] text-muted-foreground italic">
+                            Seller is past the quote stage — use the pipeline above to advance.
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={guard("Delete submission", () => onDelete(selected.id))}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  );
+                })()}
+
+                {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
+                {(selected as any).customer_profile_id ? (
+                  <div data-tour="files-section" className="border-t border-border/40 pt-4">
+                    <CustomerFiles
+                      customerId={(selected as any).customer_profile_id}
+                      customerName={selected.name}
+                    />
+                  </div>
+                ) : (
+                  <div className="border-t border-border/40 pt-4">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Files & documents</p>
+                    <p className="text-xs text-muted-foreground">
+                      This submission isn't linked to a customer profile yet. Files attach to a customer profile so they appear across all of their submissions.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         )}
