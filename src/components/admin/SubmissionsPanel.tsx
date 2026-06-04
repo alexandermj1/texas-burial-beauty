@@ -219,18 +219,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const isNew = (s: Submission) => new Date(s.created_at).getTime() >= startOfToday;
   const isUntouched = (sid: string) => !views.some(v => v.submission_id === sid);
 
+  // On mobile, ignore filters — always show "all" with no kind/stage scoping so the
+  // toolbar can stay minimal (just Refresh inbox).
+  const eFilter = isMobile ? "all" : filter;
+  const eKind = isMobile ? "all" : kindFilter;
+  const eStage = isMobile ? "all" : stageFilter;
+  const eSellerView = !isMobile && isSellerView;
   const filtered = useMemo(() => {
     return submissions.filter(s => {
-      if (filter === "new" && !isNew(s)) return false;
-      if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
-      if (isSellerView && stageFilter !== "all" && deriveBayerStage(s as any) !== stageFilter) return false;
+      if (eFilter === "new" && !isNew(s)) return false;
+      if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
+      if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery, startOfToday]);
+  }, [submissions, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
@@ -301,20 +307,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* === Team pipeline overview — sellers, full team view ===
-          Hidden by default on mobile to save space; toggle shows it. */}
-      {isMobile && (
-        <div className="lg:hidden">
-          <button
-            onClick={() => setPipelineOpenMobile(v => !v)}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border bg-card text-foreground hover:bg-muted/50 transition-colors"
-          >
-            <Layers className="w-3.5 h-3.5 text-primary" />
-            {pipelineOpenMobile ? "Hide seller pipeline" : "Show seller pipeline"}
-          </button>
-        </div>
-      )}
-      {(!isMobile || pipelineOpenMobile) && (
+      {/* === Team pipeline overview — sellers, full team view (desktop only) === */}
+      {!isMobile && (
         <PipelineOverview
           sellers={sellersAll}
           views={views}
@@ -324,7 +318,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         />
       )}
 
-      {/* Status pills */}
+      {/* Mobile: minimal toolbar — only Refresh inbox */}
+      {isMobile && onRefresh && (
+        <div className="flex items-center justify-end">
+          <button
+            onClick={async () => {
+              if (refreshing) return;
+              setRefreshing(true);
+              try { await onRefresh(); } finally { setRefreshing(false); }
+            }}
+            disabled={refreshing}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+            title="Sync Gmail and reload submissions"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Refreshing..." : "Refresh inbox"}
+          </button>
+        </div>
+      )}
+
+      {/* Status pills (desktop only) */}
+      {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
         {(["new", "all"] as const).map(f => {
           const count = f === "all"
@@ -403,6 +417,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           )}
         </div>
       </div>
+      )}
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
       <AddSubmissionDialog
         open={addOpen}
@@ -414,7 +429,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto ${selected ? "order-2" : ""} lg:order-none`}>
+      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
         {filtered.length === 0 ? (
           <div className="p-10 text-center">
             <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
@@ -432,11 +447,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const fresh = isNew(s);
             const workers = workersFor(s.id);
             const beingWorked = workers.length > 0;
-            // Background priority:
-            //  • Active row (mine) → primary tint
-            //  • Teammate currently working → soft terracotta/accent tint with pulse
-            //  • New today → soft sky tint
-            //  • Otherwise → neutral
             const bgCls = isActive
               ? "bg-primary/15 border-l-4 border-l-primary"
               : beingWorked
@@ -445,89 +455,101 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
                   : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
             return (
-              <motion.button
-                key={s.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: Math.min(i * 0.02, 0.2) }}
-                onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); }}
-                className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
-              >
-                
-                <img
-                  src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
-                  alt=""
-                  className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
-                      {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-sky-500 text-white">New</span>}
-                      {beingWorked && (
-                        <span
-                          className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
-                          title={`${workers.map(w => w.user_name).join(", ")} viewing now`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                          {workers[0].user_name}{workers.length > 1 ? ` +${workers.length - 1}` : ""}
+              <div key={s.id}>
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: Math.min(i * 0.02, 0.2) }}
+                  onClick={() => {
+                    // On mobile, tapping the already-open row collapses it.
+                    if (isMobile && isActive) { setSelectedId(null); return; }
+                    setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
+                  }}
+                  className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
+                >
+                  <img
+                    src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                    alt=""
+                    className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
+                        {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-sky-500 text-white">New</span>}
+                        {beingWorked && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
+                            title={`${workers.map(w => w.user_name).join(", ")} viewing now`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                            {workers[0].user_name}{workers.length > 1 ? ` +${workers.length - 1}` : ""}
+                          </span>
+                        )}
+                        <CustomerKindBadge kind={sKind} size="xs" />
+                        <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
+                        <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {otherViewers.length > 0 && (
+                          <div className="flex -space-x-1" title={`Also viewed by: ${otherViewers.map(v => v.user_name || "teammate").join(", ")}`}>
+                            {otherViewers.slice(0, 3).map(v => (
+                              <span
+                                key={v.user_id}
+                                className="w-4 h-4 rounded-full ring-1 ring-card flex items-center justify-center text-[8px] font-bold text-white"
+                                style={{ background: colorFor(v.user_id) }}
+                              >
+                                {(v.user_name || "?").charAt(0).toUpperCase()}
+                              </span>
+                            ))}
+                            {otherViewers.length > 3 && (
+                              <span className="w-4 h-4 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[8px] font-medium">
+                                +{otherViewers.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <span className="text-[10px] text-muted-foreground">{formatDate(s.created_at).split(",")[0]}</span>
+                      </div>
+                    </div>
+                    {stageMeta && (
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
+                          <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
+                          {stageMeta.short}
                         </span>
-                      )}
-                      <CustomerKindBadge kind={sKind} size="xs" />
-                      <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
-                      <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {otherViewers.length > 0 && (
-                        <div className="flex -space-x-1" title={`Also viewed by: ${otherViewers.map(v => v.user_name || "teammate").join(", ")}`}>
-                          {otherViewers.slice(0, 3).map(v => (
-                            <span
-                              key={v.user_id}
-                              className="w-4 h-4 rounded-full ring-1 ring-card flex items-center justify-center text-[8px] font-bold text-white"
-                              style={{ background: colorFor(v.user_id) }}
-                            >
-                              {(v.user_name || "?").charAt(0).toUpperCase()}
-                            </span>
-                          ))}
-                          {otherViewers.length > 3 && (
-                            <span className="w-4 h-4 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[8px] font-medium">
-                              +{otherViewers.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      <span className="text-[10px] text-muted-foreground">{formatDate(s.created_at).split(",")[0]}</span>
-                    </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground truncate">
+                      <span className="text-primary/80">{sourceLabel(s.source)}</span>
+                      {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
+                      {s.cemetery ? ` · ${s.cemetery}` : ""}
+                      {s.cemetery && countFor(s.cemetery) > 0 ? (
+                        <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
+                      ) : null}
+                    </p>
+                    {!isActive && (
+                      <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
+                        {s.message || s.details || s.email || s.phone || "—"}
+                      </p>
+                    )}
                   </div>
-                  {stageMeta && (
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
-                        <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
-                        {stageMeta.short}
-                      </span>
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground truncate">
-                    <span className="text-primary/80">{sourceLabel(s.source)}</span>
-                    {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
-                    {s.cemetery ? ` · ${s.cemetery}` : ""}
-                    {s.cemetery && countFor(s.cemetery) > 0 ? (
-                      <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
-                    ) : null}
-                  </p>
-                  <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
-                    {s.message || s.details || s.email || s.phone || "—"}
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-1" />
-              </motion.button>
+                  <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
+                </motion.button>
+
+                {/* Inline detail (mobile only) — keeps list visible above/below */}
+                {isMobile && isActive && (
+                  <MobileInlineDetail submission={s} />
+                )}
+              </div>
             );
           })
         )}
       </div>
 
-      {/* Detail */}
-      <div data-tour="detail-panel" className="lg:col-span-7 order-1 lg:order-none">
+
+      {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
+      <div data-tour="detail-panel" className={`lg:col-span-7 lg:order-none ${isMobile ? "hidden" : ""}`}>
         {!selected ? (
           <div className="bg-card rounded-xl border border-border/50 p-10 text-center text-sm text-muted-foreground">
             Select a submission to view details.
@@ -953,6 +975,58 @@ const Field = ({ label, value }: { label: string; value: string }) => (
     <p className="text-sm text-foreground capitalize">{value}</p>
   </div>
 );
+
+// ===========================================================================
+// MobileInlineDetail — compact, read-only detail card shown directly beneath
+// the tapped submission row on mobile. No actions, no pipeline — just the info
+// needed to glance at what the person said.
+// ===========================================================================
+const MobileInlineDetail = ({ submission: s }: { submission: Submission }) => {
+  const body = s.message || s.details || "";
+  return (
+    <div className="bg-muted/30 border-b border-border/40 px-4 py-4 space-y-3">
+      {(s.email || s.phone) && (
+        <div className="flex flex-wrap gap-2">
+          {s.email && (
+            <a
+              href={`mailto:${s.email}`}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90 transition-opacity break-all"
+            >
+              <Mail className="w-3.5 h-3.5 shrink-0" /> {s.email}
+            </a>
+          )}
+          {s.phone && (
+            <a
+              href={`tel:${s.phone.replace(/[^\d+]/g, "")}`}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-foreground text-background rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              <Phone className="w-3.5 h-3.5" /> {s.phone}
+            </a>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        {s.cemetery && <Field label="Cemetery" value={s.cemetery} />}
+        {s.property_type && <Field label="Property" value={s.property_type} />}
+        {s.spaces && <Field label="Spaces" value={String(s.spaces)} />}
+        {s.section && <Field label="Section" value={s.section} />}
+        {s.budget && <Field label="Budget" value={s.budget} />}
+        {s.timeline && <Field label="Timeline" value={s.timeline} />}
+        {s.region && <Field label="Region" value={s.region} />}
+      </div>
+
+      {body && (
+        <div className="bg-card rounded-lg p-3 border border-border/50">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Message</p>
+          <p className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">{body}</p>
+        </div>
+      )}
+
+      <p className="text-[10px] text-muted-foreground">Received {formatDate(s.created_at)}</p>
+    </div>
+  );
+};
 
 // ===========================================================================
 // PipelineOverview — full-team seller funnel that lives ABOVE the inbox.
