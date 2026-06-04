@@ -219,18 +219,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const isNew = (s: Submission) => new Date(s.created_at).getTime() >= startOfToday;
   const isUntouched = (sid: string) => !views.some(v => v.submission_id === sid);
 
+  // On mobile, ignore filters — always show "all" with no kind/stage scoping so the
+  // toolbar can stay minimal (just Refresh inbox).
+  const eFilter = isMobile ? "all" : filter;
+  const eKind = isMobile ? "all" : kindFilter;
+  const eStage = isMobile ? "all" : stageFilter;
+  const eSellerView = !isMobile && isSellerView;
   const filtered = useMemo(() => {
     return submissions.filter(s => {
-      if (filter === "new" && !isNew(s)) return false;
-      if (kindFilter !== "all" && resolveKind(s.customer_kind, s.source) !== kindFilter) return false;
-      if (isSellerView && stageFilter !== "all" && deriveBayerStage(s as any) !== stageFilter) return false;
+      if (eFilter === "new" && !isNew(s)) return false;
+      if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
+      if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, filter, kindFilter, stageFilter, isSellerView, searchQuery, startOfToday]);
+  }, [submissions, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
