@@ -23,6 +23,7 @@ import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 import { Megaphone, UserPlus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface Submission {
   id: string;
@@ -115,6 +116,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const { countFor } = useActiveListings();
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
 
   const myId = user?.id ?? "";
   const myName = cleanDisplayName((user?.user_metadata as any)?.full_name) || user?.email?.split("@")[0] || "Someone";
@@ -298,14 +301,28 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* === Team pipeline overview — sellers, full team view === */}
-      <PipelineOverview
-        sellers={sellersAll}
-        views={views}
-        colorFor={colorFor}
-        onSelectStage={(st) => { setKindFilter("seller"); setStageFilter(st); }}
-        activeStage={kindFilter === "seller" ? stageFilter : "all"}
-      />
+      {/* === Team pipeline overview — sellers, full team view ===
+          Hidden by default on mobile to save space; toggle shows it. */}
+      {isMobile && (
+        <div className="lg:hidden">
+          <button
+            onClick={() => setPipelineOpenMobile(v => !v)}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border bg-card text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <Layers className="w-3.5 h-3.5 text-primary" />
+            {pipelineOpenMobile ? "Hide seller pipeline" : "Show seller pipeline"}
+          </button>
+        </div>
+      )}
+      {(!isMobile || pipelineOpenMobile) && (
+        <PipelineOverview
+          sellers={sellersAll}
+          views={views}
+          colorFor={colorFor}
+          onSelectStage={(st) => { setKindFilter("seller"); setStageFilter(st); }}
+          activeStage={kindFilter === "seller" ? stageFilter : "all"}
+        />
+      )}
 
       {/* Status pills */}
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
@@ -397,7 +414,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div data-tour="submissions-list" className="lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto">
+      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto ${selected ? "order-2" : ""} lg:order-none`}>
         {filtered.length === 0 ? (
           <div className="p-10 text-center">
             <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
@@ -510,7 +527,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       </div>
 
       {/* Detail */}
-      <div data-tour="detail-panel" className="lg:col-span-7">
+      <div data-tour="detail-panel" className="lg:col-span-7 order-1 lg:order-none">
         {!selected ? (
           <div className="bg-card rounded-xl border border-border/50 p-10 text-center text-sm text-muted-foreground">
             Select a submission to view details.
@@ -728,133 +745,139 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             )}
 
-            {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-            <div data-tour="notes-section">
-              <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-            </div>
+            {/* Mobile keeps it lean — view-only. Notes, pipelines, reply/action buttons and files
+                are hidden on mobile since admin work is done from desktop. */}
+            {!isMobile && (
+              <>
+                {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
+                <div data-tour="notes-section">
+                  <CustomerNotes submissionId={selected.id} customerName={selected.name} />
+                </div>
 
-            {/* Sellers: pipeline below notes, above listings/dropbox */}
-            {selectedKind === "seller" && (() => {
-              const dropboxStages: BayerStage[] = [
-                "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
-                "la_confirmed_poa_issued", "awaiting_notarized_docs",
-                "file_compiled", "listing_live",
-              ];
-              const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
-              return (
-                <div data-tour="seller-pipeline">
-                  <BayerPipelinePanel
-                    submission={selected}
-                    onPatch={(patch) => onUpdate(selected.id, patch)}
-                  />
-                  {showDropbox && (
-                    <CustomerJourney
+                {/* Sellers: pipeline below notes, above listings/dropbox */}
+                {selectedKind === "seller" && (() => {
+                  const dropboxStages: BayerStage[] = [
+                    "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
+                    "la_confirmed_poa_issued", "awaiting_notarized_docs",
+                    "file_compiled", "listing_live",
+                  ];
+                  const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
+                  return (
+                    <div data-tour="seller-pipeline">
+                      <BayerPipelinePanel
+                        submission={selected}
+                        onPatch={(patch) => onUpdate(selected.id, patch)}
+                      />
+                      {showDropbox && (
+                        <CustomerJourney
+                          submission={selected}
+                          onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                        />
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {selectedKind === "buyer" && (
+                  <div data-tour="buyer-pipeline">
+                    <BuyerJourneyPanel
                       submission={selected}
-                      onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                      onOpenSend={() => setBuyerOpen(true)}
                     />
-                  )}
-                </div>
-              );
-            })()}
-
-            {selectedKind === "buyer" && (
-              <div data-tour="buyer-pipeline">
-                <BuyerJourneyPanel
-                  submission={selected}
-                  onOpenSend={() => setBuyerOpen(true)}
-                />
-              </div>
-            )}
-
-            {selectedKind !== "seller" && selectedKind !== "buyer" && (
-              <CustomerJourney
-                submission={selected}
-                onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
-              />
-            )}
-            {/* Typing banner — iMessage style */}
-            {typingUsers.length > 0 && (
-              <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
-                <span className="inline-flex gap-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "120ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "240ms" }} />
-                </span>
-                <p className="text-xs text-amber-900 dark:text-amber-200">
-                  <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
-                </p>
-              </div>
-            )}
-
-            {/* Actions — sellers: only show quote/decline before/at the quote stages.
-                Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
-            {(() => {
-              const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
-              const sellerCanQuote = selectedKind === "seller" && (!selectedBayerStage || sellerEarlyStages.includes(selectedBayerStage));
-              const showQuoteBtn = selectedKind !== "seller" || sellerCanQuote;
-              const showDeclineBtn = selectedKind !== "seller" || sellerCanQuote;
-              return (
-                <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {showQuoteBtn && (selectedKind === "seller" ? (
-                      <button
-                        onClick={guard("Send seller quote", () => setQuoteOpen(true))}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={guard("Send available plots", () => setBuyerOpen(true))}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        Send available plots
-                      </button>
-                    ))}
-
-                    {showDeclineBtn && (
-                      <button
-                        onClick={guard("Polite decline", () => setDeclineOpen(true))}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
-                      >
-                        <MessageCircleX className="w-3.5 h-3.5" />
-                        Polite decline
-                      </button>
-                    )}
-
-                    {selectedKind === "seller" && !sellerCanQuote && (
-                      <span className="text-[11px] text-muted-foreground italic">
-                        Seller is past the quote stage — use the pipeline above to advance.
-                      </span>
-                    )}
                   </div>
-                  <button
-                    onClick={guard("Delete submission", () => onDelete(selected.id))}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete
-                  </button>
-                </div>
-              );
-            })()}
+                )}
 
-            {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
-            {(selected as any).customer_profile_id ? (
-              <div data-tour="files-section" className="border-t border-border/40 pt-4">
-                <CustomerFiles
-                  customerId={(selected as any).customer_profile_id}
-                  customerName={selected.name}
-                />
-              </div>
-            ) : (
-              <div className="border-t border-border/40 pt-4">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Files & documents</p>
-                <p className="text-xs text-muted-foreground">
-                  This submission isn't linked to a customer profile yet. Files attach to a customer profile so they appear across all of their submissions.
-                </p>
-              </div>
+                {selectedKind !== "seller" && selectedKind !== "buyer" && (
+                  <CustomerJourney
+                    submission={selected}
+                    onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                  />
+                )}
+                {/* Typing banner — iMessage style */}
+                {typingUsers.length > 0 && (
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                    <span className="inline-flex gap-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "120ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "240ms" }} />
+                    </span>
+                    <p className="text-xs text-amber-900 dark:text-amber-200">
+                      <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
+                    </p>
+                  </div>
+                )}
+
+                {/* Actions — sellers: only show quote/decline before/at the quote stages.
+                    Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
+                {(() => {
+                  const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
+                  const sellerCanQuote = selectedKind === "seller" && (!selectedBayerStage || sellerEarlyStages.includes(selectedBayerStage));
+                  const showQuoteBtn = selectedKind !== "seller" || sellerCanQuote;
+                  const showDeclineBtn = selectedKind !== "seller" || sellerCanQuote;
+                  return (
+                    <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {showQuoteBtn && (selectedKind === "seller" ? (
+                          <button
+                            onClick={guard("Send seller quote", () => setQuoteOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={guard("Send available plots", () => setBuyerOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            Send available plots
+                          </button>
+                        ))}
+
+                        {showDeclineBtn && (
+                          <button
+                            onClick={guard("Polite decline", () => setDeclineOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
+                          >
+                            <MessageCircleX className="w-3.5 h-3.5" />
+                            Polite decline
+                          </button>
+                        )}
+
+                        {selectedKind === "seller" && !sellerCanQuote && (
+                          <span className="text-[11px] text-muted-foreground italic">
+                            Seller is past the quote stage — use the pipeline above to advance.
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={guard("Delete submission", () => onDelete(selected.id))}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  );
+                })()}
+
+                {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
+                {(selected as any).customer_profile_id ? (
+                  <div data-tour="files-section" className="border-t border-border/40 pt-4">
+                    <CustomerFiles
+                      customerId={(selected as any).customer_profile_id}
+                      customerName={selected.name}
+                    />
+                  </div>
+                ) : (
+                  <div className="border-t border-border/40 pt-4">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Files & documents</p>
+                    <p className="text-xs text-muted-foreground">
+                      This submission isn't linked to a customer profile yet. Files attach to a customer profile so they appear across all of their submissions.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         )}
