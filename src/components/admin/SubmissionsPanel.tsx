@@ -328,11 +328,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               try { await onRefresh(); } finally { setRefreshing(false); }
             }}
             disabled={refreshing}
-            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+            className="w-9 h-9 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center justify-center disabled:opacity-60"
             title="Sync Gmail and reload submissions"
+            aria-label="Refresh inbox"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing ? "Refreshing..." : "Refresh inbox"}
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
           </button>
         </div>
       )}
