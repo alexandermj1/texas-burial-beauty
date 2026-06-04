@@ -71,6 +71,14 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [navHiddenMobile, setNavHiddenMobile] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setNavHiddenMobile(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Inline editing
   const [editingId, setEditingId] = useState<string | null>(null);
