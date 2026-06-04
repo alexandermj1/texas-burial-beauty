@@ -307,20 +307,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* === Team pipeline overview — sellers, full team view ===
-          Hidden by default on mobile to save space; toggle shows it. */}
-      {isMobile && (
-        <div className="lg:hidden">
-          <button
-            onClick={() => setPipelineOpenMobile(v => !v)}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border bg-card text-foreground hover:bg-muted/50 transition-colors"
-          >
-            <Layers className="w-3.5 h-3.5 text-primary" />
-            {pipelineOpenMobile ? "Hide seller pipeline" : "Show seller pipeline"}
-          </button>
-        </div>
-      )}
-      {(!isMobile || pipelineOpenMobile) && (
+      {/* === Team pipeline overview — sellers, full team view (desktop only) === */}
+      {!isMobile && (
         <PipelineOverview
           sellers={sellersAll}
           views={views}
