@@ -71,6 +71,14 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [navHiddenMobile, setNavHiddenMobile] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setNavHiddenMobile(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Inline editing
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -314,7 +322,9 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
-      <Navbar forceScrolled />
+      <div className={`md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
+        <Navbar forceScrolled />
+      </div>
       <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
         <div className={focused ? "container mx-auto px-4 max-w-[1600px]" : "container mx-auto px-6"}>
           {/* Header — full when not focused, compact when focused */}
@@ -324,7 +334,7 @@ const Admin = () => {
                 <button
                   data-tour="menu-button"
                   onClick={() => setMenuOpen(o => !o)}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="hidden md:inline-flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Toggle menu"
                 >
                   {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -349,8 +359,8 @@ const Admin = () => {
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
-                <div data-tour="notifications-bell"><NotificationsBell /></div>
-                <ChangePasswordDialog variant="icon" />
+                <div data-tour="notifications-bell" className="hidden md:block"><NotificationsBell /></div>
+                <div className="hidden md:block"><ChangePasswordDialog variant="icon" /></div>
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
                 </button>
