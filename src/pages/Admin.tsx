@@ -406,6 +406,17 @@ const Admin = () => {
                 </div>
                 <div data-tour="notifications-bell" className="hidden md:block"><NotificationsBell /></div>
                 <div className="hidden md:block"><ChangePasswordDialog variant="icon" /></div>
+                {(tab === "submissions" || tab === "inbox") && (
+                  <button
+                    onClick={handleInboxRefresh}
+                    disabled={refreshingInbox}
+                    className="md:hidden shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+                    aria-label="Refresh inbox"
+                    title="Refresh inbox"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${refreshingInbox ? "animate-spin" : ""}`} />
+                  </button>
+                )}
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
                 </button>
