@@ -51,7 +51,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
       >
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 whitespace-nowrap shrink-0">
-            <img src={hibiscusLogo} alt="" width={32} height={32} className="w-8 h-8 object-contain" />
+            <img src={hibiscusLogo.url} alt="" width={32} height={32} className="w-8 h-8 object-contain" />
             <span className={`font-display text-lg sm:text-2xl ${(scrolled || menuOpen) ? "text-foreground" : "text-primary-foreground"}`}>
               Texas Cemetery Brokers
             </span>
