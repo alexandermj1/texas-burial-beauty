@@ -23,6 +23,7 @@ import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 import { Megaphone, UserPlus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface Submission {
   id: string;
