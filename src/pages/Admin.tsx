@@ -324,7 +324,7 @@ const Admin = () => {
                 <button
                   data-tour="menu-button"
                   onClick={() => setMenuOpen(o => !o)}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="hidden md:inline-flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Toggle menu"
                 >
                   {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -349,8 +349,8 @@ const Admin = () => {
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
-                <div data-tour="notifications-bell"><NotificationsBell /></div>
-                <ChangePasswordDialog variant="icon" />
+                <div data-tour="notifications-bell" className="hidden md:block"><NotificationsBell /></div>
+                <div className="hidden md:block"><ChangePasswordDialog variant="icon" /></div>
                 <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
                 </button>
