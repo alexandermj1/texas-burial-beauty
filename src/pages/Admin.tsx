@@ -72,6 +72,22 @@ const Admin = () => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
+  const [refreshingInbox, setRefreshingInbox] = useState(false);
+
+  const handleInboxRefresh = async () => {
+    if (refreshingInbox) return;
+    setRefreshingInbox(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 100 } });
+      if (error) { toast({ title: "Sync failed", description: error.message, variant: "destructive" }); }
+      const res = await supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false });
+      if (res.data) setSubmissions(res.data as any);
+      const newCount = (data as any)?.bayer_imported ?? 0;
+      toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
+    } finally {
+      setRefreshingInbox(false);
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setNavHiddenMobile(window.scrollY > 20);
