@@ -323,10 +323,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* === Team pipeline overview — sellers, full team view (desktop only) === */}
-      {!isMobile && (
+      {/* === Region tabs: Texas vs Bayer pipelines === */}
+      <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
+        {(["texas", "bayer"] as const).map(r => {
+          const count = submissions.filter(s => subRegion(s) === r).length;
+          const active = regionFilter === r;
+          const label = r === "texas" ? "Texas pipeline" : "Bayer pipeline";
+          return (
+            <button
+              key={r}
+              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); }}
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                active
+                  ? r === "texas"
+                    ? "bg-amber-600 text-white border-amber-600"
+                    : "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              {label} <span className="opacity-70 font-normal">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* === Texas cemetery directory (texas tab only) === */}
+      {regionFilter === "texas" && !isMobile && (
+        <div className="lg:col-span-12">
+          <TexasCemeteriesPanel texasSubmissions={texasSubmissions} />
+        </div>
+      )}
+
+      {/* === Team pipeline overview — sellers (Bayer only, desktop) === */}
+      {!isMobile && regionFilter === "bayer" && (
         <PipelineOverview
-          sellers={sellersAll}
+          sellers={sellersAll.filter(s => subRegion(s) === "bayer")}
           views={views}
           colorFor={colorFor}
           onSelectStage={(st) => { setKindFilter("seller"); setStageFilter(st); }}
