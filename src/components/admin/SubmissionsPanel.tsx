@@ -11,6 +11,8 @@ import TexasBadge from "./TexasBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
+import TexasPipelinePanel from "./TexasPipelinePanel";
+import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
@@ -92,6 +94,16 @@ const cemeterySearchUrl = (cemetery: string) =>
 
 type StatusFilter = "all" | "new";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
+type RegionFilter = "texas" | "bayer";
+
+const subRegion = (s: Submission): RegionFilter => {
+  const x = s as any;
+  if (x.pipeline_region === "texas" || x.pipeline_region === "bayer") return x.pipeline_region;
+  if (x.inquiry_channel === "texas_buy_wizard") return "texas";
+  if (x.state === "TX") return "texas";
+  if (typeof s.region === "string" && s.region.toLowerCase().includes("texas")) return "texas";
+  return "bayer";
+};
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
@@ -102,6 +114,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>("texas");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
@@ -227,6 +240,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eSellerView = !isMobile && isSellerView;
   const filtered = useMemo(() => {
     return submissions.filter(s => {
+      if (subRegion(s) !== regionFilter) return false;
       if (eFilter === "new" && !isNew(s)) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
@@ -236,7 +250,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday]);
+  }, [submissions, regionFilter, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday]);
+
+  const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
@@ -307,10 +323,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* === Team pipeline overview — sellers, full team view (desktop only) === */}
-      {!isMobile && (
+      {/* === Region tabs: Texas vs Bayer pipelines === */}
+      <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
+        {(["texas", "bayer"] as const).map(r => {
+          const count = submissions.filter(s => subRegion(s) === r).length;
+          const active = regionFilter === r;
+          const label = r === "texas" ? "Texas pipeline" : "Bayer pipeline";
+          return (
+            <button
+              key={r}
+              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); }}
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                active
+                  ? r === "texas"
+                    ? "bg-amber-600 text-white border-amber-600"
+                    : "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              {label} <span className="opacity-70 font-normal">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* === Texas cemetery directory (texas tab only) === */}
+      {regionFilter === "texas" && !isMobile && (
+        <div className="lg:col-span-12">
+          <TexasCemeteriesPanel texasSubmissions={texasSubmissions} />
+        </div>
+      )}
+
+      {/* === Team pipeline overview — sellers (Bayer only, desktop) === */}
+      {!isMobile && regionFilter === "bayer" && (
         <PipelineOverview
-          sellers={sellersAll}
+          sellers={sellersAll.filter(s => subRegion(s) === "bayer")}
           views={views}
           colorFor={colorFor}
           onSelectStage={(st) => { setKindFilter("seller"); setStageFilter(st); }}
@@ -759,8 +806,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <CustomerNotes submissionId={selected.id} customerName={selected.name} />
                 </div>
 
-                {/* Sellers: pipeline below notes, above listings/dropbox */}
-                {selectedKind === "seller" && (() => {
+                {/* Texas pipeline — used for all Texas submissions regardless of kind */}
+                {subRegion(selected) === "texas" && (
+                  <div data-tour="texas-pipeline">
+                    <TexasPipelinePanel
+                      submission={selected}
+                      onPatch={(patch) => onUpdate(selected.id, patch)}
+                    />
+                  </div>
+                )}
+
+                {/* Sellers (Bayer): pipeline below notes, above listings/dropbox */}
+                {subRegion(selected) === "bayer" && selectedKind === "seller" && (() => {
                   const dropboxStages: BayerStage[] = [
                     "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
                     "la_confirmed_poa_issued", "awaiting_notarized_docs",
@@ -783,7 +840,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   );
                 })()}
 
-                {selectedKind === "buyer" && (
+                {subRegion(selected) === "bayer" && selectedKind === "buyer" && (
                   <div data-tour="buyer-pipeline">
                     <BuyerJourneyPanel
                       submission={selected}
@@ -792,7 +849,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </div>
                 )}
 
-                {selectedKind !== "seller" && selectedKind !== "buyer" && (
+                {subRegion(selected) === "bayer" && selectedKind !== "seller" && selectedKind !== "buyer" && (
                   <CustomerJourney
                     submission={selected}
                     onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
