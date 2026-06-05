@@ -26,6 +26,12 @@ import AddSubmissionDialog from "./AddSubmissionDialog";
 import { Megaphone, UserPlus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { bayCemeteries } from "@/data/cemeteries";
+
+// Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
+const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+const TX_CEMETERY_NAMES = new Set(bayCemeteries.map(c => _canon(c.name)));
+const TX_CITIES = new Set(bayCemeteries.map(c => _canon(c.city)));
 
 export interface Submission {
   id: string;
@@ -98,10 +104,17 @@ type RegionFilter = "texas" | "bayer";
 
 const subRegion = (s: Submission): RegionFilter => {
   const x = s as any;
-  if (x.pipeline_region === "texas" || x.pipeline_region === "bayer") return x.pipeline_region;
+  if (x.pipeline_region === "texas") return "texas";
   if (x.inquiry_channel === "texas_buy_wizard") return "texas";
   if (x.state === "TX") return "texas";
   if (typeof s.region === "string" && s.region.toLowerCase().includes("texas")) return "texas";
+  // Match against the known Texas cemetery registry (handles "Highland Memorial Park",
+  // "Forest Park Westheimer", etc. even if region/state weren't captured at intake).
+  const cem = s.cemetery ? _canon(s.cemetery) : "";
+  if (cem && TX_CEMETERY_NAMES.has(cem)) return "texas";
+  const city = (x.cemetery_city || s.region) ? _canon(x.cemetery_city || s.region) : "";
+  if (city && TX_CITIES.has(city)) return "texas";
+  if (x.pipeline_region === "bayer") return "bayer";
   return "bayer";
 };
 
@@ -652,6 +665,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
+            {/* Texas pipeline — pinned to the TOP of the detail view for Texas submissions */}
+            {subRegion(selected) === "texas" && !isMobile && (
+              <TexasPipelinePanel
+                submission={selected}
+                onPatch={(patch) => onUpdate(selected.id, patch)}
+              />
+            )}
+
             {/* Contact actions */}
             <div className="flex flex-wrap gap-2">
               {selected.email && (
@@ -806,15 +827,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <CustomerNotes submissionId={selected.id} customerName={selected.name} />
                 </div>
 
-                {/* Texas pipeline — used for all Texas submissions regardless of kind */}
-                {subRegion(selected) === "texas" && (
-                  <div data-tour="texas-pipeline">
-                    <TexasPipelinePanel
-                      submission={selected}
-                      onPatch={(patch) => onUpdate(selected.id, patch)}
-                    />
-                  </div>
-                )}
+                {/* Texas pipeline now lives at the top of the detail view — no duplicate here. */}
+
 
                 {/* Sellers (Bayer): pipeline below notes, above listings/dropbox */}
                 {subRegion(selected) === "bayer" && selectedKind === "seller" && (() => {
@@ -1064,6 +1078,11 @@ const MobileInlineDetail = ({ submission: s }: { submission: Submission }) => {
       )}
 
       <p className="text-[10px] text-muted-foreground">Received {formatDate(s.created_at)}</p>
+
+      {/* Collaborative team notes — visible & writable on mobile too */}
+      <div className="bg-card rounded-lg p-3 border border-border/50">
+        <CustomerNotes submissionId={s.id} customerName={s.name} />
+      </div>
     </div>
   );
 };
