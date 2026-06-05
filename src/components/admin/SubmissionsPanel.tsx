@@ -827,15 +827,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <CustomerNotes submissionId={selected.id} customerName={selected.name} />
                 </div>
 
-                {/* Texas pipeline — used for all Texas submissions regardless of kind */}
-                {subRegion(selected) === "texas" && (
-                  <div data-tour="texas-pipeline">
-                    <TexasPipelinePanel
-                      submission={selected}
-                      onPatch={(patch) => onUpdate(selected.id, patch)}
-                    />
-                  </div>
-                )}
+                {/* Texas pipeline now lives at the top of the detail view — no duplicate here. */}
+
 
                 {/* Sellers (Bayer): pipeline below notes, above listings/dropbox */}
                 {subRegion(selected) === "bayer" && selectedKind === "seller" && (() => {
