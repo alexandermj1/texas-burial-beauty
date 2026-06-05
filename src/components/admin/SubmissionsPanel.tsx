@@ -840,7 +840,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   );
                 })()}
 
-                {selectedKind === "buyer" && (
+                {subRegion(selected) === "bayer" && selectedKind === "buyer" && (
                   <div data-tour="buyer-pipeline">
                     <BuyerJourneyPanel
                       submission={selected}
@@ -849,7 +849,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </div>
                 )}
 
-                {selectedKind !== "seller" && selectedKind !== "buyer" && (
+                {subRegion(selected) === "bayer" && selectedKind !== "seller" && selectedKind !== "buyer" && (
                   <CustomerJourney
                     submission={selected}
                     onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
