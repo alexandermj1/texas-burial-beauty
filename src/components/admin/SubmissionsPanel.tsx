@@ -665,6 +665,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
+            {/* Texas pipeline — pinned to the TOP of the detail view for Texas submissions */}
+            {subRegion(selected) === "texas" && !isMobile && (
+              <TexasPipelinePanel
+                submission={selected}
+                onPatch={(patch) => onUpdate(selected.id, patch)}
+              />
+            )}
+
             {/* Contact actions */}
             <div className="flex flex-wrap gap-2">
               {selected.email && (
