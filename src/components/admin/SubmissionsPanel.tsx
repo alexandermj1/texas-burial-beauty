@@ -102,13 +102,11 @@ type StatusFilter = "all" | "new";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
 
-// Strict tag-based classification — no inference from cemetery name, city, state, etc.
-// If a submission has no pipeline_region tag we treat it as Texas (this site only
-// collects Texas leads), but explicit tags always win.
+// Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
+// A submission is Bayer iff its visible badge is Bayer (inquiry_channel === "bayer_sell_a_plot").
+// Everything else lands in Texas — that mirrors what the user sees as the "Texas" tag.
 const subRegion = (s: Submission): "texas" | "bayer" => {
-  const tag = (s as any).pipeline_region;
-  if (tag === "bayer") return "bayer";
-  if (tag === "texas") return "texas";
+  if ((s as any).inquiry_channel === "bayer_sell_a_plot") return "bayer";
   return "texas";
 };
 
