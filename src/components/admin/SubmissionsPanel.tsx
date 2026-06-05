@@ -100,14 +100,15 @@ const cemeterySearchUrl = (cemetery: string) =>
 
 type StatusFilter = "all" | "new";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
-type RegionFilter = "texas" | "bayer";
+type RegionFilter = "all" | "texas" | "bayer";
 
-const subRegion = (s: Submission): RegionFilter => {
-  const x = s as any;
-  // Explicit Bayer tag wins — never reclassify a Bayer submission as Texas.
-  if (x.pipeline_region === "bayer") return "bayer";
-  if (typeof s.region === "string" && s.region.toLowerCase().includes("bay")) return "bayer";
-  // Everything else submitted through this site is a Texas submission by default.
+// Strict tag-based classification — no inference from cemetery name, city, state, etc.
+// If a submission has no pipeline_region tag we treat it as Texas (this site only
+// collects Texas leads), but explicit tags always win.
+const subRegion = (s: Submission): "texas" | "bayer" => {
+  const tag = (s as any).pipeline_region;
+  if (tag === "bayer") return "bayer";
+  if (tag === "texas") return "texas";
   return "texas";
 };
 
