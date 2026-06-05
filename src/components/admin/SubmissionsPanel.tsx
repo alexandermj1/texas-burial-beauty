@@ -806,8 +806,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <CustomerNotes submissionId={selected.id} customerName={selected.name} />
                 </div>
 
-                {/* Sellers: pipeline below notes, above listings/dropbox */}
-                {selectedKind === "seller" && (() => {
+                {/* Texas pipeline — used for all Texas submissions regardless of kind */}
+                {subRegion(selected) === "texas" && (
+                  <div data-tour="texas-pipeline">
+                    <TexasPipelinePanel
+                      submission={selected}
+                      onPatch={(patch) => onUpdate(selected.id, patch)}
+                    />
+                  </div>
+                )}
+
+                {/* Sellers (Bayer): pipeline below notes, above listings/dropbox */}
+                {subRegion(selected) === "bayer" && selectedKind === "seller" && (() => {
                   const dropboxStages: BayerStage[] = [
                     "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
                     "la_confirmed_poa_issued", "awaiting_notarized_docs",
