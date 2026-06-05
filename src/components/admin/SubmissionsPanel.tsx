@@ -332,10 +332,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       {/* === Region tabs: Texas vs Bayer pipelines === */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["texas", "bayer"] as const).map(r => {
-          const count = submissions.filter(s => subRegion(s) === r).length;
+        {(["all", "texas", "bayer"] as const).map(r => {
+          const count = r === "all"
+            ? submissions.length
+            : submissions.filter(s => subRegion(s) === r).length;
           const active = regionFilter === r;
-          const label = r === "texas" ? "Texas pipeline" : "Bayer pipeline";
+          const label = r === "all" ? "All inquiries" : r === "texas" ? "Texas pipeline" : "Bayer pipeline";
           return (
             <button
               key={r}
@@ -344,7 +346,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 active
                   ? r === "texas"
                     ? "bg-amber-600 text-white border-amber-600"
-                    : "bg-primary text-primary-foreground border-primary"
+                    : r === "bayer"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-foreground text-background border-foreground"
                   : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
