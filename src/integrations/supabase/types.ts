@@ -323,6 +323,7 @@ export type Database = {
           payment_link_sent_at: string | null
           payment_received_at: string | null
           phone: string | null
+          pipeline_region: string | null
           pipeline_stage_override: string | null
           plot_count: number | null
           property_type: string | null
@@ -345,6 +346,9 @@ export type Database = {
           space_numbers: string | null
           spaces: string | null
           state: string | null
+          texas_details_received_at: string | null
+          texas_intake_sent_at: string | null
+          texas_pipeline_stage: string | null
           timeline: string | null
           transfer_fee_amount: number | null
           updated_at: string
@@ -402,6 +406,7 @@ export type Database = {
           payment_link_sent_at?: string | null
           payment_received_at?: string | null
           phone?: string | null
+          pipeline_region?: string | null
           pipeline_stage_override?: string | null
           plot_count?: number | null
           property_type?: string | null
@@ -424,6 +429,9 @@ export type Database = {
           space_numbers?: string | null
           spaces?: string | null
           state?: string | null
+          texas_details_received_at?: string | null
+          texas_intake_sent_at?: string | null
+          texas_pipeline_stage?: string | null
           timeline?: string | null
           transfer_fee_amount?: number | null
           updated_at?: string
@@ -481,6 +489,7 @@ export type Database = {
           payment_link_sent_at?: string | null
           payment_received_at?: string | null
           phone?: string | null
+          pipeline_region?: string | null
           pipeline_stage_override?: string | null
           plot_count?: number | null
           property_type?: string | null
@@ -503,6 +512,9 @@ export type Database = {
           space_numbers?: string | null
           spaces?: string | null
           state?: string | null
+          texas_details_received_at?: string | null
+          texas_intake_sent_at?: string | null
+          texas_pipeline_stage?: string | null
           timeline?: string | null
           transfer_fee_amount?: number | null
           updated_at?: string
@@ -1372,6 +1384,60 @@ export type Database = {
           user_id?: string
           user_name?: string | null
           viewed_at?: string
+        }
+        Relationships: []
+      }
+      texas_cemeteries: {
+        Row: {
+          address: string | null
+          auto_created: boolean
+          canonical_name: string | null
+          city: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          endowment_notes: string | null
+          id: string
+          name: string
+          notes: string | null
+          transfer_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          auto_created?: boolean
+          canonical_name?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          endowment_notes?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          transfer_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          auto_created?: boolean
+          canonical_name?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          endowment_notes?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          transfer_fee?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
