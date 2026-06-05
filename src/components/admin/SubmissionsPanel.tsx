@@ -1078,6 +1078,11 @@ const MobileInlineDetail = ({ submission: s }: { submission: Submission }) => {
       )}
 
       <p className="text-[10px] text-muted-foreground">Received {formatDate(s.created_at)}</p>
+
+      {/* Collaborative team notes — visible & writable on mobile too */}
+      <div className="bg-card rounded-lg p-3 border border-border/50">
+        <CustomerNotes submissionId={s.id} customerName={s.name} />
+      </div>
     </div>
   );
 };
