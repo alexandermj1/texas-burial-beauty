@@ -104,10 +104,17 @@ type RegionFilter = "texas" | "bayer";
 
 const subRegion = (s: Submission): RegionFilter => {
   const x = s as any;
-  if (x.pipeline_region === "texas" || x.pipeline_region === "bayer") return x.pipeline_region;
+  if (x.pipeline_region === "texas") return "texas";
   if (x.inquiry_channel === "texas_buy_wizard") return "texas";
   if (x.state === "TX") return "texas";
   if (typeof s.region === "string" && s.region.toLowerCase().includes("texas")) return "texas";
+  // Match against the known Texas cemetery registry (handles "Highland Memorial Park",
+  // "Forest Park Westheimer", etc. even if region/state weren't captured at intake).
+  const cem = s.cemetery ? _canon(s.cemetery) : "";
+  if (cem && TX_CEMETERY_NAMES.has(cem)) return "texas";
+  const city = (x.cemetery_city || s.region) ? _canon(x.cemetery_city || s.region) : "";
+  if (city && TX_CITIES.has(city)) return "texas";
+  if (x.pipeline_region === "bayer") return "bayer";
   return "bayer";
 };
 
