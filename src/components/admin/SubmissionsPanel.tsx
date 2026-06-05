@@ -26,6 +26,12 @@ import AddSubmissionDialog from "./AddSubmissionDialog";
 import { Megaphone, UserPlus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { bayCemeteries } from "@/data/cemeteries";
+
+// Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
+const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+const TX_CEMETERY_NAMES = new Set(bayCemeteries.map(c => _canon(c.name)));
+const TX_CITIES = new Set(bayCemeteries.map(c => _canon(c.city)));
 
 export interface Submission {
   id: string;
