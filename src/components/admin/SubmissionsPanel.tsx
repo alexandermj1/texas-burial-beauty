@@ -247,7 +247,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eSellerView = !isMobile && isSellerView;
   const filtered = useMemo(() => {
     return submissions.filter(s => {
-      if (subRegion(s) !== regionFilter) return false;
+      if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (eFilter === "new" && !isNew(s)) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
