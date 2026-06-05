@@ -11,7 +11,7 @@ import TexasBadge from "./TexasBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
-import TexasPipelinePanel, { deriveTexasStage, TEXAS_STAGE_META } from "./TexasPipelinePanel";
+import TexasPipelinePanel from "./TexasPipelinePanel";
 import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
