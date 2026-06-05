@@ -100,14 +100,15 @@ const cemeterySearchUrl = (cemetery: string) =>
 
 type StatusFilter = "all" | "new";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
-type RegionFilter = "texas" | "bayer";
+type RegionFilter = "all" | "texas" | "bayer";
 
-const subRegion = (s: Submission): RegionFilter => {
-  const x = s as any;
-  // Explicit Bayer tag wins — never reclassify a Bayer submission as Texas.
-  if (x.pipeline_region === "bayer") return "bayer";
-  if (typeof s.region === "string" && s.region.toLowerCase().includes("bay")) return "bayer";
-  // Everything else submitted through this site is a Texas submission by default.
+// Strict tag-based classification — no inference from cemetery name, city, state, etc.
+// If a submission has no pipeline_region tag we treat it as Texas (this site only
+// collects Texas leads), but explicit tags always win.
+const subRegion = (s: Submission): "texas" | "bayer" => {
+  const tag = (s as any).pipeline_region;
+  if (tag === "bayer") return "bayer";
+  if (tag === "texas") return "texas";
   return "texas";
 };
 
@@ -120,7 +121,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("texas");
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
@@ -246,7 +247,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eSellerView = !isMobile && isSellerView;
   const filtered = useMemo(() => {
     return submissions.filter(s => {
-      if (subRegion(s) !== regionFilter) return false;
+      if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (eFilter === "new" && !isNew(s)) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
@@ -331,10 +332,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       {/* === Region tabs: Texas vs Bayer pipelines === */}
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["texas", "bayer"] as const).map(r => {
-          const count = submissions.filter(s => subRegion(s) === r).length;
+        {(["all", "texas", "bayer"] as const).map(r => {
+          const count = r === "all"
+            ? submissions.length
+            : submissions.filter(s => subRegion(s) === r).length;
           const active = regionFilter === r;
-          const label = r === "texas" ? "Texas pipeline" : "Bayer pipeline";
+          const label = r === "all" ? "All inquiries" : r === "texas" ? "Texas pipeline" : "Bayer pipeline";
           return (
             <button
               key={r}
@@ -343,7 +346,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 active
                   ? r === "texas"
                     ? "bg-amber-600 text-white border-amber-600"
-                    : "bg-primary text-primary-foreground border-primary"
+                    : r === "bayer"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-foreground text-background border-foreground"
                   : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
