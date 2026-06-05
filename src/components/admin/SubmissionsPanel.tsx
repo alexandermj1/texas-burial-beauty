@@ -11,6 +11,8 @@ import TexasBadge from "./TexasBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
+import TexasPipelinePanel, { deriveTexasStage, TEXAS_STAGE_META } from "./TexasPipelinePanel";
+import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
@@ -92,6 +94,16 @@ const cemeterySearchUrl = (cemetery: string) =>
 
 type StatusFilter = "all" | "new";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
+type RegionFilter = "texas" | "bayer";
+
+const subRegion = (s: Submission): RegionFilter => {
+  const x = s as any;
+  if (x.pipeline_region === "texas" || x.pipeline_region === "bayer") return x.pipeline_region;
+  if (x.inquiry_channel === "texas_buy_wizard") return "texas";
+  if (x.state === "TX") return "texas";
+  if (typeof s.region === "string" && s.region.toLowerCase().includes("texas")) return "texas";
+  return "bayer";
+};
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
@@ -102,6 +114,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>("texas");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
