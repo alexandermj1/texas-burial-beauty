@@ -62,14 +62,21 @@ const TexasIntakeDialog = ({ open, onClose, submission, onSent }: Props) => {
   const to = submission.email || "";
 
   const gmailUrl = useMemo(() => {
-    const base = "https://mail.google.com/mail/u/0/?view=cm&fs=1";
-    const params = [
-      `to=${encodeURIComponent(to)}`,
-      `su=${encodeURIComponent(subj)}`,
-      `body=${encodeURIComponent(body)}`,
-    ].join("&");
-    return `${base}&${params}`;
+    const params = new URLSearchParams({
+      view: "cm",
+      fs: "1",
+      tf: "1",
+      to,
+      su: subj,
+      body,
+    });
+    return `https://mail.google.com/mail/?${params.toString()}`;
   }, [to, subj, body]);
+
+  const mailtoUrl = useMemo(
+    () => `mailto:${to}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,
+    [to, subj, body]
+  );
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(`${subj}\n\n${body}`);
