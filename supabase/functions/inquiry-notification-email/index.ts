@@ -134,15 +134,19 @@ Deno.serve(async (req) => {
     const rawSubject = `Customer inquiry — ${region}: ${headerName}${cemeteryBit}`;
     const subject = encodeSubject(rawSubject);
 
+    const adminUrl = `https://www.texascemeterybrokers.com/admin?submission=${encodeURIComponent(s.id ?? "")}`;
+
     const html = `
 <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;color:#222;">
   <h1 style="border-bottom:2px solid ${regionColor};padding-bottom:8px;color:#3d4a2e;margin-bottom:4px;">Customer inquiry</h1>
   <p style="margin:6px 0 14px 0;"><span style="display:inline-block;background:${regionColor};color:#fff;font-weight:600;letter-spacing:0.06em;font-size:12px;padding:4px 10px;border-radius:999px;text-transform:uppercase;">${region}</span></p>
   <p style="color:#666;margin-top:0;">A new inquiry just came in.</p>
+  <p style="margin:14px 0 18px 0;"><a href="${adminUrl}" style="display:inline-block;background:${regionColor};color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px;">Open in admin panel →</a></p>
   <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;font-size:14px;border:1px solid #ddd;">
     ${rows}
   </table>
-  <p style="margin-top:24px;font-size:12px;color:#888;">You're receiving this because you're listed as an owner of Texas Cemetery Brokers.</p>
+  <p style="margin-top:24px;font-size:13px;"><a href="${adminUrl}" style="color:${regionColor};">View this inquiry in the admin panel</a></p>
+  <p style="margin-top:8px;font-size:12px;color:#888;">You're receiving this because you're listed as an owner of Texas Cemetery Brokers.</p>
 </div>`;
 
     const mime = [
