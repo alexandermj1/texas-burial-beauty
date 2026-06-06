@@ -75,13 +75,12 @@ Deno.serve(async (req) => {
 
     if (!s) throw new Error("No submission provided");
 
-    // Region: matches SubmissionsPanel logic — bayer if Bayer "Sell a Plot"
-    // channel OR pipeline_region explicitly set to bayer; otherwise Texas.
+    // Region: matches the badge in the admin Submissions panel — Bayer only
+    // when the inquiry channel is the Bayer "Sell a Plot" form; everything
+    // else (including all website forms) is Texas. We deliberately ignore the
+    // pipeline_region column because it defaults to 'bayer' in the database.
     const region: "Bayer" | "Texas" =
-      String(s.pipeline_region || "").toLowerCase() === "bayer" ||
-      s.inquiry_channel === "bayer_sell_a_plot"
-        ? "Bayer"
-        : "Texas";
+      s.inquiry_channel === "bayer_sell_a_plot" ? "Bayer" : "Texas";
     const regionColor = region === "Bayer" ? "#8b5e3c" : "#6b8e5a";
 
     // Curated key fields shown first
