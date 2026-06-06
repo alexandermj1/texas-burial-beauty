@@ -20,9 +20,9 @@ const buildBody = (s: Submission) => {
 
   return `Hi ${first},
 
-Thank you for confirming your interest in selling ${s.spaces ? `the ${propertyDesc}` : "your cemetery property"}${cemetery !== "[cemetery name]" ? ` at ${cemetery}` : ""} via consignment.
+Thank you for reaching out to Texas Cemetery Brokers regarding selling ${s.spaces ? `the ${propertyDesc}` : "your cemetery property"}${cemetery !== "[cemetery name]" ? ` at ${cemetery}` : ""}.
 
-Texas Cemetery Brokers is a full-service agency assisting families throughout Texas sell their cemetery plots. We offer a complimentary evaluation to see if your property is a good fit for our service based on the current resale market.
+Please note that we do not purchase cemetery plots outright. Instead, we offer a complimentary evaluation and, if your property is a good fit for the current resale market, we can list it for sale on your behalf on a consignment basis.
 
 After we complete our analysis (which typically takes a few days based on cemetery response time after we receive the property details below), we will provide you with a single, predetermined net payment offer. That's the exact amount the property owner/s will receive when we find a buyer for the plot/s. To proceed with the evaluation kindly provide the following information:
 
@@ -62,15 +62,13 @@ const TexasIntakeDialog = ({ open, onClose, submission, onSent }: Props) => {
   const to = submission.email || "";
 
   const gmailUrl = useMemo(() => {
-    const params = new URLSearchParams({
-      view: "cm",
-      fs: "1",
-      to,
-      su: subj,
-      body,
-      from: "info@texascemeterybrokers.com",
-    });
-    return `https://mail.google.com/mail/?${params.toString()}`;
+    const base = "https://mail.google.com/mail/u/0/?view=cm&fs=1";
+    const params = [
+      `to=${encodeURIComponent(to)}`,
+      `su=${encodeURIComponent(subj)}`,
+      `body=${encodeURIComponent(body)}`,
+    ].join("&");
+    return `${base}&${params}`;
   }, [to, subj, body]);
 
   const handleCopy = async () => {
