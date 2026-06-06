@@ -75,13 +75,12 @@ Deno.serve(async (req) => {
 
     if (!s) throw new Error("No submission provided");
 
-    // Region: matches SubmissionsPanel logic — bayer if Bayer "Sell a Plot"
-    // channel OR pipeline_region explicitly set to bayer; otherwise Texas.
+    // Region: matches the badge in the admin Submissions panel — Bayer only
+    // when the inquiry channel is the Bayer "Sell a Plot" form; everything
+    // else (including all website forms) is Texas. We deliberately ignore the
+    // pipeline_region column because it defaults to 'bayer' in the database.
     const region: "Bayer" | "Texas" =
-      String(s.pipeline_region || "").toLowerCase() === "bayer" ||
-      s.inquiry_channel === "bayer_sell_a_plot"
-        ? "Bayer"
-        : "Texas";
+      s.inquiry_channel === "bayer_sell_a_plot" ? "Bayer" : "Texas";
     const regionColor = region === "Bayer" ? "#8b5e3c" : "#6b8e5a";
 
     // Curated key fields shown first
@@ -135,15 +134,19 @@ Deno.serve(async (req) => {
     const rawSubject = `Customer inquiry — ${region}: ${headerName}${cemeteryBit}`;
     const subject = encodeSubject(rawSubject);
 
+    const adminUrl = `https://www.texascemeterybrokers.com/admin?submission=${encodeURIComponent(s.id ?? "")}`;
+
     const html = `
 <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;color:#222;">
   <h1 style="border-bottom:2px solid ${regionColor};padding-bottom:8px;color:#3d4a2e;margin-bottom:4px;">Customer inquiry</h1>
   <p style="margin:6px 0 14px 0;"><span style="display:inline-block;background:${regionColor};color:#fff;font-weight:600;letter-spacing:0.06em;font-size:12px;padding:4px 10px;border-radius:999px;text-transform:uppercase;">${region}</span></p>
   <p style="color:#666;margin-top:0;">A new inquiry just came in.</p>
+  <p style="margin:14px 0 18px 0;"><a href="${adminUrl}" style="display:inline-block;background:${regionColor};color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px;">Open in admin panel →</a></p>
   <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;font-size:14px;border:1px solid #ddd;">
     ${rows}
   </table>
-  <p style="margin-top:24px;font-size:12px;color:#888;">You're receiving this because you're listed as an owner of Texas Cemetery Brokers.</p>
+  <p style="margin-top:24px;font-size:13px;"><a href="${adminUrl}" style="color:${regionColor};">View this inquiry in the admin panel</a></p>
+  <p style="margin-top:8px;font-size:12px;color:#888;">You're receiving this because you're listed as an owner of Texas Cemetery Brokers.</p>
 </div>`;
 
     const mime = [
