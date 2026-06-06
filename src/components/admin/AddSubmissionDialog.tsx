@@ -68,6 +68,9 @@ const AddSubmissionDialog = ({ open, onClose, onCreated }: Props) => {
     setSaving(false);
     if (error) { toast({ title: "Couldn't add", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Submission added", description: `${form.name || "New entry"} created.` });
+    if ((data as any)?.id) {
+      supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: (data as any).id } }).catch((e) => console.warn("inquiry email failed", e));
+    }
     onCreated?.((data as any).id);
     setForm({ customer_kind: "seller", name: "", email: "", phone: "", cemetery: "", property_type: "", spaces: "", section: "", timeline: "", budget: "", message: "", inquiry_channel: "phone" });
     onClose();
