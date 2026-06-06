@@ -208,7 +208,7 @@ const BuyProperty = () => {
       `Preferred contact: ${prefLabel}`,
     ].filter(Boolean).join("\n");
 
-    const { error } = await supabase.from("contact_submissions" as any).insert({
+    const { data: inserted, error } = await supabase.from("contact_submissions" as any).insert({
       source: "buy_property_wizard",
       inquiry_channel: "texas_buy_wizard",
       state: "TX",
@@ -223,11 +223,14 @@ const BuyProperty = () => {
       details,
       message: details,
       created_at: new Date().toISOString(),
-    });
+    }).select("id").maybeSingle();
     setSubmitting(false);
     if (error) {
       toast({ title: "Something went wrong", description: "Please call or email us directly.", variant: "destructive" });
       return;
+    }
+    if ((inserted as any)?.id) {
+      supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: (inserted as any).id } }).catch((e) => console.warn("inquiry email failed", e));
     }
     toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (310) 804-9586." });
     navigate("/thank-you");
