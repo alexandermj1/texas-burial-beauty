@@ -37,7 +37,8 @@ const ContactSection = () => {
       setLoading(false);
       return;
     }
-    supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } }).catch((e) => console.warn("inquiry email failed", e));
+    const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
+    if (emailError) console.warn("inquiry email failed", emailError);
     setForm({ name: "", email: "", phone: "", message: "" });
     setLoading(false);
     navigate("/thank-you");

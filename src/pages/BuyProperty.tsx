@@ -231,7 +231,8 @@ const BuyProperty = () => {
       toast({ title: "Something went wrong", description: "Please call or email us directly.", variant: "destructive" });
       return;
     }
-    supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } }).catch((e) => console.warn("inquiry email failed", e));
+    const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
+    if (emailError) console.warn("inquiry email failed", emailError);
     toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (310) 804-9586." });
     navigate("/thank-you");
   };
