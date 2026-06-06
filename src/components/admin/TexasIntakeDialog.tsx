@@ -147,9 +147,20 @@ const TexasIntakeDialog = ({ open, onClose, submission, onSent }: Props) => {
               href={gmailUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                const w = window.open(gmailUrl, "_blank", "noopener,noreferrer");
+                if (!w) window.open(mailtoUrl, "_self");
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
             >
               <Mail className="w-3.5 h-3.5" /> Open in Gmail
+            </a>
+            <a
+              href={mailtoUrl}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
+            >
+              <Mail className="w-3.5 h-3.5" /> Default mail app
             </a>
           </div>
           <button
