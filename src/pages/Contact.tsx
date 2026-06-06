@@ -102,7 +102,9 @@ const GeneralInquiryForm = () => {
       return;
     }
     setLoading(true);
-    const { data: inserted, error } = await supabase.from("contact_submissions" as any).insert({
+    const submissionId = crypto.randomUUID();
+    const { error } = await supabase.from("contact_submissions" as any).insert({
+      id: submissionId,
       source: "contact",
       name: form.name.trim(),
       email: form.email.trim(),
@@ -111,15 +113,13 @@ const GeneralInquiryForm = () => {
       state: "TX",
       inquiry_channel: "texas_contact",
       created_at: new Date().toISOString(),
-    }).select("id").maybeSingle();
+    });
     if (error) {
       toast({ title: "Something went wrong", description: "Please try again later.", variant: "destructive" });
       setLoading(false);
       return;
     }
-    if ((inserted as any)?.id) {
-      supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: (inserted as any).id } }).catch((e) => console.warn("inquiry email failed", e));
-    }
+    supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } }).catch((e) => console.warn("inquiry email failed", e));
     toast({ title: "Message sent", description: "We'll be in touch within 24 hours." });
     setForm({ name: "", email: "", phone: "", message: "" });
     setLoading(false);
