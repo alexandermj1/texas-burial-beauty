@@ -62,14 +62,21 @@ const TexasIntakeDialog = ({ open, onClose, submission, onSent }: Props) => {
   const to = submission.email || "";
 
   const gmailUrl = useMemo(() => {
-    const base = "https://mail.google.com/mail/u/0/?view=cm&fs=1";
-    const params = [
-      `to=${encodeURIComponent(to)}`,
-      `su=${encodeURIComponent(subj)}`,
-      `body=${encodeURIComponent(body)}`,
-    ].join("&");
-    return `${base}&${params}`;
+    const params = new URLSearchParams({
+      view: "cm",
+      fs: "1",
+      tf: "1",
+      to,
+      su: subj,
+      body,
+    });
+    return `https://mail.google.com/mail/?${params.toString()}`;
   }, [to, subj, body]);
+
+  const mailtoUrl = useMemo(
+    () => `mailto:${to}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,
+    [to, subj, body]
+  );
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(`${subj}\n\n${body}`);
@@ -140,9 +147,20 @@ const TexasIntakeDialog = ({ open, onClose, submission, onSent }: Props) => {
               href={gmailUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                const w = window.open(gmailUrl, "_blank", "noopener,noreferrer");
+                if (!w) window.open(mailtoUrl, "_self");
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
             >
               <Mail className="w-3.5 h-3.5" /> Open in Gmail
+            </a>
+            <a
+              href={mailtoUrl}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
+            >
+              <Mail className="w-3.5 h-3.5" /> Default mail app
             </a>
           </div>
           <button
