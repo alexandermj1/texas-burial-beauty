@@ -61,6 +61,20 @@ Deno.serve(async (req) => {
       match_confidence: "high",
     }).eq("id", email.id);
 
+    // Notify owners about the newly promoted inquiry (non-fatal)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/inquiry-notification-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({ submission_id: submissionId }),
+      });
+    } catch (e) {
+      console.warn("inquiry-notification-email invoke failed:", e);
+    }
+
     return json({ success: true, submission_id: submissionId });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Unknown" }, 500);
