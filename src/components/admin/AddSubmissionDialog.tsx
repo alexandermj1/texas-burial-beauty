@@ -67,10 +67,11 @@ const AddSubmissionDialog = ({ open, onClose, onCreated }: Props) => {
     const { data, error } = await supabase.from("contact_submissions" as any).insert(payload).select().single();
     setSaving(false);
     if (error) { toast({ title: "Couldn't add", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Submission added", description: `${form.name || "New entry"} created.` });
     if ((data as any)?.id) {
-      supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: (data as any).id } }).catch((e) => console.warn("inquiry email failed", e));
+      const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: (data as any).id } });
+      if (emailError) console.warn("inquiry email failed", emailError);
     }
+    toast({ title: "Submission added", description: `${form.name || "New entry"} created.` });
     onCreated?.((data as any).id);
     setForm({ customer_kind: "seller", name: "", email: "", phone: "", cemetery: "", property_type: "", spaces: "", section: "", timeline: "", budget: "", message: "", inquiry_channel: "phone" });
     onClose();
