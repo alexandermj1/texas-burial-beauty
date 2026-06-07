@@ -92,13 +92,13 @@ const HeroSection = () => {
       {/* Headline sits low in the blurred zone, aligned with the Buy column below */}
       <motion.div
         style={{ y: textY, opacity: textOpacity }}
-        className="relative container mx-auto px-6 sm:px-10 mt-auto pb-2 sm:pb-4"
+        className="relative container mx-auto px-6 sm:px-10 mt-auto pt-28 sm:pt-32 pb-2 sm:pb-4"
       >
         <motion.span
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="block text-primary-foreground/90 text-xs tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-md"
+          className="block text-primary-foreground/90 text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-md"
         >
           Partnered with Bayer Cemetery Brokers · Est. 1996 · All of Texas
         </motion.span>
@@ -107,7 +107,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="font-display text-primary-foreground text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl leading-[1.02] tracking-tight drop-shadow-2xl"
+          className="font-display text-primary-foreground text-[clamp(2.5rem,8vw,8rem)] leading-[1.02] tracking-tight drop-shadow-2xl"
         >
           Cemetery property,
           <br />
@@ -121,7 +121,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.9 }}
-          className="mt-6 max-w-2xl text-primary-foreground/85 text-base sm:text-lg font-light drop-shadow-md"
+          className="mt-6 max-w-2xl text-primary-foreground/85 text-sm sm:text-base lg:text-lg font-light drop-shadow-md"
         >
           Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
         </motion.p>
