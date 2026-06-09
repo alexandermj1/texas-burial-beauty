@@ -88,6 +88,14 @@ const TexasPipelinePanel = ({ submission, onPatch }: Props) => {
                 <FileText className="w-3.5 h-3.5" /> Mark details received
               </button>
             )}
+            {stage === "details_received" && (
+              <button
+                onClick={() => setQuoteOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              >
+                <DollarSign className="w-3.5 h-3.5" /> Generate quote email
+              </button>
+            )}
           </div>
         </div>
 
