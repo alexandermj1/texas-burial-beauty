@@ -1,12 +1,13 @@
 // TexasPipelinePanel — 6-stage Texas Cemetery Brokers seller workflow.
 // Stages: New → Intake Sent → Details Received → Quoted → Listed → Closed
 import { motion } from "framer-motion";
-import { Inbox, Mail, FileText, FileSignature, Globe, CheckCircle } from "lucide-react";
+import { Inbox, Mail, FileText, FileSignature, Globe, CheckCircle, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
 import { useState } from "react";
 import TexasIntakeDialog from "./TexasIntakeDialog";
+import TexasQuoteDialog from "./TexasQuoteDialog";
 
 export type TexasStage =
   | "new"
@@ -48,6 +49,7 @@ interface Props {
 const TexasPipelinePanel = ({ submission, onPatch }: Props) => {
   const stage = deriveTexasStage(submission);
   const [intakeOpen, setIntakeOpen] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
 
   const setStage = async (next: TexasStage) => {
     const patch: any = { texas_pipeline_stage: next };
@@ -84,6 +86,14 @@ const TexasPipelinePanel = ({ submission, onPatch }: Props) => {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-sky-600 text-white hover:opacity-90 transition-opacity"
               >
                 <FileText className="w-3.5 h-3.5" /> Mark details received
+              </button>
+            )}
+            {stage === "details_received" && (
+              <button
+                onClick={() => setQuoteOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              >
+                <DollarSign className="w-3.5 h-3.5" /> Generate quote email
               </button>
             )}
           </div>
@@ -126,6 +136,18 @@ const TexasPipelinePanel = ({ submission, onPatch }: Props) => {
         onSent={async () => {
           await setStage("intake_sent");
           setIntakeOpen(false);
+        }}
+      />
+
+      <TexasQuoteDialog
+        open={quoteOpen}
+        onClose={() => setQuoteOpen(false)}
+        submission={submission}
+        onSave={async (_id, patch) => {
+          await onPatch(patch);
+          if (patch.quote_sent_at) {
+            await setStage("quoted");
+          }
         }}
       />
     </>
