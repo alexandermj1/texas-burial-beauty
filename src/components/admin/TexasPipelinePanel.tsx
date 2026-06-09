@@ -138,6 +138,18 @@ const TexasPipelinePanel = ({ submission, onPatch }: Props) => {
           setIntakeOpen(false);
         }}
       />
+
+      <TexasQuoteDialog
+        open={quoteOpen}
+        onClose={() => setQuoteOpen(false)}
+        submission={submission}
+        onSave={async (_id, patch) => {
+          await onPatch(patch);
+          if (patch.quote_sent_at) {
+            await setStage("quoted");
+          }
+        }}
+      />
     </>
   );
 };
