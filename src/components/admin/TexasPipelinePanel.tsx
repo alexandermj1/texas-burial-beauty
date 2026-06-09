@@ -1,12 +1,13 @@
 // TexasPipelinePanel — 6-stage Texas Cemetery Brokers seller workflow.
 // Stages: New → Intake Sent → Details Received → Quoted → Listed → Closed
 import { motion } from "framer-motion";
-import { Inbox, Mail, FileText, FileSignature, Globe, CheckCircle } from "lucide-react";
+import { Inbox, Mail, FileText, FileSignature, Globe, CheckCircle, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
 import { useState } from "react";
 import TexasIntakeDialog from "./TexasIntakeDialog";
+import TexasQuoteDialog from "./TexasQuoteDialog";
 
 export type TexasStage =
   | "new"
