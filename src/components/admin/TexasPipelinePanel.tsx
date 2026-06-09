@@ -49,6 +49,7 @@ interface Props {
 const TexasPipelinePanel = ({ submission, onPatch }: Props) => {
   const stage = deriveTexasStage(submission);
   const [intakeOpen, setIntakeOpen] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
 
   const setStage = async (next: TexasStage) => {
     const patch: any = { texas_pipeline_stage: next };
