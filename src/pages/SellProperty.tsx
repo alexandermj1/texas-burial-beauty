@@ -149,10 +149,10 @@ const SellProperty = () => {
                   Speak with a specialist
                 </span>
                 <a
-                  href="tel:+13108049586"
+                  href="tel:+12142304740"
                   className="font-display text-lg text-foreground hover:text-primary transition-colors inline-flex items-center gap-2"
                 >
-                  <Phone className="w-4 h-4" /> (310) 804-9586
+                  <Phone className="w-4 h-4" /> (214) 230-4740
                 </a>
               </div>
             </div>
@@ -279,8 +279,8 @@ const SellProperty = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Ready to sell your property?</h2>
             <p className="text-muted-foreground mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours and there's never any pressure.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="tel:+13108049586" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Phone className="w-4 h-4" /> (310) 804-9586
+              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
+                <Phone className="w-4 h-4" /> (214) 230-4740
               </a>
               <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
                 <Mail className="w-4 h-4" /> Email Us <ArrowRight className="w-4 h-4" />

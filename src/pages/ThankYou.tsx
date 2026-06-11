@@ -33,7 +33,7 @@ const ThankYou = () => {
           <p className="text-muted-foreground text-lg font-light leading-relaxed mb-8">
             We've received your request and a member of our team will reach out
             within 24 hours. If your matter is urgent, please call us directly
-            at <a href="tel:+13108049586" className="text-primary font-medium">(310) 804-9586</a>.
+            at <a href="tel:+12142304740" className="text-primary font-medium">(214) 230-4740</a>.
           </p>
           <Link
             to="/"

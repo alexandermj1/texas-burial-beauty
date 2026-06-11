@@ -91,7 +91,7 @@ const jsonLd: Record<string, unknown>[] = [
     provider: {
       "@type": "LocalBusiness",
       name: "Texas Cemetery Brokers",
-      telephone: "+1-310-804-9586",
+      telephone: "+1-214-230-4740",
       email: "info@texascemeterybrokers.com",
       priceRange: "$$",
       address: { "@type": "PostalAddress", addressRegion: "TX", addressCountry: "US" },
@@ -409,8 +409,8 @@ const GuideBuyingCemeteryPlot = () => (
               <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-2xl font-medium hover:-translate-y-0.5 transition-all">
                 Request a buyer concierge <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="tel:+13108049586" className="inline-flex items-center gap-2 px-6 py-3 bg-background/15 backdrop-blur border border-primary-foreground/30 rounded-2xl font-medium hover:bg-background/25 transition-all">
-                Call (310) 804-9586
+              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-6 py-3 bg-background/15 backdrop-blur border border-primary-foreground/30 rounded-2xl font-medium hover:bg-background/25 transition-all">
+                Call (214) 230-4740
               </a>
               <Link to="/buy" className="inline-flex items-center gap-2 px-6 py-3 bg-background/15 backdrop-blur border border-primary-foreground/30 rounded-2xl font-medium hover:bg-background/25 transition-all">
                 Browse available plots
