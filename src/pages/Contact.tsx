@@ -605,7 +605,7 @@ const Contact = () => {
             </a>
 
             <a
-              href="tel:+13108049586"
+              href="tel:+12142304740"
               className="group rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-soft transition-all"
             >
               <div className="flex items-center gap-2 text-muted-foreground mb-2">
@@ -613,7 +613,7 @@ const Contact = () => {
                 <span className="text-xs uppercase tracking-wide">Phone</span>
               </div>
               <p className="text-foreground font-medium group-hover:text-primary transition-colors">
-                (310) 804-9586
+                (214) 230-4740
               </p>
             </a>
 

@@ -1,7 +1,7 @@
 import { MapPin, Building2, Layers, Sparkles, TrendingUp, Clock3, Eye, HeartHandshake, type LucideIcon } from "lucide-react";
 
-export const PHONE = "+13108049586";
-export const PHONE_DISPLAY = "(310) 804-9586";
+export const PHONE = "+12142304740";
+export const PHONE_DISPLAY = "(214) 230-4740";
 export const EMAIL = "info@texascemeterybrokers.com";
 const SLUG = "sell-cemetery-plot-texas";
 const URL = `https://www.texascemeterybrokers.com/${SLUG}`;
