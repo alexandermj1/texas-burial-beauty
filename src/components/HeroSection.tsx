@@ -78,11 +78,11 @@ const HeroSection = () => {
         />
       </motion.div>
 
-      <div className="absolute inset-0 bg-foreground/20 pointer-events-none" />
+      <div className="absolute inset-0 bg-foreground/50 pointer-events-none" />
       {/* Top gradient — strong, tall, opaque at the very top so the navbar always reads */}
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/70 via-foreground/30 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/90 via-foreground/60 to-transparent pointer-events-none" />
       {/* Bottom gradient — deep shade behind headline + Buy/Sell row */}
-      <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-foreground/70 via-foreground/30 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/90 via-foreground/60 to-transparent pointer-events-none" />
       {/* Parallax merge — fades into the page background as the user scrolls, blending hero into next section */}
       <motion.div
         style={{ opacity: mergeOpacity }}
@@ -92,41 +92,39 @@ const HeroSection = () => {
       {/* Headline sits low in the blurred zone, aligned with the Buy column below */}
       <motion.div
         style={{ y: textY, opacity: textOpacity }}
-        className="relative container mx-auto px-6 sm:px-10 mt-auto pt-20 sm:pt-24 pb-2 sm:pb-4"
+        className="relative container mx-auto px-6 sm:px-10 mt-auto pt-28 sm:pt-32 pb-2 sm:pb-4"
       >
-        <div className="inline-block bg-foreground/55 backdrop-blur-md rounded-2xl px-5 py-4 sm:px-7 sm:py-5">
-          <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="block text-primary-foreground/95 text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-3 sm:mb-4 drop-shadow-md"
-          >
-            Partnered with Bayer Cemetery Brokers · Est. 1996 · All of Texas
-          </motion.span>
+        <motion.span
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="block text-primary-foreground/95 text-xs sm:text-sm tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-lg"
+        >
+          Partnered with Bayer Cemetery Brokers · Est. 1996 · All of Texas
+        </motion.span>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="font-display text-primary-foreground text-[clamp(2.5rem,8vw,7rem)] leading-[1.02] tracking-tight drop-shadow-2xl"
-          >
-            Cemetery property,
-            <br />
-            <span className="italic font-light">
-              {typed}
-              <span className="inline-block w-[0.05em] -mb-[0.1em] ml-1 h-[0.85em] bg-primary-foreground/80 animate-pulse align-baseline" aria-hidden="true" />
-            </span>
-          </motion.h1>
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="font-display text-primary-foreground text-[clamp(2.5rem,8vw,8rem)] leading-[1.02] tracking-tight drop-shadow-2xl"
+        >
+          Cemetery property,
+          <br />
+          <span className="italic font-light">
+            {typed}
+            <span className="inline-block w-[0.05em] -mb-[0.1em] ml-1 h-[0.85em] bg-primary-foreground/80 animate-pulse align-baseline" aria-hidden="true" />
+          </span>
+        </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.9 }}
-            className="mt-4 max-w-xl text-primary-foreground/90 text-sm sm:text-base lg:text-lg font-normal drop-shadow-md"
-          >
-            Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
-          </motion.p>
-        </div>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.9 }}
+          className="mt-6 max-w-2xl text-primary-foreground/95 text-base sm:text-lg lg:text-xl font-normal drop-shadow-lg"
+        >
+          Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
+        </motion.p>
       </motion.div>
 
       {/* Buy / Sell split — minimal text links */}
@@ -134,22 +132,22 @@ const HeroSection = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 1.2 }}
-        className="relative bg-foreground/40 backdrop-blur-sm border-t border-primary-foreground/20"
+        className="relative border-t border-primary-foreground/25"
       >
-        <div className="container mx-auto px-6 grid grid-cols-2 divide-x divide-primary-foreground/20">
+        <div className="container mx-auto px-6 grid grid-cols-2 divide-x divide-primary-foreground/25">
           <Link
             to="/cemeteries"
-            className="group flex items-center justify-between py-7 sm:py-8 pr-4 sm:pr-8 text-primary-foreground"
+            className="group flex items-center justify-between py-9 sm:py-10 pr-4 sm:pr-8 text-primary-foreground"
           >
-            <span className="font-display text-5xl sm:text-6xl md:text-7xl tracking-tight drop-shadow-xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Buy</span>
-            <ArrowUpRight className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="font-display text-6xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight drop-shadow-2xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Buy</span>
+            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
           <Link
             to="/sell"
-            className="group flex items-center justify-between py-7 sm:py-8 pl-4 sm:pl-8 text-primary-foreground"
+            className="group flex items-center justify-between py-9 sm:py-10 pl-4 sm:pl-8 text-primary-foreground"
           >
-            <span className="font-display text-5xl sm:text-6xl md:text-7xl tracking-tight italic font-light drop-shadow-xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
-            <ArrowUpRight className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="font-display text-6xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight italic font-light drop-shadow-2xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
+            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
         </div>
       </motion.div>
