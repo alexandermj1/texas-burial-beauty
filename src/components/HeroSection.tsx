@@ -98,7 +98,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="block text-primary-foreground/90 text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-md"
+          className="block text-primary-foreground/95 text-xs sm:text-sm tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-lg"
         >
           Partnered with Bayer Cemetery Brokers · Est. 1996 · All of Texas
         </motion.span>
