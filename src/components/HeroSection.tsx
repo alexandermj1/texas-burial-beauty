@@ -146,7 +146,7 @@ const HeroSection = () => {
             to="/sell"
             className="group flex items-center justify-between py-9 sm:py-10 pl-4 sm:pl-8 text-primary-foreground"
           >
-            <span className="font-display text-5xl sm:text-5xl md:text-6xl tracking-tight italic font-light drop-shadow-lg px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
+            <span className="font-display text-6xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight italic font-light drop-shadow-2xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
             <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
         </div>
