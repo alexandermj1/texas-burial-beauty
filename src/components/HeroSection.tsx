@@ -121,7 +121,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.9 }}
-          className="mt-6 max-w-2xl text-primary-foreground/85 text-sm sm:text-base lg:text-lg font-light drop-shadow-md"
+          className="mt-6 max-w-2xl text-primary-foreground/95 text-base sm:text-lg lg:text-xl font-normal drop-shadow-lg"
         >
           Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
         </motion.p>
