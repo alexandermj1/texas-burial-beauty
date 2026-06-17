@@ -78,11 +78,11 @@ const HeroSection = () => {
         />
       </motion.div>
 
-      <div className="absolute inset-0 bg-foreground/50 pointer-events-none" />
+      <div className="absolute inset-0 bg-foreground/20 pointer-events-none" />
       {/* Top gradient — strong, tall, opaque at the very top so the navbar always reads */}
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/90 via-foreground/60 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/70 via-foreground/30 to-transparent pointer-events-none" />
       {/* Bottom gradient — deep shade behind headline + Buy/Sell row */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/90 via-foreground/60 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-foreground/70 via-foreground/30 to-transparent pointer-events-none" />
       {/* Parallax merge — fades into the page background as the user scrolls, blending hero into next section */}
       <motion.div
         style={{ opacity: mergeOpacity }}
@@ -92,39 +92,41 @@ const HeroSection = () => {
       {/* Headline sits low in the blurred zone, aligned with the Buy column below */}
       <motion.div
         style={{ y: textY, opacity: textOpacity }}
-        className="relative container mx-auto px-6 sm:px-10 mt-auto pt-28 sm:pt-32 pb-2 sm:pb-4"
+        className="relative container mx-auto px-6 sm:px-10 mt-auto pt-20 sm:pt-24 pb-2 sm:pb-4"
       >
-        <motion.span
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="block text-primary-foreground/95 text-xs sm:text-sm tracking-[0.3em] uppercase font-medium mb-4 sm:mb-6 drop-shadow-lg"
-        >
-          Partnered with Bayer Cemetery Brokers · Est. 1996 · All of Texas
-        </motion.span>
+        <div className="inline-block bg-foreground/55 backdrop-blur-md rounded-2xl px-5 py-4 sm:px-7 sm:py-5">
+          <motion.span
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="block text-primary-foreground/95 text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-3 sm:mb-4 drop-shadow-md"
+          >
+            Partnered with Bayer Cemetery Brokers · Est. 1996 · All of Texas
+          </motion.span>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="font-display text-primary-foreground text-[clamp(2.5rem,8vw,8rem)] leading-[1.02] tracking-tight drop-shadow-2xl"
-        >
-          Cemetery property,
-          <br />
-          <span className="italic font-light">
-            {typed}
-            <span className="inline-block w-[0.05em] -mb-[0.1em] ml-1 h-[0.85em] bg-primary-foreground/80 animate-pulse align-baseline" aria-hidden="true" />
-          </span>
-        </motion.h1>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="font-display text-primary-foreground text-[clamp(2.5rem,8vw,7rem)] leading-[1.02] tracking-tight drop-shadow-2xl"
+          >
+            Cemetery property,
+            <br />
+            <span className="italic font-light">
+              {typed}
+              <span className="inline-block w-[0.05em] -mb-[0.1em] ml-1 h-[0.85em] bg-primary-foreground/80 animate-pulse align-baseline" aria-hidden="true" />
+            </span>
+          </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.9 }}
-          className="mt-6 max-w-2xl text-primary-foreground/95 text-base sm:text-lg lg:text-xl font-normal drop-shadow-lg"
-        >
-          Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
-        </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.9 }}
+            className="mt-4 max-w-xl text-primary-foreground/90 text-sm sm:text-base lg:text-lg font-normal drop-shadow-md"
+          >
+            Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
+          </motion.p>
+        </div>
       </motion.div>
 
       {/* Buy / Sell split — minimal text links */}
