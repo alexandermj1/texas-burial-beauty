@@ -134,22 +134,22 @@ const HeroSection = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 1.2 }}
-        className="relative border-t border-primary-foreground/25"
+        className="relative bg-foreground/40 backdrop-blur-sm border-t border-primary-foreground/20"
       >
-        <div className="container mx-auto px-6 grid grid-cols-2 divide-x divide-primary-foreground/25">
+        <div className="container mx-auto px-6 grid grid-cols-2 divide-x divide-primary-foreground/20">
           <Link
             to="/cemeteries"
-            className="group flex items-center justify-between py-9 sm:py-10 pr-4 sm:pr-8 text-primary-foreground"
+            className="group flex items-center justify-between py-7 sm:py-8 pr-4 sm:pr-8 text-primary-foreground"
           >
-            <span className="font-display text-6xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight drop-shadow-2xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Buy</span>
-            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="font-display text-5xl sm:text-6xl md:text-7xl tracking-tight drop-shadow-xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Buy</span>
+            <ArrowUpRight className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
           <Link
             to="/sell"
-            className="group flex items-center justify-between py-9 sm:py-10 pl-4 sm:pl-8 text-primary-foreground"
+            className="group flex items-center justify-between py-7 sm:py-8 pl-4 sm:pl-8 text-primary-foreground"
           >
-            <span className="font-display text-6xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight italic font-light drop-shadow-2xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
-            <ArrowUpRight className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            <span className="font-display text-5xl sm:text-6xl md:text-7xl tracking-tight italic font-light drop-shadow-xl px-3 -mx-3 rounded-md transition-colors group-hover:bg-primary-foreground/10">Sell</span>
+            <ArrowUpRight className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
         </div>
       </motion.div>
