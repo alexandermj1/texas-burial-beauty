@@ -156,6 +156,87 @@ function matchSubmission(
   return null;
 }
 
+const normEmail = (e?: string | null) => (e ? e.trim().toLowerCase() : null);
+const normPhone = (p?: string | null) => (p ? p.replace(/\D/g, "") : null);
+
+async function findOrCreateCustomerProfileForSubmission(admin: any, submissionId: string): Promise<string | null> {
+  const { data: sub, error: subErr } = await admin
+    .from("contact_submissions")
+    .select("id, customer_profile_id, name, email, phone, customer_kind, source, created_at")
+    .eq("id", submissionId)
+    .maybeSingle();
+
+  if (subErr) {
+    console.warn("customer profile lookup failed", subErr.message);
+    return null;
+  }
+  if (!sub) return null;
+  if (sub.customer_profile_id) return sub.customer_profile_id;
+
+  const email = normEmail(sub.email);
+  const phone = normPhone(sub.phone);
+  let profileId: string | null = null;
+
+  if (email) {
+    const { data: primary } = await admin
+      .from("customer_profiles")
+      .select("id")
+      .ilike("primary_email", email)
+      .limit(1)
+      .maybeSingle();
+    profileId = primary?.id ?? null;
+
+    if (!profileId) {
+      const { data: alt } = await admin
+        .from("customer_profiles")
+        .select("id")
+        .contains("alt_emails", [email])
+        .limit(1)
+        .maybeSingle();
+      profileId = alt?.id ?? null;
+    }
+  }
+
+  if (!profileId && phone) {
+    const { data: byPhone } = await admin
+      .from("customer_profiles")
+      .select("id")
+      .eq("primary_phone", phone)
+      .limit(1)
+      .maybeSingle();
+    profileId = byPhone?.id ?? null;
+  }
+
+  if (!profileId) {
+    const { data: created, error: createErr } = await admin
+      .from("customer_profiles")
+      .insert({
+        primary_name: sub.name,
+        primary_email: sub.email,
+        primary_phone: phone || sub.phone,
+        customer_kind: sub.customer_kind ?? sub.source,
+        state_focus: "TX",
+        last_interaction_at: sub.created_at,
+      })
+      .select("id")
+      .single();
+
+    if (createErr || !created) {
+      console.warn("customer profile create failed", createErr?.message);
+      return null;
+    }
+    profileId = created.id;
+  }
+
+  const { error: linkErr } = await admin
+    .from("contact_submissions")
+    .update({ customer_profile_id: profileId })
+    .eq("id", submissionId);
+  if (linkErr) console.warn("submission profile link failed", linkErr.message);
+
+  return profileId;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
