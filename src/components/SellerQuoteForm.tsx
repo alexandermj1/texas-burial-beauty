@@ -52,6 +52,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       spaces: form.spaces || null,
       section: form.section.trim() || null,
       details: form.details.trim() || null,
+      deed_owner_names: form.deedOwnerNames.trim() || null,
+      deed_owners_status: form.deedOwnersStatus || null,
+      relationship_to_owner: form.relationshipToOwner.trim() || null,
+      purchase_info: form.purchaseInfo.trim() || null,
+      prepaid_endowment_info: form.prepaidEndowmentInfo.trim() || null,
       created_at: new Date().toISOString(),
     });
     if (error) {
@@ -61,7 +66,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     }
     const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
     if (emailError) console.warn("inquiry email failed", emailError);
-    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "" });
+    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
     setLoading(false);
     navigate("/thank-you");
   };
