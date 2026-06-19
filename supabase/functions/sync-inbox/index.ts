@@ -561,12 +561,13 @@ Deno.serve(async (req) => {
       // Backfill: process attachments for previously-synced matched emails that haven't been handled yet.
       // We re-fetch the Gmail message to get attachment IDs (we don't store them).
       try {
-        const { data: backfillCandidates } = await admin
+        const backfillLimit = body.attachmentBackfillLimit ?? 25;
+        const { data: backfillCandidates } = backfillLimit > 0 ? await admin
           .from("email_messages")
           .select("id, gmail_message_id, from_email, subject, matched_submission_id, received_at")
           .not("matched_submission_id", "is", null)
           .order("received_at", { ascending: false })
-          .limit(150);
+          .limit(backfillLimit) : { data: [] };
         for (const em of (backfillCandidates ?? []) as any[]) {
           try {
             if (isInternalSender(em.from_email)) continue;
