@@ -14,6 +14,7 @@ const BodySchema = z.object({
   pageToken: z.string().min(1).max(500).optional(),
   maxResults: z.number().int().min(1).max(500).optional().default(100),
   query: z.string().max(500).optional().default(DEFAULT_QUERY),
+  attachmentBackfillLimit: z.number().int().min(0).max(150).optional().default(25),
 });
 
 interface GmailHeader { name: string; value: string }
@@ -233,6 +234,12 @@ async function findOrCreateCustomerProfileForSubmission(admin: any, submissionId
     .update({ customer_profile_id: profileId })
     .eq("id", submissionId);
   if (linkErr) console.warn("submission profile link failed", linkErr.message);
+
+  await admin
+    .from("email_messages")
+    .update({ customer_profile_id: profileId })
+    .eq("matched_submission_id", submissionId)
+    .is("customer_profile_id", null);
 
   return profileId;
 }
