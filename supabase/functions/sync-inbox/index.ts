@@ -14,6 +14,7 @@ const BodySchema = z.object({
   pageToken: z.string().min(1).max(500).optional(),
   maxResults: z.number().int().min(1).max(500).optional().default(100),
   query: z.string().max(500).optional().default(DEFAULT_QUERY),
+  attachmentBackfillLimit: z.number().int().min(0).max(150).optional().default(25),
 });
 
 interface GmailHeader { name: string; value: string }
@@ -154,6 +155,93 @@ function matchSubmission(
   }
 
   return null;
+}
+
+const normEmail = (e?: string | null) => (e ? e.trim().toLowerCase() : null);
+const normPhone = (p?: string | null) => (p ? p.replace(/\D/g, "") : null);
+
+async function findOrCreateCustomerProfileForSubmission(admin: any, submissionId: string): Promise<string | null> {
+  const { data: sub, error: subErr } = await admin
+    .from("contact_submissions")
+    .select("id, customer_profile_id, name, email, phone, customer_kind, source, created_at")
+    .eq("id", submissionId)
+    .maybeSingle();
+
+  if (subErr) {
+    console.warn("customer profile lookup failed", subErr.message);
+    return null;
+  }
+  if (!sub) return null;
+  if (sub.customer_profile_id) return sub.customer_profile_id;
+
+  const email = normEmail(sub.email);
+  const phone = normPhone(sub.phone);
+  let profileId: string | null = null;
+
+  if (email) {
+    const { data: primary } = await admin
+      .from("customer_profiles")
+      .select("id")
+      .ilike("primary_email", email)
+      .limit(1)
+      .maybeSingle();
+    profileId = primary?.id ?? null;
+
+    if (!profileId) {
+      const { data: alt } = await admin
+        .from("customer_profiles")
+        .select("id")
+        .contains("alt_emails", [email])
+        .limit(1)
+        .maybeSingle();
+      profileId = alt?.id ?? null;
+    }
+  }
+
+  if (!profileId && phone) {
+    const { data: byPhone } = await admin
+      .from("customer_profiles")
+      .select("id")
+      .eq("primary_phone", phone)
+      .limit(1)
+      .maybeSingle();
+    profileId = byPhone?.id ?? null;
+  }
+
+  if (!profileId) {
+    const { data: created, error: createErr } = await admin
+      .from("customer_profiles")
+      .insert({
+        primary_name: sub.name,
+        primary_email: sub.email,
+        primary_phone: phone || sub.phone,
+        customer_kind: sub.customer_kind ?? sub.source,
+        state_focus: "TX",
+        last_interaction_at: sub.created_at,
+      })
+      .select("id")
+      .single();
+
+    if (createErr || !created) {
+      console.warn("customer profile create failed", createErr?.message);
+      return null;
+    }
+    profileId = created.id;
+  }
+
+  const { error: linkErr } = await admin
+    .from("contact_submissions")
+    .update({ customer_profile_id: profileId })
+    .eq("id", submissionId);
+  if (linkErr) console.warn("submission profile link failed", linkErr.message);
+
+  await admin
+    .from("email_messages")
+    .update({ customer_profile_id: profileId })
+    .eq("matched_submission_id", submissionId)
+    .is("customer_profile_id", null);
+
+  return profileId;
 }
 
 Deno.serve(async (req) => {
@@ -462,13 +550,9 @@ Deno.serve(async (req) => {
           if (isInternalSender(em.from_email)) continue;
           const msg = msgById.get(em.gmail_message_id);
           if (!msg) continue;
-          const { data: sub } = await admin
-            .from("contact_submissions")
-            .select("id, customer_profile_id")
-            .eq("id", em.matched_submission_id)
-            .maybeSingle();
-          if (!sub?.customer_profile_id) continue;
-          attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, sub.customer_profile_id);
+          const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
+          if (!customerProfileId) continue;
+          attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
         } catch (e) {
           console.warn("attachment loop error", e);
         }
@@ -477,26 +561,23 @@ Deno.serve(async (req) => {
       // Backfill: process attachments for previously-synced matched emails that haven't been handled yet.
       // We re-fetch the Gmail message to get attachment IDs (we don't store them).
       try {
-        const { data: backfillCandidates } = await admin
+        const backfillLimit = body.attachmentBackfillLimit ?? 25;
+        const { data: backfillCandidates } = backfillLimit > 0 ? await admin
           .from("email_messages")
           .select("id, gmail_message_id, from_email, subject, matched_submission_id, received_at")
           .not("matched_submission_id", "is", null)
           .order("received_at", { ascending: false })
-          .limit(150);
+          .limit(backfillLimit) : { data: [] };
         for (const em of (backfillCandidates ?? []) as any[]) {
           try {
             if (isInternalSender(em.from_email)) continue;
-            const { data: sub } = await admin
-              .from("contact_submissions")
-              .select("customer_profile_id")
-              .eq("id", em.matched_submission_id)
-              .maybeSingle();
-            if (!sub?.customer_profile_id) continue;
+            const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
+            if (!customerProfileId) continue;
             // Cheap skip: if we've already saved at least one file for this email, assume done.
             const { data: anyExisting } = await admin
               .from("customer_files")
               .select("id")
-              .like("file_path", `${sub.customer_profile_id}/email_${em.gmail_message_id}_%`)
+              .like("file_path", `${customerProfileId}/email_${em.gmail_message_id}_%`)
               .limit(1)
               .maybeSingle();
             if (anyExisting) continue;
@@ -512,7 +593,7 @@ Deno.serve(async (req) => {
               continue;
             }
             const msg = (await r.json()) as GmailMessage;
-            attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, sub.customer_profile_id);
+            attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
           } catch (e) {
             console.warn("backfill item error", e);
           }
