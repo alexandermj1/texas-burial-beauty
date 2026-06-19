@@ -217,12 +217,98 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
                   maxLength={100}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border/40 my-10" />
+
+          {/* Section: Ownership & deed */}
+          <div className="mb-10">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-5">
+              Ownership &amp; deed
+            </p>
+            <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
+              These details help us confirm ownership and prepare an accurate valuation.
+              If you don't have an answer right now, leave it blank — we can follow up.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Names of all owners listed on the deed</label>
+                <input
+                  className={inputCls}
+                  value={form.deedOwnerNames}
+                  onChange={(e) => setForm({ ...form, deedOwnerNames: e.target.value })}
+                  placeholder="e.g. John A. Smith and Mary B. Smith"
+                  maxLength={300}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Are the plot owners currently living?</label>
+                <select
+                  value={form.deedOwnersStatus}
+                  onChange={(e) => setForm({ ...form, deedOwnersStatus: e.target.value })}
+                  className={inputCls + " cursor-pointer"}
+                >
+                  <option value="">Select...</option>
+                  <option value="All living">All living</option>
+                  <option value="Some living, some deceased">Some living, some deceased</option>
+                  <option value="All deceased">All deceased</option>
+                  <option value="Unsure">Unsure</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Your relationship to the owner(s)</label>
+                <input
+                  className={inputCls}
+                  value={form.relationshipToOwner}
+                  onChange={(e) => setForm({ ...form, relationshipToOwner: e.target.value })}
+                  placeholder="e.g. Daughter, Spouse, Executor"
+                  maxLength={150}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={labelCls}>
+                  Deed / ownership records
+                  <span className="text-muted-foreground normal-case tracking-normal text-[10px]"> — describe what you have</span>
+                </label>
+                <textarea
+                  value={form.purchaseInfo}
+                  onChange={(e) => setForm({ ...form, purchaseInfo: e.target.value })}
+                  placeholder="When was it purchased, for what amount, and what records do you have? After submitting, please email a clear photo or scanned copy of the deed/certificate of ownership and any original purchase records to info@texascemeterybrokers.com."
+                  rows={3}
+                  maxLength={1000}
+                  className={
+                    "w-full px-4 py-3 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
+                    "placeholder:text-muted-foreground transition-all resize-none " +
+                    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                  }
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={labelCls}>
+                  Prepaid endowment care or service charges
+                  <span className="text-muted-foreground normal-case tracking-normal text-[10px]"> — optional, can increase valuation</span>
+                </label>
+                <textarea
+                  value={form.prepaidEndowmentInfo}
+                  onChange={(e) => setForm({ ...form, prepaidEndowmentInfo: e.target.value })}
+                  placeholder="List any prepaid items such as endowment care, opening/closing fees, vaults, markers or service charges. Evidence of prepaid items often increases the valuation to a higher tier."
+                  rows={3}
+                  maxLength={1000}
+                  className={
+                    "w-full px-4 py-3 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
+                    "placeholder:text-muted-foreground transition-all resize-none " +
+                    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                  }
+                />
+              </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Additional details</label>
                 <textarea
                   value={form.details}
                   onChange={(e) => setForm({ ...form, details: e.target.value })}
-                  placeholder="Deed status, reason for selling, preferred timeline, anything else we should know…"
+                  placeholder="Reason for selling, preferred timeline, anything else we should know…"
                   rows={4}
                   maxLength={1000}
                   className={
@@ -234,6 +320,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
               </div>
             </div>
           </div>
+
 
           {/* Submit */}
           <div className="flex flex-col items-center gap-3">
