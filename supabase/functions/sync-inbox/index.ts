@@ -295,8 +295,9 @@ Deno.serve(async (req) => {
 
     let insertedCount = 0;
     let bayerCreated = 0;
+    let inserted: any[] | null = null;
     if (rows.length > 0) {
-      const { data: inserted, error: insertError } = await admin
+      const { data: insertedData, error: insertError } = await admin
         .from("email_messages")
         .insert(rows)
         .select("id, gmail_message_id, subject, from_email, body_text, received_at");
@@ -304,6 +305,7 @@ Deno.serve(async (req) => {
         console.error("Email insert failed", insertError);
         return json({ error: `Email insert failed: ${insertError.message}` }, 500);
       }
+      inserted = insertedData;
       insertedCount = inserted?.length ?? 0;
 
       // Auto-create contact_submissions for Bayer "Sell a Plot" form emails.
