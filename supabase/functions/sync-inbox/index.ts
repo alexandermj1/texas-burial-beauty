@@ -41,7 +41,7 @@ function collectAttachments(payload?: { parts?: GmailPart[]; filename?: string; 
   return out;
 }
 
-interface GmailPart { mimeType: string; body: { data?: string; size?: number }; parts?: GmailPart[] }
+
 interface GmailMessage {
   id: string;
   threadId: string;
