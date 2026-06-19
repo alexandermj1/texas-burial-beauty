@@ -326,6 +326,7 @@ export type Database = {
           pipeline_region: string | null
           pipeline_stage_override: string | null
           plot_count: number | null
+          prepaid_endowment_info: string | null
           property_type: string | null
           purchase_info: string | null
           quote_amount: number | null
@@ -409,6 +410,7 @@ export type Database = {
           pipeline_region?: string | null
           pipeline_stage_override?: string | null
           plot_count?: number | null
+          prepaid_endowment_info?: string | null
           property_type?: string | null
           purchase_info?: string | null
           quote_amount?: number | null
@@ -492,6 +494,7 @@ export type Database = {
           pipeline_region?: string | null
           pipeline_stage_override?: string | null
           plot_count?: number | null
+          prepaid_endowment_info?: string | null
           property_type?: string | null
           purchase_info?: string | null
           quote_amount?: number | null
