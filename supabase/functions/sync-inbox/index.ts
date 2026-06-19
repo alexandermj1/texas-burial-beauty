@@ -295,8 +295,9 @@ Deno.serve(async (req) => {
 
     let insertedCount = 0;
     let bayerCreated = 0;
+    let inserted: any[] | null = null;
     if (rows.length > 0) {
-      const { data: inserted, error: insertError } = await admin
+      const { data: insertedData, error: insertError } = await admin
         .from("email_messages")
         .insert(rows)
         .select("id, gmail_message_id, subject, from_email, body_text, received_at");
@@ -304,6 +305,7 @@ Deno.serve(async (req) => {
         console.error("Email insert failed", insertError);
         return json({ error: `Email insert failed: ${insertError.message}` }, 500);
       }
+      inserted = insertedData;
       insertedCount = inserted?.length ?? 0;
 
       // Auto-create contact_submissions for Bayer "Sell a Plot" form emails.
@@ -370,12 +372,87 @@ Deno.serve(async (req) => {
           console.error("Bayer parse error", err);
         }
       }
+    }
 
-      // Save attachments from matched incoming emails onto the customer's profile.
-      // Skip emails sent FROM our own staff addresses so we only capture what customers send IN.
+    // ===== Attachment processing (runs every sync, even when no new emails arrived) =====
+    // Save attachments from matched incoming emails onto the customer's profile.
+    // Skip emails sent FROM our own staff addresses so we only capture what customers send IN.
+    {
       const INTERNAL_DOMAINS = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
       const isInternalSender = (e: string) =>
         INTERNAL_DOMAINS.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+
+      const processAttachmentsForEmail = async (
+        em: { id: string; gmail_message_id: string; from_email: string; subject: string | null },
+        payload: GmailMessage["payload"],
+        customer_profile_id: string,
+      ): Promise<number> => {
+        const attachments = collectAttachments(payload);
+        if (attachments.length === 0) return 0;
+        let saved = 0;
+        for (const att of attachments) {
+          try {
+            const expectedPath = `${customer_profile_id}/email_${em.gmail_message_id}_${att.partId}_${(att.filename || "attachment").replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+            // Skip if already saved (dedupe across re-runs / backfills).
+            const { data: existingFile } = await admin
+              .from("customer_files")
+              .select("id")
+              .eq("file_path", expectedPath)
+              .maybeSingle();
+            if (existingFile) continue;
+
+            const r = await fetch(
+              `${GMAIL_GATEWAY}/users/me/messages/${em.gmail_message_id}/attachments/${att.attachmentId}`,
+              { headers: gmailHeaders(lovableKey, gmailKey) },
+            );
+            if (!r.ok) {
+              console.warn(`attachment fetch failed ${r.status}`);
+              continue;
+            }
+            const ad = await r.json();
+            const data: string = ad.data ?? "";
+            if (!data) continue;
+            const padded = data.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(data.length / 4) * 4, "=");
+            const bin = atob(padded);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+            const { error: upErr } = await admin.storage
+              .from("customer-files")
+              .upload(expectedPath, bytes, { contentType: att.mimeType || "application/octet-stream", upsert: true });
+            if (upErr) {
+              console.warn("attachment upload failed", upErr.message);
+              continue;
+            }
+            const { error: insErr } = await admin.from("customer_files").insert({
+              customer_profile_id,
+              uploaded_by_user_id: null,
+              uploaded_by_name: `Email from ${em.from_email}`,
+              file_name: att.filename,
+              file_path: expectedPath,
+              file_size: bytes.byteLength,
+              mime_type: att.mimeType,
+              document_type: "Email attachment",
+              notes: em.subject ? `From email: ${em.subject}` : null,
+            });
+            if (insErr) {
+              console.warn("customer_files insert failed", insErr.message);
+              continue;
+            }
+            await admin.from("customer_activity_log").insert({
+              customer_profile_id,
+              actor_user_id: null,
+              actor_name: "Inbox sync",
+              action_type: "file_uploaded",
+              action_summary: `Saved email attachment "${att.filename}" from ${em.from_email}`,
+            });
+            saved++;
+          } catch (e) {
+            console.warn("attachment processing error", e);
+          }
+        }
+        return saved;
+      };
 
       const msgById = new Map<string, GmailMessage>(fetched.map((m) => [m.id, m]));
       let attachmentsSaved = 0;
@@ -385,73 +462,63 @@ Deno.serve(async (req) => {
           if (isInternalSender(em.from_email)) continue;
           const msg = msgById.get(em.gmail_message_id);
           if (!msg) continue;
-          const attachments = collectAttachments(msg.payload);
-          if (attachments.length === 0) continue;
-
           const { data: sub } = await admin
             .from("contact_submissions")
-            .select("id, customer_profile_id, name")
+            .select("id, customer_profile_id")
             .eq("id", em.matched_submission_id)
             .maybeSingle();
           if (!sub?.customer_profile_id) continue;
-
-          for (const att of attachments) {
-            try {
-              const r = await fetch(
-                `${GMAIL_GATEWAY}/users/me/messages/${em.gmail_message_id}/attachments/${att.attachmentId}`,
-                { headers: gmailHeaders(lovableKey, gmailKey) },
-              );
-              if (!r.ok) {
-                console.warn(`attachment fetch failed ${r.status}`);
-                continue;
-              }
-              const ad = await r.json();
-              const data: string = ad.data ?? "";
-              if (!data) continue;
-              const padded = data.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(data.length / 4) * 4, "=");
-              const bin = atob(padded);
-              const bytes = new Uint8Array(bin.length);
-              for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
-              const safeName = att.filename.replace(/[^a-zA-Z0-9._-]/g, "_") || "attachment";
-              const path = `${sub.customer_profile_id}/email_${em.gmail_message_id}_${att.partId}_${safeName}`;
-              const { error: upErr } = await admin.storage
-                .from("customer-files")
-                .upload(path, bytes, { contentType: att.mimeType || "application/octet-stream", upsert: true });
-              if (upErr) {
-                console.warn("attachment upload failed", upErr.message);
-                continue;
-              }
-              const { error: insErr } = await admin.from("customer_files").insert({
-                customer_profile_id: sub.customer_profile_id,
-                uploaded_by_user_id: null,
-                uploaded_by_name: `Email from ${em.from_email}`,
-                file_name: att.filename,
-                file_path: path,
-                file_size: bytes.byteLength,
-                mime_type: att.mimeType,
-                document_type: "Email attachment",
-                notes: em.subject ? `From email: ${em.subject}` : null,
-              });
-              if (insErr) {
-                console.warn("customer_files insert failed", insErr.message);
-                continue;
-              }
-              await admin.from("customer_activity_log").insert({
-                customer_profile_id: sub.customer_profile_id,
-                actor_user_id: null,
-                actor_name: "Inbox sync",
-                action_type: "file_uploaded",
-                action_summary: `Saved email attachment "${att.filename}" from ${em.from_email}`,
-              });
-              attachmentsSaved++;
-            } catch (e) {
-              console.warn("attachment processing error", e);
-            }
-          }
+          attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, sub.customer_profile_id);
         } catch (e) {
           console.warn("attachment loop error", e);
         }
+      }
+
+      // Backfill: process attachments for previously-synced matched emails that haven't been handled yet.
+      // We re-fetch the Gmail message to get attachment IDs (we don't store them).
+      try {
+        const { data: backfillCandidates } = await admin
+          .from("email_messages")
+          .select("id, gmail_message_id, from_email, subject, matched_submission_id, received_at")
+          .not("matched_submission_id", "is", null)
+          .order("received_at", { ascending: false })
+          .limit(150);
+        for (const em of (backfillCandidates ?? []) as any[]) {
+          try {
+            if (isInternalSender(em.from_email)) continue;
+            const { data: sub } = await admin
+              .from("contact_submissions")
+              .select("customer_profile_id")
+              .eq("id", em.matched_submission_id)
+              .maybeSingle();
+            if (!sub?.customer_profile_id) continue;
+            // Cheap skip: if we've already saved at least one file for this email, assume done.
+            const { data: anyExisting } = await admin
+              .from("customer_files")
+              .select("id")
+              .like("file_path", `${sub.customer_profile_id}/email_${em.gmail_message_id}_%`)
+              .limit(1)
+              .maybeSingle();
+            if (anyExisting) continue;
+            const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${em.gmail_message_id}?format=full`, {
+              headers: gmailHeaders(lovableKey, gmailKey),
+            });
+            if (!r.ok) {
+              if (r.status === 404) {
+                // message gone from Gmail; mark as done by inserting a sentinel? simply skip.
+              } else {
+                console.warn(`backfill fetch failed ${r.status}`);
+              }
+              continue;
+            }
+            const msg = (await r.json()) as GmailMessage;
+            attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, sub.customer_profile_id);
+          } catch (e) {
+            console.warn("backfill item error", e);
+          }
+        }
+      } catch (e) {
+        console.warn("backfill error", e);
       }
     }
 
