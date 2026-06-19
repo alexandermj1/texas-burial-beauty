@@ -17,6 +17,30 @@ const BodySchema = z.object({
 });
 
 interface GmailHeader { name: string; value: string }
+interface GmailPart { partId?: string; mimeType: string; filename?: string; body: { data?: string; size?: number; attachmentId?: string }; parts?: GmailPart[] }
+
+interface AttachmentRef { partId: string; filename: string; mimeType: string; attachmentId: string; size: number }
+
+function collectAttachments(payload?: { parts?: GmailPart[]; filename?: string; body?: { attachmentId?: string }; mimeType?: string; partId?: string }): AttachmentRef[] {
+  const out: AttachmentRef[] = [];
+  const walk = (part?: any, path = "0") => {
+    if (!part) return;
+    const id = part.partId ?? path;
+    if (part.filename && part.body?.attachmentId) {
+      out.push({
+        partId: id,
+        filename: String(part.filename),
+        mimeType: String(part.mimeType || "application/octet-stream"),
+        attachmentId: String(part.body.attachmentId),
+        size: Number(part.body.size || 0),
+      });
+    }
+    if (part.parts) part.parts.forEach((p: any, i: number) => walk(p, `${id}.${i}`));
+  };
+  walk(payload);
+  return out;
+}
+
 interface GmailPart { mimeType: string; body: { data?: string; size?: number }; parts?: GmailPart[] }
 interface GmailMessage {
   id: string;
