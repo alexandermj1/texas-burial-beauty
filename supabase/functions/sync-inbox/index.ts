@@ -543,13 +543,9 @@ Deno.serve(async (req) => {
           if (isInternalSender(em.from_email)) continue;
           const msg = msgById.get(em.gmail_message_id);
           if (!msg) continue;
-          const { data: sub } = await admin
-            .from("contact_submissions")
-            .select("id, customer_profile_id")
-            .eq("id", em.matched_submission_id)
-            .maybeSingle();
-          if (!sub?.customer_profile_id) continue;
-          attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, sub.customer_profile_id);
+          const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
+          if (!customerProfileId) continue;
+          attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
         } catch (e) {
           console.warn("attachment loop error", e);
         }
@@ -567,17 +563,13 @@ Deno.serve(async (req) => {
         for (const em of (backfillCandidates ?? []) as any[]) {
           try {
             if (isInternalSender(em.from_email)) continue;
-            const { data: sub } = await admin
-              .from("contact_submissions")
-              .select("customer_profile_id")
-              .eq("id", em.matched_submission_id)
-              .maybeSingle();
-            if (!sub?.customer_profile_id) continue;
+            const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
+            if (!customerProfileId) continue;
             // Cheap skip: if we've already saved at least one file for this email, assume done.
             const { data: anyExisting } = await admin
               .from("customer_files")
               .select("id")
-              .like("file_path", `${sub.customer_profile_id}/email_${em.gmail_message_id}_%`)
+              .like("file_path", `${customerProfileId}/email_${em.gmail_message_id}_%`)
               .limit(1)
               .maybeSingle();
             if (anyExisting) continue;
@@ -593,7 +585,7 @@ Deno.serve(async (req) => {
               continue;
             }
             const msg = (await r.json()) as GmailMessage;
-            attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, sub.customer_profile_id);
+            attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
           } catch (e) {
             console.warn("backfill item error", e);
           }
