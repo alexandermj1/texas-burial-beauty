@@ -429,7 +429,7 @@ Deno.serve(async (req) => {
           console.warn("attachment loop error", e);
         }
       }
-
+    }
 
     return json({
       success: true,
