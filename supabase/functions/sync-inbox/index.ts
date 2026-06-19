@@ -370,9 +370,12 @@ Deno.serve(async (req) => {
           console.error("Bayer parse error", err);
         }
       }
+    }
 
-      // Save attachments from matched incoming emails onto the customer's profile.
-      // Skip emails sent FROM our own staff addresses so we only capture what customers send IN.
+    // ===== Attachment processing (runs every sync, even when no new emails arrived) =====
+    // Save attachments from matched incoming emails onto the customer's profile.
+    // Skip emails sent FROM our own staff addresses so we only capture what customers send IN.
+    {
       const INTERNAL_DOMAINS = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
       const isInternalSender = (e: string) =>
         INTERNAL_DOMAINS.some((d) => (e || "").toLowerCase().endsWith("@" + d));
