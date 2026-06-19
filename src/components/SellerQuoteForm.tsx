@@ -26,6 +26,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     spaces: "",
     section: "",
     details: "",
+    deedOwnerNames: "",
+    deedOwnersStatus: "",
+    relationshipToOwner: "",
+    purchaseInfo: "",
+    prepaidEndowmentInfo: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
