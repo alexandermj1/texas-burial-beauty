@@ -1,7 +1,8 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Sequence } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
 import { SceneChrome } from "../components/SceneChrome";
+import { EditorialList } from "../components/EditorialList";
 
 const SYMBOL_SIZE = 240;
 
@@ -50,7 +51,7 @@ export const Scene2Evaluation: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ flex: 0, position: "relative" }}>
+        <div style={{ flex: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 36 }}>
           {/* Main symbol */}
           <div style={{
             width: SYMBOL_SIZE, height: SYMBOL_SIZE, borderRadius: 48,
@@ -67,40 +68,17 @@ export const Scene2Evaluation: React.FC = () => {
             </svg>
           </div>
 
-          {/* Tags stacked to the right, evenly spaced */}
-          <Sequence from={52}>
-            <EvalTag text="Comparables" icon="📊" top={-10} />
-          </Sequence>
-          <Sequence from={74}>
-            <EvalTag text="Records" icon="📁" top={80} />
-          </Sequence>
-          <Sequence from={96}>
-            <EvalTag text="Quote Ready" icon="✅" top={170} />
-          </Sequence>
+          <EditorialList
+            width={SYMBOL_SIZE + 120}
+            items={[
+              { label: "Comparables", from: 52 },
+              { label: "Records", from: 74 },
+              { label: "Quote Ready", from: 96 },
+            ]}
+          />
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-const EvalTag: React.FC<{ text: string; icon: string; top: number }> = ({ text, icon, top }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 16, stiffness: 200 } });
-  const opacity = interpolate(s, [0, 1], [0, 1]);
-  const x = interpolate(s, [0, 1], [26, 0]);
-
-  return (
-    <div style={{
-      position: "absolute", top, left: 260,
-      display: "flex", alignItems: "center", gap: 12,
-      background: colors.white, padding: "12px 20px", borderRadius: 999,
-      boxShadow: `0 16px 36px -16px ${colors.foreground}24`,
-      opacity, transform: `translateX(${x}px)`,
-      width: 220,
-    }}>
-      <span style={{ fontSize: 24 }}>{icon}</span>
-      <span style={{ fontFamily: fonts.body, fontSize: 22, color: colors.foreground, fontWeight: 500 }}>{text}</span>
-    </div>
-  );
-};

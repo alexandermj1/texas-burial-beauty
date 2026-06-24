@@ -1,7 +1,8 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Sequence } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
 import { SceneChrome } from "../components/SceneChrome";
+import { EditorialList } from "../components/EditorialList";
 
 const SYMBOL_SIZE = 240;
 
@@ -57,7 +58,7 @@ export const Scene5ActiveSales: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ flex: 0, position: "relative" }}>
+        <div style={{ flex: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 36 }}>
           {/* Main symbol — search */}
           <div style={{
             width: SYMBOL_SIZE, height: SYMBOL_SIZE, borderRadius: "50%",
@@ -72,40 +73,17 @@ export const Scene5ActiveSales: React.FC = () => {
             </svg>
           </div>
 
-          {/* Count bubbles to the right */}
-          <Sequence from={52}>
-            <CountBubble label="Inquiries" value={inquiries} top={-10} ticker />
-          </Sequence>
-          <Sequence from={68}>
-            <CountBubble label="Showings" value={showings} top={80} ticker />
-          </Sequence>
-          <Sequence from={84}>
-            <CountBubble label="Qualified" value={qualified} top={170} ticker />
-          </Sequence>
+          <EditorialList
+            width={SYMBOL_SIZE + 140}
+            items={[
+              { label: "Inquiries", value: inquiries, from: 52 },
+              { label: "Showings", value: showings, from: 68 },
+              { label: "Qualified", value: qualified, from: 84 },
+            ]}
+          />
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-const CountBubble: React.FC<{ label: string; value: number; top: number; ticker?: boolean }> = ({ label, value, top, ticker = false }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 18, stiffness: 180 } });
-  const tickerSpring = spring({ frame, fps, config: { damping: 32, stiffness: 70 } });
-  const opacity = interpolate(s, [0, 1], [0, 1]);
-  const x = interpolate(s, [0, 1], [24, 0]);
-  const displayValue = ticker ? Math.round(interpolate(tickerSpring, [0, 1], [0, value])) : value;
-
-  return (
-    <div style={{
-      position: "absolute", top, left: 260,
-      background: colors.white, borderRadius: 999, width: 200, padding: "10px 20px",
-      boxShadow: `0 16px 34px -14px ${colors.foreground}24`,
-      opacity, transform: `translateX(${x}px)`,
-    }}>
-      <div style={{ fontFamily: fonts.display, fontSize: 34, color: colors.primary, lineHeight: 1 }}>{displayValue}</div>
-      <div style={{ fontFamily: fonts.body, fontSize: 18, color: colors.muted }}>{label}</div>
-    </div>
-  );
-};
