@@ -73,6 +73,20 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
   const [refreshingInbox, setRefreshingInbox] = useState(false);
+  const [deletedSubmissions, setDeletedSubmissions] = useState<any[]>([]);
+
+  // Fetch soft-deleted submissions so they can be restored from the Trash dialog.
+  const refreshDeletedSubmissions = async () => {
+    const { data } = await supabase
+      .from("contact_submissions" as any)
+      .select("*")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
+      .limit(200);
+    setDeletedSubmissions((data as any) || []);
+  };
+  useEffect(() => { if (user && isAdmin) refreshDeletedSubmissions(); }, [user, isAdmin]);
+
 
   const handleInboxRefresh = async () => {
     if (refreshingInbox) return;
@@ -80,8 +94,9 @@ const Admin = () => {
     try {
       const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 100 } });
       if (error) { toast({ title: "Sync failed", description: error.message, variant: "destructive" }); }
-      const res = await supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false });
+      const res = await supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false });
       if (res.data) setSubmissions(res.data as any);
+
       const newCount = (data as any)?.bayer_imported ?? 0;
       toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
     } finally {
@@ -140,9 +155,11 @@ const Admin = () => {
       const { data } = await supabase
         .from("contact_submissions" as any)
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (!cancelled && data) setSubmissions(data as any);
     };
+
     const interval = setInterval(refreshSubmissions, 15000);
     const channel = supabase
       .channel("admin-submissions-live")
@@ -182,7 +199,7 @@ const Admin = () => {
       supabase.rpc("get_listings_with_internal" as any),
       supabase.from("plot_reservations" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("sales" as any).select("*").order("created_at", { ascending: false }),
-      supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false }),
     ]);
     if (listingsRes.data) setListings(listingsRes.data as any);
     if (salesRes.data) setSales(salesRes.data as any);
@@ -725,14 +742,40 @@ const Admin = () => {
                 }
               }}
               onDelete={async (id) => {
-                if (!confirm("Delete this submission?")) return;
-                const { error } = await supabase.from("contact_submissions" as any).delete().eq("id", id);
-                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                // Soft-delete: stamp deleted_at/deleted_by so the submission can be restored later.
+                const deletedBy =
+                  cleanDisplayName((user?.user_metadata as any)?.full_name) ||
+                  user?.email ||
+                  "admin";
+                const { error } = await supabase
+                  .from("contact_submissions" as any)
+                  .update({ deleted_at: new Date().toISOString(), deleted_by: deletedBy })
+                  .eq("id", id);
+                if (error) { toast({ title: "Couldn't delete", description: error.message, variant: "destructive" }); return; }
                 setSubmissions(prev => prev.filter(s => s.id !== id));
-                toast({ title: "Deleted" });
+                refreshDeletedSubmissions();
+                toast({ title: "Moved to trash", description: "Open \"Recently deleted\" to restore." });
+              }}
+              deletedSubmissions={deletedSubmissions}
+              onRestore={async (id) => {
+                const { error } = await supabase
+                  .from("contact_submissions" as any)
+                  .update({ deleted_at: null, deleted_by: null })
+                  .eq("id", id);
+                if (error) { toast({ title: "Restore failed", description: error.message, variant: "destructive" }); return; }
+                toast({ title: "Submission restored" });
+                refreshDeletedSubmissions();
+                // The realtime listener will repopulate the active list, but trigger immediately.
+                const { data } = await supabase
+                  .from("contact_submissions" as any)
+                  .select("*")
+                  .is("deleted_at", null)
+                  .order("created_at", { ascending: false });
+                if (data) setSubmissions(data as any);
               }}
             />
           )}
+
 
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "customers" && <CustomersPanel />}
