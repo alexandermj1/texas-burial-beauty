@@ -146,12 +146,12 @@ const SellProperty = () => {
             <div className="col-span-12 grid grid-cols-12 gap-x-6 gap-y-8 mt-6">
               {/* Section opener label — left margin */}
               <div className="col-span-12 lg:col-span-3 lg:pt-2">
-                <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-3">The Valuation</p>
+                <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-3">Start here →</p>
                 <h3 className="font-display text-2xl md:text-3xl text-foreground leading-tight tracking-tight">
-                  A few quiet <span className="italic text-primary">questions.</span>
+                  Get your free valuation <span className="italic text-primary">in 2 minutes.</span>
                 </h3>
-                <p className="text-sm text-foreground/65 mt-3 leading-relaxed max-w-[26ch]">
-                  Takes about two minutes. One question at a time — no overwhelming form. We reply within 24 hours.
+                <p className="text-sm text-foreground/70 mt-3 leading-relaxed max-w-[28ch]">
+                  Answer a few quick questions in the form <span className="lg:hidden">below</span><span className="hidden lg:inline">on the right</span> — one at a time, no overwhelming form. We'll email your no-obligation valuation within 24 hours.
                 </p>
                 <p className="hidden lg:block text-xs text-foreground/55 mt-6">
                   Prefer to talk?{" "}
