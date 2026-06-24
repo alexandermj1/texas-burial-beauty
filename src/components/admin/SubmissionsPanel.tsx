@@ -103,6 +103,8 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "awaiting_reply";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
+type DocsFilter = "all" | "with" | "without";
+
 
 // Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
 // A submission is Bayer iff its visible badge is Bayer (inquiry_channel === "bayer_sell_a_plot").
@@ -146,6 +148,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [cemeteryLabel, setCemeteryLabel] = useState<string | null>(null);
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
+  const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
+
 
 
   const myId = user?.id ?? "";
@@ -381,6 +385,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (regionFilter === "texas" && cemeteryCanon && _canon(s.cemetery || "") !== cemeteryCanon) return false;
+      if (regionFilter === "texas" && docsFilter !== "all") {
+        const has = hasDocs(s);
+        if (docsFilter === "with" && !has) return false;
+        if (docsFilter === "without" && has) return false;
+      }
+
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
@@ -398,7 +408,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     );
     const otherRows = matches.filter(s => !awaitingMap[s.id]);
     return [...awaitingRows, ...otherRows];
-  }, [submissions, regionFilter, cemeteryCanon, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+  }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
@@ -483,7 +493,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           return (
             <button
               key={r}
-              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); setCemeteryCanon(null); setCemeteryLabel(null); }}
+              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); setCemeteryCanon(null); setCemeteryLabel(null); setDocsFilter("all"); }}
               className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
                 active
                   ? r === "texas"
@@ -627,6 +637,37 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       <div data-tour="submissions-list" className={`lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
+        {regionFilter === "texas" && (
+          <div className="flex items-center gap-1.5 flex-wrap px-3 py-2 border-b border-border/50 bg-muted/30">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mr-1">Attachments:</span>
+            {(["all", "with", "without"] as const).map(f => {
+              const labels = { all: "All", with: "With attachments", without: "Without attachments" } as const;
+              const counts = {
+                all: regionFilter === "texas" ? submissions.filter(s => subRegion(s) === "texas").length : 0,
+                with: submissions.filter(s => subRegion(s) === "texas" && hasDocs(s)).length,
+                without: submissions.filter(s => subRegion(s) === "texas" && !hasDocs(s)).length,
+              };
+              const isActive = docsFilter === f;
+              return (
+                <button
+                  key={f}
+                  onClick={() => setDocsFilter(f)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? f === "with"
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : f === "without"
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-foreground text-background border-foreground"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {labels[f]} ({counts[f]})
+                </button>
+              );
+            })}
+          </div>
+        )}
         {regionFilter === "texas" && cemeteryLabel && (
           <div className="flex items-center justify-between gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-500/30 text-xs">
             <span className="text-amber-900 dark:text-amber-100">
@@ -640,6 +681,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
           </div>
         )}
+
         {(() => {
           const renderRow = (s: Submission, i: number) => {
             const isActive = selected?.id === s.id;
@@ -765,39 +807,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             );
           }
 
-          // Texas tab: group by whether attachments have been received.
-          if (regionFilter === "texas") {
-            const withDocs = filtered.filter(hasDocs);
-            const withoutDocs = filtered.filter(s => !hasDocs(s));
-            const Header = ({ label, count, tone }: { label: string; count: number; tone: "good" | "warn" }) => (
-              <div className={`sticky top-0 z-10 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide border-b ${
-                tone === "good"
-                  ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-emerald-500/30"
-                  : "bg-amber-500/10 text-amber-800 dark:text-amber-200 border-amber-500/30"
-              }`}>
-                {label} <span className="opacity-70 font-medium">({count})</span>
-              </div>
-            );
-            let idx = 0;
-            return (
-              <>
-                {withoutDocs.length > 0 && (
-                  <>
-                    <Header label="Awaiting documents" count={withoutDocs.length} tone="warn" />
-                    {withoutDocs.map(s => renderRow(s, idx++))}
-                  </>
-                )}
-                {withDocs.length > 0 && (
-                  <>
-                    <Header label="Documents received" count={withDocs.length} tone="good" />
-                    {withDocs.map(s => renderRow(s, idx++))}
-                  </>
-                )}
-              </>
-            );
-          }
-
           return <>{filtered.map((s, i) => renderRow(s, i))}</>;
+
         })()}
       </div>
 
