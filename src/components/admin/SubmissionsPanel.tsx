@@ -279,6 +279,59 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
   }, [submissions]);
 
+  // Texas-only: build a set of customer emails that have uploaded files (customer_files
+  // joined through customer_profiles by primary/alt email). Used to group the list by
+  // "documents received" vs "awaiting documents".
+  useEffect(() => {
+    const texasEmails = submissions
+      .filter(s => subRegion(s) === "texas")
+      .map(s => (s.email || "").trim().toLowerCase())
+      .filter(Boolean);
+    if (texasEmails.length === 0) { setDocsEmails(new Set()); return; }
+    let cancelled = false;
+    const load = async () => {
+      // Get customer profiles whose primary_email matches any texas submission email.
+      const { data: profiles } = await supabase
+        .from("customer_profiles" as any)
+        .select("id, primary_email, alt_emails");
+      if (cancelled || !profiles) return;
+      const profileIds: string[] = [];
+      const idToEmails = new Map<string, string[]>();
+      for (const p of profiles as any[]) {
+        const emails: string[] = [];
+        if (p.primary_email) emails.push(String(p.primary_email).toLowerCase());
+        if (Array.isArray(p.alt_emails)) emails.push(...p.alt_emails.map((e: string) => String(e).toLowerCase()));
+        if (emails.some(e => texasEmails.includes(e))) {
+          profileIds.push(p.id);
+          idToEmails.set(p.id, emails);
+        }
+      }
+      if (profileIds.length === 0) { setDocsEmails(new Set()); return; }
+      const { data: files } = await supabase
+        .from("customer_files" as any)
+        .select("customer_profile_id")
+        .in("customer_profile_id", profileIds);
+      if (cancelled || !files) return;
+      const withFiles = new Set<string>();
+      for (const f of files as any[]) {
+        const ems = idToEmails.get(f.customer_profile_id) || [];
+        ems.forEach(e => withFiles.add(e));
+      }
+      setDocsEmails(withFiles);
+    };
+    load();
+    const ch = supabase.channel("customer_files_for_texas")
+      .on("postgres_changes", { event: "*", schema: "public", table: "customer_files" }, () => { load(); })
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, [submissions]);
+
+  const hasDocs = (s: Submission) => {
+    const e = (s.email || "").trim().toLowerCase();
+    return !!e && docsEmails.has(e);
+  };
+
+
 
 
   const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
