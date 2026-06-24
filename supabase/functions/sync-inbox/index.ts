@@ -298,6 +298,16 @@ Deno.serve(async (req) => {
       .limit(1000);
     const subs: SubmissionLite[] = (submissions ?? []) as SubmissionLite[];
 
+    // Aggregate counters across mailboxes.
+    let totalPageSize = 0;
+    let totalAlreadyCached = 0;
+    let totalNewlySynced = 0;
+    let totalRematched = 0;
+    let totalBayerCreated = 0;
+    let lastNextPageToken: string | null = null;
+    let aggregateResultSize = 0;
+
+    for (const gmailKey of gmailKeys) {
     const params = new URLSearchParams({ maxResults: String(body.maxResults), q: body.query });
     if (body.pageToken) params.set("pageToken", body.pageToken);
 
