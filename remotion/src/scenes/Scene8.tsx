@@ -55,7 +55,7 @@ export const Scene8Closing: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ flex: 0, position: "relative" }}>
+        <div style={{ flex: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 36 }}>
           {/* Big checkmark — same SYMBOL_SIZE as all others */}
           <div style={{
             width: SYMBOL_SIZE, height: SYMBOL_SIZE, borderRadius: "50%",
@@ -69,42 +69,17 @@ export const Scene8Closing: React.FC = () => {
             </svg>
           </div>
 
-          {/* Closing points as white pill boxes, perfectly aligned with symbol */}
-          <Sequence from={55}>
-            <ClosingChip text="Financing arranged" top={chipTop1} />
-          </Sequence>
-          <Sequence from={70}>
-            <ClosingChip text="Ownership transferred" top={chipTop2} />
-          </Sequence>
-          <Sequence from={85}>
-            <ClosingChip text="Full payment — no fees" top={chipTop3} />
-          </Sequence>
+          <EditorialList
+            width={SYMBOL_SIZE + 160}
+            items={[
+              { label: "Financing arranged", from: 55 },
+              { label: "Ownership transferred", from: 70 },
+              { label: "Payment in full — no fees", from: 85 },
+            ]}
+          />
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-const ClosingChip: React.FC<{ text: string; top: number }> = ({ text, top }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 20, stiffness: 200 } });
-  const opacity = interpolate(s, [0, 1], [0, 1]);
-  const x = interpolate(s, [0, 1], [20, 0]);
-  return (
-    <div style={{
-      position: "absolute", top, left: 260,
-      display: "flex", alignItems: "center", gap: 14,
-      background: colors.white, borderRadius: 999, padding: "12px 20px", width: 280,
-      boxShadow: `0 16px 34px -14px ${colors.foreground}24`,
-      opacity, transform: `translateX(${x}px)`,
-    }}>
-      <div style={{ width: 28, height: 28, borderRadius: "50%", background: colors.primaryLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </div>
-      <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.foreground, fontWeight: 500 }}>{text}</span>
-    </div>
-  );
-};
