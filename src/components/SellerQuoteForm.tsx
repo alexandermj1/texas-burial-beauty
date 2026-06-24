@@ -9,6 +9,10 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import singlePlotImg from "@/assets/property-types/single-plot.png";
+import nicheImg from "@/assets/property-types/cremation-niche.png";
+import cryptImg from "@/assets/property-types/mausoleum.png";
+import familyEstateImg from "@/assets/property-types/family-estate.png";
 
 
 interface UploadedFile {
@@ -21,7 +25,13 @@ interface UploadedFile {
 const MAX_FILE_MB = 20;
 const ALLOWED = /\.(pdf|png|jpe?g|webp|heic|tiff?|gif|docx?|txt)$/i;
 
-const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Family Estate", "Other"];
+const propertyTypeOptions = [
+  { value: "Burial Plot(s)", label: "Burial Plot", desc: "Traditional in-ground burial", image: singlePlotImg },
+  { value: "Niche(s)", label: "Niche", desc: "Cremated remains in a columbarium", image: nicheImg },
+  { value: "Crypt / Mausoleum", label: "Crypt / Mausoleum", desc: "Above-ground entombment", image: cryptImg },
+  { value: "Family Estate", label: "Family Estate", desc: "Larger multi-space property", image: familyEstateImg },
+  { value: "Other", label: "Other", desc: "Tell us what you have", image: null as string | null },
+];
 
 const guarantees = [
   "100% free, no obligation",
@@ -52,6 +62,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     phone: "",
     cemetery: defaultCemetery,
     propertyType: "",
+    propertyTypeOther: "",
     spaces: "",
     section: "",
     details: "",
@@ -128,7 +139,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       email: form.email.trim(),
       phone: form.phone.trim() || null,
       cemetery: form.cemetery.trim(),
-      property_type: form.propertyType,
+      property_type: form.propertyType === "Other" && form.propertyTypeOther.trim() ? form.propertyTypeOther.trim() : form.propertyType,
       spaces: form.spaces || null,
       section: form.section.trim() || null,
       details: form.details.trim() || null,
@@ -147,7 +158,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     }
     const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: intakeId } });
     if (emailError) console.warn("inquiry email failed", emailError);
-    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
+    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", propertyTypeOther: "", spaces: "", section: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
     setFiles([]);
     setLoading(false);
     navigate("/thank-you");
@@ -233,24 +244,46 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
         chapter: "The property",
         title: <>And what <span className="italic font-medium text-primary">kind</span> of property?</>,
         helper: "Pick a type, tell us how many spaces, and the section if you know it.",
-        validate: () => (!form.propertyType ? "Please choose a property type." : null),
+        validate: () => {
+          if (!form.propertyType) return "Please choose a property type.";
+          if (form.propertyType === "Other" && !form.propertyTypeOther.trim()) return "Please tell us what kind of property.";
+          return null;
+        },
         body: (
           <div className="space-y-7">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-              {propertyTypes.map((t) => {
-                const active = form.propertyType === t;
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {propertyTypeOptions.map((t) => {
+                const active = form.propertyType === t.value;
                 return (
-                  <button type="button" key={t} onClick={() => setForm({ ...form, propertyType: t })}
-                    className={`text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all ${
+                  <button type="button" key={t.value} onClick={() => setForm({ ...form, propertyType: t.value })}
+                    className={`group relative text-left rounded-2xl border overflow-hidden transition-all ${
                       active
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                        : "bg-background border-border/60 text-foreground hover:border-primary/50 hover:bg-primary/5"
+                        ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/30"
+                        : "border-border/60 bg-background hover:border-primary/50 hover:bg-primary/[0.03]"
                     }`}>
-                    {t}
+                    <div className="aspect-[4/3] w-full flex items-center justify-center bg-[hsl(var(--sand-light))]/60 overflow-hidden">
+                      {t.image ? (
+                        <img src={t.image} alt="" className="w-full h-full object-contain p-3 mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+                      ) : (
+                        <span className="font-display italic text-4xl text-foreground/40">?</span>
+                      )}
+                    </div>
+                    <div className="px-3 py-2.5 border-t border-border/40">
+                      <div className={`text-sm font-medium leading-tight ${active ? "text-primary" : "text-foreground"}`}>{t.label}</div>
+                      <div className="text-[11px] text-foreground/55 leading-snug mt-0.5">{t.desc}</div>
+                    </div>
                   </button>
                 );
               })}
             </div>
+            {form.propertyType === "Other" && (
+              <div>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Tell us what you have</label>
+                <input autoFocus value={form.propertyTypeOther} onChange={(e) => setForm({ ...form, propertyTypeOther: e.target.value })}
+                  placeholder="e.g. Lawn crypt, veterans niche, scattering garden…" maxLength={150}
+                  className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+              </div>
+            )}
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3"># of spaces</label>
@@ -326,12 +359,19 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                 placeholder="Reason for selling, preferred timeline, questions…" rows={3} maxLength={1000}
                 className="w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2" />
             </div>
-            <div>
+            <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Lock className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-[11px] tracking-[0.25em] uppercase font-bold text-primary">Secure broker portal</span>
+              </div>
+              <p className="text-[13px] text-foreground/70 leading-relaxed mb-4">
+                Any document you attach is uploaded directly to our private, encrypted broker portal — visible only to our licensed Texas team. Never shared, never indexed, never sold.
+              </p>
               <label htmlFor="seller-attachments-ed"
-                className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-foreground/25 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
+                className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-primary/40 bg-background hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
                 <Upload className="w-4 h-4 text-primary" />
                 <span className="text-sm text-foreground">
-                  {uploading ? "Uploading…" : "Attach a deed, receipt or photo "}
+                  {uploading ? "Uploading securely…" : "Attach a deed, receipt or photo "}
                   <span className="italic text-foreground/55">— optional</span>
                 </span>
                 <input ref={fileInputRef} id="seller-attachments-ed" type="file" multiple
@@ -344,6 +384,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                     <li key={f.path} className="flex items-center gap-2 text-xs text-foreground/70">
                       <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="truncate flex-1">{f.name}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-primary/70 font-bold">Encrypted</span>
                       <button type="button" onClick={() => removeFile(f.path)} className="hover:text-destructive" aria-label={`Remove ${f.name}`}>
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -351,10 +392,6 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                   ))}
                 </ul>
               )}
-            </div>
-            <div className="flex items-start gap-2 text-[11px] text-foreground/55 leading-relaxed pt-1">
-              <Lock className="w-3 h-3 mt-0.5 text-primary shrink-0" />
-              <span>Confidential — files upload to our private broker portal. Never shared or indexed.</span>
             </div>
           </div>
         ),
@@ -374,12 +411,12 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
 
     const onKeyDown: React.KeyboardEventHandler = (e) => {
       if (e.key === "Enter" && !e.shiftKey && !(e.target instanceof HTMLTextAreaElement)) {
-        e.preventDefault();
-        if (isLastEd) {
-          // submit
-          (e.currentTarget.closest("form") as HTMLFormElement | null)?.requestSubmit();
-        } else {
+        // Never auto-submit on Enter — require an explicit click on the Send button.
+        if (!isLastEd) {
+          e.preventDefault();
           goNext();
+        } else {
+          e.preventDefault();
         }
       }
     };
@@ -428,9 +465,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
               OK <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
           )}
-          <span className="text-xs text-foreground/55">
-            press <kbd className="font-mono font-bold text-foreground/80">Enter</kbd> ↵
-          </span>
+          {!isLastEd && (
+            <span className="text-xs text-foreground/55">
+              press <kbd className="font-mono font-bold text-foreground/80">Enter</kbd> ↵
+            </span>
+          )}
           {step > 0 && (
             <button type="button" onClick={goBack}
               className="ml-auto text-xs text-foreground/55 hover:text-foreground transition-colors inline-flex items-center gap-1">
@@ -680,7 +719,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                           <label className={labelCls}>Property type</label>
                           <select value={form.propertyType} onChange={(e) => setForm({ ...form, propertyType: e.target.value })} className={inputCls + " cursor-pointer"}>
                             <option value="">Select...</option>
-                            {propertyTypes.map((t) => (<option key={t} value={t}>{t}</option>))}
+                            {propertyTypeOptions.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
                           </select>
                         </div>
                         <div>
