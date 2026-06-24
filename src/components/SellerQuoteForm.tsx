@@ -410,19 +410,27 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
     const onKeyDown: React.KeyboardEventHandler = (e) => {
+      // Never auto-submit on Enter anywhere in the form.
       if (e.key === "Enter" && !e.shiftKey && !(e.target instanceof HTMLTextAreaElement)) {
-        // Never auto-submit on Enter — require an explicit click on the Send button.
-        if (!isLastEd) {
-          e.preventDefault();
-          goNext();
-        } else {
-          e.preventDefault();
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isLastEd) goNext();
+        // On the last step, do nothing — user must explicitly click Send.
       }
     };
 
+    const triggerSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+      // Explicit click only — bypass any form-level submit pathway.
+      handleSubmit(e as unknown as React.FormEvent);
+    };
+
     return (
-      <form id="quote-form" onSubmit={handleSubmit} onKeyDown={onKeyDown} className="relative">
+      <form
+        id="quote-form"
+        onSubmit={(e) => e.preventDefault()}
+        onKeyDown={onKeyDown}
+        className="relative"
+      >
         {/* Chapter tag */}
         <div className="flex items-center gap-3 mb-7">
           <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground font-display italic text-base flex items-center justify-center shadow-sm">
@@ -454,7 +462,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
         {/* Footer: OK button + thin progress */}
         <div className="flex items-center gap-5 flex-wrap">
           {isLastEd ? (
-            <button type="submit" disabled={loading}
+            <button type="button" onClick={triggerSubmit} disabled={loading}
               className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-md shadow-primary/30">
               {loading ? "Submitting…" : "Send my valuation request"}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
