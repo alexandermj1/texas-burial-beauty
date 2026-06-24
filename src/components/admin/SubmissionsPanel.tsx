@@ -949,10 +949,32 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
             {selected.cemetery && (((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (
               <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery (as written by customer)</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
                 <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
+                {(selected as any).cemetery_original && (selected as any).cemetery_original !== selected.cemetery && (
+                  <div className="mt-2 pt-2 border-t border-border/40">
+                    <p className="text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-1">
+                      Originally written by customer
+                    </p>
+                    <p className="text-xs text-foreground break-words italic">"{(selected as any).cemetery_original}"</p>
+                    {Array.isArray((selected as any).cemetery_merge_history) && (selected as any).cemetery_merge_history.length > 0 && (
+                      <details className="mt-1.5">
+                        <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">
+                          Merge history ({(selected as any).cemetery_merge_history.length})
+                        </summary>
+                        <ul className="mt-1 space-y-0.5 text-[10px] text-muted-foreground pl-2">
+                          {(selected as any).cemetery_merge_history.map((h: any, i: number) => (
+                            <li key={i}>
+                              {new Date(h.at).toLocaleDateString()}: "{h.from}" → "{h.to}"
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
+                )}
                 {selected.region && (
-                  <p className="text-[11px] text-muted-foreground mt-1">Region: {selected.region}</p>
+                  <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
                 )}
               </div>
             )}
