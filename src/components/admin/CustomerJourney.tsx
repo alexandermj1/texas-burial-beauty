@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
+import { isOutgoing } from "@/lib/emailReply";
 
 interface SubmissionDoc {
   id: string;
@@ -38,9 +39,14 @@ interface LinkedEmail {
   id: string;
   subject: string | null;
   from_email: string;
+  from_name: string | null;
+  to_email: string | null;
   received_at: string;
   ai_summary: string | null;
   ai_intent: string | null;
+  snippet: string | null;
+  body_text: string | null;
+  body_html: string | null;
 }
 
 export interface JourneySubmission {
@@ -111,8 +117,8 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
         .eq("submission_id", submission.id).order("created_at", { ascending: true }),
       supabase.from("reminder_log" as any).select("*")
         .eq("submission_id", submission.id).order("sent_at", { ascending: false }),
-      supabase.from("email_messages" as any).select("id, subject, from_email, received_at, ai_summary, ai_intent")
-        .eq("matched_submission_id", submission.id).order("received_at", { ascending: false }),
+      supabase.from("email_messages" as any).select("id, subject, from_email, from_name, to_email, received_at, ai_summary, ai_intent, snippet, body_text, body_html")
+        .eq("matched_submission_id", submission.id).order("received_at", { ascending: true }),
     ]);
     if (d.data) setDocs(d.data as any);
     if (r.data) setReminders(r.data as any);
@@ -445,30 +451,74 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
           <h4 className="text-sm font-medium text-foreground">
             Email thread <span className="text-muted-foreground font-normal">({emails.length})</span>
           </h4>
+          {emails.length > 0 && (() => {
+            const last = emails[emails.length - 1];
+            const awaiting = last && !isOutgoing(last.from_email);
+            return awaiting ? (
+              <span className="ml-auto inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                Needs reply
+              </span>
+            ) : null;
+          })()}
         </div>
         {emails.length === 0 ? (
           <p className="text-xs text-muted-foreground">No matched emails yet. Run "Sync Inbox" on the Gmail tab.</p>
         ) : (
-          <ul className="space-y-1.5">
-            {emails.map((e) => (
-              <li key={e.id} className="bg-card rounded-lg border border-border/50 px-3 py-2 text-xs">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-foreground truncate flex-1">{e.subject || "(no subject)"}</p>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
-                  </span>
-                </div>
-                {e.ai_summary && (
-                  <p className="text-muted-foreground italic mt-1 flex items-start gap-1">
-                    <Sparkles className="w-2.5 h-2.5 text-primary shrink-0 mt-0.5" />
-                    {e.ai_summary}
-                  </p>
-                )}
-              </li>
-            ))}
+          <ul className="space-y-2">
+            {emails.map((e) => {
+              const outgoing = isOutgoing(e.from_email);
+              const sender = outgoing
+                ? "You"
+                : (e.from_name && e.from_name.trim()) || e.from_email;
+              const body = (e.body_text && e.body_text.trim()) || e.snippet || "";
+              return (
+                <li
+                  key={e.id}
+                  className={`rounded-lg border px-3 py-2 text-xs ${
+                    outgoing
+                      ? "bg-primary/5 border-primary/20"
+                      : "bg-card border-border/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={`text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full ${
+                        outgoing
+                          ? "bg-primary/15 text-primary"
+                          : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                      }`}>
+                        {outgoing ? "Sent" : "Received"}
+                      </span>
+                      <p className="font-medium text-foreground truncate">{sender}</p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                  <p className="font-medium text-foreground/90 truncate">{e.subject || "(no subject)"}</p>
+                  {body && (
+                    <details className="mt-1 group">
+                      <summary className="list-none cursor-pointer text-muted-foreground hover:text-foreground">
+                        <span className="line-clamp-2 group-open:hidden whitespace-pre-wrap">{body}</span>
+                        <span className="hidden group-open:inline text-[10px] uppercase tracking-wide text-primary">Hide message</span>
+                      </summary>
+                      <pre className="mt-1.5 whitespace-pre-wrap font-sans text-foreground/90 bg-background/60 rounded p-2 border border-border/40 max-h-80 overflow-y-auto">{body}</pre>
+                    </details>
+                  )}
+                  {e.ai_summary && (
+                    <p className="text-muted-foreground italic mt-1 flex items-start gap-1">
+                      <Sparkles className="w-2.5 h-2.5 text-primary shrink-0 mt-0.5" />
+                      {e.ai_summary}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
+
 
       {/* ================= Reminder history ================= */}
       {reminders.length > 0 && (

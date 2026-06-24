@@ -27,6 +27,7 @@ import { Megaphone, UserPlus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
+import { isOutgoing } from "@/lib/emailReply";
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
 const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
@@ -98,7 +99,7 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "new";
+type StatusFilter = "all" | "new" | "awaiting_reply";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
 
@@ -126,6 +127,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
+  // Map of submission_id -> latest incoming email received_at (ISO) when the latest
+  // message in the thread is from the customer (i.e. we haven't replied yet).
+  const [awaitingMap, setAwaitingMap] = useState<Record<string, string>>({});
   const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
   const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
@@ -200,6 +204,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { ch.unsubscribe(); supabase.removeChannel(ch); presenceChanRef.current = null; };
   }, [myId, myName]);
 
+  // Build the "awaiting reply" map: for every submission that has matched emails,
+  // find the latest message in its thread; if it's from the customer (not us), the
+  // submission is awaiting a reply. We refetch when the submission set changes and
+  // subscribe to email_messages changes so badges update live.
+  useEffect(() => {
+    const ids = submissions.map(s => s.id);
+    if (ids.length === 0) { setAwaitingMap({}); return; }
+    let cancelled = false;
+    const recompute = async () => {
+      const { data } = await supabase
+        .from("email_messages" as any)
+        .select("matched_submission_id, from_email, received_at")
+        .in("matched_submission_id", ids)
+        .order("received_at", { ascending: false });
+      if (cancelled || !data) return;
+      const seen = new Set<string>();
+      const next: Record<string, string> = {};
+      for (const row of data as any[]) {
+        const sid = row.matched_submission_id;
+        if (!sid || seen.has(sid)) continue;
+        seen.add(sid);
+        // Latest message per submission. If it's from the customer, flag it.
+        if (!isOutgoing(row.from_email)) next[sid] = row.received_at;
+      }
+      setAwaitingMap(next);
+    };
+    recompute();
+    const ch = supabase.channel("email_messages_awaiting")
+      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, () => { recompute(); })
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, [submissions]);
+
+
   const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
   const workersFor = (sid: string) => (activeWorkers[sid] || []).filter(w => w.user_id !== myId);
   const haveIViewed = (sid: string) => !!myId && views.some(v => v.submission_id === sid && v.user_id === myId);
@@ -244,9 +282,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eStage = isMobile ? "all" : stageFilter;
   const eSellerView = !isMobile && isSellerView;
   const filtered = useMemo(() => {
-    return submissions.filter(s => {
+    const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (eFilter === "new" && !isNew(s)) return false;
+      if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
@@ -255,7 +294,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, regionFilter, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday]);
+    // Pin awaiting-reply submissions to the top (most recent incoming first).
+    // Everything else keeps its incoming order (already sorted by created_at desc upstream).
+    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort((a, b) =>
+      (awaitingMap[b.id] || "").localeCompare(awaitingMap[a.id] || "")
+    );
+    const otherRows = matches.filter(s => !awaitingMap[s.id]);
+    return [...awaitingRows, ...otherRows];
+  }, [submissions, regionFilter, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
@@ -379,17 +425,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Status pills (desktop only) */}
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["new", "all"] as const).map(f => {
+        {(["awaiting_reply", "new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
-            : submissions.filter(s => isNew(s)).length;
-          const labels = { new: "New today", all: "All" } as const;
+            : f === "new"
+              ? submissions.filter(s => isNew(s)).length
+              : submissions.filter(s => awaitingMap[s.id]).length;
+          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply" } as const;
+          const activeCls = f === "awaiting_reply"
+            ? "bg-rose-600 text-white border-rose-600"
+            : "bg-foreground text-background border-foreground";
           return (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                filter === f ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
+                filter === f ? activeCls : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
               {labels[f]} ({count})
@@ -528,6 +579,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <CustomerKindBadge kind={sKind} size="xs" />
                         <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                         <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
+                        {awaitingMap[s.id] && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-rose-600 text-white"
+                            title={`Customer replied ${new Date(awaitingMap[s.id]).toLocaleString()} — no response sent yet`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            Needs reply
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
