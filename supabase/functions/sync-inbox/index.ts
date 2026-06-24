@@ -576,7 +576,7 @@ Deno.serve(async (req) => {
       }
 
       // Backfill: process attachments for previously-synced matched emails that haven't been handled yet.
-      // We re-fetch the Gmail message to get attachment IDs (we don't store them).
+      // We re-fetch the Gmail message in parallel batches to stay within the function's 60s budget.
       try {
         const backfillLimit = body.attachmentBackfillLimit ?? 25;
         const { data: backfillCandidates } = backfillLimit > 0 ? await admin
@@ -585,35 +585,36 @@ Deno.serve(async (req) => {
           .not("matched_submission_id", "is", null)
           .order("received_at", { ascending: false })
           .limit(backfillLimit) : { data: [] };
-        for (const em of (backfillCandidates ?? []) as any[]) {
-          try {
-            if (isInternalSender(em.from_email)) continue;
-            const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
-            if (!customerProfileId) continue;
-            // Cheap skip: if we've already saved at least one file for this email, assume done.
-            const { data: anyExisting } = await admin
-              .from("customer_files")
-              .select("id")
-              .like("file_path", `${customerProfileId}/email_${em.gmail_message_id}_%`)
-              .limit(1)
-              .maybeSingle();
-            if (anyExisting) continue;
-            const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${em.gmail_message_id}?format=full`, {
-              headers: gmailHeaders(lovableKey, gmailKey),
-            });
-            if (!r.ok) {
-              if (r.status === 404) {
-                // message gone from Gmail; mark as done by inserting a sentinel? simply skip.
-              } else {
-                console.warn(`backfill fetch failed ${r.status}`);
+        const BACKFILL_CONCURRENCY = 8;
+        const candidates = (backfillCandidates ?? []) as any[];
+        for (let i = 0; i < candidates.length; i += BACKFILL_CONCURRENCY) {
+          const chunk = candidates.slice(i, i + BACKFILL_CONCURRENCY);
+          await Promise.all(chunk.map(async (em) => {
+            try {
+              if (isInternalSender(em.from_email)) return;
+              const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
+              if (!customerProfileId) return;
+              // Cheap skip: any file already saved for this gmail message means done.
+              const { data: anyExisting } = await admin
+                .from("customer_files")
+                .select("id")
+                .like("file_path", `${customerProfileId}/email_${em.gmail_message_id}_%`)
+                .limit(1)
+                .maybeSingle();
+              if (anyExisting) return;
+              const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${em.gmail_message_id}?format=full`, {
+                headers: gmailHeaders(lovableKey, gmailKey),
+              });
+              if (!r.ok) {
+                if (r.status !== 404) console.warn(`backfill fetch failed ${r.status}`);
+                return;
               }
-              continue;
+              const msg = (await r.json()) as GmailMessage;
+              attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
+            } catch (e) {
+              console.warn("backfill item error", e);
             }
-            const msg = (await r.json()) as GmailMessage;
-            attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
-          } catch (e) {
-            console.warn("backfill item error", e);
-          }
+          }));
         }
       } catch (e) {
         console.warn("backfill error", e);
