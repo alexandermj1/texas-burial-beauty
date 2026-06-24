@@ -27,6 +27,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Stable id so all uploads land under one submission folder even before save.
+  const [intakeId] = useState(() => crypto.randomUUID());
   const [form, setForm] = useState({
     name: "",
     email: "",
