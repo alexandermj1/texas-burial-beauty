@@ -74,34 +74,34 @@ const SellProperty = () => {
       <Navbar forceScrolled />
 
       {/* Hero + valuation form — one merged editorial spread */}
-      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 bg-[hsl(var(--warm-white))] overflow-hidden" id="quote-form">
-        {/* Layered backdrop: soft sage wash fading into warm white — no busy pattern over the text */}
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[55%] bg-gradient-to-b from-[hsl(var(--sage-light))]/40 to-transparent pointer-events-none" />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/15 to-transparent pointer-events-none" />
+      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 bg-background overflow-hidden" id="quote-form">
+        {/* Layered backdrop stays decorative, but now sits behind solid reading surfaces */}
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[48%] bg-gradient-to-b from-[hsl(var(--sage-light))]/30 to-transparent pointer-events-none" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/10 to-transparent pointer-events-none" />
 
         {/* Botanical illustrations */}
         <motion.img src={bananaLeaf.url} alt="" aria-hidden
-          initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.18, x: 0, rotate: -14 }}
+          initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.08, x: 0, rotate: -14 }}
           transition={{ duration: 1.4, ease: "easeOut" }}
           className="hidden md:block absolute -left-56 top-32 w-[28rem] pointer-events-none select-none"
         />
         <motion.img src={palmFan.url} alt="" aria-hidden
-          initial={{ opacity: 0, x: 40, rotate: 12 }} animate={{ opacity: 0.18, x: 0, rotate: 8 }}
+          initial={{ opacity: 0, x: 40, rotate: 12 }} animate={{ opacity: 0.08, x: 0, rotate: 8 }}
           transition={{ duration: 1.4, ease: "easeOut" }}
           className="hidden lg:block absolute -right-40 bottom-24 w-[24rem] pointer-events-none select-none"
         />
         <motion.img src={hibiscusCoral.url} alt="" aria-hidden
-          initial={{ opacity: 0, y: -20, rotate: 18 }} animate={{ opacity: 0.5, y: 0, rotate: 8 }}
+          initial={{ opacity: 0, y: -20, rotate: 18 }} animate={{ opacity: 0.22, y: 0, rotate: 8 }}
           transition={{ duration: 1.2, delay: 0.2 }}
-          className="hidden md:block absolute right-2 lg:right-8 top-10 w-32 lg:w-40 pointer-events-none select-none"
+          className="hidden md:block absolute -right-8 lg:right-4 top-10 w-32 lg:w-40 pointer-events-none select-none"
         />
         <motion.img src={pinkBranch.url} alt="" aria-hidden
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.35, y: 0 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.16, y: 0 }}
           transition={{ duration: 1.2, delay: 0.3 }}
-          className="hidden md:block absolute left-2 bottom-6 w-32 lg:w-40 pointer-events-none select-none -rotate-6"
+          className="hidden md:block absolute -left-10 bottom-6 w-32 lg:w-40 pointer-events-none select-none -rotate-6"
         />
         <motion.img src={plumeriaCluster.url} alt="" aria-hidden
-          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 0.4, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 0.18, scale: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
           className="md:hidden absolute -right-10 top-20 w-32 pointer-events-none select-none"
         />
@@ -113,14 +113,14 @@ const SellProperty = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="lg:col-span-5 lg:sticky lg:top-28"
+              className="relative z-10 lg:col-span-5 lg:sticky lg:top-28 rounded-[2rem] bg-background border border-border/70 shadow-soft p-6 sm:p-8 lg:p-9"
             >
               <div className="flex items-center gap-4 mb-6">
-                <span className="text-[10px] tracking-[0.3em] font-semibold text-primary uppercase">
+                <span className="text-[10px] tracking-[0.3em] font-bold text-primary uppercase">
                   The Seller&rsquo;s Edition
                 </span>
                 <div className="h-px w-12 bg-border" />
-                <span className="text-[10px] tracking-[0.3em] font-medium text-accent uppercase italic">
+                <span className="text-[10px] tracking-[0.3em] font-semibold text-accent uppercase italic">
                   Vol. 01
                 </span>
               </div>
@@ -130,7 +130,7 @@ const SellProperty = () => {
                 <span className="italic font-medium text-primary">the right way.</span>
               </h1>
 
-              <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8 font-light max-w-lg">
+              <p className="text-base md:text-lg text-foreground/80 leading-relaxed mb-8 max-w-lg">
                 Most owners try to sell on their own — and lose months chasing buyers, paperwork, and cemetery red tape. We take all of that off your plate, find a serious buyer, and close the deal for you.
               </p>
 
@@ -152,7 +152,7 @@ const SellProperty = () => {
                     <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" strokeWidth={2.2} />
                     <div>
                       <div className="font-display text-base text-foreground">{v.t}</div>
-                      <div className="text-sm text-muted-foreground leading-relaxed">{v.d}</div>
+                      <div className="text-sm text-foreground/75 leading-relaxed">{v.d}</div>
                     </div>
                   </motion.li>
                 ))}
@@ -162,23 +162,23 @@ const SellProperty = () => {
               <div className="grid grid-cols-3 gap-4 border-t border-border pt-6 max-w-lg">
                 <div>
                   <div className="font-display text-2xl md:text-3xl italic text-primary">$0</div>
-                  <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Upfront</div>
+                  <div className="text-[10px] tracking-widest uppercase text-foreground/65 font-bold mt-1">Upfront</div>
                 </div>
                 <div className="border-x border-border pl-4">
                   <div className="font-display text-2xl md:text-3xl italic text-accent">10k+</div>
-                  <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Families</div>
+                  <div className="text-[10px] tracking-widest uppercase text-foreground/65 font-bold mt-1">Families</div>
                 </div>
                 <div className="pl-4">
                   <div className="font-display text-2xl md:text-3xl italic text-foreground">24h</div>
-                  <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Response</div>
+                  <div className="text-[10px] tracking-widest uppercase text-foreground/65 font-bold mt-1">Response</div>
                 </div>
               </div>
 
-              <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground/70 font-semibold mt-5">
+              <p className="text-[10px] tracking-[0.25em] uppercase text-foreground/60 font-bold mt-5">
                 In partnership with Bayer Cemetery Brokers
               </p>
 
-              <p className="text-xs text-muted-foreground/80 mt-4">
+              <p className="text-xs text-foreground/70 mt-4">
                 Prefer to talk?{" "}
                 <a href="tel:+12142304740" className="underline underline-offset-2 hover:text-primary transition-colors">
                   Call (214) 230-4740
