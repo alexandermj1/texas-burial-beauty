@@ -27,12 +27,14 @@ interface Props {
   activeCemeteryCanon?: string | null;
   /** Click a cemetery to filter the submissions list (pass null to clear). */
   onSelectCemetery?: (canon: string | null, label: string | null) => void;
+  /** Called after a merge so the parent can reload submissions. */
+  onRefresh?: () => Promise<void> | void;
 }
 
 const canonical = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 
-const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery }: Props) => {
+const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery, onRefresh }: Props) => {
   const [rows, setRows] = useState<TexasCemetery[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -40,6 +42,10 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   const [collapsed, setCollapsed] = useState(true);
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [dragCanon, setDragCanon] = useState<string | null>(null);
+  const [overCanon, setOverCanon] = useState<string | null>(null);
+  const [merging, setMerging] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
@@ -181,6 +187,56 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     await load();
   };
 
+  // Drag-and-drop merge: drop cemetery A onto cemetery B → renames every Texas
+  // submission whose cemetery canonicalizes to A's key, setting it to B's display
+  // name. Also deletes A's directory row if it exists. Submissions are matched by
+  // canonical cemetery name (case/punctuation-insensitive), so this catches the
+  // "same place spelled differently" case.
+  const mergeInto = async (sourceCanon: string, target: { canon: string; displayName: string; directoryId: string | null }) => {
+    if (sourceCanon === target.canon) return;
+    const source = cemeteryStats.find(s => s.canon === sourceCanon);
+    if (!source) return;
+    const sourceIds = texasSubmissions
+      .filter(s => canonical(s.cemetery || "") === sourceCanon)
+      .map(s => s.id);
+    const ok = window.confirm(
+      `Merge "${source.displayName}" into "${target.displayName}"?\n\n` +
+      `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} will be renamed to "${target.displayName}".` +
+      (source.directoryId ? `\nThe "${source.displayName}" directory entry will be removed.` : "")
+    );
+    if (!ok) return;
+    setMerging(true);
+    try {
+      if (sourceIds.length > 0) {
+        const { error } = await supabase
+          .from("contact_submissions" as any)
+          .update({ cemetery: target.displayName })
+          .in("id", sourceIds);
+        if (error) throw error;
+      }
+      if (source.directoryId) {
+        const { error } = await supabase
+          .from("texas_cemeteries" as any)
+          .delete()
+          .eq("id", source.directoryId);
+        if (error) throw error;
+      }
+      toast({
+        title: "Cemeteries merged",
+        description: `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} moved to "${target.displayName}"`,
+      });
+      await load();
+      await onRefresh?.();
+    } catch (e: any) {
+      toast({ title: "Merge failed", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setMerging(false);
+      setDragCanon(null);
+      setOverCanon(null);
+    }
+  };
+
+
   return (
     <div className="bg-card rounded-xl border border-border/50">
       <button
@@ -253,19 +309,51 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
             </p>
           )}
 
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            Tip: drag a cemetery onto another to merge them (e.g. when the same place was typed two different ways).
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {visibleStats.map(stat => {
               const isActive = activeCemeteryCanon === stat.canon;
               const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
+              const isDragging = dragCanon === stat.canon;
+              const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
               return (
                 <div
                   key={stat.canon}
-                  className={`rounded-lg border transition-all overflow-hidden ${
-                    isActive
-                      ? "border-primary bg-primary/10 ring-1 ring-primary"
-                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
+                  draggable={!merging}
+                  onDragStart={(e) => {
+                    setDragCanon(stat.canon);
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", stat.canon);
+                  }}
+                  onDragEnd={() => { setDragCanon(null); setOverCanon(null); }}
+                  onDragOver={(e) => {
+                    if (!dragCanon || dragCanon === stat.canon) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (overCanon !== stat.canon) setOverCanon(stat.canon);
+                  }}
+                  onDragLeave={() => { if (overCanon === stat.canon) setOverCanon(null); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const src = e.dataTransfer.getData("text/plain") || dragCanon;
+                    if (!src || src === stat.canon) return;
+                    mergeInto(src, { canon: stat.canon, displayName: stat.displayName, directoryId: stat.directoryId });
+                  }}
+                  className={`rounded-lg border transition-all overflow-hidden cursor-grab active:cursor-grabbing ${
+                    isDropTarget
+                      ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500"
+                      : isDragging
+                        ? "opacity-50 border-primary"
+                        : isActive
+                          ? "border-primary bg-primary/10 ring-1 ring-primary"
+                          : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
                   }`}
+                  title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : "Drag onto another cemetery to merge"}
                 >
+
                   <button
                     onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
                     className="w-full text-left p-2.5"
