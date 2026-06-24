@@ -127,6 +127,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
+  // Map of submission_id -> latest incoming email received_at (ISO) when the latest
+  // message in the thread is from the customer (i.e. we haven't replied yet).
+  const [awaitingMap, setAwaitingMap] = useState<Record<string, string>>({});
   const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
   const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
