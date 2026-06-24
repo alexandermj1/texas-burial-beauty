@@ -38,9 +38,14 @@ interface LinkedEmail {
   id: string;
   subject: string | null;
   from_email: string;
+  from_name: string | null;
+  to_email: string | null;
   received_at: string;
   ai_summary: string | null;
   ai_intent: string | null;
+  snippet: string | null;
+  body_text: string | null;
+  body_html: string | null;
 }
 
 export interface JourneySubmission {
