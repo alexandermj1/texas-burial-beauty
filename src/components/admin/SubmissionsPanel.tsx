@@ -765,6 +765,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               />
             )}
 
+            {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
+            {subRegion(selected) === "texas" && (
+              <EmailThread submissionId={selected.id} customerEmail={selected.email} />
+            )}
+
             {/* Contact actions */}
             <div className="flex flex-wrap gap-2">
               {selected.email && (
