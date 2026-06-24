@@ -139,7 +139,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       email: form.email.trim(),
       phone: form.phone.trim() || null,
       cemetery: form.cemetery.trim(),
-      property_type: form.propertyType,
+      property_type: form.propertyType === "Other" && form.propertyTypeOther.trim() ? form.propertyTypeOther.trim() : form.propertyType,
       spaces: form.spaces || null,
       section: form.section.trim() || null,
       details: form.details.trim() || null,
