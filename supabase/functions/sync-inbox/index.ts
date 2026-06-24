@@ -581,7 +581,7 @@ Deno.serve(async (req) => {
         const backfillLimit = body.attachmentBackfillLimit ?? 25;
         const { data: backfillCandidates } = backfillLimit > 0 ? await admin
           .from("email_messages")
-          .select("id, gmail_message_id, from_email, subject, matched_submission_id, received_at")
+          .select("id, gmail_message_id, gmail_thread_id, from_email, subject, matched_submission_id, received_at")
           .not("matched_submission_id", "is", null)
           .order("received_at", { ascending: false })
           .limit(backfillLimit) : { data: [] };
