@@ -713,7 +713,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                           <label className={labelCls}>Property type</label>
                           <select value={form.propertyType} onChange={(e) => setForm({ ...form, propertyType: e.target.value })} className={inputCls + " cursor-pointer"}>
                             <option value="">Select...</option>
-                            {propertyTypes.map((t) => (<option key={t} value={t}>{t}</option>))}
+                            {propertyTypeOptions.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
                           </select>
                         </div>
                         <div>
