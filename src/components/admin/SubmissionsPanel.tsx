@@ -503,9 +503,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* === Texas cemetery directory (texas tab only) === */}
       {regionFilter === "texas" && !isMobile && (
         <div className="lg:col-span-12">
-          <TexasCemeteriesPanel texasSubmissions={texasSubmissions} />
+          <TexasCemeteriesPanel
+            texasSubmissions={texasSubmissions}
+            activeCemeteryCanon={cemeteryCanon}
+            onSelectCemetery={(canon, label) => {
+              setCemeteryCanon(canon);
+              setCemeteryLabel(label);
+              setSelectedId(null);
+            }}
+          />
         </div>
       )}
+
 
       {/* === Team pipeline overview — sellers (Bayer only, desktop) === */}
       {!isMobile && regionFilter === "bayer" && (
