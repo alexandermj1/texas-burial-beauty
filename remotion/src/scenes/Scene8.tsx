@@ -5,7 +5,6 @@ import { SceneChrome } from "../components/SceneChrome";
 import { EditorialList } from "../components/EditorialList";
 
 const SYMBOL_SIZE = 240;
-const CHIP_HEIGHT = 52;
 
 export const Scene8Closing: React.FC = () => {
   const frame = useCurrentFrame();
@@ -19,12 +18,8 @@ export const Scene8Closing: React.FC = () => {
   const badgeScale = interpolate(badgeSpring, [0, 1], [0, 1]);
 
   const glow = Math.sin(frame / 20) * 10 + 30;
-  const numSpring = spring({ frame, fps, config: { damping: 20, stiffness: 200 } });
 
-  // 3 chips perfectly spaced: top aligned with symbol top, bottom with symbol bottom
-  const chipTop1 = 0;
-  const chipTop3 = SYMBOL_SIZE - CHIP_HEIGHT;
-  const chipTop2 = (chipTop1 + chipTop3) / 2;
+
 
   return (
     <AbsoluteFill
