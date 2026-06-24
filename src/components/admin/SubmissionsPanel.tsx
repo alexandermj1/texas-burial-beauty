@@ -483,7 +483,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           return (
             <button
               key={r}
-              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); }}
+              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); setCemeteryCanon(null); setCemeteryLabel(null); }}
               className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
                 active
                   ? r === "texas"
