@@ -74,44 +74,36 @@ const SellProperty = () => {
       <Navbar forceScrolled />
 
       {/* Hero + valuation form — one merged editorial spread */}
-      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 bg-[hsl(var(--sand-light))] overflow-hidden" id="quote-form">
-        {/* Layered backdrop: sage wash on top fading into sand, with a dot grid */}
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-[hsl(var(--sage-light))]/70 to-transparent pointer-events-none" />
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-[0.18] pointer-events-none"
-          style={{
-            backgroundImage: "radial-gradient(hsl(var(--terracotta) / 0.35) 1px, transparent 1px)",
-            backgroundSize: "30px 30px",
-          }}
-        />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/25 to-transparent pointer-events-none" />
+      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 bg-[hsl(var(--warm-white))] overflow-hidden" id="quote-form">
+        {/* Layered backdrop: soft sage wash fading into warm white — no busy pattern over the text */}
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[55%] bg-gradient-to-b from-[hsl(var(--sage-light))]/40 to-transparent pointer-events-none" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/15 to-transparent pointer-events-none" />
 
         {/* Botanical illustrations */}
         <motion.img src={bananaLeaf.url} alt="" aria-hidden
-          initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.4, x: 0, rotate: -14 }}
+          initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.18, x: 0, rotate: -14 }}
           transition={{ duration: 1.4, ease: "easeOut" }}
-          className="hidden md:block absolute -left-44 top-32 w-[28rem] pointer-events-none select-none"
+          className="hidden md:block absolute -left-56 top-32 w-[28rem] pointer-events-none select-none"
         />
         <motion.img src={palmFan.url} alt="" aria-hidden
-          initial={{ opacity: 0, x: 40, rotate: 12 }} animate={{ opacity: 0.3, x: 0, rotate: 8 }}
+          initial={{ opacity: 0, x: 40, rotate: 12 }} animate={{ opacity: 0.18, x: 0, rotate: 8 }}
           transition={{ duration: 1.4, ease: "easeOut" }}
-          className="hidden lg:block absolute -right-32 bottom-24 w-[24rem] pointer-events-none select-none"
+          className="hidden lg:block absolute -right-40 bottom-24 w-[24rem] pointer-events-none select-none"
         />
         <motion.img src={hibiscusCoral.url} alt="" aria-hidden
-          initial={{ opacity: 0, y: -20, rotate: 18 }} animate={{ opacity: 0.85, y: 0, rotate: 8 }}
+          initial={{ opacity: 0, y: -20, rotate: 18 }} animate={{ opacity: 0.5, y: 0, rotate: 8 }}
           transition={{ duration: 1.2, delay: 0.2 }}
-          className="hidden md:block absolute right-6 lg:right-20 top-24 w-40 lg:w-52 pointer-events-none select-none"
+          className="hidden md:block absolute right-2 lg:right-8 top-10 w-32 lg:w-40 pointer-events-none select-none"
         />
         <motion.img src={pinkBranch.url} alt="" aria-hidden
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.6, y: 0 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.35, y: 0 }}
           transition={{ duration: 1.2, delay: 0.3 }}
-          className="hidden md:block absolute left-6 bottom-12 w-40 lg:w-52 pointer-events-none select-none -rotate-6"
+          className="hidden md:block absolute left-2 bottom-6 w-32 lg:w-40 pointer-events-none select-none -rotate-6"
         />
         <motion.img src={plumeriaCluster.url} alt="" aria-hidden
-          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 0.7, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 0.4, scale: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="md:hidden absolute -right-10 top-20 w-36 pointer-events-none select-none"
+          className="md:hidden absolute -right-10 top-20 w-32 pointer-events-none select-none"
         />
 
         <div className="relative container mx-auto px-6">
