@@ -425,17 +425,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Status pills (desktop only) */}
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["new", "all"] as const).map(f => {
+        {(["awaiting_reply", "new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
-            : submissions.filter(s => isNew(s)).length;
-          const labels = { new: "New today", all: "All" } as const;
+            : f === "new"
+              ? submissions.filter(s => isNew(s)).length
+              : submissions.filter(s => awaitingMap[s.id]).length;
+          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply" } as const;
+          const activeCls = f === "awaiting_reply"
+            ? "bg-rose-600 text-white border-rose-600"
+            : "bg-foreground text-background border-foreground";
           return (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                filter === f ? "bg-foreground text-background border-foreground" : "bg-card text-muted-foreground border-border hover:text-foreground"
+                filter === f ? activeCls : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
               {labels[f]} ({count})
