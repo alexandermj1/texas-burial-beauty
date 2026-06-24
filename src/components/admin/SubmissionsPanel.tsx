@@ -579,6 +579,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <CustomerKindBadge kind={sKind} size="xs" />
                         <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                         <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
+                        {awaitingMap[s.id] && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-rose-600 text-white"
+                            title={`Customer replied ${new Date(awaitingMap[s.id]).toLocaleString()} — no response sent yet`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            Needs reply
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
