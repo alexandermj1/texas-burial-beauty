@@ -36,7 +36,7 @@ const steps = [
   { id: 3, label: "Documents", icon: Paperclip },
 ] as const;
 
-const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
+const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = false }: { defaultCemetery?: string; compact?: boolean; editorial?: boolean } = {}) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -167,6 +167,291 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
 
   const progress = ((step + 1) / steps.length) * 100;
   const isLast = step === steps.length - 1;
+
+  // ============================================================
+  // EDITORIAL MODE — one chapter at a time, magazine-style.
+  // Reuses all state/handlers above; just a different presentation.
+  // ============================================================
+  if (editorial) {
+    const sections: { chapter: string; title: React.ReactNode; helper: string; body: React.ReactNode; validate?: () => string | null }[] = [
+      {
+        chapter: "About you",
+        title: <>First — what should we <span className="italic font-medium text-primary">call you?</span></>,
+        helper: "Just your name for now. We'll ask about the plot in a moment.",
+        validate: () => (!form.name.trim() ? "Please enter your name." : null),
+        body: (
+          <input
+            autoFocus
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Jane Doe"
+            maxLength={100}
+            className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-3xl md:text-5xl text-foreground placeholder:text-foreground/25 placeholder:italic py-3"
+          />
+        ),
+      },
+      {
+        chapter: "About you",
+        title: <>Where should we send your <span className="italic font-medium text-primary">valuation?</span></>,
+        helper: "Email is required. A phone number helps but isn't.",
+        validate: () => (!form.email.trim() ? "Please enter your email." : null),
+        body: (
+          <div className="space-y-8">
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Email</label>
+              <input
+                autoFocus type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="you@example.com" maxLength={255}
+                className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl md:text-3xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Phone <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
+              <input
+                value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="(555) 123-4567" maxLength={20}
+                className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl md:text-3xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2"
+              />
+            </div>
+          </div>
+        ),
+      },
+      {
+        chapter: "The property",
+        title: <>Which <span className="italic font-medium text-primary">cemetery</span> is it in?</>,
+        helper: "Just the cemetery name and city — we'll match it to our records.",
+        validate: () => (!form.cemetery.trim() ? "Please enter the cemetery name." : null),
+        body: (
+          <input
+            autoFocus value={form.cemetery} onChange={(e) => setForm({ ...form, cemetery: e.target.value })}
+            placeholder="e.g. Restland Memorial Park, Dallas" maxLength={200}
+            className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl md:text-4xl text-foreground placeholder:text-foreground/25 placeholder:italic py-3"
+          />
+        ),
+      },
+      {
+        chapter: "The property",
+        title: <>And what <span className="italic font-medium text-primary">kind</span> of property?</>,
+        helper: "Pick a type, tell us how many spaces, and the section if you know it.",
+        validate: () => (!form.propertyType ? "Please choose a property type." : null),
+        body: (
+          <div className="space-y-7">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+              {propertyTypes.map((t) => {
+                const active = form.propertyType === t;
+                return (
+                  <button type="button" key={t} onClick={() => setForm({ ...form, propertyType: t })}
+                    className={`text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-background border-border/60 text-foreground hover:border-primary/50 hover:bg-primary/5"
+                    }`}>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3"># of spaces</label>
+                <input type="number" min={1} max={20} value={form.spaces} onChange={(e) => setForm({ ...form, spaces: e.target.value })}
+                  placeholder="2"
+                  className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+              </div>
+              <div>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Section / Lot <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
+                <input value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}
+                  placeholder="Garden of Peace, Lot 14" maxLength={100}
+                  className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        chapter: "Ownership",
+        title: <>Who is on the <span className="italic font-medium text-primary">deed?</span></>,
+        helper: "These help us confirm ownership. Leave blank if you're not sure — we'll follow up.",
+        body: (
+          <div className="space-y-7">
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Names on the deed</label>
+              <input value={form.deedOwnerNames} onChange={(e) => setForm({ ...form, deedOwnerNames: e.target.value })}
+                placeholder="e.g. John A. Smith and Mary B. Smith" maxLength={300}
+                className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-xl md:text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Are owners living?</label>
+                <select value={form.deedOwnersStatus} onChange={(e) => setForm({ ...form, deedOwnersStatus: e.target.value })}
+                  className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-xl text-foreground py-2 cursor-pointer">
+                  <option value="">Select…</option>
+                  <option value="All living">All living</option>
+                  <option value="Some living, some deceased">Some living, some deceased</option>
+                  <option value="All deceased">All deceased</option>
+                  <option value="Unsure">Unsure</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Your relationship</label>
+                <input value={form.relationshipToOwner} onChange={(e) => setForm({ ...form, relationshipToOwner: e.target.value })}
+                  placeholder="Daughter, Spouse, Executor" maxLength={150}
+                  className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Deed records <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
+              <textarea value={form.purchaseInfo} onChange={(e) => setForm({ ...form, purchaseInfo: e.target.value })}
+                placeholder="When was it purchased, for what amount, and what records do you have?" rows={2} maxLength={1000}
+                className="w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2" />
+            </div>
+          </div>
+        ),
+      },
+      {
+        chapter: "Anything else",
+        title: <>Last thing — anything <span className="italic font-medium text-primary">helpful?</span></>,
+        helper: "Tell us anything else and (optionally) attach a deed or photo. Then we're done.",
+        body: (
+          <div className="space-y-7">
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Prepaid endowment / service charges <span className="normal-case tracking-normal italic text-foreground/45">— can increase valuation</span></label>
+              <textarea value={form.prepaidEndowmentInfo} onChange={(e) => setForm({ ...form, prepaidEndowmentInfo: e.target.value })}
+                placeholder="Endowment care, opening/closing fees, vaults, markers…" rows={2} maxLength={1000}
+                className="w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2" />
+            </div>
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Anything else we should know</label>
+              <textarea value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })}
+                placeholder="Reason for selling, preferred timeline, questions…" rows={3} maxLength={1000}
+                className="w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2" />
+            </div>
+            <div>
+              <label htmlFor="seller-attachments-ed"
+                className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-foreground/25 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
+                <Upload className="w-4 h-4 text-primary" />
+                <span className="text-sm text-foreground">
+                  {uploading ? "Uploading…" : "Attach a deed, receipt or photo "}
+                  <span className="italic text-foreground/55">— optional</span>
+                </span>
+                <input ref={fileInputRef} id="seller-attachments-ed" type="file" multiple
+                  accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
+                  className="hidden" onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
+              </label>
+              {files.length > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {files.map((f) => (
+                    <li key={f.path} className="flex items-center gap-2 text-xs text-foreground/70">
+                      <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span className="truncate flex-1">{f.name}</span>
+                      <button type="button" onClick={() => removeFile(f.path)} className="hover:text-destructive" aria-label={`Remove ${f.name}`}>
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="flex items-start gap-2 text-[11px] text-foreground/55 leading-relaxed pt-1">
+              <Lock className="w-3 h-3 mt-0.5 text-primary shrink-0" />
+              <span>Confidential — files upload to our private broker portal. Never shared or indexed.</span>
+            </div>
+          </div>
+        ),
+      },
+    ];
+
+    const totalEd = sections.length;
+    const current = sections[step] ?? sections[0];
+    const isLastEd = step === totalEd - 1;
+
+    const goNext = () => {
+      const err = current.validate?.();
+      if (err) { toast({ title: err, variant: "destructive" }); return; }
+      setStep((s) => Math.min(s + 1, totalEd - 1));
+    };
+    const goBack = () => setStep((s) => Math.max(s - 1, 0));
+
+    const onKeyDown: React.KeyboardEventHandler = (e) => {
+      if (e.key === "Enter" && !e.shiftKey && !(e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        if (isLastEd) {
+          // submit
+          (e.currentTarget.closest("form") as HTMLFormElement | null)?.requestSubmit();
+        } else {
+          goNext();
+        }
+      }
+    };
+
+    return (
+      <form id="quote-form" onSubmit={handleSubmit} onKeyDown={onKeyDown} className="relative">
+        {/* Chapter tag */}
+        <div className="flex items-center gap-3 mb-7">
+          <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground font-display italic text-base flex items-center justify-center shadow-sm">
+            {step + 1}
+          </span>
+          <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">{current.chapter}</span>
+          <span className="ml-auto text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/40">
+            {String(step + 1).padStart(2, "0")} <span className="italic font-normal">of</span> {String(totalEd).padStart(2, "0")}
+          </span>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.05] tracking-tight mb-4">
+              {current.title}
+            </h2>
+            <p className="text-sm md:text-base text-foreground/65 leading-relaxed mb-10 max-w-xl">{current.helper}</p>
+
+            <div className="mb-10">{current.body}</div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Footer: OK button + thin progress */}
+        <div className="flex items-center gap-5 flex-wrap">
+          {isLastEd ? (
+            <button type="submit" disabled={loading}
+              className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-md shadow-primary/30">
+              {loading ? "Submitting…" : "Send my valuation request"}
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          ) : (
+            <button type="button" onClick={goNext}
+              className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm tracking-wide hover:opacity-90 transition-all shadow-md shadow-primary/20">
+              OK <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          )}
+          <span className="text-xs text-foreground/55">
+            press <kbd className="font-mono font-bold text-foreground/80">Enter</kbd> ↵
+          </span>
+          {step > 0 && (
+            <button type="button" onClick={goBack}
+              className="ml-auto text-xs text-foreground/55 hover:text-foreground transition-colors inline-flex items-center gap-1">
+              <ArrowLeft className="w-3 h-3" /> Back
+            </button>
+          )}
+        </div>
+
+        {/* Thin progress line */}
+        <div className="mt-8 h-px w-full bg-foreground/10 relative overflow-hidden">
+          <motion.div
+            className="absolute inset-y-0 left-0 bg-primary"
+            initial={false}
+            animate={{ width: `${((step + 1) / totalEd) * 100}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
+        </div>
+      </form>
+    );
+  }
+
 
   return (
     <section
