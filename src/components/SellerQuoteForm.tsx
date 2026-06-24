@@ -62,6 +62,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     phone: "",
     cemetery: defaultCemetery,
     propertyType: "",
+    propertyTypeOther: "",
     spaces: "",
     section: "",
     details: "",
