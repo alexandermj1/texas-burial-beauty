@@ -742,14 +742,40 @@ const Admin = () => {
                 }
               }}
               onDelete={async (id) => {
-                if (!confirm("Delete this submission?")) return;
-                const { error } = await supabase.from("contact_submissions" as any).delete().eq("id", id);
-                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                // Soft-delete: stamp deleted_at/deleted_by so the submission can be restored later.
+                const deletedBy =
+                  cleanDisplayName((user?.user_metadata as any)?.full_name) ||
+                  user?.email ||
+                  "admin";
+                const { error } = await supabase
+                  .from("contact_submissions" as any)
+                  .update({ deleted_at: new Date().toISOString(), deleted_by: deletedBy })
+                  .eq("id", id);
+                if (error) { toast({ title: "Couldn't delete", description: error.message, variant: "destructive" }); return; }
                 setSubmissions(prev => prev.filter(s => s.id !== id));
-                toast({ title: "Deleted" });
+                refreshDeletedSubmissions();
+                toast({ title: "Moved to trash", description: "Open \"Recently deleted\" to restore." });
+              }}
+              deletedSubmissions={deletedSubmissions}
+              onRestore={async (id) => {
+                const { error } = await supabase
+                  .from("contact_submissions" as any)
+                  .update({ deleted_at: null, deleted_by: null })
+                  .eq("id", id);
+                if (error) { toast({ title: "Restore failed", description: error.message, variant: "destructive" }); return; }
+                toast({ title: "Submission restored" });
+                refreshDeletedSubmissions();
+                // The realtime listener will repopulate the active list, but trigger immediately.
+                const { data } = await supabase
+                  .from("contact_submissions" as any)
+                  .select("*")
+                  .is("deleted_at", null)
+                  .order("created_at", { ascending: false });
+                if (data) setSubmissions(data as any);
               }}
             />
           )}
+
 
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "customers" && <CustomersPanel />}
