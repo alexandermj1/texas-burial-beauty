@@ -100,9 +100,11 @@ export const Scene6Buyer: React.FC = () => {
         <div
           style={{
             flex: 0,
-            position: "relative",
-            width: CARD_WIDTH + BADGE_WIDTH + 30,
-            height: 380,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 36,
+            width: CARD_WIDTH,
           }}
         >
           {/* The net-offer ticket */}
