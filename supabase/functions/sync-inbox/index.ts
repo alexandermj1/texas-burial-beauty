@@ -265,10 +265,17 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    const gmailKey = Deno.env.get("GOOGLE_MAIL_API_KEY");
+    // Collect all linked Gmail mailbox keys: GOOGLE_MAIL_API_KEY plus
+    // GOOGLE_MAIL_API_KEY_1, GOOGLE_MAIL_API_KEY_2, ... (added when a second
+    // Gmail account like info@texascemeterybrokers.com is connected).
+    const gmailKeys: string[] = [];
+    const seenKeys = new Set<string>();
+    const pushKey = (v?: string | null) => { if (v && !seenKeys.has(v)) { seenKeys.add(v); gmailKeys.push(v); } };
+    pushKey(Deno.env.get("GOOGLE_MAIL_API_KEY"));
+    for (let i = 1; i <= 9; i++) pushKey(Deno.env.get(`GOOGLE_MAIL_API_KEY_${i}`));
 
     if (!lovableKey) return json({ error: "LOVABLE_API_KEY is not configured" }, 500);
-    if (!gmailKey) return json({ error: "GOOGLE_MAIL_API_KEY is not configured" }, 500);
+    if (gmailKeys.length === 0) return json({ error: "No Gmail connector keys configured" }, 500);
 
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
@@ -291,6 +298,16 @@ Deno.serve(async (req) => {
       .limit(1000);
     const subs: SubmissionLite[] = (submissions ?? []) as SubmissionLite[];
 
+    // Aggregate counters across mailboxes.
+    let totalPageSize = 0;
+    let totalAlreadyCached = 0;
+    let totalNewlySynced = 0;
+    let totalRematched = 0;
+    let totalBayerCreated = 0;
+    let lastNextPageToken: string | null = null;
+    let aggregateResultSize = 0;
+
+    for (const gmailKey of gmailKeys) {
     const params = new URLSearchParams({ maxResults: String(body.maxResults), q: body.query });
     if (body.pageToken) params.set("pageToken", body.pageToken);
 
@@ -559,7 +576,7 @@ Deno.serve(async (req) => {
       }
 
       // Backfill: process attachments for previously-synced matched emails that haven't been handled yet.
-      // We re-fetch the Gmail message to get attachment IDs (we don't store them).
+      // We re-fetch the Gmail message in parallel batches to stay within the function's 60s budget.
       try {
         const backfillLimit = body.attachmentBackfillLimit ?? 25;
         const { data: backfillCandidates } = backfillLimit > 0 ? await admin
@@ -568,51 +585,62 @@ Deno.serve(async (req) => {
           .not("matched_submission_id", "is", null)
           .order("received_at", { ascending: false })
           .limit(backfillLimit) : { data: [] };
-        for (const em of (backfillCandidates ?? []) as any[]) {
-          try {
-            if (isInternalSender(em.from_email)) continue;
-            const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
-            if (!customerProfileId) continue;
-            // Cheap skip: if we've already saved at least one file for this email, assume done.
-            const { data: anyExisting } = await admin
-              .from("customer_files")
-              .select("id")
-              .like("file_path", `${customerProfileId}/email_${em.gmail_message_id}_%`)
-              .limit(1)
-              .maybeSingle();
-            if (anyExisting) continue;
-            const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${em.gmail_message_id}?format=full`, {
-              headers: gmailHeaders(lovableKey, gmailKey),
-            });
-            if (!r.ok) {
-              if (r.status === 404) {
-                // message gone from Gmail; mark as done by inserting a sentinel? simply skip.
-              } else {
-                console.warn(`backfill fetch failed ${r.status}`);
+        const BACKFILL_CONCURRENCY = 8;
+        const candidates = (backfillCandidates ?? []) as any[];
+        for (let i = 0; i < candidates.length; i += BACKFILL_CONCURRENCY) {
+          const chunk = candidates.slice(i, i + BACKFILL_CONCURRENCY);
+          await Promise.all(chunk.map(async (em) => {
+            try {
+              if (isInternalSender(em.from_email)) return;
+              const customerProfileId = await findOrCreateCustomerProfileForSubmission(admin, em.matched_submission_id);
+              if (!customerProfileId) return;
+              // Cheap skip: any file already saved for this gmail message means done.
+              const { data: anyExisting } = await admin
+                .from("customer_files")
+                .select("id")
+                .like("file_path", `${customerProfileId}/email_${em.gmail_message_id}_%`)
+                .limit(1)
+                .maybeSingle();
+              if (anyExisting) return;
+              const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${em.gmail_message_id}?format=full`, {
+                headers: gmailHeaders(lovableKey, gmailKey),
+              });
+              if (!r.ok) {
+                if (r.status !== 404) console.warn(`backfill fetch failed ${r.status}`);
+                return;
               }
-              continue;
+              const msg = (await r.json()) as GmailMessage;
+              attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
+            } catch (e) {
+              console.warn("backfill item error", e);
             }
-            const msg = (await r.json()) as GmailMessage;
-            attachmentsSaved += await processAttachmentsForEmail(em, msg.payload, customerProfileId);
-          } catch (e) {
-            console.warn("backfill item error", e);
-          }
+          }));
         }
       } catch (e) {
         console.warn("backfill error", e);
       }
     }
 
+    totalPageSize += ids.length;
+    totalAlreadyCached += existingIds.size;
+    totalNewlySynced += insertedCount;
+    totalRematched += rematchedCount;
+    totalBayerCreated += bayerCreated;
+    if (listData.nextPageToken) lastNextPageToken = listData.nextPageToken;
+    aggregateResultSize += listData.resultSizeEstimate ?? 0;
+    } // end for each gmailKey
+
     return json({
       success: true,
-      page_size: ids.length,
-      already_cached: existingIds.size,
-      newly_synced: insertedCount,
-      rematched: rematchedCount,
-      next_page_token: listData.nextPageToken ?? null,
-      has_more: Boolean(listData.nextPageToken),
-      result_size_estimate: listData.resultSizeEstimate ?? null,
-      bayer_imported: bayerCreated,
+      mailboxes_synced: gmailKeys.length,
+      page_size: totalPageSize,
+      already_cached: totalAlreadyCached,
+      newly_synced: totalNewlySynced,
+      rematched: totalRematched,
+      next_page_token: lastNextPageToken,
+      has_more: Boolean(lastNextPageToken),
+      result_size_estimate: aggregateResultSize,
+      bayer_imported: totalBayerCreated,
     });
   } catch (e) {
     console.error("sync-inbox error", e);
