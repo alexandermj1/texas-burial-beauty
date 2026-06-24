@@ -1088,6 +1088,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {(selected as any).bayer_entry_id && <Field label="Bayer entry #" value={(selected as any).bayer_entry_id} />}
             </div>
 
+            {/* Files the seller uploaded with the form */}
+            {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
+              <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
+            )}
+
+
+
             {/* Message / details */}
             {(selected.message || selected.details) && (
               <div>
