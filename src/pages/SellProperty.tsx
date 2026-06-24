@@ -74,18 +74,10 @@ const SellProperty = () => {
       <Navbar forceScrolled />
 
       {/* Hero + valuation form — one merged editorial spread */}
-      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 bg-[hsl(var(--sand-light))] overflow-hidden" id="quote-form">
-        {/* Layered backdrop: sage wash on top fading into sand, with a dot grid */}
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-[hsl(var(--sage-light))]/70 to-transparent pointer-events-none" />
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-[0.18] pointer-events-none"
-          style={{
-            backgroundImage: "radial-gradient(hsl(var(--terracotta) / 0.35) 1px, transparent 1px)",
-            backgroundSize: "30px 30px",
-          }}
-        />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/25 to-transparent pointer-events-none" />
+      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 bg-[hsl(var(--warm-white))] overflow-hidden" id="quote-form">
+        {/* Layered backdrop: soft sage wash fading into warm white — no busy pattern over the text */}
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[55%] bg-gradient-to-b from-[hsl(var(--sage-light))]/40 to-transparent pointer-events-none" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/15 to-transparent pointer-events-none" />
 
         {/* Botanical illustrations */}
         <motion.img src={bananaLeaf.url} alt="" aria-hidden
