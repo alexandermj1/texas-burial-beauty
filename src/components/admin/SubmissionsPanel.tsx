@@ -121,7 +121,7 @@ const subRegion = (s: Submission): "texas" | "bayer" => {
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh }: Props) => {
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
