@@ -27,6 +27,7 @@ import { Megaphone, UserPlus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
+import { isOutgoing } from "@/lib/emailReply";
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
 const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
