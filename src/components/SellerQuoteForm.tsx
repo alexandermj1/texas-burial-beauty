@@ -48,6 +48,38 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     prepaidEndowmentInfo: "",
   });
 
+  const handleFiles = async (picked: FileList | null) => {
+    if (!picked || picked.length === 0) return;
+    setUploading(true);
+    const next: UploadedFile[] = [];
+    for (const f of Array.from(picked)) {
+      if (f.size > MAX_FILE_MB * 1024 * 1024) {
+        toast({ title: `${f.name} is too large`, description: `Max ${MAX_FILE_MB}MB per file.`, variant: "destructive" });
+        continue;
+      }
+      if (!ALLOWED.test(f.name)) {
+        toast({ title: `${f.name} type not allowed`, description: "PDF, image, or document files only.", variant: "destructive" });
+        continue;
+      }
+      const safeName = f.name.replace(/[^\w.\-]+/g, "_");
+      const path = `public-intake/${intakeId}/${Date.now()}-${safeName}`;
+      const { error: upErr } = await supabase.storage.from("customer-files").upload(path, f, { contentType: f.type || undefined, upsert: false });
+      if (upErr) {
+        toast({ title: `Couldn't upload ${f.name}`, description: upErr.message, variant: "destructive" });
+        continue;
+      }
+      next.push({ path, name: f.name, size: f.size, type: f.type });
+    }
+    setFiles(prev => [...prev, ...next]);
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeFile = async (path: string) => {
+    await supabase.storage.from("customer-files").remove([path]);
+    setFiles(prev => prev.filter(f => f.path !== path));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.cemetery.trim() || !form.propertyType) {
@@ -55,9 +87,8 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       return;
     }
     setLoading(true);
-    const submissionId = crypto.randomUUID();
     const { error } = await supabase.from("contact_submissions" as any).insert({
-      id: submissionId,
+      id: intakeId,
       source: "seller_quote",
       name: form.name.trim(),
       email: form.email.trim(),
@@ -72,6 +103,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       relationship_to_owner: form.relationshipToOwner.trim() || null,
       purchase_info: form.purchaseInfo.trim() || null,
       prepaid_endowment_info: form.prepaidEndowmentInfo.trim() || null,
+      seller_attachments: files,
       created_at: new Date().toISOString(),
     });
     if (error) {
@@ -79,9 +111,10 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       setLoading(false);
       return;
     }
-    const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
+    const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: intakeId } });
     if (emailError) console.warn("inquiry email failed", emailError);
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
+    setFiles([]);
     setLoading(false);
     navigate("/thank-you");
   };
