@@ -204,29 +204,64 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { ch.unsubscribe(); supabase.removeChannel(ch); presenceChanRef.current = null; };
   }, [myId, myName]);
 
-  // Build the "awaiting reply" map: for every submission that has matched emails,
-  // find the latest message in its thread; if it's from the customer (not us), the
-  // submission is awaiting a reply. We refetch when the submission set changes and
-  // subscribe to email_messages changes so badges update live.
+  // Build the "awaiting reply" map. Texas submissions ONLY (Bayer pipeline never
+  // gets this tag). For each Texas submission we gather every email connected to
+  // that customer — either matched_submission_id == s.id OR the customer's email
+  // address appears in from_email / to_email. We pick the latest message in that
+  // combined thread; if it's from the customer (not from one of our addresses),
+  // the submission is awaiting our reply.
   useEffect(() => {
-    const ids = submissions.map(s => s.id);
-    if (ids.length === 0) { setAwaitingMap({}); return; }
+    const texasSubs = submissions.filter(s => subRegion(s) === "texas");
+    if (texasSubs.length === 0) { setAwaitingMap({}); return; }
+    const texasIds = texasSubs.map(s => s.id);
+    // Lower-case address index for matching
+    const emailToSub = new Map<string, string>();
+    for (const s of texasSubs) {
+      if (s.email) emailToSub.set(s.email.trim().toLowerCase(), s.id);
+    }
     let cancelled = false;
+    const extractAddr = (raw: string | null | undefined): string => {
+      if (!raw) return "";
+      // from_email/to_email may be "Name <a@b.com>" or comma-separated addresses
+      const out: string[] = [];
+      const parts = raw.split(",");
+      for (const p of parts) {
+        const m = p.match(/<([^>]+)>/);
+        out.push((m ? m[1] : p).trim().toLowerCase());
+      }
+      return out.join(",");
+    };
     const recompute = async () => {
+      // Pull recent messages (most projects have a few thousand at most).
+      // Ordered desc so the first hit per submission is the latest message.
       const { data } = await supabase
         .from("email_messages" as any)
-        .select("matched_submission_id, from_email, received_at")
-        .in("matched_submission_id", ids)
-        .order("received_at", { ascending: false });
+        .select("matched_submission_id, from_email, to_email, received_at")
+        .order("received_at", { ascending: false })
+        .limit(5000);
       if (cancelled || !data) return;
-      const seen = new Set<string>();
-      const next: Record<string, string> = {};
+      // For each submission, find its latest related message.
+      const latestPerSub = new Map<string, { received_at: string; outgoing: boolean }>();
       for (const row of data as any[]) {
-        const sid = row.matched_submission_id;
-        if (!sid || seen.has(sid)) continue;
-        seen.add(sid);
-        // Latest message per submission. If it's from the customer, flag it.
-        if (!isOutgoing(row.from_email)) next[sid] = row.received_at;
+        const fromAddr = extractAddr(row.from_email);
+        const toAddrs = extractAddr(row.to_email);
+        // Direct match via matched_submission_id (must be a Texas sub).
+        const candidateIds = new Set<string>();
+        if (row.matched_submission_id && texasIds.includes(row.matched_submission_id)) {
+          candidateIds.add(row.matched_submission_id);
+        }
+        // Address match — incoming (customer -> us) or outgoing (us -> customer).
+        for (const [addr, sid] of emailToSub.entries()) {
+          if (fromAddr.includes(addr) || toAddrs.includes(addr)) candidateIds.add(sid);
+        }
+        for (const sid of candidateIds) {
+          if (latestPerSub.has(sid)) continue; // already have a newer message
+          latestPerSub.set(sid, { received_at: row.received_at, outgoing: isOutgoing(row.from_email) });
+        }
+      }
+      const next: Record<string, string> = {};
+      for (const [sid, info] of latestPerSub.entries()) {
+        if (!info.outgoing) next[sid] = info.received_at;
       }
       setAwaitingMap(next);
     };
@@ -236,6 +271,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       .subscribe();
     return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
   }, [submissions]);
+
 
 
   const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
