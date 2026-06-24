@@ -411,12 +411,12 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
 
     const onKeyDown: React.KeyboardEventHandler = (e) => {
       if (e.key === "Enter" && !e.shiftKey && !(e.target instanceof HTMLTextAreaElement)) {
-        e.preventDefault();
-        if (isLastEd) {
-          // submit
-          (e.currentTarget.closest("form") as HTMLFormElement | null)?.requestSubmit();
-        } else {
+        // Never auto-submit on Enter — require an explicit click on the Send button.
+        if (!isLastEd) {
+          e.preventDefault();
           goNext();
+        } else {
+          e.preventDefault();
         }
       }
     };
