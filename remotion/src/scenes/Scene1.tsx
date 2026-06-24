@@ -1,6 +1,7 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Sequence } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
+import { SceneChrome } from "../components/SceneChrome";
 
 export const Scene1Initiation: React.FC = () => {
   const frame = useCurrentFrame();
@@ -40,11 +41,8 @@ export const Scene1Initiation: React.FC = () => {
       <GradientOrb x={180} y={700} size={200} />
       <DashedArc x={900} y={780} size={220} speed={0.3} />
 
-      {/* Step badge */}
-      <div style={{ position: "absolute", left: 100, top: 80, transform: `scale(${numScale})`, display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", background: colors.primary, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fonts.display, fontSize: 28, color: colors.background }}>1</div>
-        <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.muted, letterSpacing: 2, textTransform: "uppercase" }}>Step One</span>
-      </div>
+      <SceneChrome step={1} chapter="Initiation" kicker="Initial Contact" />
+
 
       <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
         <div style={{ flex: 1 }}>
