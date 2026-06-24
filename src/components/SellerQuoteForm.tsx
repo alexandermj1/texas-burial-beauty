@@ -9,6 +9,10 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import singlePlotImg from "@/assets/property-types/single-plot.png";
+import nicheImg from "@/assets/property-types/cremation-niche.png";
+import cryptImg from "@/assets/property-types/mausoleum.png";
+import familyEstateImg from "@/assets/property-types/family-estate.png";
 
 
 interface UploadedFile {
