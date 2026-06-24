@@ -686,7 +686,7 @@ Deno.serve(async (req) => {
                 : new Date(header(headers, "Date") || Date.now()).toISOString();
               const { text, html } = extractBody(msg.payload);
               // Try matching by the OTHER party — if from us, match on the To address.
-              const isOutgoing = isInternalSender(fromEmail);
+              const isOutgoing = isInternal(fromEmail);
               const matchEmail = isOutgoing ? parseFromHeader(toEmail).email : fromEmail;
               const matchName = isOutgoing ? parseFromHeader(toEmail).name : fromName;
               const match = matchSubmission(matchEmail, matchName, subs);
