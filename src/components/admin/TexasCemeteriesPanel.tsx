@@ -27,12 +27,14 @@ interface Props {
   activeCemeteryCanon?: string | null;
   /** Click a cemetery to filter the submissions list (pass null to clear). */
   onSelectCemetery?: (canon: string | null, label: string | null) => void;
+  /** Called after a merge so the parent can reload submissions. */
+  onRefresh?: () => Promise<void> | void;
 }
 
 const canonical = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 
-const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery }: Props) => {
+const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery, onRefresh }: Props) => {
   const [rows, setRows] = useState<TexasCemetery[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -40,6 +42,10 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   const [collapsed, setCollapsed] = useState(true);
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [dragCanon, setDragCanon] = useState<string | null>(null);
+  const [overCanon, setOverCanon] = useState<string | null>(null);
+  const [merging, setMerging] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
