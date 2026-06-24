@@ -757,7 +757,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             {workers[0].user_name}{workers.length > 1 ? ` +${workers.length - 1}` : ""}
                           </span>
                         )}
-                        <CustomerKindBadge kind={sKind} size="xs" />
+                        {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
                         <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
                         <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
                         {awaitingMap[s.id] && (
