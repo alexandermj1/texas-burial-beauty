@@ -807,6 +807,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
                       ) : null}
                     </p>
+                    {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400 italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
+                        ✎ originally: "{(s as any).cemetery_original}"
+                      </p>
+                    )}
                     {!isActive && (
                       <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
                         {s.message || s.details || s.email || s.phone || "—"}
