@@ -1,9 +1,19 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Check, Upload, Lock, X, FileText } from "lucide-react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+interface UploadedFile {
+  path: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
+const MAX_FILE_MB = 20;
+const ALLOWED = /\.(pdf|png|jpe?g|webp|heic|tiff?|gif|docx?|txt)$/i;
 
 const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Family Estate", "Other"];
 
