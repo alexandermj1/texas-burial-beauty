@@ -204,6 +204,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { ch.unsubscribe(); supabase.removeChannel(ch); presenceChanRef.current = null; };
   }, [myId, myName]);
 
+  // Build the "awaiting reply" map: for every submission that has matched emails,
+  // find the latest message in its thread; if it's from the customer (not us), the
+  // submission is awaiting a reply. We refetch when the submission set changes and
+  // subscribe to email_messages changes so badges update live.
+  useEffect(() => {
+    const ids = submissions.map(s => s.id);
+    if (ids.length === 0) { setAwaitingMap({}); return; }
+    let cancelled = false;
+    const recompute = async () => {
+      const { data } = await supabase
+        .from("email_messages" as any)
+        .select("matched_submission_id, from_email, received_at")
+        .in("matched_submission_id", ids)
+        .order("received_at", { ascending: false });
+      if (cancelled || !data) return;
+      const seen = new Set<string>();
+      const next: Record<string, string> = {};
+      for (const row of data as any[]) {
+        const sid = row.matched_submission_id;
+        if (!sid || seen.has(sid)) continue;
+        seen.add(sid);
+        // Latest message per submission. If it's from the customer, flag it.
+        if (!isOutgoing(row.from_email)) next[sid] = row.received_at;
+      }
+      setAwaitingMap(next);
+    };
+    recompute();
+    const ch = supabase.channel("email_messages_awaiting")
+      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, () => { recompute(); })
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, [submissions]);
+
+
   const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
   const workersFor = (sid: string) => (activeWorkers[sid] || []).filter(w => w.user_id !== myId);
   const haveIViewed = (sid: string) => !!myId && views.some(v => v.submission_id === sid && v.user_id === myId);
