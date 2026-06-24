@@ -1,7 +1,8 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Sequence } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
 import { SceneChrome } from "../components/SceneChrome";
+import { EditorialList } from "../components/EditorialList";
 
 const SYMBOL_SIZE = 240;
 const CHIP_HEIGHT = 52;
