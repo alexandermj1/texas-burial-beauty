@@ -408,7 +408,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     );
     const otherRows = matches.filter(s => !awaitingMap[s.id]);
     return [...awaitingRows, ...otherRows];
-  }, [submissions, regionFilter, cemeteryCanon, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+  }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
