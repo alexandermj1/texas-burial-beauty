@@ -96,7 +96,7 @@ const SellProperty = () => {
           {/* --- BROKEN EDITORIAL GRID --- */}
           <div className="max-w-7xl mx-auto grid grid-cols-12 gap-x-6 gap-y-10">
             {/* Centered headline — "right" sits visually between the two columns below */}
-            <div className="col-span-12 text-center">
+            <div className="col-span-12 text-left lg:text-center">
               <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-5">A guide for Texas families</p>
               <h1 className="font-display text-foreground leading-[0.92] tracking-tight text-[clamp(3rem,9vw,8.5rem)]">
                 <span className="block">Sell your plot</span>
@@ -145,7 +145,7 @@ const SellProperty = () => {
             {/* --- THE EMBEDDED FORM --- magazine page within the page */}
             <div className="col-span-12 grid grid-cols-12 gap-x-6 gap-y-8 mt-6">
               {/* Section opener label — left margin */}
-              <div className="col-span-12 lg:col-span-3 lg:pt-2">
+              <div className="hidden lg:block col-span-12 lg:col-span-3 lg:pt-2">
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-[10px] tracking-[0.35em] uppercase font-bold text-accent">N° 01</span>
                 <span className="h-px flex-1 bg-foreground/25" />
