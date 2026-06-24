@@ -1,14 +1,16 @@
-import { motion } from "framer-motion";
-import { Phone, Mail, ArrowRight, CheckCircle, DollarSign, FileText, ShieldCheck, Clock, Users, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Phone, Mail, ArrowRight, CheckCircle, DollarSign, FileText, ShieldCheck, Clock, Users, TrendingUp, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
-import { SellerPromoAnimation } from "@/components/PromoAnimation";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const benefits = [
   { icon: DollarSign, title: "Free or $99 Listing", desc: "Choose a free listing or our premium $99 listing — no appraisal costs, no hidden charges." },
@@ -71,116 +73,135 @@ const SellProperty = () => {
       />
       <Navbar forceScrolled />
 
-      {/* Hero — editorial botanical spread inspired by the Guides cover */}
-      <section className="relative pt-24 pb-6 md:pt-28 md:pb-8 bg-[hsl(var(--sage-light))]/40 overflow-hidden">
-        {/* Paper dot grid */}
+      {/* Hero + valuation form — one merged editorial spread */}
+      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 bg-[hsl(var(--sand-light))] overflow-hidden" id="quote-form">
+        {/* Layered backdrop: sage wash on top fading into sand, with a dot grid */}
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-[hsl(var(--sage-light))]/70 to-transparent pointer-events-none" />
         <div
           aria-hidden
-          className="absolute inset-0 opacity-30 pointer-events-none"
+          className="absolute inset-0 opacity-[0.18] pointer-events-none"
           style={{
-            backgroundImage: "radial-gradient(hsl(var(--terracotta) / 0.25) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
+            backgroundImage: "radial-gradient(hsl(var(--terracotta) / 0.35) 1px, transparent 1px)",
+            backgroundSize: "30px 30px",
           }}
         />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/25 to-transparent pointer-events-none" />
+
         {/* Botanical illustrations */}
-        <motion.img
-          src={bananaLeaf.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, x: -30, rotate: -18 }}
-          animate={{ opacity: 0.18, x: 0, rotate: -12 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          className="hidden md:block absolute -left-40 -bottom-40 w-[26rem] pointer-events-none select-none"
+        <motion.img src={bananaLeaf.url} alt="" aria-hidden
+          initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.4, x: 0, rotate: -14 }}
+          transition={{ duration: 1.4, ease: "easeOut" }}
+          className="hidden md:block absolute -left-44 top-32 w-[28rem] pointer-events-none select-none"
         />
-        <motion.img
-          src={hibiscusCoral.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, y: 20, rotate: 10 }}
-          animate={{ opacity: 0.85, y: 0, rotate: 6 }}
-          transition={{ duration: 1.2, delay: 0.15, ease: "easeOut" }}
-          className="hidden lg:block absolute -right-16 top-16 w-80 pointer-events-none select-none"
+        <motion.img src={palmFan.url} alt="" aria-hidden
+          initial={{ opacity: 0, x: 40, rotate: 12 }} animate={{ opacity: 0.3, x: 0, rotate: 8 }}
+          transition={{ duration: 1.4, ease: "easeOut" }}
+          className="hidden lg:block absolute -right-32 bottom-24 w-[24rem] pointer-events-none select-none"
         />
-        <motion.img
-          src={plumeriaCluster.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 0.7, scale: 1 }}
+        <motion.img src={hibiscusCoral.url} alt="" aria-hidden
+          initial={{ opacity: 0, y: -20, rotate: 18 }} animate={{ opacity: 0.85, y: 0, rotate: 8 }}
+          transition={{ duration: 1.2, delay: 0.2 }}
+          className="hidden md:block absolute right-6 lg:right-20 top-24 w-40 lg:w-52 pointer-events-none select-none"
+        />
+        <motion.img src={pinkBranch.url} alt="" aria-hidden
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.6, y: 0 }}
+          transition={{ duration: 1.2, delay: 0.3 }}
+          className="hidden md:block absolute left-6 bottom-12 w-40 lg:w-52 pointer-events-none select-none -rotate-6"
+        />
+        <motion.img src={plumeriaCluster.url} alt="" aria-hidden
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 0.7, scale: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="md:hidden absolute -right-10 -top-6 w-40 pointer-events-none select-none"
+          className="md:hidden absolute -right-10 top-20 w-36 pointer-events-none select-none"
         />
 
         <div className="relative container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <span className="text-[10px] tracking-[0.3em] font-semibold text-primary uppercase">
-                The Seller&rsquo;s Edition
-              </span>
-              <div className="h-px w-12 bg-border" />
-              <span className="text-[10px] tracking-[0.3em] font-medium text-accent uppercase italic">
-                Vol. 01
-              </span>
-            </div>
-
-            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.05] tracking-tight mb-8">
-              Sell your plot{" "}
-              <span className="italic font-medium text-primary">with us today</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto font-light">
-              Choose a free listing or our premium $99 listing. We handle the entire selling process from valuation to closing.
-            </p>
-
-            <div className="flex flex-wrap gap-5 items-center justify-center">
-              <a
-                href="#quote-form"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft"
-              >
-                Get a Free Valuation <ArrowRight className="w-4 h-4" />
-              </a>
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground/80 font-semibold mb-0.5">
-                  Speak with a specialist
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start max-w-7xl mx-auto">
+            {/* LEFT — editorial pitch: why list with us */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="lg:col-span-5 lg:sticky lg:top-28"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <span className="text-[10px] tracking-[0.3em] font-semibold text-primary uppercase">
+                  The Seller&rsquo;s Edition
                 </span>
-                <a
-                  href="tel:+12142304740"
-                  className="font-display text-lg text-foreground hover:text-primary transition-colors inline-flex items-center gap-2"
-                >
-                  <Phone className="w-4 h-4" /> (214) 230-4740
-                </a>
+                <div className="h-px w-12 bg-border" />
+                <span className="text-[10px] tracking-[0.3em] font-medium text-accent uppercase italic">
+                  Vol. 01
+                </span>
               </div>
-            </div>
 
-            {/* Inline editorial stat strip — keeps Bayer partnership signal */}
-            <div className="mt-12 grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto border-t border-border pt-8">
-              <div className="text-center">
-                <div className="font-display text-3xl md:text-4xl italic text-primary">$0</div>
-                <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Upfront cost</div>
+              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.02] tracking-tight mb-6">
+                Sell your plot,{" "}
+                <span className="italic font-medium text-primary">the right way.</span>
+              </h1>
+
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8 font-light max-w-lg">
+                Most owners try to sell on their own — and lose months chasing buyers, paperwork, and cemetery red tape. We take all of that off your plate, find a serious buyer, and close the deal for you.
+              </p>
+
+              {/* Why list with us — clear value props */}
+              <ul className="space-y-4 mb-10 max-w-lg">
+                {[
+                  { t: "$0 upfront, no obligation", d: "Free listing or $99 premium — never any appraisal fees or hidden charges." },
+                  { t: "We bring the buyers", d: "Thousands of qualified Texas buyers across DFW, Houston, Austin & San Antonio." },
+                  { t: "We do the paperwork", d: "Cemetery transfer, deeds, escrow — every form, every call, handled." },
+                  { t: "You decide, always", d: "We negotiate on your behalf. Nothing happens without your approval." },
+                ].map((v, i) => (
+                  <motion.li
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 + i * 0.08 }}
+                    className="flex items-start gap-3"
+                  >
+                    <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" strokeWidth={2.2} />
+                    <div>
+                      <div className="font-display text-base text-foreground">{v.t}</div>
+                      <div className="text-sm text-muted-foreground leading-relaxed">{v.d}</div>
+                    </div>
+                  </motion.li>
+                ))}
+              </ul>
+
+              {/* Editorial stat strip */}
+              <div className="grid grid-cols-3 gap-4 border-t border-border pt-6 max-w-lg">
+                <div>
+                  <div className="font-display text-2xl md:text-3xl italic text-primary">$0</div>
+                  <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Upfront</div>
+                </div>
+                <div className="border-x border-border pl-4">
+                  <div className="font-display text-2xl md:text-3xl italic text-accent">10k+</div>
+                  <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Families</div>
+                </div>
+                <div className="pl-4">
+                  <div className="font-display text-2xl md:text-3xl italic text-foreground">24h</div>
+                  <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Response</div>
+                </div>
               </div>
-              <div className="text-center border-x border-border">
-                <div className="font-display text-3xl md:text-4xl italic text-accent">10,000+</div>
-                <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Families helped</div>
-              </div>
-              <div className="text-center">
-                <div className="font-display text-3xl md:text-4xl italic text-foreground">24h</div>
-                <div className="text-[10px] tracking-widest uppercase text-muted-foreground/80 font-semibold mt-1">Response time</div>
-              </div>
+
+              <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground/70 font-semibold mt-5">
+                In partnership with Bayer Cemetery Brokers
+              </p>
+
+              <p className="text-xs text-muted-foreground/80 mt-4">
+                Prefer to talk?{" "}
+                <a href="tel:+12142304740" className="underline underline-offset-2 hover:text-primary transition-colors">
+                  Call (214) 230-4740
+                </a>
+              </p>
+            </motion.div>
+
+            {/* RIGHT — the form, embedded directly into the hero */}
+            <div className="lg:col-span-7">
+              <SellerQuoteForm compact />
             </div>
-            <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground/70 font-semibold mt-4">
-              In partnership with Bayer Cemetery Brokers
-            </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-
-      <SellerQuoteForm />
 
       {/* Seller Journey Video */}
       <section className="py-16 bg-gradient-warm">
@@ -255,43 +276,111 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* FAQs */}
-      <section className="py-12 bg-gradient-warm">
-        <div className="container mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">Seller FAQ</h2>
-          </motion.div>
-          <div className="max-w-4xl mx-auto grid gap-4">
-            {faqs.map((faq, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} className="bg-card rounded-xl p-5 shadow-soft">
-                <h3 className="font-display text-base text-foreground mb-2">{faq.q}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* FAQs — editorial accordion */}
+      <FaqSection faqs={faqs} />
 
       {/* CTA */}
-      <section className="py-16 bg-gradient-sage">
+      <section className="py-20 bg-gradient-sage">
         <div className="container mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Ready to sell your property?</h2>
-            <p className="text-muted-foreground mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours and there's never any pressure.</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Phone className="w-4 h-4" /> (214) 230-4740
+            <h2 className="font-display text-3xl md:text-5xl text-foreground mb-4">Ready to sell your property?</h2>
+            <p className="text-muted-foreground mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours — and there's never any pressure.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <a href="#quote-form" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft">
+                Get a Free Valuation <ArrowRight className="w-4 h-4" />
               </a>
-              <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Mail className="w-4 h-4" /> Email Us <ArrowRight className="w-4 h-4" />
+              <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors underline underline-offset-4">
+                <Mail className="w-4 h-4" /> Or email us instead
               </a>
             </div>
           </motion.div>
         </div>
       </section>
 
+
       <Footer />
     </div>
+  );
+};
+
+const FaqSection = ({ faqs }: { faqs: { q: string; a: string }[] }) => {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <section className="py-24 sm:py-28 bg-background">
+      <div className="container mx-auto px-6">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-12 lg:gap-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="lg:col-span-4"
+          >
+            <div className="lg:sticky lg:top-32">
+              <p className="text-primary font-medium text-[11px] tracking-[0.3em] uppercase mb-4">
+                Seller FAQ
+              </p>
+              <h2 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05] tracking-tight">
+                Questions, <span className="italic font-light text-muted-foreground">answered.</span>
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-5 max-w-sm">
+                Everything you need to know before listing your Texas cemetery property. Still curious? Send us a note — we reply within 24 hours.
+              </p>
+            </div>
+          </motion.div>
+
+          <div className="lg:col-span-8 divide-y divide-border/60 border-t border-b border-border/60">
+            {faqs.map((faq, i) => {
+              const isOpen = open === i;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                >
+                  <button
+                    onClick={() => setOpen(isOpen ? null : i)}
+                    className="w-full text-left py-7 flex items-start gap-6 group"
+                  >
+                    <span className="font-mono text-[11px] text-muted-foreground tabular-nums pt-1 shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="flex-1 font-display text-lg sm:text-xl text-foreground leading-snug tracking-tight group-hover:text-primary transition-colors duration-300">
+                      {faq.q}
+                    </span>
+                    <motion.span
+                      animate={{ rotate: isOpen ? 45 : 0 }}
+                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                      className="shrink-0 mt-1 w-8 h-8 rounded-full border border-border flex items-center justify-center group-hover:border-primary group-hover:bg-primary/5 transition-colors duration-300"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-foreground" />
+                    </motion.span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-12 pr-14 pb-7 text-muted-foreground text-sm sm:text-base leading-relaxed">
+                          {faq.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
