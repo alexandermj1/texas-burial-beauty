@@ -627,6 +627,9 @@ Deno.serve(async (req) => {
     // ============================================================
     let threadExpandedCount = 0;
     try {
+      const INTERNAL_DOMAINS_TX = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+      const isInternal = (e: string) =>
+        INTERNAL_DOMAINS_TX.some((d) => (e || "").toLowerCase().endsWith("@" + d));
       const threadIds = new Set<string>();
       for (const m of fetched) if (m.threadId) threadIds.add(m.threadId);
       // Also expand threads for the most recent matched submissions so older
