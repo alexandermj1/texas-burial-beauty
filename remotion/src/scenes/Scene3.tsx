@@ -1,6 +1,7 @@
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Sequence } from "remotion";
 import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb } from "../components/FloatingParticle";
+import { SceneChrome } from "../components/SceneChrome";
 
 const SYMBOL_SIZE = 240;
 
