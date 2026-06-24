@@ -244,24 +244,46 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
         chapter: "The property",
         title: <>And what <span className="italic font-medium text-primary">kind</span> of property?</>,
         helper: "Pick a type, tell us how many spaces, and the section if you know it.",
-        validate: () => (!form.propertyType ? "Please choose a property type." : null),
+        validate: () => {
+          if (!form.propertyType) return "Please choose a property type.";
+          if (form.propertyType === "Other" && !form.propertyTypeOther.trim()) return "Please tell us what kind of property.";
+          return null;
+        },
         body: (
           <div className="space-y-7">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-              {propertyTypes.map((t) => {
-                const active = form.propertyType === t;
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {propertyTypeOptions.map((t) => {
+                const active = form.propertyType === t.value;
                 return (
-                  <button type="button" key={t} onClick={() => setForm({ ...form, propertyType: t })}
-                    className={`text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all ${
+                  <button type="button" key={t.value} onClick={() => setForm({ ...form, propertyType: t.value })}
+                    className={`group relative text-left rounded-2xl border overflow-hidden transition-all ${
                       active
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                        : "bg-background border-border/60 text-foreground hover:border-primary/50 hover:bg-primary/5"
+                        ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/30"
+                        : "border-border/60 bg-background hover:border-primary/50 hover:bg-primary/[0.03]"
                     }`}>
-                    {t}
+                    <div className="aspect-[4/3] w-full flex items-center justify-center bg-[hsl(var(--sand-light))]/60 overflow-hidden">
+                      {t.image ? (
+                        <img src={t.image} alt="" className="w-full h-full object-contain p-3 mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+                      ) : (
+                        <span className="font-display italic text-4xl text-foreground/40">?</span>
+                      )}
+                    </div>
+                    <div className="px-3 py-2.5 border-t border-border/40">
+                      <div className={`text-sm font-medium leading-tight ${active ? "text-primary" : "text-foreground"}`}>{t.label}</div>
+                      <div className="text-[11px] text-foreground/55 leading-snug mt-0.5">{t.desc}</div>
+                    </div>
                   </button>
                 );
               })}
             </div>
+            {form.propertyType === "Other" && (
+              <div>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Tell us what you have</label>
+                <input autoFocus value={form.propertyTypeOther} onChange={(e) => setForm({ ...form, propertyTypeOther: e.target.value })}
+                  placeholder="e.g. Lawn crypt, veterans niche, scattering garden…" maxLength={150}
+                  className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+              </div>
+            )}
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3"># of spaces</label>
