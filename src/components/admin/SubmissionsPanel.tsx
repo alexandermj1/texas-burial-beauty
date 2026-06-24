@@ -141,6 +141,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [addOpen, setAddOpen] = useState(false);
   const isMobile = useIsMobile();
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
+  // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
+  const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
+  const [cemeteryLabel, setCemeteryLabel] = useState<string | null>(null);
+  // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
+  const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
+
 
   const myId = user?.id ?? "";
   const myName = cleanDisplayName((user?.user_metadata as any)?.full_name) || user?.email?.split("@")[0] || "Someone";
@@ -273,6 +279,59 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
   }, [submissions]);
 
+  // Texas-only: build a set of customer emails that have uploaded files (customer_files
+  // joined through customer_profiles by primary/alt email). Used to group the list by
+  // "documents received" vs "awaiting documents".
+  useEffect(() => {
+    const texasEmails = submissions
+      .filter(s => subRegion(s) === "texas")
+      .map(s => (s.email || "").trim().toLowerCase())
+      .filter(Boolean);
+    if (texasEmails.length === 0) { setDocsEmails(new Set()); return; }
+    let cancelled = false;
+    const load = async () => {
+      // Get customer profiles whose primary_email matches any texas submission email.
+      const { data: profiles } = await supabase
+        .from("customer_profiles" as any)
+        .select("id, primary_email, alt_emails");
+      if (cancelled || !profiles) return;
+      const profileIds: string[] = [];
+      const idToEmails = new Map<string, string[]>();
+      for (const p of profiles as any[]) {
+        const emails: string[] = [];
+        if (p.primary_email) emails.push(String(p.primary_email).toLowerCase());
+        if (Array.isArray(p.alt_emails)) emails.push(...p.alt_emails.map((e: string) => String(e).toLowerCase()));
+        if (emails.some(e => texasEmails.includes(e))) {
+          profileIds.push(p.id);
+          idToEmails.set(p.id, emails);
+        }
+      }
+      if (profileIds.length === 0) { setDocsEmails(new Set()); return; }
+      const { data: files } = await supabase
+        .from("customer_files" as any)
+        .select("customer_profile_id")
+        .in("customer_profile_id", profileIds);
+      if (cancelled || !files) return;
+      const withFiles = new Set<string>();
+      for (const f of files as any[]) {
+        const ems = idToEmails.get(f.customer_profile_id) || [];
+        ems.forEach(e => withFiles.add(e));
+      }
+      setDocsEmails(withFiles);
+    };
+    load();
+    const ch = supabase.channel("customer_files_for_texas")
+      .on("postgres_changes", { event: "*", schema: "public", table: "customer_files" }, () => { load(); })
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, [submissions]);
+
+  const hasDocs = (s: Submission) => {
+    const e = (s.email || "").trim().toLowerCase();
+    return !!e && docsEmails.has(e);
+  };
+
+
 
 
   const viewersFor = (sid: string) => views.filter(v => v.submission_id === sid);
@@ -321,6 +380,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
+      if (regionFilter === "texas" && cemeteryCanon && _canon(s.cemetery || "") !== cemeteryCanon) return false;
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
@@ -338,7 +398,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     );
     const otherRows = matches.filter(s => !awaitingMap[s.id]);
     return [...awaitingRows, ...otherRows];
-  }, [submissions, regionFilter, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+  }, [submissions, regionFilter, cemeteryCanon, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
@@ -422,7 +483,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           return (
             <button
               key={r}
-              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); }}
+              onClick={() => { setRegionFilter(r); setSelectedId(null); setKindFilter("all"); setStageFilter("all"); setCemeteryCanon(null); setCemeteryLabel(null); }}
               className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
                 active
                   ? r === "texas"
@@ -442,9 +503,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* === Texas cemetery directory (texas tab only) === */}
       {regionFilter === "texas" && !isMobile && (
         <div className="lg:col-span-12">
-          <TexasCemeteriesPanel texasSubmissions={texasSubmissions} />
+          <TexasCemeteriesPanel
+            texasSubmissions={texasSubmissions}
+            activeCemeteryCanon={cemeteryCanon}
+            onSelectCemetery={(canon, label) => {
+              setCemeteryCanon(canon);
+              setCemeteryLabel(label);
+              setSelectedId(null);
+            }}
+          />
         </div>
       )}
+
 
       {/* === Team pipeline overview — sellers (Bayer only, desktop) === */}
       {!isMobile && regionFilter === "bayer" && (
@@ -557,19 +627,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       <div data-tour="submissions-list" className={`lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
-        {filtered.length === 0 ? (
-          <div className="p-10 text-center">
-            <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No submissions in this view.</p>
+        {regionFilter === "texas" && cemeteryLabel && (
+          <div className="flex items-center justify-between gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-500/30 text-xs">
+            <span className="text-amber-900 dark:text-amber-100">
+              Showing submissions for <span className="font-semibold">{cemeteryLabel}</span> ({filtered.length})
+            </span>
+            <button
+              onClick={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
+              className="text-amber-700 hover:text-amber-900 font-medium underline-offset-2 hover:underline"
+            >
+              Clear filter
+            </button>
           </div>
-        ) : (
-          filtered.map((s, i) => {
+        )}
+        {(() => {
+          const renderRow = (s: Submission, i: number) => {
             const isActive = selected?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
             const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
             const stageMeta = bayer ? BAYER_STAGE_META[bayer] : null;
             const rowViewers = viewersFor(s.id);
-            const iViewed = haveIViewed(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
             const fresh = isNew(s);
             const workers = workersFor(s.id);
@@ -588,7 +665,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   animate={{ opacity: 1 }}
                   transition={{ delay: Math.min(i * 0.02, 0.2) }}
                   onClick={() => {
-                    // On mobile, tapping the already-open row collapses it.
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
@@ -673,15 +749,58 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
 
-                {/* Inline detail (mobile only) — keeps list visible above/below */}
                 {isMobile && isActive && (
                   <MobileInlineDetail submission={s} />
                 )}
               </div>
             );
-          })
-        )}
+          };
+
+          if (filtered.length === 0) {
+            return (
+              <div className="p-10 text-center">
+                <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No submissions in this view.</p>
+              </div>
+            );
+          }
+
+          // Texas tab: group by whether attachments have been received.
+          if (regionFilter === "texas") {
+            const withDocs = filtered.filter(hasDocs);
+            const withoutDocs = filtered.filter(s => !hasDocs(s));
+            const Header = ({ label, count, tone }: { label: string; count: number; tone: "good" | "warn" }) => (
+              <div className={`sticky top-0 z-10 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide border-b ${
+                tone === "good"
+                  ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-emerald-500/30"
+                  : "bg-amber-500/10 text-amber-800 dark:text-amber-200 border-amber-500/30"
+              }`}>
+                {label} <span className="opacity-70 font-medium">({count})</span>
+              </div>
+            );
+            let idx = 0;
+            return (
+              <>
+                {withoutDocs.length > 0 && (
+                  <>
+                    <Header label="Awaiting documents" count={withoutDocs.length} tone="warn" />
+                    {withoutDocs.map(s => renderRow(s, idx++))}
+                  </>
+                )}
+                {withDocs.length > 0 && (
+                  <>
+                    <Header label="Documents received" count={withDocs.length} tone="good" />
+                    {withDocs.map(s => renderRow(s, idx++))}
+                  </>
+                )}
+              </>
+            );
+          }
+
+          return <>{filtered.map((s, i) => renderRow(s, i))}</>;
+        })()}
       </div>
+
 
 
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
