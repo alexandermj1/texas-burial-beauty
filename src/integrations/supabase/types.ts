@@ -346,6 +346,7 @@ export type Database = {
           region: string | null
           relationship_to_owner: string | null
           section: string | null
+          seller_attachments: Json
           source: string
           source_email_id: string | null
           space_numbers: string | null
@@ -434,6 +435,7 @@ export type Database = {
           region?: string | null
           relationship_to_owner?: string | null
           section?: string | null
+          seller_attachments?: Json
           source?: string
           source_email_id?: string | null
           space_numbers?: string | null
@@ -522,6 +524,7 @@ export type Database = {
           region?: string | null
           relationship_to_owner?: string | null
           section?: string | null
+          seller_attachments?: Json
           source?: string
           source_email_id?: string | null
           space_numbers?: string | null

@@ -1088,6 +1088,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {(selected as any).bayer_entry_id && <Field label="Bayer entry #" value={(selected as any).bayer_entry_id} />}
             </div>
 
+            {/* Files the seller uploaded with the form */}
+            {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
+              <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
+            )}
+
+
+
             {/* Message / details */}
             {(selected.message || selected.details) && (
               <div>
@@ -1568,6 +1575,44 @@ const PipelineOverview = ({
         })}
       </div>
     </section>
+  );
+};
+
+// Renders the files a seller uploaded through the public quote form. Each file
+// lives in the private `customer-files` bucket under `public-intake/<submission>/...`
+// — we create a short-lived signed URL on click so admins can download.
+const SellerAttachmentsBlock = ({ files }: { files: Array<{ path: string; name: string; size?: number; type?: string }> }) => {
+  const open = async (path: string) => {
+    const { data, error } = await supabase.storage.from("customer-files").createSignedUrl(path, 60 * 10);
+    if (error || !data?.signedUrl) {
+      alert("Couldn't open file: " + (error?.message || "unknown"));
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+  return (
+    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-2">
+      <p className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+        <FileText className="w-3 h-3" /> Uploaded with the form ({files.length})
+      </p>
+      <ul className="space-y-1.5">
+        {files.map((f) => (
+          <li key={f.path}>
+            <button
+              onClick={() => open(f.path)}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-background border border-border/50 hover:border-primary/40 hover:bg-primary/5 text-left transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="text-xs text-foreground truncate flex-1">{f.name}</span>
+              {typeof f.size === "number" && (
+                <span className="text-[10px] text-muted-foreground shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+              )}
+              <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 

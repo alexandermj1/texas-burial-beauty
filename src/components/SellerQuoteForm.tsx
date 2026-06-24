@@ -1,9 +1,19 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Check, Upload, Lock, X, FileText } from "lucide-react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+interface UploadedFile {
+  path: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
+const MAX_FILE_MB = 20;
+const ALLOWED = /\.(pdf|png|jpe?g|webp|heic|tiff?|gif|docx?|txt)$/i;
 
 const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Family Estate", "Other"];
 
@@ -17,6 +27,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Stable id so all uploads land under one submission folder even before save.
+  const [intakeId] = useState(() => crypto.randomUUID());
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -33,6 +48,38 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     prepaidEndowmentInfo: "",
   });
 
+  const handleFiles = async (picked: FileList | null) => {
+    if (!picked || picked.length === 0) return;
+    setUploading(true);
+    const next: UploadedFile[] = [];
+    for (const f of Array.from(picked)) {
+      if (f.size > MAX_FILE_MB * 1024 * 1024) {
+        toast({ title: `${f.name} is too large`, description: `Max ${MAX_FILE_MB}MB per file.`, variant: "destructive" });
+        continue;
+      }
+      if (!ALLOWED.test(f.name)) {
+        toast({ title: `${f.name} type not allowed`, description: "PDF, image, or document files only.", variant: "destructive" });
+        continue;
+      }
+      const safeName = f.name.replace(/[^\w.\-]+/g, "_");
+      const path = `public-intake/${intakeId}/${Date.now()}-${safeName}`;
+      const { error: upErr } = await supabase.storage.from("customer-files").upload(path, f, { contentType: f.type || undefined, upsert: false });
+      if (upErr) {
+        toast({ title: `Couldn't upload ${f.name}`, description: upErr.message, variant: "destructive" });
+        continue;
+      }
+      next.push({ path, name: f.name, size: f.size, type: f.type });
+    }
+    setFiles(prev => [...prev, ...next]);
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeFile = async (path: string) => {
+    await supabase.storage.from("customer-files").remove([path]);
+    setFiles(prev => prev.filter(f => f.path !== path));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.cemetery.trim() || !form.propertyType) {
@@ -40,9 +87,8 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       return;
     }
     setLoading(true);
-    const submissionId = crypto.randomUUID();
     const { error } = await supabase.from("contact_submissions" as any).insert({
-      id: submissionId,
+      id: intakeId,
       source: "seller_quote",
       name: form.name.trim(),
       email: form.email.trim(),
@@ -57,6 +103,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       relationship_to_owner: form.relationshipToOwner.trim() || null,
       purchase_info: form.purchaseInfo.trim() || null,
       prepaid_endowment_info: form.prepaidEndowmentInfo.trim() || null,
+      seller_attachments: files,
       created_at: new Date().toISOString(),
     });
     if (error) {
@@ -64,9 +111,10 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
       setLoading(false);
       return;
     }
-    const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
+    const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: intakeId } });
     if (emailError) console.warn("inquiry email failed", emailError);
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", spaces: "", section: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
+    setFiles([]);
     setLoading(false);
     navigate("/thank-you");
   };
@@ -275,7 +323,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
                 <textarea
                   value={form.purchaseInfo}
                   onChange={(e) => setForm({ ...form, purchaseInfo: e.target.value })}
-                  placeholder="When was it purchased, for what amount, and what records do you have? After submitting, please email a clear photo or scanned copy of the deed/certificate of ownership and any original purchase records to info@texascemeterybrokers.com."
+                  placeholder="When was it purchased, for what amount, and what records do you have? You can attach the deed/certificate of ownership and any purchase records securely below."
                   rows={3}
                   maxLength={1000}
                   className={
@@ -319,6 +367,71 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
                 />
               </div>
             </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border/40 my-10" />
+
+          {/* Section: Secure document upload */}
+          <div className="mb-10">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-3">
+              Attach documents
+            </p>
+            <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-xl p-3">
+              <Lock className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
+              <p className="leading-relaxed">
+                <span className="font-medium text-foreground">Confidential & secure.</span>{" "}
+                Files upload directly to our private broker portal. Only our team can see them —
+                they are never shared, indexed, or sent over email. PDF, JPG, PNG, HEIC, or DOC up to {MAX_FILE_MB}MB each.
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+              Helpful to attach: the deed or certificate of ownership, original purchase records,
+              endowment care receipts, or photos of the plot.
+            </p>
+
+            <label
+              htmlFor="seller-attachments"
+              className="flex flex-col items-center justify-center gap-2 w-full py-8 rounded-xl border-2 border-dashed border-border/70 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer text-center"
+            >
+              <Upload className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-foreground">
+                {uploading ? "Uploading…" : "Click to choose files or drop here"}
+              </span>
+              <span className="text-[11px] text-muted-foreground">You can add multiple files</span>
+              <input
+                ref={fileInputRef}
+                id="seller-attachments"
+                type="file"
+                multiple
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => handleFiles(e.target.files)}
+                disabled={uploading}
+              />
+            </label>
+
+            {files.length > 0 && (
+              <ul className="mt-4 space-y-2">
+                {files.map((f) => (
+                  <li key={f.path} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground truncate">{f.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{(f.size / 1024).toFixed(0)} KB · uploaded</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(f.path)}
+                      className="text-muted-foreground hover:text-destructive p-1"
+                      aria-label={`Remove ${f.name}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
 
