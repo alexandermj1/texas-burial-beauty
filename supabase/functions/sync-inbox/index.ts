@@ -15,6 +15,8 @@ const BodySchema = z.object({
   maxResults: z.number().int().min(1).max(500).optional().default(100),
   query: z.string().max(500).optional().default(DEFAULT_QUERY),
   attachmentBackfillLimit: z.number().int().min(0).max(150).optional().default(25),
+  threadBackfillLimit: z.number().int().min(0).max(500).optional().default(60),
+  maxThreadsPerSync: z.number().int().min(0).max(500).optional().default(80),
 });
 
 interface GmailHeader { name: string; value: string }
