@@ -73,6 +73,20 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
   const [refreshingInbox, setRefreshingInbox] = useState(false);
+  const [deletedSubmissions, setDeletedSubmissions] = useState<any[]>([]);
+
+  // Fetch soft-deleted submissions so they can be restored from the Trash dialog.
+  const refreshDeletedSubmissions = async () => {
+    const { data } = await supabase
+      .from("contact_submissions" as any)
+      .select("*")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
+      .limit(200);
+    setDeletedSubmissions((data as any) || []);
+  };
+  useEffect(() => { if (user && isAdmin) refreshDeletedSubmissions(); }, [user, isAdmin]);
+
 
   const handleInboxRefresh = async () => {
     if (refreshingInbox) return;
