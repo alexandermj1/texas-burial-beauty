@@ -60,9 +60,9 @@ export const Scene7Processing: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ flex: 0, position: "relative" }}>
-          {/* Progress bar above symbol — NO Sequence wrapper to avoid AbsoluteFill overlay */}
-          <div style={{ marginBottom: 18, width: SYMBOL_SIZE, opacity: progressBarOpacity }}>
+        <div style={{ flex: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 32 }}>
+          {/* Progress bar above symbol */}
+          <div style={{ width: SYMBOL_SIZE, opacity: progressBarOpacity }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontFamily: fonts.body, fontSize: 17, color: colors.muted }}>Paperwork</span>
               <span style={{ fontFamily: fonts.body, fontSize: 17, color: colors.primary, fontWeight: 600 }}>{Math.round(progress)}%</span>
@@ -79,7 +79,6 @@ export const Scene7Processing: React.FC = () => {
             display: "flex", alignItems: "center", justifyContent: "center",
             transform: `scale(${iconScale * pulse})`,
             boxShadow: `0 20px 60px -15px ${colors.primary}60`,
-            position: "relative",
           }}>
             <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke={colors.background} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -88,46 +87,17 @@ export const Scene7Processing: React.FC = () => {
             </svg>
           </div>
 
-          {/* Doc stamps to the right — positioned relative to symbol top */}
-          <Sequence from={56}>
-            <DocStamp label="Transfer" top={boxTop1} />
-          </Sequence>
-          <Sequence from={74}>
-            <DocStamp label="Cemetery" top={boxTop2} />
-          </Sequence>
-          <Sequence from={92}>
-            <DocStamp label="Records" top={boxTop3} />
-          </Sequence>
+          <EditorialList
+            width={SYMBOL_SIZE + 120}
+            items={[
+              { label: "Transfer", from: 56 },
+              { label: "Cemetery", from: 74 },
+              { label: "Records", from: 92 },
+            ]}
+          />
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-const DocStamp: React.FC<{ label: string; top: number }> = ({ label, top }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 16, stiffness: 180 } });
-  const opacity = interpolate(s, [0, 1], [0, 1]);
-  const x = interpolate(s, [0, 1], [24, 0]);
-
-  // Offset top to account for the progress bar above the symbol (approx 54px: 36px bar + 18px margin)
-  const adjustedTop = top + 54;
-
-  return (
-    <div style={{
-      position: "absolute", top: adjustedTop, left: 260,
-      display: "flex", alignItems: "center", gap: 10,
-      background: colors.white, borderRadius: 999, width: 200, padding: "11px 18px",
-      boxShadow: `0 15px 30px -14px ${colors.foreground}24`,
-      opacity, transform: `translateX(${x}px)`,
-    }}>
-      <div style={{ width: 24, height: 24, borderRadius: "50%", background: colors.primaryLight, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </div>
-      <span style={{ fontFamily: fonts.body, fontSize: 21, color: colors.foreground, fontWeight: 500 }}>{label}</span>
-    </div>
-  );
-};
