@@ -359,12 +359,19 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                 placeholder="Reason for selling, preferred timeline, questions…" rows={3} maxLength={1000}
                 className="w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2" />
             </div>
-            <div>
+            <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Lock className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-[11px] tracking-[0.25em] uppercase font-bold text-primary">Secure broker portal</span>
+              </div>
+              <p className="text-[13px] text-foreground/70 leading-relaxed mb-4">
+                Any document you attach is uploaded directly to our private, encrypted broker portal — visible only to our licensed Texas team. Never shared, never indexed, never sold.
+              </p>
               <label htmlFor="seller-attachments-ed"
-                className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-foreground/25 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
+                className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-primary/40 bg-background hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
                 <Upload className="w-4 h-4 text-primary" />
                 <span className="text-sm text-foreground">
-                  {uploading ? "Uploading…" : "Attach a deed, receipt or photo "}
+                  {uploading ? "Uploading securely…" : "Attach a deed, receipt or photo "}
                   <span className="italic text-foreground/55">— optional</span>
                 </span>
                 <input ref={fileInputRef} id="seller-attachments-ed" type="file" multiple
@@ -377,6 +384,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                     <li key={f.path} className="flex items-center gap-2 text-xs text-foreground/70">
                       <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="truncate flex-1">{f.name}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-primary/70 font-bold">Encrypted</span>
                       <button type="button" onClick={() => removeFile(f.path)} className="hover:text-destructive" aria-label={`Remove ${f.name}`}>
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -384,10 +392,6 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                   ))}
                 </ul>
               )}
-            </div>
-            <div className="flex items-start gap-2 text-[11px] text-foreground/55 leading-relaxed pt-1">
-              <Lock className="w-3 h-3 mt-0.5 text-primary shrink-0" />
-              <span>Confidential — files upload to our private broker portal. Never shared or indexed.</span>
             </div>
           </div>
         ),
