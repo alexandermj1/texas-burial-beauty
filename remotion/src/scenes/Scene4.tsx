@@ -94,10 +94,6 @@ export const Scene4Marketing: React.FC = () => {
           </Sequence>
         </div>
       </div>
-
-      <Sequence from={40}>
-        <BottomProgress step={4} />
-      </Sequence>
     </AbsoluteFill>
   );
 };
@@ -119,19 +115,6 @@ const MarketingChip: React.FC<{ icon: string; label: string; top: number }> = ({
     }}>
       <span style={{ fontSize: 24 }}>{icon}</span>
       <span style={{ fontFamily: fonts.body, fontSize: 22, color: colors.foreground, fontWeight: 500 }}>{label}</span>
-    </div>
-  );
-};
-
-const BottomProgress: React.FC<{ step: number }> = ({ step }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const progress = spring({ frame, fps, config: { damping: 200 } });
-  const opacity = interpolate(progress, [0, 1], [0, 0.6]);
-  return (
-    <div style={{ position: "absolute", bottom: 60, left: 160, right: 160, display: "flex", alignItems: "center", gap: 8, opacity }}>
-      {Array.from({ length: 8 }, (_, i) => (<div key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i < step ? colors.primary : colors.sand }} />))}
-      <span style={{ fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginLeft: 8 }}>{step}/8</span>
     </div>
   );
 };
