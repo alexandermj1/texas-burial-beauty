@@ -148,6 +148,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [cemeteryLabel, setCemeteryLabel] = useState<string | null>(null);
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
+  const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
+
 
 
   const myId = user?.id ?? "";
