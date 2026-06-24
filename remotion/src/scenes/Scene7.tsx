@@ -5,7 +5,6 @@ import { SceneChrome } from "../components/SceneChrome";
 import { EditorialList } from "../components/EditorialList";
 
 const SYMBOL_SIZE = 240;
-const BOX_HEIGHT = 48;
 
 export const Scene7Processing: React.FC = () => {
   const frame = useCurrentFrame();
@@ -21,12 +20,7 @@ export const Scene7Processing: React.FC = () => {
 
   const progress = interpolate(frame - 44, [0, 78], [0, 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const progressBarOpacity = interpolate(frame - 44, [0, 5], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const numSpring = spring({ frame, fps, config: { damping: 20, stiffness: 200 } });
 
-  // White boxes aligned to symbol: top, center, bottom
-  const boxTop1 = 0;
-  const boxTop3 = SYMBOL_SIZE - BOX_HEIGHT;
-  const boxTop2 = (boxTop1 + boxTop3) / 2;
 
   return (
     <AbsoluteFill
