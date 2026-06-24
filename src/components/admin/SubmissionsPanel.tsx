@@ -775,39 +775,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             );
           }
 
-          // Texas tab: group by whether attachments have been received.
-          if (regionFilter === "texas") {
-            const withDocs = filtered.filter(hasDocs);
-            const withoutDocs = filtered.filter(s => !hasDocs(s));
-            const Header = ({ label, count, tone }: { label: string; count: number; tone: "good" | "warn" }) => (
-              <div className={`sticky top-0 z-10 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide border-b ${
-                tone === "good"
-                  ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-emerald-500/30"
-                  : "bg-amber-500/10 text-amber-800 dark:text-amber-200 border-amber-500/30"
-              }`}>
-                {label} <span className="opacity-70 font-medium">({count})</span>
-              </div>
-            );
-            let idx = 0;
-            return (
-              <>
-                {withoutDocs.length > 0 && (
-                  <>
-                    <Header label="Awaiting documents" count={withoutDocs.length} tone="warn" />
-                    {withoutDocs.map(s => renderRow(s, idx++))}
-                  </>
-                )}
-                {withDocs.length > 0 && (
-                  <>
-                    <Header label="Documents received" count={withDocs.length} tone="good" />
-                    {withDocs.map(s => renderRow(s, idx++))}
-                  </>
-                )}
-              </>
-            );
-          }
-
           return <>{filtered.map((s, i) => renderRow(s, i))}</>;
+
         })()}
       </div>
 
