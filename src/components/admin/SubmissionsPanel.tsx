@@ -282,9 +282,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eStage = isMobile ? "all" : stageFilter;
   const eSellerView = !isMobile && isSellerView;
   const filtered = useMemo(() => {
-    return submissions.filter(s => {
+    const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (eFilter === "new" && !isNew(s)) return false;
+      if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
@@ -293,7 +294,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-  }, [submissions, regionFilter, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday]);
+    // Pin awaiting-reply submissions to the top (most recent incoming first).
+    // Everything else keeps its incoming order (already sorted by created_at desc upstream).
+    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort((a, b) =>
+      (awaitingMap[b.id] || "").localeCompare(awaitingMap[a.id] || "")
+    );
+    const otherRows = matches.filter(s => !awaitingMap[s.id]);
+    return [...awaitingRows, ...otherRows];
+  }, [submissions, regionFilter, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
