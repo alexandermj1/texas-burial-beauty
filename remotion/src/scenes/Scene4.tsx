@@ -37,10 +37,8 @@ export const Scene4Marketing: React.FC = () => {
       <GradientOrb x={200} y={700} size={200} />
       <DashedArc x={850} y={780} size={240} speed={0.35} />
 
-      <div style={{ position: "absolute", left: 100, top: 80, transform: `scale(${interpolate(numSpring, [0, 1], [0, 1])})`, display: "flex", alignItems: "center", gap: 16, zIndex: 2 }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", background: colors.primary, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fonts.display, fontSize: 28, color: colors.background }}>4</div>
-        <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.muted, letterSpacing: 2, textTransform: "uppercase" }}>Step Four</span>
-      </div>
+      <SceneChrome step={4} chapter="Marketing" kicker="Marketing Launch" />
+
 
       <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
         <div style={{ flex: 1 }}>

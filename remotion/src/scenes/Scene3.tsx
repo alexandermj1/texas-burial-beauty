@@ -45,10 +45,8 @@ export const Scene3Agreement: React.FC = () => {
       <GradientOrb x={150} y={700} size={200} />
       <AnimatedRing x={900} y={800} size={180} color={colors.sand + "15"} speed={0.4} />
 
-      <div style={{ position: "absolute", left: 100, top: 80, transform: `scale(${interpolate(numSpring, [0, 1], [0, 1])})`, display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", background: colors.primary, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fonts.display, fontSize: 28, color: colors.background }}>3</div>
-        <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.muted, letterSpacing: 2, textTransform: "uppercase" }}>Step Three</span>
-      </div>
+      <SceneChrome step={3} chapter="Agreement" kicker="Listing Agreement" />
+
 
       <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
         <div style={{ flex: 1 }}>
