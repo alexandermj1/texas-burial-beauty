@@ -276,40 +276,27 @@ const SellProperty = () => {
         </div>
       </section>
 
-      {/* FAQs */}
-      <section className="py-12 bg-gradient-warm">
-        <div className="container mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
-            <h2 className="font-display text-3xl md:text-4xl text-foreground">Seller FAQ</h2>
-          </motion.div>
-          <div className="max-w-4xl mx-auto grid gap-4">
-            {faqs.map((faq, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} className="bg-card rounded-xl p-5 shadow-soft">
-                <h3 className="font-display text-base text-foreground mb-2">{faq.q}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* FAQs — editorial accordion */}
+      <FaqSection faqs={faqs} />
 
       {/* CTA */}
-      <section className="py-16 bg-gradient-sage">
+      <section className="py-20 bg-gradient-sage">
         <div className="container mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">Ready to sell your property?</h2>
-            <p className="text-muted-foreground mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours and there's never any pressure.</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Phone className="w-4 h-4" /> (214) 230-4740
+            <h2 className="font-display text-3xl md:text-5xl text-foreground mb-4">Ready to sell your property?</h2>
+            <p className="text-muted-foreground mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours — and there's never any pressure.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <a href="#quote-form" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft">
+                Get a Free Valuation <ArrowRight className="w-4 h-4" />
               </a>
-              <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                <Mail className="w-4 h-4" /> Email Us <ArrowRight className="w-4 h-4" />
+              <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors underline underline-offset-4">
+                <Mail className="w-4 h-4" /> Or email us instead
               </a>
             </div>
           </motion.div>
         </div>
       </section>
+
 
       <Footer />
     </div>
