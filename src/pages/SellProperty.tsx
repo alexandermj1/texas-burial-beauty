@@ -146,13 +146,20 @@ const SellProperty = () => {
             <div className="col-span-12 grid grid-cols-12 gap-x-6 gap-y-8 mt-6">
               {/* Section opener label — left margin */}
               <div className="col-span-12 lg:col-span-3 lg:pt-2">
-                <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-3">Start here →</p>
-                <h3 className="font-display text-2xl md:text-3xl text-foreground leading-tight tracking-tight">
-                  Get your free valuation <span className="italic text-primary">in 2 minutes.</span>
-                </h3>
-                <p className="text-sm text-foreground/70 mt-3 leading-relaxed max-w-[28ch]">
-                  Answer a few quick questions in the form <span className="lg:hidden">below</span><span className="hidden lg:inline">on the right</span> — one at a time, no overwhelming form. We'll email your no-obligation valuation within 24 hours.
-                </p>
+              <motion.div
+                animate={{ x: [0, 6, 0] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30"
+              >
+                <span className="text-sm md:text-base tracking-[0.2em] uppercase font-bold text-accent">Start here</span>
+                <ArrowRight className="w-4 h-4 text-accent" />
+              </motion.div>
+              <h3 className="font-display text-2xl md:text-3xl text-foreground leading-tight tracking-tight">
+                Get your free valuation <span className="italic text-primary">in 2 minutes.</span>
+              </h3>
+              <p className="text-sm text-foreground/70 mt-3 leading-relaxed max-w-[28ch]">
+                Answer a few quick questions in the form <span className="lg:hidden">below</span><span className="hidden lg:inline">on the right</span> — one at a time, no overwhelming form. We'll email your no-obligation valuation within 24 hours.
+              </p>
                 <p className="hidden lg:block text-xs text-foreground/55 mt-6">
                   Prefer to talk?{" "}
                   <a href="tel:+12142304740" className="underline underline-offset-2 hover:text-primary transition-colors">
