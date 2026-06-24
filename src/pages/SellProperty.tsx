@@ -146,26 +146,32 @@ const SellProperty = () => {
             <div className="col-span-12 grid grid-cols-12 gap-x-6 gap-y-8 mt-6">
               {/* Section opener label — left margin */}
               <div className="col-span-12 lg:col-span-3 lg:pt-2">
-              <motion.div
-                animate={{ x: [0, 6, 0] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30"
-              >
-                <span className="text-sm md:text-base tracking-[0.2em] uppercase font-bold text-accent">Start here</span>
-                <ArrowRight className="w-4 h-4 text-accent" />
-              </motion.div>
-              <h3 className="font-display text-2xl md:text-3xl text-foreground leading-tight tracking-tight">
-                Get your free valuation <span className="italic text-primary">in 2 minutes.</span>
+              <div className="flex items-center gap-4 mb-6">
+                <span className="text-[10px] tracking-[0.35em] uppercase font-bold text-accent">N° 01</span>
+                <span className="h-px flex-1 bg-foreground/25" />
+              </div>
+              <h3 className="font-display text-foreground leading-[0.95] tracking-tight text-[clamp(2.75rem,5.5vw,4.5rem)]">
+                Start
+                <span className="block italic font-light text-primary -mt-1">
+                  here<span className="text-foreground not-italic font-normal">.</span>
+                </span>
               </h3>
-              <p className="text-sm text-foreground/70 mt-3 leading-relaxed max-w-[28ch]">
-                Answer a few quick questions in the form <span className="lg:hidden">below</span><span className="hidden lg:inline">on the right</span> — one at a time, no overwhelming form. We'll email your no-obligation valuation within 24 hours.
+              <motion.div
+                animate={{ x: [0, 10, 0], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                className="flex items-center gap-3 mt-5 text-foreground/70"
+                aria-hidden
+              >
+                <span className="h-px w-10 bg-foreground/50" />
+                <ArrowRight className="w-5 h-5" />
+              </motion.div>
+              <p className="font-display italic text-xl md:text-2xl text-foreground/80 leading-snug mt-7 max-w-[26ch]">
+                Your free valuation begins with a single field <span className="lg:hidden">below</span><span className="hidden lg:inline">to the right</span>.
               </p>
-                <p className="hidden lg:block text-xs text-foreground/55 mt-6">
-                  Prefer to talk?{" "}
-                  <a href="tel:+12142304740" className="underline underline-offset-2 hover:text-primary transition-colors">
-                    (214) 230-4740
-                  </a>
-                </p>
+              <p className="text-[13px] text-foreground/65 mt-4 leading-relaxed max-w-[30ch]">
+                One question at a time — no overwhelming forms. Reply in your inbox within 24 hours.
+              </p>
+
               </div>
 
               {/* The form, embedded directly on the page — no card, no in-your-face panel */}
