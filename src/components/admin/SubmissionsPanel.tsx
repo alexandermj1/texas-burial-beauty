@@ -1275,9 +1275,120 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         </div>
       )}
+
+      {/* Delete confirmation — soft-delete only. Requires typing "DELETE" so it can't
+          happen by accident; the submission goes to trash and can be restored. */}
+      {confirmDeleteFor && (() => {
+        const target = confirmDeleteFor;
+        const expected = "DELETE";
+        const ready = deleteText.trim().toUpperCase() === expected;
+        return (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setConfirmDeleteFor(null)}>
+            <div onClick={e => e.stopPropagation()} className="bg-card rounded-xl border border-border shadow-xl max-w-md w-full p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-destructive" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold text-foreground">Move submission to trash?</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className="font-medium text-foreground">{target.name || "Anonymous"}</span>
+                    {target.email ? ` · ${target.email}` : ""}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This won't permanently delete anything — the submission moves to "Recently deleted" and any teammate can restore it. To confirm, type <span className="font-mono font-semibold text-foreground">DELETE</span> below.
+              </p>
+              <input
+                autoFocus
+                value={deleteText}
+                onChange={e => setDeleteText(e.target.value)}
+                placeholder="Type DELETE to confirm"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm font-mono"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => { setConfirmDeleteFor(null); setDeleteText(""); }}
+                  className="px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={!ready}
+                  onClick={async () => {
+                    const id = target.id;
+                    setConfirmDeleteFor(null);
+                    setDeleteText("");
+                    await onDelete(id);
+                  }}
+                  className="px-4 py-2 rounded-full text-xs font-semibold bg-destructive text-destructive-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Move to trash
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Recently deleted — list of soft-deleted submissions with one-click restore. */}
+      {trashOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setTrashOpen(false)}>
+          <div onClick={e => e.stopPropagation()} className="bg-card rounded-xl border border-border shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-border/50">
+              <div className="flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-foreground">Recently deleted submissions</h3>
+                <span className="text-[11px] text-muted-foreground">({deletedSubmissions.length})</span>
+              </div>
+              <button onClick={() => setTrashOpen(false)} className="p-1 rounded-full hover:bg-muted/50">
+                <MessageCircleX className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {deletedSubmissions.length === 0 ? (
+                <div className="p-10 text-center">
+                  <Trash2 className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Nothing in the trash.</p>
+                </div>
+              ) : (
+                deletedSubmissions.map((d: any) => (
+                  <div key={d.id} className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 hover:bg-muted/30">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{d.name || "Anonymous"}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {sourceLabel(d.source)}
+                        {d.cemetery ? ` · ${d.cemetery}` : ""}
+                        {d.email ? ` · ${d.email}` : ""}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/80 mt-0.5">
+                        Deleted {d.deleted_at ? new Date(d.deleted_at).toLocaleString() : "—"}
+                        {d.deleted_by ? ` by ${d.deleted_by}` : ""}
+                      </p>
+                    </div>
+                    {onRestore && (
+                      <button
+                        onClick={async () => { await onRestore(d.id); }}
+                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" /> Restore
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="p-3 border-t border-border/50 text-[11px] text-muted-foreground text-center">
+              Restored submissions reappear at the top of the list immediately.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 const Field = ({ label, value }: { label: string; value: string }) => (
   <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/40">
