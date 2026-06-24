@@ -25,7 +25,13 @@ interface UploadedFile {
 const MAX_FILE_MB = 20;
 const ALLOWED = /\.(pdf|png|jpe?g|webp|heic|tiff?|gif|docx?|txt)$/i;
 
-const propertyTypes = ["Burial Plot(s)", "Niche(s)", "Crypt / Mausoleum", "Family Estate", "Other"];
+const propertyTypeOptions = [
+  { value: "Burial Plot(s)", label: "Burial Plot", desc: "Traditional in-ground burial", image: singlePlotImg },
+  { value: "Niche(s)", label: "Niche", desc: "Cremated remains in a columbarium", image: nicheImg },
+  { value: "Crypt / Mausoleum", label: "Crypt / Mausoleum", desc: "Above-ground entombment", image: cryptImg },
+  { value: "Family Estate", label: "Family Estate", desc: "Larger multi-space property", image: familyEstateImg },
+  { value: "Other", label: "Other", desc: "Tell us what you have", image: null as string | null },
+];
 
 const guarantees = [
   "100% free, no obligation",
