@@ -185,7 +185,7 @@ const Admin = () => {
       supabase.rpc("get_listings_with_internal" as any),
       supabase.from("plot_reservations" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("sales" as any).select("*").order("created_at", { ascending: false }),
-      supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false }),
     ]);
     if (listingsRes.data) setListings(listingsRes.data as any);
     if (salesRes.data) setSales(salesRes.data as any);
