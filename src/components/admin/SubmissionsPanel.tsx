@@ -521,7 +521,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               setCemeteryLabel(label);
               setSelectedId(null);
             }}
+            onRefresh={onRefresh}
           />
+
         </div>
       )}
 
