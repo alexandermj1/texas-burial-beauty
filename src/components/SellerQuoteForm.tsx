@@ -465,9 +465,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
               OK <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
           )}
-          <span className="text-xs text-foreground/55">
-            press <kbd className="font-mono font-bold text-foreground/80">Enter</kbd> ↵
-          </span>
+          {!isLastEd && (
+            <span className="text-xs text-foreground/55">
+              press <kbd className="font-mono font-bold text-foreground/80">Enter</kbd> ↵
+            </span>
+          )}
           {step > 0 && (
             <button type="button" onClick={goBack}
               className="ml-auto text-xs text-foreground/55 hover:text-foreground transition-colors inline-flex items-center gap-1">
