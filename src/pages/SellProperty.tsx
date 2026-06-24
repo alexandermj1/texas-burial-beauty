@@ -93,47 +93,32 @@ const SellProperty = () => {
         />
 
         <div className="relative container mx-auto px-6">
-          {/* --- MASTHEAD --- */}
-          <div className="max-w-7xl mx-auto border-b border-foreground/15 pb-4 mb-10 flex items-center justify-between text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/70">
-            <span>Vol. 01 · Texas Edition</span>
-            <span className="hidden sm:inline italic font-display normal-case tracking-normal text-base text-foreground">The Seller&rsquo;s Brief</span>
-            <span>Est. 2026</span>
-          </div>
-
           {/* --- BROKEN EDITORIAL GRID --- */}
           <div className="max-w-7xl mx-auto grid grid-cols-12 gap-x-6 gap-y-10">
-            {/* Tiny eyebrow — top left */}
-            <div className="col-span-12 lg:col-span-3">
-              <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-2">Cover Story</p>
-              <p className="font-display italic text-foreground/60 text-sm leading-snug max-w-[16ch]">
-                On selling a Texas cemetery plot, gracefully.
-              </p>
-            </div>
-
-            {/* MASSIVE asymmetric headline */}
-            <div className="col-span-12 lg:col-span-9 lg:-mt-3">
+            {/* Centered headline — "right" sits visually between the two columns below */}
+            <div className="col-span-12 text-center">
+              <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-5">A guide for Texas families</p>
               <h1 className="font-display text-foreground leading-[0.92] tracking-tight text-[clamp(3rem,9vw,8.5rem)]">
-                Sell your plot
-                <span className="block pl-[6%]">
+                <span className="block">Sell your plot</span>
+                <span className="block">
                   the <span className="italic font-medium text-primary">right</span> way.
                 </span>
               </h1>
             </div>
 
-            {/* Standfirst — drop cap intro paragraph, magazine-style, narrow column */}
-            <div className="col-span-12 md:col-span-7 lg:col-span-5 lg:col-start-2 lg:-mt-4">
+            {/* Standfirst — drop cap intro paragraph, narrow left column */}
+            <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
               <p className="text-base md:text-lg text-foreground/80 leading-relaxed font-light first-letter:font-display first-letter:text-6xl first-letter:font-medium first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none">
                 Most owners try to sell on their own — and lose months chasing buyers, paperwork, and cemetery red tape. We take all of that off your plate, find a serious buyer, and close for you. Free valuation. No upfront cost. You stay in charge.
               </p>
               <div className="mt-6 flex items-baseline gap-3 text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/60">
                 <span>By Texas Cemetery Brokers</span>
                 <span className="h-px flex-1 bg-foreground/20" />
-                <span className="italic font-display normal-case tracking-normal text-sm">in partnership with Bayer</span>
               </div>
             </div>
 
-            {/* Pull quote — right column, sits next to standfirst */}
-            <aside className="hidden lg:block col-span-4 col-start-9 border-l border-foreground/20 pl-6">
+            {/* Pull quote — right column */}
+            <aside className="hidden md:block col-span-6 lg:col-span-4 lg:col-start-8 border-l border-foreground/20 pl-6">
               <p className="font-display italic text-2xl text-foreground/85 leading-snug">
                 &ldquo;They handled everything — deeds, the cemetery, the buyer. I just signed.&rdquo;
               </p>
