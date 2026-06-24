@@ -113,7 +113,7 @@ const SellProperty = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="lg:col-span-5 lg:sticky lg:top-28 rounded-[2rem] bg-background/92 backdrop-blur-md border border-border/70 shadow-soft p-6 sm:p-8 lg:p-9"
+              className="relative z-10 lg:col-span-5 lg:sticky lg:top-28 rounded-[2rem] bg-background border border-border/70 shadow-soft p-6 sm:p-8 lg:p-9"
             >
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-[10px] tracking-[0.3em] font-bold text-primary uppercase">
