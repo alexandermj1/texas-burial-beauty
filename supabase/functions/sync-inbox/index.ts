@@ -265,10 +265,17 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    const gmailKey = Deno.env.get("GOOGLE_MAIL_API_KEY");
+    // Collect all linked Gmail mailbox keys: GOOGLE_MAIL_API_KEY plus
+    // GOOGLE_MAIL_API_KEY_1, GOOGLE_MAIL_API_KEY_2, ... (added when a second
+    // Gmail account like info@texascemeterybrokers.com is connected).
+    const gmailKeys: string[] = [];
+    const seenKeys = new Set<string>();
+    const pushKey = (v?: string | null) => { if (v && !seenKeys.has(v)) { seenKeys.add(v); gmailKeys.push(v); } };
+    pushKey(Deno.env.get("GOOGLE_MAIL_API_KEY"));
+    for (let i = 1; i <= 9; i++) pushKey(Deno.env.get(`GOOGLE_MAIL_API_KEY_${i}`));
 
     if (!lovableKey) return json({ error: "LOVABLE_API_KEY is not configured" }, 500);
-    if (!gmailKey) return json({ error: "GOOGLE_MAIL_API_KEY is not configured" }, 500);
+    if (gmailKeys.length === 0) return json({ error: "No Gmail connector keys configured" }, 500);
 
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
