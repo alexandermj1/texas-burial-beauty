@@ -80,8 +80,9 @@ const Admin = () => {
     try {
       const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 100 } });
       if (error) { toast({ title: "Sync failed", description: error.message, variant: "destructive" }); }
-      const res = await supabase.from("contact_submissions" as any).select("*").order("created_at", { ascending: false });
+      const res = await supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false });
       if (res.data) setSubmissions(res.data as any);
+
       const newCount = (data as any)?.bayer_imported ?? 0;
       toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
     } finally {
