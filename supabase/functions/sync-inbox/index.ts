@@ -620,16 +620,26 @@ Deno.serve(async (req) => {
       }
     }
 
+    totalPageSize += ids.length;
+    totalAlreadyCached += existingIds.size;
+    totalNewlySynced += insertedCount;
+    totalRematched += rematchedCount;
+    totalBayerCreated += bayerCreated;
+    if (listData.nextPageToken) lastNextPageToken = listData.nextPageToken;
+    aggregateResultSize += listData.resultSizeEstimate ?? 0;
+    } // end for each gmailKey
+
     return json({
       success: true,
-      page_size: ids.length,
-      already_cached: existingIds.size,
-      newly_synced: insertedCount,
-      rematched: rematchedCount,
-      next_page_token: listData.nextPageToken ?? null,
-      has_more: Boolean(listData.nextPageToken),
-      result_size_estimate: listData.resultSizeEstimate ?? null,
-      bayer_imported: bayerCreated,
+      mailboxes_synced: gmailKeys.length,
+      page_size: totalPageSize,
+      already_cached: totalAlreadyCached,
+      newly_synced: totalNewlySynced,
+      rematched: totalRematched,
+      next_page_token: lastNextPageToken,
+      has_more: Boolean(lastNextPageToken),
+      result_size_estimate: aggregateResultSize,
+      bayer_imported: totalBayerCreated,
     });
   } catch (e) {
     console.error("sync-inbox error", e);
