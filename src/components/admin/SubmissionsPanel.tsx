@@ -385,6 +385,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (regionFilter === "texas" && cemeteryCanon && _canon(s.cemetery || "") !== cemeteryCanon) return false;
+      if (regionFilter === "texas" && docsFilter !== "all") {
+        const has = hasDocs(s);
+        if (docsFilter === "with" && !has) return false;
+        if (docsFilter === "without" && has) return false;
+      }
+
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
