@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { ArrowRight, Check, Upload, Lock, X, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, ArrowLeft, Check, Upload, Lock, X, FileText, User, MapPin, FileSignature, Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -23,12 +23,20 @@ const guarantees = [
   "You stay in control",
 ];
 
+const steps = [
+  { id: 0, label: "About you", icon: User },
+  { id: 1, label: "Property", icon: MapPin },
+  { id: 2, label: "Ownership", icon: FileSignature },
+  { id: 3, label: "Documents", icon: Paperclip },
+] as const;
+
 const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [step, setStep] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Stable id so all uploads land under one submission folder even before save.
   const [intakeId] = useState(() => crypto.randomUUID());
@@ -80,11 +88,31 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     setFiles(prev => prev.filter(f => f.path !== path));
   };
 
+  const validateStep = (s: number): string | null => {
+    if (s === 0) {
+      if (!form.name.trim()) return "Please enter your name.";
+      if (!form.email.trim()) return "Please enter your email.";
+    }
+    if (s === 1) {
+      if (!form.cemetery.trim()) return "Please enter the cemetery name.";
+      if (!form.propertyType) return "Please choose a property type.";
+    }
+    return null;
+  };
+
+  const next = () => {
+    const err = validateStep(step);
+    if (err) { toast({ title: err, variant: "destructive" }); return; }
+    setStep(s => Math.min(s + 1, steps.length - 1));
+  };
+  const back = () => setStep(s => Math.max(s - 1, 0));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.cemetery.trim() || !form.propertyType) {
-      toast({ title: "Please fill in all required fields", variant: "destructive" });
-      return;
+    // Re-validate the gated steps before final send.
+    for (const s of [0, 1]) {
+      const err = validateStep(s);
+      if (err) { setStep(s); toast({ title: err, variant: "destructive" }); return; }
     }
     setLoading(true);
     const { error } = await supabase.from("contact_submissions" as any).insert({
@@ -124,7 +152,15 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
     "placeholder:text-muted-foreground transition-all " +
     "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40";
 
+  const textareaCls =
+    "w-full px-4 py-3 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
+    "placeholder:text-muted-foreground transition-all resize-none " +
+    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40";
+
   const labelCls = "block text-[11px] font-medium tracking-[0.12em] uppercase text-muted-foreground mb-2";
+
+  const progress = ((step + 1) / steps.length) * 100;
+  const isLast = step === steps.length - 1;
 
   return (
     <section className={compact ? "" : "pt-8 pb-20 md:pt-12 md:pb-24 bg-gradient-warm"} id="quote-form">
@@ -135,7 +171,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="max-w-2xl mx-auto text-center mb-12"
+          className="max-w-2xl mx-auto text-center mb-10"
         >
           <p className="text-primary font-medium text-xs tracking-[0.25em] uppercase mb-4">
             Free Valuation
@@ -146,11 +182,10 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
             <span className="italic text-foreground/70">free valuation.</span>
           </h2>
           <p className="text-muted-foreground text-lg font-light leading-relaxed">
-            Tell us about your property and we'll respond within 24 hours with a
-            quote showing your net proceeds if we list it for you.
+            Four quick steps. Takes about two minutes — we'll respond within 24 hours.
           </p>
 
-          <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-8">
+          <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-6">
             {guarantees.map((g) => (
               <li key={g} className="inline-flex items-center gap-2 text-xs text-muted-foreground">
                 <Check className="w-3.5 h-3.5 text-primary" strokeWidth={2.5} />
@@ -160,296 +195,288 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
           </ul>
         </motion.div>
 
-        {/* Form card */}
-        <motion.form
-          onSubmit={handleSubmit}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.15 }}
-          className="max-w-3xl mx-auto bg-background rounded-3xl border border-border shadow-xl p-8 md:p-12 relative overflow-hidden"
-        >
-          {/* Accent top bar */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-primary/60" />
-          {/* Section: You */}
-          <div className="mb-10">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-5">
-              About you
-            </p>
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div>
-                <label className={labelCls}>Full name</label>
-                <input
-                  className={inputCls}
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Jane Doe"
-                  maxLength={100}
-                />
+        {/* Card wrapper with offset decorative layer for stand-out */}
+        <div className="max-w-3xl mx-auto relative">
+          {/* Decorative offset shadow card */}
+          <div aria-hidden className="hidden md:block absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 blur-xl opacity-70 -z-10" />
+          <div aria-hidden className="hidden md:block absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-primary/10 blur-2xl -z-10" />
+
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="bg-background/95 backdrop-blur-sm rounded-3xl border border-border/80 shadow-2xl shadow-primary/10 overflow-hidden ring-1 ring-foreground/5"
+          >
+            {/* Accent top bar */}
+            <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary/60" />
+
+            {/* Stepper header */}
+            <div className="px-6 md:px-10 pt-7 pb-5 border-b border-border/40">
+              <div className="flex items-center justify-between mb-4">
+                <ol className="flex items-center gap-2 sm:gap-4 flex-1">
+                  {steps.map((s, i) => {
+                    const Icon = s.icon;
+                    const active = i === step;
+                    const done = i < step;
+                    return (
+                      <li key={s.id} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => i < step && setStep(i)}
+                          disabled={i > step}
+                          className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold transition-all border ${
+                            active
+                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-110"
+                              : done
+                              ? "bg-primary/15 text-primary border-primary/30 cursor-pointer hover:bg-primary/25"
+                              : "bg-muted text-muted-foreground border-border/60"
+                          }`}
+                          aria-label={`Step ${i + 1}: ${s.label}`}
+                        >
+                          {done ? <Check className="w-4 h-4" strokeWidth={3} /> : <Icon className="w-4 h-4" />}
+                        </button>
+                        <div className="hidden sm:flex flex-col min-w-0">
+                          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Step {i + 1}</span>
+                          <span className={`text-xs font-medium truncate ${active ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+                        </div>
+                        {i < steps.length - 1 && (
+                          <div className="hidden sm:block flex-1 h-px bg-border/60 mx-1" />
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
               </div>
-              <div>
-                <label className={labelCls}>Email</label>
-                <input
-                  type="email"
-                  className={inputCls}
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@example.com"
-                  maxLength={255}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Phone <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— optional</span></label>
-                <input
-                  className={inputCls}
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="(555) 123-4567"
-                  maxLength={20}
+              {/* Progress bar (mobile + universal) */}
+              <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-primary to-accent"
+                  initial={false}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 />
               </div>
             </div>
-          </div>
 
-          {/* Divider */}
-          <div className="h-px bg-border/40 my-10" />
-
-          {/* Section: Property */}
-          <div className="mb-10">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-5">
-              Your property
-            </p>
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Cemetery name</label>
-                <input
-                  className={inputCls}
-                  value={form.cemetery}
-                  onChange={(e) => setForm({ ...form, cemetery: e.target.value })}
-                  placeholder="e.g. Restland Memorial Park, Dallas"
-                  maxLength={200}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Property type</label>
-                <select
-                  value={form.propertyType}
-                  onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
-                  className={inputCls + " cursor-pointer"}
+            {/* Step body */}
+            <div className="px-6 md:px-10 py-8 md:py-10 min-h-[360px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.25 }}
                 >
-                  <option value="">Select...</option>
-                  {propertyTypes.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Number of spaces</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  className={inputCls}
-                  value={form.spaces}
-                  onChange={(e) => setForm({ ...form, spaces: e.target.value })}
-                  placeholder="e.g. 2"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Section / Lot # <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— if known</span></label>
-                <input
-                  className={inputCls}
-                  value={form.section}
-                  onChange={(e) => setForm({ ...form, section: e.target.value })}
-                  placeholder="e.g. Garden of Peace, Lot 14"
-                  maxLength={100}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-border/40 my-10" />
-
-          {/* Section: Ownership & deed */}
-          <div className="mb-10">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-5">
-              Ownership &amp; deed
-            </p>
-            <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
-              These details help us confirm ownership and prepare an accurate valuation.
-              If you don't have an answer right now, leave it blank — we can follow up.
-            </p>
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Names of all owners listed on the deed</label>
-                <input
-                  className={inputCls}
-                  value={form.deedOwnerNames}
-                  onChange={(e) => setForm({ ...form, deedOwnerNames: e.target.value })}
-                  placeholder="e.g. John A. Smith and Mary B. Smith"
-                  maxLength={300}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Are the plot owners currently living?</label>
-                <select
-                  value={form.deedOwnersStatus}
-                  onChange={(e) => setForm({ ...form, deedOwnersStatus: e.target.value })}
-                  className={inputCls + " cursor-pointer"}
-                >
-                  <option value="">Select...</option>
-                  <option value="All living">All living</option>
-                  <option value="Some living, some deceased">Some living, some deceased</option>
-                  <option value="All deceased">All deceased</option>
-                  <option value="Unsure">Unsure</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Your relationship to the owner(s)</label>
-                <input
-                  className={inputCls}
-                  value={form.relationshipToOwner}
-                  onChange={(e) => setForm({ ...form, relationshipToOwner: e.target.value })}
-                  placeholder="e.g. Daughter, Spouse, Executor"
-                  maxLength={150}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>
-                  Deed / ownership records
-                  <span className="text-muted-foreground normal-case tracking-normal text-[10px]"> — describe what you have</span>
-                </label>
-                <textarea
-                  value={form.purchaseInfo}
-                  onChange={(e) => setForm({ ...form, purchaseInfo: e.target.value })}
-                  placeholder="When was it purchased, for what amount, and what records do you have? You can attach the deed/certificate of ownership and any purchase records securely below."
-                  rows={3}
-                  maxLength={1000}
-                  className={
-                    "w-full px-4 py-3 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
-                    "placeholder:text-muted-foreground transition-all resize-none " +
-                    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
-                  }
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>
-                  Prepaid endowment care or service charges
-                  <span className="text-muted-foreground normal-case tracking-normal text-[10px]"> — optional, can increase valuation</span>
-                </label>
-                <textarea
-                  value={form.prepaidEndowmentInfo}
-                  onChange={(e) => setForm({ ...form, prepaidEndowmentInfo: e.target.value })}
-                  placeholder="List any prepaid items such as endowment care, opening/closing fees, vaults, markers or service charges. Evidence of prepaid items often increases the valuation to a higher tier."
-                  rows={3}
-                  maxLength={1000}
-                  className={
-                    "w-full px-4 py-3 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
-                    "placeholder:text-muted-foreground transition-all resize-none " +
-                    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
-                  }
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Additional details</label>
-                <textarea
-                  value={form.details}
-                  onChange={(e) => setForm({ ...form, details: e.target.value })}
-                  placeholder="Reason for selling, preferred timeline, anything else we should know…"
-                  rows={4}
-                  maxLength={1000}
-                  className={
-                    "w-full px-4 py-3 rounded-xl bg-background border border-border/60 text-foreground text-[15px] " +
-                    "placeholder:text-muted-foreground transition-all resize-none " +
-                    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-border/40 my-10" />
-
-          {/* Section: Secure document upload */}
-          <div className="mb-10">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-3">
-              Attach documents
-            </p>
-            <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-xl p-3">
-              <Lock className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
-              <p className="leading-relaxed">
-                <span className="font-medium text-foreground">Confidential & secure.</span>{" "}
-                Files upload directly to our private broker portal. Only our team can see them —
-                they are never shared, indexed, or sent over email. PDF, JPG, PNG, HEIC, or DOC up to {MAX_FILE_MB}MB each.
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-              Helpful to attach: the deed or certificate of ownership, original purchase records,
-              endowment care receipts, or photos of the plot.
-            </p>
-
-            <label
-              htmlFor="seller-attachments"
-              className="flex flex-col items-center justify-center gap-2 w-full py-8 rounded-xl border-2 border-dashed border-border/70 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer text-center"
-            >
-              <Upload className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium text-foreground">
-                {uploading ? "Uploading…" : "Click to choose files or drop here"}
-              </span>
-              <span className="text-[11px] text-muted-foreground">You can add multiple files</span>
-              <input
-                ref={fileInputRef}
-                id="seller-attachments"
-                type="file"
-                multiple
-                accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
-                className="hidden"
-                onChange={(e) => handleFiles(e.target.files)}
-                disabled={uploading}
-              />
-            </label>
-
-            {files.length > 0 && (
-              <ul className="mt-4 space-y-2">
-                {files.map((f) => (
-                  <li key={f.path} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
-                    <FileText className="w-4 h-4 text-primary shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-foreground truncate">{f.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{(f.size / 1024).toFixed(0)} KB · uploaded</p>
+                  {step === 0 && (
+                    <div>
+                      <h3 className="font-display text-2xl text-foreground mb-1">A bit about you</h3>
+                      <p className="text-sm text-muted-foreground mb-6">So we know who to reach out to with your valuation.</p>
+                      <div className="grid sm:grid-cols-2 gap-5">
+                        <div>
+                          <label className={labelCls}>Full name</label>
+                          <input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Jane Doe" maxLength={100} />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Email</label>
+                          <input type="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" maxLength={255} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Phone <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— optional</span></label>
+                          <input className={inputCls} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(555) 123-4567" maxLength={20} />
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(f.path)}
-                      className="text-muted-foreground hover:text-destructive p-1"
-                      aria-label={`Remove ${f.name}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                  )}
 
+                  {step === 1 && (
+                    <div>
+                      <h3 className="font-display text-2xl text-foreground mb-1">Your property</h3>
+                      <p className="text-sm text-muted-foreground mb-6">Where is it and what kind of property is it?</p>
+                      <div className="grid sm:grid-cols-2 gap-5">
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Cemetery name</label>
+                          <input className={inputCls} value={form.cemetery} onChange={(e) => setForm({ ...form, cemetery: e.target.value })} placeholder="e.g. Restland Memorial Park, Dallas" maxLength={200} />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Property type</label>
+                          <select value={form.propertyType} onChange={(e) => setForm({ ...form, propertyType: e.target.value })} className={inputCls + " cursor-pointer"}>
+                            <option value="">Select...</option>
+                            {propertyTypes.map((t) => (<option key={t} value={t}>{t}</option>))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={labelCls}>Number of spaces</label>
+                          <input type="number" min={1} max={20} className={inputCls} value={form.spaces} onChange={(e) => setForm({ ...form, spaces: e.target.value })} placeholder="e.g. 2" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Section / Lot # <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— if known</span></label>
+                          <input className={inputCls} value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} placeholder="e.g. Garden of Peace, Lot 14" maxLength={100} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-          {/* Submit */}
-          <div className="flex flex-col items-center gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-soft"
-            >
-              {loading ? "Submitting…" : "Request my free valuation"}
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-            </button>
-            <p className="text-[11px] text-muted-foreground/70">
-              No spam. No pressure. We respond within 24 hours.
-            </p>
-          </div>
-        </motion.form>
+                  {step === 2 && (
+                    <div>
+                      <h3 className="font-display text-2xl text-foreground mb-1">Ownership &amp; deed</h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        These help us confirm ownership and prepare an accurate valuation. Leave blank if you're not sure — we'll follow up.
+                      </p>
+                      <div className="grid sm:grid-cols-2 gap-5">
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Names of all owners listed on the deed</label>
+                          <input className={inputCls} value={form.deedOwnerNames} onChange={(e) => setForm({ ...form, deedOwnerNames: e.target.value })} placeholder="e.g. John A. Smith and Mary B. Smith" maxLength={300} />
+                        </div>
+                        <div>
+                          <label className={labelCls}>Are the plot owners currently living?</label>
+                          <select value={form.deedOwnersStatus} onChange={(e) => setForm({ ...form, deedOwnersStatus: e.target.value })} className={inputCls + " cursor-pointer"}>
+                            <option value="">Select...</option>
+                            <option value="All living">All living</option>
+                            <option value="Some living, some deceased">Some living, some deceased</option>
+                            <option value="All deceased">All deceased</option>
+                            <option value="Unsure">Unsure</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className={labelCls}>Your relationship to the owner(s)</label>
+                          <input className={inputCls} value={form.relationshipToOwner} onChange={(e) => setForm({ ...form, relationshipToOwner: e.target.value })} placeholder="e.g. Daughter, Spouse, Executor" maxLength={150} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Deed / ownership records<span className="text-muted-foreground normal-case tracking-normal text-[10px]"> — describe what you have</span></label>
+                          <textarea value={form.purchaseInfo} onChange={(e) => setForm({ ...form, purchaseInfo: e.target.value })} placeholder="When was it purchased, for what amount, and what records do you have?" rows={3} maxLength={1000} className={textareaCls} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Prepaid endowment care or service charges<span className="text-muted-foreground normal-case tracking-normal text-[10px]"> — optional, can increase valuation</span></label>
+                          <textarea value={form.prepaidEndowmentInfo} onChange={(e) => setForm({ ...form, prepaidEndowmentInfo: e.target.value })} placeholder="List any prepaid items such as endowment care, opening/closing fees, vaults, markers or service charges." rows={3} maxLength={1000} className={textareaCls} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Additional details</label>
+                          <textarea value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} placeholder="Reason for selling, preferred timeline, anything else we should know…" rows={3} maxLength={1000} className={textareaCls} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 3 && (
+                    <div>
+                      <h3 className="font-display text-2xl text-foreground mb-1">Attach documents</h3>
+                      <p className="text-sm text-muted-foreground mb-5">Optional — helpful but not required. You can always send them later.</p>
+
+                      <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-xl p-3">
+                        <Lock className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
+                        <p className="leading-relaxed">
+                          <span className="font-medium text-foreground">Confidential &amp; secure.</span>{" "}
+                          Files upload directly to our private broker portal. Only our team can see them — never shared, indexed, or sent over email. PDF, JPG, PNG, HEIC, or DOC up to {MAX_FILE_MB}MB each.
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                        Helpful to attach: the deed or certificate of ownership, original purchase records, endowment care receipts, or photos of the plot.
+                      </p>
+
+                      <label
+                        htmlFor="seller-attachments"
+                        className="flex flex-col items-center justify-center gap-2 w-full py-8 rounded-xl border-2 border-dashed border-border/70 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer text-center"
+                      >
+                        <Upload className="w-5 h-5 text-primary" />
+                        <span className="text-sm font-medium text-foreground">
+                          {uploading ? "Uploading…" : "Click to choose files or drop here"}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">You can add multiple files</span>
+                        <input
+                          ref={fileInputRef}
+                          id="seller-attachments"
+                          type="file"
+                          multiple
+                          accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
+                          className="hidden"
+                          onChange={(e) => handleFiles(e.target.files)}
+                          disabled={uploading}
+                        />
+                      </label>
+
+                      {files.length > 0 && (
+                        <ul className="mt-4 space-y-2">
+                          {files.map((f) => (
+                            <li key={f.path} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
+                              <FileText className="w-4 h-4 text-primary shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm text-foreground truncate">{f.name}</p>
+                                <p className="text-[11px] text-muted-foreground">{(f.size / 1024).toFixed(0)} KB · uploaded</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(f.path)}
+                                className="text-muted-foreground hover:text-destructive p-1"
+                                aria-label={`Remove ${f.name}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {/* Mini review */}
+                      <div className="mt-6 rounded-xl bg-muted/30 border border-border/50 p-4">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Quick review</p>
+                        <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Name</dt><dd className="text-foreground truncate">{form.name || "—"}</dd></div>
+                          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Email</dt><dd className="text-foreground truncate">{form.email || "—"}</dd></div>
+                          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Cemetery</dt><dd className="text-foreground truncate">{form.cemetery || "—"}</dd></div>
+                          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Type</dt><dd className="text-foreground truncate">{form.propertyType || "—"}</dd></div>
+                        </dl>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Footer nav */}
+            <div className="px-6 md:px-10 py-5 bg-muted/30 border-t border-border/50 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={back}
+                disabled={step === 0}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </button>
+
+              <span className="text-[11px] text-muted-foreground hidden sm:block">
+                Step {step + 1} of {steps.length}
+              </span>
+
+              {isLast ? (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-md shadow-primary/30"
+                >
+                  {loading ? "Submitting…" : "Request my free valuation"}
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={next}
+                  className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all shadow-md shadow-primary/20"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              )}
+            </div>
+          </motion.form>
+
+          <p className="text-[11px] text-muted-foreground/70 text-center mt-4">
+            No spam. No pressure. We respond within 24 hours.
+          </p>
+        </div>
       </div>
     </section>
   );
