@@ -1,7 +1,8 @@
 // TexasCemeteriesPanel — directory of Texas cemeteries with profiles built up
-// over time. Auto-creates entries when a new cemetery appears in a submission.
+// over time. Also surfaces a click-to-filter list of cemeteries with submission
+// counts so admins can drill into "every submission for Forest Lawn" etc.
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Plus, ChevronDown, ChevronRight, Save, Sparkles } from "lucide-react";
+import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
@@ -22,17 +23,23 @@ interface TexasCemetery {
 
 interface Props {
   texasSubmissions: Submission[];
+  /** Canonical key of the cemetery currently filtering the parent list, or null. */
+  activeCemeteryCanon?: string | null;
+  /** Click a cemetery to filter the submissions list (pass null to clear). */
+  onSelectCemetery?: (canon: string | null, label: string | null) => void;
 }
 
 const canonical = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 
-const TexasCemeteriesPanel = ({ texasSubmissions }: Props) => {
+const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery }: Props) => {
   const [rows, setRows] = useState<TexasCemetery[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, Partial<TexasCemetery>>>({});
   const [collapsed, setCollapsed] = useState(false);
+  const [query, setQuery] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -46,35 +53,102 @@ const TexasCemeteriesPanel = ({ texasSubmissions }: Props) => {
 
   useEffect(() => { load(); }, []);
 
-  // Find cemeteries mentioned in submissions but not yet in the directory.
-  const missing = useMemo(() => {
-    const known = new Set(rows.map(r => r.canonical_name || canonical(r.name)));
-    const seen = new Map<string, { name: string; count: number; sample: Submission }>();
+  // Build a merged list: every cemetery name that has been submitted (canonical
+  // dedupe + count), plus any directory entry that hasn't received submissions yet.
+  // Each entry is clickable to filter the parent submission list.
+  const cemeteryStats = useMemo(() => {
+    type Stat = {
+      canon: string;
+      displayName: string;
+      count: number;
+      latestAt: number;
+      cities: Set<string>;
+      directoryId: string | null;
+      autoCreatedPending: boolean; // appears in submissions but not in directory
+      sample?: Submission;
+    };
+    const map = new Map<string, Stat>();
+    // Seed from directory so even zero-count entries show up (when "show all" is on)
+    for (const r of rows) {
+      const c = r.canonical_name || canonical(r.name);
+      if (!c) continue;
+      map.set(c, {
+        canon: c,
+        displayName: r.name,
+        count: 0,
+        latestAt: 0,
+        cities: new Set(r.city ? [r.city] : []),
+        directoryId: r.id,
+        autoCreatedPending: false,
+      });
+    }
+    // Tally submissions
     for (const s of texasSubmissions) {
       const name = (s.cemetery || "").trim();
       if (!name) continue;
-      const key = canonical(name);
-      if (known.has(key)) continue;
-      const prev = seen.get(key);
-      if (prev) prev.count += 1;
-      else seen.set(key, { name, count: 1, sample: s });
+      const c = canonical(name);
+      if (!c) continue;
+      const ts = new Date(s.created_at).getTime();
+      const existing = map.get(c);
+      if (existing) {
+        existing.count += 1;
+        if (ts > existing.latestAt) existing.latestAt = ts;
+        const city = (s as any).cemetery_city || s.region;
+        if (city) existing.cities.add(String(city));
+      } else {
+        map.set(c, {
+          canon: c,
+          displayName: name,
+          count: 1,
+          latestAt: ts,
+          cities: new Set((s as any).cemetery_city ? [(s as any).cemetery_city] : []),
+          directoryId: null,
+          autoCreatedPending: true,
+          sample: s,
+        });
+      }
     }
-    return Array.from(seen.values()).sort((a, b) => b.count - a.count);
+    return Array.from(map.values());
   }, [rows, texasSubmissions]);
 
-  const autoCreate = async (name: string, sample: Submission) => {
+  const filteredStats = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = cemeteryStats.filter(s => {
+      if (q && !s.displayName.toLowerCase().includes(q) && !Array.from(s.cities).some(c => c.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    // Sort: count desc, then latest submission desc, then name
+    list.sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      if (b.latestAt !== a.latestAt) return b.latestAt - a.latestAt;
+      return a.displayName.localeCompare(b.displayName);
+    });
+    return list;
+  }, [cemeteryStats, query]);
+
+  const visibleStats = useMemo(() => {
+    if (showAll || query.trim()) return filteredStats;
+    // By default hide zero-count directory entries to keep this focused on what's coming in
+    const withSubs = filteredStats.filter(s => s.count > 0);
+    return withSubs.length > 0 ? withSubs : filteredStats.slice(0, 0);
+  }, [filteredStats, showAll, query]);
+
+  const totalWithSubs = cemeteryStats.filter(s => s.count > 0).length;
+  const pendingCount = cemeteryStats.filter(s => s.autoCreatedPending).length;
+
+  const autoCreate = async (name: string, sample?: Submission) => {
     const { error } = await supabase
       .from("texas_cemeteries" as any)
       .insert({
         name,
-        city: (sample as any).cemetery_city || sample.region || null,
+        city: (sample as any)?.cemetery_city || sample?.region || null,
         auto_created: true,
       });
     if (error) {
       toast({ title: "Couldn't add cemetery", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Cemetery added", description: name });
+    toast({ title: "Added to directory", description: name });
     await load();
   };
 
@@ -113,13 +187,18 @@ const TexasCemeteriesPanel = ({ texasSubmissions }: Props) => {
         onClick={() => setCollapsed(c => !c)}
         className="w-full flex items-center justify-between p-4 border-b border-border/50"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Building2 className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground">Texas cemetery directory</h3>
-          <span className="text-[11px] text-muted-foreground">({rows.length} profile{rows.length === 1 ? "" : "s"})</span>
-          {missing.length > 0 && (
+          <h3 className="text-sm font-semibold text-foreground">Submissions by cemetery</h3>
+          <span className="text-[11px] text-muted-foreground">({totalWithSubs} active · {rows.length} in directory)</span>
+          {pendingCount > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/25">
-              {missing.length} unknown
+              {pendingCount} not yet profiled
+            </span>
+          )}
+          {activeCemeteryCanon && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+              filter active
             </span>
           )}
         </div>
@@ -128,79 +207,130 @@ const TexasCemeteriesPanel = ({ texasSubmissions }: Props) => {
 
       {!collapsed && (
         <div className="p-4 space-y-3">
-          {/* Unknown cemeteries — one-click add */}
-          {missing.length > 0 && (
-            <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 space-y-2">
-              <p className="text-[11px] uppercase tracking-wide text-amber-700 font-semibold flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3" /> Unknown cemeteries from recent submissions
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {missing.slice(0, 8).map(m => (
-                  <button
-                    key={m.name}
-                    onClick={() => autoCreate(m.name, m.sample)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border border-amber-500/30 bg-card hover:bg-amber-500/10 transition-colors"
-                    title={`Add ${m.name} to the directory (${m.count} mention${m.count > 1 ? "s" : ""})`}
-                  >
-                    <Plus className="w-3 h-3" /> {m.name}
-                    <span className="text-amber-700">×{m.count}</span>
-                  </button>
-                ))}
-              </div>
+          {/* Search + clear filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search cemeteries or cities…"
+                className="w-full pl-8 pr-3 py-1.5 rounded-full text-xs border border-border bg-background"
+              />
             </div>
-          )}
+            {activeCemeteryCanon && onSelectCemetery && (
+              <button
+                onClick={() => onSelectCemetery(null, null)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
+              >
+                <X className="w-3 h-3" /> Clear filter
+              </button>
+            )}
+            <button
+              onClick={() => setShowAll(v => !v)}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
+              title={showAll ? "Hide cemeteries with no submissions" : "Show all directory entries"}
+            >
+              <Filter className="w-3 h-3" /> {showAll ? "Active only" : "Show all"}
+            </button>
+            <button
+              onClick={addBlank}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
+            >
+              <Plus className="w-3 h-3" /> Add manually
+            </button>
+          </div>
 
+          {/* Cemetery cards: click to filter the parent list */}
           {loading && <p className="text-xs text-muted-foreground">Loading…</p>}
 
-          {!loading && rows.length === 0 && missing.length === 0 && (
-            <p className="text-xs text-muted-foreground">No cemetery profiles yet. New ones will appear here automatically as Texas submissions come in.</p>
+          {!loading && visibleStats.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              {query.trim()
+                ? "No matches."
+                : "No cemeteries from submissions yet — once Texas inquiries come in they'll be tallied here so you can filter by location."}
+            </p>
           )}
 
-          <div className="space-y-1.5">
-            {rows.map(r => {
-              const isOpen = openId === r.id;
-              const edit = (k: keyof TexasCemetery, v: any) =>
-                setEdits(e => ({ ...e, [r.id]: { ...e[r.id], [k]: v } }));
-              const val = (k: keyof TexasCemetery) =>
-                (edits[r.id]?.[k] as any) ?? (r as any)[k] ?? "";
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {visibleStats.map(stat => {
+              const isActive = activeCemeteryCanon === stat.canon;
+              const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
               return (
-                <div key={r.id} className="rounded-lg border border-border/50 bg-card">
+                <div
+                  key={stat.canon}
+                  className={`rounded-lg border transition-all overflow-hidden ${
+                    isActive
+                      ? "border-primary bg-primary/10 ring-1 ring-primary"
+                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
+                  }`}
+                >
                   <button
-                    onClick={() => setOpenId(o => (o === r.id ? null : r.id))}
-                    className="w-full flex items-center justify-between p-2.5 text-left"
+                    onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
+                    className="w-full text-left p-2.5"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <p className="text-sm font-medium text-foreground truncate">{r.name}</p>
-                      {r.city && <span className="text-[11px] text-muted-foreground truncate">· {r.city}</span>}
-                      {r.auto_created && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">auto</span>
-                      )}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground truncate">{stat.displayName}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {Array.from(stat.cities).filter(Boolean).slice(0, 2).join(", ") || "—"}
+                          {stat.autoCreatedPending && (
+                            <span className="ml-1.5 text-amber-700 font-medium">· not in directory</span>
+                          )}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded-full text-[11px] font-bold ${
+                          stat.count > 0
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                        title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
+                      >
+                        {stat.count}
+                      </span>
                     </div>
-                    {isOpen ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
                   </button>
-                  {isOpen && (
-                    <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Inp label="Name" value={val("name")} onChange={v => edit("name", v)} />
-                      <Inp label="City" value={val("city")} onChange={v => edit("city", v)} />
-                      <Inp label="Address" value={val("address")} onChange={v => edit("address", v)} className="sm:col-span-2" />
-                      <Inp label="Contact name" value={val("contact_name")} onChange={v => edit("contact_name", v)} />
-                      <Inp label="Contact phone" value={val("contact_phone")} onChange={v => edit("contact_phone", v)} />
-                      <Inp label="Contact email" value={val("contact_email")} onChange={v => edit("contact_email", v)} />
-                      <Inp label="Transfer fee ($)" type="number" value={val("transfer_fee")} onChange={v => edit("transfer_fee", v === "" ? null : Number(v))} />
+                  <div className="flex items-center gap-1 px-2.5 pb-2">
+                    {profile ? (
+                      <button
+                        onClick={() => setOpenId(o => (o === profile.id ? null : profile.id))}
+                        className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                      >
+                        {openId === profile.id ? "Hide profile" : "Edit profile"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => autoCreate(stat.displayName, stat.sample)}
+                        className="text-[10px] text-amber-700 hover:text-amber-900 underline-offset-2 hover:underline inline-flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add to directory
+                      </button>
+                    )}
+                  </div>
+                  {profile && openId === profile.id && (
+                    <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-background/50">
+                      <Inp label="Name" value={(edits[profile.id]?.name as any) ?? profile.name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], name: v } }))} />
+                      <Inp label="City" value={(edits[profile.id]?.city as any) ?? profile.city ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], city: v } }))} />
+                      <Inp label="Address" value={(edits[profile.id]?.address as any) ?? profile.address ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], address: v } }))} className="sm:col-span-2" />
+                      <Inp label="Contact name" value={(edits[profile.id]?.contact_name as any) ?? profile.contact_name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_name: v } }))} />
+                      <Inp label="Contact phone" value={(edits[profile.id]?.contact_phone as any) ?? profile.contact_phone ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_phone: v } }))} />
+                      <Inp label="Contact email" value={(edits[profile.id]?.contact_email as any) ?? profile.contact_email ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_email: v } }))} />
+                      <Inp label="Transfer fee ($)" type="number" value={(edits[profile.id]?.transfer_fee as any) ?? profile.transfer_fee ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], transfer_fee: v === "" ? null : Number(v) } }))} />
                       <div className="sm:col-span-2">
                         <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Notes</label>
                         <textarea
-                          value={val("notes") || ""}
-                          onChange={(e) => edit("notes", e.target.value)}
+                          value={(edits[profile.id]?.notes as any) ?? profile.notes ?? ""}
+                          onChange={(e) => setEdits(es => ({ ...es, [profile.id]: { ...es[profile.id], notes: e.target.value } }))}
                           rows={3}
                           className="w-full mt-1 px-2 py-1.5 rounded-md border border-border bg-background text-xs"
                         />
                       </div>
                       <div className="sm:col-span-2 flex justify-end">
                         <button
-                          onClick={() => save(r.id)}
-                          disabled={!edits[r.id]}
+                          onClick={() => save(profile.id)}
+                          disabled={!edits[profile.id]}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
                         >
                           <Save className="w-3.5 h-3.5" /> Save profile
@@ -211,15 +341,6 @@ const TexasCemeteriesPanel = ({ texasSubmissions }: Props) => {
                 </div>
               );
             })}
-          </div>
-
-          <div className="pt-2 border-t border-border/50">
-            <button
-              onClick={addBlank}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add cemetery manually
-            </button>
           </div>
         </div>
       )}
