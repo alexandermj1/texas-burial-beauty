@@ -627,19 +627,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       <div data-tour="submissions-list" className={`lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
-        {filtered.length === 0 ? (
-          <div className="p-10 text-center">
-            <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No submissions in this view.</p>
+        {regionFilter === "texas" && cemeteryLabel && (
+          <div className="flex items-center justify-between gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-500/30 text-xs">
+            <span className="text-amber-900 dark:text-amber-100">
+              Showing submissions for <span className="font-semibold">{cemeteryLabel}</span> ({filtered.length})
+            </span>
+            <button
+              onClick={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
+              className="text-amber-700 hover:text-amber-900 font-medium underline-offset-2 hover:underline"
+            >
+              Clear filter
+            </button>
           </div>
-        ) : (
-          filtered.map((s, i) => {
+        )}
+        {(() => {
+          const renderRow = (s: Submission, i: number) => {
             const isActive = selected?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
             const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
             const stageMeta = bayer ? BAYER_STAGE_META[bayer] : null;
             const rowViewers = viewersFor(s.id);
-            const iViewed = haveIViewed(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
             const fresh = isNew(s);
             const workers = workersFor(s.id);
@@ -658,7 +665,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   animate={{ opacity: 1 }}
                   transition={{ delay: Math.min(i * 0.02, 0.2) }}
                   onClick={() => {
-                    // On mobile, tapping the already-open row collapses it.
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
@@ -743,15 +749,58 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
 
-                {/* Inline detail (mobile only) — keeps list visible above/below */}
                 {isMobile && isActive && (
                   <MobileInlineDetail submission={s} />
                 )}
               </div>
             );
-          })
-        )}
+          };
+
+          if (filtered.length === 0) {
+            return (
+              <div className="p-10 text-center">
+                <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No submissions in this view.</p>
+              </div>
+            );
+          }
+
+          // Texas tab: group by whether attachments have been received.
+          if (regionFilter === "texas") {
+            const withDocs = filtered.filter(hasDocs);
+            const withoutDocs = filtered.filter(s => !hasDocs(s));
+            const Header = ({ label, count, tone }: { label: string; count: number; tone: "good" | "warn" }) => (
+              <div className={`sticky top-0 z-10 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide border-b ${
+                tone === "good"
+                  ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-emerald-500/30"
+                  : "bg-amber-500/10 text-amber-800 dark:text-amber-200 border-amber-500/30"
+              }`}>
+                {label} <span className="opacity-70 font-medium">({count})</span>
+              </div>
+            );
+            let idx = 0;
+            return (
+              <>
+                {withoutDocs.length > 0 && (
+                  <>
+                    <Header label="Awaiting documents" count={withoutDocs.length} tone="warn" />
+                    {withoutDocs.map(s => renderRow(s, idx++))}
+                  </>
+                )}
+                {withDocs.length > 0 && (
+                  <>
+                    <Header label="Documents received" count={withDocs.length} tone="good" />
+                    {withDocs.map(s => renderRow(s, idx++))}
+                  </>
+                )}
+              </>
+            );
+          }
+
+          return <>{filtered.map((s, i) => renderRow(s, i))}</>;
+        })()}
       </div>
+
 
 
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
