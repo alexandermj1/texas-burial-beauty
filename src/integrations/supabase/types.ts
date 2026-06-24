@@ -279,6 +279,8 @@ export type Database = {
           budget: string | null
           cemetery: string | null
           cemetery_city: string | null
+          cemetery_merge_history: Json
+          cemetery_original: string | null
           cemetery_retail: number | null
           cemetery_verified_ownership: boolean | null
           closed_at: string | null
@@ -365,6 +367,8 @@ export type Database = {
           budget?: string | null
           cemetery?: string | null
           cemetery_city?: string | null
+          cemetery_merge_history?: Json
+          cemetery_original?: string | null
           cemetery_retail?: number | null
           cemetery_verified_ownership?: boolean | null
           closed_at?: string | null
@@ -451,6 +455,8 @@ export type Database = {
           budget?: string | null
           cemetery?: string | null
           cemetery_city?: string | null
+          cemetery_merge_history?: Json
+          cemetery_original?: string | null
           cemetery_retail?: number | null
           cemetery_verified_ownership?: boolean | null
           closed_at?: string | null

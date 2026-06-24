@@ -196,22 +196,45 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     if (sourceCanon === target.canon) return;
     const source = cemeteryStats.find(s => s.canon === sourceCanon);
     if (!source) return;
-    const sourceIds = texasSubmissions
-      .filter(s => canonical(s.cemetery || "") === sourceCanon)
-      .map(s => s.id);
+    const sourceSubs = texasSubmissions.filter(s => canonical(s.cemetery || "") === sourceCanon);
+    const sourceIds = sourceSubs.map(s => s.id);
     const ok = window.confirm(
       `Merge "${source.displayName}" into "${target.displayName}"?\n\n` +
-      `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} will be renamed to "${target.displayName}".` +
-      (source.directoryId ? `\nThe "${source.displayName}" directory entry will be removed.` : "")
+      `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} will be renamed to "${target.displayName}".\n` +
+      `The customer's original wording will be preserved on each submission so you can undo if this was a mistake.` +
+      (source.directoryId ? `\n\nThe "${source.displayName}" directory entry will be removed.` : "")
     );
     if (!ok) return;
     setMerging(true);
     try {
-      if (sourceIds.length > 0) {
+      // Update each submission individually so we can preserve the customer's
+      // original wording (cemetery_original — first value wins) and append an
+      // entry to cemetery_merge_history for audit / undo.
+      for (const sub of sourceSubs) {
+        const prevCemetery = sub.cemetery || "";
+        const prevHistory = Array.isArray((sub as any).cemetery_merge_history)
+          ? (sub as any).cemetery_merge_history
+          : [];
+        const patch: any = {
+          cemetery: target.displayName,
+          cemetery_merge_history: [
+            ...prevHistory,
+            {
+              at: new Date().toISOString(),
+              from: prevCemetery,
+              to: target.displayName,
+            },
+          ],
+        };
+        // Only set cemetery_original the first time so the customer's
+        // original wording is never overwritten by a later merge.
+        if (!(sub as any).cemetery_original) {
+          patch.cemetery_original = prevCemetery;
+        }
         const { error } = await supabase
           .from("contact_submissions" as any)
-          .update({ cemetery: target.displayName })
-          .in("id", sourceIds);
+          .update(patch)
+          .eq("id", sub.id);
         if (error) throw error;
       }
       if (source.directoryId) {
@@ -223,7 +246,7 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       }
       toast({
         title: "Cemeteries merged",
-        description: `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} moved to "${target.displayName}"`,
+        description: `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} moved to "${target.displayName}". Original wording preserved.`,
       });
       await load();
       await onRefresh?.();
