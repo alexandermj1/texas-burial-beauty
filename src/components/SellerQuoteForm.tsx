@@ -36,7 +36,7 @@ const steps = [
   { id: 3, label: "Documents", icon: Paperclip },
 ] as const;
 
-const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCemetery?: string; compact?: boolean } = {}) => {
+const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = false }: { defaultCemetery?: string; compact?: boolean; editorial?: boolean } = {}) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
