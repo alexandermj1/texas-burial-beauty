@@ -141,9 +141,11 @@ const Admin = () => {
       const { data } = await supabase
         .from("contact_submissions" as any)
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (!cancelled && data) setSubmissions(data as any);
     };
+
     const interval = setInterval(refreshSubmissions, 15000);
     const channel = supabase
       .channel("admin-submissions-live")
