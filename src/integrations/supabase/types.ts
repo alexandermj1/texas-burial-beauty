@@ -290,6 +290,8 @@ export type Database = {
           deed_on_file: boolean | null
           deed_owner_names: string | null
           deed_owners_status: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           details: string | null
           documents_requested_at: string | null
           docusign_envelope_url: string | null
@@ -374,6 +376,8 @@ export type Database = {
           deed_on_file?: boolean | null
           deed_owner_names?: string | null
           deed_owners_status?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -458,6 +462,8 @@ export type Database = {
           deed_on_file?: boolean | null
           deed_owner_names?: string | null
           deed_owners_status?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           details?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
