@@ -712,7 +712,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const isActive = selected?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
             const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
-            const stageMeta = bayer ? BAYER_STAGE_META[bayer] : null;
+            // Hide the "Inquiry" badge — it's the default stage for every new seller, so it's noise.
+            const stageMeta = bayer && bayer !== "initial_inquiry" ? BAYER_STAGE_META[bayer] : null;
             const rowViewers = viewersFor(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
             const fresh = isNew(s);
