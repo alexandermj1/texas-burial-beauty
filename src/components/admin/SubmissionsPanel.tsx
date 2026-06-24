@@ -9,6 +9,7 @@ import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
 import TexasBadge from "./TexasBadge";
 import CustomerJourney from "./CustomerJourney";
+import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import TexasPipelinePanel from "./TexasPipelinePanel";
@@ -763,6 +764,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 submission={selected}
                 onPatch={(patch) => onUpdate(selected.id, patch)}
               />
+            )}
+
+            {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
+            {subRegion(selected) === "texas" && (
+              <EmailThread submissionId={selected.id} customerEmail={selected.email} />
             )}
 
             {/* Contact actions */}
