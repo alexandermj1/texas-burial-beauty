@@ -1169,11 +1169,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                       </div>
                       <button
-                        onClick={guard("Delete submission", () => onDelete(selected.id))}
+                        onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}
                         className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
+                        title="Move to trash — you can restore it later from Recently deleted"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Delete
                       </button>
+
                     </div>
                   );
                 })()}
