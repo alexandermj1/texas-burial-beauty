@@ -112,19 +112,35 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
 
   const fetchAll = async () => {
     setLoading(true);
+    // Pull every email connected to this customer — either explicitly matched to
+    // the submission, or sent to/from the customer's email address.
+    const addr = (submission.email || "").trim().toLowerCase();
+    const orParts: string[] = [`matched_submission_id.eq.${submission.id}`];
+    if (addr) {
+      orParts.push(`from_email.ilike.%${addr}%`);
+      orParts.push(`to_email.ilike.%${addr}%`);
+    }
     const [d, r, e] = await Promise.all([
       supabase.from("submission_documents" as any).select("*")
         .eq("submission_id", submission.id).order("created_at", { ascending: true }),
       supabase.from("reminder_log" as any).select("*")
         .eq("submission_id", submission.id).order("sent_at", { ascending: false }),
-      supabase.from("email_messages" as any).select("id, subject, from_email, from_name, to_email, received_at, ai_summary, ai_intent, snippet, body_text, body_html")
-        .eq("matched_submission_id", submission.id).order("received_at", { ascending: true }),
+      supabase.from("email_messages" as any)
+        .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, ai_intent, snippet, body_text, body_html")
+        .or(orParts.join(","))
+        .order("received_at", { ascending: true }),
     ]);
     if (d.data) setDocs(d.data as any);
     if (r.data) setReminders(r.data as any);
-    if (e.data) setEmails(e.data as any);
+    if (e.data) {
+      // De-dup by id in case the OR returns the same row twice.
+      const seen = new Set<string>();
+      const uniq = (e.data as any[]).filter((m) => (seen.has(m.id) ? false : (seen.add(m.id), true)));
+      setEmails(uniq as any);
+    }
     setLoading(false);
   };
+
 
   // Seed the standard checklist if it hasn't been created yet.
   const seedChecklist = async () => {
