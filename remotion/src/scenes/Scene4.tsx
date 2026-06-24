@@ -55,7 +55,7 @@ export const Scene4Marketing: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ flex: 0, position: "relative" }}>
+        <div style={{ flex: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 36 }}>
           {/* Main symbol — megaphone/broadcast */}
           <div style={{
             width: SYMBOL_SIZE, height: SYMBOL_SIZE, borderRadius: 48,
@@ -71,51 +71,18 @@ export const Scene4Marketing: React.FC = () => {
             </svg>
           </div>
 
-          {/* Chips stacked to the right */}
-          <Sequence from={48}>
-            <MarketingChip icon="🌐" label="Website" top={-10} />
-          </Sequence>
-          <Sequence from={66}>
-            <MarketingChip icon="📣" label="Google Ads" top={80} />
-          </Sequence>
-          <Sequence from={82}>
-            <MarketingChip icon="🏛️" label="Mortuaries" top={170} />
-          </Sequence>
-
-          {/* Reach counter below, centered under symbol */}
-          <Sequence from={96}>
-            <div style={{
-              position: "absolute", top: 260, left: (SYMBOL_SIZE - 220) / 2,
-              background: colors.white, borderRadius: 20, padding: "14px 22px",
-              boxShadow: `0 16px 34px -14px ${colors.foreground}25`, width: 220,
-            }}>
-              <div style={{ fontFamily: fonts.display, fontSize: 34, color: colors.primary, lineHeight: 1 }}>{reach.toLocaleString()}+</div>
-              <div style={{ fontFamily: fonts.body, fontSize: 18, color: colors.muted }}>buyers reached</div>
-            </div>
-          </Sequence>
+          <EditorialList
+            width={SYMBOL_SIZE + 140}
+            items={[
+              { label: "Website", from: 48 },
+              { label: "Google Ads", from: 66 },
+              { label: "Mortuary Partners", from: 82 },
+              { label: "Buyers Reached", value: `${reach.toLocaleString()}+`, from: 96 },
+            ]}
+          />
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-const MarketingChip: React.FC<{ icon: string; label: string; top: number }> = ({ icon, label, top }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 16, stiffness: 180 } });
-  const opacity = interpolate(s, [0, 1], [0, 1]);
-  const x = interpolate(s, [0, 1], [24, 0]);
-
-  return (
-    <div style={{
-      position: "absolute", top, left: 260,
-      display: "flex", alignItems: "center", gap: 10,
-      background: colors.white, borderRadius: 999, width: 220, padding: "12px 20px",
-      boxShadow: `0 16px 30px -14px ${colors.foreground}24`,
-      opacity, transform: `translateX(${x}px)`,
-    }}>
-      <span style={{ fontSize: 24 }}>{icon}</span>
-      <span style={{ fontFamily: fonts.body, fontSize: 22, color: colors.foreground, fontWeight: 500 }}>{label}</span>
-    </div>
-  );
-};
