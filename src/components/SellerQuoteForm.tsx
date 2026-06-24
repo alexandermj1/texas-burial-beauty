@@ -169,25 +169,110 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
   const isLast = step === steps.length - 1;
 
   return (
-    <section className={compact ? "" : "pt-8 pb-20 md:pt-12 md:pb-24 bg-gradient-warm"} id="quote-form">
-      <div className={compact ? "" : "container mx-auto px-6"}>
+    <section
+      className={
+        compact
+          ? ""
+          : "relative py-20 md:py-28 overflow-hidden bg-[hsl(var(--sand-light))]"
+      }
+      id="quote-form"
+    >
+      {!compact && (
+        <>
+          {/* Layered botanical background */}
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.18] pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(hsl(var(--terracotta) / 0.4) 1px, transparent 1px)",
+              backgroundSize: "30px 30px",
+            }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-[hsl(var(--sage-light))]/70 to-transparent pointer-events-none"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/30 to-transparent pointer-events-none"
+          />
+
+          {/* Botanical illustrations */}
+          <motion.img
+            src={bananaLeaf.url}
+            alt=""
+            aria-hidden
+            initial={{ opacity: 0, x: -40, rotate: -20 }}
+            whileInView={{ opacity: 0.45, x: 0, rotate: -14 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+            className="hidden md:block absolute -left-44 top-20 w-[28rem] pointer-events-none select-none"
+          />
+          <motion.img
+            src={palmFan.url}
+            alt=""
+            aria-hidden
+            initial={{ opacity: 0, x: 40, rotate: 12 }}
+            whileInView={{ opacity: 0.35, x: 0, rotate: 8 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+            className="hidden lg:block absolute -right-32 bottom-16 w-[24rem] pointer-events-none select-none"
+          />
+          <motion.img
+            src={hibiscusCoral.url}
+            alt=""
+            aria-hidden
+            initial={{ opacity: 0, y: -20, rotate: 18 }}
+            whileInView={{ opacity: 0.9, y: 0, rotate: 12 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.2, delay: 0.2 }}
+            className="hidden md:block absolute right-6 lg:right-24 top-8 w-44 lg:w-56 pointer-events-none select-none"
+          />
+          <motion.img
+            src={pinkBranch.url}
+            alt=""
+            aria-hidden
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 0.65, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.2, delay: 0.3 }}
+            className="hidden md:block absolute left-8 bottom-8 w-40 lg:w-52 pointer-events-none select-none -rotate-6"
+          />
+          <motion.img
+            src={plumeriaCluster.url}
+            alt=""
+            aria-hidden
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 0.7, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1 }}
+            className="md:hidden absolute -right-10 top-4 w-36 pointer-events-none select-none"
+          />
+        </>
+      )}
+
+      <div className={compact ? "" : "relative container mx-auto px-6"}>
         {/* Centered intro */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="max-w-2xl mx-auto text-center mb-10"
+          className="max-w-2xl mx-auto text-center mb-12"
         >
-          <p className="text-primary font-medium text-xs tracking-[0.25em] uppercase mb-4">
-            Free Valuation
-          </p>
-          <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight mb-5">
-            Get your
-            <br />
-            <span className="italic text-foreground/70">free valuation.</span>
+          <div className="inline-flex items-center gap-3 mb-5">
+            <span className="h-px w-8 bg-primary/40" />
+            <p className="text-primary font-semibold text-[10px] tracking-[0.3em] uppercase">
+              Free Valuation
+            </p>
+            <span className="h-px w-8 bg-primary/40" />
+          </div>
+          <h2 className="font-display text-4xl md:text-6xl text-foreground leading-[1.05] mb-5 tracking-tight">
+            Get your{" "}
+            <span className="italic text-primary">free valuation.</span>
           </h2>
-          <p className="text-muted-foreground text-lg font-light leading-relaxed">
+          <p className="text-muted-foreground text-base md:text-lg font-light leading-relaxed">
             Four quick steps. Takes about two minutes — we'll respond within 24 hours.
           </p>
 
@@ -202,10 +287,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
         </motion.div>
 
         {/* Card wrapper with offset decorative layer for stand-out */}
-        <div className="max-w-3xl mx-auto relative">
-          {/* Decorative offset shadow card */}
-          <div aria-hidden className="hidden md:block absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 blur-xl opacity-70 -z-10" />
-          <div aria-hidden className="hidden md:block absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-primary/10 blur-2xl -z-10" />
+        <div className="max-w-4xl mx-auto relative">
+          {/* Decorative offset glows */}
+          <div aria-hidden className="hidden md:block absolute -inset-4 rounded-[2.25rem] bg-gradient-to-br from-primary/20 via-accent/10 to-terracotta/15 blur-2xl opacity-80 -z-10" />
+          <div aria-hidden className="hidden md:block absolute -bottom-6 -right-6 w-40 h-40 rounded-full bg-accent/15 blur-3xl -z-10" />
+          <div aria-hidden className="hidden md:block absolute -top-6 -left-6 w-40 h-40 rounded-full bg-primary/15 blur-3xl -z-10" />
 
           <motion.form
             onSubmit={handleSubmit}
@@ -213,10 +299,9 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="bg-background/95 backdrop-blur-sm rounded-3xl border border-border/80 shadow-2xl shadow-primary/10 overflow-hidden ring-1 ring-foreground/5"
+            className="relative bg-background/95 backdrop-blur-md rounded-[2rem] border border-border/70 shadow-2xl shadow-foreground/10 overflow-hidden ring-1 ring-foreground/5"
           >
-            {/* Accent top bar */}
-            <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary/60" />
+
 
             {/* Stepper header */}
             <div className="px-6 md:px-10 pt-7 pb-5 border-b border-border/40">
