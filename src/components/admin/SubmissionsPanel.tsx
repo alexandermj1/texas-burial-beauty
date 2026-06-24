@@ -637,6 +637,37 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       <div data-tour="submissions-list" className={`lg:col-span-5 bg-card rounded-xl border border-border/50 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
+        {regionFilter === "texas" && (
+          <div className="flex items-center gap-1.5 flex-wrap px-3 py-2 border-b border-border/50 bg-muted/30">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mr-1">Attachments:</span>
+            {(["all", "with", "without"] as const).map(f => {
+              const labels = { all: "All", with: "With attachments", without: "Without attachments" } as const;
+              const counts = {
+                all: regionFilter === "texas" ? submissions.filter(s => subRegion(s) === "texas").length : 0,
+                with: submissions.filter(s => subRegion(s) === "texas" && hasDocs(s)).length,
+                without: submissions.filter(s => subRegion(s) === "texas" && !hasDocs(s)).length,
+              };
+              const isActive = docsFilter === f;
+              return (
+                <button
+                  key={f}
+                  onClick={() => setDocsFilter(f)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? f === "with"
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : f === "without"
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-foreground text-background border-foreground"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {labels[f]} ({counts[f]})
+                </button>
+              );
+            })}
+          </div>
+        )}
         {regionFilter === "texas" && cemeteryLabel && (
           <div className="flex items-center justify-between gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-500/30 text-xs">
             <span className="text-amber-900 dark:text-amber-100">
@@ -650,6 +681,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
           </div>
         )}
+
         {(() => {
           const renderRow = (s: Submission, i: number) => {
             const isActive = selected?.id === s.id;
