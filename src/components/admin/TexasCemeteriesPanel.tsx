@@ -309,19 +309,51 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
             </p>
           )}
 
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            Tip: drag a cemetery onto another to merge them (e.g. when the same place was typed two different ways).
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {visibleStats.map(stat => {
               const isActive = activeCemeteryCanon === stat.canon;
               const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
+              const isDragging = dragCanon === stat.canon;
+              const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
               return (
                 <div
                   key={stat.canon}
-                  className={`rounded-lg border transition-all overflow-hidden ${
-                    isActive
-                      ? "border-primary bg-primary/10 ring-1 ring-primary"
-                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
+                  draggable={!merging}
+                  onDragStart={(e) => {
+                    setDragCanon(stat.canon);
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", stat.canon);
+                  }}
+                  onDragEnd={() => { setDragCanon(null); setOverCanon(null); }}
+                  onDragOver={(e) => {
+                    if (!dragCanon || dragCanon === stat.canon) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (overCanon !== stat.canon) setOverCanon(stat.canon);
+                  }}
+                  onDragLeave={() => { if (overCanon === stat.canon) setOverCanon(null); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const src = e.dataTransfer.getData("text/plain") || dragCanon;
+                    if (!src || src === stat.canon) return;
+                    mergeInto(src, { canon: stat.canon, displayName: stat.displayName, directoryId: stat.directoryId });
+                  }}
+                  className={`rounded-lg border transition-all overflow-hidden cursor-grab active:cursor-grabbing ${
+                    isDropTarget
+                      ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500"
+                      : isDragging
+                        ? "opacity-50 border-primary"
+                        : isActive
+                          ? "border-primary bg-primary/10 ring-1 ring-primary"
+                          : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
                   }`}
+                  title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : "Drag onto another cemetery to merge"}
                 >
+
                   <button
                     onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
                     className="w-full text-left p-2.5"
