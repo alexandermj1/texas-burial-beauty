@@ -1,6 +1,7 @@
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Sequence } from "remotion";
 import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
+import { SceneChrome } from "../components/SceneChrome";
 
 const SYMBOL_SIZE = 240;
 
@@ -36,12 +37,10 @@ export const Scene4Marketing: React.FC = () => {
       <GradientOrb x={200} y={700} size={200} />
       <DashedArc x={850} y={780} size={240} speed={0.35} />
 
-      <div style={{ position: "absolute", left: 100, top: 80, transform: `scale(${interpolate(numSpring, [0, 1], [0, 1])})`, display: "flex", alignItems: "center", gap: 16, zIndex: 2 }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", background: colors.primary, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: fonts.display, fontSize: 28, color: colors.background }}>4</div>
-        <span style={{ fontFamily: fonts.body, fontSize: 20, color: colors.muted, letterSpacing: 2, textTransform: "uppercase" }}>Step Four</span>
-      </div>
+      <SceneChrome step={4} chapter="Marketing" kicker="Marketing Launch" />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
+
+      <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: 140, padding: "0 200px" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
             Marketing Launch
@@ -95,10 +94,6 @@ export const Scene4Marketing: React.FC = () => {
           </Sequence>
         </div>
       </div>
-
-      <Sequence from={40}>
-        <BottomProgress step={4} />
-      </Sequence>
     </AbsoluteFill>
   );
 };
@@ -120,19 +115,6 @@ const MarketingChip: React.FC<{ icon: string; label: string; top: number }> = ({
     }}>
       <span style={{ fontSize: 24 }}>{icon}</span>
       <span style={{ fontFamily: fonts.body, fontSize: 22, color: colors.foreground, fontWeight: 500 }}>{label}</span>
-    </div>
-  );
-};
-
-const BottomProgress: React.FC<{ step: number }> = ({ step }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const progress = spring({ frame, fps, config: { damping: 200 } });
-  const opacity = interpolate(progress, [0, 1], [0, 0.6]);
-  return (
-    <div style={{ position: "absolute", bottom: 60, left: 160, right: 160, display: "flex", alignItems: "center", gap: 8, opacity }}>
-      {Array.from({ length: 8 }, (_, i) => (<div key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i < step ? colors.primary : colors.sand }} />))}
-      <span style={{ fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginLeft: 8 }}>{step}/8</span>
     </div>
   );
 };
