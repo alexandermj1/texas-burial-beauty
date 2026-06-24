@@ -369,6 +369,71 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
             </div>
           </div>
 
+          {/* Divider */}
+          <div className="h-px bg-border/40 my-10" />
+
+          {/* Section: Secure document upload */}
+          <div className="mb-10">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-primary/80 font-semibold mb-3">
+              Attach documents
+            </p>
+            <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-xl p-3">
+              <Lock className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
+              <p className="leading-relaxed">
+                <span className="font-medium text-foreground">Confidential & secure.</span>{" "}
+                Files upload directly to our private broker portal. Only our team can see them —
+                they are never shared, indexed, or sent over email. PDF, JPG, PNG, HEIC, or DOC up to {MAX_FILE_MB}MB each.
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+              Helpful to attach: the deed or certificate of ownership, original purchase records,
+              endowment care receipts, or photos of the plot.
+            </p>
+
+            <label
+              htmlFor="seller-attachments"
+              className="flex flex-col items-center justify-center gap-2 w-full py-8 rounded-xl border-2 border-dashed border-border/70 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer text-center"
+            >
+              <Upload className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-foreground">
+                {uploading ? "Uploading…" : "Click to choose files or drop here"}
+              </span>
+              <span className="text-[11px] text-muted-foreground">You can add multiple files</span>
+              <input
+                ref={fileInputRef}
+                id="seller-attachments"
+                type="file"
+                multiple
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => handleFiles(e.target.files)}
+                disabled={uploading}
+              />
+            </label>
+
+            {files.length > 0 && (
+              <ul className="mt-4 space-y-2">
+                {files.map((f) => (
+                  <li key={f.path} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground truncate">{f.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{(f.size / 1024).toFixed(0)} KB · uploaded</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(f.path)}
+                      className="text-muted-foreground hover:text-destructive p-1"
+                      aria-label={`Remove ${f.name}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
 
           {/* Submit */}
           <div className="flex flex-col items-center gap-3">
