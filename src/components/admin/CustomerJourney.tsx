@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
+import { isOutgoing } from "@/lib/emailReply";
 
 interface SubmissionDoc {
   id: string;
