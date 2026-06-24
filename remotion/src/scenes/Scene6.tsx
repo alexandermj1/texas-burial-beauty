@@ -209,125 +209,17 @@ export const Scene6Buyer: React.FC = () => {
             </div>
           </div>
 
-          {/* Stacked badges to the right of the ticket */}
-          <Sequence from={62}>
-            <FlowBadge
-              label="Listed on consignment"
-              top={28}
-              left={CARD_WIDTH + 30}
-              icon="list"
-            />
-          </Sequence>
-          <Sequence from={86}>
-            <FlowBadge
-              label="When it sells, you're paid"
-              top={120}
-              left={CARD_WIDTH + 30}
-              icon="check"
-            />
-          </Sequence>
-          <Sequence from={106}>
-            <FlowBadge
-              label="Exactly your quoted net"
-              top={212}
-              left={CARD_WIDTH + 30}
-              icon="dollar"
-              accent
-            />
-          </Sequence>
+          <EditorialList
+            width={CARD_WIDTH}
+            items={[
+              { label: "Listed on consignment", from: 62 },
+              { label: "When it sells, you're paid", from: 86 },
+              { label: "Exactly your quoted net", from: 106 },
+            ]}
+          />
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-const FlowBadge: React.FC<{
-  label: string;
-  top: number;
-  left: number;
-  icon: "list" | "check" | "dollar";
-  accent?: boolean;
-}> = ({ label, top, left, icon, accent = false }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 16, stiffness: 180 } });
-  const opacity = interpolate(s, [0, 1], [0, 1]);
-  const x = interpolate(s, [0, 1], [24, 0]);
-
-  const iconStroke = accent ? colors.white : colors.primary;
-  const iconBg = accent ? colors.primary : colors.primaryLight;
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top,
-        left,
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        background: colors.white,
-        borderRadius: 999,
-        width: BADGE_WIDTH,
-        padding: "12px 18px",
-        boxShadow: `0 15px 30px -14px ${colors.foreground}24`,
-        opacity,
-        transform: `translateX(${x}px)`,
-        border: accent ? `1.5px solid ${colors.primary}30` : "none",
-      }}
-    >
-      <div
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: "50%",
-          background: iconBg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={iconStroke}
-          strokeWidth="2.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          {icon === "list" && (
-            <>
-              <line x1="8" y1="6" x2="20" y2="6" />
-              <line x1="8" y1="12" x2="20" y2="12" />
-              <line x1="8" y1="18" x2="20" y2="18" />
-              <circle cx="4" cy="6" r="1" />
-              <circle cx="4" cy="12" r="1" />
-              <circle cx="4" cy="18" r="1" />
-            </>
-          )}
-          {icon === "check" && <polyline points="20 6 9 17 4 12" />}
-          {icon === "dollar" && (
-            <>
-              <line x1="12" y1="2" x2="12" y2="22" />
-              <path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </>
-          )}
-        </svg>
-      </div>
-      <span
-        style={{
-          fontFamily: fonts.body,
-          fontSize: 18,
-          color: colors.foreground,
-          fontWeight: accent ? 600 : 500,
-          lineHeight: 1.15,
-        }}
-      >
-        {label}
-      </span>
-    </div>
-  );
-};
