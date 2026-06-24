@@ -620,7 +620,10 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         console.warn("backfill error", e);
+      }
     }
+
+
 
     // ============================================================
     // Thread expansion — pull EVERY message in the threads we've seen
