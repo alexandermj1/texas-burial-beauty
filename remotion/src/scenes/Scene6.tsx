@@ -1,10 +1,10 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Sequence } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { colors, fonts } from "../styles";
 import { FloatingParticle, AnimatedRing, GradientOrb, DashedArc } from "../components/FloatingParticle";
 import { SceneChrome } from "../components/SceneChrome";
+import { EditorialList } from "../components/EditorialList";
 
-const CARD_WIDTH = 360;
-const BADGE_WIDTH = 240;
+const CARD_WIDTH = 420;
 
 export const Scene6Buyer: React.FC = () => {
   const frame = useCurrentFrame();
