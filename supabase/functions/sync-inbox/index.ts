@@ -15,6 +15,8 @@ const BodySchema = z.object({
   maxResults: z.number().int().min(1).max(500).optional().default(100),
   query: z.string().max(500).optional().default(DEFAULT_QUERY),
   attachmentBackfillLimit: z.number().int().min(0).max(150).optional().default(25),
+  threadBackfillLimit: z.number().int().min(0).max(500).optional().default(60),
+  maxThreadsPerSync: z.number().int().min(0).max(500).optional().default(80),
 });
 
 interface GmailHeader { name: string; value: string }
@@ -581,7 +583,7 @@ Deno.serve(async (req) => {
         const backfillLimit = body.attachmentBackfillLimit ?? 25;
         const { data: backfillCandidates } = backfillLimit > 0 ? await admin
           .from("email_messages")
-          .select("id, gmail_message_id, from_email, subject, matched_submission_id, received_at")
+          .select("id, gmail_message_id, gmail_thread_id, from_email, subject, matched_submission_id, received_at")
           .not("matched_submission_id", "is", null)
           .order("received_at", { ascending: false })
           .limit(backfillLimit) : { data: [] };
@@ -620,6 +622,116 @@ Deno.serve(async (req) => {
         console.warn("backfill error", e);
       }
     }
+
+
+
+    // ============================================================
+    // Thread expansion — pull EVERY message in the threads we've seen
+    // (including our Sent replies, which the INBOX-only list query skips)
+    // so the admin UI can show the complete back-and-forth.
+    // ============================================================
+    let threadExpandedCount = 0;
+    try {
+      const INTERNAL_DOMAINS_TX = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+      const isInternal = (e: string) =>
+        INTERNAL_DOMAINS_TX.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+      const threadIds = new Set<string>();
+      for (const m of fetched) if (m.threadId) threadIds.add(m.threadId);
+      // Also expand threads for the most recent matched submissions so older
+      // chains backfill over successive syncs.
+      const threadBackfillLimit = body.threadBackfillLimit ?? 60;
+      if (threadBackfillLimit > 0) {
+        const { data: recentMatched } = await admin
+          .from("email_messages")
+          .select("gmail_thread_id")
+          .not("matched_submission_id", "is", null)
+          .order("received_at", { ascending: false })
+          .limit(threadBackfillLimit);
+        for (const r of (recentMatched ?? []) as any[]) {
+          if (r.gmail_thread_id) threadIds.add(r.gmail_thread_id);
+        }
+      }
+
+      const THREAD_CONCURRENCY = 5;
+      const threadList = Array.from(threadIds);
+      // Cap to keep us within the 60s budget; remaining threads catch up next sync.
+      const cappedThreads = threadList.slice(0, body.maxThreadsPerSync ?? 80);
+
+      for (let i = 0; i < cappedThreads.length; i += THREAD_CONCURRENCY) {
+        const chunk = cappedThreads.slice(i, i + THREAD_CONCURRENCY);
+        await Promise.all(chunk.map(async (tid) => {
+          try {
+            const r = await fetch(`${GMAIL_GATEWAY}/users/me/threads/${tid}?format=full`, {
+              headers: gmailHeaders(lovableKey, gmailKey),
+            });
+            if (!r.ok) {
+              if (r.status !== 404) console.warn(`thread fetch failed ${r.status}`);
+              return;
+            }
+            const thread = await r.json() as { messages?: GmailMessage[] };
+            const msgs = thread.messages ?? [];
+            if (msgs.length === 0) return;
+            const msgIds = msgs.map((m) => m.id);
+            const { data: alreadyHave } = await admin
+              .from("email_messages")
+              .select("gmail_message_id")
+              .in("gmail_message_id", msgIds);
+            const have = new Set((alreadyHave ?? []).map((x: any) => x.gmail_message_id));
+            const missing = msgs.filter((m) => !have.has(m.id));
+            if (missing.length === 0) return;
+            const newRows = missing.map((msg) => {
+              const headers = msg.payload?.headers ?? [];
+              const fromRaw = header(headers, "From");
+              const { email: fromEmail, name: fromName } = parseFromHeader(fromRaw);
+              const subject = header(headers, "Subject");
+              const toEmail = header(headers, "To");
+              const messageDate = Number.parseInt(msg.internalDate ?? "", 10);
+              const receivedAt = Number.isFinite(messageDate)
+                ? new Date(messageDate).toISOString()
+                : new Date(header(headers, "Date") || Date.now()).toISOString();
+              const { text, html } = extractBody(msg.payload);
+              // Try matching by the OTHER party — if from us, match on the To address.
+              const isOutgoing = isInternal(fromEmail);
+              const matchEmail = isOutgoing ? parseFromHeader(toEmail).email : fromEmail;
+              const matchName = isOutgoing ? parseFromHeader(toEmail).name : fromName;
+              const match = matchSubmission(matchEmail, matchName, subs);
+              return {
+                gmail_message_id: msg.id,
+                gmail_thread_id: msg.threadId,
+                from_email: fromEmail,
+                from_name: fromName,
+                to_email: toEmail,
+                subject,
+                snippet: msg.snippet ?? "",
+                body_text: text || null,
+                body_html: html || null,
+                received_at: receivedAt,
+                is_read: !(msg.labelIds ?? []).includes("UNREAD"),
+                ai_summary: null,
+                ai_intent: null,
+                ai_draft_reply: null,
+                ai_analyzed_at: null,
+                matched_submission_id: match?.id ?? null,
+                match_confidence: match?.confidence ?? "none",
+              };
+            });
+            const { error: insErr } = await admin.from("email_messages").insert(newRows);
+            if (insErr) {
+              console.warn("thread expansion insert failed", insErr.message);
+              return;
+            }
+            threadExpandedCount += newRows.length;
+          } catch (e) {
+            console.warn("thread expansion item error", e);
+          }
+        }));
+      }
+    } catch (e) {
+      console.warn("thread expansion error", e);
+    }
+    totalNewlySynced += threadExpandedCount;
+
+
 
     totalPageSize += ids.length;
     totalAlreadyCached += existingIds.size;
