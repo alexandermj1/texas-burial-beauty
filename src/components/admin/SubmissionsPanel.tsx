@@ -80,7 +80,12 @@ interface Props {
   focusSubmissionId?: string | null;
   /** Optional: trigger a Gmail sync + reload submissions. */
   onRefresh?: () => Promise<void>;
+  /** Soft-deleted submissions available for restore via the Trash dialog. */
+  deletedSubmissions?: any[];
+  /** Restore a soft-deleted submission by id. */
+  onRestore?: (id: string) => Promise<void>;
 }
+
 
 const sourceLabel = (s: string | null) => {
   switch (s) {
