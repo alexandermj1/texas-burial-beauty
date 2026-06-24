@@ -99,7 +99,7 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "new";
+type StatusFilter = "all" | "new" | "awaiting_reply";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
 
