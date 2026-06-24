@@ -103,6 +103,8 @@ const cemeterySearchUrl = (cemetery: string) =>
 type StatusFilter = "all" | "new" | "awaiting_reply";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
+type DocsFilter = "all" | "with" | "without";
+
 
 // Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
 // A submission is Bayer iff its visible badge is Bayer (inquiry_channel === "bayer_sell_a_plot").
