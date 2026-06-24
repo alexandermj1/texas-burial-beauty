@@ -187,6 +187,56 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     await load();
   };
 
+  // Drag-and-drop merge: drop cemetery A onto cemetery B → renames every Texas
+  // submission whose cemetery canonicalizes to A's key, setting it to B's display
+  // name. Also deletes A's directory row if it exists. Submissions are matched by
+  // canonical cemetery name (case/punctuation-insensitive), so this catches the
+  // "same place spelled differently" case.
+  const mergeInto = async (sourceCanon: string, target: { canon: string; displayName: string; directoryId: string | null }) => {
+    if (sourceCanon === target.canon) return;
+    const source = cemeteryStats.find(s => s.canon === sourceCanon);
+    if (!source) return;
+    const sourceIds = texasSubmissions
+      .filter(s => canonical(s.cemetery || "") === sourceCanon)
+      .map(s => s.id);
+    const ok = window.confirm(
+      `Merge "${source.displayName}" into "${target.displayName}"?\n\n` +
+      `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} will be renamed to "${target.displayName}".` +
+      (source.directoryId ? `\nThe "${source.displayName}" directory entry will be removed.` : "")
+    );
+    if (!ok) return;
+    setMerging(true);
+    try {
+      if (sourceIds.length > 0) {
+        const { error } = await supabase
+          .from("contact_submissions" as any)
+          .update({ cemetery: target.displayName })
+          .in("id", sourceIds);
+        if (error) throw error;
+      }
+      if (source.directoryId) {
+        const { error } = await supabase
+          .from("texas_cemeteries" as any)
+          .delete()
+          .eq("id", source.directoryId);
+        if (error) throw error;
+      }
+      toast({
+        title: "Cemeteries merged",
+        description: `${sourceIds.length} submission${sourceIds.length === 1 ? "" : "s"} moved to "${target.displayName}"`,
+      });
+      await load();
+      await onRefresh?.();
+    } catch (e: any) {
+      toast({ title: "Merge failed", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setMerging(false);
+      setDragCanon(null);
+      setOverCanon(null);
+    }
+  };
+
+
   return (
     <div className="bg-card rounded-xl border border-border/50">
       <button
