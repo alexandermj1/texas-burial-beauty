@@ -323,7 +323,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false }: { defaultCem
                 <textarea
                   value={form.purchaseInfo}
                   onChange={(e) => setForm({ ...form, purchaseInfo: e.target.value })}
-                  placeholder="When was it purchased, for what amount, and what records do you have? After submitting, please email a clear photo or scanned copy of the deed/certificate of ownership and any original purchase records to info@texascemeterybrokers.com."
+                  placeholder="When was it purchased, for what amount, and what records do you have? You can attach the deed/certificate of ownership and any purchase records securely below."
                   rows={3}
                   maxLength={1000}
                   className={
