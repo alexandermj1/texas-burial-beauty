@@ -9,6 +9,7 @@ import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
 import TexasBadge from "./TexasBadge";
 import CustomerJourney from "./CustomerJourney";
+import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import TexasPipelinePanel from "./TexasPipelinePanel";
