@@ -380,6 +380,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
+      if (regionFilter === "texas" && cemeteryCanon && _canon(s.cemetery || "") !== cemeteryCanon) return false;
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
@@ -397,7 +398,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     );
     const otherRows = matches.filter(s => !awaitingMap[s.id]);
     return [...awaitingRows, ...otherRows];
-  }, [submissions, regionFilter, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+  }, [submissions, regionFilter, cemeteryCanon, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
