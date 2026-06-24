@@ -45,7 +45,7 @@ export const Scene8Closing: React.FC = () => {
       <SceneChrome step={8} chapter="Closing" kicker="Closing Day" />
 
 
-      <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
+      <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: 140, padding: "0 200px" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
             Closing Day

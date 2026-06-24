@@ -40,7 +40,7 @@ export const Scene4Marketing: React.FC = () => {
       <SceneChrome step={4} chapter="Marketing" kicker="Marketing Launch" />
 
 
-      <div style={{ display: "flex", alignItems: "center", gap: 120, padding: "0 180px" }}>
+      <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: 140, padding: "0 200px" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: fonts.body, fontSize: 24, color: colors.accent, letterSpacing: 3, textTransform: "uppercase", fontWeight: 500, opacity: titleOpacity, marginBottom: 20 }}>
             Marketing Launch

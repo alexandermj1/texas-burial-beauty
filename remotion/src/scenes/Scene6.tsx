@@ -50,7 +50,7 @@ export const Scene6Buyer: React.FC = () => {
       <SceneChrome step={6} chapter="The Net" kicker="Your Guaranteed Number" />
 
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 96, padding: "0 180px" }}>
+      <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", justifyContent: "center", gap: 120, padding: "0 200px" }}>
         {/* Text column */}
         <div style={{ flex: "0 0 620px", maxWidth: 620 }}>
           <div
