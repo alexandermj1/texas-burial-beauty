@@ -81,29 +81,29 @@ const SellProperty = () => {
 
         {/* Botanical illustrations */}
         <motion.img src={bananaLeaf.url} alt="" aria-hidden
-          initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.4, x: 0, rotate: -14 }}
+          initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.18, x: 0, rotate: -14 }}
           transition={{ duration: 1.4, ease: "easeOut" }}
-          className="hidden md:block absolute -left-44 top-32 w-[28rem] pointer-events-none select-none"
+          className="hidden md:block absolute -left-56 top-32 w-[28rem] pointer-events-none select-none"
         />
         <motion.img src={palmFan.url} alt="" aria-hidden
-          initial={{ opacity: 0, x: 40, rotate: 12 }} animate={{ opacity: 0.3, x: 0, rotate: 8 }}
+          initial={{ opacity: 0, x: 40, rotate: 12 }} animate={{ opacity: 0.18, x: 0, rotate: 8 }}
           transition={{ duration: 1.4, ease: "easeOut" }}
-          className="hidden lg:block absolute -right-32 bottom-24 w-[24rem] pointer-events-none select-none"
+          className="hidden lg:block absolute -right-40 bottom-24 w-[24rem] pointer-events-none select-none"
         />
         <motion.img src={hibiscusCoral.url} alt="" aria-hidden
-          initial={{ opacity: 0, y: -20, rotate: 18 }} animate={{ opacity: 0.85, y: 0, rotate: 8 }}
+          initial={{ opacity: 0, y: -20, rotate: 18 }} animate={{ opacity: 0.5, y: 0, rotate: 8 }}
           transition={{ duration: 1.2, delay: 0.2 }}
-          className="hidden md:block absolute right-6 lg:right-20 top-24 w-40 lg:w-52 pointer-events-none select-none"
+          className="hidden md:block absolute right-2 lg:right-8 top-10 w-32 lg:w-40 pointer-events-none select-none"
         />
         <motion.img src={pinkBranch.url} alt="" aria-hidden
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.6, y: 0 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.35, y: 0 }}
           transition={{ duration: 1.2, delay: 0.3 }}
-          className="hidden md:block absolute left-6 bottom-12 w-40 lg:w-52 pointer-events-none select-none -rotate-6"
+          className="hidden md:block absolute left-2 bottom-6 w-32 lg:w-40 pointer-events-none select-none -rotate-6"
         />
         <motion.img src={plumeriaCluster.url} alt="" aria-hidden
-          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 0.7, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 0.4, scale: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="md:hidden absolute -right-10 top-20 w-36 pointer-events-none select-none"
+          className="md:hidden absolute -right-10 top-20 w-32 pointer-events-none select-none"
         />
 
         <div className="relative container mx-auto px-6">
