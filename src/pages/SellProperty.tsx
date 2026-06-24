@@ -192,8 +192,8 @@ const SellProperty = () => {
             <h2 className="font-display text-3xl md:text-5xl text-foreground tracking-tight">See what happens <span className="italic text-primary">behind the scenes.</span></h2>
             <p className="text-foreground/70 mt-4 max-w-lg mx-auto">From your first call to final payment — watch the entire process we handle on your behalf.</p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-hover aspect-video">
-            <video className="w-full" autoPlay loop muted playsInline poster="">
+          <motion.div initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="w-full rounded-2xl overflow-hidden shadow-hover aspect-video">
+            <video className="w-full h-full object-cover" autoPlay loop muted playsInline poster="">
               <source src="/videos/seller-journey.mp4" type="video/mp4" />
             </video>
           </motion.div>

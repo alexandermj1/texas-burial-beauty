@@ -192,7 +192,6 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
         validate: () => (!form.name.trim() ? "Please enter your name." : null),
         body: (
           <input
-            autoFocus
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Jane Doe"
