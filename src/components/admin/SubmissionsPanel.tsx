@@ -634,6 +634,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {refreshing ? "Refreshing..." : "Refresh inbox"}
             </button>
           )}
+          <button
+            onClick={() => setTrashOpen(true)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
+            title="View and restore recently deleted submissions"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Recently deleted
+            {deletedSubmissions.length > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-foreground font-semibold">
+                {deletedSubmissions.length}
+              </span>
+            )}
+          </button>
+
         </div>
       </div>
       )}
