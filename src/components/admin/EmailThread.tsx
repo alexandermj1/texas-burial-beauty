@@ -2,7 +2,7 @@
 // Matches messages by matched_submission_id OR by the customer's email address
 // appearing in from/to fields so threads still show even if the linker missed it.
 import { useEffect, useState } from "react";
-import { Mail, Sparkles } from "lucide-react";
+import { Mail, Sparkles, Reply } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { isOutgoing } from "@/lib/emailReply";
@@ -17,7 +17,19 @@ interface EmailRow {
   ai_summary: string | null;
   snippet: string | null;
   body_text: string | null;
+  gmail_thread_id: string | null;
+  gmail_message_id: string | null;
 }
+
+const GMAIL_USER = "info@texascemeterybrokers.com";
+const openGmailThread = (threadId: string | null, messageId?: string | null) => {
+  if (!threadId) return;
+  // Opening the thread directly lets Gmail's native Reply button keep In-Reply-To/References
+  // headers — something the compose URL (?view=cm) can't do.
+  const anchor = messageId ? `${threadId}/${messageId}` : threadId;
+  const url = `https://mail.google.com/mail/u/?authuser=${encodeURIComponent(GMAIL_USER)}#all/${anchor}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 
 interface Props {
   submissionId: string;
@@ -40,7 +52,7 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
       }
       const { data } = await supabase
         .from("email_messages" as any)
-        .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text")
+        .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text, gmail_thread_id, gmail_message_id")
         .or(orParts.join(","))
         .order("received_at", { ascending: true });
       if (cancelled) return;
@@ -99,9 +111,21 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
                     </span>
                     <p className="font-medium text-foreground truncate">{sender}</p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
+                    </span>
+                    {e.gmail_thread_id && (
+                      <button
+                        type="button"
+                        onClick={() => openGmailThread(e.gmail_thread_id, e.gmail_message_id)}
+                        title="Open this thread in Gmail to reply in the same chain"
+                        className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                      >
+                        <Reply className="w-2.5 h-2.5" /> Reply in Gmail
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="font-medium text-foreground/90 truncate">{e.subject || "(no subject)"}</p>
                 {body && (
