@@ -7,7 +7,9 @@ const corsHeaders = {
 };
 
 const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
-const DEFAULT_QUERY = "-in:sent -in:draft";
+// Include Sent folder so we know which submissions we've already replied to.
+// Drafts stay excluded.
+const DEFAULT_QUERY = "-in:draft";
 const FETCH_BATCH_SIZE = 10;
 
 const BodySchema = z.object({
@@ -15,8 +17,8 @@ const BodySchema = z.object({
   maxResults: z.number().int().min(1).max(500).optional().default(100),
   query: z.string().max(500).optional().default(DEFAULT_QUERY),
   attachmentBackfillLimit: z.number().int().min(0).max(150).optional().default(25),
-  threadBackfillLimit: z.number().int().min(0).max(500).optional().default(60),
-  maxThreadsPerSync: z.number().int().min(0).max(500).optional().default(80),
+  threadBackfillLimit: z.number().int().min(0).max(2000).optional().default(400),
+  maxThreadsPerSync: z.number().int().min(0).max(2000).optional().default(400),
 });
 
 interface GmailHeader { name: string; value: string }
@@ -328,16 +330,22 @@ Deno.serve(async (req) => {
 
     const { data: existing } = await admin
       .from("email_messages")
-      .select("id, gmail_message_id, from_email, from_name, matched_submission_id")
+      .select("id, gmail_message_id, from_email, from_name, to_email, matched_submission_id")
       .in("gmail_message_id", ids.length ? ids : ["__none__"]);
 
     const existingIds = new Set((existing ?? []).map((r: any) => r.gmail_message_id));
     const newIds = ids.filter((id) => !existingIds.has(id));
 
+    const INTERNAL_DOMAINS_REMATCH = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+    const isInternalRematch = (e: string) =>
+      INTERNAL_DOMAINS_REMATCH.some((d) => (e || "").toLowerCase().endsWith("@" + d));
     let rematchedCount = 0;
     for (const row of (existing ?? []) as any[]) {
       if (row.matched_submission_id) continue;
-      const m = matchSubmission(row.from_email, row.from_name, subs);
+      const outgoing = isInternalRematch(row.from_email ?? "");
+      const matchEmail = outgoing ? parseFromHeader(row.to_email ?? "").email : (row.from_email ?? "");
+      const matchName = outgoing ? parseFromHeader(row.to_email ?? "").name : row.from_name;
+      const m = matchSubmission(matchEmail, matchName, subs);
       if (m) {
         await admin
           .from("email_messages")
@@ -368,6 +376,9 @@ Deno.serve(async (req) => {
       fetched.push(...results.filter((m): m is GmailMessage => !!m));
     }
 
+    const INTERNAL_DOMAINS_INSERT = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+    const isInternalAddr = (e: string) =>
+      INTERNAL_DOMAINS_INSERT.some((d) => (e || "").toLowerCase().endsWith("@" + d));
     const rows = fetched.map((msg) => {
       const headers = msg.payload?.headers ?? [];
       const fromRaw = header(headers, "From");
@@ -377,7 +388,11 @@ Deno.serve(async (req) => {
       const messageDate = Number.parseInt(msg.internalDate ?? "", 10);
       const receivedAt = Number.isFinite(messageDate) ? new Date(messageDate).toISOString() : new Date(header(headers, "Date") || Date.now()).toISOString();
       const { text, html } = extractBody(msg.payload);
-      const match = matchSubmission(fromEmail, fromName, subs);
+      // For outgoing mail (sent by us), match on the recipient instead of sender.
+      const outgoing = isInternalAddr(fromEmail);
+      const matchEmail = outgoing ? parseFromHeader(toEmail).email : fromEmail;
+      const matchName = outgoing ? parseFromHeader(toEmail).name : fromName;
+      const match = matchSubmission(matchEmail, matchName, subs);
 
       return {
         gmail_message_id: msg.id,
