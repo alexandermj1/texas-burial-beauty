@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Save, Eye } from "lucide-react";
 import type { Submission } from "./SubmissionsPanel";

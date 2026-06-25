@@ -3,6 +3,7 @@
 // customer-rebuild edge function. Click "Refresh" after a new submission lands.
 
 import { useEffect, useMemo, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";

@@ -2,6 +2,7 @@
 // Each stage exposes its own inline checklist + "advance" actions that mutate
 // fields on contact_submissions. The derived stage is computed from those fields.
 import { useEffect, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion } from "framer-motion";
 import {
   Inbox, FileText, Archive, ThumbsUp, FileSignature, CreditCard,

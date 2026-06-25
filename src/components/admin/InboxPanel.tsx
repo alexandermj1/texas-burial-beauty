@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, RefreshCw, Link2, ChevronRight, MailOpen, FilePlus2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
