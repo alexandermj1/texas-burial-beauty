@@ -158,6 +158,10 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     }
     const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: intakeId } });
     if (emailError) console.warn("inquiry email failed", emailError);
+    if (files.length > 0) {
+      const { error: attachError } = await supabase.functions.invoke("attach-seller-files", { body: { submission_id: intakeId } });
+      if (attachError) console.warn("attach-seller-files failed", attachError);
+    }
     setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", propertyTypeOther: "", spaces: "", section: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
     setFiles([]);
     setLoading(false);
