@@ -846,6 +846,7 @@ Deno.serve(async (req) => {
       has_more: Boolean(lastNextPageToken),
       result_size_estimate: aggregateResultSize,
       bayer_imported: totalBayerCreated,
+      auto_created_submissions: totalAutoCreated,
     });
   } catch (e) {
     console.error("sync-inbox error", e);
