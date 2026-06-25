@@ -423,6 +423,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
+  // Texas-only: count submissions per canonical cemetery name for the "N other submissions" chip.
+  const texasCemeteryCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of texasSubmissions) {
+      const k = _canon(s.cemetery || "");
+      if (!k) continue;
+      m.set(k, (m.get(k) || 0) + 1);
+    }
+    return m;
+  }, [texasSubmissions]);
+
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
