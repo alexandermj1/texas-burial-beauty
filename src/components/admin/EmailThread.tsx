@@ -111,9 +111,21 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
                     </span>
                     <p className="font-medium text-foreground truncate">{sender}</p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
+                    </span>
+                    {e.gmail_thread_id && (
+                      <button
+                        type="button"
+                        onClick={() => openGmailThread(e.gmail_thread_id, e.gmail_message_id)}
+                        title="Open this thread in Gmail to reply in the same chain"
+                        className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                      >
+                        <Reply className="w-2.5 h-2.5" /> Reply in Gmail
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="font-medium text-foreground/90 truncate">{e.subject || "(no subject)"}</p>
                 {body && (
