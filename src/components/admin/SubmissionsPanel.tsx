@@ -975,9 +975,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
             {selected.cemetery && (((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (() => {
               const selCanon = _canon(selected.cemetery || "");
-              const sameCemeteryCount = selCanon
-                ? texasSubmissions.filter(t => t.id !== selected.id && _canon(t.cemetery || "") === selCanon).length
-                : 0;
               return (
               <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
@@ -1007,7 +1004,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {selected.region && (
                   <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
                 )}
-                {sameCemeteryCount > 0 && (
+                {selCanon && (
                   <button
                     onClick={() => {
                       setRegionFilter("texas");
@@ -1017,13 +1014,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                    title="Filter the list to this cemetery"
+                    title="Search Texas submissions for this cemetery (fuzzy match, handles spelling variations)"
                   >
-                    View {sameCemeteryCount} other submission{sameCemeteryCount === 1 ? "" : "s"} at this cemetery
+                    <Search className="w-3.5 h-3.5" /> Search submissions at this cemetery
                   </button>
-                )}
-                {sameCemeteryCount === 0 && (
-                  <p className="text-[11px] text-muted-foreground mt-2 italic">No other submissions yet for this cemetery.</p>
                 )}
               </div>
               );
