@@ -818,6 +818,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       {s.cemetery && countFor(s.cemetery) > 0 ? (
                         <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
                       ) : null}
+                      {subRegion(s) === "texas" && s.cemetery && (texasCemeteryCounts.get(_canon(s.cemetery)) || 0) > 1 ? (
+                        <span className="ml-1.5 text-[10px] text-foreground/70 font-medium">· {(texasCemeteryCounts.get(_canon(s.cemetery)) || 1) - 1} other submission{((texasCemeteryCounts.get(_canon(s.cemetery)) || 1) - 1) === 1 ? "" : "s"}</span>
+                      ) : null}
                     </p>
                     {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
                       <p className="text-[10px] text-amber-700 dark:text-amber-400 italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
