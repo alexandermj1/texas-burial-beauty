@@ -394,7 +394,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
-      if (regionFilter === "texas" && cemeteryCanon && _canon(s.cemetery || "") !== cemeteryCanon) return false;
+      if (regionFilter === "texas" && cemeteryCanon) {
+        const sc = _canon(s.cemetery || "");
+        if (!sc) return false;
+        const STOP = new Set(["the","of","and","memorial","park","cemetery","mortuary","mausoleum","association","assoc","garden","gardens","lawn","at","in"]);
+        const qTokens = cemeteryCanon.split(" ").filter(t => t && !STOP.has(t));
+        const sTokens = new Set(sc.split(" ").filter(t => t && !STOP.has(t)));
+        const substringHit = sc.includes(cemeteryCanon) || cemeteryCanon.includes(sc);
+        const tokenHit = qTokens.length > 0 && qTokens.some(t => sTokens.has(t));
+        if (!substringHit && !tokenHit) return false;
+      }
       if (regionFilter === "texas" && docsFilter !== "all") {
         const has = hasDocs(s);
         if (docsFilter === "with" && !has) return false;
