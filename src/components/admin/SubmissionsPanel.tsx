@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -394,7 +394,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
-      if (regionFilter === "texas" && cemeteryCanon && _canon(s.cemetery || "") !== cemeteryCanon) return false;
+      if (regionFilter === "texas" && cemeteryCanon) {
+        const sc = _canon(s.cemetery || "");
+        if (!sc) return false;
+        const STOP = new Set(["the","of","and","memorial","park","cemetery","mortuary","mausoleum","association","assoc","garden","gardens","lawn","at","in"]);
+        const qTokens = cemeteryCanon.split(" ").filter(t => t && !STOP.has(t));
+        const sTokens = new Set(sc.split(" ").filter(t => t && !STOP.has(t)));
+        const substringHit = sc.includes(cemeteryCanon) || cemeteryCanon.includes(sc);
+        const tokenHit = qTokens.length > 0 && qTokens.some(t => sTokens.has(t));
+        if (!substringHit && !tokenHit) return false;
+      }
       if (regionFilter === "texas" && docsFilter !== "all") {
         const has = hasDocs(s);
         if (docsFilter === "with" && !has) return false;
@@ -818,9 +827,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       {s.cemetery && countFor(s.cemetery) > 0 ? (
                         <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
                       ) : null}
-                      {subRegion(s) === "texas" && s.cemetery && (texasCemeteryCounts.get(_canon(s.cemetery)) || 0) > 1 ? (
-                        <span className="ml-1.5 text-[10px] text-foreground/70 font-medium">· {(texasCemeteryCounts.get(_canon(s.cemetery)) || 1) - 1} other submission{((texasCemeteryCounts.get(_canon(s.cemetery)) || 1) - 1) === 1 ? "" : "s"}</span>
-                      ) : null}
                     </p>
                     {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
                       <p className="text-[10px] text-amber-700 dark:text-amber-400 italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
@@ -969,9 +975,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
             {selected.cemetery && (((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (() => {
               const selCanon = _canon(selected.cemetery || "");
-              const sameCemeteryCount = selCanon
-                ? texasSubmissions.filter(t => t.id !== selected.id && _canon(t.cemetery || "") === selCanon).length
-                : 0;
               return (
               <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
@@ -1001,7 +1004,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {selected.region && (
                   <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
                 )}
-                {sameCemeteryCount > 0 && (
+                {selCanon && (
                   <button
                     onClick={() => {
                       setRegionFilter("texas");
@@ -1011,13 +1014,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                    title="Filter the list to this cemetery"
+                    title="Search Texas submissions for this cemetery (fuzzy match, handles spelling variations)"
                   >
-                    View {sameCemeteryCount} other submission{sameCemeteryCount === 1 ? "" : "s"} at this cemetery
+                    <Search className="w-3.5 h-3.5" /> Search submissions at this cemetery
                   </button>
-                )}
-                {sameCemeteryCount === 0 && (
-                  <p className="text-[11px] text-muted-foreground mt-2 italic">No other submissions yet for this cemetery.</p>
                 )}
               </div>
               );
