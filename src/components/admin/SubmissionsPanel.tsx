@@ -284,6 +284,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       for (const [sid, info] of latestPerSub.entries()) {
         if (!info.outgoing) next[sid] = info.received_at;
       }
+      // Also flag Texas submissions where we've never sent any email at all
+      // (form came in, no outgoing reply yet) — use their created_at as the
+      // "waiting since" timestamp so they sort alongside customer replies.
+      for (const s of texasSubs) {
+        if (next[s.id]) continue;
+        const info = latestPerSub.get(s.id);
+        if (!info) {
+          // No matched messages at all → definitely awaiting a first reply.
+          next[s.id] = s.created_at;
+        }
+        // If info exists and is outgoing, we've already replied — skip.
+      }
       setAwaitingMap(next);
     };
     recompute();
