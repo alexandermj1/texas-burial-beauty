@@ -52,7 +52,7 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
       }
       const { data } = await supabase
         .from("email_messages" as any)
-        .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text")
+        .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text, gmail_thread_id, gmail_message_id")
         .or(orParts.join(","))
         .order("received_at", { ascending: true });
       if (cancelled) return;
