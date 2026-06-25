@@ -7,7 +7,9 @@ const corsHeaders = {
 };
 
 const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
-const DEFAULT_QUERY = "-in:sent -in:draft";
+// Include Sent folder so we know which submissions we've already replied to.
+// Drafts stay excluded.
+const DEFAULT_QUERY = "-in:draft";
 const FETCH_BATCH_SIZE = 10;
 
 const BodySchema = z.object({
@@ -15,8 +17,8 @@ const BodySchema = z.object({
   maxResults: z.number().int().min(1).max(500).optional().default(100),
   query: z.string().max(500).optional().default(DEFAULT_QUERY),
   attachmentBackfillLimit: z.number().int().min(0).max(150).optional().default(25),
-  threadBackfillLimit: z.number().int().min(0).max(500).optional().default(60),
-  maxThreadsPerSync: z.number().int().min(0).max(500).optional().default(80),
+  threadBackfillLimit: z.number().int().min(0).max(2000).optional().default(400),
+  maxThreadsPerSync: z.number().int().min(0).max(2000).optional().default(400),
 });
 
 interface GmailHeader { name: string; value: string }
