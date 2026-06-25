@@ -308,6 +308,7 @@ Deno.serve(async (req) => {
     let totalNewlySynced = 0;
     let totalRematched = 0;
     let totalBayerCreated = 0;
+    let totalAutoCreated = 0;
     let lastNextPageToken: string | null = null;
     let aggregateResultSize = 0;
 
