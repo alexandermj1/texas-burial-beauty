@@ -830,6 +830,7 @@ Deno.serve(async (req) => {
     totalNewlySynced += insertedCount;
     totalRematched += rematchedCount;
     totalBayerCreated += bayerCreated;
+    totalAutoCreated += autoCreatedSubmissions;
     if (listData.nextPageToken) lastNextPageToken = listData.nextPageToken;
     aggregateResultSize += listData.resultSizeEstimate ?? 0;
     } // end for each gmailKey
