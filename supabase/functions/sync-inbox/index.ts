@@ -339,7 +339,7 @@ Deno.serve(async (req) => {
 
     const INTERNAL_DOMAINS_REMATCH = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
     const isInternalRematch = (e: string) =>
-      INTERNAL_DOMAINS_REMATCH.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+      INTERNAL_DOMAINS_REMATCH.some((d) => (e || "").toLowerCase().endsWith("@" + d)) || ["texascemeterybrokers@gmail.com"].includes((e || "").toLowerCase().trim());
     let rematchedCount = 0;
     for (const row of (existing ?? []) as any[]) {
       if (row.matched_submission_id) continue;
@@ -379,7 +379,7 @@ Deno.serve(async (req) => {
 
     const INTERNAL_DOMAINS_INSERT = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
     const isInternalAddr = (e: string) =>
-      INTERNAL_DOMAINS_INSERT.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+      INTERNAL_DOMAINS_INSERT.some((d) => (e || "").toLowerCase().endsWith("@" + d)) || ["texascemeterybrokers@gmail.com"].includes((e || "").toLowerCase().trim());
     const rows = fetched.map((msg) => {
       const headers = msg.payload?.headers ?? [];
       const fromRaw = header(headers, "From");
@@ -505,7 +505,7 @@ Deno.serve(async (req) => {
     {
       const INTERNAL_DOMAINS_PROMOTE = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
       const isInternalSenderProm = (e: string) =>
-        INTERNAL_DOMAINS_PROMOTE.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+        INTERNAL_DOMAINS_PROMOTE.some((d) => (e || "").toLowerCase().endsWith("@" + d)) || ["texascemeterybrokers@gmail.com"].includes((e || "").toLowerCase().trim());
       for (const em of (inserted ?? []) as any[]) {
         try {
           if (em.matched_submission_id) continue;
@@ -637,7 +637,7 @@ Deno.serve(async (req) => {
     {
       const INTERNAL_DOMAINS = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
       const isInternalSender = (e: string) =>
-        INTERNAL_DOMAINS.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+        INTERNAL_DOMAINS.some((d) => (e || "").toLowerCase().endsWith("@" + d)) || ["texascemeterybrokers@gmail.com"].includes((e || "").toLowerCase().trim());
 
       const processAttachmentsForEmail = async (
         em: { id: string; gmail_message_id: string; from_email: string; subject: string | null },
@@ -784,7 +784,7 @@ Deno.serve(async (req) => {
     try {
       const INTERNAL_DOMAINS_TX = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
       const isInternal = (e: string) =>
-        INTERNAL_DOMAINS_TX.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+        INTERNAL_DOMAINS_TX.some((d) => (e || "").toLowerCase().endsWith("@" + d)) || ["texascemeterybrokers@gmail.com"].includes((e || "").toLowerCase().trim());
       const threadIds = new Set<string>();
       for (const m of fetched) if (m.threadId) threadIds.add(m.threadId);
       // Also expand threads for the most recent matched submissions so older
