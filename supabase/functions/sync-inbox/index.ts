@@ -330,16 +330,22 @@ Deno.serve(async (req) => {
 
     const { data: existing } = await admin
       .from("email_messages")
-      .select("id, gmail_message_id, from_email, from_name, matched_submission_id")
+      .select("id, gmail_message_id, from_email, from_name, to_email, matched_submission_id")
       .in("gmail_message_id", ids.length ? ids : ["__none__"]);
 
     const existingIds = new Set((existing ?? []).map((r: any) => r.gmail_message_id));
     const newIds = ids.filter((id) => !existingIds.has(id));
 
+    const INTERNAL_DOMAINS_REMATCH = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+    const isInternalRematch = (e: string) =>
+      INTERNAL_DOMAINS_REMATCH.some((d) => (e || "").toLowerCase().endsWith("@" + d));
     let rematchedCount = 0;
     for (const row of (existing ?? []) as any[]) {
       if (row.matched_submission_id) continue;
-      const m = matchSubmission(row.from_email, row.from_name, subs);
+      const outgoing = isInternalRematch(row.from_email ?? "");
+      const matchEmail = outgoing ? parseFromHeader(row.to_email ?? "").email : (row.from_email ?? "");
+      const matchName = outgoing ? parseFromHeader(row.to_email ?? "").name : row.from_name;
+      const m = matchSubmission(matchEmail, matchName, subs);
       if (m) {
         await admin
           .from("email_messages")
