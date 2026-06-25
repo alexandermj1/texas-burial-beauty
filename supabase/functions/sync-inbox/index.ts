@@ -370,6 +370,9 @@ Deno.serve(async (req) => {
       fetched.push(...results.filter((m): m is GmailMessage => !!m));
     }
 
+    const INTERNAL_DOMAINS_INSERT = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+    const isInternalAddr = (e: string) =>
+      INTERNAL_DOMAINS_INSERT.some((d) => (e || "").toLowerCase().endsWith("@" + d));
     const rows = fetched.map((msg) => {
       const headers = msg.payload?.headers ?? [];
       const fromRaw = header(headers, "From");
@@ -379,7 +382,11 @@ Deno.serve(async (req) => {
       const messageDate = Number.parseInt(msg.internalDate ?? "", 10);
       const receivedAt = Number.isFinite(messageDate) ? new Date(messageDate).toISOString() : new Date(header(headers, "Date") || Date.now()).toISOString();
       const { text, html } = extractBody(msg.payload);
-      const match = matchSubmission(fromEmail, fromName, subs);
+      // For outgoing mail (sent by us), match on the recipient instead of sender.
+      const outgoing = isInternalAddr(fromEmail);
+      const matchEmail = outgoing ? parseFromHeader(toEmail).email : fromEmail;
+      const matchName = outgoing ? parseFromHeader(toEmail).name : fromName;
+      const match = matchSubmission(matchEmail, matchName, subs);
 
       return {
         gmail_message_id: msg.id,
