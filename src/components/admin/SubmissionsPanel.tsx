@@ -88,7 +88,8 @@ interface Props {
 }
 
 
-const sourceLabel = (s: string | null) => {
+const sourceLabel = (s: string | null, channel?: string | null) => {
+  if (channel === "email_inbound") return "Inbound email";
   switch (s) {
     case "contact": return "Contact form";
     case "seller_quote": return "Seller quote";
@@ -97,6 +98,7 @@ const sourceLabel = (s: string | null) => {
     default: return s || "Unknown";
   }
 };
+
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -834,7 +836,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     )}
                     <p className="text-xs text-muted-foreground truncate">
-                      <span className="text-primary/80">{sourceLabel(s.source)}</span>
+                      <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
                       {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
                       {s.cemetery ? ` · ${s.cemetery}` : ""}
                       {s.cemetery && countFor(s.cemetery) > 0 ? (
@@ -904,7 +906,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
                     <BayerBadge inquiryChannel={selected.inquiry_channel} />
                     <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} source={selected.source} sourceEmailId={(selected as any).source_email_id} />
-                    <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source)}</p>
+                    <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source, selected.inquiry_channel)}</p>
                     {selected.source === "manual_phone" && (selected as any).handled_by_name && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
                         <UserPlus className="w-3 h-3" /> Added by {cleanDisplayName((selected as any).handled_by_name)}
@@ -1446,7 +1448,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{d.name || "Anonymous"}</p>
                       <p className="text-[11px] text-muted-foreground truncate">
-                        {sourceLabel(d.source)}
+                        {sourceLabel(d.source, (d as any).inquiry_channel)}
                         {d.cemetery ? ` · ${d.cemetery}` : ""}
                         {d.email ? ` · ${d.email}` : ""}
                       </p>
