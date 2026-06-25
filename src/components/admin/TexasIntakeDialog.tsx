@@ -69,6 +69,7 @@ const TexasIntakeDialog = ({ open, onClose, submission, onSent }: Props) => {
       to,
       su: subj,
       body,
+      authuser: "info@texascemeterybrokers.com",
     });
     return `https://mail.google.com/mail/?${params.toString()}`;
   }, [to, subj, body]);
