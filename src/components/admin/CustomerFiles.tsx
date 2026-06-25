@@ -158,22 +158,35 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  const openFile = async (row: CustomerFileRow) => {
-    const { data, error } = await supabase.storage.from("customer-files").createSignedUrl(row.file_path, 60 * 10);
+  // Fetch the file as a blob and open via blob: URL — this avoids ad-blockers
+  // (uBlock/Brave/Adblock) that block direct *.supabase.co links with ERR_BLOCKED_BY_CLIENT.
+  const fetchBlobUrl = async (row: CustomerFileRow): Promise<string | null> => {
+    const { data, error } = await supabase.storage.from("customer-files").download(row.file_path);
     if (error || !data) {
-      toast({ title: "Could not open file", description: error?.message, variant: "destructive" });
-      return;
+      toast({ title: "Could not load file", description: error?.message, variant: "destructive" });
+      return null;
     }
-    window.open(data.signedUrl, "_blank", "noopener");
+    const typed = row.mime_type ? new Blob([data], { type: row.mime_type }) : data;
+    return URL.createObjectURL(typed);
+  };
+
+  const openFile = async (row: CustomerFileRow) => {
+    const url = await fetchBlobUrl(row);
+    if (!url) return;
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
   const downloadFile = async (row: CustomerFileRow) => {
-    const { data, error } = await supabase.storage.from("customer-files").createSignedUrl(row.file_path, 60 * 10, { download: row.file_name });
-    if (error || !data) {
-      toast({ title: "Could not download", description: error?.message, variant: "destructive" });
-      return;
-    }
-    window.open(data.signedUrl, "_blank", "noopener");
+    const url = await fetchBlobUrl(row);
+    if (!url) return;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = row.file_name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
   const deleteFile = async (row: CustomerFileRow) => {
