@@ -308,6 +308,7 @@ Deno.serve(async (req) => {
     let totalNewlySynced = 0;
     let totalRematched = 0;
     let totalBayerCreated = 0;
+    let totalAutoCreated = 0;
     let lastNextPageToken: string | null = null;
     let aggregateResultSize = 0;
 
@@ -422,7 +423,7 @@ Deno.serve(async (req) => {
       const { data: insertedData, error: insertError } = await admin
         .from("email_messages")
         .insert(rows)
-        .select("id, gmail_message_id, subject, from_email, body_text, received_at");
+        .select("id, gmail_message_id, subject, from_email, from_name, body_text, received_at, matched_submission_id");
       if (insertError) {
         console.error("Email insert failed", insertError);
         return json({ error: `Email insert failed: ${insertError.message}` }, 500);
@@ -495,6 +496,82 @@ Deno.serve(async (req) => {
         }
       }
     }
+
+    // ===== Auto-create Texas submissions for unmatched inbound emails =====
+    // If someone emails info@texascemeterybrokers.com and we have no submission
+    // for them yet, spin up a Texas-tagged contact_submission so they show up
+    // in the admin pipeline. Body of the email becomes the "message" field.
+    let autoCreatedSubmissions = 0;
+    {
+      const INTERNAL_DOMAINS_PROMOTE = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+      const isInternalSenderProm = (e: string) =>
+        INTERNAL_DOMAINS_PROMOTE.some((d) => (e || "").toLowerCase().endsWith("@" + d));
+      for (const em of (inserted ?? []) as any[]) {
+        try {
+          if (em.matched_submission_id) continue;
+          const fromEmail = (em.from_email ?? "").toLowerCase();
+          if (!fromEmail || fromEmail === "unknown@unknown.local") continue;
+          if (isInternalSenderProm(fromEmail)) continue;
+
+          // Re-check directly in case another row in this batch created one,
+          // or a submission exists that didn't load in the initial top-1000 window.
+          const { data: existsSub } = await admin
+            .from("contact_submissions")
+            .select("id, name, email, created_at")
+            .ilike("email", fromEmail)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (existsSub) {
+            await admin.from("email_messages")
+              .update({ matched_submission_id: existsSub.id, match_confidence: "high" })
+              .eq("id", em.id);
+            subs.unshift({
+              id: existsSub.id,
+              name: existsSub.name ?? em.from_name ?? null,
+              email: existsSub.email ?? fromEmail,
+              source: null, cemetery: null, message: null,
+              created_at: existsSub.created_at ?? em.received_at,
+            });
+            continue;
+          }
+
+          const newId = crypto.randomUUID();
+          const { error: subErr } = await admin.from("contact_submissions").insert({
+            id: newId,
+            source: "contact",
+            inquiry_channel: "email_inbound",
+            pipeline_region: "texas",
+            name: em.from_name ?? null,
+            email: fromEmail,
+            message: em.body_text ?? em.subject ?? null,
+            source_email_id: em.id,
+            created_at: em.received_at,
+          });
+          if (subErr) {
+            console.warn("auto-create submission failed", subErr.message);
+            continue;
+          }
+          await admin.from("email_messages")
+            .update({ matched_submission_id: newId, match_confidence: "high" })
+            .eq("id", em.id);
+          subs.unshift({
+            id: newId,
+            name: em.from_name ?? null,
+            email: fromEmail,
+            source: "contact",
+            cemetery: null,
+            message: em.body_text ?? null,
+            created_at: em.received_at,
+          });
+          autoCreatedSubmissions++;
+        } catch (e) {
+          console.warn("auto-promote unmatched email error", e);
+        }
+      }
+    }
+
 
     // ===== Attachment processing (runs every sync, even when no new emails arrived) =====
     // Save attachments from matched incoming emails onto the customer's profile.
@@ -753,6 +830,7 @@ Deno.serve(async (req) => {
     totalNewlySynced += insertedCount;
     totalRematched += rematchedCount;
     totalBayerCreated += bayerCreated;
+    totalAutoCreated += autoCreatedSubmissions;
     if (listData.nextPageToken) lastNextPageToken = listData.nextPageToken;
     aggregateResultSize += listData.resultSizeEstimate ?? 0;
     } // end for each gmailKey
@@ -768,6 +846,7 @@ Deno.serve(async (req) => {
       has_more: Boolean(lastNextPageToken),
       result_size_estimate: aggregateResultSize,
       bayer_imported: totalBayerCreated,
+      auto_created_submissions: totalAutoCreated,
     });
   } catch (e) {
     console.error("sync-inbox error", e);
