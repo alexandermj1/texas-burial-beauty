@@ -168,8 +168,7 @@ const SendDeclineDialog = ({ submission, open, onClose }: Props) => {
 
   const handleSendMailto = () => {
     if (!submission.email) return;
-    const mailto = `mailto:${submission.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
+    window.open(buildGmailComposeUrl({ to: submission.email, subject, body }), "_blank", "noopener,noreferrer");
     onClose();
   };
 

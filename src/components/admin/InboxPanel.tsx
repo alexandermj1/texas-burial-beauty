@@ -148,8 +148,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
   const sendViaMailto = (email: EmailMessage) => {
     const subject = email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject ?? ""}`;
-    const url = `mailto:${email.from_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(draftEdit)}`;
-    window.location.href = url;
+    window.open(buildGmailComposeUrl({ to: email.from_email || "", subject, body: draftEdit }), "_blank", "noopener,noreferrer");
   };
 
   const filtered = emails.filter((e) => {

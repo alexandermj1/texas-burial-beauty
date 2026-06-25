@@ -141,8 +141,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     } as any);
     setSaving(false);
     if (submission.email) {
-      const mailto = `mailto:${submission.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.location.href = mailto;
+      window.open(buildGmailComposeUrl({ to: submission.email, subject, body }), "_blank", "noopener,noreferrer");
     }
     onClose();
   };

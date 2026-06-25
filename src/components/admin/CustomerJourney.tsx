@@ -220,7 +220,7 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
       toast({ title: "Failed to log", description: error.message, variant: "destructive" });
       return;
     }
-    window.location.href = `mailto:${submission.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(buildGmailComposeUrl({ to: submission.email, subject, body }), "_blank", "noopener,noreferrer");
     fetchAll();
   };
 

@@ -230,7 +230,7 @@ const CustomersPanel = () => {
               {/* Contacts */}
               <div className="flex flex-wrap gap-2">
                 {selected.primary_email && (
-                  <a href={`mailto:${selected.primary_email}`} className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">
+                  <a href={buildGmailComposeUrl({ to: selected.primary_email })} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90">
                     <Mail className="w-3.5 h-3.5" /> {selected.primary_email}
                   </a>
                 )}
