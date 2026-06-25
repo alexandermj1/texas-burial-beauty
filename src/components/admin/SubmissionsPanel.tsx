@@ -1580,15 +1580,18 @@ const PipelineOverview = ({
 
 // Renders the files a seller uploaded through the public quote form. Each file
 // lives in the private `customer-files` bucket under `public-intake/<submission>/...`
-// — we create a short-lived signed URL on click so admins can download.
+// — we download it as a blob before opening so ad blockers do not block backend URLs.
 const SellerAttachmentsBlock = ({ files }: { files: Array<{ path: string; name: string; size?: number; type?: string }> }) => {
-  const open = async (path: string) => {
-    const { data, error } = await supabase.storage.from("customer-files").createSignedUrl(path, 60 * 10);
-    if (error || !data?.signedUrl) {
+  const open = async (file: { path: string; name: string; type?: string }) => {
+    const { data, error } = await supabase.storage.from("customer-files").download(file.path);
+    if (error || !data) {
       alert("Couldn't open file: " + (error?.message || "unknown"));
       return;
     }
-    window.open(data.signedUrl, "_blank", "noopener");
+    const blob = file.type ? new Blob([data], { type: file.type }) : data;
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
   return (
     <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-2">
@@ -1599,7 +1602,7 @@ const SellerAttachmentsBlock = ({ files }: { files: Array<{ path: string; name: 
         {files.map((f) => (
           <li key={f.path}>
             <button
-              onClick={() => open(f.path)}
+              onClick={() => open(f)}
               className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-background border border-border/50 hover:border-primary/40 hover:bg-primary/5 text-left transition-colors"
             >
               <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
