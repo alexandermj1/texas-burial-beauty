@@ -423,6 +423,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
+  // Texas-only: count submissions per canonical cemetery name for the "N other submissions" chip.
+  const texasCemeteryCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of texasSubmissions) {
+      const k = _canon(s.cemetery || "");
+      if (!k) continue;
+      m.set(k, (m.get(k) || 0) + 1);
+    }
+    return m;
+  }, [texasSubmissions]);
+
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
@@ -807,6 +818,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       {s.cemetery && countFor(s.cemetery) > 0 ? (
                         <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
                       ) : null}
+                      {subRegion(s) === "texas" && s.cemetery && (texasCemeteryCounts.get(_canon(s.cemetery)) || 0) > 1 ? (
+                        <span className="ml-1.5 text-[10px] text-foreground/70 font-medium">· {(texasCemeteryCounts.get(_canon(s.cemetery)) || 1) - 1} other submission{((texasCemeteryCounts.get(_canon(s.cemetery)) || 1) - 1) === 1 ? "" : "s"}</span>
+                      ) : null}
                     </p>
                     {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
                       <p className="text-[10px] text-amber-700 dark:text-amber-400 italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
@@ -953,7 +967,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </div>
 
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
-            {selected.cemetery && (((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (
+            {selected.cemetery && (((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (() => {
+              const selCanon = _canon(selected.cemetery || "");
+              const sameCemeteryCount = selCanon
+                ? texasSubmissions.filter(t => t.id !== selected.id && _canon(t.cemetery || "") === selCanon).length
+                : 0;
+              return (
               <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
                 <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
@@ -982,8 +1001,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {selected.region && (
                   <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
                 )}
+                {sameCemeteryCount > 0 && (
+                  <button
+                    onClick={() => {
+                      setRegionFilter("texas");
+                      setCemeteryCanon(selCanon);
+                      setCemeteryLabel(selected.cemetery);
+                      setSelectedId(null);
+                      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                    title="Filter the list to this cemetery"
+                  >
+                    View {sameCemeteryCount} other submission{sameCemeteryCount === 1 ? "" : "s"} at this cemetery
+                  </button>
+                )}
+                {sameCemeteryCount === 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-2 italic">No other submissions yet for this cemetery.</p>
+                )}
               </div>
-            )}
+              );
+            })()}
 
             {/* Cemetery contact directory + inventory match — CA submissions only */}
             {selected.cemetery && !(((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (() => {
