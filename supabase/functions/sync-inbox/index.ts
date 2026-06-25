@@ -422,7 +422,7 @@ Deno.serve(async (req) => {
       const { data: insertedData, error: insertError } = await admin
         .from("email_messages")
         .insert(rows)
-        .select("id, gmail_message_id, subject, from_email, body_text, received_at");
+        .select("id, gmail_message_id, subject, from_email, from_name, body_text, received_at, matched_submission_id");
       if (insertError) {
         console.error("Email insert failed", insertError);
         return json({ error: `Email insert failed: ${insertError.message}` }, 500);
