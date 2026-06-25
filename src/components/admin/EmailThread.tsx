@@ -2,7 +2,7 @@
 // Matches messages by matched_submission_id OR by the customer's email address
 // appearing in from/to fields so threads still show even if the linker missed it.
 import { useEffect, useState } from "react";
-import { Mail, Sparkles } from "lucide-react";
+import { Mail, Sparkles, Reply } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { isOutgoing } from "@/lib/emailReply";
@@ -17,7 +17,19 @@ interface EmailRow {
   ai_summary: string | null;
   snippet: string | null;
   body_text: string | null;
+  gmail_thread_id: string | null;
+  gmail_message_id: string | null;
 }
+
+const GMAIL_USER = "info@texascemeterybrokers.com";
+const openGmailThread = (threadId: string | null, messageId?: string | null) => {
+  if (!threadId) return;
+  // Opening the thread directly lets Gmail's native Reply button keep In-Reply-To/References
+  // headers — something the compose URL (?view=cm) can't do.
+  const anchor = messageId ? `${threadId}/${messageId}` : threadId;
+  const url = `https://mail.google.com/mail/u/?authuser=${encodeURIComponent(GMAIL_USER)}#all/${anchor}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 
 interface Props {
   submissionId: string;
