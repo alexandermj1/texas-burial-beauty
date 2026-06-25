@@ -570,7 +570,65 @@ Deno.serve(async (req) => {
           console.warn("auto-promote unmatched email error", e);
         }
       }
+
+      // ===== Backlog pass: auto-create submissions for previously cached
+      // unmatched incoming emails (e.g. emails synced before the auto-promote
+      // logic existed, or that failed to match earlier). =====
+      const { data: backlog } = await admin
+        .from("email_messages")
+        .select("id, from_email, from_name, subject, body_text, received_at")
+        .is("matched_submission_id", null)
+        .order("received_at", { ascending: false })
+        .limit(500);
+      for (const em of (backlog ?? []) as any[]) {
+        try {
+          const fromEmail = (em.from_email ?? "").toLowerCase();
+          if (!fromEmail || fromEmail === "unknown@unknown.local") continue;
+          if (isInternalSenderProm(fromEmail)) continue;
+
+          const { data: existsSub } = await admin
+            .from("contact_submissions")
+            .select("id, name, email, created_at")
+            .ilike("email", fromEmail)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (existsSub) {
+            await admin.from("email_messages")
+              .update({ matched_submission_id: existsSub.id, match_confidence: "high" })
+              .eq("id", em.id);
+            continue;
+          }
+
+          const newId = crypto.randomUUID();
+          const { error: subErr } = await admin.from("contact_submissions").insert({
+            id: newId,
+            source: "contact",
+            inquiry_channel: "email_inbound",
+            pipeline_region: "texas",
+            name: em.from_name ?? null,
+            email: fromEmail,
+            message: em.body_text ?? em.subject ?? null,
+            source_email_id: em.id,
+            created_at: em.received_at,
+          });
+          if (subErr) {
+            console.warn("backlog auto-create failed", subErr.message);
+            continue;
+          }
+          await admin.from("email_messages")
+            .update({ matched_submission_id: newId, match_confidence: "high" })
+            .eq("id", em.id);
+          autoCreatedSubmissions++;
+        } catch (e) {
+          console.warn("backlog auto-promote error", e);
+        }
+      }
     }
+    totalAutoCreated += autoCreatedSubmissions;
+
+
 
 
     // ===== Attachment processing (runs every sync, even when no new emails arrived) =====
