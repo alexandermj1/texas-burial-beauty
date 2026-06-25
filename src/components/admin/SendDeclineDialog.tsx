@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Eye, AlertCircle, FileText } from "lucide-react";
 import type { Submission } from "./SubmissionsPanel";
@@ -168,8 +169,7 @@ const SendDeclineDialog = ({ submission, open, onClose }: Props) => {
 
   const handleSendMailto = () => {
     if (!submission.email) return;
-    const mailto = `mailto:${submission.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
+    window.open(buildGmailComposeUrl({ to: submission.email, subject, body }), "_blank", "noopener,noreferrer");
     onClose();
   };
 

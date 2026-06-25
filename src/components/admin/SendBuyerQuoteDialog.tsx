@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Eye, Sparkles, Plus, Check, Search, FileText } from "lucide-react";
 import type { Submission } from "./SubmissionsPanel";
@@ -231,8 +232,7 @@ const SendBuyerQuoteDialog = ({ submission, open, onClose }: Props) => {
       await supabase.from("buyer_recommendations" as any).insert(rows);
       window.dispatchEvent(new Event("buyer-rec-saved"));
     }
-    const mailto = `mailto:${submission.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
+    window.open(buildGmailComposeUrl({ to: submission.email, subject, body }), "_blank", "noopener,noreferrer");
     onClose();
   };
 

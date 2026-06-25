@@ -18,6 +18,7 @@ import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import CustomerFiles from "./CustomerFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -968,7 +969,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             <div className="flex flex-wrap gap-2">
               {selected.email && (
                 <a
-                  href={`mailto:${selected.email}`}
+                  href={buildGmailComposeUrl({ to: selected.email })}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
                 >
                   <Mail className="w-3.5 h-3.5" /> {selected.email}
@@ -1495,7 +1498,9 @@ const MobileInlineDetail = ({ submission: s }: { submission: Submission }) => {
         <div className="flex flex-wrap gap-2">
           {s.email && (
             <a
-              href={`mailto:${s.email}`}
+              href={buildGmailComposeUrl({ to: s.email })}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90 transition-opacity break-all"
             >
               <Mail className="w-3.5 h-3.5 shrink-0" /> {s.email}

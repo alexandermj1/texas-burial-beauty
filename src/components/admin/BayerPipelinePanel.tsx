@@ -2,6 +2,7 @@
 // Each stage exposes its own inline checklist + "advance" actions that mutate
 // fields on contact_submissions. The derived stage is computed from those fields.
 import { useEffect, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion } from "framer-motion";
 import {
   Inbox, FileText, Archive, ThumbsUp, FileSignature, CreditCard,
@@ -362,7 +363,13 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
             <div className="flex flex-wrap gap-2">
               {submission.email && (
                 <a
-                  href={`mailto:${submission.email}?subject=${encodeURIComponent("Your $99 listing payment link — Texas Cemetery Brokers")}&body=${encodeURIComponent(`Hi ${submission.name || "there"},\n\nThanks for signing your Listing Agreement. Please complete your $99 listing fee using the secure link below:\n\nhttps://paymnt.io/0hd7ep\n\nOnce payment is received we'll countersign and take your listing live.\n\nThank you,\nTexas Cemetery Brokers\n(214) 230-4740`)}`}
+                  href={buildGmailComposeUrl({
+                    to: submission.email,
+                    subject: "Your $99 listing payment link — Texas Cemetery Brokers",
+                    body: `Hi ${submission.name || "there"},\n\nThanks for signing your Listing Agreement. Please complete your $99 listing fee using the secure link below:\n\nhttps://paymnt.io/0hd7ep\n\nOnce payment is received we'll countersign and take your listing live.\n\nThank you,\nTexas Cemetery Brokers\n(214) 230-4740`,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => advance({ payment_link_sent_at: nowIso() } as any, "Payment link emailed")}
                   className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary text-primary-foreground"
                 >

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, RefreshCw, Link2, ChevronRight, MailOpen, FilePlus2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -148,8 +149,7 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
 
   const sendViaMailto = (email: EmailMessage) => {
     const subject = email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject ?? ""}`;
-    const url = `mailto:${email.from_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(draftEdit)}`;
-    window.location.href = url;
+    window.open(buildGmailComposeUrl({ to: email.from_email || "", subject, body: draftEdit }), "_blank", "noopener,noreferrer");
   };
 
   const filtered = emails.filter((e) => {

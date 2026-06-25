@@ -6,6 +6,7 @@
 // flips status as they go. Document collection is also manual: admin marks each
 // required doc as received / verified.
 import { useEffect, useMemo, useState } from "react";
+import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import { motion } from "framer-motion";
 import {
   FileSignature, Send, CheckCircle2, XCircle, FileText, Plus, Bell,
@@ -220,7 +221,7 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
       toast({ title: "Failed to log", description: error.message, variant: "destructive" });
       return;
     }
-    window.location.href = `mailto:${submission.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(buildGmailComposeUrl({ to: submission.email, subject, body }), "_blank", "noopener,noreferrer");
     fetchAll();
   };
 
