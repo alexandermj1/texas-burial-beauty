@@ -88,7 +88,8 @@ interface Props {
 }
 
 
-const sourceLabel = (s: string | null) => {
+const sourceLabel = (s: string | null, channel?: string | null) => {
+  if (channel === "email_inbound") return "Inbound email";
   switch (s) {
     case "contact": return "Contact form";
     case "seller_quote": return "Seller quote";
@@ -97,6 +98,7 @@ const sourceLabel = (s: string | null) => {
     default: return s || "Unknown";
   }
 };
+
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
