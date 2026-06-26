@@ -5,6 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { cleanDisplayName } from "@/lib/displayName";
 
+// Alexander prefers to sign off as "Alexander James" rather than his full legal name.
+const applyOverrides = (name: string, email?: string | null): string => {
+  const lower = (name || "").toLowerCase();
+  const emailLower = (email || "").toLowerCase();
+  if (lower.startsWith("alexander") || emailLower.startsWith("alexander")) {
+    return "Alexander James";
+  }
+  return name;
+};
+
 export const useAdminDisplayName = () => {
   const { user } = useAuth();
   const [name, setName] = useState<string>("");
@@ -14,7 +24,7 @@ export const useAdminDisplayName = () => {
     if (!user) { setName(""); return; }
     const meta = (user.user_metadata as any) || {};
     const fromMeta = cleanDisplayName(meta.full_name || meta.name);
-    if (fromMeta) setName(fromMeta);
+    if (fromMeta) setName(applyOverrides(fromMeta, user.email));
 
     (async () => {
       const { data } = await supabase
@@ -24,10 +34,10 @@ export const useAdminDisplayName = () => {
         .maybeSingle();
       if (cancelled) return;
       const cleaned = cleanDisplayName(data?.full_name);
-      if (cleaned) setName(cleaned);
+      if (cleaned) setName(applyOverrides(cleaned, data?.email || user.email));
       else if (!fromMeta) {
         const fallback = (data?.email || user.email || "").split("@")[0];
-        setName(fallback);
+        setName(applyOverrides(fallback, data?.email || user.email));
       }
     })();
     return () => { cancelled = true; };
