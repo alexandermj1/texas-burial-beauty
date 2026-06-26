@@ -208,7 +208,9 @@ const BuyProperty = () => {
       `Region: ${selections.region || "—"}`,
       selections.cemetery ? `Cemetery: ${selections.cemetery}` : null,
       `Preferred contact: ${prefLabel}`,
+      selections.note.trim() ? `\nMessage from buyer:\n${selections.note.trim()}` : null,
     ].filter(Boolean).join("\n");
+
 
     const submissionId = crypto.randomUUID();
     const { error } = await supabase.from("contact_submissions" as any).insert({
