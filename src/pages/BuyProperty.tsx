@@ -74,7 +74,9 @@ const BuyProperty = () => {
     phone: "",
     email: "",
     contactPref: "either" as "phone" | "email" | "either",
+    note: "",
   });
+
 
   // Pre-fill from query params (e.g. ?cemetery=...&region=...) — set on first load.
   useEffect(() => {
@@ -206,7 +208,9 @@ const BuyProperty = () => {
       `Region: ${selections.region || "—"}`,
       selections.cemetery ? `Cemetery: ${selections.cemetery}` : null,
       `Preferred contact: ${prefLabel}`,
+      selections.note.trim() ? `\nMessage from buyer:\n${selections.note.trim()}` : null,
     ].filter(Boolean).join("\n");
+
 
     const submissionId = crypto.randomUUID();
     const { error } = await supabase.from("contact_submissions" as any).insert({
@@ -577,7 +581,20 @@ const BuyProperty = () => {
                     </div>
                   </div>
 
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-1.5">Anything you'd like us to know? <span className="text-muted-foreground/70">(optional)</span></p>
+                    <textarea
+                      value={selections.note}
+                      onChange={e => update("note", e.target.value)}
+                      placeholder="Share any details, questions, or specific requests…"
+                      rows={3}
+                      maxLength={1000}
+                      className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 resize-none"
+                    />
+                  </div>
+
                   <p className="text-[11px] text-muted-foreground">Phone or email — at least one required. We never share your info.</p>
+
 
                   <button
                     type="submit"
