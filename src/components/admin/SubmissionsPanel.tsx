@@ -964,7 +964,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
             {subRegion(selected) === "texas" && (
-              <EmailThread submissionId={selected.id} customerEmail={selected.email} customerName={selected.name} />
+              <EmailThread submissionId={selected.id} customerEmail={selected.email} customerName={selected.name} cemetery={selected.cemetery_original || selected.cemetery} />
             )}
 
             {/* Contact actions */}
