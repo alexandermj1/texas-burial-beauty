@@ -104,7 +104,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery }: Pr
         <div className="mb-3">
           <InlineEmailComposer
             to={replyTarget}
-            defaultSubject=""
+            defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
             recipientName={customerName}
             onSent={() => { setComposeNew(false); refresh(); }}
             onCancel={() => setComposeNew(false)}
