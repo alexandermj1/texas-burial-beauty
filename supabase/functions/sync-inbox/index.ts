@@ -281,6 +281,25 @@ Deno.serve(async (req) => {
     if (!lovableKey) return json({ error: "LOVABLE_API_KEY is not configured" }, 500);
     if (gmailKeys.length === 0) return json({ error: "No Gmail connector keys configured" }, 500);
 
+    // Only sync the info@texascemeterybrokers.com mailbox. Other connected
+    // Gmail accounts (e.g. Alexander's personal inbox) must NOT be ingested —
+    // they would pollute the admin inbox with unrelated mail.
+    const TARGET_MAILBOX = "info@texascemeterybrokers.com";
+    const filteredKeys: string[] = [];
+    for (const k of gmailKeys) {
+      try {
+        const r = await fetch(`${GMAIL_GATEWAY}/users/me/profile`, { headers: gmailHeaders(lovableKey, k) });
+        if (!r.ok) continue;
+        const j = await r.json();
+        if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) filteredKeys.push(k);
+      } catch { /* skip */ }
+    }
+    if (filteredKeys.length === 0) {
+      return json({ error: `No Gmail connector linked for ${TARGET_MAILBOX}` }, 500);
+    }
+    gmailKeys.length = 0;
+    gmailKeys.push(...filteredKeys);
+
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
     if (userErr || !user) return json({ error: "Unauthorized" }, 401);
