@@ -581,7 +581,20 @@ const BuyProperty = () => {
                     </div>
                   </div>
 
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-1.5">Anything you'd like us to know? <span className="text-muted-foreground/70">(optional)</span></p>
+                    <textarea
+                      value={selections.note}
+                      onChange={e => update("note", e.target.value)}
+                      placeholder="Share any details, questions, or specific requests…"
+                      rows={3}
+                      maxLength={1000}
+                      className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 resize-none"
+                    />
+                  </div>
+
                   <p className="text-[11px] text-muted-foreground">Phone or email — at least one required. We never share your info.</p>
+
 
                   <button
                     type="submit"
