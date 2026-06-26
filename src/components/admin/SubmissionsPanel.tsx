@@ -804,6 +804,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Needs reply
                           </span>
                         )}
+                        {hasDocs(s) && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-emerald-600 text-white"
+                            title="Customer submitted attachments"
+                          >
+                            <Paperclip className="w-2.5 h-2.5" />
+                            Attachments
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
