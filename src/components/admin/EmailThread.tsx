@@ -27,9 +27,10 @@ interface Props {
   submissionId: string;
   customerEmail: string | null;
   customerName?: string | null;
+  cemetery?: string | null;
 }
 
-const EmailThread = ({ submissionId, customerEmail, customerName }: Props) => {
+const EmailThread = ({ submissionId, customerEmail, customerName, cemetery }: Props) => {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -103,7 +104,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName }: Props) => {
         <div className="mb-3">
           <InlineEmailComposer
             to={replyTarget}
-            defaultSubject=""
+            defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
             recipientName={customerName}
             onSent={() => { setComposeNew(false); refresh(); }}
             onCancel={() => setComposeNew(false)}
