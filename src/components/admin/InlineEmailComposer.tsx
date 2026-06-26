@@ -115,6 +115,42 @@ const InlineEmailComposer = ({
     onSent?.();
   };
 
+  const checkGrammar = async () => {
+    if (!body.trim() || checking) return;
+    setChecking(true);
+    const original = body;
+    const { data, error } = await supabase.functions.invoke("proofread-email", {
+      body: { body, subject },
+    });
+    setChecking(false);
+    if (error || (data as any)?.error) {
+      toast({
+        title: "Grammar check failed",
+        description: error?.message || (data as any)?.error || "Unknown error",
+        variant: "destructive",
+      });
+      return;
+    }
+    const corrected = (data as any)?.corrected as string;
+    const changed = (data as any)?.changed as boolean;
+    if (!corrected) return;
+    if (!changed) {
+      toast({ title: "Looks good", description: "No grammar issues found." });
+      return;
+    }
+    setPreCheckBody(original);
+    setBody(corrected);
+    setBodyTouched(true);
+    toast({ title: "Grammar updated", description: "Click Undo to revert." });
+  };
+
+  const undoGrammar = () => {
+    if (preCheckBody === null) return;
+    setBody(preCheckBody);
+    setPreCheckBody(null);
+  };
+
+
   return (
     <div className="mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
