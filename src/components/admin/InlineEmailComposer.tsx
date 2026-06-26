@@ -186,6 +186,26 @@ const InlineEmailComposer = ({
         className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background font-sans whitespace-pre-wrap focus:outline-none focus:ring-1 focus:ring-primary"
       />
       <div className="flex items-center justify-end gap-2">
+        {preCheckBody !== null && (
+          <button
+            type="button"
+            onClick={undoGrammar}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted"
+            title="Revert grammar changes"
+          >
+            <Undo2 className="w-3 h-3" /> Undo
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={checkGrammar}
+          disabled={checking || !body.trim()}
+          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50"
+          title="Proofread with AI"
+        >
+          {checking ? <Loader2 className="w-3 h-3 animate-spin" /> : <SpellCheck className="w-3 h-3" />}
+          {checking ? "Checking…" : "Check grammar"}
+        </button>
         <button
           type="button"
           onClick={send}
@@ -196,6 +216,7 @@ const InlineEmailComposer = ({
           {sending ? "Sending…" : sendLabel}
         </button>
       </div>
+
     </div>
   );
 };
