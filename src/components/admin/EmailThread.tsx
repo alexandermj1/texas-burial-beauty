@@ -1,11 +1,13 @@
 // Renders the full back-and-forth email chain for a single submission.
 // Matches messages by matched_submission_id OR by the customer's email address
 // appearing in from/to fields so threads still show even if the linker missed it.
-import { useEffect, useState } from "react";
-import { Mail, Sparkles, Reply } from "lucide-react";
+// Replies are composed and sent inline (no Gmail tab) via the gmail-action edge fn.
+import { useEffect, useMemo, useState } from "react";
+import { Mail, Sparkles, Reply, PenLine } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { isOutgoing } from "@/lib/emailReply";
+import InlineEmailComposer from "./InlineEmailComposer";
 
 interface EmailRow {
   id: string;
@@ -21,55 +23,56 @@ interface EmailRow {
   gmail_message_id: string | null;
 }
 
-const GMAIL_USER = "info@texascemeterybrokers.com";
-const openGmailThread = (threadId: string | null, messageId?: string | null) => {
-  if (!threadId) return;
-  // Opening the thread directly lets Gmail's native Reply button keep In-Reply-To/References
-  // headers — something the compose URL (?view=cm) can't do.
-  const anchor = messageId ? `${threadId}/${messageId}` : threadId;
-  const url = `https://mail.google.com/mail/u/?authuser=${encodeURIComponent(GMAIL_USER)}#all/${anchor}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-};
-
 interface Props {
   submissionId: string;
   customerEmail: string | null;
+  customerName?: string | null;
 }
 
-const EmailThread = ({ submissionId, customerEmail }: Props) => {
+const EmailThread = ({ submissionId, customerEmail, customerName }: Props) => {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [composeNew, setComposeNew] = useState(false);
+
+  const refresh = async () => {
+    const addr = (customerEmail || "").trim().toLowerCase();
+    const orParts: string[] = [`matched_submission_id.eq.${submissionId}`];
+    if (addr) {
+      orParts.push(`from_email.ilike.%${addr}%`);
+      orParts.push(`to_email.ilike.%${addr}%`);
+    }
+    const { data } = await supabase
+      .from("email_messages" as any)
+      .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text, gmail_thread_id, gmail_message_id")
+      .or(orParts.join(","))
+      .order("received_at", { ascending: true });
+    const seen = new Set<string>();
+    const uniq = ((data as any[]) || []).filter((m) => (seen.has(m.id) ? false : (seen.add(m.id), true)));
+    setEmails(uniq as any);
+    setLoading(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
-      setLoading(true);
-      const addr = (customerEmail || "").trim().toLowerCase();
-      const orParts: string[] = [`matched_submission_id.eq.${submissionId}`];
-      if (addr) {
-        orParts.push(`from_email.ilike.%${addr}%`);
-        orParts.push(`to_email.ilike.%${addr}%`);
-      }
-      const { data } = await supabase
-        .from("email_messages" as any)
-        .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text, gmail_thread_id, gmail_message_id")
-        .or(orParts.join(","))
-        .order("received_at", { ascending: true });
-      if (cancelled) return;
-      const seen = new Set<string>();
-      const uniq = ((data as any[]) || []).filter((m) => (seen.has(m.id) ? false : (seen.add(m.id), true)));
-      setEmails(uniq as any);
-      setLoading(false);
-    };
-    load();
+    setLoading(true);
+    refresh().then(() => { if (cancelled) return; });
     const ch = supabase.channel(`email_thread:${submissionId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, () => { load(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, () => { refresh(); })
       .subscribe();
     return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submissionId, customerEmail]);
 
   const last = emails[emails.length - 1];
   const awaiting = !!last && !isOutgoing(last.from_email);
+
+  const newSubject = useMemo(() => {
+    const lastSub = emails[emails.length - 1]?.subject;
+    return lastSub ? (lastSub.toLowerCase().startsWith("re:") ? lastSub : `Re: ${lastSub}`) : "";
+  }, [emails]);
+
+  const replyTarget = customerEmail || "";
 
   return (
     <section className="bg-muted/30 rounded-xl border border-border/50 p-4">
@@ -79,12 +82,35 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
           Email thread <span className="text-muted-foreground font-normal">({emails.length})</span>
         </h4>
         {awaiting && (
-          <span className="ml-auto inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
+          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             Needs reply
           </span>
         )}
+        {replyTarget && !composeNew && (
+          <button
+            type="button"
+            onClick={() => { setComposeNew(true); setReplyingTo(null); }}
+            className="ml-auto inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-foreground text-background hover:opacity-90"
+            title="Start a new email to this customer"
+          >
+            <PenLine className="w-2.5 h-2.5" /> New email
+          </button>
+        )}
       </div>
+
+      {composeNew && replyTarget && (
+        <div className="mb-3">
+          <InlineEmailComposer
+            to={replyTarget}
+            defaultSubject=""
+            recipientName={customerName}
+            onSent={() => { setComposeNew(false); refresh(); }}
+            onCancel={() => setComposeNew(false)}
+          />
+        </div>
+      )}
+
       {loading ? (
         <p className="text-xs text-muted-foreground">Loading messages…</p>
       ) : emails.length === 0 ? (
@@ -95,6 +121,9 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
             const outgoing = isOutgoing(e.from_email);
             const sender = outgoing ? "You" : (e.from_name && e.from_name.trim()) || e.from_email;
             const body = (e.body_text && e.body_text.trim()) || e.snippet || "";
+            const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
+            const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
+            const isOpen = replyingTo === e.id;
             return (
               <li
                 key={e.id}
@@ -115,14 +144,14 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
                     <span className="text-[10px] text-muted-foreground">
                       {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
                     </span>
-                    {e.gmail_thread_id && (
+                    {replyToAddr && (
                       <button
                         type="button"
-                        onClick={() => openGmailThread(e.gmail_thread_id, e.gmail_message_id)}
-                        title="Open this thread in Gmail to reply in the same chain"
+                        onClick={() => { setReplyingTo(isOpen ? null : e.id); setComposeNew(false); }}
+                        title="Reply in this thread without leaving the admin panel"
                         className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground hover:opacity-90"
                       >
-                        <Reply className="w-2.5 h-2.5" /> Reply in Gmail
+                        <Reply className="w-2.5 h-2.5" /> {isOpen ? "Close" : "Reply"}
                       </button>
                     )}
                   </div>
@@ -142,6 +171,18 @@ const EmailThread = ({ submissionId, customerEmail }: Props) => {
                     <Sparkles className="w-2.5 h-2.5 text-primary shrink-0 mt-0.5" />
                     {e.ai_summary}
                   </p>
+                )}
+                {isOpen && replyToAddr && (
+                  <InlineEmailComposer
+                    to={replyToAddr}
+                    defaultSubject={replySubject}
+                    threadId={e.gmail_thread_id}
+                    inReplyToGmailId={e.gmail_message_id}
+                    recipientName={customerName}
+                    sendLabel="Send reply"
+                    onSent={() => { setReplyingTo(null); refresh(); }}
+                    onCancel={() => setReplyingTo(null)}
+                  />
                 )}
               </li>
             );
