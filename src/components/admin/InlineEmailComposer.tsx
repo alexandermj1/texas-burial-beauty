@@ -139,6 +139,7 @@ const InlineEmailComposer = ({
         className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
       />
       <textarea
+        ref={textareaRef}
         value={body}
         onChange={(e) => { setBody(e.target.value); setBodyTouched(true); }}
         rows={9}
