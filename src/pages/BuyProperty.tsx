@@ -74,7 +74,9 @@ const BuyProperty = () => {
     phone: "",
     email: "",
     contactPref: "either" as "phone" | "email" | "either",
+    note: "",
   });
+
 
   // Pre-fill from query params (e.g. ?cemetery=...&region=...) — set on first load.
   useEffect(() => {
