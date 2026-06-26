@@ -135,26 +135,27 @@ const RegionRow = ({
             onClick={() => scrollBy(-1)}
             disabled={!canPrev}
             aria-label="Scroll left"
-            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+            className="w-11 h-11 rounded-full border-2 border-primary/60 bg-background flex items-center justify-center text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-25 disabled:hover:bg-background disabled:hover:text-foreground disabled:hover:border-primary/60 transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" strokeWidth={2.25} />
           </button>
           <button
             onClick={() => scrollBy(1)}
             disabled={!canNext}
             aria-label="Scroll right"
-            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+            className="w-11 h-11 rounded-full border-2 border-primary/60 bg-background flex items-center justify-center text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-25 disabled:hover:bg-background disabled:hover:text-foreground disabled:hover:border-primary/60 transition-colors"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" strokeWidth={2.25} />
           </button>
         </div>
+
       </div>
 
       {/* Horizontal scroll row — Airbnb-style, x-only */}
       <div className="relative -mx-6 pl-8 pr-6 md:-mx-8 md:pl-10 md:pr-8">
         <div
           ref={scrollerRef}
-          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-8 md:scroll-pl-10 py-3 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto] [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)]"
+          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-8 md:scroll-pl-10 py-3 [touch-action:pan-y] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto] [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)]"
         >
           {list.map((c, i) => {
             let h = 0;
@@ -170,7 +171,7 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border-2 border-primary/50 ring-1 ring-foreground/5 shadow-[0_14px_34px_-18px_hsl(var(--foreground)/0.28),0_4px_10px_-4px_hsl(var(--foreground)/0.10)] hover:shadow-[0_26px_55px_-22px_hsl(var(--primary)/0.45)] hover:-translate-y-1 hover:border-primary/75 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border-2 border-primary/70 hover:border-primary hover:-translate-y-1 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
                 <Link
                   to={`/cemeteries/${slug}`}
