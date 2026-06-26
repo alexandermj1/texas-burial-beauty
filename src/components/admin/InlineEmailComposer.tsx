@@ -3,7 +3,7 @@
 // info@texascemeterybrokers.com — without opening Gmail in a new tab.
 // Pre-fills greeting ("Dear <first name>,") and a signature with the
 // currently signed-in admin's name.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Send, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -49,15 +49,32 @@ const InlineEmailComposer = ({
 
   // Re-template the body whenever the recipient or admin name resolves,
   // until the user has actually edited the textarea.
+  const greetLen = useMemo(() => `Dear ${firstName(recipientName)},`.length, [recipientName]);
   const template = useMemo(() => {
     const greet = `Dear ${firstName(recipientName)},`;
     const sig = adminName ? `Best regards,\n${adminName}\nTexas Cemetery Brokers` : `Best regards,\nTexas Cemetery Brokers`;
     return `${greet}\n\n\n\n${sig}`;
   }, [recipientName, adminName]);
 
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   useEffect(() => {
     if (!bodyTouched) setBody(template);
   }, [template, bodyTouched]);
+
+  // Autofocus the textarea and place the cursor one line below the greeting
+  // so the admin can just start typing the body.
+  useEffect(() => {
+    if (bodyTouched) return;
+    const el = textareaRef.current;
+    if (!el) return;
+    const pos = greetLen + 2; // after "Dear X,\n\n"
+    const id = window.setTimeout(() => {
+      el.focus();
+      try { el.setSelectionRange(pos, pos); } catch { /* noop */ }
+    }, 30);
+    return () => window.clearTimeout(id);
+  }, [body, greetLen, bodyTouched]);
 
   useEffect(() => {
     setSubject(defaultSubject);
@@ -122,6 +139,7 @@ const InlineEmailComposer = ({
         className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
       />
       <textarea
+        ref={textareaRef}
         value={body}
         onChange={(e) => { setBody(e.target.value); setBodyTouched(true); }}
         rows={9}

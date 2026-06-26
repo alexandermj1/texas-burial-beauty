@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -802,6 +802,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                             Needs reply
+                          </span>
+                        )}
+                        {hasDocs(s) && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-emerald-600 text-white"
+                            title="Customer submitted attachments"
+                          >
+                            <Paperclip className="w-2.5 h-2.5" />
+                            Attachments
                           </span>
                         )}
                       </div>
