@@ -135,19 +135,20 @@ const RegionRow = ({
             onClick={() => scrollBy(-1)}
             disabled={!canPrev}
             aria-label="Scroll left"
-            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+            className="w-11 h-11 rounded-full border-2 border-primary/60 bg-background flex items-center justify-center text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-25 disabled:hover:bg-background disabled:hover:text-foreground disabled:hover:border-primary/60 transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" strokeWidth={2.25} />
           </button>
           <button
             onClick={() => scrollBy(1)}
             disabled={!canNext}
             aria-label="Scroll right"
-            className="w-9 h-9 rounded-full border border-border bg-background flex items-center justify-center text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-background transition-colors"
+            className="w-11 h-11 rounded-full border-2 border-primary/60 bg-background flex items-center justify-center text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-25 disabled:hover:bg-background disabled:hover:text-foreground disabled:hover:border-primary/60 transition-colors"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" strokeWidth={2.25} />
           </button>
         </div>
+
       </div>
 
       {/* Horizontal scroll row — Airbnb-style, x-only */}
