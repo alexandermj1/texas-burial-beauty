@@ -47,6 +47,9 @@ const InlineEmailComposer = ({
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [bodyTouched, setBodyTouched] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [preCheckBody, setPreCheckBody] = useState<string | null>(null);
+
 
   // Re-template the body whenever the recipient or admin name resolves,
   // until the user has actually edited the textarea.
