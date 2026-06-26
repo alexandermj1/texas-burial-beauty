@@ -4,7 +4,8 @@
 // Pre-fills greeting ("Dear <first name>,") and a signature with the
 // currently signed-in admin's name.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, X, Loader2 } from "lucide-react";
+import { Send, X, Loader2, SpellCheck, Undo2 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
