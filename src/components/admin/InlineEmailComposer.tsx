@@ -32,11 +32,14 @@ interface Props {
   templates?: EmailTemplate[];
 }
 
+import { properFirstName } from "@/lib/properCase";
+
 const firstName = (name?: string | null): string => {
   const clean = cleanDisplayName(name || "");
-  if (!clean) return "there";
-  return clean.split(/\s+/)[0];
+  const cased = properFirstName(clean);
+  return cased || "there";
 };
+
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
