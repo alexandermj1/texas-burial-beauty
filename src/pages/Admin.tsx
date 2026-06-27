@@ -383,41 +383,45 @@ const Admin = () => {
   const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory";
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-sand-light/40 to-sage-light/30">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <div className={`lg:hidden md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
         <Navbar forceScrolled />
       </div>
-      <section className={`flex-1 ${focused ? "pt-24 lg:pt-6 pb-10" : "pt-28 lg:pt-8 pb-16"}`}>
-        <div className={focused ? "w-full px-4 lg:px-8" : "w-full px-4 lg:px-8"}>
+      <section className={`flex-1 ${focused ? "pt-6 lg:pt-5 pb-10" : "pt-28 lg:pt-8 pb-16"}`}>
+        <div className="w-full px-4 lg:px-8">
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
             <>
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-5 flex items-center gap-3 rounded-2xl bg-card/70 backdrop-blur-md border border-border/60 shadow-soft px-3 lg:px-4 py-2.5">
                 <button
                   data-tour="menu-button"
                   onClick={() => setMenuOpen(o => !o)}
-                  className="hidden md:inline-flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="hidden md:inline-flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-full bg-background/60 border border-border/70 text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
                   aria-label="Toggle menu"
                 >
                   {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
                   <span className="hidden sm:inline">Menu</span>
                 </button>
-                <h1 className="font-display text-lg text-foreground shrink-0 hidden md:block">Admin</h1>
+                <div className="hidden md:flex items-center gap-2 shrink-0 pr-1">
+                  <span className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-accent shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
+                  <h1 className="font-display text-lg tracking-tight text-foreground">Admin</h1>
+                </div>
                 <div className="flex-1 flex justify-center">
-                  <div data-tour="search-bar" className="relative w-full max-w-2xl lg:max-w-3xl">
-                    <Search className="absolute left-4 lg:left-5 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground" />
+                  <div data-tour="search-bar" className="relative w-full max-w-2xl lg:max-w-3xl group">
+                    <div className="pointer-events-none absolute -inset-px rounded-full bg-gradient-to-r from-primary/20 via-transparent to-accent/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity" />
+                    <Search className="absolute left-4 lg:left-5 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder={searchPlaceholder}
-                      className="w-full pl-11 lg:pl-14 pr-4 py-2.5 lg:py-3.5 rounded-full bg-card border border-border lg:border-2 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 shadow-soft lg:shadow-md transition-all"
+                      className="relative w-full pl-11 lg:pl-14 pr-4 py-2.5 lg:py-3.5 rounded-full bg-background/80 backdrop-blur border border-border/70 text-sm lg:text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 shadow-sm transition-all"
                     />
                   </div>
                 </div>
-                <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border text-xs">
-                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-semibold">
+                <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/60 border border-border/70 text-xs">
+                  <span className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground flex items-center justify-center text-[10px] font-semibold shadow-sm">
                     {(cleanDisplayName(user.user_metadata?.full_name) || user.email || "?").charAt(0).toUpperCase()}
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
@@ -428,27 +432,29 @@ const Admin = () => {
                   <button
                     onClick={handleInboxRefresh}
                     disabled={refreshingInbox}
-                    className="md:hidden shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+                    className="md:hidden shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full border border-border/70 bg-background/60 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
                     aria-label="Refresh inbox"
                     title="Refresh inbox"
                   >
                     <RefreshCw className={`w-4 h-4 ${refreshingInbox ? "animate-spin" : ""}`} />
                   </button>
                 )}
-                <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border/70 bg-background/60 rounded-full transition-colors">
                   <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
                 </button>
               </div>
               {menuOpen && (
-                <div data-tour="menu-panel" className="flex gap-1.5 mb-4 flex-wrap p-3 bg-card rounded-xl border border-border/50">
+                <div data-tour="menu-panel" className="flex gap-1.5 mb-5 flex-wrap p-3 bg-card/70 backdrop-blur-md rounded-2xl border border-border/60 shadow-soft">
                   {tabsConfig.map(({ key, label, Icon, count }) => {
                     const active = tab === key;
                     return (
                       <button
                         key={key}
                         onClick={() => { setTab(key); if (key !== "submissions" && key !== "inbox") setMenuOpen(false); }}
-                        className={`px-3 py-1.5 text-xs rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
-                          active ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground border border-border"
+                        className={`px-3.5 py-1.5 text-xs rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
+                          active
+                            ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-sm"
+                            : "bg-background/70 text-muted-foreground hover:text-foreground hover:border-primary/40 border border-border/70"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
