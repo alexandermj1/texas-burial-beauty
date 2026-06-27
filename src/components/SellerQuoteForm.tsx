@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { validateEmail } from "@/lib/emailValidation";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
@@ -110,6 +111,8 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     if (s === 0) {
       if (!form.name.trim()) return "Please enter your name.";
       if (!form.email.trim()) return "Please enter your email.";
+      const check = validateEmail(form.email);
+      if (check.ok !== true) return check.error;
     }
     if (s === 1) {
       if (!form.cemetery.trim()) return "Please enter the cemetery name.";
