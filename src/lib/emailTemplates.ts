@@ -99,9 +99,11 @@ export const buildSellerIntakeTemplate = (i: SellerInput): EmailTemplate => {
     if (otherOwnersImplied(i.recipientName, formOwners, extractedOwners)) {
       missing.push("Could you confirm who is the current owner of record with the cemetery administration? The deed appears to list additional names alongside yours, so we'd like to be sure we have the official owner-of-record correct before we proceed");
     } else {
+      missing.push("Could you confirm that you are currently the owner on record with the cemetery, and whether you were the original purchaser of the property? If you weren't the original purchaser, is this an heirship situation (i.e. the property passed to you through a family member)? If so, please share the original owner's name and their relationship to you");
       missing.push("Are you the sole owner of the property? If there are any other named owners, please share their full names and their relationship to you");
     }
   }
+
 
   const ask = missing.length
     ? `Thank you for providing the details you've shared so far — the more complete the picture, the higher the valuation we're typically able to come back with. To finalise your complimentary evaluation, could you send across the following:\n\n${missing.map(m => `• ${m}`).join("\n")}\n\n`
