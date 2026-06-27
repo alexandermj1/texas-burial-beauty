@@ -2,7 +2,7 @@
 // Files live in the private "customer-files" storage bucket; metadata in customer_files.
 // Renders as a grid of mini thumbnail tiles at the bottom of the submission view —
 // images preview inline (signed URLs), other files show a typed icon. Click a tile to open.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Fragment } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
