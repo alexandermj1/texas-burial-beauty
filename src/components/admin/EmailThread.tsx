@@ -32,9 +32,11 @@ interface Props {
   cemetery?: string | null;
   /** Optional templates for the New email composer (first one is loaded by default). */
   newEmailTemplates?: EmailTemplate[];
+  /** Called after a new email (from the templates composer) is sent. */
+  onNewEmailSent?: (meta?: { templateId?: string | null }) => void;
 }
 
-const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates }: Props) => {
+const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent }: Props) => {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
