@@ -16,41 +16,57 @@ const MAX_BYTES = 15 * 1024 * 1024; // 15 MB safety cap
 
 const SYSTEM_PROMPT = `You are an expert paralegal who reads cemetery-related documents:
 deeds, certificates of ownership, powers of attorney, government IDs, death
-certificates, listing agreements, statements, and similar paperwork. Extract
-the most useful facts from the document and return ONLY valid JSON matching
-this schema (omit unknown fields, do not invent):
+certificates, listing agreements, statements, contracts, correspondence, and
+similar paperwork.
+
+Your job: extract EVERY piece of useful information present in the document.
+Do not limit yourself to a fixed schema — different documents contain
+different facts, so include whatever is actually there. Never invent or guess.
+
+ALWAYS extract the purchaser's / owner's mailing address whenever it appears
+anywhere on the document — this is high priority, search the whole page for it.
+
+Return ONLY a single valid JSON object. No prose, no markdown fences. Use the
+shape below as a STARTING POINT: OMIT any field not in the document, and ADD
+any other useful key/value facts under "additional_fields" (object) when the
+document contains information that doesn't fit the suggested keys.
 
 {
-  "document_type": string,           // e.g. "Deed", "Power of Attorney", "Death certificate", "Driver license", "Statement", "Other"
-  "summary": string,                  // 1-2 sentence plain-English summary of what this document is and who it concerns
-  "owners": string[],                 // names of current owners / grantees on a deed
+  "document_type": string,            // e.g. "Deed", "Power of Attorney", "Death certificate", "Driver license", "Statement", "Contract", "Letter", "Other"
+  "summary": string,                   // 1-3 sentence plain-English summary of what this document is, who it concerns, and the key facts
+  "purchaser_address": string,         // ALWAYS include if present anywhere on the document
+  "owners": string[],
   "previous_owners": string[],
-  "decedent": string,                 // if a death certificate
-  "principal": string,                // if a POA, who is granting authority
-  "attorney_in_fact": string,         // if a POA, who is receiving authority
+  "purchaser": string,
+  "seller": string,
+  "decedent": string,
+  "principal": string,
+  "attorney_in_fact": string,
   "cemetery": string,
+  "cemetery_address": string,
   "section": string,
   "lot": string,
   "block": string,
   "space": string,
-  "plot_type": string,                // grave, crypt, niche, etc.
+  "plot_type": string,                 // grave, crypt, niche, etc.
   "deed_number": string,
   "certificate_number": string,
-  "issued_date": string,              // YYYY-MM-DD if determinable
-  "date_of_death": string,            // YYYY-MM-DD if determinable
-  "notarized": boolean,
-  "id_type": string,                  // for IDs: "Driver License", "Passport", etc.
+  "contract_number": string,
+  "issued_date": string,               // YYYY-MM-DD if determinable
+  "purchase_date": string,
+  "date_of_death": string,
+  "id_type": string,
   "id_number": string,
   "id_state": string,
   "id_expires": string,
-  "amounts": string[],                // any dollar amounts mentioned, with context
-  "addresses": string[],
+  "amounts": string[],                 // any dollar amounts mentioned, with context
+  "addresses": string[],               // every other address that appears
   "phone_numbers": string[],
   "emails": string[],
-  "notes": string                     // anything else important you noticed
-}
-
-Return strictly a single JSON object. No prose, no markdown fences.`;
+  "parties": string[],                 // anyone else named (witnesses, agents, funeral home, etc.)
+  "notes": string,                     // anything else important you noticed
+  "additional_fields": object          // any other useful facts in the document that don't fit above
+}`;
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
