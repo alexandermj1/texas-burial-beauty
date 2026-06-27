@@ -753,9 +753,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-soft overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
+      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/85 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_8px_32px_-16px_hsl(var(--primary)/0.2)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
         {regionFilter === "texas" && (
-          <div className="flex items-center gap-1.5 flex-wrap px-3 py-2.5 border-b border-border/50 bg-gradient-to-r from-muted/40 via-sand-light/30 to-transparent">
+          <div className="flex items-center gap-1.5 flex-wrap px-3 py-2.5 border-b border-border/50 bg-gradient-to-r from-sage-light/40 via-sand-light/40 to-terracotta/10 dark:from-muted/40 dark:via-card/40 dark:to-card/30">
 
             <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mr-1">Attachments:</span>
             {(["all", "with", "without"] as const).map(f => {
