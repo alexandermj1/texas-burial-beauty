@@ -89,7 +89,7 @@ ${signature(i.adminName)}`;
 };
 
 export const buildBuyerHaveItTemplate = (i: BuyerInput): EmailTemplate => {
-  const at = i.cemetery ? ` at ${i.cemetery}` : "";
+  const at = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
   const desc = [i.spaces, i.propertyType].filter(Boolean).join(" ") || "cemetery property";
   const body = `Dear ${first(i.recipientName)},
 
