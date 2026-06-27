@@ -45,6 +45,38 @@
     --warm-white: 40 30% 97%;
     --stone: 30 15% 40%;
 
+    /* Cohesive status palette — all anchored to ~50% saturation, 45-50% lightness
+       in the warm earth family so badges/highlights read as one system. */
+    --status-reply: 12 62% 48%;          /* urgent terracotta */
+    --status-reply-soft: 12 55% 94%;
+    --status-reply-fg: 12 55% 28%;
+    --status-reply-border: 12 50% 82%;
+
+    --status-quote: 35 70% 46%;          /* gold/amber — money */
+    --status-quote-soft: 38 70% 93%;
+    --status-quote-fg: 30 60% 26%;
+    --status-quote-border: 35 60% 80%;
+
+    --status-followup: 145 28% 36%;      /* sage-deep — action pending */
+    --status-followup-soft: 145 25% 92%;
+    --status-followup-fg: 145 35% 22%;
+    --status-followup-border: 145 22% 78%;
+
+    --status-new: 200 45% 44%;           /* dusty sky — fresh, only cool note */
+    --status-new-soft: 200 45% 93%;
+    --status-new-fg: 200 50% 26%;
+    --status-new-border: 200 40% 80%;
+
+    --status-docs: 155 32% 38%;          /* moss — success/attachments */
+    --status-docs-soft: 152 30% 92%;
+    --status-docs-fg: 155 38% 22%;
+    --status-docs-border: 152 25% 78%;
+
+    --status-nodocs: 28 55% 50%;         /* warm clay — caution */
+    --status-nodocs-soft: 30 55% 94%;
+    --status-nodocs-fg: 25 50% 28%;
+    --status-nodocs-border: 28 45% 80%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 145 25% 36%;

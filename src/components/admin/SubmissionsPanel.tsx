@@ -593,7 +593,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
                 active
                   ? r === "texas"
-                    ? "bg-amber-600 text-white border-amber-600"
+                    ? "bg-[hsl(var(--status-nodocs))] text-white border-[hsl(var(--status-nodocs))]"
                     : r === "bayer"
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-foreground text-background border-foreground"
@@ -637,20 +637,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   : submissions.filter(s => awaitingMap[s.id]).length;
           const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_quote: "Needs quote", needs_followup: "Follow up" } as const;
           const activeCls = f === "awaiting_reply"
-            ? "bg-rose-600 text-white border-rose-600"
+            ? "bg-[hsl(var(--status-reply))] text-white border-[hsl(var(--status-reply))]"
             : f === "needs_quote"
-              ? "bg-violet-600 text-white border-violet-600"
+              ? "bg-[hsl(var(--status-quote))] text-white border-[hsl(var(--status-quote))]"
               : f === "needs_followup"
-                ? "bg-indigo-600 text-white border-indigo-600"
+                ? "bg-[hsl(var(--status-followup))] text-white border-[hsl(var(--status-followup))]"
                 : "bg-foreground text-background border-foreground";
           // Tint the inactive pill so each status is visually identifiable at a glance,
           // not just a row of muted gray pills.
           const inactiveCls = f === "awaiting_reply"
-            ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900"
+            ? "bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border-[hsl(var(--status-reply-border))] hover:bg-[hsl(var(--status-reply-soft))]/70"
             : f === "needs_quote"
-              ? "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 dark:bg-violet-950/30 dark:text-violet-300 dark:border-violet-900"
+              ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
               : f === "needs_followup"
-                ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-300 dark:border-indigo-900"
+                ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
                 : "bg-card text-muted-foreground border-border hover:text-foreground";
           return (
             <button
@@ -673,7 +673,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           const activeCls: Record<KindFilter, string> = {
             all: "bg-foreground text-background border-foreground",
             seller: "bg-primary text-primary-foreground border-primary",
-            buyer: "bg-emerald-600 text-white border-emerald-600",
+            buyer: "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))]",
             contact: "bg-foreground text-background border-foreground",
           };
           return (
@@ -773,9 +773,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
                     isActive
                       ? f === "with"
-                        ? "bg-emerald-600 text-white border-emerald-600"
+                        ? "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))]"
                         : f === "without"
-                          ? "bg-amber-600 text-white border-amber-600"
+                          ? "bg-[hsl(var(--status-nodocs))] text-white border-[hsl(var(--status-nodocs))]"
                           : "bg-foreground text-background border-foreground"
                       : "bg-card text-muted-foreground border-border hover:text-foreground"
                   }`}
@@ -787,13 +787,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {regionFilter === "texas" && cemeteryLabel && (
-          <div className="flex items-center justify-between gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-500/30 text-xs">
-            <span className="text-amber-900 dark:text-amber-100">
+          <div className="flex items-center justify-between gap-2 px-4 py-2 bg-[hsl(var(--status-nodocs-soft))] border-b border-[hsl(var(--status-nodocs-border))] text-xs">
+            <span className="text-[hsl(var(--status-nodocs-fg))]">
               Showing submissions for <span className="font-semibold">{cemeteryLabel}</span> ({filtered.length})
             </span>
             <button
               onClick={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
-              className="text-amber-700 hover:text-amber-900 font-medium underline-offset-2 hover:underline"
+              className="text-[hsl(var(--status-nodocs-fg))] hover:text-[hsl(var(--status-nodocs))] font-medium underline-offset-2 hover:underline"
             >
               Clear filter
             </button>
@@ -835,7 +835,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               : beingWorked
                 ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
                 : fresh
-                  ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
+                  ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
                   : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
             return (
               <div key={s.id}>
@@ -858,7 +858,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="flex items-center justify-between gap-2 mb-0.5">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
-                        {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-sky-500 text-white">New</span>}
+                        {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
                         {beingWorked && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
@@ -873,16 +873,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
                         {awaitingMap[s.id] && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300 shadow-sm dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border border-[hsl(var(--status-reply-border))] shadow-sm"
                             title={`Customer replied ${new Date(awaitingMap[s.id]).toLocaleString()} — no response sent yet`}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-reply))] animate-pulse" />
                             Needs reply
                           </span>
                         )}
                         {!awaitingMap[s.id] && (s as any).needs_quote && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-violet-600 text-white border border-violet-700 shadow-sm"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-[hsl(var(--status-quote))] text-white border border-[hsl(var(--status-quote))] shadow-sm"
                             title="Quote owed to seller"
                           >
                             <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
@@ -892,16 +892,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                         {!awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id] && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border border-[hsl(var(--status-followup-border))] shadow-sm"
                             title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-followup))] animate-pulse" />
                             Follow up
                           </span>
                         )}
                         {hasDocs(s) && (
                           <span
-                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 shadow-sm"
+                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))] shadow-sm"
                             title="Customer submitted attachments"
                           >
                             <Paperclip className="w-3 h-3" />
@@ -947,7 +947,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       ) : null}
                     </p>
                     {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
-                      <p className="text-[10px] text-amber-700 dark:text-amber-400 italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
+                      <p className="text-[10px] text-[hsl(var(--status-nodocs-fg))] italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
                         ✎ originally: "{(s as any).cemetery_original}"
                       </p>
                     )}
@@ -1020,7 +1020,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} source={selected.source} sourceEmailId={(selected as any).source_email_id} />
                     <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source, selected.inquiry_channel)}</p>
                     {selected.source === "manual_phone" && (selected as any).handled_by_name && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))]">
                         <UserPlus className="w-3 h-3" /> Added by {cleanDisplayName((selected as any).handled_by_name)}
                       </span>
                     )}
@@ -1044,7 +1044,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   return (
                     <div className="flex items-center gap-1.5">
                       {isNew(selected) && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-500 text-white">New today</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[hsl(var(--status-new))] text-white">New today</span>
                       )}
                       {sViewers.length > 0 && (
                         <div className="flex items-center gap-1.5" title={`Viewed by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
@@ -1077,7 +1077,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   {isAwaiting && (
                     <button
                       onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))] hover:bg-[hsl(var(--status-nodocs-soft))]/70 transition-colors"
                       title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
                     >
                       <CheckCircle className="w-3.5 h-3.5" /> Doesn't need a reply
@@ -1102,12 +1102,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     }}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       manualFollowup
-                        ? "bg-indigo-100 text-indigo-900 border-indigo-300 hover:bg-indigo-200"
+                        ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
                         : "bg-card text-foreground border-border hover:bg-muted/60"
                     }`}
                     title="Manually flag this submission for follow-up so it never falls through the cracks"
                   >
-                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-indigo-600" : "bg-muted-foreground/40"}`} />
+                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
                     {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
                   </button>
                   {(() => {
@@ -1117,12 +1117,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         onClick={() => onUpdate(selected.id, { needs_quote: !needsQuote } as any)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                           needsQuote
-                            ? "bg-violet-100 text-violet-900 border-violet-300 hover:bg-violet-200"
+                            ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
                             : "bg-card text-foreground border-border hover:bg-muted/60"
                         }`}
                         title="Flag this submission as awaiting a quote from us"
                       >
-                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-violet-600" : "bg-muted-foreground/40"}`} />
+                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-[hsl(var(--status-quote))]" : "bg-muted-foreground/40"}`} />
                         {needsQuote ? "Marked needs quote" : "Mark needs quote"}
                       </button>
                     );
@@ -1210,7 +1210,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
                 {(selected as any).cemetery_original && (selected as any).cemetery_original !== selected.cemetery && (
                   <div className="mt-2 pt-2 border-t border-border/40">
-                    <p className="text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-1">
+                    <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--status-nodocs-fg))] mb-1">
                       Originally written by customer
                     </p>
                     <p className="text-xs text-foreground break-words italic">"{(selected as any).cemetery_original}"</p>
@@ -1265,7 +1265,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery (as written by customer)</p>
                       <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
                       {contact && (
-                        <p className={`text-[11px] mt-1 ${uncertain ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}`}>
+                        <p className={`text-[11px] mt-1 ${uncertain ? "text-[hsl(var(--status-nodocs-fg))]" : "text-muted-foreground"}`}>
                           {uncertain ? "⚠ Best guess match — please verify: " : "Matched directory entry: "}
                           <span className="font-medium text-foreground">{contact.name}</span>
                         </p>
@@ -1427,13 +1427,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
                 {/* Typing banner — iMessage style */}
                 {typingUsers.length > 0 && (
-                  <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                  <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--status-nodocs-border))] bg-[hsl(var(--status-nodocs-soft))] px-3 py-2">
                     <span className="inline-flex gap-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "120ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-bounce" style={{ animationDelay: "240ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "120ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "240ms" }} />
                     </span>
-                    <p className="text-xs text-amber-900 dark:text-amber-200">
+                    <p className="text-xs text-[hsl(var(--status-nodocs-fg))]">
                       <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
                     </p>
                   </div>
@@ -1553,7 +1553,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPendingAction(null)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-xl border border-border max-w-md w-full p-5 shadow-xl">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-[hsl(var(--status-quote))]/15 text-[hsl(var(--status-quote))] flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -1835,7 +1835,7 @@ const PipelineOverview = ({
                     )}
                   </div>
                 ) : count > 0 ? (
-                  <span className="text-[9px] text-sky-600 dark:text-sky-400 font-medium">untouched</span>
+                  <span className="text-[9px] text-[hsl(var(--status-new-fg))] font-medium">untouched</span>
                 ) : null}
               </div>
               <p className="text-[9px] text-muted-foreground mt-1 truncate">Owner: {m.owner}</p>
@@ -1863,8 +1863,8 @@ const SellerAttachmentsBlock = ({ files }: { files: Array<{ path: string; name: 
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
   return (
-    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-2">
-      <p className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+    <div className="bg-[hsl(var(--status-docs))]/5 border border-[hsl(var(--status-docs))]/25 rounded-lg p-4 space-y-2">
+      <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--status-docs-fg))] font-semibold flex items-center gap-1.5">
         <FileText className="w-3 h-3" /> Uploaded with the form ({files.length})
       </p>
       <ul className="space-y-1.5">
