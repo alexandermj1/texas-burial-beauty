@@ -44,6 +44,7 @@ const InlineEmailComposer = ({
   onSent,
   onCancel,
   sendLabel = "Send",
+  templates,
 }: Props) => {
   const { toast } = useToast();
   const adminName = useAdminDisplayName();
@@ -53,16 +54,23 @@ const InlineEmailComposer = ({
   const [bodyTouched, setBodyTouched] = useState(false);
   const [checking, setChecking] = useState(false);
   const [preCheckBody, setPreCheckBody] = useState<string | null>(null);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
+    templates && templates.length ? templates[0].id : null,
+  );
 
 
   // Re-template the body whenever the recipient or admin name resolves,
   // until the user has actually edited the textarea.
   const greetLen = useMemo(() => `Dear ${firstName(recipientName)},`.length, [recipientName]);
   const template = useMemo(() => {
+    if (templates && templates.length) {
+      const t = templates.find(x => x.id === activeTemplateId) || templates[0];
+      return t.body;
+    }
     const greet = `Dear ${firstName(recipientName)},`;
     const sig = adminName ? `Best regards,\n${adminName}\nTexas Cemetery Brokers` : `Best regards,\nTexas Cemetery Brokers`;
     return `${greet}\n\n\n\n${sig}`;
-  }, [recipientName, adminName]);
+  }, [recipientName, adminName, templates, activeTemplateId]);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -70,19 +78,28 @@ const InlineEmailComposer = ({
     if (!bodyTouched) setBody(template);
   }, [template, bodyTouched]);
 
+  const applyTemplate = (id: string) => {
+    const t = templates?.find(x => x.id === id);
+    if (!t) return;
+    setActiveTemplateId(id);
+    setBody(t.body);
+    setBodyTouched(false);
+  };
+
   // Autofocus the textarea and place the cursor one line below the greeting
   // so the admin can just start typing the body.
   useEffect(() => {
     if (bodyTouched) return;
     const el = textareaRef.current;
     if (!el) return;
-    const pos = greetLen + 2; // after "Dear X,\n\n"
+    // When a custom template is active, just focus at the end so the user can edit.
+    const pos = templates && templates.length ? body.length : greetLen + 2;
     const id = window.setTimeout(() => {
       el.focus();
       try { el.setSelectionRange(pos, pos); } catch { /* noop */ }
     }, 30);
     return () => window.clearTimeout(id);
-  }, [body, greetLen, bodyTouched]);
+  }, [body, greetLen, bodyTouched, templates]);
 
   useEffect(() => {
     setSubject(defaultSubject);
