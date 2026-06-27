@@ -229,8 +229,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     fetchFiles();
   };
 
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const toggleExpand = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  const [detailsFor, setDetailsFor] = useState<CustomerFileRow | null>(null);
 
   const renderExtracted = (data: Record<string, any> | null) => {
     if (!data || typeof data !== "object") return null;
@@ -244,18 +243,25 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     });
     if (entries.length === 0) return null;
     return (
-      <dl className="mt-1.5 grid grid-cols-1 gap-y-1 text-xs">
+      <dl className="grid grid-cols-1 sm:grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
         {entries.map(([k, v]) => (
-          <div key={k} className="flex gap-2 leading-snug">
-            <dt className="text-muted-foreground capitalize shrink-0 font-medium">{k.replace(/_/g, " ")}:</dt>
+          <Fragment key={k}>
+            <dt className="text-muted-foreground capitalize font-medium">{k.replace(/_/g, " ")}</dt>
             <dd className="text-foreground break-words">
-              {Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
+              {Array.isArray(v)
+                ? (typeof v[0] === "object"
+                    ? <pre className="whitespace-pre-wrap text-xs bg-muted/40 rounded p-2">{JSON.stringify(v, null, 2)}</pre>
+                    : v.join(", "))
+                : typeof v === "object"
+                ? <pre className="whitespace-pre-wrap text-xs bg-muted/40 rounded p-2">{JSON.stringify(v, null, 2)}</pre>
+                : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
             </dd>
-          </div>
+          </Fragment>
         ))}
       </dl>
     );
   };
+
 
   return (
     <div>
