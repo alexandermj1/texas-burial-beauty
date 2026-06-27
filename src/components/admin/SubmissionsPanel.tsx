@@ -1835,7 +1835,7 @@ const PipelineOverview = ({
                     )}
                   </div>
                 ) : count > 0 ? (
-                  <span className="text-[9px] text-sky-600 dark:text-sky-400 font-medium">untouched</span>
+                  <span className="text-[9px] text-[hsl(var(--status-new-fg))] font-medium">untouched</span>
                 ) : null}
               </div>
               <p className="text-[9px] text-muted-foreground mt-1 truncate">Owner: {m.owner}</p>
@@ -1863,8 +1863,8 @@ const SellerAttachmentsBlock = ({ files }: { files: Array<{ path: string; name: 
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
   return (
-    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 space-y-2">
-      <p className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+    <div className="bg-[hsl(var(--status-docs))]/5 border border-[hsl(var(--status-docs))]/25 rounded-lg p-4 space-y-2">
+      <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--status-docs-fg))] font-semibold flex items-center gap-1.5">
         <FileText className="w-3 h-3" /> Uploaded with the form ({files.length})
       </p>
       <ul className="space-y-1.5">
