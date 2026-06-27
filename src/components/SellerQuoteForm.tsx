@@ -752,12 +752,16 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                           </select>
                         </div>
                         <div>
-                          <label className={labelCls}>Number of spaces</label>
+                          <label className={labelCls}>Number of spaces <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— optional</span></label>
                           <input type="number" min={1} max={20} className={inputCls} value={form.spaces} onChange={(e) => setForm({ ...form, spaces: e.target.value })} placeholder="e.g. 2" />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className={labelCls}>Section / Lot # <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— if known</span></label>
-                          <input className={inputCls} value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} placeholder="e.g. Garden of Peace, Lot 14" maxLength={100} />
+                          <label className={labelCls}>Section / Garden name</label>
+                          <input className={inputCls} value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} placeholder="e.g. Garden of Peace" maxLength={100} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Lot # / Space # <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— optional</span></label>
+                          <input className={inputCls} value={form.lotNumber} onChange={(e) => setForm({ ...form, lotNumber: e.target.value })} placeholder="e.g. Lot 14, Space 2" maxLength={100} />
                         </div>
                       </div>
                     </div>
