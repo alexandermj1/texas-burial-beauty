@@ -20,6 +20,7 @@ const SendSchema = z.object({
   bcc: z.string().max(2000).optional().default(""),
   subject: z.string().max(998).optional().default(""),
   body: z.string().max(200000).optional().default(""),
+  htmlBody: z.string().max(400000).optional(),
   threadId: z.string().max(200).optional(),
   inReplyToGmailId: z.string().max(200).optional(),
 });
