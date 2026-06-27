@@ -47,11 +47,14 @@ const escapeHtml = (s: string) =>
 // Convert plain text (templates) into safe HTML preserving paragraph + line breaks.
 const textToHtml = (text: string): string => {
   if (!text) return "";
+  // Split on blank lines into paragraphs, then insert a visible empty paragraph
+  // between them so the editor preview matches what the recipient will see.
   const paragraphs = text.split(/\n{2,}/);
   return paragraphs
     .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
-    .join("");
+    .join("<p><br></p>");
 };
+
 
 // Convert composer HTML to a readable plain-text fallback (text/plain MIME part).
 const htmlToText = (html: string): string => {
