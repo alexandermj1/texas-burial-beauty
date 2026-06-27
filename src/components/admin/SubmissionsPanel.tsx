@@ -14,7 +14,7 @@ import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
-import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
+// TexasCemeteriesPanel now lives in the Cemeteries tab (see src/pages/Admin.tsx).
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
@@ -602,21 +602,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         })}
       </div>
       )}
-      {regionFilter === "texas" && !isMobile && (
-        <div className="lg:col-span-12">
-          <TexasCemeteriesPanel
-            texasSubmissions={texasSubmissions}
-            activeCemeteryCanon={cemeteryCanon}
-            onSelectCemetery={(canon, label) => {
-              setCemeteryCanon(canon);
-              setCemeteryLabel(label);
-              setSelectedId(null);
-            }}
-            onRefresh={onRefresh}
-          />
-
-        </div>
-      )}
+      {/* Cemetery directory moved to the Cemeteries tab. */}
 
 
       {/* === Team pipeline overview — sellers (Bayer only, desktop) === */}
@@ -653,12 +639,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               : f === "needs_followup"
                 ? "bg-indigo-600 text-white border-indigo-600"
                 : "bg-foreground text-background border-foreground";
+          // Tint the inactive pill so each status is visually identifiable at a glance,
+          // not just a row of muted gray pills.
+          const inactiveCls = f === "awaiting_reply"
+            ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900"
+            : f === "needs_quote"
+              ? "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 dark:bg-violet-950/30 dark:text-violet-300 dark:border-violet-900"
+              : f === "needs_followup"
+                ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-300 dark:border-indigo-900"
+                : "bg-card text-muted-foreground border-border hover:text-foreground";
           return (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                filter === f ? activeCls : "bg-card text-muted-foreground border-border hover:text-foreground"
+                filter === f ? activeCls : inactiveCls
               }`}
             >
               {labels[f]} ({count})
