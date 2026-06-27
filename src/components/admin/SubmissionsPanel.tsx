@@ -26,7 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
-import { Megaphone, UserPlus } from "lucide-react";
+import { Megaphone, UserPlus, Building2 } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -86,6 +86,8 @@ interface Props {
   deletedSubmissions?: any[];
   /** Restore a soft-deleted submission by id. */
   onRestore?: (id: string) => Promise<void>;
+  /** Jump to the Cemeteries tab from the submissions toolbar. */
+  onViewCemeteries?: () => void;
 }
 
 
@@ -131,7 +133,7 @@ const subRegion = (s: Submission): "texas" | "bayer" => {
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore }: Props) => {
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
@@ -687,6 +689,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         })}
 
         <div className="ml-auto flex items-center gap-1.5">
+          {onViewCemeteries && (
+            <button
+              onClick={onViewCemeteries}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
+              title="Open the Cemeteries directory"
+            >
+              <Building2 className="w-3.5 h-3.5" /> Cemeteries
+            </button>
+          )}
           <button
             data-tour="add-submission"
             onClick={() => setAddOpen(true)}
@@ -839,10 +850,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
                         {awaitingMap[s.id] && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 shadow-sm"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300 shadow-sm dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900"
                             title={`Customer replied ${new Date(awaitingMap[s.id]).toLocaleString()} — no response sent yet`}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
                             Needs reply
                           </span>
                         )}

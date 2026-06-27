@@ -713,6 +713,7 @@ const Admin = () => {
               searchQuery={searchQuery}
               focusSubmissionId={focusSubmissionId}
               onRefresh={handleInboxRefresh}
+              onViewCemeteries={() => setTab("cemeteries")}
               onUpdate={async (id, patch) => {
                 const before = submissions.find(s => s.id === id);
                 const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
