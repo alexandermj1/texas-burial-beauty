@@ -1,0 +1,1 @@
+ALTER TABLE public.contact_submissions ADD COLUMN IF NOT EXISTS needs_quote boolean NOT NULL DEFAULT false;
