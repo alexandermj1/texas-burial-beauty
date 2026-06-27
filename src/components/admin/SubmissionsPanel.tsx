@@ -798,6 +798,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
 
+        {cemeteriesOpen && (
+          <div className="border-b border-border bg-muted/20 p-4">
+            <TexasCemeteriesPanel
+              texasSubmissions={texasSubmissions}
+              activeCemeteryCanon={cemeteryCanon}
+              onSelectCemetery={(canon, label) => {
+                setCemeteryCanon(canon);
+                setCemeteryLabel(label);
+                if (canon) setCemeteriesOpen(false);
+              }}
+              onRefresh={onRefresh}
+              standalone
+            />
+          </div>
+        )}
+
+
         {(() => {
           const renderRow = (s: Submission, i: number) => {
             const isActive = selected?.id === s.id;
