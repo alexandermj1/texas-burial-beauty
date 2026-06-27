@@ -110,6 +110,8 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     if (s === 0) {
       if (!form.name.trim()) return "Please enter your name.";
       if (!form.email.trim()) return "Please enter your email.";
+      const check = validateEmail(form.email);
+      if (!check.ok) return check.error;
     }
     if (s === 1) {
       if (!form.cemetery.trim()) return "Please enter the cemetery name.";
