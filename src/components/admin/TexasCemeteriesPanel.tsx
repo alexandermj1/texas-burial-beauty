@@ -351,7 +351,7 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                     ? "opacity-50 border-primary"
                     : isActive
                       ? "border-primary bg-primary/10 ring-1 ring-primary"
-                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
+                      : `${countTint(stat.count)} hover:border-primary/40`
               }`}
               title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : "Drag onto another cemetery to merge"}
             >
@@ -368,33 +368,31 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded-full text-[11px] font-bold ${
-                      stat.count > 0
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    }`}
+                    className={`shrink-0 inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded-full text-[11px] font-bold ${countBadgeTint(stat.count)}`}
                     title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
                   >
                     {stat.count}
                   </span>
                 </div>
               </button>
-              <div className="flex items-center gap-1 px-2.5 pb-2">
-                <button
-                  onClick={async () => {
-                    if (profile) {
-                      setOpenId(o => (o === profile.id ? null : profile.id));
-                    } else {
-                      const id = await ensureProfile(stat);
-                      if (id) setOpenId(id);
-                    }
-                  }}
-                  className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                >
-                  {profile && openId === profile.id ? "Hide profile" : (profile ? "Edit profile" : "Add profile info")}
-                </button>
-              </div>
-              {profile && openId === profile.id && (
+              {!hideProfileEditor && (
+                <div className="flex items-center gap-1 px-2.5 pb-2">
+                  <button
+                    onClick={async () => {
+                      if (profile) {
+                        setOpenId(o => (o === profile.id ? null : profile.id));
+                      } else {
+                        const id = await ensureProfile(stat);
+                        if (id) setOpenId(id);
+                      }
+                    }}
+                    className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                  >
+                    {profile && openId === profile.id ? "Hide profile" : (profile ? "Edit profile" : "Add profile info")}
+                  </button>
+                </div>
+              )}
+              {!hideProfileEditor && profile && openId === profile.id && (
                 <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-background/50">
                   <Inp label="Name" value={(edits[profile.id]?.name as any) ?? profile.name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], name: v } }))} />
                   <Inp label="City" value={(edits[profile.id]?.city as any) ?? profile.city ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], city: v } }))} />
