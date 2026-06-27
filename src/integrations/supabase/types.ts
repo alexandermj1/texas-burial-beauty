@@ -318,6 +318,7 @@ export type Database = {
           listing_number: string | null
           listing_option: string | null
           listing_url: string | null
+          manual_followup: boolean
           message: string | null
           morgued_at: string | null
           multi_owner_perm_required: boolean | null
@@ -345,6 +346,7 @@ export type Database = {
           receipt_sent_at: string | null
           region: string | null
           relationship_to_owner: string | null
+          reply_dismissed_at: string | null
           section: string | null
           seller_attachments: Json
           source: string
@@ -407,6 +409,7 @@ export type Database = {
           listing_number?: string | null
           listing_option?: string | null
           listing_url?: string | null
+          manual_followup?: boolean
           message?: string | null
           morgued_at?: string | null
           multi_owner_perm_required?: boolean | null
@@ -434,6 +437,7 @@ export type Database = {
           receipt_sent_at?: string | null
           region?: string | null
           relationship_to_owner?: string | null
+          reply_dismissed_at?: string | null
           section?: string | null
           seller_attachments?: Json
           source?: string
@@ -496,6 +500,7 @@ export type Database = {
           listing_number?: string | null
           listing_option?: string | null
           listing_url?: string | null
+          manual_followup?: boolean
           message?: string | null
           morgued_at?: string | null
           multi_owner_perm_required?: boolean | null
@@ -523,6 +528,7 @@ export type Database = {
           receipt_sent_at?: string | null
           region?: string | null
           relationship_to_owner?: string | null
+          reply_dismissed_at?: string | null
           section?: string | null
           seller_attachments?: Json
           source?: string

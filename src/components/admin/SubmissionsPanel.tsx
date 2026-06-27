@@ -293,6 +293,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const nextAwaiting: Record<string, string> = {};
       const nextFollowup: Record<string, { since: string; phrase: string }> = {};
       const now = Date.now();
+      const subById = new Map(texasSubs.map(s => [s.id, s as any]));
       for (const [sid, info] of latestPerSub.entries()) {
         if (!info.outgoing) {
           nextAwaiting[sid] = info.received_at;
@@ -312,6 +313,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       for (const s of texasSubs) {
         if (nextAwaiting[s.id]) continue;
         if (!latestPerSub.has(s.id)) nextAwaiting[s.id] = s.created_at;
+      }
+      // Honor manual dismissal: if the admin marked "doesn't need a reply", drop the
+      // Needs reply tag UNLESS a newer inbound email has arrived since they dismissed.
+      for (const sid of Object.keys(nextAwaiting)) {
+        const sub = subById.get(sid);
+        const dismissedAt = sub?.reply_dismissed_at;
+        if (!dismissedAt) continue;
+        const lastInbound = nextAwaiting[sid];
+        if (new Date(lastInbound).getTime() <= new Date(dismissedAt).getTime()) {
+          delete nextAwaiting[sid];
+        }
+      }
+      // Manual "needs follow-up" toggle: always surface, even if no email promise.
+      for (const s of texasSubs) {
+        if ((s as any).manual_followup && !nextFollowup[s.id]) {
+          nextFollowup[s.id] = { since: s.created_at, phrase: "Manually flagged for follow-up" };
+        }
       }
       setAwaitingMap(nextAwaiting);
       setFollowupMap(nextFollowup);
@@ -1001,6 +1019,55 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 onPatch={(patch) => onUpdate(selected.id, patch)}
               />
             )}
+
+            {/* Reply / follow-up state — Texas only */}
+            {subRegion(selected) === "texas" && (() => {
+              const isAwaiting = !!awaitingMap[selected.id];
+              const isFollowup = !!followupMap[selected.id];
+              const manualFollowup = !!(selected as any).manual_followup;
+              return (
+                <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
+                  {isAwaiting && (
+                    <button
+                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors"
+                      title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Doesn't need a reply
+                    </button>
+                  )}
+                  {!isAwaiting && (selected as any).reply_dismissed_at && (
+                    <button
+                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: null } as any)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
+                      title="Undo — re-enable Needs reply detection"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Re-enable needs reply
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onUpdate(selected.id, { manual_followup: !manualFollowup } as any)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      manualFollowup
+                        ? "bg-indigo-100 text-indigo-900 border-indigo-300 hover:bg-indigo-200"
+                        : "bg-card text-foreground border-border hover:bg-muted/60"
+                    }`}
+                    title="Manually flag this submission for follow-up so it never falls through the cracks"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-indigo-600" : "bg-muted-foreground/40"}`} />
+                    {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
+                  </button>
+                  {isFollowup && !manualFollowup && (
+                    <span className="text-[11px] text-muted-foreground italic">
+                      Auto-flagged from outgoing promise
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
+
 
             {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
             {subRegion(selected) === "texas" && (
