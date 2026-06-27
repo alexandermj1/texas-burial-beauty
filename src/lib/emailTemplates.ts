@@ -79,7 +79,7 @@ Unfortunately we don't have anything matching your request available at this mom
 If your needs change in the meantime, just let me know.
 
 ${signature(i.adminName)}`;
-  return { id: "buyer_none", label: "Buyer — no inventory yet", body };
+  return { id: "buyer_none", label: "No inventory yet", body };
 };
 
 export const buildBuyerHaveItTemplate = (i: BuyerInput): EmailTemplate => {
