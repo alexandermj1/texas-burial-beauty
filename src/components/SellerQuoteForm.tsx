@@ -65,6 +65,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     propertyTypeOther: "",
     spaces: "",
     section: "",
+    lotNumber: "",
     details: "",
     deedOwnerNames: "",
     deedOwnersStatus: "",
@@ -113,6 +114,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     if (s === 1) {
       if (!form.cemetery.trim()) return "Please enter the cemetery name.";
       if (!form.propertyType) return "Please choose a property type.";
+      if (!form.section.trim()) return "Please enter the section or garden name.";
     }
     return null;
   };
@@ -124,8 +126,17 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
   };
   const back = () => setStep(s => Math.max(s - 1, 0));
 
+  const composedSection = () => {
+    const sec = form.section.trim();
+    const lot = form.lotNumber.trim();
+    if (sec && lot) return `${sec} · Lot/Space ${lot}`;
+    return sec || lot || "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Guard: only submit from the final step.
+    if (step !== steps.length - 1) return;
     // Re-validate the gated steps before final send.
     for (const s of [0, 1]) {
       const err = validateStep(s);
@@ -141,7 +152,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       cemetery: form.cemetery.trim(),
       property_type: form.propertyType === "Other" && form.propertyTypeOther.trim() ? form.propertyTypeOther.trim() : form.propertyType,
       spaces: form.spaces || null,
-      section: form.section.trim() || null,
+      section: composedSection() || null,
       details: form.details.trim() || null,
       deed_owner_names: form.deedOwnerNames.trim() || null,
       deed_owners_status: form.deedOwnersStatus || null,
@@ -162,7 +173,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       const { error: attachError } = await supabase.functions.invoke("attach-seller-files", { body: { submission_id: intakeId } });
       if (attachError) console.warn("attach-seller-files failed", attachError);
     }
-    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", propertyTypeOther: "", spaces: "", section: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
+    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
     setFiles([]);
     setLoading(false);
     navigate("/thank-you");
@@ -246,10 +257,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       {
         chapter: "The property",
         title: <>And what <span className="italic font-medium text-primary">kind</span> of property?</>,
-        helper: "Pick a type, tell us how many spaces, and the section if you know it.",
+        helper: "Pick a type, tell us the section or garden name, and how many spaces.",
         validate: () => {
           if (!form.propertyType) return "Please choose a property type.";
           if (form.propertyType === "Other" && !form.propertyTypeOther.trim()) return "Please tell us what kind of property.";
+          if (!form.section.trim()) return "Please enter the section or garden name.";
           return null;
         },
         body: (
@@ -287,17 +299,23 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                   className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
               </div>
             )}
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Section / Garden name</label>
+              <input value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}
+                placeholder="e.g. Garden of Peace" maxLength={100}
+                className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+            </div>
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3"># of spaces</label>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3"># of spaces <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
                 <input type="number" min={1} max={20} value={form.spaces} onChange={(e) => setForm({ ...form, spaces: e.target.value })}
                   placeholder="2"
                   className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
               </div>
               <div>
-                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Section / Lot <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
-                <input value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}
-                  placeholder="Garden of Peace, Lot 14" maxLength={100}
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Lot / Space # <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
+                <input value={form.lotNumber} onChange={(e) => setForm({ ...form, lotNumber: e.target.value })}
+                  placeholder="e.g. Lot 14, Space 2" maxLength={100}
                   className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
               </div>
             </div>
@@ -630,6 +648,12 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
 
           <motion.form
             onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              // Prevent Enter from auto-submitting or advancing — user must click.
+              if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
+                e.preventDefault();
+              }
+            }}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -734,12 +758,16 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                           </select>
                         </div>
                         <div>
-                          <label className={labelCls}>Number of spaces</label>
+                          <label className={labelCls}>Number of spaces <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— optional</span></label>
                           <input type="number" min={1} max={20} className={inputCls} value={form.spaces} onChange={(e) => setForm({ ...form, spaces: e.target.value })} placeholder="e.g. 2" />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className={labelCls}>Section / Lot # <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— if known</span></label>
-                          <input className={inputCls} value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} placeholder="e.g. Garden of Peace, Lot 14" maxLength={100} />
+                          <label className={labelCls}>Section / Garden name</label>
+                          <input className={inputCls} value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} placeholder="e.g. Garden of Peace" maxLength={100} />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className={labelCls}>Lot # / Space # <span className="text-muted-foreground normal-case tracking-normal text-[10px]">— optional</span></label>
+                          <input className={inputCls} value={form.lotNumber} onChange={(e) => setForm({ ...form, lotNumber: e.target.value })} placeholder="e.g. Lot 14, Space 2" maxLength={100} />
                         </div>
                       </div>
                     </div>
