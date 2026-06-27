@@ -473,16 +473,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-    // Pin awaiting-reply first (they're waiting on us right now), then follow-up promises
-    // we made and forgot about, then the rest.
+    // Order: Needs reply → Needs quote → Needs follow-up → everything else.
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort((a, b) =>
       (awaitingMap[b.id] || "").localeCompare(awaitingMap[a.id] || "")
     );
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && followupMap[s.id]).sort((a, b) =>
+    const quoteRows = matches.filter(s => !awaitingMap[s.id] && (s as any).needs_quote);
+    const followupRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id]).sort((a, b) =>
       (followupMap[b.id]?.since || "").localeCompare(followupMap[a.id]?.since || "")
     );
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !followupMap[s.id]);
-    return [...awaitingRows, ...followupRows, ...otherRows];
+    const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]);
+    return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+
   }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
 
 
