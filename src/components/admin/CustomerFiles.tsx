@@ -231,6 +231,43 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
 
   const [detailsFor, setDetailsFor] = useState<CustomerFileRow | null>(null);
 
+  const humanizeKey = (k: string) =>
+    k.replace(/[_-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+  const renderValue = (v: any): React.ReactNode => {
+    if (v == null) return null;
+    if (typeof v === "boolean") return v ? "Yes" : "No";
+    if (typeof v === "string" || typeof v === "number") return String(v);
+    if (Array.isArray(v)) {
+      if (v.length === 0) return null;
+      if (v.every(item => item == null || typeof item !== "object")) {
+        return v.filter(x => x != null && String(x).trim() !== "").join(", ");
+      }
+      return (
+        <ul className="list-disc pl-4 space-y-1">
+          {v.map((item, i) => <li key={i}>{renderValue(item)}</li>)}
+        </ul>
+      );
+    }
+    if (typeof v === "object") {
+      const entries = Object.entries(v).filter(([, val]) =>
+        val != null && !(Array.isArray(val) && val.length === 0) && !(typeof val === "string" && !val.trim())
+      );
+      if (entries.length === 0) return null;
+      return (
+        <div className="space-y-1">
+          {entries.map(([k, val]) => (
+            <div key={k}>
+              <span className="text-muted-foreground">{humanizeKey(k)}:</span>{" "}
+              <span className="text-foreground">{renderValue(val)}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return String(v);
+  };
+
   const renderExtracted = (data: Record<string, any> | null) => {
     if (!data || typeof data !== "object") return null;
     const skip = new Set(["summary"]);
@@ -239,6 +276,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
       if (v == null) return false;
       if (Array.isArray(v) && v.length === 0) return false;
       if (typeof v === "string" && !v.trim()) return false;
+      if (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0) return false;
       return true;
     });
     if (entries.length === 0) return null;
@@ -246,21 +284,14 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
       <dl className="grid grid-cols-1 sm:grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
         {entries.map(([k, v]) => (
           <Fragment key={k}>
-            <dt className="text-muted-foreground capitalize font-medium">{k.replace(/_/g, " ")}</dt>
-            <dd className="text-foreground break-words">
-              {Array.isArray(v)
-                ? (typeof v[0] === "object"
-                    ? <pre className="whitespace-pre-wrap text-xs bg-muted/40 rounded p-2">{JSON.stringify(v, null, 2)}</pre>
-                    : v.join(", "))
-                : typeof v === "object"
-                ? <pre className="whitespace-pre-wrap text-xs bg-muted/40 rounded p-2">{JSON.stringify(v, null, 2)}</pre>
-                : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
-            </dd>
+            <dt className="text-muted-foreground font-medium">{humanizeKey(k)}</dt>
+            <dd className="text-foreground break-words">{renderValue(v)}</dd>
           </Fragment>
         ))}
       </dl>
     );
   };
+
 
 
   return (
