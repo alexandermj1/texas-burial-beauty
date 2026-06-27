@@ -810,6 +810,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               }}
               onRefresh={onRefresh}
               standalone
+              hideProfileEditor
             />
           </div>
         )}
