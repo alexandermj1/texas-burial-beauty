@@ -257,10 +257,11 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       {
         chapter: "The property",
         title: <>And what <span className="italic font-medium text-primary">kind</span> of property?</>,
-        helper: "Pick a type, tell us how many spaces, and the section if you know it.",
+        helper: "Pick a type, tell us the section or garden name, and how many spaces.",
         validate: () => {
           if (!form.propertyType) return "Please choose a property type.";
           if (form.propertyType === "Other" && !form.propertyTypeOther.trim()) return "Please tell us what kind of property.";
+          if (!form.section.trim()) return "Please enter the section or garden name.";
           return null;
         },
         body: (
