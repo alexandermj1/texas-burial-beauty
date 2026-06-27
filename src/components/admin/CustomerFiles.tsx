@@ -244,10 +244,10 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     });
     if (entries.length === 0) return null;
     return (
-      <dl className="mt-1 grid grid-cols-1 gap-y-0.5 text-[10px]">
+      <dl className="mt-1.5 grid grid-cols-1 gap-y-1 text-xs">
         {entries.map(([k, v]) => (
-          <div key={k} className="flex gap-1.5 leading-tight">
-            <dt className="text-muted-foreground capitalize shrink-0">{k.replace(/_/g, " ")}:</dt>
+          <div key={k} className="flex gap-2 leading-snug">
+            <dt className="text-muted-foreground capitalize shrink-0 font-medium">{k.replace(/_/g, " ")}:</dt>
             <dd className="text-foreground break-words">
               {Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
             </dd>
