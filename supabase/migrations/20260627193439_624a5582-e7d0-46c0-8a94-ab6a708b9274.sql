@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.canonical_cemetery(text) TO authenticated, anon, service_role;
