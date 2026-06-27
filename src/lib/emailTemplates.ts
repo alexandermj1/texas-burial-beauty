@@ -38,7 +38,7 @@ interface SellerInput {
 }
 
 export const buildSellerIntakeTemplate = (i: SellerInput): EmailTemplate => {
-  const cemetery = i.cemetery ? ` at ${i.cemetery}` : "";
+  const cemetery = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
   const missing: string[] = [];
 
   if (!i.section?.trim()) missing.push("Garden / section name");
