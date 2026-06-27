@@ -573,7 +573,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* === Region tabs: Texas vs Bayer pipelines === */}
+      {/* Region tabs hidden — Texas-only view. Bayer code is preserved above. */}
+      {false && (
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
         {(["all", "texas", "bayer"] as const).map(r => {
           const count = r === "all"
@@ -600,8 +601,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           );
         })}
       </div>
-
-      {/* === Texas cemetery directory (texas tab only) === */}
+      )}
       {regionFilter === "texas" && !isMobile && (
         <div className="lg:col-span-12">
           <TexasCemeteriesPanel
