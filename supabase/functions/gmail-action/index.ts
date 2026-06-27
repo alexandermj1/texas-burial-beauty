@@ -20,6 +20,7 @@ const SendSchema = z.object({
   bcc: z.string().max(2000).optional().default(""),
   subject: z.string().max(998).optional().default(""),
   body: z.string().max(200000).optional().default(""),
+  htmlBody: z.string().max(400000).optional(),
   threadId: z.string().max(200).optional(),
   inReplyToGmailId: z.string().max(200).optional(),
 });
@@ -60,23 +61,40 @@ function encodeBase64Url(s: string): string {
 
 function buildRfc2822(opts: {
   from: string; to: string; cc?: string; bcc?: string;
-  subject: string; body: string;
+  subject: string; body: string; htmlBody?: string;
   inReplyTo?: string; references?: string;
 }): string {
-  const lines: string[] = [];
-  lines.push(`From: ${opts.from}`);
-  lines.push(`To: ${opts.to}`);
-  if (opts.cc) lines.push(`Cc: ${opts.cc}`);
-  if (opts.bcc) lines.push(`Bcc: ${opts.bcc}`);
-  lines.push(`Subject: ${opts.subject}`);
-  if (opts.inReplyTo) lines.push(`In-Reply-To: ${opts.inReplyTo}`);
-  if (opts.references) lines.push(`References: ${opts.references}`);
-  lines.push("MIME-Version: 1.0");
-  lines.push('Content-Type: text/plain; charset="UTF-8"');
-  lines.push("Content-Transfer-Encoding: 7bit");
-  lines.push("");
-  lines.push(opts.body);
-  return lines.join("\r\n");
+  const headers: string[] = [];
+  headers.push(`From: ${opts.from}`);
+  headers.push(`To: ${opts.to}`);
+  if (opts.cc) headers.push(`Cc: ${opts.cc}`);
+  if (opts.bcc) headers.push(`Bcc: ${opts.bcc}`);
+  headers.push(`Subject: ${opts.subject}`);
+  if (opts.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`);
+  if (opts.references) headers.push(`References: ${opts.references}`);
+  headers.push("MIME-Version: 1.0");
+
+  if (opts.htmlBody) {
+    const boundary = `=_tcb_${crypto.randomUUID().replace(/-/g, "")}`;
+    headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
+    const parts: string[] = [];
+    parts.push(`--${boundary}`);
+    parts.push('Content-Type: text/plain; charset="UTF-8"');
+    parts.push("Content-Transfer-Encoding: 8bit");
+    parts.push("");
+    parts.push(opts.body || "");
+    parts.push(`--${boundary}`);
+    parts.push('Content-Type: text/html; charset="UTF-8"');
+    parts.push("Content-Transfer-Encoding: 8bit");
+    parts.push("");
+    parts.push(opts.htmlBody);
+    parts.push(`--${boundary}--`);
+    return [...headers, "", ...parts].join("\r\n");
+  }
+
+  headers.push('Content-Type: text/plain; charset="UTF-8"');
+  headers.push("Content-Transfer-Encoding: 8bit");
+  return [...headers, "", opts.body].join("\r\n");
 }
 
 async function resolveGmailKey(lovableKey: string): Promise<string | null> {
@@ -154,6 +172,7 @@ Deno.serve(async (req) => {
         bcc: input.bcc,
         subject: input.subject || "(no subject)",
         body: input.body,
+        htmlBody: input.htmlBody,
         inReplyTo,
         references,
       });
