@@ -108,10 +108,16 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "new" | "awaiting_reply";
+type StatusFilter = "all" | "new" | "awaiting_reply" | "needs_followup";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
 type DocsFilter = "all" | "with" | "without";
+
+// Phrases in OUR outgoing emails that indicate we committed to following up.
+// If the latest message in a thread is from us and contains one of these, AND
+// enough time has passed without further contact, surface it as "Follow up".
+const FOLLOWUP_PROMISE_RX = /\b(i['’]?ll|i will|we['’]?ll|we will|let me|going to|gonna)\s+(follow\s*up|get back to you|circle back|check|look into|find out|reach out|send|email|call|get you|have|loop back|update you|let you know|confirm|verify)\b|\b(get back to you|circle back|follow up with you|i['’]?ll be in touch|i['’]?ll have an? (answer|update)|by (tomorrow|monday|tuesday|wednesday|thursday|friday|the end of (the )?(day|week))|shortly|in a (few|couple) days?)\b/i;
+const FOLLOWUP_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
 
 // Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
