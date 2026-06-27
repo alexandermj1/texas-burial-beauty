@@ -827,6 +827,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Needs reply
                           </span>
                         )}
+                        {!awaitingMap[s.id] && followupMap[s.id] && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
+                            title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                            Follow up
+                          </span>
+                        )}
                         {hasDocs(s) && (
                           <span
                             className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 shadow-sm"
