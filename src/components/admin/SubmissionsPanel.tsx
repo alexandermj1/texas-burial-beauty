@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -473,16 +473,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-    // Pin awaiting-reply first (they're waiting on us right now), then follow-up promises
-    // we made and forgot about, then the rest.
+    // Order: Needs reply → Needs quote → Needs follow-up → everything else.
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort((a, b) =>
       (awaitingMap[b.id] || "").localeCompare(awaitingMap[a.id] || "")
     );
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && followupMap[s.id]).sort((a, b) =>
+    const quoteRows = matches.filter(s => !awaitingMap[s.id] && (s as any).needs_quote);
+    const followupRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id]).sort((a, b) =>
       (followupMap[b.id]?.since || "").localeCompare(followupMap[a.id]?.since || "")
     );
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !followupMap[s.id]);
-    return [...awaitingRows, ...followupRows, ...otherRows];
+    const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]);
+    return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+
   }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
 
 
@@ -851,13 +852,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                         {!awaitingMap[s.id] && (s as any).needs_quote && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-900 border border-violet-300 shadow-sm"
-                            title="Seller intake sent — quote owed"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-violet-600 text-white border border-violet-700 shadow-sm"
+                            title="Quote owed to seller"
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-violet-600 animate-pulse" />
+                            <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
                             Needs quote
                           </span>
                         )}
+
                         {!awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id] && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
