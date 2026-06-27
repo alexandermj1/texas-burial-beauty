@@ -787,13 +787,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {regionFilter === "texas" && cemeteryLabel && (
-          <div className="flex items-center justify-between gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-500/30 text-xs">
-            <span className="text-amber-900 dark:text-amber-100">
+          <div className="flex items-center justify-between gap-2 px-4 py-2 bg-[hsl(var(--status-nodocs-soft))] border-b border-[hsl(var(--status-nodocs-border))] text-xs">
+            <span className="text-[hsl(var(--status-nodocs-fg))]">
               Showing submissions for <span className="font-semibold">{cemeteryLabel}</span> ({filtered.length})
             </span>
             <button
               onClick={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
-              className="text-amber-700 hover:text-amber-900 font-medium underline-offset-2 hover:underline"
+              className="text-[hsl(var(--status-nodocs-fg))] hover:text-[hsl(var(--status-nodocs))] font-medium underline-offset-2 hover:underline"
             >
               Clear filter
             </button>
@@ -947,7 +947,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       ) : null}
                     </p>
                     {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
-                      <p className="text-[10px] text-amber-700 dark:text-amber-400 italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
+                      <p className="text-[10px] text-[hsl(var(--status-nodocs-fg))] italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
                         ✎ originally: "{(s as any).cemetery_original}"
                       </p>
                     )}
@@ -1020,7 +1020,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} source={selected.source} sourceEmailId={(selected as any).source_email_id} />
                     <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source, selected.inquiry_channel)}</p>
                     {selected.source === "manual_phone" && (selected as any).handled_by_name && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))]">
                         <UserPlus className="w-3 h-3" /> Added by {cleanDisplayName((selected as any).handled_by_name)}
                       </span>
                     )}
@@ -1077,7 +1077,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   {isAwaiting && (
                     <button
                       onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))] hover:bg-[hsl(var(--status-nodocs-soft))]/70 transition-colors"
                       title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
                     >
                       <CheckCircle className="w-3.5 h-3.5" /> Doesn't need a reply
@@ -1210,7 +1210,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
                 {(selected as any).cemetery_original && (selected as any).cemetery_original !== selected.cemetery && (
                   <div className="mt-2 pt-2 border-t border-border/40">
-                    <p className="text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-1">
+                    <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--status-nodocs-fg))] mb-1">
                       Originally written by customer
                     </p>
                     <p className="text-xs text-foreground break-words italic">"{(selected as any).cemetery_original}"</p>
@@ -1265,7 +1265,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery (as written by customer)</p>
                       <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
                       {contact && (
-                        <p className={`text-[11px] mt-1 ${uncertain ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}`}>
+                        <p className={`text-[11px] mt-1 ${uncertain ? "text-[hsl(var(--status-nodocs-fg))]" : "text-muted-foreground"}`}>
                           {uncertain ? "⚠ Best guess match — please verify: " : "Matched directory entry: "}
                           <span className="font-medium text-foreground">{contact.name}</span>
                         </p>
@@ -1427,13 +1427,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
                 {/* Typing banner — iMessage style */}
                 {typingUsers.length > 0 && (
-                  <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
+                  <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--status-nodocs-border))] bg-[hsl(var(--status-nodocs-soft))] px-3 py-2">
                     <span className="inline-flex gap-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "0ms" }} />
                       <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "120ms" }} />
                       <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "240ms" }} />
                     </span>
-                    <p className="text-xs text-amber-900 dark:text-amber-200">
+                    <p className="text-xs text-[hsl(var(--status-nodocs-fg))]">
                       <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
                     </p>
                   </div>
