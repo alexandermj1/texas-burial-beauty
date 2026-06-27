@@ -1198,6 +1198,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       deedOwnersStatus: x.deed_owners_status,
                       relationshipToOwner: x.relationship_to_owner,
                       hasAttachments: hasDocs(selected),
+                      deedExtractedOwners: selectedDeedOwners,
                     }),
                   ];
               return (
