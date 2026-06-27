@@ -385,10 +385,10 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
-      <div className={`md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
+      <div className={`lg:hidden md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
         <Navbar forceScrolled />
       </div>
-      <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
+      <section className={`flex-1 ${focused ? "pt-24 lg:pt-6 pb-10" : "pt-28 lg:pt-8 pb-16"}`}>
         <div className={focused ? "w-full px-4 lg:px-8" : "w-full px-4 lg:px-8"}>
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
@@ -405,14 +405,14 @@ const Admin = () => {
                 </button>
                 <h1 className="font-display text-lg text-foreground shrink-0 hidden md:block">Admin</h1>
                 <div className="flex-1 flex justify-center">
-                  <div data-tour="search-bar" className="relative w-full max-w-2xl">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <div data-tour="search-bar" className="relative w-full max-w-2xl lg:max-w-3xl">
+                    <Search className="absolute left-4 lg:left-5 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder={searchPlaceholder}
-                      className="w-full pl-11 pr-4 py-2.5 rounded-full bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-soft"
+                      className="w-full pl-11 lg:pl-14 pr-4 py-2.5 lg:py-3.5 rounded-full bg-card border border-border lg:border-2 text-sm lg:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 shadow-soft lg:shadow-md transition-all"
                     />
                   </div>
                 </div>
