@@ -15,6 +15,7 @@ import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORD
 import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
+import CemeteryInfoCard from "./CemeteryInfoCard";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
@@ -810,6 +811,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               }}
               onRefresh={onRefresh}
               standalone
+              hideProfileEditor
             />
           </div>
         )}
@@ -981,10 +983,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
-      <div data-tour="detail-panel" className={`lg:col-span-7 lg:order-none ${isMobile ? "hidden" : ""}`}>
+      <div data-tour="detail-panel" className={`lg:col-span-7 lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
+        {cemeteryCanon && cemeteryLabel && (
+          <CemeteryInfoCard
+            key={cemeteryCanon}
+            canon={cemeteryCanon}
+            displayName={cemeteryLabel}
+            submissionCount={filtered.length}
+            onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
+          />
+        )}
         {!selected ? (
           <div className="bg-card rounded-xl border border-border/50 p-10 text-center text-sm text-muted-foreground">
-            Select a submission to view details.
+            {cemeteryCanon ? "Select a submission from the list to view its details." : "Select a submission to view details."}
           </div>
         ) : (
           <motion.div
