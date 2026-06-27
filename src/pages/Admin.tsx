@@ -15,6 +15,7 @@ import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
+import TexasCemeteriesPanel from "@/components/admin/TexasCemeteriesPanel";
 import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipelinePanel";
 import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
@@ -793,37 +794,13 @@ const Admin = () => {
           )}
 
           {tab === "cemeteries" && (
-            <div>
-              <div className="bg-card rounded-2xl p-6 shadow-soft mb-6">
-                <h2 className="font-display text-xl text-foreground mb-4">Add New Cemetery</h2>
-                <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div><label className="text-xs text-muted-foreground">Cemetery Name</label><input value={newCemetery.name} onChange={e => setNewCemetery(p => ({ ...p, name: e.target.value }))} className={inputClass + " w-full"} placeholder="e.g. Rose Hills" /></div>
-                  <div><label className="text-xs text-muted-foreground">City</label><input value={newCemetery.city} onChange={e => setNewCemetery(p => ({ ...p, city: e.target.value }))} className={inputClass + " w-full"} placeholder="e.g. San Jose" /></div>
-                  <div><label className="text-xs text-muted-foreground">Region</label><select value={newCemetery.region} onChange={e => setNewCemetery(p => ({ ...p, region: e.target.value }))} className={inputClass + " w-full"}><option>Peninsula & SF</option><option>South Bay</option><option>East Bay</option><option>North Bay</option></select></div>
-                  <div><label className="text-xs text-muted-foreground">Address</label><input value={newCemetery.address} onChange={e => setNewCemetery(p => ({ ...p, address: e.target.value }))} className={inputClass + " w-full"} placeholder="Full address" /></div>
-                </div>
-                <button
-                  onClick={() => {
-                    if (!newCemetery.name || !newCemetery.city) { toast({ title: "Name and city are required", variant: "destructive" }); return; }
-                    toast({ title: "Cemetery added", description: `${newCemetery.name} has been added.` });
-                    setNewCemetery({ name: "", city: "", region: "Peninsula & SF", address: "" });
-                  }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-full hover:opacity-90 transition-opacity"
-                >
-                  <Plus className="w-4 h-4" /> Add Cemetery
-                </button>
-              </div>
-
-              <h2 className="font-display text-xl text-foreground mb-4">Cemeteries ({filteredCemeteries.length})</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredCemeteries.map((cem) => (
-                  <div key={`${cem.name}-${cem.city}`} className="bg-card rounded-xl p-4 border border-border/50">
-                    <h3 className="font-display text-sm text-foreground">{cem.name}</h3>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {cem.city} · {cem.region}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <TexasCemeteriesPanel
+              texasSubmissions={submissions.filter((s: any) =>
+                (s.region_tag || "").toLowerCase() === "texas" || (s.region || "").toLowerCase().includes("texas")
+              )}
+              onRefresh={handleInboxRefresh}
+              standalone
+            />
           )}
           <div className="mt-10 flex items-center justify-end gap-3 flex-wrap">
             <button
