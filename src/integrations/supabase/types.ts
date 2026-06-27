@@ -1445,6 +1445,8 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          process_info: string | null
+          sections: Json
           transfer_fee: number | null
           typical_prices: string | null
           updated_at: string
@@ -1465,6 +1467,8 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          process_info?: string | null
+          sections?: Json
           transfer_fee?: number | null
           typical_prices?: string | null
           updated_at?: string
@@ -1485,6 +1489,8 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          process_info?: string | null
+          sections?: Json
           transfer_fee?: number | null
           typical_prices?: string | null
           updated_at?: string
