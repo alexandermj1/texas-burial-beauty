@@ -995,7 +995,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           />
         )}
         {!selected ? (
-          <div className="bg-gradient-to-br from-card/85 via-card/80 to-sand-light/30 dark:from-card/80 dark:via-card/70 dark:to-card/60 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_8px_32px_-16px_hsl(var(--primary)/0.2)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
+          <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
             {cemeteryCanon ? "Select a submission from the list to view its details." : "Select a submission to view details."}
           </div>
         ) : (
@@ -1003,7 +1003,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             key={selected.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-card/90 via-card/85 to-sand-light/25 dark:from-card/85 dark:via-card/80 dark:to-card/70 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_12px_40px_-16px_hsl(var(--primary)/0.25)] ring-1 ring-primary/5 p-6 space-y-5"
+            className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
