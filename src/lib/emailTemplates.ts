@@ -92,5 +92,5 @@ Great news — we currently have ${desc}${at} available that matches what you're
 I'd be happy to share the full details and pricing. When would be a good time for a quick call, or would you prefer I send the information by email?
 
 ${signature(i.adminName)}`;
-  return { id: "buyer_have", label: "Buyer — we have a match", body };
+  return { id: "buyer_have", label: "We have a match", body };
 };
