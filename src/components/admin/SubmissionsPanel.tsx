@@ -442,6 +442,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
+      if (eFilter === "needs_followup" && !followupMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
@@ -450,14 +451,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-    // Pin awaiting-reply submissions to the top (most recent incoming first).
-    // Everything else keeps its incoming order (already sorted by created_at desc upstream).
+    // Pin awaiting-reply first (they're waiting on us right now), then follow-up promises
+    // we made and forgot about, then the rest.
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort((a, b) =>
       (awaitingMap[b.id] || "").localeCompare(awaitingMap[a.id] || "")
     );
-    const otherRows = matches.filter(s => !awaitingMap[s.id]);
-    return [...awaitingRows, ...otherRows];
-  }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+    const followupRows = matches.filter(s => !awaitingMap[s.id] && followupMap[s.id]).sort((a, b) =>
+      (followupMap[b.id]?.since || "").localeCompare(followupMap[a.id]?.since || "")
+    );
+    const otherRows = matches.filter(s => !awaitingMap[s.id] && !followupMap[s.id]);
+    return [...awaitingRows, ...followupRows, ...otherRows];
+  }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
