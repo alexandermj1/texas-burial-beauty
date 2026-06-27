@@ -125,7 +125,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         upsert: false,
       });
       if (upErr) throw upErr;
-      const { error: insErr } = await supabase.from("customer_files" as any).insert({
+      const { data: insRow, error: insErr } = await supabase.from("customer_files" as any).insert({
         customer_profile_id: customerId,
         uploaded_by_user_id: user?.id ?? null,
         uploaded_by_name: actorName,
@@ -134,8 +134,12 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         file_size: pendingFile.size,
         mime_type: pendingFile.type,
         document_type: finalDocType,
-      });
+      }).select("id").single();
       if (insErr) throw insErr;
+      // Fire-and-forget AI extraction
+      if ((insRow as any)?.id) {
+        supabase.functions.invoke("extract-attachment-info", { body: { file_id: (insRow as any).id } }).catch(() => {});
+      }
       const destination = customerName ? `to ${customerName}'s file` : "to customer file";
       await supabase.from("customer_activity_log" as any).insert({
         customer_profile_id: customerId,
