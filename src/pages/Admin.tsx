@@ -383,7 +383,7 @@ const Admin = () => {
   const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-sand-light/40 to-sage-light/30">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-sand-light/60 via-background to-sage-light/40 dark:from-background dark:via-background dark:to-background">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
       <div className={`lg:hidden md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
         <Navbar forceScrolled />
@@ -393,7 +393,7 @@ const Admin = () => {
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
             <>
-              <div className="mb-5 flex items-center gap-3 rounded-2xl bg-card/70 backdrop-blur-md border border-border/60 shadow-soft px-3 lg:px-4 py-2.5">
+              <div className="mb-5 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-card/85 via-sand-light/40 to-sage-light/30 dark:from-card/70 dark:via-card/60 dark:to-card/70 backdrop-blur-md border border-border/60 shadow-[0_6px_28px_-12px_hsl(var(--primary)/0.3)] ring-1 ring-primary/5 px-3 lg:px-4 py-2.5">
                 <button
                   data-tour="menu-button"
                   onClick={() => setMenuOpen(o => !o)}
@@ -444,7 +444,7 @@ const Admin = () => {
                 </button>
               </div>
               {menuOpen && (
-                <div data-tour="menu-panel" className="flex gap-1.5 mb-5 flex-wrap p-3 bg-card/70 backdrop-blur-md rounded-2xl border border-border/60 shadow-soft">
+                <div data-tour="menu-panel" className="flex gap-1.5 mb-5 flex-wrap p-3 bg-gradient-to-r from-card/80 via-sand-light/30 to-sage-light/25 dark:from-card/70 dark:via-card/60 dark:to-card/70 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.25)] ring-1 ring-primary/5">
                   {tabsConfig.map(({ key, label, Icon, count }) => {
                     const active = tab === key;
                     return (
