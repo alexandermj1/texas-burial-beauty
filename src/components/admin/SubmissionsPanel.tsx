@@ -147,6 +147,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Map of submission_id -> latest incoming email received_at (ISO) when the latest
   // message in the thread is from the customer (i.e. we haven't replied yet).
   const [awaitingMap, setAwaitingMap] = useState<Record<string, string>>({});
+  // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
+  // when WE promised to follow up and haven't sent anything since (older than threshold).
+  const [followupMap, setFollowupMap] = useState<Record<string, { since: string; phrase: string }>>({});
   const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
   const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
