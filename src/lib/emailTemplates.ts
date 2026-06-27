@@ -75,7 +75,7 @@ interface BuyerInput {
 }
 
 export const buildBuyerNoInventoryTemplate = (i: BuyerInput): EmailTemplate => {
-  const at = i.cemetery ? ` at ${i.cemetery}` : "";
+  const at = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
   const body = `Dear ${first(i.recipientName)},
 
 Thank you for reaching out about cemetery property${at}.
