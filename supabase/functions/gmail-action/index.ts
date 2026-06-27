@@ -172,6 +172,7 @@ Deno.serve(async (req) => {
         bcc: input.bcc,
         subject: input.subject || "(no subject)",
         body: input.body,
+        htmlBody: input.htmlBody,
         inReplyTo,
         references,
       });
