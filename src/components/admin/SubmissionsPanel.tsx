@@ -14,7 +14,7 @@ import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
-// TexasCemeteriesPanel now lives in the Cemeteries tab (see src/pages/Admin.tsx).
+import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
@@ -164,6 +164,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const { countFor } = useActiveListings();
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
   const isMobile = useIsMobile();
   const adminName = useAdminDisplayName();
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
@@ -689,15 +690,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         })}
 
         <div className="ml-auto flex items-center gap-1.5">
-          {onViewCemeteries && (
-            <button
-              onClick={onViewCemeteries}
-              className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
-              title="Open the Cemeteries directory"
-            >
-              <Building2 className="w-3.5 h-3.5" /> Cemeteries
-            </button>
-          )}
+          <button
+            onClick={() => setCemeteriesOpen(o => !o)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+              cemeteriesOpen
+                ? "bg-foreground text-background border-foreground"
+                : "bg-card text-muted-foreground border-border hover:text-foreground"
+            }`}
+            title="Show the Cemeteries directory in this tab"
+          >
+            <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide cemeteries" : "Cemeteries"}
+          </button>
           <button
             data-tour="add-submission"
             onClick={() => setAddOpen(true)}
@@ -794,6 +797,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
           </div>
         )}
+
+        {cemeteriesOpen && (
+          <div className="border-b border-border bg-muted/20 p-4">
+            <TexasCemeteriesPanel
+              texasSubmissions={texasSubmissions}
+              activeCemeteryCanon={cemeteryCanon}
+              onSelectCemetery={(canon, label) => {
+                setCemeteryCanon(canon);
+                setCemeteryLabel(label);
+                if (canon) setCemeteriesOpen(false);
+              }}
+              onRefresh={onRefresh}
+              standalone
+            />
+          </div>
+        )}
+
 
         {(() => {
           const renderRow = (s: Submission, i: number) => {
