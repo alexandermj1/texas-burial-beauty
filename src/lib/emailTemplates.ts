@@ -3,6 +3,7 @@
 // Buyers get two options: "we don't have it" and "we have it".
 
 import { cleanDisplayName } from "@/lib/displayName";
+import { properCase, properFirstName } from "@/lib/properCase";
 
 export interface EmailTemplate {
   id: string;
@@ -12,9 +13,12 @@ export interface EmailTemplate {
 
 const first = (name?: string | null): string => {
   const c = cleanDisplayName(name || "");
-  if (!c) return "there";
-  return c.split(/\s+/)[0];
+  const cased = properFirstName(c);
+  return cased || "there";
 };
+
+const cem = (c?: string | null) => properCase(c || "");
+
 
 const signature = (adminName?: string | null) =>
   adminName ? `Best regards,\n${adminName}\nTexas Cemetery Brokers` : `Best regards,\nTexas Cemetery Brokers`;
