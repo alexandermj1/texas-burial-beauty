@@ -481,15 +481,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
+    // Within each group, always sort newest → oldest by created_at so brand-new
+    // submissions surface at the top of their bucket.
+    const byNewest = (a: Submission, b: Submission) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     // Order: Needs reply → Needs quote → Needs follow-up → everything else.
-    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort((a, b) =>
-      (awaitingMap[b.id] || "").localeCompare(awaitingMap[a.id] || "")
-    );
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && (s as any).needs_quote);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id]).sort((a, b) =>
-      (followupMap[b.id]?.since || "").localeCompare(followupMap[a.id]?.since || "")
-    );
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]);
+    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byNewest);
+    const quoteRows = matches.filter(s => !awaitingMap[s.id] && (s as any).needs_quote).sort(byNewest);
+    const followupRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id]).sort(byNewest);
+    const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]).sort(byNewest);
     return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
 
   }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
