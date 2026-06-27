@@ -995,7 +995,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           />
         )}
         {!selected ? (
-          <div className="bg-card rounded-xl border border-border/50 p-10 text-center text-sm text-muted-foreground">
+          <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-soft p-10 text-center text-sm text-muted-foreground">
             {cemeteryCanon ? "Select a submission from the list to view its details." : "Select a submission to view details."}
           </div>
         ) : (
@@ -1003,7 +1003,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             key={selected.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-xl border border-border/50 p-6 space-y-5"
+            className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-soft p-6 space-y-5"
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
