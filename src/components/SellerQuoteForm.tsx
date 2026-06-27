@@ -648,6 +648,12 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
 
           <motion.form
             onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              // Prevent Enter from auto-submitting or advancing — user must click.
+              if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
+                e.preventDefault();
+              }
+            }}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
