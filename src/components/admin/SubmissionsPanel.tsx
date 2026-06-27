@@ -138,7 +138,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
+  // Bayer pipeline is temporarily hidden — submissions panel is Texas-only for now.
+  // Keep the state + setter so the rest of the code (cemetery directory, filters,
+  // and the Bayer code paths) remains intact and easy to re-enable later.
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>("texas");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
