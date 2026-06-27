@@ -593,7 +593,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
                 active
                   ? r === "texas"
-                    ? "bg-amber-600 text-white border-amber-600"
+                    ? "bg-[hsl(var(--status-nodocs))] text-white border-[hsl(var(--status-nodocs))]"
                     : r === "bayer"
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-foreground text-background border-foreground"
@@ -637,20 +637,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   : submissions.filter(s => awaitingMap[s.id]).length;
           const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_quote: "Needs quote", needs_followup: "Follow up" } as const;
           const activeCls = f === "awaiting_reply"
-            ? "bg-rose-600 text-white border-rose-600"
+            ? "bg-[hsl(var(--status-reply))] text-white border-[hsl(var(--status-reply))]"
             : f === "needs_quote"
-              ? "bg-violet-600 text-white border-violet-600"
+              ? "bg-[hsl(var(--status-quote))] text-white border-[hsl(var(--status-quote))]"
               : f === "needs_followup"
-                ? "bg-indigo-600 text-white border-indigo-600"
+                ? "bg-[hsl(var(--status-followup))] text-white border-[hsl(var(--status-followup))]"
                 : "bg-foreground text-background border-foreground";
           // Tint the inactive pill so each status is visually identifiable at a glance,
           // not just a row of muted gray pills.
           const inactiveCls = f === "awaiting_reply"
-            ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900"
+            ? "bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border-[hsl(var(--status-reply-border))] hover:bg-[hsl(var(--status-reply-soft))]/70"
             : f === "needs_quote"
-              ? "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 dark:bg-violet-950/30 dark:text-violet-300 dark:border-violet-900"
+              ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
               : f === "needs_followup"
-                ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-300 dark:border-indigo-900"
+                ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
                 : "bg-card text-muted-foreground border-border hover:text-foreground";
           return (
             <button
@@ -673,7 +673,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           const activeCls: Record<KindFilter, string> = {
             all: "bg-foreground text-background border-foreground",
             seller: "bg-primary text-primary-foreground border-primary",
-            buyer: "bg-emerald-600 text-white border-emerald-600",
+            buyer: "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))]",
             contact: "bg-foreground text-background border-foreground",
           };
           return (
@@ -773,9 +773,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
                     isActive
                       ? f === "with"
-                        ? "bg-emerald-600 text-white border-emerald-600"
+                        ? "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))]"
                         : f === "without"
-                          ? "bg-amber-600 text-white border-amber-600"
+                          ? "bg-[hsl(var(--status-nodocs))] text-white border-[hsl(var(--status-nodocs))]"
                           : "bg-foreground text-background border-foreground"
                       : "bg-card text-muted-foreground border-border hover:text-foreground"
                   }`}
@@ -835,7 +835,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               : beingWorked
                 ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
                 : fresh
-                  ? "bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 border-l-4 border-l-sky-500"
+                  ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
                   : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
             return (
               <div key={s.id}>
@@ -858,7 +858,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="flex items-center justify-between gap-2 mb-0.5">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
-                        {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-sky-500 text-white">New</span>}
+                        {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
                         {beingWorked && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
@@ -873,16 +873,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
                         {awaitingMap[s.id] && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300 shadow-sm dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border border-[hsl(var(--status-reply-border))] shadow-sm"
                             title={`Customer replied ${new Date(awaitingMap[s.id]).toLocaleString()} — no response sent yet`}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-reply))] animate-pulse" />
                             Needs reply
                           </span>
                         )}
                         {!awaitingMap[s.id] && (s as any).needs_quote && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-violet-600 text-white border border-violet-700 shadow-sm"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-[hsl(var(--status-quote))] text-white border border-[hsl(var(--status-quote))] shadow-sm"
                             title="Quote owed to seller"
                           >
                             <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
@@ -892,16 +892,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                         {!awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id] && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border border-[hsl(var(--status-followup-border))] shadow-sm"
                             title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-followup))] animate-pulse" />
                             Follow up
                           </span>
                         )}
                         {hasDocs(s) && (
                           <span
-                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 shadow-sm"
+                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))] shadow-sm"
                             title="Customer submitted attachments"
                           >
                             <Paperclip className="w-3 h-3" />
@@ -1044,7 +1044,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   return (
                     <div className="flex items-center gap-1.5">
                       {isNew(selected) && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-500 text-white">New today</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[hsl(var(--status-new))] text-white">New today</span>
                       )}
                       {sViewers.length > 0 && (
                         <div className="flex items-center gap-1.5" title={`Viewed by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
@@ -1102,12 +1102,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     }}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       manualFollowup
-                        ? "bg-indigo-100 text-indigo-900 border-indigo-300 hover:bg-indigo-200"
+                        ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
                         : "bg-card text-foreground border-border hover:bg-muted/60"
                     }`}
                     title="Manually flag this submission for follow-up so it never falls through the cracks"
                   >
-                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-indigo-600" : "bg-muted-foreground/40"}`} />
+                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
                     {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
                   </button>
                   {(() => {
@@ -1117,12 +1117,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         onClick={() => onUpdate(selected.id, { needs_quote: !needsQuote } as any)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                           needsQuote
-                            ? "bg-violet-100 text-violet-900 border-violet-300 hover:bg-violet-200"
+                            ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
                             : "bg-card text-foreground border-border hover:bg-muted/60"
                         }`}
                         title="Flag this submission as awaiting a quote from us"
                       >
-                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-violet-600" : "bg-muted-foreground/40"}`} />
+                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-[hsl(var(--status-quote))]" : "bg-muted-foreground/40"}`} />
                         {needsQuote ? "Marked needs quote" : "Mark needs quote"}
                       </button>
                     );
