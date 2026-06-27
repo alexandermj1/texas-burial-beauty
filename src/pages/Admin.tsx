@@ -444,7 +444,7 @@ const Admin = () => {
                 </button>
               </div>
               {menuOpen && (
-                <div data-tour="menu-panel" className="flex gap-1.5 mb-5 flex-wrap p-3 bg-card/70 backdrop-blur-md rounded-2xl border border-border/60 shadow-soft">
+                <div data-tour="menu-panel" className="flex gap-1.5 mb-5 flex-wrap p-3 bg-gradient-to-r from-card/80 via-sand-light/30 to-sage-light/25 dark:from-card/70 dark:via-card/60 dark:to-card/70 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.25)] ring-1 ring-primary/5">
                   {tabsConfig.map(({ key, label, Icon, count }) => {
                     const active = tab === key;
                     return (
