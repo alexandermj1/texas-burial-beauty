@@ -133,7 +133,7 @@ const InlineEmailComposer = ({
     toast({ title: "Email sent", description: `Sent to ${to}` });
     setBody(template);
     setBodyTouched(false);
-    onSent?.();
+    onSent?.({ templateId: activeTemplateId });
   };
 
   const checkGrammar = async () => {
