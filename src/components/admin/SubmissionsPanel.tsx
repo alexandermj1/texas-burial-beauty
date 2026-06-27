@@ -852,13 +852,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                         {!awaitingMap[s.id] && (s as any).needs_quote && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-900 border border-violet-300 shadow-sm"
-                            title="Seller intake sent — quote owed"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-violet-600 text-white border border-violet-700 shadow-sm"
+                            title="Quote owed to seller"
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-violet-600 animate-pulse" />
+                            <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
                             Needs quote
                           </span>
                         )}
+
                         {!awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id] && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
