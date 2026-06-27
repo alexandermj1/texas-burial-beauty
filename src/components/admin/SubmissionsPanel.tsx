@@ -691,10 +691,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
         <div className="ml-auto flex items-center gap-1.5">
           <button
-            onClick={() => {
-              setCemeteriesOpen(o => !o);
-              if (onViewCemeteries) onViewCemeteries();
-            }}
+            onClick={() => setCemeteriesOpen(o => !o)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
               cemeteriesOpen
                 ? "bg-foreground text-background border-foreground"
