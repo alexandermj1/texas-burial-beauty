@@ -1094,6 +1094,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   customerName={selected.name}
                   cemetery={x.cemetery_original || selected.cemetery}
                   newEmailTemplates={templates}
+                  onNewEmailSent={(meta) => {
+                    if (meta?.templateId === "seller_intake") {
+                      onUpdate(selected.id, { needs_quote: true } as any);
+                    }
+                  }}
                 />
               );
             })()}
