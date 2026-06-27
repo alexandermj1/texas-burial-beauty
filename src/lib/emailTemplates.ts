@@ -44,9 +44,35 @@ export const buildSellerIntakeTemplate = (i: SellerInput): EmailTemplate => {
   if (!i.section?.trim()) missing.push("Garden / section name");
   const hasPlotDetails = !!(i.spaceNumbers?.trim() || (i.spaces?.trim() && i.propertyType?.trim()));
   if (!hasPlotDetails) missing.push("Lot & space numbers and type of plot (e.g. double-depth lawn crypt, single grave space)");
-  if (!i.deedOwnerNames?.trim()) missing.push("Names of all owners listed on the deed");
-  if (!i.deedOwnersStatus?.trim()) missing.push("Are the plot owner(s) currently living?");
-  if (!i.relationshipToOwner?.trim()) missing.push("Your relationship to the plot owner(s)");
+
+  // Detect vague self-references in the deed owner field ("self", "me", "myself",
+  // "I", "I am the owner", etc.) — we can't tell from this whether they are the
+  // sole owner on the deed or whether there are co-owners. Ask explicitly.
+  const ownerRaw = (i.deedOwnerNames || "").trim();
+  const vagueSelf = /^(self|me|myself|mine|i|i am|i'm|i am the owner|owner|the owner|just me)\.?$/i.test(ownerRaw);
+
+  if (!ownerRaw) {
+    missing.push("The full names of every person currently listed on the deed (exactly as they appear on the deed itself — the cemetery's records are the ultimate source of truth on ownership)");
+  } else if (vagueSelf) {
+    missing.push("Just to confirm — are you the sole name listed on the deed, or are there any co-owners alongside you? If there are others, please share their full names exactly as they appear on the deed");
+  }
+
+  // Heirship vs. recorded ownership clarification. Many sellers describe
+  // themselves as the "owner" when in reality the deed is still recorded in a
+  // deceased relative's name and they hold heirship rights — the next steps
+  // (probate paperwork, affidavit of heirship, etc.) are very different.
+  const relRaw = (i.relationshipToOwner || "").trim().toLowerCase();
+  const looksLikeHeir = /heir|inherit|passed|deceased|estate|probate|mother|father|parent|spouse|husband|wife|sibling|brother|sister|son|daughter|aunt|uncle|grand/.test(relRaw);
+  const statusSuggestsDeceased = /deceas|passed|not living|no longer|died/.test((i.deedOwnersStatus || "").toLowerCase());
+  const ownershipUnclear = !relRaw || looksLikeHeir || statusSuggestsDeceased || vagueSelf;
+
+  if (!i.deedOwnersStatus?.trim()) missing.push("Are the person(s) currently named on the deed still living? If any have passed, please let us know who");
+  if (!i.relationshipToOwner?.trim()) missing.push("Your relationship to the person(s) named on the deed (e.g. you are the named owner, a co-owner, a surviving spouse, an heir, executor of the estate, etc.)");
+
+  if (ownershipUnclear) {
+    missing.push("Whether the deed has been formally transferred into your name with the cemetery, or whether it is still recorded in the original (and possibly deceased) deed holder's name — the cemetery's own records are the source of truth here, so it's worth a quick call to them to confirm whose name is currently on file");
+  }
+
   if (!i.hasAttachments) missing.push("A scanned copy of the deed, plus any original purchase records or evidence of prepaid endowment care / service charges (these can increase the valuation)");
 
   const ask = missing.length
@@ -65,6 +91,7 @@ ${ask}${closing}${signature(i.adminName)}`;
 
   return { id: "seller_intake", label: "Seller intake (asks for missing info)", body };
 };
+
 
 interface BuyerInput {
   recipientName?: string | null;
