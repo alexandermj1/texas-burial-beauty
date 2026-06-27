@@ -26,7 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
-import { Megaphone, UserPlus } from "lucide-react";
+import { Megaphone, UserPlus, Building2 } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -86,6 +86,8 @@ interface Props {
   deletedSubmissions?: any[];
   /** Restore a soft-deleted submission by id. */
   onRestore?: (id: string) => Promise<void>;
+  /** Jump to the Cemeteries tab from the submissions toolbar. */
+  onViewCemeteries?: () => void;
 }
 
 
@@ -131,7 +133,7 @@ const subRegion = (s: Submission): "texas" | "bayer" => {
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore }: Props) => {
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
