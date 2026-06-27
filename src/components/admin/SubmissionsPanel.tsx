@@ -624,7 +624,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Status pills (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap rounded-2xl bg-gradient-to-r from-card/85 via-sand-light/40 to-sage-light/30 dark:from-card/70 dark:via-card/60 dark:to-card/70 backdrop-blur-md border border-border/60 shadow-[0_4px_24px_-12px_hsl(var(--primary)/0.25)] ring-1 ring-primary/5 px-3 py-2.5">
+      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2.5">
         {(["awaiting_reply", "needs_quote", "needs_followup", "new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
@@ -753,9 +753,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/85 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_8px_32px_-16px_hsl(var(--primary)/0.2)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
+      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
         {regionFilter === "texas" && (
-          <div className="flex items-center gap-1.5 flex-wrap px-3 py-2.5 border-b border-border/50 bg-gradient-to-r from-sage-light/40 via-sand-light/40 to-terracotta/10 dark:from-muted/40 dark:via-card/40 dark:to-card/30">
+          <div className="flex items-center gap-1.5 flex-wrap px-3 py-2.5 border-b border-border/50 bg-sand-light/30 dark:bg-muted/20">
 
             <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mr-1">Attachments:</span>
             {(["all", "with", "without"] as const).map(f => {
@@ -995,7 +995,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           />
         )}
         {!selected ? (
-          <div className="bg-gradient-to-br from-card/85 via-card/80 to-sand-light/30 dark:from-card/80 dark:via-card/70 dark:to-card/60 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_8px_32px_-16px_hsl(var(--primary)/0.2)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
+          <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
             {cemeteryCanon ? "Select a submission from the list to view its details." : "Select a submission to view details."}
           </div>
         ) : (
@@ -1003,7 +1003,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             key={selected.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-card/90 via-card/85 to-sand-light/25 dark:from-card/85 dark:via-card/80 dark:to-card/70 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_12px_40px_-16px_hsl(var(--primary)/0.25)] ring-1 ring-primary/5 p-6 space-y-5"
+            className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
