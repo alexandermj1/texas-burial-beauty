@@ -131,7 +131,19 @@ Deno.serve(async (req) => {
         action_type: "file_uploaded",
         action_summary: `Seller attached ${inserted} file${inserted === 1 ? "" : "s"} via intake form`,
       });
+
+      // Fire-and-forget AI extraction on each new file.
+      const fnBase = `${Deno.env.get("SUPABASE_URL")}/functions/v1/extract-attachment-info`;
+      const svc = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      for (const r of fIns ?? []) {
+        fetch(fnBase, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${svc}` },
+          body: JSON.stringify({ file_id: (r as any).id }),
+        }).catch((e) => console.warn("extract invoke failed", e));
+      }
     }
+
 
     return new Response(
       JSON.stringify({ files_attached: inserted, customer_profile_id: profileId }),

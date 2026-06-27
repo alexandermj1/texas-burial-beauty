@@ -700,7 +700,7 @@ Deno.serve(async (req) => {
               console.warn("attachment upload failed", upErr.message);
               continue;
             }
-            const { error: insErr } = await admin.from("customer_files").insert({
+            const { data: insRow, error: insErr } = await admin.from("customer_files").insert({
               customer_profile_id,
               uploaded_by_user_id: null,
               uploaded_by_name: `Email from ${em.from_email}`,
@@ -710,7 +710,7 @@ Deno.serve(async (req) => {
               mime_type: att.mimeType,
               document_type: "Email attachment",
               notes: em.subject ? `From email: ${em.subject}` : null,
-            });
+            }).select("id").maybeSingle();
             if (insErr) {
               console.warn("customer_files insert failed", insErr.message);
               continue;
@@ -722,6 +722,14 @@ Deno.serve(async (req) => {
               action_type: "file_uploaded",
               action_summary: `Saved email attachment "${att.filename}" from ${em.from_email}`,
             });
+            // Fire-and-forget AI extraction
+            if (insRow?.id) {
+              fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/extract-attachment-info`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+                body: JSON.stringify({ file_id: insRow.id }),
+              }).catch((e) => console.warn("extract invoke failed", e));
+            }
             saved++;
           } catch (e) {
             console.warn("attachment processing error", e);

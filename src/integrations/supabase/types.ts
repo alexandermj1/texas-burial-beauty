@@ -603,6 +603,11 @@ export type Database = {
           created_at: string
           customer_profile_id: string
           document_type: string | null
+          extracted_at: string | null
+          extracted_data: Json | null
+          extracted_summary: string | null
+          extraction_error: string | null
+          extraction_status: string | null
           file_name: string
           file_path: string
           file_size: number | null
@@ -616,6 +621,11 @@ export type Database = {
           created_at?: string
           customer_profile_id: string
           document_type?: string | null
+          extracted_at?: string | null
+          extracted_data?: Json | null
+          extracted_summary?: string | null
+          extraction_error?: string | null
+          extraction_status?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
@@ -629,6 +639,11 @@ export type Database = {
           created_at?: string
           customer_profile_id?: string
           document_type?: string | null
+          extracted_at?: string | null
+          extracted_data?: Json | null
+          extracted_summary?: string | null
+          extraction_error?: string | null
+          extraction_status?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null

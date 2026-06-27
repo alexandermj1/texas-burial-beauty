@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cleanDisplayName } from "@/lib/displayName";
-import { Paperclip, Upload, Trash2, Download, FileText, Loader2, Image as ImageIcon, FileQuestion } from "lucide-react";
+import { Paperclip, Upload, Trash2, Download, FileText, Loader2, Image as ImageIcon, FileQuestion, Sparkles, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 
 interface CustomerFileRow {
   id: string;
@@ -19,6 +19,11 @@ interface CustomerFileRow {
   notes: string | null;
   uploaded_by_name: string | null;
   created_at: string;
+  extracted_data: Record<string, any> | null;
+  extracted_summary: string | null;
+  extraction_status: string | null;
+  extraction_error: string | null;
+  extracted_at: string | null;
 }
 
 const DOC_TYPES = [
@@ -120,7 +125,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         upsert: false,
       });
       if (upErr) throw upErr;
-      const { error: insErr } = await supabase.from("customer_files" as any).insert({
+      const { data: insRow, error: insErr } = await supabase.from("customer_files" as any).insert({
         customer_profile_id: customerId,
         uploaded_by_user_id: user?.id ?? null,
         uploaded_by_name: actorName,
@@ -129,8 +134,12 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         file_size: pendingFile.size,
         mime_type: pendingFile.type,
         document_type: finalDocType,
-      });
+      }).select("id").single();
       if (insErr) throw insErr;
+      // Fire-and-forget AI extraction
+      if ((insRow as any)?.id) {
+        supabase.functions.invoke("extract-attachment-info", { body: { file_id: (insRow as any).id } }).catch(() => {});
+      }
       const destination = customerName ? `to ${customerName}'s file` : "to customer file";
       await supabase.from("customer_activity_log" as any).insert({
         customer_profile_id: customerId,
@@ -207,6 +216,45 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     });
     toast({ title: "File deleted" });
     fetchFiles();
+  };
+
+  const reExtract = async (row: CustomerFileRow) => {
+    toast({ title: "AI reading file…", description: row.file_name });
+    const { error } = await supabase.functions.invoke("extract-attachment-info", { body: { file_id: row.id } });
+    if (error) {
+      toast({ title: "Extraction failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "AI extraction complete" });
+    }
+    fetchFiles();
+  };
+
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const toggleExpand = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const renderExtracted = (data: Record<string, any> | null) => {
+    if (!data || typeof data !== "object") return null;
+    const skip = new Set(["summary"]);
+    const entries = Object.entries(data).filter(([k, v]) => {
+      if (skip.has(k)) return false;
+      if (v == null) return false;
+      if (Array.isArray(v) && v.length === 0) return false;
+      if (typeof v === "string" && !v.trim()) return false;
+      return true;
+    });
+    if (entries.length === 0) return null;
+    return (
+      <dl className="mt-1 grid grid-cols-1 gap-y-0.5 text-[10px]">
+        {entries.map(([k, v]) => (
+          <div key={k} className="flex gap-1.5 leading-tight">
+            <dt className="text-muted-foreground capitalize shrink-0">{k.replace(/_/g, " ")}:</dt>
+            <dd className="text-foreground break-words">
+              {Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
   };
 
   return (
@@ -329,7 +377,39 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                   <p className="text-[10px] text-muted-foreground truncate">
                     {formatBytes(f.file_size)} · {f.uploaded_by_name || "admin"} · {formatDate(f.created_at)}
                   </p>
+                  {/* AI summary block */}
+                  {f.extraction_status === "pending" && (
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> AI reading…</p>
+                  )}
+                  {f.extraction_status === "done" && (
+                    <div className="mt-0.5 rounded-md bg-primary/5 border border-primary/20 px-1.5 py-1">
+                      <div className="flex items-start gap-1 text-[10px] text-foreground">
+                        <Sparkles className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                        <span className="leading-tight">{f.extracted_summary || "Extracted"}</span>
+                      </div>
+                      {f.extracted_data && (
+                        <>
+                          <button
+                            onClick={() => toggleExpand(f.id)}
+                            className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-primary hover:underline"
+                          >
+                            {expanded[f.id] ? <><ChevronUp className="w-3 h-3" /> Hide details</> : <><ChevronDown className="w-3 h-3" /> Details</>}
+                          </button>
+                          {expanded[f.id] && renderExtracted(f.extracted_data)}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {f.extraction_status === "failed" && (
+                    <p className="text-[10px] text-destructive truncate" title={f.extraction_error || ""}>AI read failed</p>
+                  )}
+                  {f.extraction_status === "unsupported" && (
+                    <p className="text-[10px] text-muted-foreground">AI: unsupported file type</p>
+                  )}
                   <div className="flex items-center justify-end gap-0.5 -mr-1">
+                    <button onClick={() => reExtract(f)} title="Re-run AI extraction" className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-primary">
+                      <RefreshCw className="w-3 h-3" />
+                    </button>
                     <button onClick={() => downloadFile(f)} title="Download" className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground">
                       <Download className="w-3 h-3" />
                     </button>
