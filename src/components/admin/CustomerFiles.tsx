@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cleanDisplayName } from "@/lib/displayName";
-import { Paperclip, Upload, Trash2, Download, FileText, Loader2, Image as ImageIcon, FileQuestion } from "lucide-react";
+import { Paperclip, Upload, Trash2, Download, FileText, Loader2, Image as ImageIcon, FileQuestion, Sparkles, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 
 interface CustomerFileRow {
   id: string;
@@ -19,6 +19,11 @@ interface CustomerFileRow {
   notes: string | null;
   uploaded_by_name: string | null;
   created_at: string;
+  extracted_data: Record<string, any> | null;
+  extracted_summary: string | null;
+  extraction_status: string | null;
+  extraction_error: string | null;
+  extracted_at: string | null;
 }
 
 const DOC_TYPES = [
