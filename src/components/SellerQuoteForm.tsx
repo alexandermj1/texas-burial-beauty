@@ -114,6 +114,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     if (s === 1) {
       if (!form.cemetery.trim()) return "Please enter the cemetery name.";
       if (!form.propertyType) return "Please choose a property type.";
+      if (!form.section.trim()) return "Please enter the section or garden name.";
     }
     return null;
   };
@@ -125,8 +126,17 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
   };
   const back = () => setStep(s => Math.max(s - 1, 0));
 
+  const composedSection = () => {
+    const sec = form.section.trim();
+    const lot = form.lotNumber.trim();
+    if (sec && lot) return `${sec} · Lot/Space ${lot}`;
+    return sec || lot || "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Guard: only submit from the final step.
+    if (step !== steps.length - 1) return;
     // Re-validate the gated steps before final send.
     for (const s of [0, 1]) {
       const err = validateStep(s);
@@ -142,7 +152,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       cemetery: form.cemetery.trim(),
       property_type: form.propertyType === "Other" && form.propertyTypeOther.trim() ? form.propertyTypeOther.trim() : form.propertyType,
       spaces: form.spaces || null,
-      section: form.section.trim() || null,
+      section: composedSection() || null,
       details: form.details.trim() || null,
       deed_owner_names: form.deedOwnerNames.trim() || null,
       deed_owners_status: form.deedOwnersStatus || null,
