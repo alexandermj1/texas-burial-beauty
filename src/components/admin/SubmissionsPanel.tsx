@@ -15,6 +15,7 @@ import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORD
 import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
+import CemeteryInfoCard from "./CemeteryInfoCard";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
