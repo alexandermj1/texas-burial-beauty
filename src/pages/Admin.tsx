@@ -385,10 +385,10 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
-      <div className={`md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
+      <div className={`lg:hidden md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
         <Navbar forceScrolled />
       </div>
-      <section className={`flex-1 ${focused ? "pt-24 pb-10" : "pt-28 pb-16"}`}>
+      <section className={`flex-1 ${focused ? "pt-6 lg:pt-6 pt-24 pb-10" : "lg:pt-8 pt-28 pb-16"}`}>
         <div className={focused ? "w-full px-4 lg:px-8" : "w-full px-4 lg:px-8"}>
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
