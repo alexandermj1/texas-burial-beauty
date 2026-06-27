@@ -109,7 +109,7 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "new" | "awaiting_reply" | "needs_followup";
+type StatusFilter = "all" | "new" | "awaiting_reply" | "needs_quote" | "needs_followup";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
 type DocsFilter = "all" | "with" | "without";
@@ -464,6 +464,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
+      if (eFilter === "needs_quote" && !(s as any).needs_quote) return false;
       if (eFilter === "needs_followup" && !followupMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
@@ -631,20 +632,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Status pills (desktop only) */}
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["awaiting_reply", "needs_followup", "new", "all"] as const).map(f => {
+        {(["awaiting_reply", "needs_quote", "needs_followup", "new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
             : f === "new"
               ? submissions.filter(s => isNew(s)).length
               : f === "needs_followup"
                 ? submissions.filter(s => followupMap[s.id]).length
-                : submissions.filter(s => awaitingMap[s.id]).length;
-          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_followup: "Follow up" } as const;
+                : f === "needs_quote"
+                  ? submissions.filter(s => (s as any).needs_quote).length
+                  : submissions.filter(s => awaitingMap[s.id]).length;
+          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_quote: "Needs quote", needs_followup: "Follow up" } as const;
           const activeCls = f === "awaiting_reply"
             ? "bg-rose-600 text-white border-rose-600"
-            : f === "needs_followup"
-              ? "bg-indigo-600 text-white border-indigo-600"
-              : "bg-foreground text-background border-foreground";
+            : f === "needs_quote"
+              ? "bg-violet-600 text-white border-violet-600"
+              : f === "needs_followup"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-foreground text-background border-foreground";
           return (
             <button
               key={f}
@@ -692,14 +697,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             <UserPlus className="w-3.5 h-3.5" /> Add submission
           </button>
-          <button
-            data-tour="message-team"
-            onClick={() => setBroadcastOpen(true)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
-            title="Send a notification to the whole team"
-          >
-            <Megaphone className="w-3.5 h-3.5" /> Message team
-          </button>
           {onRefresh && (
             <button
               onClick={async () => {
@@ -717,12 +714,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           )}
           <button
             onClick={() => setTrashOpen(true)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
-            title="View and restore recently deleted submissions"
+            aria-label="Recently deleted submissions"
+            title={`Recently deleted${deletedSubmissions.length ? ` (${deletedSubmissions.length})` : ""}`}
+            className="relative w-8 h-8 inline-flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all"
           >
-            <Trash2 className="w-3.5 h-3.5" /> Recently deleted
+            <Trash2 className="w-3.5 h-3.5" />
             {deletedSubmissions.length > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-foreground font-semibold">
+              <span className="absolute -top-1 -right-1 text-[9px] leading-none px-1 py-0.5 rounded-full bg-muted text-foreground font-semibold border border-border">
                 {deletedSubmissions.length}
               </span>
             )}
