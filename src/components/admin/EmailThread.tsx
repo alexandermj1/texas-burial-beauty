@@ -23,14 +23,18 @@ interface EmailRow {
   gmail_message_id: string | null;
 }
 
+import type { EmailTemplate } from "@/lib/emailTemplates";
+
 interface Props {
   submissionId: string;
   customerEmail: string | null;
   customerName?: string | null;
   cemetery?: string | null;
+  /** Optional templates for the New email composer (first one is loaded by default). */
+  newEmailTemplates?: EmailTemplate[];
 }
 
-const EmailThread = ({ submissionId, customerEmail, customerName, cemetery }: Props) => {
+const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates }: Props) => {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -106,6 +110,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery }: Pr
             to={replyTarget}
             defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
             recipientName={customerName}
+            templates={newEmailTemplates}
             onSent={() => { setComposeNew(false); refresh(); }}
             onCancel={() => setComposeNew(false)}
           />

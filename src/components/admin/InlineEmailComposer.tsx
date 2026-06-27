@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 
+import type { EmailTemplate } from "@/lib/emailTemplates";
+
 interface Props {
   to: string;
   defaultSubject?: string;
@@ -23,6 +25,8 @@ interface Props {
   onCancel?: () => void;
   /** Optional label override for the send button (e.g. "Send reply"). */
   sendLabel?: string;
+  /** Optional preset templates to pick from. First one is loaded by default. */
+  templates?: EmailTemplate[];
 }
 
 const firstName = (name?: string | null): string => {
@@ -40,6 +44,7 @@ const InlineEmailComposer = ({
   onSent,
   onCancel,
   sendLabel = "Send",
+  templates,
 }: Props) => {
   const { toast } = useToast();
   const adminName = useAdminDisplayName();
@@ -49,16 +54,23 @@ const InlineEmailComposer = ({
   const [bodyTouched, setBodyTouched] = useState(false);
   const [checking, setChecking] = useState(false);
   const [preCheckBody, setPreCheckBody] = useState<string | null>(null);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
+    templates && templates.length ? templates[0].id : null,
+  );
 
 
   // Re-template the body whenever the recipient or admin name resolves,
   // until the user has actually edited the textarea.
   const greetLen = useMemo(() => `Dear ${firstName(recipientName)},`.length, [recipientName]);
   const template = useMemo(() => {
+    if (templates && templates.length) {
+      const t = templates.find(x => x.id === activeTemplateId) || templates[0];
+      return t.body;
+    }
     const greet = `Dear ${firstName(recipientName)},`;
     const sig = adminName ? `Best regards,\n${adminName}\nTexas Cemetery Brokers` : `Best regards,\nTexas Cemetery Brokers`;
     return `${greet}\n\n\n\n${sig}`;
-  }, [recipientName, adminName]);
+  }, [recipientName, adminName, templates, activeTemplateId]);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -66,19 +78,28 @@ const InlineEmailComposer = ({
     if (!bodyTouched) setBody(template);
   }, [template, bodyTouched]);
 
+  const applyTemplate = (id: string) => {
+    const t = templates?.find(x => x.id === id);
+    if (!t) return;
+    setActiveTemplateId(id);
+    setBody(t.body);
+    setBodyTouched(false);
+  };
+
   // Autofocus the textarea and place the cursor one line below the greeting
   // so the admin can just start typing the body.
   useEffect(() => {
     if (bodyTouched) return;
     const el = textareaRef.current;
     if (!el) return;
-    const pos = greetLen + 2; // after "Dear X,\n\n"
+    // When a custom template is active, just focus at the end so the user can edit.
+    const pos = templates && templates.length ? body.length : greetLen + 2;
     const id = window.setTimeout(() => {
       el.focus();
       try { el.setSelectionRange(pos, pos); } catch { /* noop */ }
     }, 30);
     return () => window.clearTimeout(id);
-  }, [body, greetLen, bodyTouched]);
+  }, [body, greetLen, bodyTouched, templates]);
 
   useEffect(() => {
     setSubject(defaultSubject);
@@ -171,6 +192,26 @@ const InlineEmailComposer = ({
       <div className="text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground">To:</span> {to}
       </div>
+      {templates && templates.length > 1 && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Template:</span>
+          {templates.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => applyTemplate(t.id)}
+              className={`text-[10px] font-medium px-2 py-1 rounded-full border transition-colors ${
+                activeTemplateId === t.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-border hover:bg-muted"
+              }`}
+              title={`Load: ${t.label}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
       <input
         type="text"
         value={subject}
