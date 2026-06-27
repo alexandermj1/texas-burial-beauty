@@ -1020,6 +1020,55 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               />
             )}
 
+            {/* Reply / follow-up state — Texas only */}
+            {subRegion(selected) === "texas" && (() => {
+              const isAwaiting = !!awaitingMap[selected.id];
+              const isFollowup = !!followupMap[selected.id];
+              const manualFollowup = !!(selected as any).manual_followup;
+              return (
+                <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
+                  {isAwaiting && (
+                    <button
+                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors"
+                      title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Doesn't need a reply
+                    </button>
+                  )}
+                  {!isAwaiting && (selected as any).reply_dismissed_at && (
+                    <button
+                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: null } as any)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
+                      title="Undo — re-enable Needs reply detection"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Re-enable needs reply
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onUpdate(selected.id, { manual_followup: !manualFollowup } as any)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      manualFollowup
+                        ? "bg-indigo-100 text-indigo-900 border-indigo-300 hover:bg-indigo-200"
+                        : "bg-card text-foreground border-border hover:bg-muted/60"
+                    }`}
+                    title="Manually flag this submission for follow-up so it never falls through the cracks"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-indigo-600" : "bg-muted-foreground/40"}`} />
+                    {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
+                  </button>
+                  {isFollowup && !manualFollowup && (
+                    <span className="text-[11px] text-muted-foreground italic">
+                      Auto-flagged from outgoing promise
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
+
+
             {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
             {subRegion(selected) === "texas" && (
               <EmailThread submissionId={selected.id} customerEmail={selected.email} customerName={selected.name} cemetery={(selected as any).cemetery_original || selected.cemetery} />
