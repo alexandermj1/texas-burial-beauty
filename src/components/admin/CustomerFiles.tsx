@@ -377,7 +377,39 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                   <p className="text-[10px] text-muted-foreground truncate">
                     {formatBytes(f.file_size)} · {f.uploaded_by_name || "admin"} · {formatDate(f.created_at)}
                   </p>
+                  {/* AI summary block */}
+                  {f.extraction_status === "pending" && (
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> AI reading…</p>
+                  )}
+                  {f.extraction_status === "done" && (
+                    <div className="mt-0.5 rounded-md bg-primary/5 border border-primary/20 px-1.5 py-1">
+                      <div className="flex items-start gap-1 text-[10px] text-foreground">
+                        <Sparkles className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                        <span className="leading-tight">{f.extracted_summary || "Extracted"}</span>
+                      </div>
+                      {f.extracted_data && (
+                        <>
+                          <button
+                            onClick={() => toggleExpand(f.id)}
+                            className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-primary hover:underline"
+                          >
+                            {expanded[f.id] ? <><ChevronUp className="w-3 h-3" /> Hide details</> : <><ChevronDown className="w-3 h-3" /> Details</>}
+                          </button>
+                          {expanded[f.id] && renderExtracted(f.extracted_data)}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {f.extraction_status === "failed" && (
+                    <p className="text-[10px] text-destructive truncate" title={f.extraction_error || ""}>AI read failed</p>
+                  )}
+                  {f.extraction_status === "unsupported" && (
+                    <p className="text-[10px] text-muted-foreground">AI: unsupported file type</p>
+                  )}
                   <div className="flex items-center justify-end gap-0.5 -mr-1">
+                    <button onClick={() => reExtract(f)} title="Re-run AI extraction" className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-primary">
+                      <RefreshCw className="w-3 h-3" />
+                    </button>
                     <button onClick={() => downloadFile(f)} title="Download" className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground">
                       <Download className="w-3 h-3" />
                     </button>
