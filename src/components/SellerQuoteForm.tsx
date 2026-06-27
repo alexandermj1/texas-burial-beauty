@@ -65,6 +65,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     propertyTypeOther: "",
     spaces: "",
     section: "",
+    lotNumber: "",
     details: "",
     deedOwnerNames: "",
     deedOwnersStatus: "",
