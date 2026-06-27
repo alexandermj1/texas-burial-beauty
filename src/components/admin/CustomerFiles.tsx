@@ -218,6 +218,45 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     fetchFiles();
   };
 
+  const reExtract = async (row: CustomerFileRow) => {
+    toast({ title: "AI reading file…", description: row.file_name });
+    const { error } = await supabase.functions.invoke("extract-attachment-info", { body: { file_id: row.id } });
+    if (error) {
+      toast({ title: "Extraction failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "AI extraction complete" });
+    }
+    fetchFiles();
+  };
+
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const toggleExpand = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const renderExtracted = (data: Record<string, any> | null) => {
+    if (!data || typeof data !== "object") return null;
+    const skip = new Set(["summary"]);
+    const entries = Object.entries(data).filter(([k, v]) => {
+      if (skip.has(k)) return false;
+      if (v == null) return false;
+      if (Array.isArray(v) && v.length === 0) return false;
+      if (typeof v === "string" && !v.trim()) return false;
+      return true;
+    });
+    if (entries.length === 0) return null;
+    return (
+      <dl className="mt-1 grid grid-cols-1 gap-y-0.5 text-[10px]">
+        {entries.map(([k, v]) => (
+          <div key={k} className="flex gap-1.5 leading-tight">
+            <dt className="text-muted-foreground capitalize shrink-0">{k.replace(/_/g, " ")}:</dt>
+            <dd className="text-foreground break-words">
+              {Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
