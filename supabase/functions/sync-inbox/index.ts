@@ -281,24 +281,32 @@ Deno.serve(async (req) => {
     if (!lovableKey) return json({ error: "LOVABLE_API_KEY is not configured" }, 500);
     if (gmailKeys.length === 0) return json({ error: "No Gmail connector keys configured" }, 500);
 
-    // Only sync the info@texascemeterybrokers.com mailbox. Other connected
-    // Gmail accounts (e.g. Alexander's personal inbox) must NOT be ingested —
-    // they would pollute the admin inbox with unrelated mail.
-    const TARGET_MAILBOX = "info@texascemeterybrokers.com";
+    // Sync the brand mailboxes only — info@texascemeterybrokers.com (Texas
+    // forms + replies) and info@bayercemeterybrokers.com (Bayer contact /
+    // Sell-a-Plot / buyer-match forms). Any other connected Gmail account
+    // (e.g. Alexander's personal inbox) is skipped so the admin inbox stays
+    // clean. Add another address to TARGET_MAILBOXES to ingest a new brand.
+    const TARGET_MAILBOXES = new Set([
+      "info@texascemeterybrokers.com",
+      "info@bayercemeterybrokers.com",
+    ]);
     const filteredKeys: string[] = [];
+    const matchedMailboxes: string[] = [];
     for (const k of gmailKeys) {
       try {
         const r = await fetch(`${GMAIL_GATEWAY}/users/me/profile`, { headers: gmailHeaders(lovableKey, k) });
         if (!r.ok) continue;
         const j = await r.json();
-        if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) filteredKeys.push(k);
+        const addr = String(j.emailAddress || "").toLowerCase();
+        if (TARGET_MAILBOXES.has(addr)) { filteredKeys.push(k); matchedMailboxes.push(addr); }
       } catch { /* skip */ }
     }
     if (filteredKeys.length === 0) {
-      return json({ error: `No Gmail connector linked for ${TARGET_MAILBOX}` }, 500);
+      return json({ error: `No Gmail connector linked for ${[...TARGET_MAILBOXES].join(" or ")}` }, 500);
     }
     gmailKeys.length = 0;
     gmailKeys.push(...filteredKeys);
+    console.log("sync-inbox mailboxes:", matchedMailboxes.join(", "));
 
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
