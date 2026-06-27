@@ -1440,12 +1440,15 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           endowment_notes: string | null
           id: string
           name: string
           notes: string | null
           transfer_fee: number | null
+          typical_prices: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address?: string | null
@@ -1457,12 +1460,15 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           endowment_notes?: string | null
           id?: string
           name: string
           notes?: string | null
           transfer_fee?: number | null
+          typical_prices?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address?: string | null
@@ -1474,12 +1480,15 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           endowment_notes?: string | null
           id?: string
           name?: string
           notes?: string | null
           transfer_fee?: number | null
+          typical_prices?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

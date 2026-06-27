@@ -1,0 +1,1 @@
+ALTER TABLE public.texas_cemeteries ADD COLUMN IF NOT EXISTS description text; ALTER TABLE public.texas_cemeteries ADD COLUMN IF NOT EXISTS typical_prices text; ALTER TABLE public.texas_cemeteries ADD COLUMN IF NOT EXISTS website text;
