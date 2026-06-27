@@ -108,10 +108,16 @@ const formatDate = (iso: string) => {
 const cemeterySearchUrl = (cemetery: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(cemetery + " Texas phone number")}`;
 
-type StatusFilter = "all" | "new" | "awaiting_reply";
+type StatusFilter = "all" | "new" | "awaiting_reply" | "needs_followup";
 type KindFilter = "all" | "seller" | "buyer" | "contact";
 type RegionFilter = "all" | "texas" | "bayer";
 type DocsFilter = "all" | "with" | "without";
+
+// Phrases in OUR outgoing emails that indicate we committed to following up.
+// If the latest message in a thread is from us and contains one of these, AND
+// enough time has passed without further contact, surface it as "Follow up".
+const FOLLOWUP_PROMISE_RX = /\b(i['’]?ll|i will|we['’]?ll|we will|let me|going to|gonna)\s+(follow\s*up|get back to you|circle back|check|look into|find out|reach out|send|email|call|get you|have|loop back|update you|let you know|confirm|verify)\b|\b(get back to you|circle back|follow up with you|i['’]?ll be in touch|i['’]?ll have an? (answer|update)|by (tomorrow|monday|tuesday|wednesday|thursday|friday|the end of (the )?(day|week))|shortly|in a (few|couple) days?)\b/i;
+const FOLLOWUP_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
 
 // Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
@@ -141,6 +147,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Map of submission_id -> latest incoming email received_at (ISO) when the latest
   // message in the thread is from the customer (i.e. we haven't replied yet).
   const [awaitingMap, setAwaitingMap] = useState<Record<string, string>>({});
+  // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
+  // when WE promised to follow up and haven't sent anything since (older than threshold).
+  const [followupMap, setFollowupMap] = useState<Record<string, { since: string; phrase: string }>>({});
   const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
   const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
@@ -236,7 +245,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // the submission is awaiting our reply.
   useEffect(() => {
     const texasSubs = submissions.filter(s => subRegion(s) === "texas");
-    if (texasSubs.length === 0) { setAwaitingMap({}); return; }
+    if (texasSubs.length === 0) { setAwaitingMap({}); setFollowupMap({}); return; }
     const texasIds = texasSubs.map(s => s.id);
     // Lower-case address index for matching
     const emailToSub = new Map<string, string>();
@@ -246,7 +255,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     let cancelled = false;
     const extractAddr = (raw: string | null | undefined): string => {
       if (!raw) return "";
-      // from_email/to_email may be "Name <a@b.com>" or comma-separated addresses
       const out: string[] = [];
       const parts = raw.split(",");
       for (const p of parts) {
@@ -256,50 +264,57 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return out.join(",");
     };
     const recompute = async () => {
-      // Pull recent messages (most projects have a few thousand at most).
-      // Ordered desc so the first hit per submission is the latest message.
       const { data } = await supabase
         .from("email_messages" as any)
-        .select("matched_submission_id, from_email, to_email, received_at")
+        .select("matched_submission_id, from_email, to_email, received_at, body_text, snippet")
         .order("received_at", { ascending: false })
         .limit(5000);
       if (cancelled || !data) return;
-      // For each submission, find its latest related message.
-      const latestPerSub = new Map<string, { received_at: string; outgoing: boolean }>();
+      const latestPerSub = new Map<string, { received_at: string; outgoing: boolean; body: string }>();
       for (const row of data as any[]) {
         const fromAddr = extractAddr(row.from_email);
         const toAddrs = extractAddr(row.to_email);
-        // Direct match via matched_submission_id (must be a Texas sub).
         const candidateIds = new Set<string>();
         if (row.matched_submission_id && texasIds.includes(row.matched_submission_id)) {
           candidateIds.add(row.matched_submission_id);
         }
-        // Address match — incoming (customer -> us) or outgoing (us -> customer).
         for (const [addr, sid] of emailToSub.entries()) {
           if (fromAddr.includes(addr) || toAddrs.includes(addr)) candidateIds.add(sid);
         }
         for (const sid of candidateIds) {
-          if (latestPerSub.has(sid)) continue; // already have a newer message
-          latestPerSub.set(sid, { received_at: row.received_at, outgoing: isOutgoing(row.from_email) });
+          if (latestPerSub.has(sid)) continue;
+          latestPerSub.set(sid, {
+            received_at: row.received_at,
+            outgoing: isOutgoing(row.from_email),
+            body: String(row.body_text || row.snippet || ""),
+          });
         }
       }
-      const next: Record<string, string> = {};
+      const nextAwaiting: Record<string, string> = {};
+      const nextFollowup: Record<string, { since: string; phrase: string }> = {};
+      const now = Date.now();
       for (const [sid, info] of latestPerSub.entries()) {
-        if (!info.outgoing) next[sid] = info.received_at;
-      }
-      // Also flag Texas submissions where we've never sent any email at all
-      // (form came in, no outgoing reply yet) — use their created_at as the
-      // "waiting since" timestamp so they sort alongside customer replies.
-      for (const s of texasSubs) {
-        if (next[s.id]) continue;
-        const info = latestPerSub.get(s.id);
-        if (!info) {
-          // No matched messages at all → definitely awaiting a first reply.
-          next[s.id] = s.created_at;
+        if (!info.outgoing) {
+          nextAwaiting[sid] = info.received_at;
+        } else {
+          // We sent the last message — check if it contained a follow-up promise
+          // AND enough time has passed without further contact from either side.
+          const ageMs = now - new Date(info.received_at).getTime();
+          if (ageMs >= FOLLOWUP_THRESHOLD_MS) {
+            const m = info.body.match(FOLLOWUP_PROMISE_RX);
+            if (m) {
+              nextFollowup[sid] = { since: info.received_at, phrase: m[0].slice(0, 80) };
+            }
+          }
         }
-        // If info exists and is outgoing, we've already replied — skip.
       }
-      setAwaitingMap(next);
+      // Texas submissions with no matched messages at all → awaiting first reply.
+      for (const s of texasSubs) {
+        if (nextAwaiting[s.id]) continue;
+        if (!latestPerSub.has(s.id)) nextAwaiting[s.id] = s.created_at;
+      }
+      setAwaitingMap(nextAwaiting);
+      setFollowupMap(nextFollowup);
     };
     recompute();
     const ch = supabase.channel("email_messages_awaiting")
@@ -427,6 +442,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
+      if (eFilter === "needs_followup" && !followupMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
@@ -435,14 +451,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-    // Pin awaiting-reply submissions to the top (most recent incoming first).
-    // Everything else keeps its incoming order (already sorted by created_at desc upstream).
+    // Pin awaiting-reply first (they're waiting on us right now), then follow-up promises
+    // we made and forgot about, then the rest.
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort((a, b) =>
       (awaitingMap[b.id] || "").localeCompare(awaitingMap[a.id] || "")
     );
-    const otherRows = matches.filter(s => !awaitingMap[s.id]);
-    return [...awaitingRows, ...otherRows];
-  }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap]);
+    const followupRows = matches.filter(s => !awaitingMap[s.id] && followupMap[s.id]).sort((a, b) =>
+      (followupMap[b.id]?.since || "").localeCompare(followupMap[a.id]?.since || "")
+    );
+    const otherRows = matches.filter(s => !awaitingMap[s.id] && !followupMap[s.id]);
+    return [...awaitingRows, ...followupRows, ...otherRows];
+  }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
@@ -589,16 +608,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Status pills (desktop only) */}
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["awaiting_reply", "new", "all"] as const).map(f => {
+        {(["awaiting_reply", "needs_followup", "new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
             : f === "new"
               ? submissions.filter(s => isNew(s)).length
-              : submissions.filter(s => awaitingMap[s.id]).length;
-          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply" } as const;
+              : f === "needs_followup"
+                ? submissions.filter(s => followupMap[s.id]).length
+                : submissions.filter(s => awaitingMap[s.id]).length;
+          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_followup: "Follow up" } as const;
           const activeCls = f === "awaiting_reply"
             ? "bg-rose-600 text-white border-rose-600"
-            : "bg-foreground text-background border-foreground";
+            : f === "needs_followup"
+              ? "bg-indigo-600 text-white border-indigo-600"
+              : "bg-foreground text-background border-foreground";
           return (
             <button
               key={f}
@@ -802,6 +825,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                             Needs reply
+                          </span>
+                        )}
+                        {!awaitingMap[s.id] && followupMap[s.id] && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
+                            title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                            Follow up
                           </span>
                         )}
                         {hasDocs(s) && (
