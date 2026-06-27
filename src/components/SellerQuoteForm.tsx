@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { validateEmail } from "@/lib/emailValidation";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
