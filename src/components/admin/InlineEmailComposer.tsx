@@ -19,8 +19,8 @@ interface Props {
   threadId?: string | null;
   inReplyToGmailId?: string | null;
   recipientName?: string | null;
-  /** Called after a successful send. */
-  onSent?: () => void;
+  /** Called after a successful send. Receives the active template id (if any). */
+  onSent?: (meta?: { templateId?: string | null }) => void;
   /** Called when the user dismisses the composer. */
   onCancel?: () => void;
   /** Optional label override for the send button (e.g. "Send reply"). */
@@ -133,7 +133,7 @@ const InlineEmailComposer = ({
     toast({ title: "Email sent", description: `Sent to ${to}` });
     setBody(template);
     setBodyTouched(false);
-    onSent?.();
+    onSent?.({ templateId: activeTemplateId });
   };
 
   const checkGrammar = async () => {

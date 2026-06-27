@@ -318,9 +318,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       // Honor manual dismissal: if the admin marked "doesn't need a reply", drop the
       // Needs reply tag UNLESS a newer inbound email has arrived since they dismissed.
+      // Manually flagging "needs follow-up" also dismisses needs-reply (handled in onUpdate too).
       for (const sid of Object.keys(nextAwaiting)) {
         const sub = subById.get(sid);
         const dismissedAt = sub?.reply_dismissed_at;
+        if ((sub as any)?.manual_followup) { delete nextAwaiting[sid]; continue; }
         if (!dismissedAt) continue;
         const lastInbound = nextAwaiting[sid];
         if (new Date(lastInbound).getTime() <= new Date(dismissedAt).getTime()) {
@@ -847,7 +849,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Needs reply
                           </span>
                         )}
-                        {!awaitingMap[s.id] && followupMap[s.id] && (
+                        {!awaitingMap[s.id] && (s as any).needs_quote && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-900 border border-violet-300 shadow-sm"
+                            title="Seller intake sent — quote owed"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-violet-600 animate-pulse" />
+                            Needs quote
+                          </span>
+                        )}
+                        {!awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id] && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-sm"
                             title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
@@ -1041,7 +1052,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </button>
                   )}
                   <button
-                    onClick={() => onUpdate(selected.id, { manual_followup: !manualFollowup } as any)}
+                    onClick={() => {
+                      const next = !manualFollowup;
+                      const patch: any = { manual_followup: next };
+                      // Marking needs-follow-up implies we're not waiting on a reply from them.
+                      if (next) patch.reply_dismissed_at = new Date().toISOString();
+                      onUpdate(selected.id, patch);
+                    }}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       manualFollowup
                         ? "bg-indigo-100 text-indigo-900 border-indigo-300 hover:bg-indigo-200"
@@ -1094,6 +1111,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   customerName={selected.name}
                   cemetery={x.cemetery_original || selected.cemetery}
                   newEmailTemplates={templates}
+                  onNewEmailSent={(meta) => {
+                    if (meta?.templateId === "seller_intake") {
+                      onUpdate(selected.id, { needs_quote: true } as any);
+                    }
+                  }}
                 />
               );
             })()}

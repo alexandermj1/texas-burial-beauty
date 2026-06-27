@@ -324,6 +324,7 @@ export type Database = {
           multi_owner_perm_required: boolean | null
           multi_owner_perm_signed_at: string | null
           name: string | null
+          needs_quote: boolean
           ownership_type: string | null
           payment_link_sent_at: string | null
           payment_received_at: string | null
@@ -415,6 +416,7 @@ export type Database = {
           multi_owner_perm_required?: boolean | null
           multi_owner_perm_signed_at?: string | null
           name?: string | null
+          needs_quote?: boolean
           ownership_type?: string | null
           payment_link_sent_at?: string | null
           payment_received_at?: string | null
@@ -506,6 +508,7 @@ export type Database = {
           multi_owner_perm_required?: boolean | null
           multi_owner_perm_signed_at?: string | null
           name?: string | null
+          needs_quote?: boolean
           ownership_type?: string | null
           payment_link_sent_at?: string | null
           payment_received_at?: string | null
