@@ -624,7 +624,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Status pills (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
+      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap rounded-2xl bg-card/70 backdrop-blur-md border border-border/60 shadow-soft px-3 py-2.5">
         {(["awaiting_reply", "needs_quote", "needs_followup", "new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
