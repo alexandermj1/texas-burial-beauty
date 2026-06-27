@@ -1069,11 +1069,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-indigo-600" : "bg-muted-foreground/40"}`} />
                     {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
                   </button>
+                  {(() => {
+                    const needsQuote = !!(selected as any).needs_quote;
+                    return (
+                      <button
+                        onClick={() => onUpdate(selected.id, { needs_quote: !needsQuote } as any)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                          needsQuote
+                            ? "bg-violet-100 text-violet-900 border-violet-300 hover:bg-violet-200"
+                            : "bg-card text-foreground border-border hover:bg-muted/60"
+                        }`}
+                        title="Flag this submission as awaiting a quote from us"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-violet-600" : "bg-muted-foreground/40"}`} />
+                        {needsQuote ? "Marked needs quote" : "Mark needs quote"}
+                      </button>
+                    );
+                  })()}
                   {isFollowup && !manualFollowup && (
                     <span className="text-[11px] text-muted-foreground italic">
                       Auto-flagged from outgoing promise
                     </span>
                   )}
+
                 </div>
               );
             })()}
