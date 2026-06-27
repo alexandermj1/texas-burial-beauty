@@ -293,6 +293,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const nextAwaiting: Record<string, string> = {};
       const nextFollowup: Record<string, { since: string; phrase: string }> = {};
       const now = Date.now();
+      const subById = new Map(texasSubs.map(s => [s.id, s as any]));
       for (const [sid, info] of latestPerSub.entries()) {
         if (!info.outgoing) {
           nextAwaiting[sid] = info.received_at;
@@ -312,6 +313,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       for (const s of texasSubs) {
         if (nextAwaiting[s.id]) continue;
         if (!latestPerSub.has(s.id)) nextAwaiting[s.id] = s.created_at;
+      }
+      // Honor manual dismissal: if the admin marked "doesn't need a reply", drop the
+      // Needs reply tag UNLESS a newer inbound email has arrived since they dismissed.
+      for (const sid of Object.keys(nextAwaiting)) {
+        const sub = subById.get(sid);
+        const dismissedAt = sub?.reply_dismissed_at;
+        if (!dismissedAt) continue;
+        const lastInbound = nextAwaiting[sid];
+        if (new Date(lastInbound).getTime() <= new Date(dismissedAt).getTime()) {
+          delete nextAwaiting[sid];
+        }
+      }
+      // Manual "needs follow-up" toggle: always surface, even if no email promise.
+      for (const s of texasSubs) {
+        if ((s as any).manual_followup && !nextFollowup[s.id]) {
+          nextFollowup[s.id] = { since: s.created_at, phrase: "Manually flagged for follow-up" };
+        }
       }
       setAwaitingMap(nextAwaiting);
       setFollowupMap(nextFollowup);
