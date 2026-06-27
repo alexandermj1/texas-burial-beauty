@@ -207,7 +207,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       {
         chapter: "About you",
         title: <>Where should we send your <span className="italic font-medium text-primary">valuation?</span></>,
-        helper: "Email is required. A phone number helps but isn't.",
+        helper: "Email is required. A phone number helps but isn't mandatory.",
         validate: () => (!form.email.trim() ? "Please enter your email." : null),
         body: (
           <div className="space-y-8">
