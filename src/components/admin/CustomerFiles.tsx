@@ -244,10 +244,10 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     });
     if (entries.length === 0) return null;
     return (
-      <dl className="mt-1 grid grid-cols-1 gap-y-0.5 text-[10px]">
+      <dl className="mt-1.5 grid grid-cols-1 gap-y-1 text-xs">
         {entries.map(([k, v]) => (
-          <div key={k} className="flex gap-1.5 leading-tight">
-            <dt className="text-muted-foreground capitalize shrink-0">{k.replace(/_/g, " ")}:</dt>
+          <div key={k} className="flex gap-2 leading-snug">
+            <dt className="text-muted-foreground capitalize shrink-0 font-medium">{k.replace(/_/g, " ")}:</dt>
             <dd className="text-foreground break-words">
               {Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
             </dd>
@@ -382,18 +382,18 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> AI reading…</p>
                   )}
                   {f.extraction_status === "done" && (
-                    <div className="mt-0.5 rounded-md bg-primary/5 border border-primary/20 px-1.5 py-1">
-                      <div className="flex items-start gap-1 text-[10px] text-foreground">
-                        <Sparkles className="w-3 h-3 text-primary mt-0.5 shrink-0" />
-                        <span className="leading-tight">{f.extracted_summary || "Extracted"}</span>
+                    <div className="mt-1 rounded-md bg-primary/5 border border-primary/20 px-2 py-1.5">
+                      <div className="flex items-start gap-1.5 text-xs text-foreground">
+                        <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                        <span className="leading-snug">{f.extracted_summary || "Extracted"}</span>
                       </div>
                       {f.extracted_data && (
                         <>
                           <button
                             onClick={() => toggleExpand(f.id)}
-                            className="mt-1 inline-flex items-center gap-0.5 text-[10px] text-primary hover:underline"
+                            className="mt-1.5 inline-flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
                           >
-                            {expanded[f.id] ? <><ChevronUp className="w-3 h-3" /> Hide details</> : <><ChevronDown className="w-3 h-3" /> Details</>}
+                            {expanded[f.id] ? <><ChevronUp className="w-3.5 h-3.5" /> Hide details</> : <><ChevronDown className="w-3.5 h-3.5" /> Details</>}
                           </button>
                           {expanded[f.id] && renderExtracted(f.extracted_data)}
                         </>
