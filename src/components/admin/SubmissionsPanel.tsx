@@ -138,7 +138,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
+  // Bayer pipeline is temporarily hidden — submissions panel is Texas-only for now.
+  // Keep the state + setter so the rest of the code (cemetery directory, filters,
+  // and the Bayer code paths) remains intact and easy to re-enable later.
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>("texas");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
@@ -570,7 +573,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {/* === Region tabs: Texas vs Bayer pipelines === */}
+      {/* Region tabs hidden — Texas-only view. Bayer code is preserved above. */}
+      {false && (
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
         {(["all", "texas", "bayer"] as const).map(r => {
           const count = r === "all"
@@ -597,8 +601,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           );
         })}
       </div>
-
-      {/* === Texas cemetery directory (texas tab only) === */}
+      )}
       {regionFilter === "texas" && !isMobile && (
         <div className="lg:col-span-12">
           <TexasCemeteriesPanel
