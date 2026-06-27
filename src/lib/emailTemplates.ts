@@ -20,8 +20,12 @@ const first = (name?: string | null): string => {
 const cem = (c?: string | null) => properCase(c || "");
 
 
-const signature = (adminName?: string | null) =>
-  adminName ? `Best regards,\n${adminName}\nTexas Cemetery Brokers` : `Best regards,\nTexas Cemetery Brokers`;
+const signature = (adminName?: string | null) => {
+  const name = adminName?.trim();
+  const nameBlock = name ? `${name}\nCemetery Salesperson\n` : "";
+  return `Best regards,\n\n${nameBlock}Texas Cemetery Brokers\nwww.texascemeterybrokers.com`;
+};
+
 
 interface SellerInput {
   recipientName?: string | null;
