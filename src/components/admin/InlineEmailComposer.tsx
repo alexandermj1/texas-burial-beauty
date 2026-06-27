@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 
+import type { EmailTemplate } from "@/lib/emailTemplates";
+
 interface Props {
   to: string;
   defaultSubject?: string;
@@ -23,6 +25,8 @@ interface Props {
   onCancel?: () => void;
   /** Optional label override for the send button (e.g. "Send reply"). */
   sendLabel?: string;
+  /** Optional preset templates to pick from. First one is loaded by default. */
+  templates?: EmailTemplate[];
 }
 
 const firstName = (name?: string | null): string => {
