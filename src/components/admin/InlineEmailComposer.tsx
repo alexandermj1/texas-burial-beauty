@@ -108,9 +108,9 @@ const InlineEmailComposer = ({
       return t.body;
     }
     const greet = `Dear ${firstName(recipientName)},`;
-    const sig = adminName
-      ? `Best regards,\n${adminName}\nTexas Cemetery Brokers`
-      : `Best regards,\nTexas Cemetery Brokers`;
+    const nameBlock = adminName ? `${adminName}\nCemetery Salesperson\n` : "";
+    const sig = `Best regards,\n\n${nameBlock}Texas Cemetery Brokers\nwww.texascemeterybrokers.com`;
+
     return `${greet}\n\n\n\n${sig}`;
   }, [recipientName, adminName, templates, activeTemplateId]);
 
