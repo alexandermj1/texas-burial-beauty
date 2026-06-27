@@ -46,16 +46,18 @@ export const buildSellerIntakeTemplate = (i: SellerInput): EmailTemplate => {
   if (!i.hasAttachments) missing.push("A scanned copy of the deed, plus any original purchase records or evidence of prepaid endowment care / service charges (these can increase the valuation)");
 
   const ask = missing.length
-    ? `To prepare your complimentary evaluation, I just need a few more details:\n\n${missing.map(m => `• ${m}`).join("\n")}\n\n`
-    : `We have everything we need to get started — I'll be in touch shortly with your complimentary evaluation.\n\n`;
+    ? `Thank you for providing the details you've shared so far — the more complete the picture, the higher the valuation we're typically able to come back with. To finalise your complimentary evaluation, could you send across the following:\n\n${missing.map(m => `• ${m}`).join("\n")}\n\n`
+    : `Thank you for providing such complete details in the form — it genuinely helps us come back to you with the highest possible number.\n\n`;
+
+  const closing = missing.length
+    ? `As soon as we have these, we'll do our very best to get back to you promptly with an evaluation.\n\n`
+    : `We'll do our very best to get back to you promptly with an evaluation.\n\n`;
 
   const body = `Dear ${first(i.recipientName)},
 
 Thank you for reaching out to Texas Cemetery Brokers about selling your cemetery property${cemetery}.
 
-Please note we do not purchase plots outright. Instead, we offer a complimentary evaluation and, if your property is a good fit for the current resale market, list it for sale on your behalf on a consignment basis with a single predetermined net payment to you when we find a buyer.
-
-${ask}${signature(i.adminName)}`;
+${ask}${closing}${signature(i.adminName)}`;
 
   return { id: "seller_intake", label: "Seller intake (asks for missing info)", body };
 };
