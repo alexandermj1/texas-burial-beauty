@@ -113,7 +113,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
             recipientName={customerName}
             templates={newEmailTemplates}
-            onSent={() => { setComposeNew(false); refresh(); }}
+            onSent={(meta) => { setComposeNew(false); onNewEmailSent?.(meta); refresh(); }}
             onCancel={() => setComposeNew(false)}
           />
         </div>
