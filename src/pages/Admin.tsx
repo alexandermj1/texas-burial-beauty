@@ -713,7 +713,10 @@ const Admin = () => {
               searchQuery={searchQuery}
               focusSubmissionId={focusSubmissionId}
               onRefresh={handleInboxRefresh}
-              onViewCemeteries={() => setTab("cemeteries")}
+              onViewCemeteries={() => {
+                setTab("cemeteries");
+                requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+              }}
               onUpdate={async (id, patch) => {
                 const before = submissions.find(s => s.id === id);
                 const { error } = await supabase.from("contact_submissions" as any).update(patch).eq("id", id);
@@ -796,9 +799,7 @@ const Admin = () => {
 
           {tab === "cemeteries" && (
             <TexasCemeteriesPanel
-              texasSubmissions={submissions.filter((s: any) =>
-                (s.region_tag || "").toLowerCase() === "texas" || (s.region || "").toLowerCase().includes("texas")
-              )}
+              texasSubmissions={submissions.filter((s: any) => s.inquiry_channel !== "bayer_sell_a_plot")}
               onRefresh={handleInboxRefresh}
               standalone
             />
