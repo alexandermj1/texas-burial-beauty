@@ -35,7 +35,50 @@ interface SellerInput {
   deedOwnersStatus?: string | null;
   relationshipToOwner?: string | null;
   hasAttachments?: boolean;
+  /** Owner names extracted from uploaded deed attachments (via AI extraction). */
+  deedExtractedOwners?: string[] | null;
 }
+
+// Light heuristics for the ownership rules.
+const splitOwnerNames = (raw?: string | null): string[] => {
+  if (!raw) return [];
+  return raw
+    .split(/,| and | & |\s*;\s*|\s*\/\s*/i)
+    .map(s => s.trim())
+    .filter(Boolean);
+};
+
+const nameTokens = (s?: string | null): Set<string> => {
+  const set = new Set<string>();
+  if (!s) return set;
+  s.toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).forEach(t => {
+    if (t && t.length > 1) set.add(t);
+  });
+  return set;
+};
+
+const sellerClaimsOwner = (rel?: string | null): boolean => {
+  if (!rel) return false;
+  const r = rel.toLowerCase();
+  return /\b(owner|self|myself|i am|i'm|mine|purchaser|buyer of record)\b/.test(r);
+};
+
+const otherOwnersImplied = (
+  sellerName: string | null | undefined,
+  formOwners: string[],
+  extractedOwners: string[],
+): boolean => {
+  const sellerToks = nameTokens(sellerName);
+  const matchesSeller = (n: string) => {
+    const t = nameTokens(n);
+    for (const x of t) if (sellerToks.has(x)) return true;
+    return false;
+  };
+  const allOwners = [...formOwners, ...extractedOwners];
+  if (allOwners.length === 0) return false;
+  if (allOwners.length >= 2) return true;
+  return !allOwners.some(matchesSeller);
+};
 
 export const buildSellerIntakeTemplate = (i: SellerInput): EmailTemplate => {
   const cemetery = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
@@ -48,6 +91,17 @@ export const buildSellerIntakeTemplate = (i: SellerInput): EmailTemplate => {
   if (!i.deedOwnersStatus?.trim()) missing.push("Are the plot owner(s) currently living?");
   if (!i.relationshipToOwner?.trim()) missing.push("Your relationship to the plot owner(s)");
   if (!i.hasAttachments) missing.push("A scanned copy of the deed, plus any original purchase records or evidence of prepaid endowment care / service charges (these can increase the valuation)");
+
+  // Ownership-specific follow-ups (only when the seller says they're an owner).
+  const formOwners = splitOwnerNames(i.deedOwnerNames);
+  const extractedOwners = (i.deedExtractedOwners || []).filter(Boolean);
+  if (sellerClaimsOwner(i.relationshipToOwner)) {
+    if (otherOwnersImplied(i.recipientName, formOwners, extractedOwners)) {
+      missing.push("Could you confirm who is the current owner of record with the cemetery administration? The deed appears to list additional names alongside yours, so we'd like to be sure we have the official owner-of-record correct before we proceed");
+    } else {
+      missing.push("Are you the sole owner of the property? If there are any other named owners, please share their full names and their relationship to you");
+    }
+  }
 
   const ask = missing.length
     ? `Thank you for providing the details you've shared so far — the more complete the picture, the higher the valuation we're typically able to come back with. To finalise your complimentary evaluation, could you send across the following:\n\n${missing.map(m => `• ${m}`).join("\n")}\n\n`
