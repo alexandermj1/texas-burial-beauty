@@ -2,6 +2,7 @@
 // Our outgoing sender addresses — anything from these counts as a reply we sent.
 const OUR_ADDRESSES = [
   "info@texascemeterybrokers.com",
+  "info@bayercemeterybrokers.com",
   "texascemeterybrokers@gmail.com",
 ];
 
