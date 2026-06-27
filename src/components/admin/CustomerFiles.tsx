@@ -394,15 +394,12 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                         <span className="leading-snug">{f.extracted_summary || "Extracted"}</span>
                       </div>
                       {f.extracted_data && (
-                        <>
-                          <button
-                            onClick={() => toggleExpand(f.id)}
-                            className="mt-1.5 inline-flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
-                          >
-                            {expanded[f.id] ? <><ChevronUp className="w-3.5 h-3.5" /> Hide details</> : <><ChevronDown className="w-3.5 h-3.5" /> Details</>}
-                          </button>
-                          {expanded[f.id] && renderExtracted(f.extracted_data)}
-                        </>
+                        <button
+                          onClick={() => setDetailsFor(f)}
+                          className="mt-1.5 inline-flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" /> View details
+                        </button>
                       )}
                     </div>
                   )}
