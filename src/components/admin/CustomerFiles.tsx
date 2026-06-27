@@ -2,7 +2,7 @@
 // Files live in the private "customer-files" storage bucket; metadata in customer_files.
 // Renders as a grid of mini thumbnail tiles at the bottom of the submission view —
 // images preview inline (signed URLs), other files show a typed icon. Click a tile to open.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Fragment } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -229,8 +229,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     fetchFiles();
   };
 
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const toggleExpand = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  const [detailsFor, setDetailsFor] = useState<CustomerFileRow | null>(null);
 
   const renderExtracted = (data: Record<string, any> | null) => {
     if (!data || typeof data !== "object") return null;
@@ -244,18 +243,25 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     });
     if (entries.length === 0) return null;
     return (
-      <dl className="mt-1.5 grid grid-cols-1 gap-y-1 text-xs">
+      <dl className="grid grid-cols-1 sm:grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
         {entries.map(([k, v]) => (
-          <div key={k} className="flex gap-2 leading-snug">
-            <dt className="text-muted-foreground capitalize shrink-0 font-medium">{k.replace(/_/g, " ")}:</dt>
+          <Fragment key={k}>
+            <dt className="text-muted-foreground capitalize font-medium">{k.replace(/_/g, " ")}</dt>
             <dd className="text-foreground break-words">
-              {Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
+              {Array.isArray(v)
+                ? (typeof v[0] === "object"
+                    ? <pre className="whitespace-pre-wrap text-xs bg-muted/40 rounded p-2">{JSON.stringify(v, null, 2)}</pre>
+                    : v.join(", "))
+                : typeof v === "object"
+                ? <pre className="whitespace-pre-wrap text-xs bg-muted/40 rounded p-2">{JSON.stringify(v, null, 2)}</pre>
+                : typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
             </dd>
-          </div>
+          </Fragment>
         ))}
       </dl>
     );
   };
+
 
   return (
     <div>
@@ -388,15 +394,12 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                         <span className="leading-snug">{f.extracted_summary || "Extracted"}</span>
                       </div>
                       {f.extracted_data && (
-                        <>
-                          <button
-                            onClick={() => toggleExpand(f.id)}
-                            className="mt-1.5 inline-flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
-                          >
-                            {expanded[f.id] ? <><ChevronUp className="w-3.5 h-3.5" /> Hide details</> : <><ChevronDown className="w-3.5 h-3.5" /> Details</>}
-                          </button>
-                          {expanded[f.id] && renderExtracted(f.extracted_data)}
-                        </>
+                        <button
+                          onClick={() => setDetailsFor(f)}
+                          className="mt-1.5 inline-flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" /> View details
+                        </button>
                       )}
                     </div>
                   )}
@@ -421,6 +424,44 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
               </div>
             );
           })}
+        </div>
+      )}
+
+      {detailsFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setDetailsFor(null)}
+        >
+          <div
+            className="bg-card rounded-xl border border-border shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-card border-b border-border px-5 py-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-xs text-primary mb-0.5">
+                  <Sparkles className="w-3.5 h-3.5" /> AI extracted details
+                </div>
+                <p className="text-sm font-semibold text-foreground truncate">{detailsFor.file_name}</p>
+                {detailsFor.document_type && (
+                  <p className="text-xs text-muted-foreground">{detailsFor.document_type}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setDetailsFor(null)}
+                className="text-muted-foreground hover:text-foreground text-sm px-2 py-1 rounded-md hover:bg-muted shrink-0"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {detailsFor.extracted_summary && (
+                <p className="text-sm text-foreground leading-relaxed bg-primary/5 border border-primary/20 rounded-md p-3">
+                  {detailsFor.extracted_summary}
+                </p>
+              )}
+              {renderExtracted(detailsFor.extracted_data)}
+            </div>
+          </div>
         </div>
       )}
     </div>
