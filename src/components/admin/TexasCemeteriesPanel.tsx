@@ -37,7 +37,33 @@ interface Props {
   onRefresh?: () => Promise<void> | void;
   /** When true, render without the collapsible wrapper (full-page mode). */
   standalone?: boolean;
+  /** When true, hide the inline "Add profile info"/"Edit profile" footer + editor.
+   *  Profile editing then happens in the right-pane CemeteryInfoCard instead. */
+  hideProfileEditor?: boolean;
 }
+
+// Light volume-based tint so high-traffic cemeteries are immediately recognisable
+// once we have 100+ submissions on a single cemetery. Kept subtle — never overrides
+// the active/drop-target states which use stronger borders.
+const countTint = (count: number): string => {
+  if (count >= 100) return "bg-rose-100/70 dark:bg-rose-950/40 border-rose-300/60 dark:border-rose-900/60";
+  if (count >= 50)  return "bg-amber-100/60 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-900/60";
+  if (count >= 25)  return "bg-orange-50/80 dark:bg-orange-950/25 border-orange-200/70 dark:border-orange-900/50";
+  if (count >= 10)  return "bg-emerald-50/80 dark:bg-emerald-950/25 border-emerald-200/70 dark:border-emerald-900/50";
+  if (count >= 3)   return "bg-sky-50/70 dark:bg-sky-950/25 border-sky-200/70 dark:border-sky-900/40";
+  if (count >= 1)   return "bg-card border-border/60";
+  return "bg-muted/40 border-border/50";
+};
+
+const countBadgeTint = (count: number): string => {
+  if (count >= 100) return "bg-rose-600 text-white";
+  if (count >= 50)  return "bg-amber-600 text-white";
+  if (count >= 25)  return "bg-orange-500 text-white";
+  if (count >= 10)  return "bg-emerald-600 text-white";
+  if (count >= 3)   return "bg-sky-600 text-white";
+  if (count >= 1)   return "bg-primary text-primary-foreground";
+  return "bg-muted text-muted-foreground";
+};
 
 const canonical = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
