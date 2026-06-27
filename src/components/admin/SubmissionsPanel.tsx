@@ -1052,7 +1052,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </button>
                   )}
                   <button
-                    onClick={() => onUpdate(selected.id, { manual_followup: !manualFollowup } as any)}
+                    onClick={() => {
+                      const next = !manualFollowup;
+                      const patch: any = { manual_followup: next };
+                      // Marking needs-follow-up implies we're not waiting on a reply from them.
+                      if (next) patch.reply_dismissed_at = new Date().toISOString();
+                      onUpdate(selected.id, patch);
+                    }}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       manualFollowup
                         ? "bg-indigo-100 text-indigo-900 border-indigo-300 hover:bg-indigo-200"
