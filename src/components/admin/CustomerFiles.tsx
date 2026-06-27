@@ -376,38 +376,40 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                     </span>
                   )}
                 </button>
-                <div className="p-2 flex flex-col gap-1">
-                  <button onClick={() => openFile(f)} className="text-left text-xs font-medium text-foreground truncate hover:text-primary" title={f.file_name}>
+                <div className="p-2.5 flex flex-col gap-1.5">
+                  <button onClick={() => openFile(f)} className="text-left text-sm font-medium text-foreground truncate hover:text-primary" title={f.file_name}>
                     {f.file_name}
                   </button>
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-[11px] text-muted-foreground truncate">
                     {formatBytes(f.file_size)} · {f.uploaded_by_name || "admin"} · {formatDate(f.created_at)}
                   </p>
                   {/* AI summary block */}
                   {f.extraction_status === "pending" && (
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> AI reading…</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> AI reading…</p>
                   )}
                   {f.extraction_status === "done" && (
-                    <div className="mt-1 rounded-md bg-primary/5 border border-primary/20 px-2 py-1.5">
-                      <div className="flex items-start gap-1.5 text-xs text-foreground">
-                        <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                        <span className="leading-snug">{f.extracted_summary || "Extracted"}</span>
+                    <button
+                      onClick={() => f.extracted_data ? setDetailsFor(f) : undefined}
+                      className="mt-0.5 text-left rounded-md bg-primary/5 hover:bg-primary/10 border border-primary/20 px-2.5 py-2 transition-colors w-full"
+                    >
+                      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">
+                        <Sparkles className="w-3 h-3" /> AI Summary
                       </div>
+                      <p className="text-xs text-foreground leading-relaxed line-clamp-3">
+                        {f.extracted_summary || "Extracted"}
+                      </p>
                       {f.extracted_data && (
-                        <button
-                          onClick={() => setDetailsFor(f)}
-                          className="mt-1.5 inline-flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
-                        >
-                          <ChevronDown className="w-3.5 h-3.5" /> View details
-                        </button>
+                        <span className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] text-primary font-medium">
+                          View details →
+                        </span>
                       )}
-                    </div>
+                    </button>
                   )}
                   {f.extraction_status === "failed" && (
-                    <p className="text-[10px] text-destructive truncate" title={f.extraction_error || ""}>AI read failed</p>
+                    <p className="text-xs text-destructive truncate" title={f.extraction_error || ""}>AI read failed</p>
                   )}
                   {f.extraction_status === "unsupported" && (
-                    <p className="text-[10px] text-muted-foreground">AI: unsupported file type</p>
+                    <p className="text-xs text-muted-foreground">AI: unsupported file type</p>
                   )}
                   <div className="flex items-center justify-end gap-0.5 -mr-1">
                     <button onClick={() => reExtract(f)} title="Re-run AI extraction" className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-primary">
