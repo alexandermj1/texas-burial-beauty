@@ -608,16 +608,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Status pills (desktop only) */}
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap">
-        {(["awaiting_reply", "new", "all"] as const).map(f => {
+        {(["awaiting_reply", "needs_followup", "new", "all"] as const).map(f => {
           const count = f === "all"
             ? submissions.length
             : f === "new"
               ? submissions.filter(s => isNew(s)).length
-              : submissions.filter(s => awaitingMap[s.id]).length;
-          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply" } as const;
+              : f === "needs_followup"
+                ? submissions.filter(s => followupMap[s.id]).length
+                : submissions.filter(s => awaitingMap[s.id]).length;
+          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_followup: "Follow up" } as const;
           const activeCls = f === "awaiting_reply"
             ? "bg-rose-600 text-white border-rose-600"
-            : "bg-foreground text-background border-foreground";
+            : f === "needs_followup"
+              ? "bg-indigo-600 text-white border-indigo-600"
+              : "bg-foreground text-background border-foreground";
           return (
             <button
               key={f}
