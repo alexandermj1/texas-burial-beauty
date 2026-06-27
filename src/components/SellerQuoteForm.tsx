@@ -299,17 +299,23 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                   className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
               </div>
             )}
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Section / Garden name</label>
+              <input value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}
+                placeholder="e.g. Garden of Peace" maxLength={100}
+                className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
+            </div>
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3"># of spaces</label>
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3"># of spaces <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
                 <input type="number" min={1} max={20} value={form.spaces} onChange={(e) => setForm({ ...form, spaces: e.target.value })}
                   placeholder="2"
                   className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
               </div>
               <div>
-                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Section / Lot <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
-                <input value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}
-                  placeholder="Garden of Peace, Lot 14" maxLength={100}
+                <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Lot / Space # <span className="normal-case tracking-normal italic text-foreground/45">— optional</span></label>
+                <input value={form.lotNumber} onChange={(e) => setForm({ ...form, lotNumber: e.target.value })}
+                  placeholder="e.g. Lot 14, Space 2" maxLength={100}
                   className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl text-foreground placeholder:text-foreground/25 placeholder:italic py-2" />
               </div>
             </div>
