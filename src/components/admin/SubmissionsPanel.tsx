@@ -1012,14 +1012,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
-            {/* Texas pipeline — pinned to the TOP of the detail view for Texas submissions */}
-            {subRegion(selected) === "texas" && !isMobile && (
-              <TexasPipelinePanel
-                submission={selected}
-                onPatch={(patch) => onUpdate(selected.id, patch)}
-              />
-            )}
-
             {/* Reply / follow-up state — Texas only */}
             {subRegion(selected) === "texas" && (() => {
               const isAwaiting = !!awaitingMap[selected.id];
@@ -1070,9 +1062,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
             {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
-            {subRegion(selected) === "texas" && (
-              <EmailThread submissionId={selected.id} customerEmail={selected.email} customerName={selected.name} cemetery={(selected as any).cemetery_original || selected.cemetery} />
-            )}
+            {subRegion(selected) === "texas" && (() => {
+              const kind = resolveKind(selected.customer_kind, selected.source);
+              const x = selected as any;
+              const templates = kind === "buyer"
+                ? [
+                    buildBuyerHaveItTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery, propertyType: selected.property_type, spaces: selected.spaces }),
+                    buildBuyerNoInventoryTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery }),
+                  ]
+                : [
+                    buildSellerIntakeTemplate({
+                      recipientName: selected.name,
+                      adminName,
+                      cemetery: selected.cemetery,
+                      section: selected.section,
+                      spaces: selected.spaces,
+                      propertyType: selected.property_type,
+                      spaceNumbers: x.space_numbers,
+                      deedOwnerNames: x.deed_owner_names,
+                      deedOwnersStatus: x.deed_owners_status,
+                      relationshipToOwner: x.relationship_to_owner,
+                      hasAttachments: hasDocs(selected),
+                    }),
+                  ];
+              return (
+                <EmailThread
+                  submissionId={selected.id}
+                  customerEmail={selected.email}
+                  customerName={selected.name}
+                  cemetery={x.cemetery_original || selected.cemetery}
+                  newEmailTemplates={templates}
+                />
+              );
+            })()}
 
             {/* Contact actions */}
             <div className="flex flex-wrap gap-2">
