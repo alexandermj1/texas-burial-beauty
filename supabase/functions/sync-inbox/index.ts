@@ -288,7 +288,7 @@ Deno.serve(async (req) => {
     // clean. Add another address to TARGET_MAILBOXES to ingest a new brand.
     const TARGET_MAILBOXES = new Set([
       "info@texascemeterybrokers.com",
-      "info@bayercemeterybrokers.com",
+      "info@bayerbrokers.com",
     ]);
     const filteredKeys: string[] = [];
     const matchedMailboxes: string[] = [];
