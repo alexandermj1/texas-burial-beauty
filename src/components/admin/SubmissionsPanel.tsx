@@ -515,6 +515,43 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Record a view for this admin when they open a submission
   useEffect(() => { if (selected?.id) recordView(selected.id); }, [selected?.id, myId]);
 
+  // Pull deed-extracted owner names for the currently selected submission so the
+  // seller-intake template can ask the right ownership follow-up question.
+  const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    setSelectedDeedOwners([]);
+    const email = (selected?.email || "").trim().toLowerCase();
+    if (!email) return;
+    (async () => {
+      const { data: profiles } = await supabase
+        .from("customer_profiles" as any)
+        .select("id, primary_email, alt_emails");
+      if (cancelled || !profiles) return;
+      const profileIds = (profiles as any[])
+        .filter(p => {
+          const ems = [p.primary_email, ...(Array.isArray(p.alt_emails) ? p.alt_emails : [])]
+            .filter(Boolean).map((e: string) => String(e).toLowerCase());
+          return ems.includes(email);
+        })
+        .map(p => p.id);
+      if (profileIds.length === 0) return;
+      const { data: files } = await supabase
+        .from("customer_files" as any)
+        .select("extracted_data")
+        .in("customer_profile_id", profileIds);
+      if (cancelled || !files) return;
+      const owners = new Set<string>();
+      for (const f of files as any[]) {
+        const ex = f.extracted_data;
+        const list = Array.isArray(ex?.owners) ? ex.owners : [];
+        list.forEach((n: any) => { if (typeof n === "string" && n.trim()) owners.add(n.trim()); });
+      }
+      if (!cancelled) setSelectedDeedOwners(Array.from(owners));
+    })();
+    return () => { cancelled = true; };
+  }, [selected?.id, selected?.email]);
+
   // Broadcast my "currently working on" submission so teammates see it instantly.
   useEffect(() => {
     const ch = presenceChanRef.current;
