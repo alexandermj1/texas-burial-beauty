@@ -796,9 +796,7 @@ const Admin = () => {
 
           {tab === "cemeteries" && (
             <TexasCemeteriesPanel
-              texasSubmissions={submissions.filter((s: any) =>
-                (s.region_tag || "").toLowerCase() === "texas" || (s.region || "").toLowerCase().includes("texas")
-              )}
+              texasSubmissions={submissions.filter((s: any) => s.inquiry_channel !== "bayer_sell_a_plot")}
               onRefresh={handleInboxRefresh}
               standalone
             />
