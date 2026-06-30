@@ -126,19 +126,33 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         next[r.id] = {
           selected: true,
           price: cur[r.id]?.price ?? (r.list_price ? String(r.list_price) : r.accepted_quote_amount ? String(r.accepted_quote_amount) : ""),
+          description: cur[r.id]?.description ?? "",
         };
       }
       return next;
     });
 
   const setPrice = (id: string, price: string) =>
-    setSelected((cur) => ({ ...cur, [id]: { selected: cur[id]?.selected ?? true, price } }));
+    setSelected((cur) => ({
+      ...cur,
+      [id]: { selected: cur[id]?.selected ?? true, price, description: cur[id]?.description ?? "" },
+    }));
+
+  const setDescription = (id: string, description: string) =>
+    setSelected((cur) => ({
+      ...cur,
+      [id]: { selected: cur[id]?.selected ?? true, price: cur[id]?.price ?? "", description },
+    }));
 
   const chosen = useMemo(
     () =>
       rows
         .filter((r) => selected[r.id]?.selected)
-        .map((r) => ({ row: r, priceNum: Number(selected[r.id]?.price) || 0 })),
+        .map((r) => ({
+          row: r,
+          priceNum: Number(selected[r.id]?.price) || 0,
+          description: selected[r.id]?.description ?? "",
+        })),
     [rows, selected],
   );
 
