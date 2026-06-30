@@ -282,7 +282,18 @@ const InlineEmailComposer = ({
         placeholder="Write your message…"
         minHeight={200}
       />
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        {buyerContext && (
+          <button
+            type="button"
+            onClick={() => setPlotPickerOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[hsl(var(--accent-gold-fg))]/40 text-[hsl(var(--accent-gold-fg))] bg-[hsl(var(--accent-gold-bg))]/60 hover:bg-[hsl(var(--accent-gold-bg))]"
+            title="Pick Texas plots and insert branded cards into this email"
+          >
+            <LayoutGrid className="w-3 h-3" />
+            Attach plot cards
+          </button>
+        )}
         {preCheckHtml !== null && (
           <button
             type="button"
@@ -313,6 +324,20 @@ const InlineEmailComposer = ({
           {sending ? "Sending…" : sendLabel}
         </button>
       </div>
+      {buyerContext && (
+        <SendBuyerPlotCardsDialog
+          open={plotPickerOpen}
+          onClose={() => setPlotPickerOpen(false)}
+          buyer={buyerContext}
+          adminName={adminName}
+          mode="attach"
+          onAttach={(cardsHtml) => {
+            editorRef.current?.appendHtml(cardsHtml);
+            setHtml(editorRef.current?.getHtml() ?? html);
+            setBodyTouched(true);
+          }}
+        />
+      )}
     </div>
   );
 };
