@@ -52,10 +52,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
       if (elRef.current) {
         elRef.current.innerHTML = html;
         lastHtmlRef.current = html;
+        onChange?.(html);
       }
     },
     getHtml: () => elRef.current?.innerHTML ?? "",
     focus: () => elRef.current?.focus(),
+    appendHtml: (html: string) => {
+      if (!elRef.current) return;
+      elRef.current.innerHTML = (elRef.current.innerHTML || "") + html;
+      lastHtmlRef.current = elRef.current.innerHTML;
+      onChange?.(lastHtmlRef.current);
+    },
   }));
 
   useEffect(() => {
