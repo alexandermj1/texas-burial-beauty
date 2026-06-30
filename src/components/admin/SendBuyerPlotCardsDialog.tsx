@@ -415,8 +415,6 @@ function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string
     row.property_type,
     row.spaces && `${row.spaces} space${n === 1 ? "" : "s"}`,
     row.section && `Section ${properCase(row.section)}`,
-    row.lot && `Lot ${row.lot}`,
-    row.space && `Space ${row.space}`,
   ]
     .filter(Boolean)
     .map((s) => escapeHtml(String(s)))
