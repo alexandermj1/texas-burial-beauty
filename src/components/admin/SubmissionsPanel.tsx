@@ -788,6 +788,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         onCreated={(id) => { setSelectedId(id); onRefresh?.(); }}
       />
 
+      {selected && (
+        <PaymentLinkDialog
+          open={paymentLinkOpen}
+          onClose={() => setPaymentLinkOpen(false)}
+          submission={selected as any}
+          adminName={adminName}
+        />
+      )}
+
       {/* Pipeline stage filter intentionally removed — it duplicated the stepper inside the Bayer pipeline panel.
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
