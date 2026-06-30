@@ -307,8 +307,15 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
                             {[r.property_type, r.spaces && `${r.spaces} space${r.spaces === "1" ? "" : "s"}`, r.section && `Section ${r.section}`].filter(Boolean).join(" · ") || "—"}
-                            {r.name ? ` · seller ${r.name}` : ""}
                           </p>
+                          {(() => {
+                            const n = spacesNum(r.spaces);
+                            const p = Number(price) || 0;
+                            if (n > 1 && p > 0) {
+                              return <p className="text-[10px] text-muted-foreground/80 mt-0.5">{fmt(p)} total · {fmt(Math.round(p / n))} per space</p>;
+                            }
+                            return null;
+                          })()}
                         </div>
                         <div className="shrink-0">
                           <div className="relative">
