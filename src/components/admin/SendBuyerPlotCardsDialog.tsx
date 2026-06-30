@@ -402,7 +402,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
   );
 }
 
-function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string, description?: string) {
+function buildCard(row: PlotRow, price: number, url: string, description?: string) {
   const cem = escapeHtml(properCase(row.cemetery || "Cemetery plot"));
   const n = spacesNum(row.spaces);
   const meta = [
@@ -420,9 +420,7 @@ function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string
   const descLine = description && description.trim()
     ? `<p style="font-family:Georgia,serif;font-size:13px;color:#4b4537;margin:8px 0 12px;line-height:1.55;font-style:italic;">${escapeHtml(description.trim())}</p>`
     : "";
-  const holdLine = reserveUrl
-    ? `<p style="font-family:Georgia,serif;font-size:12px;color:#6b6354;margin:10px 0 0;">Not ready to pay? <a href="${reserveUrl}" style="color:#7c3a2e;text-decoration:underline;">Hold this plot for 3 days</a> — no payment required.</p>`
-    : "";
+  const demandLine = `<p style="font-family:Georgia,serif;font-size:11px;color:#9a8f7a;margin:10px 0 0;font-style:italic;">Due to high demand at this cemetery, we are unable to hold plots — first secured, first served.</p>`;
   return `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 16px;border-collapse:separate;border:1px solid #e7e2d8;border-radius:14px;background:#fbf8f3;overflow:hidden;">
   <tr>
@@ -435,7 +433,7 @@ function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string
       ${perSpaceLine}
       <a href="${url}" style="display:inline-block;margin-top:8px;background:#7c3a2e;color:#ffffff;padding:12px 24px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Reserve &amp; pay securely</a>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
-      ${holdLine}
+      ${demandLine}
     </td>
   </tr>
 </table>`.trim();
