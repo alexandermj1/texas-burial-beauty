@@ -272,6 +272,7 @@ export type Database = {
       contact_submissions: {
         Row: {
           acceptance_channel: string | null
+          accepted_quote_amount: number | null
           admin_notes: string | null
           authorization_confirmed: boolean | null
           authorization_notes: string | null
@@ -314,6 +315,7 @@ export type Database = {
           la_signature_expires_at: string | null
           la_signed_at: string | null
           lawn: string | null
+          list_price: number | null
           listing_live_at: string | null
           listing_number: string | null
           listing_option: string | null
@@ -350,6 +352,10 @@ export type Database = {
           reply_dismissed_at: string | null
           section: string | null
           seller_attachments: Json
+          seller_payout_paid_at: string | null
+          seller_payout_status: string | null
+          sold_at: string | null
+          sold_price: number | null
           source: string
           source_email_id: string | null
           space_numbers: string | null
@@ -364,6 +370,7 @@ export type Database = {
         }
         Insert: {
           acceptance_channel?: string | null
+          accepted_quote_amount?: number | null
           admin_notes?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
@@ -406,6 +413,7 @@ export type Database = {
           la_signature_expires_at?: string | null
           la_signed_at?: string | null
           lawn?: string | null
+          list_price?: number | null
           listing_live_at?: string | null
           listing_number?: string | null
           listing_option?: string | null
@@ -442,6 +450,10 @@ export type Database = {
           reply_dismissed_at?: string | null
           section?: string | null
           seller_attachments?: Json
+          seller_payout_paid_at?: string | null
+          seller_payout_status?: string | null
+          sold_at?: string | null
+          sold_price?: number | null
           source?: string
           source_email_id?: string | null
           space_numbers?: string | null
@@ -456,6 +468,7 @@ export type Database = {
         }
         Update: {
           acceptance_channel?: string | null
+          accepted_quote_amount?: number | null
           admin_notes?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
@@ -498,6 +511,7 @@ export type Database = {
           la_signature_expires_at?: string | null
           la_signed_at?: string | null
           lawn?: string | null
+          list_price?: number | null
           listing_live_at?: string | null
           listing_number?: string | null
           listing_option?: string | null
@@ -534,6 +548,10 @@ export type Database = {
           reply_dismissed_at?: string | null
           section?: string | null
           seller_attachments?: Json
+          seller_payout_paid_at?: string | null
+          seller_payout_status?: string | null
+          sold_at?: string | null
+          sold_price?: number | null
           source?: string
           source_email_id?: string | null
           space_numbers?: string | null
@@ -971,6 +989,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount_cents: number
+          checkout_url: string | null
+          created_at: string
+          created_by_name: string | null
+          created_by_user_id: string | null
+          currency: string
+          description: string | null
+          environment: string
+          id: string
+          kind: string
+          metadata: Json | null
+          paid_at: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          submission_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          checkout_url?: string | null
+          created_at?: string
+          created_by_name?: string | null
+          created_by_user_id?: string | null
+          currency?: string
+          description?: string | null
+          environment?: string
+          id?: string
+          kind: string
+          metadata?: Json | null
+          paid_at?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          checkout_url?: string | null
+          created_at?: string
+          created_by_name?: string | null
+          created_by_user_id?: string | null
+          currency?: string
+          description?: string | null
+          environment?: string
+          id?: string
+          kind?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          submission_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plot_reservations: {
         Row: {
