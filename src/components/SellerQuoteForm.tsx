@@ -139,7 +139,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Guard: only submit from the final step.
-    if (step !== steps.length - 1) return;
+    // Note: editorial mode uses a different step count, so don't gate on steps.length here.
     // Re-validate the gated steps before final send.
     for (const s of [0, 1]) {
       const err = validateStep(s);
