@@ -8,6 +8,8 @@ export interface RichTextEditorHandle {
   setHtml: (html: string) => void;
   getHtml: () => string;
   focus: () => void;
+  /** Append HTML to the end of the editor content. */
+  appendHtml: (html: string) => void;
 }
 
 interface Props {
