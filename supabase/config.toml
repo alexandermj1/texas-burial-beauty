@@ -1,4 +1,19 @@
 project_id = "mceguxfdoikjthsrbmzx"
 
+[functions.sync-inbox]
+verify_jwt = false
+
+[functions.inquiry-notification-email]
+verify_jwt = false
+
+[functions.daily-summary-email]
+verify_jwt = false
+
+[functions.attach-seller-files]
+verify_jwt = false
+
 [functions.payments-webhook]
+verify_jwt = false
+
+[functions.reserve-plot]
 verify_jwt = false
