@@ -154,6 +154,47 @@ async function handleCustomPaid(tx: any) {
   );
 }
 
+async function handleRefund(tx: any, refundAmountCents: number) {
+  await db().from("payment_transactions").update({
+    status: "refunded",
+    refunded_at: new Date().toISOString(),
+    refund_amount_cents: refundAmountCents,
+  }).eq("id", tx.id);
+
+  if (tx.submission_id) {
+    if (tx.kind === "plot_sale") {
+      await db().from("contact_submissions").update({
+        sold_at: null,
+        sold_price: null,
+        closed_outcome: null,
+        seller_payout_status: null,
+      }).eq("id", tx.submission_id);
+    } else if (tx.kind === "listing_fee") {
+      await db().from("contact_submissions").update({
+        listing_tier: null,
+        listing_paid_at: null,
+      }).eq("id", tx.submission_id);
+    }
+  }
+
+  await notifyAdmins(
+    "Refund processed",
+    `${tx.recipient_name || tx.recipient_email} refunded ${fmt(refundAmountCents)} (${tx.kind}).`,
+    tx.submission_id,
+  );
+}
+
+async function handleDispute(tx: any, status: string) {
+  await db().from("payment_transactions").update({
+    dispute_status: status,
+  }).eq("id", tx.id);
+  await notifyAdmins(
+    "Stripe dispute opened",
+    `${tx.recipient_name || tx.recipient_email} disputed ${fmt(tx.amount_cents)}. Review in Stripe dashboard.`,
+    tx.submission_id,
+  );
+}
+
 async function markPaid(sessionId: string, paymentIntentId: string | null, env: StripeEnv) {
   const { data: tx } = await db()
     .from("payment_transactions")
@@ -180,6 +221,26 @@ async function markFailed(sessionId: string, env: StripeEnv) {
     .eq("environment", env);
 }
 
+async function findTxByCharge(charge: any, env: StripeEnv) {
+  const intentId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+  let q = db().from("payment_transactions").select("*").eq("environment", env);
+  if (intentId) {
+    const { data } = await q.eq("stripe_payment_intent_id", intentId).maybeSingle();
+    if (data) {
+      if (charge.id) {
+        await db().from("payment_transactions").update({ stripe_charge_id: charge.id }).eq("id", data.id);
+      }
+      return data;
+    }
+  }
+  if (charge.id) {
+    const { data } = await db().from("payment_transactions").select("*")
+      .eq("environment", env).eq("stripe_charge_id", charge.id).maybeSingle();
+    return data;
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   const rawEnv = new URL(req.url).searchParams.get("env");
@@ -200,6 +261,20 @@ Deno.serve(async (req) => {
       case "transaction.payment_failed":
       case "checkout.session.expired": {
         await markFailed(event.data.object.id, env);
+        break;
+      }
+      case "charge.refunded": {
+        const charge: any = event.data.object;
+        const tx = await findTxByCharge(charge, env);
+        if (tx) await handleRefund(tx, charge.amount_refunded ?? charge.amount ?? tx.amount_cents);
+        break;
+      }
+      case "charge.dispute.created":
+      case "charge.dispute.closed": {
+        const dispute: any = event.data.object;
+        const chargeObj = { id: dispute.charge, payment_intent: dispute.payment_intent };
+        const tx = await findTxByCharge(chargeObj, env);
+        if (tx) await handleDispute(tx, dispute.status || event.type);
         break;
       }
       default:

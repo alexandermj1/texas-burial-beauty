@@ -1020,6 +1020,7 @@ export type Database = {
           created_by_user_id: string | null
           currency: string
           description: string | null
+          dispute_status: string | null
           environment: string
           id: string
           kind: string
@@ -1027,7 +1028,10 @@ export type Database = {
           paid_at: string | null
           recipient_email: string | null
           recipient_name: string | null
+          refund_amount_cents: number | null
+          refunded_at: string | null
           status: string
+          stripe_charge_id: string | null
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           submission_id: string | null
@@ -1041,6 +1045,7 @@ export type Database = {
           created_by_user_id?: string | null
           currency?: string
           description?: string | null
+          dispute_status?: string | null
           environment?: string
           id?: string
           kind: string
@@ -1048,7 +1053,10 @@ export type Database = {
           paid_at?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
+          refund_amount_cents?: number | null
+          refunded_at?: string | null
           status?: string
+          stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           submission_id?: string | null
@@ -1062,6 +1070,7 @@ export type Database = {
           created_by_user_id?: string | null
           currency?: string
           description?: string | null
+          dispute_status?: string | null
           environment?: string
           id?: string
           kind?: string
@@ -1069,7 +1078,10 @@ export type Database = {
           paid_at?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
+          refund_amount_cents?: number | null
+          refunded_at?: string | null
           status?: string
+          stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           submission_id?: string | null
