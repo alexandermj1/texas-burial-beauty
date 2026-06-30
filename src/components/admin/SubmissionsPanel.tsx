@@ -1595,6 +1595,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             open={buyerOpen}
             onClose={() => setBuyerOpen(false)}
           />
+          <SendBuyerPlotCardsDialog
+            open={plotCardsOpen}
+            onClose={() => setPlotCardsOpen(false)}
+            buyer={{
+              id: selected.id,
+              name: selected.name,
+              email: selected.email,
+              cemetery: selected.cemetery,
+              property_type: selected.property_type,
+            }}
+            adminName={adminName}
+          />
           <SendDeclineDialog
             submission={selected}
             open={declineOpen}
