@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, DollarSign, Link2, Mail, Loader2, Check, Copy, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { properCaseName } from "@/lib/properCase";
+import { properCase } from "@/lib/properCase";
 
 interface Props {
   open: boolean;
@@ -65,7 +65,7 @@ export default function PaymentLinkDialog({ open, onClose, submission, adminName
   useEffect(() => {
     if (kind === "listing_fee") {
       setRecipient(submission.email || "");
-      setRecipientName(properCaseName(submission.name || ""));
+      setRecipientName(properCase(submission.name || ""));
       const fee = LISTING_FEES.find(f => f.id === listingFee)!;
       setAmount(String(fee.amount));
       setDescription(`${fee.label} listing — ${submission.cemetery || "your plot"}`);
