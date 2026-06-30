@@ -319,6 +319,8 @@ export type Database = {
           listing_live_at: string | null
           listing_number: string | null
           listing_option: string | null
+          listing_paid_at: string | null
+          listing_tier: string | null
           listing_url: string | null
           manual_followup: boolean
           message: string | null
@@ -422,6 +424,8 @@ export type Database = {
           listing_live_at?: string | null
           listing_number?: string | null
           listing_option?: string | null
+          listing_paid_at?: string | null
+          listing_tier?: string | null
           listing_url?: string | null
           manual_followup?: boolean
           message?: string | null
@@ -525,6 +529,8 @@ export type Database = {
           listing_live_at?: string | null
           listing_number?: string | null
           listing_option?: string | null
+          listing_paid_at?: string | null
+          listing_tier?: string | null
           listing_url?: string | null
           manual_followup?: boolean
           message?: string | null

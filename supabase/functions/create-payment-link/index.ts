@@ -13,10 +13,11 @@ const corsHeaders = {
 const BodySchema = z.object({
   submissionId: z.string().uuid(),
   kind: z.enum(["listing_fee", "plot_sale", "custom"]),
-  amountCents: z.number().int().positive().max(50_000_000),
+  amountCents: z.number().int().nonnegative().max(50_000_000),
   description: z.string().min(2).max(500),
   recipientEmail: z.string().email(),
   recipientName: z.string().max(200).optional().default(""),
+  listingTier: z.enum(["starter", "pro", "custom_plus"]).optional(),
   environment: z.enum(["sandbox", "live"]).optional(),
 });
 
@@ -51,8 +52,27 @@ Deno.serve(async (req) => {
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const { submissionId, kind, amountCents, description, recipientEmail, recipientName } = parsed.data;
+    const { submissionId, kind, amountCents, description, recipientEmail, recipientName, listingTier } = parsed.data;
     const env: StripeEnv = parsed.data.environment ?? "sandbox";
+
+    // Starter ($0) listing — no Stripe session needed, just record + activate.
+    if (kind === "listing_fee" && amountCents === 0) {
+      await supabase.from("contact_submissions").update({
+        listing_tier: listingTier || "starter",
+        listing_paid_at: new Date().toISOString(),
+      }).eq("id", submissionId);
+      const { data: freeTx } = await supabase.from("payment_transactions").insert({
+        submission_id: submissionId, kind, description,
+        recipient_email: recipientEmail, recipient_name: recipientName || null,
+        amount_cents: 0, currency: "usd", status: "paid",
+        paid_at: new Date().toISOString(),
+        environment: env, created_by_user_id: user.id,
+        metadata: { listing_tier: listingTier || "starter", product_name: "Starter Listing" },
+      }).select().single();
+      return new Response(JSON.stringify({ url: null, free: true, transactionId: freeTx?.id }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: submission } = await supabase
       .from("contact_submissions")
@@ -96,6 +116,7 @@ Deno.serve(async (req) => {
           submission_id: submissionId,
           kind,
           recipient_name: recipientName,
+          ...(listingTier && { listing_tier: listingTier }),
         },
       },
       metadata: {
@@ -103,6 +124,7 @@ Deno.serve(async (req) => {
         kind,
         recipient_email: recipientEmail,
         recipient_name: recipientName,
+        ...(listingTier && { listing_tier: listingTier }),
       },
       success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/payment-cancelled`,
@@ -123,7 +145,7 @@ Deno.serve(async (req) => {
         checkout_url: session.url,
         environment: env,
         created_by_user_id: user.id,
-        metadata: { product_name: productName },
+        metadata: { product_name: productName, ...(listingTier && { listing_tier: listingTier }) },
       })
       .select()
       .single();
