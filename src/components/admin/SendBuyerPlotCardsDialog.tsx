@@ -178,9 +178,15 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       // 2. Create a Stripe Checkout link for each selected plot. If Stripe isn't
       // set up yet (edge function fails / payments not configured), fall back to
       // a mailto: link so the buyer can still respond and we don't block sending.
+      const reserveBase = `${(supabase as any).supabaseUrl || ""}/functions/v1/reserve-plot`;
       const links = await Promise.all(
-        chosen.map(async ({ row, priceNum }) => {
+        chosen.map(async ({ row, priceNum, description }) => {
           const desc = `Cemetery plot — ${row.cemetery || "Texas"}${row.section ? `, Section ${row.section}` : ""}`;
+          const reserveUrl =
+            `${reserveBase}?s=${encodeURIComponent(row.id)}` +
+            `&b=${encodeURIComponent(buyer.id)}` +
+            (buyer.email ? `&e=${encodeURIComponent(buyer.email)}` : "") +
+            (buyer.name ? `&n=${encodeURIComponent(buyer.name)}` : "");
           try {
             const { data, error } = await supabase.functions.invoke("create-payment-link", {
               body: {
@@ -193,19 +199,21 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
               },
             });
             if (error || !data?.url) throw new Error(error?.message || "no url");
-            return { row, priceNum, url: data.url as string, fallback: false };
+            return { row, priceNum, description, url: data.url as string, reserveUrl, fallback: false };
           } catch (e) {
             console.warn("payment link unavailable, using mailto fallback", e);
             const subj = encodeURIComponent(`Interested in ${row.cemetery || "this plot"}${row.section ? ` (Section ${row.section})` : ""}`);
             const body = encodeURIComponent(`Hi,\n\nI'd like to reserve this plot listed at $${priceNum.toLocaleString()}.\n\nThank you,\n${properCase(buyer.name || "")}`);
             const url = `mailto:info@texascemeterybrokers.com?subject=${subj}&body=${body}`;
-            return { row, priceNum, url, fallback: true };
+            return { row, priceNum, description, url, reserveUrl, fallback: true };
           }
         }),
       );
 
       // 3. Build branded card HTML — no seller identity is ever included.
-      const cards = links.map(({ row, priceNum, url }) => buildCard(row, priceNum, url)).join("\n");
+      const cards = links.map(({ row, priceNum, description, url, reserveUrl }) =>
+        buildCard(row, priceNum, url, reserveUrl, description),
+      ).join("\n");
 
       // 4. Log recommendations for the buyer journey panel (both modes).
       await supabase.from("buyer_recommendations" as any).insert(
