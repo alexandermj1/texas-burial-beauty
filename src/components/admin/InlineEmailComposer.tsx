@@ -322,16 +322,18 @@ const InlineEmailComposer = ({
         placeholder="Subject"
         className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
       />
-      <RichTextEditor
-        ref={editorRef}
-        initialHtml={html}
-        onChange={(next) => {
-          setHtml(next);
-          setBodyTouched(true);
-        }}
-        placeholder="Write your message…"
-        minHeight={200}
-      />
+      <div className={expanded ? "flex-1 min-h-0 overflow-auto" : ""}>
+        <RichTextEditor
+          ref={editorRef}
+          initialHtml={html}
+          onChange={(next) => {
+            setHtml(next);
+            setBodyTouched(true);
+          }}
+          placeholder="Write your message…"
+          minHeight={expanded ? 520 : 200}
+        />
+      </div>
       <div className="flex items-center justify-end gap-2 flex-wrap">
         {buyerContext && (
           <button
