@@ -6,7 +6,7 @@
 // (bold, italic, underline, bulleted/numbered lists, links) — sent as
 // multipart/alternative so recipients see formatting in Gmail.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid } from "lucide-react";
+import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -54,14 +54,15 @@ const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 // Convert plain text (templates) into safe HTML preserving paragraph + line breaks.
+// Each non-empty block of text becomes one <p>; consecutive blank lines become
+// empty <p><br></p> rows so the editor preserves room to type between the
+// greeting and signature without inflating the gap between regular paragraphs.
 const textToHtml = (text: string): string => {
   if (!text) return "";
-  // Split on blank lines into paragraphs, then insert a visible empty paragraph
-  // between them so the editor preview matches what the recipient will see.
   const paragraphs = text.split(/\n{2,}/);
   return paragraphs
-    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
-    .join("<p><br></p>");
+    .map((p) => (p.length === 0 ? "<p><br></p>" : `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`))
+    .join("");
 };
 
 
@@ -92,6 +93,8 @@ const htmlToText = (html: string): string => {
 // Vogue-style branded shell wrapped around every outgoing email so replies from
 // the submissions panel match the aesthetic of the plot-card emails: editorial
 // masthead at the top, hairline divider, and an italic footer line.
+const LOGO_URL = "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png";
+
 const wrapInBrandedShell = (innerHtml: string): string => {
   if (!innerHtml || !innerHtml.trim()) return innerHtml;
   if (/data-tcb-shell="1"/.test(innerHtml)) return innerHtml; // never double-wrap
@@ -100,8 +103,9 @@ const wrapInBrandedShell = (innerHtml: string): string => {
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 18px;border-collapse:collapse;">
     <tr>
       <td style="text-align:center;padding:6px 0 14px;border-bottom:1px solid #e7e2d8;">
+        <img src="${LOGO_URL}" alt="Texas Cemetery Brokers" width="44" height="44" style="display:inline-block;width:44px;height:44px;object-fit:contain;margin-bottom:8px;" />
         <p style="font-family:Georgia,serif;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#7c3a2e;margin:0;font-weight:600;">Texas Cemetery Brokers</p>
-        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9a8f7a;margin:4px 0 0;font-style:italic;">Established stewardship &middot; Texas</p>
+        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9a8f7a;margin:4px 0 0;font-style:italic;">Serving all of Texas</p>
       </td>
     </tr>
   </table>
@@ -253,22 +257,40 @@ const InlineEmailComposer = ({
     setPreCheckHtml(null);
   };
 
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className="mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2">
+    <div
+      className={
+        expanded
+          ? "fixed inset-4 z-50 rounded-xl border border-primary/30 bg-background p-5 shadow-2xl flex flex-col gap-3 overflow-hidden"
+          : "mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2"
+      }
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="text-[10px] uppercase tracking-wide font-bold text-primary">
           {inReplyToGmailId ? "Reply in this thread" : "New email"} · from info@texascemeterybrokers.com
         </div>
-        {onCancel && (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onCancel}
-            className="text-muted-foreground hover:text-foreground"
-            title="Close"
+            onClick={() => setExpanded((v) => !v)}
+            className="hidden lg:inline-flex text-muted-foreground hover:text-foreground"
+            title={expanded ? "Exit full screen" : "Expand to full screen"}
           >
-            <X className="w-3.5 h-3.5" />
+            {expanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
-        )}
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-muted-foreground hover:text-foreground"
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
       <div className="text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground">To:</span> {to}
@@ -300,16 +322,18 @@ const InlineEmailComposer = ({
         placeholder="Subject"
         className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
       />
-      <RichTextEditor
-        ref={editorRef}
-        initialHtml={html}
-        onChange={(next) => {
-          setHtml(next);
-          setBodyTouched(true);
-        }}
-        placeholder="Write your message…"
-        minHeight={200}
-      />
+      <div className={expanded ? "flex-1 min-h-0 overflow-auto" : ""}>
+        <RichTextEditor
+          ref={editorRef}
+          initialHtml={html}
+          onChange={(next) => {
+            setHtml(next);
+            setBodyTouched(true);
+          }}
+          placeholder="Write your message…"
+          minHeight={expanded ? 520 : 200}
+        />
+      </div>
       <div className="flex items-center justify-end gap-2 flex-wrap">
         {buyerContext && (
           <button
