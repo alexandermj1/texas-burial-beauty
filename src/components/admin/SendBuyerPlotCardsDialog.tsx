@@ -209,7 +209,8 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         // Wrap in a labelled block so the admin can see/remove it in the editor.
         const block = `<div data-plot-cards="1" style="margin:18px 0;">${cards}</div><p><br></p>`;
         onAttach?.(block);
-        toast({ title: "Plot cards attached", description: `${links.length} card${links.length === 1 ? "" : "s"} added to your email.` });
+        const fellBack = links.some(l => l.fallback);
+        toast({ title: "Plot cards attached", description: `${links.length} card${links.length === 1 ? "" : "s"} added.${fellBack ? " (Payment links unavailable — buttons will email you instead.)" : ""}` });
         onClose();
         return;
       }
