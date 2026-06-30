@@ -159,13 +159,14 @@ const InlineEmailComposer = ({
       return;
     }
     setSending(true);
+    const brandedHtml = wrapInBrandedShell(html);
     const { data, error } = await supabase.functions.invoke("gmail-action", {
       body: {
         action: "send",
         to,
         subject: subject || "(no subject)",
         body: plain,
-        htmlBody: html,
+        htmlBody: brandedHtml,
         threadId: threadId || undefined,
         inReplyToGmailId: inReplyToGmailId || undefined,
       },
