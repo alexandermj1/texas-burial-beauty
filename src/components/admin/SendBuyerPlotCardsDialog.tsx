@@ -222,8 +222,20 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       window.dispatchEvent(new Event("buyer-rec-saved"));
 
       if (mode === "attach") {
+        // Build a dynamic intro paragraph that summarises what we're showing
+        // (count, cemeteries) so the email body matches the selected plots.
+        const cems = Array.from(new Set(links.map((l) => properCase(l.row.cemetery || "")).filter(Boolean)));
+        const cemPhrase = cems.length === 0
+          ? "Texas"
+          : cems.length === 1
+          ? cems[0]
+          : cems.length === 2
+          ? `${cems[0]} and ${cems[1]}`
+          : `${cems.slice(0, -1).join(", ")}, and ${cems[cems.length - 1]}`;
+        const countWord = links.length === 1 ? "one option" : `${links.length} options`;
+        const intro = `<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">Based on what you're looking for, I've put together ${countWord} currently available at ${escapeHtml(cemPhrase)}. Details and pricing for each are below.</p>`;
         // Wrap in a labelled block so the admin can see/remove it in the editor.
-        const block = `<div data-plot-cards="1" style="margin:18px 0;">${cards}</div><p><br></p>`;
+        const block = `<div data-plot-cards="1" style="margin:18px 0;">${intro}${cards}</div><p><br></p>`;
         onAttach?.(block);
         const fellBack = links.some(l => l.fallback);
         toast({ title: "Plot cards attached", description: `${links.length} card${links.length === 1 ? "" : "s"} added.${fellBack ? " (Payment links unavailable — buttons will email you instead.)" : ""}` });
