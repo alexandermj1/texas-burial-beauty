@@ -89,6 +89,33 @@ const htmlToText = (html: string): string => {
   return text;
 };
 
+// Vogue-style branded shell wrapped around every outgoing email so replies from
+// the submissions panel match the aesthetic of the plot-card emails: editorial
+// masthead at the top, hairline divider, and an italic footer line.
+const wrapInBrandedShell = (innerHtml: string): string => {
+  if (!innerHtml || !innerHtml.trim()) return innerHtml;
+  if (/data-tcb-shell="1"/.test(innerHtml)) return innerHtml; // never double-wrap
+  return `
+<div data-tcb-shell="1" style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1f2937;padding:8px;background:#ffffff;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 18px;border-collapse:collapse;">
+    <tr>
+      <td style="text-align:center;padding:6px 0 14px;border-bottom:1px solid #e7e2d8;">
+        <p style="font-family:Georgia,serif;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#7c3a2e;margin:0;font-weight:600;">Texas Cemetery Brokers</p>
+        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9a8f7a;margin:4px 0 0;font-style:italic;">Established stewardship &middot; Texas</p>
+      </td>
+    </tr>
+  </table>
+  <div style="font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#1f2937;">${innerHtml}</div>
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:22px 0 0;border-collapse:collapse;">
+    <tr>
+      <td style="text-align:center;padding:14px 0 4px;border-top:1px solid #e7e2d8;">
+        <p style="font-family:Georgia,serif;font-size:11px;color:#9a8f7a;margin:0;font-style:italic;letter-spacing:.04em;">texascemeterybrokers.com &middot; info@texascemeterybrokers.com</p>
+      </td>
+    </tr>
+  </table>
+</div>`.trim();
+};
+
 const InlineEmailComposer = ({
   to,
   defaultSubject = "",
@@ -159,13 +186,14 @@ const InlineEmailComposer = ({
       return;
     }
     setSending(true);
+    const brandedHtml = wrapInBrandedShell(html);
     const { data, error } = await supabase.functions.invoke("gmail-action", {
       body: {
         action: "send",
         to,
         subject: subject || "(no subject)",
         body: plain,
-        htmlBody: html,
+        htmlBody: brandedHtml,
         threadId: threadId || undefined,
         inReplyToGmailId: inReplyToGmailId || undefined,
       },

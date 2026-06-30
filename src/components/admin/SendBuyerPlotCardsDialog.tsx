@@ -178,15 +178,9 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       // 2. Create a Stripe Checkout link for each selected plot. If Stripe isn't
       // set up yet (edge function fails / payments not configured), fall back to
       // a mailto: link so the buyer can still respond and we don't block sending.
-      const reserveBase = `${(supabase as any).supabaseUrl || ""}/functions/v1/reserve-plot`;
       const links = await Promise.all(
         chosen.map(async ({ row, priceNum, description }) => {
           const desc = `Cemetery plot — ${row.cemetery || "Texas"}${row.section ? `, Section ${row.section}` : ""}`;
-          const reserveUrl =
-            `${reserveBase}?s=${encodeURIComponent(row.id)}` +
-            `&b=${encodeURIComponent(buyer.id)}` +
-            (buyer.email ? `&e=${encodeURIComponent(buyer.email)}` : "") +
-            (buyer.name ? `&n=${encodeURIComponent(buyer.name)}` : "");
           try {
             const { data, error } = await supabase.functions.invoke("create-payment-link", {
               body: {
@@ -199,20 +193,20 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
               },
             });
             if (error || !data?.url) throw new Error(error?.message || "no url");
-            return { row, priceNum, description, url: data.url as string, reserveUrl, fallback: false };
+            return { row, priceNum, description, url: data.url as string, fallback: false };
           } catch (e) {
             console.warn("payment link unavailable, using mailto fallback", e);
             const subj = encodeURIComponent(`Interested in ${row.cemetery || "this plot"}${row.section ? ` (Section ${row.section})` : ""}`);
-            const body = encodeURIComponent(`Hi,\n\nI'd like to reserve this plot listed at $${priceNum.toLocaleString()}.\n\nThank you,\n${properCase(buyer.name || "")}`);
+            const body = encodeURIComponent(`Hi,\n\nI'd like to purchase this plot listed at $${priceNum.toLocaleString()}.\n\nThank you,\n${properCase(buyer.name || "")}`);
             const url = `mailto:info@texascemeterybrokers.com?subject=${subj}&body=${body}`;
-            return { row, priceNum, description, url, reserveUrl, fallback: true };
+            return { row, priceNum, description, url, fallback: true };
           }
         }),
       );
 
       // 3. Build branded card HTML — no seller identity is ever included.
-      const cards = links.map(({ row, priceNum, description, url, reserveUrl }) =>
-        buildCard(row, priceNum, url, reserveUrl, description),
+      const cards = links.map(({ row, priceNum, description, url }) =>
+        buildCard(row, priceNum, url, description),
       ).join("\n");
 
       // 4. Log recommendations for the buyer journey panel (both modes).
@@ -408,7 +402,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
   );
 }
 
-function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string, description?: string) {
+function buildCard(row: PlotRow, price: number, url: string, description?: string) {
   const cem = escapeHtml(properCase(row.cemetery || "Cemetery plot"));
   const n = spacesNum(row.spaces);
   const meta = [
@@ -426,9 +420,7 @@ function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string
   const descLine = description && description.trim()
     ? `<p style="font-family:Georgia,serif;font-size:13px;color:#4b4537;margin:8px 0 12px;line-height:1.55;font-style:italic;">${escapeHtml(description.trim())}</p>`
     : "";
-  const holdLine = reserveUrl
-    ? `<p style="font-family:Georgia,serif;font-size:12px;color:#6b6354;margin:10px 0 0;">Not ready to pay? <a href="${reserveUrl}" style="color:#7c3a2e;text-decoration:underline;">Hold this plot for 3 days</a> — no payment required.</p>`
-    : "";
+  const demandLine = `<p style="font-family:Georgia,serif;font-size:11px;color:#9a8f7a;margin:10px 0 0;font-style:italic;">Due to high demand at this cemetery, we are unable to hold plots — first secured, first served.</p>`;
   return `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 16px;border-collapse:separate;border:1px solid #e7e2d8;border-radius:14px;background:#fbf8f3;overflow:hidden;">
   <tr>
@@ -441,7 +433,7 @@ function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string
       ${perSpaceLine}
       <a href="${url}" style="display:inline-block;margin-top:8px;background:#7c3a2e;color:#ffffff;padding:12px 24px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Reserve &amp; pay securely</a>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
-      ${holdLine}
+      ${demandLine}
     </td>
   </tr>
 </table>`.trim();
