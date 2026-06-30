@@ -1256,6 +1256,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               >
                 <DollarSign className="w-3.5 h-3.5" /> Send payment link
               </button>
+              {selectedKind === "buyer" && (
+                <button
+                  onClick={() => setPlotCardsOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <Send className="w-3.5 h-3.5" /> Send plot cards
+                </button>
+              )}
             </div>
 
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
