@@ -57,7 +57,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
   const [rows, setRows] = useState<PlotRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Record<string, { selected: boolean; price: string }>>({});
+  const [selected, setSelected] = useState<Record<string, { selected: boolean; price: string; description: string }>>({});
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -126,19 +126,33 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         next[r.id] = {
           selected: true,
           price: cur[r.id]?.price ?? (r.list_price ? String(r.list_price) : r.accepted_quote_amount ? String(r.accepted_quote_amount) : ""),
+          description: cur[r.id]?.description ?? "",
         };
       }
       return next;
     });
 
   const setPrice = (id: string, price: string) =>
-    setSelected((cur) => ({ ...cur, [id]: { selected: cur[id]?.selected ?? true, price } }));
+    setSelected((cur) => ({
+      ...cur,
+      [id]: { selected: cur[id]?.selected ?? true, price, description: cur[id]?.description ?? "" },
+    }));
+
+  const setDescription = (id: string, description: string) =>
+    setSelected((cur) => ({
+      ...cur,
+      [id]: { selected: cur[id]?.selected ?? true, price: cur[id]?.price ?? "", description },
+    }));
 
   const chosen = useMemo(
     () =>
       rows
         .filter((r) => selected[r.id]?.selected)
-        .map((r) => ({ row: r, priceNum: Number(selected[r.id]?.price) || 0 })),
+        .map((r) => ({
+          row: r,
+          priceNum: Number(selected[r.id]?.price) || 0,
+          description: selected[r.id]?.description ?? "",
+        })),
     [rows, selected],
   );
 
@@ -164,9 +178,15 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       // 2. Create a Stripe Checkout link for each selected plot. If Stripe isn't
       // set up yet (edge function fails / payments not configured), fall back to
       // a mailto: link so the buyer can still respond and we don't block sending.
+      const reserveBase = `${(supabase as any).supabaseUrl || ""}/functions/v1/reserve-plot`;
       const links = await Promise.all(
-        chosen.map(async ({ row, priceNum }) => {
+        chosen.map(async ({ row, priceNum, description }) => {
           const desc = `Cemetery plot — ${row.cemetery || "Texas"}${row.section ? `, Section ${row.section}` : ""}`;
+          const reserveUrl =
+            `${reserveBase}?s=${encodeURIComponent(row.id)}` +
+            `&b=${encodeURIComponent(buyer.id)}` +
+            (buyer.email ? `&e=${encodeURIComponent(buyer.email)}` : "") +
+            (buyer.name ? `&n=${encodeURIComponent(buyer.name)}` : "");
           try {
             const { data, error } = await supabase.functions.invoke("create-payment-link", {
               body: {
@@ -179,19 +199,21 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
               },
             });
             if (error || !data?.url) throw new Error(error?.message || "no url");
-            return { row, priceNum, url: data.url as string, fallback: false };
+            return { row, priceNum, description, url: data.url as string, reserveUrl, fallback: false };
           } catch (e) {
             console.warn("payment link unavailable, using mailto fallback", e);
             const subj = encodeURIComponent(`Interested in ${row.cemetery || "this plot"}${row.section ? ` (Section ${row.section})` : ""}`);
             const body = encodeURIComponent(`Hi,\n\nI'd like to reserve this plot listed at $${priceNum.toLocaleString()}.\n\nThank you,\n${properCase(buyer.name || "")}`);
             const url = `mailto:info@texascemeterybrokers.com?subject=${subj}&body=${body}`;
-            return { row, priceNum, url, fallback: true };
+            return { row, priceNum, description, url, reserveUrl, fallback: true };
           }
         }),
       );
 
       // 3. Build branded card HTML — no seller identity is ever included.
-      const cards = links.map(({ row, priceNum, url }) => buildCard(row, priceNum, url)).join("\n");
+      const cards = links.map(({ row, priceNum, description, url, reserveUrl }) =>
+        buildCard(row, priceNum, url, reserveUrl, description),
+      ).join("\n");
 
       // 4. Log recommendations for the buyer journey panel (both modes).
       await supabase.from("buyer_recommendations" as any).insert(
@@ -346,6 +368,20 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                           )}
                         </div>
                       </div>
+                      {isSel && (
+                        <div className="mt-3 pl-8">
+                          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                            Description (optional — shown on the card)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={selected[r.id]?.description ?? ""}
+                            onChange={(e) => setDescription(r.id, e.target.value)}
+                            placeholder="e.g. Peaceful corner lot beneath mature oaks, near the chapel."
+                            className="w-full rounded-md bg-background border border-border/60 text-xs p-2 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -372,13 +408,13 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
   );
 }
 
-function buildCard(row: PlotRow, price: number, url: string) {
+function buildCard(row: PlotRow, price: number, url: string, reserveUrl?: string, description?: string) {
   const cem = escapeHtml(properCase(row.cemetery || "Cemetery plot"));
   const n = spacesNum(row.spaces);
   const meta = [
     row.property_type,
     row.spaces && `${row.spaces} space${n === 1 ? "" : "s"}`,
-    row.section && `Section ${row.section}`,
+    row.section && `Section ${properCase(row.section)}`,
   ]
     .filter(Boolean)
     .map((s) => escapeHtml(String(s)))
@@ -387,6 +423,12 @@ function buildCard(row: PlotRow, price: number, url: string) {
     n > 1
       ? `<p style="font-family:Georgia,serif;font-size:13px;color:#6b6354;margin:0 0 14px;">${escapeHtml(fmt(Math.round(price / n)))} per space &middot; ${n} spaces</p>`
       : "";
+  const descLine = description && description.trim()
+    ? `<p style="font-family:Georgia,serif;font-size:13px;color:#4b4537;margin:8px 0 12px;line-height:1.55;font-style:italic;">${escapeHtml(description.trim())}</p>`
+    : "";
+  const holdLine = reserveUrl
+    ? `<p style="font-family:Georgia,serif;font-size:12px;color:#6b6354;margin:10px 0 0;">Not ready to pay? <a href="${reserveUrl}" style="color:#7c3a2e;text-decoration:underline;">Hold this plot for 3 days</a> — no payment required.</p>`
+    : "";
   return `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 16px;border-collapse:separate;border:1px solid #e7e2d8;border-radius:14px;background:#fbf8f3;overflow:hidden;">
   <tr>
@@ -394,10 +436,12 @@ function buildCard(row: PlotRow, price: number, url: string) {
       <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#7c3a2e;margin:0 0 6px;">Available Plot</p>
       <h2 style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1f2937;margin:0 0 4px;line-height:1.25;">${cem}</h2>
       <p style="font-family:Georgia,serif;font-size:13px;color:#6b6354;margin:0 0 6px;">${meta}</p>
+      ${descLine}
       <p style="font-family:Georgia,serif;font-size:22px;font-weight:600;color:#1f2937;margin:0 0 4px;">${escapeHtml(fmt(price))}${n > 1 ? ' <span style="font-size:13px;font-weight:400;color:#6b6354;">total</span>' : ""}</p>
       ${perSpaceLine}
       <a href="${url}" style="display:inline-block;margin-top:8px;background:#7c3a2e;color:#ffffff;padding:12px 24px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Reserve &amp; pay securely</a>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
+      ${holdLine}
     </td>
   </tr>
 </table>`.trim();

@@ -10,6 +10,12 @@ export interface RichTextEditorHandle {
   focus: () => void;
   /** Append HTML to the end of the editor content. */
   appendHtml: (html: string) => void;
+  /**
+   * Insert HTML just above the signature block (paragraph starting with
+   * "Best regards", "Warm regards", "Kind regards", "Sincerely", "Thanks",
+   * etc.). Falls back to appending at the end if no signature is detected.
+   */
+  insertHtmlBeforeSignature: (html: string) => void;
 }
 
 interface Props {
@@ -61,6 +67,24 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
       if (!elRef.current) return;
       elRef.current.innerHTML = (elRef.current.innerHTML || "") + html;
       lastHtmlRef.current = elRef.current.innerHTML;
+      onChange?.(lastHtmlRef.current);
+    },
+    insertHtmlBeforeSignature: (html: string) => {
+      const el = elRef.current;
+      if (!el) return;
+      const SIG_RE = /\b(best regards|warm regards|kind regards|sincerely|thank(s| you)|cheers|regards)\b/i;
+      const blocks = Array.from(el.children) as HTMLElement[];
+      const sigIdx = blocks.findIndex((b) => SIG_RE.test(b.textContent || ""));
+      const wrap = document.createElement("div");
+      wrap.innerHTML = html;
+      const frag = document.createDocumentFragment();
+      while (wrap.firstChild) frag.appendChild(wrap.firstChild);
+      if (sigIdx >= 0) {
+        el.insertBefore(frag, blocks[sigIdx]);
+      } else {
+        el.appendChild(frag);
+      }
+      lastHtmlRef.current = el.innerHTML;
       onChange?.(lastHtmlRef.current);
     },
   }));
