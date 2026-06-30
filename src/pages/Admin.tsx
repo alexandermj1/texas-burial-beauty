@@ -791,6 +791,7 @@ const Admin = () => {
 
 
           {tab === "performance" && <AgentPerformancePanel />}
+          {tab === "accounting" && <AccountingPanel />}
           {tab === "customers" && <CustomersPanel />}
           
           {tab === "inventory_requests" && <InventoryRequestsPanel />}
