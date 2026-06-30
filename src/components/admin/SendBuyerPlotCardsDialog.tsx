@@ -245,7 +245,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-start justify-center p-4 pt-10 overflow-y-auto"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 10 }}
