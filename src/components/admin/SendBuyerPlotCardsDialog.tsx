@@ -443,8 +443,8 @@ function buildCard(row: PlotRow, price: number, url: string, description?: strin
       <p style="font-family:Georgia,serif;font-size:22px;font-weight:600;color:#1f2937;margin:0 0 4px;">${escapeHtml(fmt(price))}${n > 1 ? ' <span style="font-size:13px;font-weight:400;color:#6b6354;">total</span>' : ""}</p>
       ${perSpaceLine}
       <div style="margin-top:10px;font-size:0;line-height:0;">
-        <a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:11px 22px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;margin:0 10px 10px 0;">Buy securely</a>
-        <span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:11px 22px;border-radius:999px;font-family:Georgia,serif;font-size:14px;font-weight:500;letter-spacing:.02em;border:1px solid #e7e2d8;margin:0 0 10px 0;">Reserve &mdash; unavailable</span>
+        <a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:16px 32px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:16px;font-weight:600;letter-spacing:.02em;margin:0 12px 12px 0;">Buy securely</a>
+        <span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:16px 32px;border-radius:999px;font-family:Georgia,serif;font-size:16px;font-weight:500;letter-spacing:.02em;border:1px solid #e7e2d8;margin:0 0 12px 0;">Reserve &mdash; unavailable</span>
       </div>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9a8f7a;margin:6px 0 0;font-style:italic;">Reservations are currently unavailable at this cemetery due to high demand &mdash; plots are first secured, first served.</p>
