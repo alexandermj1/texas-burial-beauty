@@ -1221,6 +1221,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   customerName={selected.name}
                   cemetery={x.cemetery_original || selected.cemetery}
                   newEmailTemplates={templates}
+                  buyerContext={kind === "buyer" ? {
+                    id: selected.id,
+                    name: selected.name,
+                    email: selected.email,
+                    cemetery: selected.cemetery,
+                    property_type: selected.property_type,
+                  } : null}
                   onNewEmailSent={(meta) => {
                     if (meta?.templateId === "seller_intake") {
                       onUpdate(selected.id, { needs_quote: true } as any);

@@ -6,13 +6,14 @@
 // (bold, italic, underline, bulleted/numbered lists, links) — sent as
 // multipart/alternative so recipients see formatting in Gmail.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, X, Loader2, SpellCheck, Undo2 } from "lucide-react";
+import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
+import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
 
@@ -30,6 +31,14 @@ interface Props {
   sendLabel?: string;
   /** Optional preset templates to pick from. First one is loaded by default. */
   templates?: EmailTemplate[];
+  /** When provided, shows an "Attach plot cards" button (Texas buyer flow only). */
+  buyerContext?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    cemetery: string | null;
+    property_type?: string | null;
+  } | null;
 }
 
 import { properFirstName } from "@/lib/properCase";
@@ -90,6 +99,7 @@ const InlineEmailComposer = ({
   onCancel,
   sendLabel = "Send",
   templates,
+  buyerContext,
 }: Props) => {
   const { toast } = useToast();
   const adminName = useAdminDisplayName();
@@ -99,6 +109,7 @@ const InlineEmailComposer = ({
   const [bodyTouched, setBodyTouched] = useState(false);
   const [checking, setChecking] = useState(false);
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
+  const [plotPickerOpen, setPlotPickerOpen] = useState(false);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
     templates && templates.length ? templates[0].id : null,
   );
@@ -271,7 +282,18 @@ const InlineEmailComposer = ({
         placeholder="Write your message…"
         minHeight={200}
       />
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        {buyerContext && (
+          <button
+            type="button"
+            onClick={() => setPlotPickerOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[hsl(var(--accent-gold-fg))]/40 text-[hsl(var(--accent-gold-fg))] bg-[hsl(var(--accent-gold-bg))]/60 hover:bg-[hsl(var(--accent-gold-bg))]"
+            title="Pick Texas plots and insert branded cards into this email"
+          >
+            <LayoutGrid className="w-3 h-3" />
+            Attach plot cards
+          </button>
+        )}
         {preCheckHtml !== null && (
           <button
             type="button"
@@ -302,6 +324,20 @@ const InlineEmailComposer = ({
           {sending ? "Sending…" : sendLabel}
         </button>
       </div>
+      {buyerContext && (
+        <SendBuyerPlotCardsDialog
+          open={plotPickerOpen}
+          onClose={() => setPlotPickerOpen(false)}
+          buyer={buyerContext}
+          adminName={adminName}
+          mode="attach"
+          onAttach={(cardsHtml) => {
+            editorRef.current?.appendHtml(cardsHtml);
+            setHtml(editorRef.current?.getHtml() ?? html);
+            setBodyTouched(true);
+          }}
+        />
+      )}
     </div>
   );
 };

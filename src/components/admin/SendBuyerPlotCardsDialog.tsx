@@ -22,6 +22,10 @@ interface Props {
     property_type?: string | null;
   };
   adminName?: string;
+  /** "send" = compose & send a standalone email; "attach" = return HTML cards block to caller for insertion into an existing composer. */
+  mode?: "send" | "attach";
+  /** Called in attach mode with the rendered cards HTML after Stripe links are created. */
+  onAttach?: (html: string) => void;
 }
 
 interface PlotRow {
@@ -35,13 +39,21 @@ interface PlotRow {
   accepted_quote_amount: number | null;
   sold_at: string | null;
   deleted_at: string | null;
+  state?: string | null;
+  region?: string | null;
+  inquiry_channel?: string | null;
 }
 
 const norm = (s: string | null | undefined) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
 const fmt = (v: number | null | undefined) =>
   v == null ? "Price on request" : Number(v).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const spacesNum = (s: string | null | undefined): number => {
+  if (!s) return 1;
+  const n = parseInt(String(s).replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+};
 
-export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminName }: Props) {
+export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminName, mode = "send", onAttach }: Props) {
   const [rows, setRows] = useState<PlotRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -59,7 +71,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     setLoading(true);
     const { data, error } = await supabase
       .from("contact_submissions")
-      .select("id, name, cemetery, section, property_type, spaces, list_price, accepted_quote_amount, sold_at, deleted_at, customer_kind, source")
+      .select("id, name, cemetery, section, property_type, spaces, list_price, accepted_quote_amount, sold_at, deleted_at, customer_kind, source, state, region, inquiry_channel")
       .is("deleted_at", null)
       .is("sold_at", null)
       .order("created_at", { ascending: false })
@@ -70,7 +82,15 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     } else {
       const sellers = (data || []).filter((r: any) => {
         const k = (r.customer_kind || r.source || "").toLowerCase();
-        return k.includes("sell") || k === "seller";
+        const isSeller = k.includes("sell") || k === "seller";
+        if (!isSeller) return false;
+        // Texas-only: only Texas seller listings can be sent to a buyer.
+        const isTexas =
+          (r.state || "").toUpperCase() === "TX" ||
+          (r.inquiry_channel || "").toLowerCase() === "texas_buy_wizard" ||
+          (r.inquiry_channel || "").toLowerCase().includes("texas") ||
+          (r.region || "").toLowerCase().includes("texas");
+        return isTexas;
       }) as PlotRow[];
       setRows(sellers);
     }
@@ -81,7 +101,9 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     const q = norm(search);
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.cemetery, r.section, r.property_type, r.name].some((v) => norm(v).includes(q)),
+      // Intentionally exclude seller's name from the searchable fields —
+      // we never expose the seller identity to a buyer.
+      [r.cemetery, r.section, r.property_type].some((v) => norm(v).includes(q)),
     );
   }, [rows, search]);
 
@@ -121,10 +143,14 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     [rows, selected],
   );
 
-  const canSend = !!buyer.email && chosen.length > 0 && chosen.every((c) => c.priceNum > 0);
+  const canSend =
+    chosen.length > 0 &&
+    chosen.every((c) => c.priceNum > 0) &&
+    (mode === "attach" || !!buyer.email);
 
   const handleSend = async () => {
-    if (!canSend || !buyer.email) return;
+    if (!canSend) return;
+    if (mode === "send" && !buyer.email) return;
     setSending(true);
     try {
       // 1. Persist list_price for each (so admin doesn't lose the number).
@@ -146,7 +172,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
               kind: "plot_sale",
               amountCents: Math.round(priceNum * 100),
               description: desc,
-              recipientEmail: buyer.email,
+              recipientEmail: buyer.email || undefined,
               recipientName: properCase(buyer.name || ""),
             },
           });
@@ -155,8 +181,31 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         }),
       );
 
-      // 3. Build the HTML email with branded cards.
+      // 3. Build branded card HTML — no seller identity is ever included.
       const cards = links.map(({ row, priceNum, url }) => buildCard(row, priceNum, url)).join("\n");
+
+      // 4. Log recommendations for the buyer journey panel (both modes).
+      await supabase.from("buyer_recommendations" as any).insert(
+        links.map(({ row, priceNum }) => ({
+          submission_id: buyer.id,
+          listing_id: row.id,
+          cemetery: row.cemetery,
+          plot_type: row.property_type,
+          asking_price: priceNum,
+        })),
+      );
+      window.dispatchEvent(new Event("buyer-rec-saved"));
+
+      if (mode === "attach") {
+        // Wrap in a labelled block so the admin can see/remove it in the editor.
+        const block = `<div data-plot-cards="1" style="margin:18px 0;">${cards}</div><p><br></p>`;
+        onAttach?.(block);
+        toast({ title: "Plot cards attached", description: `${links.length} card${links.length === 1 ? "" : "s"} added to your email.` });
+        onClose();
+        return;
+      }
+
+      // Standalone send mode: build the full branded email and send it.
       const buyerFirst = properCase(buyer.name || "").split(" ")[0] || "there";
       const html = `
 <div style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1f2937;padding:8px;">
@@ -181,18 +230,6 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       });
       if (sendErr) throw sendErr;
 
-      // 4. Log recommendations for the buyer journey panel.
-      await supabase.from("buyer_recommendations" as any).insert(
-        links.map(({ row, priceNum }) => ({
-          submission_id: buyer.id,
-          listing_id: row.id,
-          cemetery: row.cemetery,
-          plot_type: row.property_type,
-          asking_price: priceNum,
-        })),
-      );
-      window.dispatchEvent(new Event("buyer-rec-saved"));
-
       toast({ title: "Plots sent", description: `${links.length} plot${links.length === 1 ? "" : "s"} sent to ${buyer.email}` });
       onClose();
     } catch (e: any) {
@@ -201,6 +238,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       setSending(false);
     }
   };
+
 
   return (
     <AnimatePresence>
@@ -269,8 +307,15 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
                             {[r.property_type, r.spaces && `${r.spaces} space${r.spaces === "1" ? "" : "s"}`, r.section && `Section ${r.section}`].filter(Boolean).join(" · ") || "—"}
-                            {r.name ? ` · seller ${r.name}` : ""}
                           </p>
+                          {(() => {
+                            const n = spacesNum(r.spaces);
+                            const p = Number(price) || 0;
+                            if (n > 1 && p > 0) {
+                              return <p className="text-[10px] text-muted-foreground/80 mt-0.5">{fmt(p)} total · {fmt(Math.round(p / n))} per space</p>;
+                            }
+                            return null;
+                          })()}
                         </div>
                         <div className="shrink-0">
                           <div className="relative">
@@ -307,7 +352,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                 className="inline-flex items-center gap-2 px-5 h-10 rounded-full text-sm font-medium bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                Send plot cards
+                {mode === "attach" ? "Attach to email" : "Send plot cards"}
               </button>
             </div>
           </motion.div>
@@ -319,19 +364,29 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
 
 function buildCard(row: PlotRow, price: number, url: string) {
   const cem = escapeHtml(properCase(row.cemetery || "Cemetery plot"));
-  const meta = [row.property_type, row.spaces && `${row.spaces} space${row.spaces === "1" ? "" : "s"}`, row.section && `Section ${row.section}`]
+  const n = spacesNum(row.spaces);
+  const meta = [
+    row.property_type,
+    row.spaces && `${row.spaces} space${n === 1 ? "" : "s"}`,
+    row.section && `Section ${row.section}`,
+  ]
     .filter(Boolean)
     .map((s) => escapeHtml(String(s)))
     .join(" &middot; ") || "Texas plot";
+  const perSpaceLine =
+    n > 1
+      ? `<p style="font-family:Georgia,serif;font-size:13px;color:#6b6354;margin:0 0 14px;">${escapeHtml(fmt(Math.round(price / n)))} per space &middot; ${n} spaces</p>`
+      : "";
   return `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 16px;border-collapse:separate;border:1px solid #e7e2d8;border-radius:14px;background:#fbf8f3;overflow:hidden;">
   <tr>
     <td style="padding:18px 20px;">
       <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#7c3a2e;margin:0 0 6px;">Available Plot</p>
       <h2 style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1f2937;margin:0 0 4px;line-height:1.25;">${cem}</h2>
-      <p style="font-family:Georgia,serif;font-size:13px;color:#6b6354;margin:0 0 14px;">${meta}</p>
-      <p style="font-family:Georgia,serif;font-size:22px;font-weight:600;color:#1f2937;margin:0 0 14px;">${escapeHtml(fmt(price))}</p>
-      <a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:12px 24px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Reserve &amp; pay securely</a>
+      <p style="font-family:Georgia,serif;font-size:13px;color:#6b6354;margin:0 0 6px;">${meta}</p>
+      <p style="font-family:Georgia,serif;font-size:22px;font-weight:600;color:#1f2937;margin:0 0 4px;">${escapeHtml(fmt(price))}${n > 1 ? ' <span style="font-size:13px;font-weight:400;color:#6b6354;">total</span>' : ""}</p>
+      ${perSpaceLine}
+      <a href="${url}" style="display:inline-block;margin-top:8px;background:#7c3a2e;color:#ffffff;padding:12px 24px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Reserve &amp; pay securely</a>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
     </td>
   </tr>
