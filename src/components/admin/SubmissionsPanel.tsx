@@ -1182,7 +1182,44 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       Auto-flagged from outgoing promise
                     </span>
                   )}
-
+                  {(() => {
+                    const sx = selected as any;
+                    const until = sx.reserved_until ? new Date(sx.reserved_until) : null;
+                    const isReserved = until && until.getTime() > Date.now();
+                    if (isReserved) {
+                      const days = Math.ceil((until!.getTime() - Date.now()) / 86400000);
+                      return (
+                        <>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300">
+                            ⏳ Reserved{sx.reserved_by_name ? ` by ${sx.reserved_by_name}` : ""} · {days}d left
+                          </span>
+                          <button
+                            onClick={() => onUpdate(selected.id, { reserved_at: null, reserved_until: null, reserved_by_email: null, reserved_by_name: null, reserved_by_submission_id: null } as any)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-card text-foreground border border-border hover:bg-muted/60 transition-colors"
+                            title="Release this 3-day hold"
+                          >
+                            Release hold
+                          </button>
+                        </>
+                      );
+                    }
+                    return (
+                      <button
+                        onClick={() => {
+                          const now = new Date();
+                          const end = new Date(now.getTime() + 3 * 86400000);
+                          onUpdate(selected.id, {
+                            reserved_at: now.toISOString(),
+                            reserved_until: end.toISOString(),
+                          } as any);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-card text-foreground border border-border hover:bg-muted/60 transition-colors"
+                        title="Place a 3-day hold on this plot for a buyer"
+                      >
+                        Reserve for 3 days
+                      </button>
+                    );
+                  })()}
                 </div>
               );
             })()}
