@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
+import PaymentLinkDialog from "./PaymentLinkDialog";
 import { Megaphone, UserPlus, Building2 } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -166,6 +167,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
+  const [paymentLinkOpen, setPaymentLinkOpen] = useState(false);
   const isMobile = useIsMobile();
   const adminName = useAdminDisplayName();
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
@@ -786,6 +788,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         onCreated={(id) => { setSelectedId(id); onRefresh?.(); }}
       />
 
+      {selected && (
+        <PaymentLinkDialog
+          open={paymentLinkOpen}
+          onClose={() => setPaymentLinkOpen(false)}
+          submission={selected as any}
+          adminName={adminName}
+        />
+      )}
+
       {/* Pipeline stage filter intentionally removed — it duplicated the stepper inside the Bayer pipeline panel.
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
@@ -1237,6 +1248,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <Phone className="w-3.5 h-3.5" /> {selected.phone}
                 </a>
               )}
+              <button
+                onClick={() => setPaymentLinkOpen(true)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--accent-gold-bg))] text-[hsl(var(--accent-gold-fg))] border border-[hsl(var(--accent-gold-fg))]/20 hover:opacity-90 transition-opacity"
+              >
+                <DollarSign className="w-3.5 h-3.5" /> Send payment link
+              </button>
             </div>
 
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
