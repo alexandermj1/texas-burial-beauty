@@ -1516,7 +1516,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           </button>
                         ) : (
                           <button
-                            onClick={guard("Send available plots", () => setBuyerOpen(true))}
+                            onClick={guard("Send available plots", () => setPlotCardsOpen(true))}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                           >
                             <Send className="w-3.5 h-3.5" />
