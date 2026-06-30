@@ -54,13 +54,14 @@ const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 // Convert plain text (templates) into safe HTML preserving paragraph + line breaks.
-// Paragraph tags already provide visual spacing; do not insert empty paragraphs
-// between them or the result double-spaces in both the composer and recipient view.
+// Each non-empty block of text becomes one <p>; consecutive blank lines become
+// empty <p><br></p> rows so the editor preserves room to type between the
+// greeting and signature without inflating the gap between regular paragraphs.
 const textToHtml = (text: string): string => {
   if (!text) return "";
-  const paragraphs = text.split(/\n{2,}/).filter((p) => p.length > 0);
+  const paragraphs = text.split(/\n{2,}/);
   return paragraphs
-    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+    .map((p) => (p.length === 0 ? "<p><br></p>" : `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`))
     .join("");
 };
 
