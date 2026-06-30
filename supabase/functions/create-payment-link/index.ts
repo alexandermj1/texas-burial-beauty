@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
       await supabase.from("contact_submissions").update({
         listing_tier: listingTier || "starter",
         listing_paid_at: new Date().toISOString(),
+        payment_received_at: new Date().toISOString(),
       }).eq("id", submissionId);
       const { data: freeTx } = await supabase.from("payment_transactions").insert({
         submission_id: submissionId, kind, description,
@@ -69,6 +70,12 @@ Deno.serve(async (req) => {
         environment: env, created_by_user_id: user.id,
         metadata: { listing_tier: listingTier || "starter", product_name: "Starter Listing" },
       }).select().single();
+
+      // Send branded confirmation email + admin notification (same treatment as Pro).
+      try {
+        await supabase.functions.invoke("payments-webhook", { body: { __internal_starter_activated: true, transactionId: freeTx?.id } });
+      } catch (_) { /* best-effort */ }
+
       return new Response(JSON.stringify({ url: null, free: true, transactionId: freeTx?.id }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
