@@ -352,7 +352,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                 className="inline-flex items-center gap-2 px-5 h-10 rounded-full text-sm font-medium bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                Send plot cards
+                {mode === "attach" ? "Attach to email" : "Send plot cards"}
               </button>
             </div>
           </motion.div>
