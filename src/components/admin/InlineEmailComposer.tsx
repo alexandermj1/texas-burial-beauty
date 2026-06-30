@@ -92,6 +92,8 @@ const htmlToText = (html: string): string => {
 // Vogue-style branded shell wrapped around every outgoing email so replies from
 // the submissions panel match the aesthetic of the plot-card emails: editorial
 // masthead at the top, hairline divider, and an italic footer line.
+const LOGO_URL = "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png";
+
 const wrapInBrandedShell = (innerHtml: string): string => {
   if (!innerHtml || !innerHtml.trim()) return innerHtml;
   if (/data-tcb-shell="1"/.test(innerHtml)) return innerHtml; // never double-wrap
@@ -100,8 +102,9 @@ const wrapInBrandedShell = (innerHtml: string): string => {
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 18px;border-collapse:collapse;">
     <tr>
       <td style="text-align:center;padding:6px 0 14px;border-bottom:1px solid #e7e2d8;">
+        <img src="${LOGO_URL}" alt="Texas Cemetery Brokers" width="44" height="44" style="display:inline-block;width:44px;height:44px;object-fit:contain;margin-bottom:8px;" />
         <p style="font-family:Georgia,serif;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#7c3a2e;margin:0;font-weight:600;">Texas Cemetery Brokers</p>
-        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9a8f7a;margin:4px 0 0;font-style:italic;">Established stewardship &middot; Texas</p>
+        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9a8f7a;margin:4px 0 0;font-style:italic;">Serving all of Texas</p>
       </td>
     </tr>
   </table>
