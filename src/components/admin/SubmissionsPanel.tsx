@@ -167,6 +167,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
+  const [paymentLinkOpen, setPaymentLinkOpen] = useState(false);
   const isMobile = useIsMobile();
   const adminName = useAdminDisplayName();
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
