@@ -1239,6 +1239,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <Phone className="w-3.5 h-3.5" /> {selected.phone}
                 </a>
               )}
+              <button
+                onClick={() => setPaymentLinkOpen(true)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--accent-gold-bg))] text-[hsl(var(--accent-gold-fg))] border border-[hsl(var(--accent-gold-fg))]/20 hover:opacity-90 transition-opacity"
+              >
+                <DollarSign className="w-3.5 h-3.5" /> Send payment link
+              </button>
             </div>
 
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
