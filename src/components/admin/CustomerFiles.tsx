@@ -44,7 +44,10 @@ const formatBytes = (b: number | null) => {
 };
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+
+const formatDateOnly = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 const isImageMime = (m: string | null) => !!m && m.startsWith("image/");
 
@@ -406,13 +409,19 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                       {f.document_type}
                     </span>
                   )}
+                  <span className="absolute bottom-1.5 right-1.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-primary/90 text-primary-foreground backdrop-blur-sm" title={`Received ${formatDate(f.created_at)}`}>
+                    {formatDateOnly(f.created_at)}
+                  </span>
                 </button>
                 <div className="p-2.5 flex flex-col gap-1.5">
                   <button onClick={() => openFile(f)} className="text-left text-sm font-medium text-foreground truncate hover:text-primary" title={f.file_name}>
                     {f.file_name}
                   </button>
                   <p className="text-[11px] text-muted-foreground truncate">
-                    {formatBytes(f.file_size)} · {f.uploaded_by_name || "admin"} · {formatDate(f.created_at)}
+                    Sent {formatDate(f.created_at)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {formatBytes(f.file_size)} · {f.uploaded_by_name || "admin"}
                   </p>
                   {/* AI summary block */}
                   {f.extraction_status === "pending" && (
