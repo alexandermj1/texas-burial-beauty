@@ -36,6 +36,8 @@ const Guides = lazy(() => import("./pages/Guides"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
 const ThankYou = lazy(() => import("./pages/ThankYou"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +81,8 @@ const App = () => (
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
                 <Route path="/thank-you" element={<ThankYou />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                 <Route path="/buying-a-cemetery-plot-in-texas" element={<Navigate to="/cemetery-plots-for-sale-texas" replace />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
