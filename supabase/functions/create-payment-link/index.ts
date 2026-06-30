@@ -13,10 +13,11 @@ const corsHeaders = {
 const BodySchema = z.object({
   submissionId: z.string().uuid(),
   kind: z.enum(["listing_fee", "plot_sale", "custom"]),
-  amountCents: z.number().int().positive().max(50_000_000),
+  amountCents: z.number().int().nonnegative().max(50_000_000),
   description: z.string().min(2).max(500),
   recipientEmail: z.string().email(),
   recipientName: z.string().max(200).optional().default(""),
+  listingTier: z.enum(["starter", "pro", "custom_plus"]).optional(),
   environment: z.enum(["sandbox", "live"]).optional(),
 });
 
