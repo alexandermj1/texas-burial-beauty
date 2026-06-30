@@ -53,7 +53,7 @@ const spacesNum = (s: string | null | undefined): number => {
   return Number.isFinite(n) && n > 0 ? n : 1;
 };
 
-export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminName }: Props) {
+export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminName, mode = "send", onAttach }: Props) {
   const [rows, setRows] = useState<PlotRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -71,7 +71,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     setLoading(true);
     const { data, error } = await supabase
       .from("contact_submissions")
-      .select("id, name, cemetery, section, property_type, spaces, list_price, accepted_quote_amount, sold_at, deleted_at, customer_kind, source")
+      .select("id, name, cemetery, section, property_type, spaces, list_price, accepted_quote_amount, sold_at, deleted_at, customer_kind, source, state, region, inquiry_channel")
       .is("deleted_at", null)
       .is("sold_at", null)
       .order("created_at", { ascending: false })
@@ -82,7 +82,15 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     } else {
       const sellers = (data || []).filter((r: any) => {
         const k = (r.customer_kind || r.source || "").toLowerCase();
-        return k.includes("sell") || k === "seller";
+        const isSeller = k.includes("sell") || k === "seller";
+        if (!isSeller) return false;
+        // Texas-only: only Texas seller listings can be sent to a buyer.
+        const isTexas =
+          (r.state || "").toUpperCase() === "TX" ||
+          (r.inquiry_channel || "").toLowerCase() === "texas_buy_wizard" ||
+          (r.inquiry_channel || "").toLowerCase().includes("texas") ||
+          (r.region || "").toLowerCase().includes("texas");
+        return isTexas;
       }) as PlotRow[];
       setRows(sellers);
     }
