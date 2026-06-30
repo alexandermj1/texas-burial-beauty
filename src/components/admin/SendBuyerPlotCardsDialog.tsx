@@ -39,11 +39,19 @@ interface PlotRow {
   accepted_quote_amount: number | null;
   sold_at: string | null;
   deleted_at: string | null;
+  state?: string | null;
+  region?: string | null;
+  inquiry_channel?: string | null;
 }
 
 const norm = (s: string | null | undefined) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
 const fmt = (v: number | null | undefined) =>
   v == null ? "Price on request" : Number(v).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const spacesNum = (s: string | null | undefined): number => {
+  if (!s) return 1;
+  const n = parseInt(String(s).replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+};
 
 export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminName }: Props) {
   const [rows, setRows] = useState<PlotRow[]>([]);
