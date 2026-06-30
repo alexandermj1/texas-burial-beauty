@@ -22,6 +22,10 @@ interface Props {
     property_type?: string | null;
   };
   adminName?: string;
+  /** "send" = compose & send a standalone email; "attach" = return HTML cards block to caller for insertion into an existing composer. */
+  mode?: "send" | "attach";
+  /** Called in attach mode with the rendered cards HTML after Stripe links are created. */
+  onAttach?: (html: string) => void;
 }
 
 interface PlotRow {
