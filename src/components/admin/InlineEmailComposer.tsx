@@ -257,22 +257,40 @@ const InlineEmailComposer = ({
     setPreCheckHtml(null);
   };
 
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className="mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2">
+    <div
+      className={
+        expanded
+          ? "fixed inset-4 z-50 rounded-xl border border-primary/30 bg-background p-5 shadow-2xl flex flex-col gap-3 overflow-hidden"
+          : "mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2"
+      }
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="text-[10px] uppercase tracking-wide font-bold text-primary">
           {inReplyToGmailId ? "Reply in this thread" : "New email"} · from info@texascemeterybrokers.com
         </div>
-        {onCancel && (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onCancel}
-            className="text-muted-foreground hover:text-foreground"
-            title="Close"
+            onClick={() => setExpanded((v) => !v)}
+            className="hidden lg:inline-flex text-muted-foreground hover:text-foreground"
+            title={expanded ? "Exit full screen" : "Expand to full screen"}
           >
-            <X className="w-3.5 h-3.5" />
+            {expanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
-        )}
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-muted-foreground hover:text-foreground"
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
       <div className="text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground">To:</span> {to}
