@@ -57,7 +57,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
   const [rows, setRows] = useState<PlotRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Record<string, { selected: boolean; price: string }>>({});
+  const [selected, setSelected] = useState<Record<string, { selected: boolean; price: string; description: string }>>({});
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
