@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
+import AccountingPanel from "@/components/admin/AccountingPanel";
 import CustomersPanel from "@/components/admin/CustomersPanel";
 import InventoryRequestsPanel from "@/components/admin/InventoryRequestsPanel";
 import CaliforniaInventoryPanel from "@/components/admin/CaliforniaInventoryPanel";
@@ -56,7 +57,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -367,6 +368,7 @@ const Admin = () => {
     { key: "reservations", label: "Reservations", Icon: CalendarDays, count: reservations.filter(r => r.status === "active").length },
     { key: "sales", label: "Sales", Icon: DollarSign, count: sales.length },
     { key: "performance", label: "Performance", Icon: Trophy },
+    { key: "accounting", label: "Accounting", Icon: DollarSign },
     { key: "customers", label: "Customers", Icon: Users },
     { key: "inventory_requests", label: "Inv. Requests", Icon: ClipboardList },
     { key: "ca_inventory", label: "CA Inventory", Icon: Package },
