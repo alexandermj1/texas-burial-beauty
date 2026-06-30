@@ -99,7 +99,7 @@ const wrapInBrandedShell = (innerHtml: string): string => {
   if (!innerHtml || !innerHtml.trim()) return innerHtml;
   if (/data-tcb-shell="1"/.test(innerHtml)) return innerHtml; // never double-wrap
   return `
-<div data-tcb-shell="1" style="font-family:Georgia,serif;width:100%;max-width:960px;margin:0 auto;color:#1f2937;padding:24px 32px;background:#ffffff;box-sizing:border-box;">
+<div data-tcb-shell="1" style="font-family:Georgia,serif;width:100%;max-width:100%;margin:0;color:#1f2937;padding:24px 40px;background:#ffffff;box-sizing:border-box;">
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 18px;border-collapse:collapse;">
     <tr>
       <td style="text-align:center;padding:6px 0 14px;border-bottom:1px solid #e7e2d8;">
