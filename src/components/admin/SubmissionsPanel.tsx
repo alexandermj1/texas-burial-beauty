@@ -4,6 +4,7 @@ import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, Fi
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
+import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
