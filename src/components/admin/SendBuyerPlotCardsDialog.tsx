@@ -143,10 +143,14 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     [rows, selected],
   );
 
-  const canSend = !!buyer.email && chosen.length > 0 && chosen.every((c) => c.priceNum > 0);
+  const canSend =
+    chosen.length > 0 &&
+    chosen.every((c) => c.priceNum > 0) &&
+    (mode === "attach" || !!buyer.email);
 
   const handleSend = async () => {
-    if (!canSend || !buyer.email) return;
+    if (!canSend) return;
+    if (mode === "send" && !buyer.email) return;
     setSending(true);
     try {
       // 1. Persist list_price for each (so admin doesn't lose the number).
@@ -168,7 +172,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
               kind: "plot_sale",
               amountCents: Math.round(priceNum * 100),
               description: desc,
-              recipientEmail: buyer.email,
+              recipientEmail: buyer.email || undefined,
               recipientName: properCase(buyer.name || ""),
             },
           });
@@ -177,8 +181,31 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         }),
       );
 
-      // 3. Build the HTML email with branded cards.
+      // 3. Build branded card HTML — no seller identity is ever included.
       const cards = links.map(({ row, priceNum, url }) => buildCard(row, priceNum, url)).join("\n");
+
+      // 4. Log recommendations for the buyer journey panel (both modes).
+      await supabase.from("buyer_recommendations" as any).insert(
+        links.map(({ row, priceNum }) => ({
+          submission_id: buyer.id,
+          listing_id: row.id,
+          cemetery: row.cemetery,
+          plot_type: row.property_type,
+          asking_price: priceNum,
+        })),
+      );
+      window.dispatchEvent(new Event("buyer-rec-saved"));
+
+      if (mode === "attach") {
+        // Wrap in a labelled block so the admin can see/remove it in the editor.
+        const block = `<div data-plot-cards="1" style="margin:18px 0;">${cards}</div><p><br></p>`;
+        onAttach?.(block);
+        toast({ title: "Plot cards attached", description: `${links.length} card${links.length === 1 ? "" : "s"} added to your email.` });
+        onClose();
+        return;
+      }
+
+      // Standalone send mode: build the full branded email and send it.
       const buyerFirst = properCase(buyer.name || "").split(" ")[0] || "there";
       const html = `
 <div style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1f2937;padding:8px;">
@@ -203,18 +230,6 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       });
       if (sendErr) throw sendErr;
 
-      // 4. Log recommendations for the buyer journey panel.
-      await supabase.from("buyer_recommendations" as any).insert(
-        links.map(({ row, priceNum }) => ({
-          submission_id: buyer.id,
-          listing_id: row.id,
-          cemetery: row.cemetery,
-          plot_type: row.property_type,
-          asking_price: priceNum,
-        })),
-      );
-      window.dispatchEvent(new Event("buyer-rec-saved"));
-
       toast({ title: "Plots sent", description: `${links.length} plot${links.length === 1 ? "" : "s"} sent to ${buyer.email}` });
       onClose();
     } catch (e: any) {
@@ -223,6 +238,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       setSending(false);
     }
   };
+
 
   return (
     <AnimatePresence>
