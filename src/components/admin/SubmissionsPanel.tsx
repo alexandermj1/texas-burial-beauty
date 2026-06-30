@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
+import PaymentLinkDialog from "./PaymentLinkDialog";
 import { Megaphone, UserPlus, Building2 } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
