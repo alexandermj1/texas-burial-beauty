@@ -350,6 +350,11 @@ export type Database = {
           region: string | null
           relationship_to_owner: string | null
           reply_dismissed_at: string | null
+          reserved_at: string | null
+          reserved_by_email: string | null
+          reserved_by_name: string | null
+          reserved_by_submission_id: string | null
+          reserved_until: string | null
           section: string | null
           seller_attachments: Json
           seller_payout_paid_at: string | null
@@ -448,6 +453,11 @@ export type Database = {
           region?: string | null
           relationship_to_owner?: string | null
           reply_dismissed_at?: string | null
+          reserved_at?: string | null
+          reserved_by_email?: string | null
+          reserved_by_name?: string | null
+          reserved_by_submission_id?: string | null
+          reserved_until?: string | null
           section?: string | null
           seller_attachments?: Json
           seller_payout_paid_at?: string | null
@@ -546,6 +556,11 @@ export type Database = {
           region?: string | null
           relationship_to_owner?: string | null
           reply_dismissed_at?: string | null
+          reserved_at?: string | null
+          reserved_by_email?: string | null
+          reserved_by_name?: string | null
+          reserved_by_submission_id?: string | null
+          reserved_until?: string | null
           section?: string | null
           seller_attachments?: Json
           seller_payout_paid_at?: string | null
