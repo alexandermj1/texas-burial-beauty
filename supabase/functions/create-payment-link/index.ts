@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
         checkout_url: session.url,
         environment: env,
         created_by_user_id: user.id,
-        metadata: { product_name: productName },
+        metadata: { product_name: productName, ...(listingTier && { listing_tier: listingTier }) },
       })
       .select()
       .single();

@@ -89,7 +89,7 @@ export default function PaymentLinkDialog({ open, onClose, submission, adminName
   }, [kind, listingFee, submission.email, submission.name, submission.cemetery, submission.section, submission.list_price]);
 
   const amountCents = Math.round((Number(amount) || 0) * 100);
-  const canGenerate = amountCents > 0 && /\S+@\S+\.\S+/.test(recipient) && description.trim().length >= 2;
+  const canGenerate = (kind === "listing_fee" || amountCents > 0) && /\S+@\S+\.\S+/.test(recipient) && description.trim().length >= 2;
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
@@ -103,9 +103,15 @@ export default function PaymentLinkDialog({ open, onClose, submission, adminName
           description: description.trim(),
           recipientEmail: recipient.trim(),
           recipientName: recipientName.trim(),
+          ...(kind === "listing_fee" && { listingTier: listingFee }),
         },
       });
       if (error) throw error;
+      if (kind === "listing_fee" && amountCents === 0 && data?.free) {
+        toast({ title: "Starter listing activated", description: "Seller marked as listed — no payment required." });
+        onClose();
+        return;
+      }
       if (!data?.url) throw new Error("No checkout URL returned");
       setGenerated({ url: data.url, id: data.transactionId || data.sessionId });
     } catch (e: any) {
