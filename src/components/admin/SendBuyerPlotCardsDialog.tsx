@@ -246,7 +246,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       // Standalone send mode: build the full branded email and send it.
       const buyerFirst = properCase(buyer.name || "").split(" ")[0] || "there";
       const html = `
-<div style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1f2937;padding:8px;">
+<div style="font-family:Georgia,serif;width:100%;max-width:960px;margin:0 auto;color:#1f2937;padding:24px 32px;box-sizing:border-box;">
   <p style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#7c3a2e;margin:0 0 4px;">Texas Cemetery Brokers</p>
   <h1 style="font-family:Georgia,serif;font-size:24px;font-weight:500;color:#1f2937;margin:0 0 14px;">Available plots for you</h1>
   <p style="font-size:15px;line-height:1.55;margin:0 0 18px;">Dear ${escapeHtml(buyerFirst)},</p>
@@ -442,16 +442,10 @@ function buildCard(row: PlotRow, price: number, url: string, description?: strin
       ${descLine}
       <p style="font-family:Georgia,serif;font-size:22px;font-weight:600;color:#1f2937;margin:0 0 4px;">${escapeHtml(fmt(price))}${n > 1 ? ' <span style="font-size:13px;font-weight:400;color:#6b6354;">total</span>' : ""}</p>
       ${perSpaceLine}
-      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:10px;border-collapse:separate;">
-        <tr>
-          <td style="padding-right:8px;">
-            <a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:11px 22px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Buy securely</a>
-          </td>
-          <td>
-            <span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:11px 22px;border-radius:999px;font-family:Georgia,serif;font-size:14px;font-weight:500;letter-spacing:.02em;border:1px solid #e7e2d8;cursor:not-allowed;">Reserve &mdash; unavailable</span>
-          </td>
-        </tr>
-      </table>
+      <div style="margin-top:10px;font-size:0;line-height:0;">
+        <a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:11px 22px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;margin:0 10px 10px 0;">Buy securely</a>
+        <span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:11px 22px;border-radius:999px;font-family:Georgia,serif;font-size:14px;font-weight:500;letter-spacing:.02em;border:1px solid #e7e2d8;margin:0 0 10px 0;">Reserve &mdash; unavailable</span>
+      </div>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9a8f7a;margin:6px 0 0;font-style:italic;">Reservations are currently unavailable at this cemetery due to high demand &mdash; plots are first secured, first served.</p>
     </td>
