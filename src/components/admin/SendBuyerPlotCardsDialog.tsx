@@ -246,7 +246,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       // Standalone send mode: build the full branded email and send it.
       const buyerFirst = properCase(buyer.name || "").split(" ")[0] || "there";
       const html = `
-<div style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1f2937;padding:8px;">
+<div style="font-family:Georgia,serif;width:100%;max-width:960px;margin:0 auto;color:#1f2937;padding:24px 32px;box-sizing:border-box;">
   <p style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#7c3a2e;margin:0 0 4px;">Texas Cemetery Brokers</p>
   <h1 style="font-family:Georgia,serif;font-size:24px;font-weight:500;color:#1f2937;margin:0 0 14px;">Available plots for you</h1>
   <p style="font-size:15px;line-height:1.55;margin:0 0 18px;">Dear ${escapeHtml(buyerFirst)},</p>
