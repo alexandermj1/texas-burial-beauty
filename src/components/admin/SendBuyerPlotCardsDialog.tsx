@@ -81,16 +81,15 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
       setRows([]);
     } else {
       const sellers = (data || []).filter((r: any) => {
-        const k = (r.customer_kind || r.source || "").toLowerCase();
-        const isSeller = k.includes("sell") || k === "seller";
+        const k = (r.customer_kind || "").toLowerCase();
+        const src = (r.source || "").toLowerCase();
+        const isSeller = k === "seller" || k.includes("sell") || src === "seller_quote" || src.includes("sell");
         if (!isSeller) return false;
-        // Texas-only: only Texas seller listings can be sent to a buyer.
-        const isTexas =
-          (r.state || "").toUpperCase() === "TX" ||
-          (r.inquiry_channel || "").toLowerCase() === "texas_buy_wizard" ||
-          (r.inquiry_channel || "").toLowerCase().includes("texas") ||
-          (r.region || "").toLowerCase().includes("texas");
-        return isTexas;
+        // "Texas" here mirrors SubmissionsPanel.subRegion: everything that isn't a
+        // Bayer sell-a-plot submission counts as Texas. This keeps the buyer
+        // picker in sync with the admin's Texas pipeline view.
+        const isBayer = (r.inquiry_channel || "").toLowerCase() === "bayer_sell_a_plot";
+        return !isBayer;
       }) as PlotRow[];
       setRows(sellers);
     }
