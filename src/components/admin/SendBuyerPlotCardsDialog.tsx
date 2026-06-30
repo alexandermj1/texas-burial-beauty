@@ -368,6 +368,20 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                           )}
                         </div>
                       </div>
+                      {isSel && (
+                        <div className="mt-3 pl-8">
+                          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                            Description (optional — shown on the card)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={selected[r.id]?.description ?? ""}
+                            onChange={(e) => setDescription(r.id, e.target.value)}
+                            placeholder="e.g. Peaceful corner lot beneath mature oaks, near the chapel."
+                            className="w-full rounded-md bg-background border border-border/60 text-xs p-2 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })
