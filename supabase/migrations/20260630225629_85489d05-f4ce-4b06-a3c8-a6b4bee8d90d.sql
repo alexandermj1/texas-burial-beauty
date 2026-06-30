@@ -1,0 +1,1 @@
+ALTER TABLE public.contact_submissions ADD COLUMN IF NOT EXISTS listing_tier text, ADD COLUMN IF NOT EXISTS listing_paid_at timestamptz;
