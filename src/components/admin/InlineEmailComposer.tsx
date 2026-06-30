@@ -31,6 +31,14 @@ interface Props {
   sendLabel?: string;
   /** Optional preset templates to pick from. First one is loaded by default. */
   templates?: EmailTemplate[];
+  /** When provided, shows an "Attach plot cards" button (Texas buyer flow only). */
+  buyerContext?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    cemetery: string | null;
+    property_type?: string | null;
+  } | null;
 }
 
 import { properFirstName } from "@/lib/properCase";
