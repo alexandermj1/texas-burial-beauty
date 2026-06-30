@@ -101,7 +101,9 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
     const q = norm(search);
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.cemetery, r.section, r.property_type, r.name].some((v) => norm(v).includes(q)),
+      // Intentionally exclude seller's name from the searchable fields —
+      // we never expose the seller identity to a buyer.
+      [r.cemetery, r.section, r.property_type].some((v) => norm(v).includes(q)),
     );
   }, [rows, search]);
 
