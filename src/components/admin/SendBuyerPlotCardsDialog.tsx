@@ -420,7 +420,6 @@ function buildCard(row: PlotRow, price: number, url: string, description?: strin
   const descLine = description && description.trim()
     ? `<p style="font-family:Georgia,serif;font-size:13px;color:#4b4537;margin:8px 0 12px;line-height:1.55;font-style:italic;">${escapeHtml(description.trim())}</p>`
     : "";
-  const demandLine = `<p style="font-family:Georgia,serif;font-size:11px;color:#9a8f7a;margin:10px 0 0;font-style:italic;">Due to high demand at this cemetery, we are unable to hold plots — first secured, first served.</p>`;
   return `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 16px;border-collapse:separate;border:1px solid #e7e2d8;border-radius:14px;background:#fbf8f3;overflow:hidden;">
   <tr>
@@ -431,9 +430,18 @@ function buildCard(row: PlotRow, price: number, url: string, description?: strin
       ${descLine}
       <p style="font-family:Georgia,serif;font-size:22px;font-weight:600;color:#1f2937;margin:0 0 4px;">${escapeHtml(fmt(price))}${n > 1 ? ' <span style="font-size:13px;font-weight:400;color:#6b6354;">total</span>' : ""}</p>
       ${perSpaceLine}
-      <a href="${url}" style="display:inline-block;margin-top:8px;background:#7c3a2e;color:#ffffff;padding:12px 24px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Reserve &amp; pay securely</a>
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:10px;border-collapse:separate;">
+        <tr>
+          <td style="padding-right:8px;">
+            <a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:11px 22px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:14px;font-weight:600;letter-spacing:.02em;">Buy securely</a>
+          </td>
+          <td>
+            <span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:11px 22px;border-radius:999px;font-family:Georgia,serif;font-size:14px;font-weight:500;letter-spacing:.02em;border:1px solid #e7e2d8;cursor:not-allowed;">Reserve &mdash; unavailable</span>
+          </td>
+        </tr>
+      </table>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
-      ${demandLine}
+      <p style="font-family:Georgia,serif;font-size:11px;color:#9a8f7a;margin:6px 0 0;font-style:italic;">Reservations are currently unavailable at this cemetery due to high demand &mdash; plots are first secured, first served.</p>
     </td>
   </tr>
 </table>`.trim();
