@@ -196,6 +196,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     threadId={e.gmail_thread_id}
                     inReplyToGmailId={e.gmail_message_id}
                     recipientName={customerName}
+                    buyerContext={buyerContext ?? undefined}
                     sendLabel="Send reply"
                     onSent={() => { setReplyingTo(null); refresh(); }}
                     onCancel={() => setReplyingTo(null)}
