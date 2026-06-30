@@ -99,6 +99,7 @@ const InlineEmailComposer = ({
   onCancel,
   sendLabel = "Send",
   templates,
+  buyerContext,
 }: Props) => {
   const { toast } = useToast();
   const adminName = useAdminDisplayName();
@@ -108,6 +109,7 @@ const InlineEmailComposer = ({
   const [bodyTouched, setBodyTouched] = useState(false);
   const [checking, setChecking] = useState(false);
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
+  const [plotPickerOpen, setPlotPickerOpen] = useState(false);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
     templates && templates.length ? templates[0].id : null,
   );
