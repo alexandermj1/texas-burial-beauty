@@ -332,7 +332,7 @@ const InlineEmailComposer = ({
           adminName={adminName}
           mode="attach"
           onAttach={(cardsHtml) => {
-            editorRef.current?.appendHtml(cardsHtml);
+            editorRef.current?.insertHtmlBeforeSignature(cardsHtml);
             setHtml(editorRef.current?.getHtml() ?? html);
             setBodyTouched(true);
           }}
