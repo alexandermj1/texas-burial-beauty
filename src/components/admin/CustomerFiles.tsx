@@ -44,7 +44,10 @@ const formatBytes = (b: number | null) => {
 };
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+
+const formatDateOnly = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 const isImageMime = (m: string | null) => !!m && m.startsWith("image/");
 
