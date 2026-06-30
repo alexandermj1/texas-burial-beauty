@@ -161,22 +161,32 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         ),
       );
 
-      // 2. Create a Stripe Checkout link for each selected plot.
+      // 2. Create a Stripe Checkout link for each selected plot. If Stripe isn't
+      // set up yet (edge function fails / payments not configured), fall back to
+      // a mailto: link so the buyer can still respond and we don't block sending.
       const links = await Promise.all(
         chosen.map(async ({ row, priceNum }) => {
           const desc = `Cemetery plot — ${row.cemetery || "Texas"}${row.section ? `, Section ${row.section}` : ""}`;
-          const { data, error } = await supabase.functions.invoke("create-payment-link", {
-            body: {
-              submissionId: row.id,
-              kind: "plot_sale",
-              amountCents: Math.round(priceNum * 100),
-              description: desc,
-              recipientEmail: buyer.email || undefined,
-              recipientName: properCase(buyer.name || ""),
-            },
-          });
-          if (error || !data?.url) throw new Error(error?.message || "Failed to create link");
-          return { row, priceNum, url: data.url as string };
+          try {
+            const { data, error } = await supabase.functions.invoke("create-payment-link", {
+              body: {
+                submissionId: row.id,
+                kind: "plot_sale",
+                amountCents: Math.round(priceNum * 100),
+                description: desc,
+                recipientEmail: buyer.email || undefined,
+                recipientName: properCase(buyer.name || ""),
+              },
+            });
+            if (error || !data?.url) throw new Error(error?.message || "no url");
+            return { row, priceNum, url: data.url as string, fallback: false };
+          } catch (e) {
+            console.warn("payment link unavailable, using mailto fallback", e);
+            const subj = encodeURIComponent(`Interested in ${row.cemetery || "this plot"}${row.section ? ` (Section ${row.section})` : ""}`);
+            const body = encodeURIComponent(`Hi,\n\nI'd like to reserve this plot listed at $${priceNum.toLocaleString()}.\n\nThank you,\n${properCase(buyer.name || "")}`);
+            const url = `mailto:info@texascemeterybrokers.com?subject=${subj}&body=${body}`;
+            return { row, priceNum, url, fallback: true };
+          }
         }),
       );
 
@@ -199,7 +209,8 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
         // Wrap in a labelled block so the admin can see/remove it in the editor.
         const block = `<div data-plot-cards="1" style="margin:18px 0;">${cards}</div><p><br></p>`;
         onAttach?.(block);
-        toast({ title: "Plot cards attached", description: `${links.length} card${links.length === 1 ? "" : "s"} added to your email.` });
+        const fellBack = links.some(l => l.fallback);
+        toast({ title: "Plot cards attached", description: `${links.length} card${links.length === 1 ? "" : "s"} added.${fellBack ? " (Payment links unavailable — buttons will email you instead.)" : ""}` });
         onClose();
         return;
       }
