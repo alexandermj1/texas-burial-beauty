@@ -4,6 +4,7 @@ import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, Fi
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
+import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
@@ -149,6 +150,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
+  const [plotCardsOpen, setPlotCardsOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
@@ -1254,6 +1256,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               >
                 <DollarSign className="w-3.5 h-3.5" /> Send payment link
               </button>
+              {selectedKind === "buyer" && (
+                <button
+                  onClick={() => setPlotCardsOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <Send className="w-3.5 h-3.5" /> Send plot cards
+                </button>
+              )}
             </div>
 
             {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
@@ -1514,7 +1524,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           </button>
                         ) : (
                           <button
-                            onClick={guard("Send available plots", () => setBuyerOpen(true))}
+                            onClick={guard("Send available plots", () => setPlotCardsOpen(true))}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                           >
                             <Send className="w-3.5 h-3.5" />
@@ -1584,6 +1594,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             submission={selected}
             open={buyerOpen}
             onClose={() => setBuyerOpen(false)}
+          />
+          <SendBuyerPlotCardsDialog
+            open={plotCardsOpen}
+            onClose={() => setPlotCardsOpen(false)}
+            buyer={{
+              id: selected.id,
+              name: selected.name,
+              email: selected.email,
+              cemetery: selected.cemetery,
+              property_type: selected.property_type,
+            }}
+            adminName={adminName}
           />
           <SendDeclineDialog
             submission={selected}
