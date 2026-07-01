@@ -34,6 +34,7 @@ import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
 import { isOutgoing } from "@/lib/emailReply";
+import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
 const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
@@ -567,10 +568,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         "Purchase date": sel.purchase_info ? { label: "Purchase date / amount", value: String(sel.purchase_info) } : null,
       };
       const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-      const compare = (a: string, b: string): "match" | "differs" => {
+      const isCemeteryLabel = (l: string) => /cemetery/i.test(l);
+      // Split a "Last, First" or "First Last" name into normalized tokens for owner comparison.
+      const nameTokens = (s: string) => {
+        const flipped = s.includes(",") ? s.split(",").reverse().join(" ") : s;
+        return new Set(norm(flipped).split(" ").filter(t => t.length > 1));
+      };
+      const nameMatches = (a: string, b: string) => {
+        const A = nameTokens(a), B = nameTokens(b);
+        if (!A.size || !B.size) return false;
+        let shared = 0;
+        for (const t of A) if (B.has(t)) shared++;
+        // Consider it a match if at least 2 name tokens overlap (first + last), or one token if names are very short.
+        return shared >= Math.min(2, Math.min(A.size, B.size));
+      };
+      const compare = (a: string, b: string, label: string): "match" | "differs" => {
         const na = norm(a), nb = norm(b);
         if (!na || !nb) return "differs";
         if (na === nb || na.includes(nb) || nb.includes(na)) return "match";
+        // Cemetery names: use fuzzy scoring so "Hillcrest Memorial Park" ≈ "Hillcrest Memorial Park and Mausoleum".
+        if (isCemeteryLabel(label)) {
+          if (cemeteryScore(a, b) >= 0.5) return "match";
+        }
+        // Owner / purchaser names: token overlap on first + last name.
+        if (/owner|purchaser/i.test(label) && nameMatches(a, b)) return "match";
         return "differs";
       };
       const pushFact = (label: string, value: any, source: string) => {
@@ -587,7 +608,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         let customerValue: string | undefined;
         let customerLabel: string | undefined;
         if (cust) {
-          status = compare(str, cust.value);
+          status = compare(str, cust.value, label);
           customerValue = cust.value;
           customerLabel = cust.label;
         }
@@ -614,6 +635,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         pushFact("Certificate number", ex.certificate_number, src);
         pushFact("Purchase date", ex.purchase_date, src);
         pushFact("Issued date", ex.issued_date, src);
+        // Extra useful fields the extractor now returns.
+        pushFact("Decedent", ex.decedent, src);
+        pushFact("Date of death", ex.date_of_death, src);
+        pushFact("Contract number", ex.contract_number, src);
+        pushFact("ID type", ex.id_type, src);
+        pushFact("ID number", ex.id_number, src);
+        if (Array.isArray(ex.amounts)) pushFact("Amounts mentioned", ex.amounts, src);
+        if (Array.isArray(ex.parties)) pushFact("Other parties named", ex.parties, src);
+        if (ex.additional_fields && typeof ex.additional_fields === "object") {
+          for (const [k, v] of Object.entries(ex.additional_fields)) {
+            const pretty = k.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+            pushFact(pretty, v as any, src);
+          }
+        }
+        // Flag if the AI-found owners on the deed don't include the submitter's name.
+        const submitterName = (sel.name || "").trim();
+        if (submitterName && Array.isArray(ex.owners) && ex.owners.length > 0) {
+          const ownersStr = ex.owners.filter(Boolean).map(String).join(", ");
+          if (ownersStr && !nameMatches(ownersStr, submitterName)) {
+            const dupKey = `submitter-vs-owners::${ownersStr.toLowerCase()}`;
+            if (!seen.has(dupKey)) {
+              seen.add(dupKey);
+              facts.push({
+                label: "Name on deed vs. submitter",
+                value: ownersStr,
+                source: src,
+                status: "differs",
+                customerValue: submitterName,
+                customerLabel: "Submitter name",
+              });
+            }
+          }
+        }
         if (typeof f.extracted_summary === "string" && f.extracted_summary.trim()) {
           summaries.push({ file: src, summary: f.extracted_summary.trim() });
         }
@@ -1583,22 +1637,59 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Full AI-generated summary of each uploaded document */}
-            {aiSummaries.length > 0 && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
-                  <Sparkles className="w-3 h-3" /> AI document summary
+            {/* Consolidated facts: everything the customer submitted + every fact AI pulled from the documents. */}
+            {(() => {
+              const s: any = selected;
+              type Row = { label: string; value: string; source: string };
+              const rows: Row[] = [];
+              const seenKey = new Set<string>();
+              const add = (label: string, value: any, source: string) => {
+                if (value == null) return;
+                const str = Array.isArray(value)
+                  ? value.filter((v: any) => v != null && String(v).trim() !== "").map(String).join(", ")
+                  : String(value).trim();
+                if (!str) return;
+                const key = `${label.toLowerCase()}::${str.toLowerCase()}`;
+                if (seenKey.has(key)) return;
+                seenKey.add(key);
+                rows.push({ label, value: str, source });
+              };
+              // Customer-submitted facts
+              add("Name", s.name, "Customer");
+              add("Email", s.email, "Customer");
+              add("Phone", s.phone, "Customer");
+              add("Customer type", s.customer_kind || s.source, "Customer");
+              add("Cemetery", s.cemetery, "Customer");
+              add("Cemetery city/state", s.cemetery_city, "Customer");
+              add("Property type", s.property_type, "Customer");
+              add("Section / Lot", s.section, "Customer");
+              add("Spaces", s.spaces, "Customer");
+              add("Deed owner(s)", s.deed_owner_names, "Customer");
+              add("Ownership status", s.ownership_status, "Customer");
+              add("Purchase date / amount", s.purchase_info, "Customer");
+              add("Asking price", s.asking_price, "Customer");
+              add("Message", s.message, "Customer");
+              add("Details", s.details, "Customer");
+              // AI-extracted facts (already deduped, includes additional_fields)
+              for (const f of aiFacts) add(f.label, f.value, f.source);
+              if (rows.length === 0) return null;
+              return (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                    <Sparkles className="w-3 h-3" /> All known facts — customer submission + AI-extracted from documents
+                  </div>
+                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
+                    {rows.map((r, i) => (
+                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
+                        <span className="text-foreground break-words">{r.value}</span>
+                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="space-y-3">
-                  {aiSummaries.map((s, i) => (
-                    <div key={i} className="rounded-md border border-border/40 bg-background/60 p-2.5">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 truncate" title={s.file}>{s.file}</p>
-                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{s.summary}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
 
 
