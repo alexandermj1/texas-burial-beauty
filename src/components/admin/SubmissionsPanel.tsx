@@ -1203,45 +1203,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     )}
                   </div>
                   <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
-                  {(() => {
-                    // Warn when the submitter's name does not appear on the deed (either the customer-entered
-                    // deed owners field, or the owners extracted from uploaded deed documents by AI).
-                    const submitter = (selected.name || "").trim();
-                    if (!submitter) return null;
-                    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-                    const tokens = (s: string) => {
-                      const flipped = s.includes(",") ? s.split(",").reverse().join(" ") : s;
-                      return new Set(norm(flipped).split(" ").filter(t => t.length > 1));
-                    };
-                    const matches = (a: string, b: string) => {
-                      const A = tokens(a), B = tokens(b);
-                      if (!A.size || !B.size) return false;
-                      let shared = 0; for (const t of A) if (B.has(t)) shared++;
-                      return shared >= Math.min(2, Math.min(A.size, B.size));
-                    };
-                    const deedSources: Array<{ label: string; value: string }> = [];
-                    const customerDeed = ((selected as any).deed_owner_names || "").toString().trim();
-                    if (customerDeed) deedSources.push({ label: "customer-entered deed owners", value: customerDeed });
-                    if (selectedDeedOwners && selectedDeedOwners.length > 0) {
-                      deedSources.push({ label: "deed document", value: selectedDeedOwners.join(", ") });
-                    }
-                    if (deedSources.length === 0) return null;
-                    const anyMatch = deedSources.some(d => matches(d.value, submitter));
-                    if (anyMatch) return null;
-                    const shown = deedSources[deedSources.length - 1];
-                    return (
-                      <div
-                        className="mt-1.5 inline-flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-800"
-                        title={deedSources.map(d => `${d.label}: ${d.value}`).join(" · ")}
-                      >
-                        <FileSignature className="w-3 h-3 mt-[1px] shrink-0" />
-                        <span>
-                          <span className="font-semibold">Name mismatch:</span> submitter “{submitter}” is not on the deed
-                          <span className="text-amber-800/70"> — deed shows {shown.value}</span>
-                        </span>
-                      </div>
-                    );
-                  })()}
                   <p className="text-xs text-muted-foreground mt-1">
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
@@ -1659,10 +1620,37 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-
-
-
-
+            {/* AI-extracted facts from uploaded documents (AI-only). */}
+            {(() => {
+              type Row = { label: string; value: string; source: string };
+              const rows: Row[] = [];
+              const seenKey = new Set<string>();
+              for (const f of aiFacts) {
+                const str = String(f.value || "").trim();
+                if (!str) continue;
+                const key = `${f.label.toLowerCase()}::${str.toLowerCase()}`;
+                if (seenKey.has(key)) continue;
+                seenKey.add(key);
+                rows.push({ label: f.label, value: str, source: f.source });
+              }
+              if (rows.length === 0) return null;
+              return (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                    <Sparkles className="w-3 h-3" /> AI-extracted from uploaded documents
+                  </div>
+                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
+                    {rows.map((r, i) => (
+                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
+                        <span className="text-foreground break-words">{r.value}</span>
+                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
 
 
             {/* Files the seller uploaded with the form */}
