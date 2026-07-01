@@ -42,12 +42,63 @@ function brandedShell(innerHtml: string, preheader = ""): string {
 </table></body></html>`;
 }
 
+const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
+const MAILBOX = "info@texascemeterybrokers.com";
+
+function encodeBase64Url(s: string): string {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function buildRawEmail(to: string, subject: string, html: string): string {
+  const boundary = `=_tcb_${crypto.randomUUID().replace(/-/g, "")}`;
+  const plain = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const lines = [
+    `From: ${MAILBOX}`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    plain,
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    html,
+    `--${boundary}--`,
+    "",
+  ];
+  return encodeBase64Url(lines.join("\r\n"));
+}
+
 async function sendEmail(to: string, subject: string, html: string) {
   try {
-    const { error } = await db().functions.invoke("gmail-action", {
-      body: { action: "send", to, subject, htmlBody: html, body: html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() },
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    const gmailKey = Deno.env.get("GOOGLE_MAIL_API_KEY");
+    if (!lovableKey || !gmailKey) {
+      console.error("sendEmail: missing LOVABLE_API_KEY or GOOGLE_MAIL_API_KEY");
+      return;
+    }
+    const raw = buildRawEmail(to, subject, html);
+    const res = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": gmailKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ raw }),
     });
-    if (error) console.error("sendEmail error", error);
+    if (!res.ok) {
+      console.error("sendEmail gmail gateway error", res.status, await res.text());
+    }
   } catch (e) {
     console.error("sendEmail throw", e);
   }
