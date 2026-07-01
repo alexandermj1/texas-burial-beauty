@@ -523,6 +523,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // seller-intake template can ask the right ownership follow-up question.
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
+  const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
+
   useEffect(() => {
     let cancelled = false;
     setSelectedDeedOwners([]);
