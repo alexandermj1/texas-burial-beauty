@@ -529,6 +529,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     let cancelled = false;
     setSelectedDeedOwners([]);
     setAiFacts([]);
+    setAiSummaries([]);
+
     const email = (selected?.email || "").trim().toLowerCase();
     if (!email) return;
     (async () => {
