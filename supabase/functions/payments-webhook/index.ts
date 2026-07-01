@@ -75,7 +75,29 @@ const TIER_LABEL: Record<string, string> = {
   custom_plus: "Custom Plus",
 };
 
-async function handleListingFeePaid(tx: any) {
+function receiptBlock(tx: any, itemLabel: string, cardBrand?: string, cardLast4?: string) {
+  const paidOn = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const method = cardBrand && cardLast4
+    ? `${cardBrand.charAt(0).toUpperCase() + cardBrand.slice(1)} •••• ${cardLast4}`
+    : "Card payment";
+  const ref = (tx.stripe_payment_intent_id || tx.stripe_session_id || tx.id || "").toString().slice(-12).toUpperCase();
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border:1px solid #ead9c9;border-radius:10px;background:#faf6f0;">
+      <tr><td style="padding:18px 22px;">
+        <div style="font-size:11px;letter-spacing:.24em;color:#a08a76;text-transform:uppercase;margin-bottom:12px;">Receipt</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#2d2a26;">
+          <tr><td style="padding:4px 0;color:#8a7766;">Date</td><td align="right" style="padding:4px 0;">${paidOn}</td></tr>
+          <tr><td style="padding:4px 0;color:#8a7766;">Reference</td><td align="right" style="padding:4px 0;font-family:monospace;">${ref}</td></tr>
+          <tr><td style="padding:4px 0;color:#8a7766;">Payment method</td><td align="right" style="padding:4px 0;">${escapeHtml(method)}</td></tr>
+          <tr><td style="padding:4px 0;color:#8a7766;">Item</td><td align="right" style="padding:4px 0;">${escapeHtml(itemLabel)}</td></tr>
+          <tr><td colspan="2" style="padding:8px 0 0;border-top:1px solid #ead9c9;"></td></tr>
+          <tr><td style="padding:10px 0 0;font-weight:600;">Total paid</td><td align="right" style="padding:10px 0 0;font-weight:600;color:#7c3a2e;">${fmt(tx.amount_cents)} USD</td></tr>
+        </table>
+      </td></tr>
+    </table>`;
+}
+
+async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: string) {
   const tier = tx.metadata?.listing_tier || "pro";
   if (tx.submission_id) {
     await db().from("contact_submissions").update({
@@ -88,7 +110,8 @@ async function handleListingFeePaid(tx: any) {
   const tierLabel = TIER_LABEL[tier] || "Listing";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — we've received your <strong>${escapeHtml(tierLabel)} listing</strong> payment of <strong>${fmt(tx.amount_cents)}</strong>.</p>
+    <p>Thank you — we've received your <strong>${escapeHtml(tierLabel)} listing</strong> payment. Please keep this email as your official receipt.</p>
+    ${receiptBlock(tx, `${tierLabel} Listing`, cardBrand, cardLast4)}
     <p>Your plot is now in our active marketing rotation. Here's what happens next:</p>
     <ol>
       <li>We finalise your listing copy and any photography within 1–2 business days.</li>
@@ -97,9 +120,9 @@ async function handleListingFeePaid(tx: any) {
     </ol>
     <p>If you have additional documentation (deed, photos, cemetery letters), simply reply to this email and attach them.</p>
     <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Payment received — ${tierLabel} listing activated.`);
+  `, `Receipt — ${tierLabel} listing ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Your ${tierLabel} listing is active — ${BRAND}`, html);
+    await sendEmail(tx.recipient_email, `Receipt — ${tierLabel} listing (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Listing fee paid",
@@ -108,7 +131,7 @@ async function handleListingFeePaid(tx: any) {
   );
 }
 
-async function handlePlotSalePaid(tx: any) {
+async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: string) {
   if (tx.submission_id) {
     await db().from("contact_submissions").update({
       sold_at: new Date().toISOString(),
@@ -119,15 +142,16 @@ async function handlePlotSalePaid(tx: any) {
     }).eq("id", tx.submission_id);
   }
   const firstName = (tx.recipient_name || "").split(" ")[0] || "there";
+  const itemLabel = tx.description || "Cemetery plot";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — your payment of <strong>${fmt(tx.amount_cents)}</strong> for <em>${escapeHtml(tx.description || "your cemetery plot")}</em> has been received.</p>
+    <p>Thank you — your payment for <em>${escapeHtml(itemLabel)}</em> has been received. Please keep this email as your official receipt.</p>
+    ${receiptBlock(tx, itemLabel, cardBrand, cardLast4)}
     <p>The plot is now reserved in your name. Our transfer team will be in touch within one business day with the cemetery transfer paperwork and next steps.</p>
-    <p>A Stripe receipt has also been emailed to you separately.</p>
     <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Payment confirmed — your plot is reserved.`);
+  `, `Receipt — ${fmt(tx.amount_cents)} for your cemetery plot.`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Payment confirmed — ${BRAND}`, html);
+    await sendEmail(tx.recipient_email, `Receipt — Plot purchase (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Plot sold",
@@ -136,16 +160,18 @@ async function handlePlotSalePaid(tx: any) {
   );
 }
 
-async function handleCustomPaid(tx: any) {
+async function handleCustomPaid(tx: any, cardBrand?: string, cardLast4?: string) {
   const firstName = (tx.recipient_name || "").split(" ")[0] || "there";
+  const itemLabel = tx.description || "Invoice";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — we've received your payment of <strong>${fmt(tx.amount_cents)}</strong> for <em>${escapeHtml(tx.description || "your invoice")}</em>.</p>
-    <p>A Stripe receipt has been emailed to you separately. Reply to this email anytime with questions.</p>
+    <p>Thank you — we've received your payment. Please keep this email as your official receipt.</p>
+    ${receiptBlock(tx, itemLabel, cardBrand, cardLast4)}
+    <p>Reply to this email anytime with questions.</p>
     <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, "Payment received.");
+  `, `Receipt — ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Payment received — ${BRAND}`, html);
+    await sendEmail(tx.recipient_email, `Receipt — ${BRAND} (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Invoice paid",
@@ -195,6 +221,21 @@ async function handleDispute(tx: any, status: string) {
   );
 }
 
+async function fetchCardDetails(paymentIntentId: string | null, env: StripeEnv): Promise<{ brand?: string; last4?: string }> {
+  if (!paymentIntentId) return {};
+  try {
+    const { createStripeClient } = await import("../_shared/stripe.ts");
+    const stripe = createStripeClient(env);
+    const pi: any = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge"] });
+    const charge = pi?.latest_charge;
+    const pmd = charge?.payment_method_details?.card;
+    return { brand: pmd?.brand, last4: pmd?.last4 };
+  } catch (e) {
+    console.error("fetchCardDetails", e);
+    return {};
+  }
+}
+
 async function markPaid(sessionId: string, paymentIntentId: string | null, env: StripeEnv) {
   const { data: tx } = await db()
     .from("payment_transactions")
@@ -209,9 +250,10 @@ async function markPaid(sessionId: string, paymentIntentId: string | null, env: 
     .maybeSingle();
 
   if (!tx) return;
-  if (tx.kind === "listing_fee") await handleListingFeePaid(tx);
-  else if (tx.kind === "plot_sale") await handlePlotSalePaid(tx);
-  else if (tx.kind === "custom") await handleCustomPaid(tx);
+  const { brand, last4 } = await fetchCardDetails(paymentIntentId, env);
+  if (tx.kind === "listing_fee") await handleListingFeePaid(tx, brand, last4);
+  else if (tx.kind === "plot_sale") await handlePlotSalePaid(tx, brand, last4);
+  else if (tx.kind === "custom") await handleCustomPaid(tx, brand, last4);
 }
 
 async function markFailed(sessionId: string, env: StripeEnv) {
