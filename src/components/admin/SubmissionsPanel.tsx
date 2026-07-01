@@ -1913,20 +1913,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 };
 
 
-const Field = ({ label, value, aiNote }: { label: string; value: string; aiNote?: "added" | "differs"; }) => (
-  <div className={`rounded-lg px-3 py-2 border ${aiNote ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border/40"}`}>
-    <div className="flex items-center justify-between gap-2">
-      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      {aiNote === "added" && (
-        <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">Added by AI</span>
-      )}
-      {aiNote === "differs" && (
-        <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 border border-amber-500/30">AI differs</span>
-      )}
-    </div>
+const Field = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-lg px-3 py-2 border bg-muted/40 border-border/40">
+    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
     <p className="text-sm text-foreground capitalize">{value}</p>
   </div>
 );
+
 
 
 // ===========================================================================
