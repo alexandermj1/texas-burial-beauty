@@ -13,7 +13,7 @@ import CustomerJourney from "./CustomerJourney";
 import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
-import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate } from "@/lib/emailTemplates";
+import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryInfoCard from "./CemeteryInfoCard";
@@ -1215,6 +1215,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       hasAttachments: hasDocs(selected),
                       deedExtractedOwners: selectedDeedOwners,
                     }),
+                    buildSellerListingOptionsTemplate({
+                      recipientName: selected.name,
+                      adminName,
+                      cemetery: selected.cemetery,
+                    }),
                   ];
               return (
                 <EmailThread
@@ -1230,8 +1235,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     cemetery: selected.cemetery,
                     property_type: selected.property_type,
                   } : null}
+                  sellerContext={kind !== "buyer" ? {
+                    id: selected.id,
+                    name: selected.name,
+                    email: selected.email,
+                    cemetery: selected.cemetery,
+                    section: selected.section,
+                    property_type: selected.property_type,
+                    spaces: selected.spaces,
+                  } : null}
                   onNewEmailSent={(meta) => {
-                    if (meta?.templateId === "seller_intake") {
+                    if (meta?.templateId === "seller_intake" || meta?.templateId === "seller_listing_options") {
                       onUpdate(selected.id, { needs_quote: true } as any);
                     }
                   }}

@@ -14,6 +14,7 @@ import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
+import SendListingOptionsDialog from "./SendListingOptionsDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
 
@@ -38,6 +39,16 @@ interface Props {
     email: string | null;
     cemetery: string | null;
     property_type?: string | null;
+  } | null;
+  /** When provided AND the "seller_listing_options" template is active, shows "Attach listing options". */
+  sellerContext?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    cemetery: string | null;
+    section: string | null;
+    property_type: string | null;
+    spaces: string | null;
   } | null;
 }
 
@@ -131,6 +142,7 @@ const InlineEmailComposer = ({
   sendLabel = "Send",
   templates,
   buyerContext,
+  sellerContext,
 }: Props) => {
   const { toast } = useToast();
   const adminName = useAdminDisplayName();
@@ -141,6 +153,7 @@ const InlineEmailComposer = ({
   const [checking, setChecking] = useState(false);
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
   const [plotPickerOpen, setPlotPickerOpen] = useState(false);
+  const [listingOptionsOpen, setListingOptionsOpen] = useState(false);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
     templates && templates.length ? templates[0].id : null,
   );
@@ -346,6 +359,17 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
+        {sellerContext && activeTemplateId === "seller_listing_options" && (
+          <button
+            type="button"
+            onClick={() => setListingOptionsOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[hsl(var(--accent-gold-fg))]/40 text-[hsl(var(--accent-gold-fg))] bg-[hsl(var(--accent-gold-bg))]/60 hover:bg-[hsl(var(--accent-gold-bg))]"
+            title="Insert offer + Starter/Pro/Featured pay buttons"
+          >
+            <LayoutGrid className="w-3 h-3" />
+            Attach listing options
+          </button>
+        )}
         {preCheckHtml !== null && (
           <button
             type="button"
@@ -383,6 +407,18 @@ const InlineEmailComposer = ({
           buyer={buyerContext}
           adminName={adminName}
           mode="attach"
+          onAttach={(cardsHtml) => {
+            editorRef.current?.insertHtmlBeforeSignature(cardsHtml);
+            setHtml(editorRef.current?.getHtml() ?? html);
+            setBodyTouched(true);
+          }}
+        />
+      )}
+      {sellerContext && (
+        <SendListingOptionsDialog
+          open={listingOptionsOpen}
+          onClose={() => setListingOptionsOpen(false)}
+          seller={sellerContext}
           onAttach={(cardsHtml) => {
             editorRef.current?.insertHtmlBeforeSignature(cardsHtml);
             setHtml(editorRef.current?.getHtml() ?? html);

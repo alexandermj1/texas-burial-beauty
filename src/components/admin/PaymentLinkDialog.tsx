@@ -133,17 +133,23 @@ export default function PaymentLinkDialog({ open, onClose, submission, adminName
       };
       const subject = subjectMap[kind];
       const html = `
-<div style="font-family: Georgia, serif; max-width: 560px; color:#1f2937;">
-  <p>${greeting}</p>
-  <p>Please find your secure payment link below for <strong>${escapeHtml(description)}</strong> in the amount of <strong>${fmt(amountCents)}</strong>.</p>
-  <p style="margin: 24px 0;">
-    <a href="${generated.url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;letter-spacing:.02em;">Complete Secure Payment</a>
+<div style="font-family:Georgia,serif;width:100%;max-width:100%;margin:0;color:#1f2937;padding:28px 40px;background:#ffffff;box-sizing:border-box;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 22px;border-collapse:collapse;">
+    <tr>
+      <td style="text-align:center;padding:0 0 14px;border-bottom:1px solid #e7e2d8;">
+        <p style="font-family:Georgia,serif;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#7c3a2e;margin:0;font-weight:600;">Texas Cemetery Brokers</p>
+        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9a8f7a;margin:4px 0 0;font-style:italic;">Serving all of Texas</p>
+      </td>
+    </tr>
+  </table>
+  <p style="font-size:15px;line-height:1.6;margin:0 0 14px;">${greeting}</p>
+  <p style="font-size:15px;line-height:1.6;margin:0 0 22px;">Please find your secure payment link below for <strong>${escapeHtml(description)}</strong> in the amount of <strong>${fmt(amountCents)}</strong>.</p>
+  <p style="margin: 26px 0 22px;text-align:center;">
+    <a href="${generated.url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:16px 34px;border-radius:999px;text-decoration:none;font-weight:600;letter-spacing:.02em;font-size:16px;">Complete secure payment</a>
   </p>
-  <p style="font-size:13px;color:#6b7280;">Or copy this link into your browser:<br><span style="word-break:break-all;">${generated.url}</span></p>
-  <p>Payments are processed securely by Stripe. Once complete you will receive an emailed receipt.</p>
-  <p>If you have any questions please reply to this email.</p>
-  <br>
-  <p>Warm regards,<br><strong>${adminName || "Alexander James"}</strong><br>Cemetery Salesperson<br>Texas Cemetery Brokers<br><a href="https://www.texascemeterybrokers.com" style="color:#7c3a2e;">www.texascemeterybrokers.com</a></p>
+  <p style="font-size:13px;color:#6b7280;line-height:1.55;margin:0 0 18px;">Secure checkout is processed by Stripe. Once complete you'll receive an emailed receipt automatically.</p>
+  <p style="font-size:15px;line-height:1.6;margin:0 0 22px;">If you have any questions, simply reply to this email.</p>
+  <p style="font-size:14px;line-height:1.5;margin:0;">Warm regards,<br><strong>${adminName || "Alexander James"}</strong><br>Cemetery Salesperson<br>Texas Cemetery Brokers<br><a href="https://www.texascemeterybrokers.com" style="color:#7c3a2e;">www.texascemeterybrokers.com</a></p>
 </div>`.trim();
 
       const { error } = await supabase.functions.invoke("gmail-action", {
