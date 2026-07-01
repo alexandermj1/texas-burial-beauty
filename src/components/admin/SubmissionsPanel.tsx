@@ -1503,28 +1503,50 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {(selected as any).purchase_info && <Field label="Purchase date / amount" value={(selected as any).purchase_info} />}
               {(selected as any).prepaid_endowment_info && <Field label="Prepaid endowment / fees" value={(selected as any).prepaid_endowment_info} />}
               {(selected as any).bayer_entry_id && <Field label="Bayer entry #" value={(selected as any).bayer_entry_id} />}
+              {/* AI-added fields the customer didn't provide — rendered inline so they read as part of the record */}
+              {aiFacts.filter(f => f.status === "new").map((f, i) => (
+                <Field key={`ai-${i}`} label={f.label} value={f.value} aiNote="added" />
+              ))}
             </div>
 
-            {/* AI-found details from uploaded documents */}
+            {/* AI-found details from uploaded documents — comparison view */}
             {aiFacts.length > 0 && (
               <div className="rounded-lg border border-primary/25 bg-primary/5 p-3">
                 <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
                   <FileSignature className="w-3 h-3" /> Found by AI in uploaded documents
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                  {aiFacts.map((f, i) => (
-                    <div key={i} className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{f.label}</p>
-                      <p className="text-sm text-foreground break-words">{f.value}</p>
-                      <p className="text-[10px] text-muted-foreground/70 italic truncate" title={f.source}>from {f.source}</p>
-                    </div>
-                  ))}
+                  {aiFacts.map((f, i) => {
+                    const badge =
+                      f.status === "match"
+                        ? { text: "Matches customer", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" }
+                        : f.status === "differs"
+                        ? { text: "Differs from customer", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30" }
+                        : { text: "New — added by AI", cls: "bg-primary/15 text-primary border-primary/25" };
+                    return (
+                      <div key={i} className="min-w-0 rounded-md border border-border/40 bg-background/60 p-2">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{f.label}</p>
+                          <span className={`text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full border ${badge.cls}`}>{badge.text}</span>
+                        </div>
+                        <p className="text-sm text-foreground break-words">{f.value}</p>
+                        {f.status === "differs" && f.customerValue && (
+                          <p className="mt-1 text-[11px] text-amber-800/80 break-words">
+                            Customer said <span className="line-through">{f.customerValue}</span>
+                            {f.customerLabel ? <span className="text-muted-foreground"> (from “{f.customerLabel}”)</span> : null}
+                          </p>
+                        )}
+                        <p className="mt-1 text-[10px] text-muted-foreground/70 italic truncate" title={f.source}>from {f.source}</p>
+                      </div>
+                    );
+                  })}
                 </div>
                 <p className="mt-2 text-[10px] text-muted-foreground italic">
                   These fields were extracted automatically from attachments — verify against the original document before quoting.
                 </p>
               </div>
             )}
+
 
             {/* Files the seller uploaded with the form */}
             {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
