@@ -1620,10 +1620,37 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-
-
-
-
+            {/* AI-extracted facts from uploaded documents (AI-only). */}
+            {(() => {
+              type Row = { label: string; value: string; source: string };
+              const rows: Row[] = [];
+              const seenKey = new Set<string>();
+              for (const f of aiFacts) {
+                const str = String(f.value || "").trim();
+                if (!str) continue;
+                const key = `${f.label.toLowerCase()}::${str.toLowerCase()}`;
+                if (seenKey.has(key)) continue;
+                seenKey.add(key);
+                rows.push({ label: f.label, value: str, source: f.source });
+              }
+              if (rows.length === 0) return null;
+              return (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                    <Sparkles className="w-3 h-3" /> AI-extracted from uploaded documents
+                  </div>
+                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
+                    {rows.map((r, i) => (
+                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
+                        <span className="text-foreground break-words">{r.value}</span>
+                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
 
 
             {/* Files the seller uploaded with the form */}
