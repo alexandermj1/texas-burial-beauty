@@ -194,7 +194,19 @@ const InlineEmailComposer = ({
     setHtml(next);
     editorRef.current?.setHtml(next);
     setBodyTouched(false);
+    if (id === "seller_listing_options" && sellerContext) {
+      setListingOptionsOpen(true);
+    }
   };
+
+  // Auto-open the quote dialog when the composer opens with the quote
+  // template already selected (default template for sellers).
+  useEffect(() => {
+    if (activeTemplateId === "seller_listing_options" && sellerContext && !bodyTouched) {
+      setListingOptionsOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTemplateId, sellerContext?.id]);
 
   const send = async () => {
     const plain = htmlToText(html);

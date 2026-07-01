@@ -173,19 +173,14 @@ ${signature(i.adminName)}`;
 // "Attach listing options" to inject 3 Stripe pay buttons + the offer intro.
 // The body here is just the closing text (greeting + next steps + signature);
 // the offer intro and 3 tier cards are inserted by SendListingOptionsDialog.
+// Body is just greeting + signature. The offer intro, tier cards, and
+// Next Steps block are injected in one branded HTML chunk by
+// SendListingOptionsDialog when the admin fills in the quote amount.
 export const buildSellerListingOptionsTemplate = (i: SellerInput): EmailTemplate => {
   const body = `Dear ${first(i.recipientName)},
 
 
 
-Next Steps
-
-1. Review the Offer: Take your time to consider the net payment and the competitive market strategy outlined above.
-2. Select Your Listing Option: Choose the plan (Starter, Pro, or Featured) that best aligns with your goals — simply click the button on the option you want.
-3. Confirm Your Acceptance or Ask Questions: To accept this offer, or if you have any questions about the market or our process, please simply reply to this email. We will promptly send over your Exclusive Sales Agreement and guide you through listing your property.
-
-We look forward to achieving a successful sale on your behalf.
-
 ${signature(i.adminName)}`;
-  return { id: "seller_listing_options", label: "Listing options (with pay buttons)", body };
+  return { id: "seller_listing_options", label: "Quote (with pay buttons)", body };
 };
