@@ -336,6 +336,27 @@ const InlineEmailComposer = ({
         placeholder="Subject"
         className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
       />
+      {sellerContext && activeTemplateId === "seller_listing_options" && (
+        <ListingOptionsInlinePanel
+          seller={sellerContext}
+          hasGenerated={listingBlockInserted}
+          onGenerated={(blockHtml) => {
+            // Remove any previously inserted block so regeneration replaces
+            // rather than duplicates.
+            const current = editorRef.current?.getHtml() ?? html;
+            const stripped = current.replace(
+              /<div data-listing-options="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
+              "",
+            );
+            editorRef.current?.setHtml(stripped);
+            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+            const next = editorRef.current?.getHtml() ?? blockHtml;
+            setHtml(next);
+            setBodyTouched(true);
+            setListingBlockInserted(true);
+          }}
+        />
+      )}
       <div className={expanded ? "flex-1 min-h-0 overflow-auto" : ""}>
         <RichTextEditor
           ref={editorRef}
