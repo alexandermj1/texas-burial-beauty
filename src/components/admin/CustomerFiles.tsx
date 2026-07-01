@@ -499,7 +499,9 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
             );
           })}
         </div>
+        </>
       )}
+
 
     </div>
   );
