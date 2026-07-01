@@ -1583,6 +1583,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
+            {/* Full AI-generated summary of each uploaded document */}
+            {aiSummaries.length > 0 && (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                  <Sparkles className="w-3 h-3" /> AI document summary
+                </div>
+                <div className="space-y-3">
+                  {aiSummaries.map((s, i) => (
+                    <div key={i} className="rounded-md border border-border/40 bg-background/60 p-2.5">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 truncate" title={s.file}>{s.file}</p>
+                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{s.summary}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
+
 
 
             {/* Files the seller uploaded with the form */}
