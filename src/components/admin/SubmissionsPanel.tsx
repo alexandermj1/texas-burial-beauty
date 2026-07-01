@@ -593,6 +593,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         }
         facts.push({ label, value: str, source, status, customerValue, customerLabel });
       };
+      const summaries: Array<{ file: string; summary: string }> = [];
       for (const f of files as any[]) {
         const ex = f.extracted_data || {};
         const src = f.file_name || "document";
@@ -613,11 +614,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         pushFact("Certificate number", ex.certificate_number, src);
         pushFact("Purchase date", ex.purchase_date, src);
         pushFact("Issued date", ex.issued_date, src);
+        if (typeof f.extracted_summary === "string" && f.extracted_summary.trim()) {
+          summaries.push({ file: src, summary: f.extracted_summary.trim() });
+        }
       }
       if (!cancelled) {
         setSelectedDeedOwners(Array.from(owners));
         setAiFacts(facts);
+        setAiSummaries(summaries);
       }
+
     })();
     return () => { cancelled = true; };
   }, [selected?.id, selected?.email, (selected as any)?.deed_owner_names, (selected as any)?.cemetery, (selected as any)?.section, (selected as any)?.cemetery_city, (selected as any)?.purchase_info]);
