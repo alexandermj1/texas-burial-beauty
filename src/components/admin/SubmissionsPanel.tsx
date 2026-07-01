@@ -522,9 +522,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Pull deed-extracted owner names for the currently selected submission so the
   // seller-intake template can ask the right ownership follow-up question.
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
+  const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string }>>([]);
   useEffect(() => {
     let cancelled = false;
     setSelectedDeedOwners([]);
+    setAiFacts([]);
     const email = (selected?.email || "").trim().toLowerCase();
     if (!email) return;
     (async () => {
@@ -542,16 +544,48 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (profileIds.length === 0) return;
       const { data: files } = await supabase
         .from("customer_files" as any)
-        .select("extracted_data")
+        .select("file_name, extracted_data")
         .in("customer_profile_id", profileIds);
       if (cancelled || !files) return;
       const owners = new Set<string>();
+      const facts: Array<{ label: string; value: string; source: string }> = [];
+      const seen = new Set<string>();
+      const pushFact = (label: string, value: any, source: string) => {
+        if (value == null) return;
+        const str = Array.isArray(value)
+          ? value.filter(v => v != null && String(v).trim() !== "").map(String).join(", ")
+          : String(value).trim();
+        if (!str) return;
+        const key = `${label}::${str.toLowerCase()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        facts.push({ label, value: str, source });
+      };
       for (const f of files as any[]) {
-        const ex = f.extracted_data;
-        const list = Array.isArray(ex?.owners) ? ex.owners : [];
+        const ex = f.extracted_data || {};
+        const src = f.file_name || "document";
+        const list = Array.isArray(ex.owners) ? ex.owners : [];
         list.forEach((n: any) => { if (typeof n === "string" && n.trim()) owners.add(n.trim()); });
+        pushFact("Owner(s) on record", ex.owners, src);
+        pushFact("Previous owner(s)", ex.previous_owners, src);
+        pushFact("Purchaser", ex.purchaser, src);
+        pushFact("Purchaser address", ex.purchaser_address, src);
+        pushFact("Cemetery", ex.cemetery, src);
+        pushFact("Cemetery address", ex.cemetery_address, src);
+        pushFact("Section", ex.section, src);
+        pushFact("Lot", ex.lot, src);
+        pushFact("Block", ex.block, src);
+        pushFact("Space", ex.space, src);
+        pushFact("Plot type", ex.plot_type, src);
+        pushFact("Deed number", ex.deed_number, src);
+        pushFact("Certificate number", ex.certificate_number, src);
+        pushFact("Purchase date", ex.purchase_date, src);
+        pushFact("Issued date", ex.issued_date, src);
       }
-      if (!cancelled) setSelectedDeedOwners(Array.from(owners));
+      if (!cancelled) {
+        setSelectedDeedOwners(Array.from(owners));
+        setAiFacts(facts);
+      }
     })();
     return () => { cancelled = true; };
   }, [selected?.id, selected?.email]);
