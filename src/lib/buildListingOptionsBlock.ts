@@ -1,0 +1,138 @@
+// Shared builder for the "Quote (with pay buttons)" block. Used by both
+// SendListingOptionsDialog (legacy modal) and the inline panel that now
+// lives inside the composer.
+
+import { supabase } from "@/integrations/supabase/client";
+import { properCase } from "@/lib/properCase";
+
+const fmtUsd = (n: number) =>
+  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+export const TIERS = [
+  { id: "starter", label: "Starter", price: 0, priceLabel: "$0 Upfront", blurb: "List your property with zero out-of-pocket costs. (Please note: an early cancellation fee applies if withdrawn within 36 months)." },
+  { id: "pro", label: "Pro", price: 99, priceLabel: "$99 One-Time Upfront Fee", blurb: "Your property is actively marketed and sent directly to local mortuaries and family counselors to help find a buyer. Cancel anytime at no charge." },
+  { id: "custom_plus", label: "Featured", price: 299, priceLabel: "$299 One-Time Upfront Fee", blurb: "Our most aggressive marketing package. This tier includes active digital advertising (Google Ads and Meta Ads) specifically targeted for your plots to prompt a faster sale. Additionally, your property will be featured at the very top of the priority list we send to local mortuaries and counselors, ensuring it is seen before any other available properties at your cemetery. Cancel anytime at no charge." },
+] as const;
+
+export const parseSpaces = (s: string | null | undefined): number => {
+  if (!s) return 1;
+  const n = parseInt(String(s).replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+};
+
+export interface SellerForBlock {
+  id: string;
+  name: string | null;
+  email: string | null;
+  cemetery: string | null;
+  section: string | null;
+  property_type: string | null;
+  spaces: string | null;
+}
+
+export async function buildListingOptionsBlock(opts: {
+  seller: SellerForBlock;
+  netPerPlot: number;
+  plotCount: number;
+  transferFee: number;
+}): Promise<string> {
+  const { seller, netPerPlot, plotCount, transferFee } = opts;
+  const total = netPerPlot * plotCount;
+
+  const links = await Promise.all(
+    TIERS.map(async (t) => {
+      try {
+        const { data, error } = await supabase.functions.invoke("create-payment-link", {
+          body: {
+            submissionId: seller.id,
+            kind: "listing_fee",
+            amountCents: t.price * 100,
+            description: `${t.label} listing — ${seller.cemetery || "your plot"}`,
+            recipientEmail: seller.email || "",
+            recipientName: properCase(seller.name || ""),
+            listingTier: t.id,
+          },
+        });
+        if (error) throw error;
+        return { tier: t, url: (data as any)?.url as string | null, free: !!(data as any)?.free };
+      } catch (e) {
+        console.warn("listing tier link failed", t.id, e);
+        return { tier: t, url: null, free: false };
+      }
+    }),
+  );
+
+  const cards = links.map(({ tier, url, free }) => buildListingCard(tier, url, free)).join("\n");
+
+  const introHtml = buildOfferIntroHtml({
+    cemetery: seller.cemetery,
+    section: seller.section,
+    propertyType: seller.property_type,
+    plotCount,
+    netPerPlot,
+    total,
+    transferFee,
+  });
+
+  const nextStepsHtml = `<h3 style="font-family:Georgia,serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#7c3a2e;margin:24px 0 10px;font-weight:600;">Next Steps</h3><ol style="font-family:Georgia,serif;font-size:14px;line-height:1.6;color:#1f2937;margin:0 0 14px;padding-left:20px;"><li style="margin:0 0 6px;"><strong>Review the Offer:</strong> Take your time to consider the net payment and the competitive market strategy outlined above.</li><li style="margin:0 0 6px;"><strong>Select Your Listing Option:</strong> Choose the plan (Starter, Pro, or Featured) that best aligns with your goals — simply click the button on the option you want.</li><li style="margin:0 0 6px;"><strong>Confirm Your Acceptance or Ask Questions:</strong> To accept this offer, or if you have any questions about the market or our process, please simply reply to this email. We will promptly send over your Exclusive Sales Agreement and guide you through listing your property.</li></ol><p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">We look forward to achieving a successful sale on your behalf.</p>`;
+
+  return `<div data-listing-options="1" style="margin:14px 0;">${introHtml}<h3 style="font-family:Georgia,serif;font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:#7c3a2e;margin:24px 0 12px;font-weight:600;">Listing Options</h3><p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 14px;color:#4b4537;">To move forward, we offer three tailored listing options. There are no additional broker fees due upon the sale of your plot in any of these options:</p>${cards}<p style="font-family:Georgia,serif;font-size:13px;color:#9a8f7a;margin:14px 0 18px;font-style:italic;">This offer is valid for 3 days.</p>${nextStepsHtml}</div><p><br></p>`;
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
+function buildOfferIntroHtml(opts: {
+  cemetery: string | null;
+  section: string | null;
+  propertyType: string | null;
+  plotCount: number;
+  netPerPlot: number;
+  total: number;
+  transferFee: number;
+}) {
+  const cemLabel = escapeHtml(properCase(opts.cemetery || "your cemetery"));
+  const plotWord = opts.plotCount === 1 ? "Burial Plot" : "Burial Plots";
+  const descBits: string[] = [];
+  if (opts.section) descBits.push(`Section ${escapeHtml(properCase(opts.section))}`);
+  descBits.push(`${opts.plotCount} ${plotWord}`);
+  const parenthetical = ` (${descBits.join(", ")})`;
+  const totalLine = opts.plotCount > 1
+    ? ` (Totaling <strong>${fmtUsd(opts.total)}</strong> when all ${opts.plotCount} spaces sell)`
+    : "";
+  return `
+<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${cemLabel}${parenthetical}.</p>
+<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${cemLabel}, we are pleased to present you with a direct, transparent offer.</p>
+<h3 style="font-family:Georgia,serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#7c3a2e;margin:20px 0 10px;font-weight:600;">Your Final Net Payment Offer</h3>
+<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 12px;"><strong>Total Final Net Payment: ${fmtUsd(opts.netPerPlot)} per plot</strong>${totalLine}</p>
+<p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 12px;color:#4b4537;">We have positioned this quote to offer the highest competitive value for a property at ${cemLabel} when compared to current active listings. The cemetery resale market is highly sensitive to pricing. Pricing plots higher typically results in buyers moving on to other options; furthermore, as new, lower-priced inventory is continuously added to the market, overpriced properties simply sit unsold. Our goal is to provide a strong, accurate valuation that stands out to buyers and ensures your property actually sells.</p>
+${opts.transferFee > 0 ? `<p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 12px;color:#4b4537;">Additionally, as part of this offer, we handle the significant cemetery-imposed costs. We pay the <strong>${fmtUsd(opts.transferFee)} transfer fee</strong> for the plots directly. This expense is entirely covered by us and does not come out of your proceeds, ensuring you receive exactly the net payment quoted above.</p>` : ""}
+`.trim();
+}
+
+function buildListingCard(
+  tier: { id: string; label: string; price: number; priceLabel: string; blurb: string },
+  url: string | null,
+  free: boolean,
+) {
+  const buttonLabel = tier.price === 0 ? "Select Starter" : `Pay & select ${tier.label}`;
+  const button = url
+    ? `<a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:14px 28px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:15px;font-weight:600;letter-spacing:.02em;">${buttonLabel}</a>`
+    : free
+      ? `<span style="display:inline-block;background:#f1ece2;color:#4b4537;padding:14px 28px;border-radius:999px;font-family:Georgia,serif;font-size:15px;font-weight:600;border:1px solid #e7e2d8;">Reply to select</span>`
+      : `<span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:14px 28px;border-radius:999px;font-family:Georgia,serif;font-size:15px;font-weight:500;border:1px solid #e7e2d8;">Payment link unavailable — reply to select</span>`;
+
+  return `
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 14px;border-collapse:separate;border:1px solid #e7e2d8;border-radius:14px;background:#fbf8f3;overflow:hidden;">
+  <tr>
+    <td style="padding:18px 20px;">
+      <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#7c3a2e;margin:0 0 6px;">Listing Option</p>
+      <h2 style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1f2937;margin:0 0 4px;line-height:1.25;">${escapeHtml(tier.label)} — ${escapeHtml(tier.priceLabel)}</h2>
+      <p style="font-family:Georgia,serif;font-size:13px;color:#4b4537;margin:0 0 14px;line-height:1.6;">${escapeHtml(tier.blurb)}</p>
+      <div style="margin-top:6px;">${button}</div>
+      <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
+    </td>
+  </tr>
+</table>`.trim();
+}

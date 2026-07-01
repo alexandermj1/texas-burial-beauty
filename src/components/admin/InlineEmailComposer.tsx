@@ -14,7 +14,7 @@ import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
-import SendListingOptionsDialog from "./SendListingOptionsDialog";
+import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
 
@@ -153,7 +153,7 @@ const InlineEmailComposer = ({
   const [checking, setChecking] = useState(false);
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
   const [plotPickerOpen, setPlotPickerOpen] = useState(false);
-  const [listingOptionsOpen, setListingOptionsOpen] = useState(false);
+  const [listingBlockInserted, setListingBlockInserted] = useState(false);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
     templates && templates.length ? templates[0].id : null,
   );
@@ -194,19 +194,8 @@ const InlineEmailComposer = ({
     setHtml(next);
     editorRef.current?.setHtml(next);
     setBodyTouched(false);
-    if (id === "seller_listing_options" && sellerContext) {
-      setListingOptionsOpen(true);
-    }
+    setListingBlockInserted(false);
   };
-
-  // Auto-open the quote dialog when the composer opens with the quote
-  // template already selected (default template for sellers).
-  useEffect(() => {
-    if (activeTemplateId === "seller_listing_options" && sellerContext && !bodyTouched) {
-      setListingOptionsOpen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTemplateId, sellerContext?.id]);
 
   const send = async () => {
     const plain = htmlToText(html);
@@ -347,6 +336,27 @@ const InlineEmailComposer = ({
         placeholder="Subject"
         className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
       />
+      {sellerContext && activeTemplateId === "seller_listing_options" && (
+        <ListingOptionsInlinePanel
+          seller={sellerContext}
+          hasGenerated={listingBlockInserted}
+          onGenerated={(blockHtml) => {
+            // Remove any previously inserted block so regeneration replaces
+            // rather than duplicates.
+            const current = editorRef.current?.getHtml() ?? html;
+            const stripped = current.replace(
+              /<div data-listing-options="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
+              "",
+            );
+            editorRef.current?.setHtml(stripped);
+            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+            const next = editorRef.current?.getHtml() ?? blockHtml;
+            setHtml(next);
+            setBodyTouched(true);
+            setListingBlockInserted(true);
+          }}
+        />
+      )}
       <div className={expanded ? "flex-1 min-h-0 overflow-auto" : ""}>
         <RichTextEditor
           ref={editorRef}
@@ -369,17 +379,6 @@ const InlineEmailComposer = ({
           >
             <LayoutGrid className="w-3 h-3" />
             Attach plot cards
-          </button>
-        )}
-        {sellerContext && activeTemplateId === "seller_listing_options" && (
-          <button
-            type="button"
-            onClick={() => setListingOptionsOpen(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[hsl(var(--accent-gold-fg))]/40 text-[hsl(var(--accent-gold-fg))] bg-[hsl(var(--accent-gold-bg))]/60 hover:bg-[hsl(var(--accent-gold-bg))]"
-            title="Insert offer + Starter/Pro/Featured pay buttons"
-          >
-            <LayoutGrid className="w-3 h-3" />
-            Attach listing options
           </button>
         )}
         {preCheckHtml !== null && (
@@ -419,18 +418,6 @@ const InlineEmailComposer = ({
           buyer={buyerContext}
           adminName={adminName}
           mode="attach"
-          onAttach={(cardsHtml) => {
-            editorRef.current?.insertHtmlBeforeSignature(cardsHtml);
-            setHtml(editorRef.current?.getHtml() ?? html);
-            setBodyTouched(true);
-          }}
-        />
-      )}
-      {sellerContext && (
-        <SendListingOptionsDialog
-          open={listingOptionsOpen}
-          onClose={() => setListingOptionsOpen(false)}
-          seller={sellerContext}
           onAttach={(cardsHtml) => {
             editorRef.current?.insertHtmlBeforeSignature(cardsHtml);
             setHtml(editorRef.current?.getHtml() ?? html);
