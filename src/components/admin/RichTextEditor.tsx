@@ -153,7 +153,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
         onInput={handleInput}
         onBlur={handleInput}
         data-placeholder={placeholder}
-        className="text-xs px-2.5 py-2 focus:outline-none whitespace-pre-wrap leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
+        className="text-xs px-2.5 py-2 focus:outline-none whitespace-pre-wrap leading-relaxed [&_p]:my-4 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-4 [&_a]:text-primary [&_a]:underline empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
         style={{ minHeight }}
       />
     </div>
