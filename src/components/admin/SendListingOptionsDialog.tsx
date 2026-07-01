@@ -36,9 +36,9 @@ const parseSpaces = (s: string | null | undefined): number => {
 };
 
 const TIERS = [
-  { id: "starter", label: "Starter", price: 0, blurb: "$0 upfront. Early cancellation fee applies if withdrawn within 36 months." },
-  { id: "pro", label: "Pro", price: 99, blurb: "$99 one-time. Actively marketed and sent directly to local mortuaries and counselors. Cancel anytime." },
-  { id: "custom_plus", label: "Featured", price: 299, blurb: "$299 one-time. Digital ads (Google & Meta) targeted to your plot, featured at the top of counselor priority lists. Cancel anytime." },
+  { id: "starter", label: "Starter", price: 0, priceLabel: "$0 Upfront", blurb: "List your property with zero out-of-pocket costs. (Please note: an early cancellation fee applies if withdrawn within 36 months)." },
+  { id: "pro", label: "Pro", price: 99, priceLabel: "$99 One-Time Upfront Fee", blurb: "Your property is actively marketed and sent directly to local mortuaries and family counselors to help find a buyer. Cancel anytime at no charge." },
+  { id: "custom_plus", label: "Featured", price: 299, priceLabel: "$299 One-Time Upfront Fee", blurb: "Our most aggressive marketing package. This tier includes active digital advertising (Google Ads and Meta Ads) specifically targeted for your plots to prompt a faster sale. Additionally, your property will be featured at the very top of the priority list we send to local mortuaries and counselors, ensuring it is seen before any other available properties at your cemetery. Cancel anytime at no charge." },
 ] as const;
 
 export default function SendListingOptionsDialog({ open, onClose, seller, onAttach }: Props) {
