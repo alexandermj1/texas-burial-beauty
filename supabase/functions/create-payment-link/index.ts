@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") || "https://texascemeterybrokers.com";
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      ui_mode: "hosted",
+      ui_mode: "hosted_page",
       line_items: [{
         price_data: {
           currency: "usd",
