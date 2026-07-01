@@ -142,6 +142,7 @@ const InlineEmailComposer = ({
   sendLabel = "Send",
   templates,
   buyerContext,
+  sellerContext,
 }: Props) => {
   const { toast } = useToast();
   const adminName = useAdminDisplayName();
@@ -152,6 +153,7 @@ const InlineEmailComposer = ({
   const [checking, setChecking] = useState(false);
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
   const [plotPickerOpen, setPlotPickerOpen] = useState(false);
+  const [listingOptionsOpen, setListingOptionsOpen] = useState(false);
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
     templates && templates.length ? templates[0].id : null,
   );
