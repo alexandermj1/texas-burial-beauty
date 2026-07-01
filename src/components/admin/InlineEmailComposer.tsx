@@ -414,6 +414,18 @@ const InlineEmailComposer = ({
           }}
         />
       )}
+      {sellerContext && (
+        <SendListingOptionsDialog
+          open={listingOptionsOpen}
+          onClose={() => setListingOptionsOpen(false)}
+          seller={sellerContext}
+          onAttach={(cardsHtml) => {
+            editorRef.current?.insertHtmlBeforeSignature(cardsHtml);
+            setHtml(editorRef.current?.getHtml() ?? html);
+            setBodyTouched(true);
+          }}
+        />
+      )}
     </div>
   );
 };
