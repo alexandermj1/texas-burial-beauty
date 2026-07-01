@@ -1532,14 +1532,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { label: "Prepaid endowment / fees", r: resolve(s.prepaid_endowment_info, []) },
                 { label: "Bayer entry #", r: resolve(s.bayer_entry_id, []) },
               ];
+              // Additional AI-only facts (no matching grid field) — appended as extra boxes.
+              const mappedAiLabels = new Set([
+                "Plot type", "Section", "Lot", "Block", "Space",
+                "Cemetery address", "Owner(s) on record", "Purchaser", "Purchase date",
+              ]);
+              const extras = aiFacts.filter(f => f.status === "new" && !mappedAiLabels.has(f.label));
               return (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                   {rows.map(({ label, r }) => r ? (
                     <Field key={label} label={label} value={r.value} />
                   ) : null)}
+                  {extras.map((f, i) => (
+                    <Field key={`ai-extra-${i}`} label={f.label} value={f.value} />
+                  ))}
                 </div>
               );
             })()}
+
 
 
             {/* AI-found details from uploaded documents — only shows facts that differ from what the customer entered */}
