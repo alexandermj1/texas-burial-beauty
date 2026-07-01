@@ -548,8 +548,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .in("customer_profile_id", profileIds);
       if (cancelled || !files) return;
       const owners = new Set<string>();
-      const facts: Array<{ label: string; value: string; source: string }> = [];
+      type Fact = { label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string };
+      const facts: Fact[] = [];
       const seen = new Set<string>();
+      // Map AI labels to the customer-submitted field on `selected`
+      const sel: any = selected || {};
+      const customerFor: Record<string, { label: string; value: string } | null> = {
+        "Owner(s) on record": sel.deed_owner_names ? { label: "Deed owner(s)", value: String(sel.deed_owner_names) } : null,
+        "Purchaser": sel.deed_owner_names ? { label: "Deed owner(s)", value: String(sel.deed_owner_names) } : null,
+        "Cemetery": sel.cemetery ? { label: "Cemetery", value: String(sel.cemetery) } : null,
+        "Cemetery address": sel.cemetery_city ? { label: "Cemetery city/state", value: String(sel.cemetery_city) } : null,
+        "Section": sel.section ? { label: "Section / Lot", value: String(sel.section) } : null,
+        "Purchase date": sel.purchase_info ? { label: "Purchase date / amount", value: String(sel.purchase_info) } : null,
+      };
+      const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const compare = (a: string, b: string): "match" | "differs" => {
+        const na = norm(a), nb = norm(b);
+        if (!na || !nb) return "differs";
+        if (na === nb || na.includes(nb) || nb.includes(na)) return "match";
+        return "differs";
+      };
       const pushFact = (label: string, value: any, source: string) => {
         if (value == null) return;
         const str = Array.isArray(value)
@@ -559,7 +577,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         const key = `${label}::${str.toLowerCase()}`;
         if (seen.has(key)) return;
         seen.add(key);
-        facts.push({ label, value: str, source });
+        const cust = customerFor[label];
+        let status: Fact["status"] = "new";
+        let customerValue: string | undefined;
+        let customerLabel: string | undefined;
+        if (cust) {
+          status = compare(str, cust.value);
+          customerValue = cust.value;
+          customerLabel = cust.label;
+        }
+        facts.push({ label, value: str, source, status, customerValue, customerLabel });
       };
       for (const f of files as any[]) {
         const ex = f.extracted_data || {};
@@ -588,7 +615,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
     })();
     return () => { cancelled = true; };
-  }, [selected?.id, selected?.email]);
+  }, [selected?.id, selected?.email, (selected as any)?.deed_owner_names, (selected as any)?.cemetery, (selected as any)?.section, (selected as any)?.cemetery_city, (selected as any)?.purchase_info]);
+
 
   // Broadcast my "currently working on" submission so teammates see it instantly.
   useEffect(() => {
