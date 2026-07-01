@@ -1477,6 +1477,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {(selected as any).bayer_entry_id && <Field label="Bayer entry #" value={(selected as any).bayer_entry_id} />}
             </div>
 
+            {/* AI-found details from uploaded documents */}
+            {aiFacts.length > 0 && (
+              <div className="rounded-lg border border-primary/25 bg-primary/5 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                  <FileSignature className="w-3 h-3" /> Found by AI in uploaded documents
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  {aiFacts.map((f, i) => (
+                    <div key={i} className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{f.label}</p>
+                      <p className="text-sm text-foreground break-words">{f.value}</p>
+                      <p className="text-[10px] text-muted-foreground/70 italic truncate" title={f.source}>from {f.source}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-[10px] text-muted-foreground italic">
+                  These fields were extracted automatically from attachments — verify against the original document before quoting.
+                </p>
+              </div>
+            )}
+
             {/* Files the seller uploaded with the form */}
             {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
               <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
