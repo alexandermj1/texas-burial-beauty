@@ -232,12 +232,9 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     fetchFiles();
   };
 
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const toggleExpanded = (id: string) => setExpandedIds(prev => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const toggleExpanded = (id: string) => setExpandedId(prev => (prev === id ? null : id));
+
 
   const humanizeKey = (k: string) =>
     k.replace(/[_-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
