@@ -196,23 +196,29 @@ function buildOfferIntroHtml(opts: {
   transferFee: number;
 }) {
   const cemLabel = escapeHtml(properCase(opts.cemetery || "your cemetery"));
-  const secLabel = opts.section ? ` (Section ${escapeHtml(properCase(opts.section))}${opts.plotCount ? `, ${opts.plotCount} ${opts.plotCount === 1 ? "plot" : "plots"}` : ""})` : opts.plotCount ? ` (${opts.plotCount} ${opts.plotCount === 1 ? "plot" : "plots"})` : "";
+  const plotWord = opts.plotCount === 1 ? "Burial Plot" : "Burial Plots";
+  const descBits: string[] = [];
+  if (opts.section) descBits.push(`Section ${escapeHtml(properCase(opts.section))}`);
+  descBits.push(`${opts.plotCount} ${plotWord}`);
+  const parenthetical = ` (${descBits.join(", ")})`;
+  const totalLine = opts.plotCount > 1
+    ? ` (Totaling <strong>${fmtUsd(opts.total)}</strong> when all ${opts.plotCount} spaces sell)`
+    : "";
   return `
-<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${cemLabel}${secLabel}.</p>
-<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">After a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${cemLabel}, we are pleased to present a direct, transparent offer.</p>
+<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${cemLabel}${parenthetical}.</p>
+<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 14px;">After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${cemLabel}, we are pleased to present you with a direct, transparent offer.</p>
 <h3 style="font-family:Georgia,serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#7c3a2e;margin:20px 0 10px;font-weight:600;">Your Final Net Payment Offer</h3>
-<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 12px;"><strong>${fmtUsd(opts.netPerPlot)} per plot</strong>${opts.plotCount > 1 ? ` — totaling <strong>${fmtUsd(opts.total)}</strong> when all ${opts.plotCount} spaces sell.` : "."}</p>
-<p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 12px;color:#4b4537;">We've positioned this quote to offer the highest competitive value for a property at ${cemLabel} against current active listings. The resale market is highly sensitive to pricing — overpriced properties simply sit unsold as newer, lower-priced inventory arrives. Our goal is a strong, accurate valuation that stands out to buyers so your property actually sells.</p>
-${opts.transferFee > 0 ? `<p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 12px;color:#4b4537;">As part of this offer, we cover the <strong>${fmtUsd(opts.transferFee)} cemetery transfer fee</strong> directly — it does not come out of your proceeds. You receive exactly the net payment quoted above.</p>` : ""}
+<p style="font-family:Georgia,serif;font-size:15px;line-height:1.6;margin:0 0 12px;"><strong>Total Final Net Payment: ${fmtUsd(opts.netPerPlot)} per plot</strong>${totalLine}</p>
+<p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 12px;color:#4b4537;">We have positioned this quote to offer the highest competitive value for a property at ${cemLabel} when compared to current active listings. The cemetery resale market is highly sensitive to pricing. Pricing plots higher typically results in buyers moving on to other options; furthermore, as new, lower-priced inventory is continuously added to the market, overpriced properties simply sit unsold. Our goal is to provide a strong, accurate valuation that stands out to buyers and ensures your property actually sells.</p>
+${opts.transferFee > 0 ? `<p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 12px;color:#4b4537;">Additionally, as part of this offer, we handle the significant cemetery-imposed costs. We pay the <strong>${fmtUsd(opts.transferFee)} transfer fee</strong> for the plots directly. This expense is entirely covered by us and does not come out of your proceeds, ensuring you receive exactly the net payment quoted above.</p>` : ""}
 `.trim();
 }
 
 function buildListingCard(
-  tier: { id: string; label: string; price: number; blurb: string },
+  tier: { id: string; label: string; price: number; priceLabel: string; blurb: string },
   url: string | null,
   free: boolean,
 ) {
-  const priceLabel = tier.price === 0 ? "$0 upfront" : `${fmtUsd(tier.price)} one-time`;
   const buttonLabel = tier.price === 0 ? "Select Starter" : `Pay & select ${tier.label}`;
   const button = url
     ? `<a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:14px 28px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:15px;font-weight:600;letter-spacing:.02em;">${buttonLabel}</a>`
@@ -225,9 +231,8 @@ function buildListingCard(
   <tr>
     <td style="padding:18px 20px;">
       <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#7c3a2e;margin:0 0 6px;">Listing Option</p>
-      <h2 style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1f2937;margin:0 0 4px;line-height:1.25;">${escapeHtml(tier.label)}</h2>
-      <p style="font-family:Georgia,serif;font-size:15px;font-weight:600;color:#1f2937;margin:0 0 8px;">${escapeHtml(priceLabel)}</p>
-      <p style="font-family:Georgia,serif;font-size:13px;color:#4b4537;margin:0 0 14px;line-height:1.55;">${escapeHtml(tier.blurb)}</p>
+      <h2 style="font-family:Georgia,serif;font-size:20px;font-weight:500;color:#1f2937;margin:0 0 4px;line-height:1.25;">${escapeHtml(tier.label)} — ${escapeHtml(tier.priceLabel)}</h2>
+      <p style="font-family:Georgia,serif;font-size:13px;color:#4b4537;margin:0 0 14px;line-height:1.6;">${escapeHtml(tier.blurb)}</p>
       <div style="margin-top:6px;">${button}</div>
       <p style="font-family:Georgia,serif;font-size:11px;color:#9ca3af;margin:10px 0 0;">Secure checkout via Stripe</p>
     </td>
