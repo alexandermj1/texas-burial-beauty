@@ -381,17 +381,6 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
-        {sellerContext && activeTemplateId === "seller_listing_options" && (
-          <button
-            type="button"
-            onClick={() => setListingOptionsOpen(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[hsl(var(--accent-gold-fg))]/40 text-[hsl(var(--accent-gold-fg))] bg-[hsl(var(--accent-gold-bg))]/60 hover:bg-[hsl(var(--accent-gold-bg))]"
-            title="Insert offer + Starter/Pro/Featured pay buttons"
-          >
-            <LayoutGrid className="w-3 h-3" />
-            Attach listing options
-          </button>
-        )}
         {preCheckHtml !== null && (
           <button
             type="button"
