@@ -1486,28 +1486,50 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Property details grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-              {selected.property_type && (
-                <Field label="Property type" value={selected.property_type} />
-              )}
-              {selected.timeline && <Field label="Timeline" value={selected.timeline} />}
-              {selected.budget && <Field label="Budget" value={selected.budget} />}
-              {selected.region && <Field label="Region" value={selected.region} />}
-              {selected.spaces && <Field label="Spaces" value={selected.spaces} />}
-              {selected.section && <Field label="Section / Lot" value={selected.section} />}
-              {(selected as any).cemetery_city && <Field label="Cemetery city/state" value={(selected as any).cemetery_city} />}
-              {(selected as any).deed_owner_names && <Field label="Deed owner(s)" value={(selected as any).deed_owner_names} />}
-              {(selected as any).deed_owners_status && <Field label="Owner status" value={(selected as any).deed_owners_status} />}
-              {(selected as any).relationship_to_owner && <Field label="Relationship to owner" value={(selected as any).relationship_to_owner} />}
-              {(selected as any).purchase_info && <Field label="Purchase date / amount" value={(selected as any).purchase_info} />}
-              {(selected as any).prepaid_endowment_info && <Field label="Prepaid endowment / fees" value={(selected as any).prepaid_endowment_info} />}
-              {(selected as any).bayer_entry_id && <Field label="Bayer entry #" value={(selected as any).bayer_entry_id} />}
-              {/* AI-added fields the customer didn't provide — rendered inline so they read as part of the record */}
-              {aiFacts.filter(f => f.status === "new").map((f, i) => (
-                <Field key={`ai-${i}`} label={f.label} value={f.value} aiNote="added" />
-              ))}
-            </div>
+            {/* Property details grid — customer values fill first; when a box is empty the AI
+                fills it in with an "Added by AI" tag; when both exist and disagree we flag it. */}
+            {(() => {
+              // Map each grid field to the AI label(s) that could fill it.
+              const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
+              const pick = (labels: string[]) => {
+                for (const l of labels) { const f = aiByLabel.get(l); if (f) return f; }
+                return undefined;
+              };
+              const resolve = (customerVal: any, aiLabels: string[]): { value: string; aiNote?: "added" | "differs" } | null => {
+                const cv = customerVal != null ? String(customerVal).trim() : "";
+                const ai = pick(aiLabels);
+                if (cv) {
+                  if (ai && ai.status === "differs") return { value: cv, aiNote: "differs" };
+                  return { value: cv };
+                }
+                if (ai) return { value: ai.value, aiNote: "added" };
+                return null;
+              };
+              const s: any = selected;
+              const rows: Array<{ label: string; r: { value: string; aiNote?: "added" | "differs" } | null }> = [
+                { label: "Property type", r: resolve(s.property_type, ["Plot type"]) },
+                { label: "Timeline", r: resolve(s.timeline, []) },
+                { label: "Budget", r: resolve(s.budget, []) },
+                { label: "Region", r: resolve(s.region, []) },
+                { label: "Spaces", r: resolve(s.spaces, []) },
+                { label: "Section / Lot", r: resolve(s.section, ["Section", "Lot", "Block", "Space"]) },
+                { label: "Cemetery city/state", r: resolve(s.cemetery_city, ["Cemetery address"]) },
+                { label: "Deed owner(s)", r: resolve(s.deed_owner_names, ["Owner(s) on record", "Purchaser"]) },
+                { label: "Owner status", r: resolve(s.deed_owners_status, []) },
+                { label: "Relationship to owner", r: resolve(s.relationship_to_owner, []) },
+                { label: "Purchase date / amount", r: resolve(s.purchase_info, ["Purchase date"]) },
+                { label: "Prepaid endowment / fees", r: resolve(s.prepaid_endowment_info, []) },
+                { label: "Bayer entry #", r: resolve(s.bayer_entry_id, []) },
+              ];
+              return (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  {rows.map(({ label, r }) => r ? (
+                    <Field key={label} label={label} value={r.value} aiNote={r.aiNote} />
+                  ) : null)}
+                </div>
+              );
+            })()}
+
 
             {/* AI-found details from uploaded documents — comparison view */}
             {aiFacts.length > 0 && (
