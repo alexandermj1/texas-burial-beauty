@@ -522,7 +522,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Pull deed-extracted owner names for the currently selected submission so the
   // seller-intake template can ask the right ownership follow-up question.
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
-  const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string }>>([]);
+  const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   useEffect(() => {
     let cancelled = false;
     setSelectedDeedOwners([]);
