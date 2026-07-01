@@ -42,9 +42,19 @@ interface Props {
     cemetery: string | null;
     property_type?: string | null;
   } | null;
+  /** When provided (Texas seller), the composer exposes "Attach listing options". */
+  sellerContext?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    cemetery: string | null;
+    section: string | null;
+    property_type: string | null;
+    spaces: string | null;
+  } | null;
 }
 
-const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext }: Props) => {
+const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext, sellerContext }: Props) => {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
