@@ -568,10 +568,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         "Purchase date": sel.purchase_info ? { label: "Purchase date / amount", value: String(sel.purchase_info) } : null,
       };
       const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-      const compare = (a: string, b: string): "match" | "differs" => {
+      const isCemeteryLabel = (l: string) => /cemetery/i.test(l);
+      // Split a "Last, First" or "First Last" name into normalized tokens for owner comparison.
+      const nameTokens = (s: string) => {
+        const flipped = s.includes(",") ? s.split(",").reverse().join(" ") : s;
+        return new Set(norm(flipped).split(" ").filter(t => t.length > 1));
+      };
+      const nameMatches = (a: string, b: string) => {
+        const A = nameTokens(a), B = nameTokens(b);
+        if (!A.size || !B.size) return false;
+        let shared = 0;
+        for (const t of A) if (B.has(t)) shared++;
+        // Consider it a match if at least 2 name tokens overlap (first + last), or one token if names are very short.
+        return shared >= Math.min(2, Math.min(A.size, B.size));
+      };
+      const compare = (a: string, b: string, label: string): "match" | "differs" => {
         const na = norm(a), nb = norm(b);
         if (!na || !nb) return "differs";
         if (na === nb || na.includes(nb) || nb.includes(na)) return "match";
+        // Cemetery names: use fuzzy scoring so "Hillcrest Memorial Park" ≈ "Hillcrest Memorial Park and Mausoleum".
+        if (isCemeteryLabel(label)) {
+          if (cemeteryScore(a, b) >= 0.5) return "match";
+        }
+        // Owner / purchaser names: token overlap on first + last name.
+        if (/owner|purchaser/i.test(label) && nameMatches(a, b)) return "match";
         return "differs";
       };
       const pushFact = (label: string, value: any, source: string) => {
@@ -588,7 +608,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         let customerValue: string | undefined;
         let customerLabel: string | undefined;
         if (cust) {
-          status = compare(str, cust.value);
+          status = compare(str, cust.value, label);
           customerValue = cust.value;
           customerLabel = cust.label;
         }
@@ -615,6 +635,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         pushFact("Certificate number", ex.certificate_number, src);
         pushFact("Purchase date", ex.purchase_date, src);
         pushFact("Issued date", ex.issued_date, src);
+        // Extra useful fields the extractor now returns.
+        pushFact("Decedent", ex.decedent, src);
+        pushFact("Date of death", ex.date_of_death, src);
+        pushFact("Contract number", ex.contract_number, src);
+        pushFact("ID type", ex.id_type, src);
+        pushFact("ID number", ex.id_number, src);
+        if (Array.isArray(ex.amounts)) pushFact("Amounts mentioned", ex.amounts, src);
+        if (Array.isArray(ex.parties)) pushFact("Other parties named", ex.parties, src);
+        if (ex.additional_fields && typeof ex.additional_fields === "object") {
+          for (const [k, v] of Object.entries(ex.additional_fields)) {
+            const pretty = k.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+            pushFact(pretty, v as any, src);
+          }
+        }
+        // Flag if the AI-found owners on the deed don't include the submitter's name.
+        const submitterName = (sel.name || "").trim();
+        if (submitterName && Array.isArray(ex.owners) && ex.owners.length > 0) {
+          const ownersStr = ex.owners.filter(Boolean).map(String).join(", ");
+          if (ownersStr && !nameMatches(ownersStr, submitterName)) {
+            const dupKey = `submitter-vs-owners::${ownersStr.toLowerCase()}`;
+            if (!seen.has(dupKey)) {
+              seen.add(dupKey);
+              facts.push({
+                label: "Name on deed vs. submitter",
+                value: ownersStr,
+                source: src,
+                status: "differs",
+                customerValue: submitterName,
+                customerLabel: "Submitter name",
+              });
+            }
+          }
+        }
         if (typeof f.extracted_summary === "string" && f.extracted_summary.trim()) {
           summaries.push({ file: src, summary: f.extracted_summary.trim() });
         }
