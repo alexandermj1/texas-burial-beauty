@@ -1619,99 +1619,46 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   {rows.map(({ label, value }) => (
                     <Field key={label} label={label} value={value} />
                   ))}
-                  {showDeedBox && (
-                    <div className="col-span-2 md:col-span-3 rounded-md border border-border/60 bg-background/60 p-3">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Deed owner(s)</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mb-0.5">Customer answered</p>
-                          <p className="text-foreground break-words">{customerDeed || <span className="text-muted-foreground italic">— not provided —</span>}</p>
+                  {showDeedBox && (() => {
+                    const matches = customerDeed && aiDeed && aiDeed.status === "match";
+                    const differs = customerDeed && aiDeed && aiDeed.status === "differs";
+                    const tone = matches
+                      ? { border: "border-emerald-500/40", bg: "bg-emerald-500/5", label: "text-emerald-800", note: "Match — customer's answer matches the deed." }
+                      : differs
+                      ? { border: "border-red-500/40", bg: "bg-red-500/5", label: "text-red-800", note: "Mismatch — customer's answer and the name(s) on the deed don't match." }
+                      : { border: "border-border/60", bg: "bg-background/60", label: "text-muted-foreground", note: "" };
+                    return (
+                      <div className={`col-span-2 md:col-span-3 rounded-md border ${tone.border} ${tone.bg} p-3`}>
+                        <p className={`text-[10px] uppercase tracking-wide font-semibold mb-2 ${tone.label}`}>Deed owner(s)</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm items-start">
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Customer answered</p>
+                            <p className="text-sm text-foreground leading-snug break-words">
+                              {customerDeed || <span className="text-muted-foreground italic">— not provided —</span>}
+                            </p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 inline-flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" /> From deed (AI)
+                            </p>
+                            <p className="text-sm text-foreground leading-snug break-words">
+                              {aiDeed?.value || <span className="text-muted-foreground italic">— no deed uploaded / none found —</span>}
+                            </p>
+                            {aiDeed?.source && (
+                              <p className="mt-1 text-[10px] text-muted-foreground/70 italic truncate" title={aiDeed.source}>from {aiDeed.source}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wide text-primary/80 mb-0.5 inline-flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" /> From deed (AI)
-                          </p>
-                          <p className="text-foreground break-words">{aiDeed?.value || <span className="text-muted-foreground italic">— no deed uploaded / none found —</span>}</p>
-                          {aiDeed?.source && (
-                            <p className="mt-0.5 text-[10px] text-muted-foreground/70 italic truncate" title={aiDeed.source}>from {aiDeed.source}</p>
-                          )}
-                        </div>
-                      </div>
-                      {customerDeed && aiDeed && aiDeed.status === "differs" && (
-                        <p className="mt-2 text-[11px] text-amber-800 bg-amber-500/10 border border-amber-500/30 rounded px-2 py-1">
-                          Customer's answer and the name(s) on the deed don't match — please verify.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-
-
-            {/* AI-found details from uploaded documents — only shows facts that differ from what the customer entered */}
-            {(() => {
-              const diffs = aiFacts.filter(f => f.status === "differs");
-              if (diffs.length === 0) return null;
-              return (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-700 font-semibold mb-2">
-                    <FileSignature className="w-3 h-3" /> Found by AI in uploaded documents — differs from customer
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    {diffs.map((f, i) => (
-                      <div key={i} className="min-w-0 rounded-md border border-border/40 bg-background/60 p-2">
-                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{f.label}</p>
-                        <p className="text-sm text-foreground break-words">{f.value}</p>
-                        {f.customerValue && (
-                          <p className="mt-1 text-[11px] text-amber-800/80 break-words">
-                            Customer said <span className="line-through">{f.customerValue}</span>
-                            {f.customerLabel ? <span className="text-muted-foreground"> (from “{f.customerLabel}”)</span> : null}
-                          </p>
+                        {tone.note && (
+                          <p className={`mt-2 text-[11px] font-medium ${tone.label}`}>{tone.note}</p>
                         )}
-                        <p className="mt-1 text-[10px] text-muted-foreground/70 italic truncate" title={f.source}>from {f.source}</p>
                       </div>
-                    ))}
-                  </div>
-                  <p className="mt-2 text-[10px] text-muted-foreground italic">
-                    Verify against the original document before quoting.
-                  </p>
+                    );
+                  })()}
                 </div>
               );
             })()}
 
-            {/* AI-extracted facts from uploaded documents (AI-only — customer-submitted info is not repeated here). */}
-            {(() => {
-              type Row = { label: string; value: string; source: string };
-              const rows: Row[] = [];
-              const seenKey = new Set<string>();
-              for (const f of aiFacts) {
-                const str = String(f.value || "").trim();
-                if (!str) continue;
-                const key = `${f.label.toLowerCase()}::${str.toLowerCase()}`;
-                if (seenKey.has(key)) continue;
-                seenKey.add(key);
-                rows.push({ label: f.label, value: str, source: f.source });
-              }
-              if (rows.length === 0) return null;
-              return (
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
-                    <Sparkles className="w-3 h-3" /> AI-extracted from uploaded documents
-                  </div>
-                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
-                    {rows.map((r, i) => (
-                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
-                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
-                        <span className="text-foreground break-words">{r.value}</span>
-                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })()}
 
 
 
