@@ -180,9 +180,9 @@ export const buildSellerListingOptionsTemplate = (i: SellerInput): EmailTemplate
 
 Next Steps
 
-1. Review the offer above and the three listing options.
-2. Select the plan (Starter, Pro, or Featured) that best aligns with your goals — simply click the button on the option you want.
-3. Or, if you have any questions about the market or our process, just reply to this email. We'll promptly send over your Exclusive Sales Agreement and guide you through listing your property.
+1. Review the Offer: Take your time to consider the net payment and the competitive market strategy outlined above.
+2. Select Your Listing Option: Choose the plan (Starter, Pro, or Featured) that best aligns with your goals — simply click the button on the option you want.
+3. Confirm Your Acceptance or Ask Questions: To accept this offer, or if you have any questions about the market or our process, please simply reply to this email. We will promptly send over your Exclusive Sales Agreement and guide you through listing your property.
 
 We look forward to achieving a successful sale on your behalf.
 
