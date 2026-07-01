@@ -232,12 +232,9 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     fetchFiles();
   };
 
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const toggleExpanded = (id: string) => setExpandedIds(prev => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const toggleExpanded = (id: string) => setExpandedId(prev => (prev === id ? null : id));
+
 
   const humanizeKey = (k: string) =>
     k.replace(/[_-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -385,7 +382,37 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
           No files uploaded yet. Upload Power of Attorney, deeds, IDs, or other documents related to {customerName || "this customer"}.
         </p>
       ) : (
+        <>
+        {(() => {
+          const openFileRow = expandedId ? files.find(f => f.id === expandedId) : null;
+          if (!openFileRow) return null;
+          return (
+            <div className="mb-3 rounded-lg border border-primary/20 bg-primary/5 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-primary/15 bg-primary/10">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold min-w-0">
+                  <Sparkles className="w-3 h-3 shrink-0" />
+                  <span className="truncate">AI Summary · {openFileRow.file_name}</span>
+                </div>
+                <button
+                  onClick={() => setExpandedId(null)}
+                  className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5 shrink-0"
+                >
+                  <ChevronUp className="w-3 h-3" /> Hide
+                </button>
+              </div>
+              <div className="px-3 py-2.5 space-y-2.5">
+                {openFileRow.extracted_summary && (
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                    {openFileRow.extracted_summary}
+                  </p>
+                )}
+                {openFileRow.extracted_data && renderExtracted(openFileRow.extracted_data)}
+              </div>
+            </div>
+          );
+        })()}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+
           {files.map(f => {
             const isImg = isImageMime(f.mime_type);
             const isPdf = f.mime_type === "application/pdf";
@@ -433,33 +460,23 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> AI reading…</p>
                   )}
                   {f.extraction_status === "done" && (() => {
-                    const isOpen = expandedIds.has(f.id);
+                    const isOpen = expandedId === f.id;
                     return (
-                      <div className="mt-0.5 rounded-md bg-primary/5 border border-primary/20 overflow-hidden">
-                        <button
-                          onClick={() => f.extracted_data && toggleExpanded(f.id)}
-                          className="w-full text-left px-2.5 py-2 hover:bg-primary/10 transition-colors"
-                        >
-                          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">
-                            <Sparkles className="w-3 h-3" /> AI Summary
-                          </div>
-                          <p className={`text-xs text-foreground leading-relaxed ${isOpen ? "" : "line-clamp-3"}`}>
-                            {f.extracted_summary || "Extracted"}
-                          </p>
-                          {f.extracted_data && (
-                            <span className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] text-primary font-medium">
-                              {isOpen ? (<><ChevronUp className="w-3 h-3" /> Hide details</>) : (<><ChevronDown className="w-3 h-3" /> View details</>)}
-                            </span>
-                          )}
-                        </button>
-                        {isOpen && f.extracted_data && (
-                          <div className="px-2.5 pb-2.5 pt-1 border-t border-primary/15">
-                            {renderExtracted(f.extracted_data)}
-                          </div>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => toggleExpanded(f.id)}
+                        className={`mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md border transition-colors self-start ${
+                          isOpen
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
+                        }`}
+                        title={f.extracted_summary || "AI Summary"}
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        {isOpen ? "Hide AI summary" : "AI Summary"}
+                      </button>
                     );
                   })()}
+
                   {f.extraction_status === "failed" && (
                     <p className="text-xs text-destructive truncate" title={f.extraction_error || ""}>AI read failed</p>
                   )}
@@ -482,7 +499,9 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
             );
           })}
         </div>
+        </>
       )}
+
 
     </div>
   );
