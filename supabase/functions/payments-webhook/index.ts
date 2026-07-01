@@ -221,6 +221,21 @@ async function handleDispute(tx: any, status: string) {
   );
 }
 
+async function fetchCardDetails(paymentIntentId: string | null, env: StripeEnv): Promise<{ brand?: string; last4?: string }> {
+  if (!paymentIntentId) return {};
+  try {
+    const { createStripeClient } = await import("../_shared/stripe.ts");
+    const stripe = createStripeClient(env);
+    const pi: any = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge"] });
+    const charge = pi?.latest_charge;
+    const pmd = charge?.payment_method_details?.card;
+    return { brand: pmd?.brand, last4: pmd?.last4 };
+  } catch (e) {
+    console.error("fetchCardDetails", e);
+    return {};
+  }
+}
+
 async function markPaid(sessionId: string, paymentIntentId: string | null, env: StripeEnv) {
   const { data: tx } = await db()
     .from("payment_transactions")
@@ -235,9 +250,10 @@ async function markPaid(sessionId: string, paymentIntentId: string | null, env: 
     .maybeSingle();
 
   if (!tx) return;
-  if (tx.kind === "listing_fee") await handleListingFeePaid(tx);
-  else if (tx.kind === "plot_sale") await handlePlotSalePaid(tx);
-  else if (tx.kind === "custom") await handleCustomPaid(tx);
+  const { brand, last4 } = await fetchCardDetails(paymentIntentId, env);
+  if (tx.kind === "listing_fee") await handleListingFeePaid(tx, brand, last4);
+  else if (tx.kind === "plot_sale") await handlePlotSalePaid(tx, brand, last4);
+  else if (tx.kind === "custom") await handleCustomPaid(tx, brand, last4);
 }
 
 async function markFailed(sessionId: string, env: StripeEnv) {
