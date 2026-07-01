@@ -1591,49 +1591,61 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Property details grid — customer values fill first; when a box is empty the AI
-                fills it in with an "Added by AI" tag; when both exist and disagree we flag it. */}
+            {/* Property details grid — only customer-submitted values. The Deed owner(s) field
+                is special: it always shows the customer's answer alongside the AI-extracted owners
+                from the uploaded deed so the admin can compare both. */}
             {(() => {
-              // Map each grid field to the AI label(s) that could fill it.
-              const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
-              const pick = (labels: string[]) => {
-                for (const l of labels) { const f = aiByLabel.get(l); if (f) return f; }
-                return undefined;
-              };
-              const resolve = (customerVal: any, aiLabels: string[]): { value: string; aiNote?: "added" | "differs" } | null => {
-                const cv = customerVal != null ? String(customerVal).trim() : "";
-                const ai = pick(aiLabels);
-                if (cv) {
-                  if (ai && ai.status === "differs") return { value: cv, aiNote: "differs" };
-                  return { value: cv };
-                }
-                if (ai) return { value: ai.value, aiNote: "added" };
-                return null;
-              };
               const s: any = selected;
-              const rows: Array<{ label: string; r: { value: string; aiNote?: "added" | "differs" } | null }> = [
-                { label: "Property type", r: resolve(s.property_type, ["Plot type"]) },
-                { label: "Timeline", r: resolve(s.timeline, []) },
-                { label: "Budget", r: resolve(s.budget, []) },
-                { label: "Region", r: resolve(s.region, []) },
-                { label: "Spaces", r: resolve(s.spaces, []) },
-                { label: "Section / Lot", r: resolve(s.section, ["Section", "Lot", "Block", "Space"]) },
-                { label: "Cemetery city/state", r: resolve(s.cemetery_city, ["Cemetery address"]) },
-                { label: "Deed owner(s)", r: resolve(s.deed_owner_names, ["Owner(s) on record", "Purchaser"]) },
-                { label: "Owner status", r: resolve(s.deed_owners_status, []) },
-                { label: "Relationship to owner", r: resolve(s.relationship_to_owner, []) },
-                { label: "Purchase date / amount", r: resolve(s.purchase_info, ["Purchase date"]) },
-                { label: "Prepaid endowment / fees", r: resolve(s.prepaid_endowment_info, []) },
-                { label: "Bayer entry #", r: resolve(s.bayer_entry_id, []) },
-              ];
+              const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
+              const aiDeed = aiByLabel.get("Owner(s) on record") || aiByLabel.get("Purchaser");
+              const customerDeed = s.deed_owner_names ? String(s.deed_owner_names).trim() : "";
+              const rows: Array<{ label: string; value: string }> = [
+                { label: "Property type", value: s.property_type || "" },
+                { label: "Timeline", value: s.timeline || "" },
+                { label: "Budget", value: s.budget || "" },
+                { label: "Region", value: s.region || "" },
+                { label: "Spaces", value: s.spaces != null ? String(s.spaces) : "" },
+                { label: "Section / Lot", value: s.section || "" },
+                { label: "Cemetery city/state", value: s.cemetery_city || "" },
+                { label: "Owner status", value: s.deed_owners_status || "" },
+                { label: "Relationship to owner", value: s.relationship_to_owner || "" },
+                { label: "Purchase date / amount", value: s.purchase_info || "" },
+                { label: "Prepaid endowment / fees", value: s.prepaid_endowment_info || "" },
+                { label: "Bayer entry #", value: s.bayer_entry_id || "" },
+              ].filter(r => r.value && r.value.trim());
+              const showDeedBox = customerDeed || aiDeed;
               return (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                  {rows.map(({ label, r }) => r ? (
-                    <Field key={label} label={label} value={r.value} />
-                  ) : null)}
+                  {rows.map(({ label, value }) => (
+                    <Field key={label} label={label} value={value} />
+                  ))}
+                  {showDeedBox && (
+                    <div className="col-span-2 md:col-span-3 rounded-md border border-border/60 bg-background/60 p-3">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Deed owner(s)</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mb-0.5">Customer answered</p>
+                          <p className="text-foreground break-words">{customerDeed || <span className="text-muted-foreground italic">— not provided —</span>}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-primary/80 mb-0.5 inline-flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" /> From deed (AI)
+                          </p>
+                          <p className="text-foreground break-words">{aiDeed?.value || <span className="text-muted-foreground italic">— no deed uploaded / none found —</span>}</p>
+                          {aiDeed?.source && (
+                            <p className="mt-0.5 text-[10px] text-muted-foreground/70 italic truncate" title={aiDeed.source}>from {aiDeed.source}</p>
+                          )}
+                        </div>
+                      </div>
+                      {customerDeed && aiDeed && aiDeed.status === "differs" && (
+                        <p className="mt-2 text-[11px] text-amber-800 bg-amber-500/10 border border-amber-500/30 rounded px-2 py-1">
+                          Customer's answer and the name(s) on the deed don't match — please verify.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
-
             })()}
 
 
