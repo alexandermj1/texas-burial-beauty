@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -523,10 +523,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // seller-intake template can ask the right ownership follow-up question.
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
+  const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
+
   useEffect(() => {
     let cancelled = false;
     setSelectedDeedOwners([]);
     setAiFacts([]);
+    setAiSummaries([]);
+
     const email = (selected?.email || "").trim().toLowerCase();
     if (!email) return;
     (async () => {
@@ -544,8 +548,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (profileIds.length === 0) return;
       const { data: files } = await supabase
         .from("customer_files" as any)
-        .select("file_name, extracted_data")
+        .select("file_name, extracted_data, extracted_summary")
         .in("customer_profile_id", profileIds);
+
       if (cancelled || !files) return;
       const owners = new Set<string>();
       type Fact = { label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string };
@@ -588,6 +593,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         }
         facts.push({ label, value: str, source, status, customerValue, customerLabel });
       };
+      const summaries: Array<{ file: string; summary: string }> = [];
       for (const f of files as any[]) {
         const ex = f.extracted_data || {};
         const src = f.file_name || "document";
@@ -608,11 +614,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         pushFact("Certificate number", ex.certificate_number, src);
         pushFact("Purchase date", ex.purchase_date, src);
         pushFact("Issued date", ex.issued_date, src);
+        if (typeof f.extracted_summary === "string" && f.extracted_summary.trim()) {
+          summaries.push({ file: src, summary: f.extracted_summary.trim() });
+        }
       }
       if (!cancelled) {
         setSelectedDeedOwners(Array.from(owners));
         setAiFacts(facts);
+        setAiSummaries(summaries);
       }
+
     })();
     return () => { cancelled = true; };
   }, [selected?.id, selected?.email, (selected as any)?.deed_owner_names, (selected as any)?.cemetery, (selected as any)?.section, (selected as any)?.cemetery_city, (selected as any)?.purchase_info]);
@@ -1521,14 +1532,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { label: "Prepaid endowment / fees", r: resolve(s.prepaid_endowment_info, []) },
                 { label: "Bayer entry #", r: resolve(s.bayer_entry_id, []) },
               ];
+              // Additional AI-only facts (no matching grid field) — appended as extra boxes.
+              const mappedAiLabels = new Set([
+                "Plot type", "Section", "Lot", "Block", "Space",
+                "Cemetery address", "Owner(s) on record", "Purchaser", "Purchase date",
+              ]);
+              const extras = aiFacts.filter(f => f.status === "new" && !mappedAiLabels.has(f.label));
               return (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                   {rows.map(({ label, r }) => r ? (
                     <Field key={label} label={label} value={r.value} />
                   ) : null)}
+                  {extras.map((f, i) => (
+                    <Field key={`ai-extra-${i}`} label={f.label} value={f.value} />
+                  ))}
                 </div>
               );
             })()}
+
 
 
             {/* AI-found details from uploaded documents — only shows facts that differ from what the customer entered */}
@@ -1561,6 +1582,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               );
             })()}
+
+            {/* Full AI-generated summary of each uploaded document */}
+            {aiSummaries.length > 0 && (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                  <Sparkles className="w-3 h-3" /> AI document summary
+                </div>
+                <div className="space-y-3">
+                  {aiSummaries.map((s, i) => (
+                    <div key={i} className="rounded-md border border-border/40 bg-background/60 p-2.5">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 truncate" title={s.file}>{s.file}</p>
+                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{s.summary}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
 
 
 
