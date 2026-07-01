@@ -104,7 +104,7 @@ export default function SendListingOptionsDialog({ open, onClose, seller, onAtta
         transferFee: Number(transferFee) || 0,
       });
 
-      const block = `<div data-listing-options="1" style="margin:14px 0;">${introHtml}<h3 style="font-family:Georgia,serif;font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:#7c3a2e;margin:24px 0 12px;font-weight:600;">Listing Options</h3><p style="font-family:Georgia,serif;font-size:14px;line-height:1.55;margin:0 0 14px;color:#4b4537;">Choose the plan that best fits your goals. There are no additional broker fees due upon sale in any option.</p>${cards}<p style="font-family:Georgia,serif;font-size:13px;color:#9a8f7a;margin:14px 0 0;font-style:italic;">This offer is valid for 3 days.</p></div><p><br></p>`;
+      const block = `<div data-listing-options="1" style="margin:14px 0;">${introHtml}<h3 style="font-family:Georgia,serif;font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:#7c3a2e;margin:24px 0 12px;font-weight:600;">Listing Options</h3><p style="font-family:Georgia,serif;font-size:14px;line-height:1.6;margin:0 0 14px;color:#4b4537;">To move forward, we offer three tailored listing options. There are no additional broker fees due upon the sale of your plot in any of these options:</p>${cards}<p style="font-family:Georgia,serif;font-size:13px;color:#9a8f7a;margin:14px 0 0;font-style:italic;">This offer is valid for 3 days.</p></div><p><br></p>`;
 
       onAttach(block);
       toast({ title: "Listing options attached", description: "Three pay-to-select buttons added to the email." });
