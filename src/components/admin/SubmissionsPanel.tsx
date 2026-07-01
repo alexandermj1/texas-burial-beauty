@@ -125,6 +125,9 @@ type DocsFilter = "all" | "with" | "without";
 // enough time has passed without further contact, surface it as "Follow up".
 const FOLLOWUP_PROMISE_RX = /\b(i['’]?ll|i will|we['’]?ll|we will|let me|going to|gonna)\s+(follow\s*up|get back to you|circle back|check|look into|find out|reach out|send|email|call|get you|have|loop back|update you|let you know|confirm|verify)\b|\b(get back to you|circle back|follow up with you|i['’]?ll be in touch|i['’]?ll have an? (answer|update)|by (tomorrow|monday|tuesday|wednesday|thursday|friday|the end of (the )?(day|week))|shortly|in a (few|couple) days?)\b/i;
 const FOLLOWUP_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
+// Outgoing emails matching these patterns are informational (e.g. the "we don't
+// currently have inventory" buyer template) and should NOT auto-flag follow-up.
+const FOLLOWUP_EXCLUDE_RX = /(don['’]?t have anything matching|keep your request on file|nothing matching your request|the moment something fitting becomes available|new inventory comes in often)/i;
 
 
 // Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
@@ -316,6 +319,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           // AND enough time has passed without further contact from either side.
           const ageMs = now - new Date(info.received_at).getTime();
           if (ageMs >= FOLLOWUP_THRESHOLD_MS) {
+            if (FOLLOWUP_EXCLUDE_RX.test(info.body)) continue;
             const m = info.body.match(FOLLOWUP_PROMISE_RX);
             if (m) {
               nextFollowup[sid] = { since: info.received_at, phrase: m[0].slice(0, 80) };
