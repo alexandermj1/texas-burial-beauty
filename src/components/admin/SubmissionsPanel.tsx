@@ -319,6 +319,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           // AND enough time has passed without further contact from either side.
           const ageMs = now - new Date(info.received_at).getTime();
           if (ageMs >= FOLLOWUP_THRESHOLD_MS) {
+            if (FOLLOWUP_EXCLUDE_RX.test(info.body)) continue;
             const m = info.body.match(FOLLOWUP_PROMISE_RX);
             if (m) {
               nextFollowup[sid] = { since: info.received_at, phrase: m[0].slice(0, 80) };
