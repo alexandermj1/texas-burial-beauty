@@ -14,6 +14,7 @@ import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
+import SendListingOptionsDialog from "./SendListingOptionsDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
 
@@ -38,6 +39,16 @@ interface Props {
     email: string | null;
     cemetery: string | null;
     property_type?: string | null;
+  } | null;
+  /** When provided AND the "seller_listing_options" template is active, shows "Attach listing options". */
+  sellerContext?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    cemetery: string | null;
+    section: string | null;
+    property_type: string | null;
+    spaces: string | null;
   } | null;
 }
 
