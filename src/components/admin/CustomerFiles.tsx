@@ -484,43 +484,6 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         </div>
       )}
 
-      {detailsFor && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => setDetailsFor(null)}
-        >
-          <div
-            className="bg-card rounded-xl border border-border shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-card border-b border-border px-5 py-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 text-xs text-primary mb-0.5">
-                  <Sparkles className="w-3.5 h-3.5" /> AI extracted details
-                </div>
-                <p className="text-sm font-semibold text-foreground truncate">{detailsFor.file_name}</p>
-                {detailsFor.document_type && (
-                  <p className="text-xs text-muted-foreground">{detailsFor.document_type}</p>
-                )}
-              </div>
-              <button
-                onClick={() => setDetailsFor(null)}
-                className="text-muted-foreground hover:text-foreground text-sm px-2 py-1 rounded-md hover:bg-muted shrink-0"
-              >
-                Close
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              {detailsFor.extracted_summary && (
-                <p className="text-sm text-foreground leading-relaxed bg-primary/5 border border-primary/20 rounded-md p-3">
-                  {detailsFor.extracted_summary}
-                </p>
-              )}
-              {renderExtracted(detailsFor.extracted_data)}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
