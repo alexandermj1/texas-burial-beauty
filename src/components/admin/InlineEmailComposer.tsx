@@ -14,7 +14,7 @@ import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
-import SendListingOptionsDialog from "./SendListingOptionsDialog";
+import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
 
