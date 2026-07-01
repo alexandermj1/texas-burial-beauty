@@ -1637,22 +1637,59 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Full AI-generated summary of each uploaded document */}
-            {aiSummaries.length > 0 && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
-                  <Sparkles className="w-3 h-3" /> AI document summary
+            {/* Consolidated facts: everything the customer submitted + every fact AI pulled from the documents. */}
+            {(() => {
+              const s: any = selected;
+              type Row = { label: string; value: string; source: string };
+              const rows: Row[] = [];
+              const seenKey = new Set<string>();
+              const add = (label: string, value: any, source: string) => {
+                if (value == null) return;
+                const str = Array.isArray(value)
+                  ? value.filter((v: any) => v != null && String(v).trim() !== "").map(String).join(", ")
+                  : String(value).trim();
+                if (!str) return;
+                const key = `${label.toLowerCase()}::${str.toLowerCase()}`;
+                if (seenKey.has(key)) return;
+                seenKey.add(key);
+                rows.push({ label, value: str, source });
+              };
+              // Customer-submitted facts
+              add("Name", s.name, "Customer");
+              add("Email", s.email, "Customer");
+              add("Phone", s.phone, "Customer");
+              add("Customer type", s.customer_kind || s.source, "Customer");
+              add("Cemetery", s.cemetery, "Customer");
+              add("Cemetery city/state", s.cemetery_city, "Customer");
+              add("Property type", s.property_type, "Customer");
+              add("Section / Lot", s.section, "Customer");
+              add("Spaces", s.spaces, "Customer");
+              add("Deed owner(s)", s.deed_owner_names, "Customer");
+              add("Ownership status", s.ownership_status, "Customer");
+              add("Purchase date / amount", s.purchase_info, "Customer");
+              add("Asking price", s.asking_price, "Customer");
+              add("Message", s.message, "Customer");
+              add("Details", s.details, "Customer");
+              // AI-extracted facts (already deduped, includes additional_fields)
+              for (const f of aiFacts) add(f.label, f.value, f.source);
+              if (rows.length === 0) return null;
+              return (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                    <Sparkles className="w-3 h-3" /> All known facts — customer submission + AI-extracted from documents
+                  </div>
+                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
+                    {rows.map((r, i) => (
+                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
+                        <span className="text-foreground break-words">{r.value}</span>
+                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="space-y-3">
-                  {aiSummaries.map((s, i) => (
-                    <div key={i} className="rounded-md border border-border/40 bg-background/60 p-2.5">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 truncate" title={s.file}>{s.file}</p>
-                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{s.summary}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
 
 
