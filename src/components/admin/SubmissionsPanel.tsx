@@ -1626,22 +1626,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { label: "Prepaid endowment / fees", r: resolve(s.prepaid_endowment_info, []) },
                 { label: "Bayer entry #", r: resolve(s.bayer_entry_id, []) },
               ];
-              // Additional AI-only facts (no matching grid field) — appended as extra boxes.
-              const mappedAiLabels = new Set([
-                "Plot type", "Section", "Lot", "Block", "Space",
-                "Cemetery address", "Owner(s) on record", "Purchaser", "Purchase date",
-              ]);
-              const extras = aiFacts.filter(f => f.status === "new" && !mappedAiLabels.has(f.label));
               return (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                   {rows.map(({ label, r }) => r ? (
                     <Field key={label} label={label} value={r.value} />
                   ) : null)}
-                  {extras.map((f, i) => (
-                    <Field key={`ai-extra-${i}`} label={f.label} value={f.value} />
-                  ))}
                 </div>
               );
+
             })()}
 
 
@@ -1677,46 +1669,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Consolidated facts: everything the customer submitted + every fact AI pulled from the documents. */}
+            {/* AI-extracted facts from uploaded documents (AI-only — customer-submitted info is not repeated here). */}
             {(() => {
-              const s: any = selected;
               type Row = { label: string; value: string; source: string };
               const rows: Row[] = [];
               const seenKey = new Set<string>();
-              const add = (label: string, value: any, source: string) => {
-                if (value == null) return;
-                const str = Array.isArray(value)
-                  ? value.filter((v: any) => v != null && String(v).trim() !== "").map(String).join(", ")
-                  : String(value).trim();
-                if (!str) return;
-                const key = `${label.toLowerCase()}::${str.toLowerCase()}`;
-                if (seenKey.has(key)) return;
+              for (const f of aiFacts) {
+                const str = String(f.value || "").trim();
+                if (!str) continue;
+                const key = `${f.label.toLowerCase()}::${str.toLowerCase()}`;
+                if (seenKey.has(key)) continue;
                 seenKey.add(key);
-                rows.push({ label, value: str, source });
-              };
-              // Customer-submitted facts
-              add("Name", s.name, "Customer");
-              add("Email", s.email, "Customer");
-              add("Phone", s.phone, "Customer");
-              add("Customer type", s.customer_kind || s.source, "Customer");
-              add("Cemetery", s.cemetery, "Customer");
-              add("Cemetery city/state", s.cemetery_city, "Customer");
-              add("Property type", s.property_type, "Customer");
-              add("Section / Lot", s.section, "Customer");
-              add("Spaces", s.spaces, "Customer");
-              add("Deed owner(s)", s.deed_owner_names, "Customer");
-              add("Ownership status", s.ownership_status, "Customer");
-              add("Purchase date / amount", s.purchase_info, "Customer");
-              add("Asking price", s.asking_price, "Customer");
-              add("Message", s.message, "Customer");
-              add("Details", s.details, "Customer");
-              // AI-extracted facts (already deduped, includes additional_fields)
-              for (const f of aiFacts) add(f.label, f.value, f.source);
+                rows.push({ label: f.label, value: str, source: f.source });
+              }
               if (rows.length === 0) return null;
               return (
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
-                    <Sparkles className="w-3 h-3" /> All known facts — customer submission + AI-extracted from documents
+                    <Sparkles className="w-3 h-3" /> AI-extracted from uploaded documents
                   </div>
                   <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
                     {rows.map((r, i) => (
@@ -1730,6 +1700,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               );
             })()}
+
 
 
 
