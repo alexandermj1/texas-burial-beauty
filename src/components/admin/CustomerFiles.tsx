@@ -232,7 +232,12 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     fetchFiles();
   };
 
-  const [detailsFor, setDetailsFor] = useState<CustomerFileRow | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) => setExpandedIds(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const humanizeKey = (k: string) =>
     k.replace(/[_-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -427,24 +432,34 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
                   {f.extraction_status === "pending" && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> AI reading…</p>
                   )}
-                  {f.extraction_status === "done" && (
-                    <button
-                      onClick={() => f.extracted_data ? setDetailsFor(f) : undefined}
-                      className="mt-0.5 text-left rounded-md bg-primary/5 hover:bg-primary/10 border border-primary/20 px-2.5 py-2 transition-colors w-full"
-                    >
-                      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">
-                        <Sparkles className="w-3 h-3" /> AI Summary
+                  {f.extraction_status === "done" && (() => {
+                    const isOpen = expandedIds.has(f.id);
+                    return (
+                      <div className="mt-0.5 rounded-md bg-primary/5 border border-primary/20 overflow-hidden">
+                        <button
+                          onClick={() => f.extracted_data && toggleExpanded(f.id)}
+                          className="w-full text-left px-2.5 py-2 hover:bg-primary/10 transition-colors"
+                        >
+                          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">
+                            <Sparkles className="w-3 h-3" /> AI Summary
+                          </div>
+                          <p className={`text-xs text-foreground leading-relaxed ${isOpen ? "" : "line-clamp-3"}`}>
+                            {f.extracted_summary || "Extracted"}
+                          </p>
+                          {f.extracted_data && (
+                            <span className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] text-primary font-medium">
+                              {isOpen ? (<><ChevronUp className="w-3 h-3" /> Hide details</>) : (<><ChevronDown className="w-3 h-3" /> View details</>)}
+                            </span>
+                          )}
+                        </button>
+                        {isOpen && f.extracted_data && (
+                          <div className="px-2.5 pb-2.5 pt-1 border-t border-primary/15">
+                            {renderExtracted(f.extracted_data)}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs text-foreground leading-relaxed line-clamp-3">
-                        {f.extracted_summary || "Extracted"}
-                      </p>
-                      {f.extracted_data && (
-                        <span className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] text-primary font-medium">
-                          View details →
-                        </span>
-                      )}
-                    </button>
-                  )}
+                    );
+                  })()}
                   {f.extraction_status === "failed" && (
                     <p className="text-xs text-destructive truncate" title={f.extraction_error || ""}>AI read failed</p>
                   )}
@@ -469,43 +484,6 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         </div>
       )}
 
-      {detailsFor && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => setDetailsFor(null)}
-        >
-          <div
-            className="bg-card rounded-xl border border-border shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-card border-b border-border px-5 py-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 text-xs text-primary mb-0.5">
-                  <Sparkles className="w-3.5 h-3.5" /> AI extracted details
-                </div>
-                <p className="text-sm font-semibold text-foreground truncate">{detailsFor.file_name}</p>
-                {detailsFor.document_type && (
-                  <p className="text-xs text-muted-foreground">{detailsFor.document_type}</p>
-                )}
-              </div>
-              <button
-                onClick={() => setDetailsFor(null)}
-                className="text-muted-foreground hover:text-foreground text-sm px-2 py-1 rounded-md hover:bg-muted shrink-0"
-              >
-                Close
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              {detailsFor.extracted_summary && (
-                <p className="text-sm text-foreground leading-relaxed bg-primary/5 border border-primary/20 rounded-md p-3">
-                  {detailsFor.extracted_summary}
-                </p>
-              )}
-              {renderExtracted(detailsFor.extracted_data)}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
