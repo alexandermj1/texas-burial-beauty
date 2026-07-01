@@ -548,8 +548,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (profileIds.length === 0) return;
       const { data: files } = await supabase
         .from("customer_files" as any)
-        .select("file_name, extracted_data")
+        .select("file_name, extracted_data, extracted_summary")
         .in("customer_profile_id", profileIds);
+
       if (cancelled || !files) return;
       const owners = new Set<string>();
       type Fact = { label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string };
