@@ -1524,7 +1524,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               return (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                   {rows.map(({ label, r }) => r ? (
-                    <Field key={label} label={label} value={r.value} aiNote={r.aiNote} />
+                    <Field key={label} label={label} value={r.value} />
                   ) : null)}
                 </div>
               );
