@@ -522,7 +522,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Pull deed-extracted owner names for the currently selected submission so the
   // seller-intake template can ask the right ownership follow-up question.
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
-  const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string }>>([]);
+  const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   useEffect(() => {
     let cancelled = false;
     setSelectedDeedOwners([]);
@@ -548,8 +548,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .in("customer_profile_id", profileIds);
       if (cancelled || !files) return;
       const owners = new Set<string>();
-      const facts: Array<{ label: string; value: string; source: string }> = [];
+      type Fact = { label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string };
+      const facts: Fact[] = [];
       const seen = new Set<string>();
+      // Map AI labels to the customer-submitted field on `selected`
+      const sel: any = selected || {};
+      const customerFor: Record<string, { label: string; value: string } | null> = {
+        "Owner(s) on record": sel.deed_owner_names ? { label: "Deed owner(s)", value: String(sel.deed_owner_names) } : null,
+        "Purchaser": sel.deed_owner_names ? { label: "Deed owner(s)", value: String(sel.deed_owner_names) } : null,
+        "Cemetery": sel.cemetery ? { label: "Cemetery", value: String(sel.cemetery) } : null,
+        "Cemetery address": sel.cemetery_city ? { label: "Cemetery city/state", value: String(sel.cemetery_city) } : null,
+        "Section": sel.section ? { label: "Section / Lot", value: String(sel.section) } : null,
+        "Purchase date": sel.purchase_info ? { label: "Purchase date / amount", value: String(sel.purchase_info) } : null,
+      };
+      const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const compare = (a: string, b: string): "match" | "differs" => {
+        const na = norm(a), nb = norm(b);
+        if (!na || !nb) return "differs";
+        if (na === nb || na.includes(nb) || nb.includes(na)) return "match";
+        return "differs";
+      };
       const pushFact = (label: string, value: any, source: string) => {
         if (value == null) return;
         const str = Array.isArray(value)
@@ -559,7 +577,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         const key = `${label}::${str.toLowerCase()}`;
         if (seen.has(key)) return;
         seen.add(key);
-        facts.push({ label, value: str, source });
+        const cust = customerFor[label];
+        let status: Fact["status"] = "new";
+        let customerValue: string | undefined;
+        let customerLabel: string | undefined;
+        if (cust) {
+          status = compare(str, cust.value);
+          customerValue = cust.value;
+          customerLabel = cust.label;
+        }
+        facts.push({ label, value: str, source, status, customerValue, customerLabel });
       };
       for (const f of files as any[]) {
         const ex = f.extracted_data || {};
@@ -588,7 +615,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
     })();
     return () => { cancelled = true; };
-  }, [selected?.id, selected?.email]);
+  }, [selected?.id, selected?.email, (selected as any)?.deed_owner_names, (selected as any)?.cemetery, (selected as any)?.section, (selected as any)?.cemetery_city, (selected as any)?.purchase_info]);
+
 
   // Broadcast my "currently working on" submission so teammates see it instantly.
   useEffect(() => {
@@ -1475,28 +1503,50 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               {(selected as any).purchase_info && <Field label="Purchase date / amount" value={(selected as any).purchase_info} />}
               {(selected as any).prepaid_endowment_info && <Field label="Prepaid endowment / fees" value={(selected as any).prepaid_endowment_info} />}
               {(selected as any).bayer_entry_id && <Field label="Bayer entry #" value={(selected as any).bayer_entry_id} />}
+              {/* AI-added fields the customer didn't provide — rendered inline so they read as part of the record */}
+              {aiFacts.filter(f => f.status === "new").map((f, i) => (
+                <Field key={`ai-${i}`} label={f.label} value={f.value} aiNote="added" />
+              ))}
             </div>
 
-            {/* AI-found details from uploaded documents */}
+            {/* AI-found details from uploaded documents — comparison view */}
             {aiFacts.length > 0 && (
               <div className="rounded-lg border border-primary/25 bg-primary/5 p-3">
                 <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
                   <FileSignature className="w-3 h-3" /> Found by AI in uploaded documents
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                  {aiFacts.map((f, i) => (
-                    <div key={i} className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{f.label}</p>
-                      <p className="text-sm text-foreground break-words">{f.value}</p>
-                      <p className="text-[10px] text-muted-foreground/70 italic truncate" title={f.source}>from {f.source}</p>
-                    </div>
-                  ))}
+                  {aiFacts.map((f, i) => {
+                    const badge =
+                      f.status === "match"
+                        ? { text: "Matches customer", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" }
+                        : f.status === "differs"
+                        ? { text: "Differs from customer", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30" }
+                        : { text: "New — added by AI", cls: "bg-primary/15 text-primary border-primary/25" };
+                    return (
+                      <div key={i} className="min-w-0 rounded-md border border-border/40 bg-background/60 p-2">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{f.label}</p>
+                          <span className={`text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full border ${badge.cls}`}>{badge.text}</span>
+                        </div>
+                        <p className="text-sm text-foreground break-words">{f.value}</p>
+                        {f.status === "differs" && f.customerValue && (
+                          <p className="mt-1 text-[11px] text-amber-800/80 break-words">
+                            Customer said <span className="line-through">{f.customerValue}</span>
+                            {f.customerLabel ? <span className="text-muted-foreground"> (from “{f.customerLabel}”)</span> : null}
+                          </p>
+                        )}
+                        <p className="mt-1 text-[10px] text-muted-foreground/70 italic truncate" title={f.source}>from {f.source}</p>
+                      </div>
+                    );
+                  })}
                 </div>
                 <p className="mt-2 text-[10px] text-muted-foreground italic">
                   These fields were extracted automatically from attachments — verify against the original document before quoting.
                 </p>
               </div>
             )}
+
 
             {/* Files the seller uploaded with the form */}
             {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
@@ -1847,12 +1897,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 };
 
 
-const Field = ({ label, value }: { label: string; value: string }) => (
-  <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/40">
-    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+const Field = ({ label, value, aiNote }: { label: string; value: string; aiNote?: "added" | "differs"; }) => (
+  <div className={`rounded-lg px-3 py-2 border ${aiNote ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border/40"}`}>
+    <div className="flex items-center justify-between gap-2">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      {aiNote === "added" && (
+        <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">Added by AI</span>
+      )}
+      {aiNote === "differs" && (
+        <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 border border-amber-500/30">AI differs</span>
+      )}
+    </div>
     <p className="text-sm text-foreground capitalize">{value}</p>
   </div>
 );
+
 
 // ===========================================================================
 // MobileInlineDetail — compact, read-only detail card shown directly beneath
