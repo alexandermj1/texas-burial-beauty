@@ -1203,10 +1203,50 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     )}
                   </div>
                   <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
+                  {(() => {
+                    // Warn when the submitter's name does not appear on the deed (either the customer-entered
+                    // deed owners field, or the owners extracted from uploaded deed documents by AI).
+                    const submitter = (selected.name || "").trim();
+                    if (!submitter) return null;
+                    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+                    const tokens = (s: string) => {
+                      const flipped = s.includes(",") ? s.split(",").reverse().join(" ") : s;
+                      return new Set(norm(flipped).split(" ").filter(t => t.length > 1));
+                    };
+                    const matches = (a: string, b: string) => {
+                      const A = tokens(a), B = tokens(b);
+                      if (!A.size || !B.size) return false;
+                      let shared = 0; for (const t of A) if (B.has(t)) shared++;
+                      return shared >= Math.min(2, Math.min(A.size, B.size));
+                    };
+                    const deedSources: Array<{ label: string; value: string }> = [];
+                    const customerDeed = ((selected as any).deed_owner_names || "").toString().trim();
+                    if (customerDeed) deedSources.push({ label: "customer-entered deed owners", value: customerDeed });
+                    if (selectedDeedOwners && selectedDeedOwners.length > 0) {
+                      deedSources.push({ label: "deed document", value: selectedDeedOwners.join(", ") });
+                    }
+                    if (deedSources.length === 0) return null;
+                    const anyMatch = deedSources.some(d => matches(d.value, submitter));
+                    if (anyMatch) return null;
+                    const shown = deedSources[deedSources.length - 1];
+                    return (
+                      <div
+                        className="mt-1.5 inline-flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-800"
+                        title={deedSources.map(d => `${d.label}: ${d.value}`).join(" · ")}
+                      >
+                        <FileSignature className="w-3 h-3 mt-[1px] shrink-0" />
+                        <span>
+                          <span className="font-semibold">Name mismatch:</span> submitter “{submitter}” is not on the deed
+                          <span className="text-amber-800/70"> — deed shows {shown.value}</span>
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <p className="text-xs text-muted-foreground mt-1">
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
+
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
