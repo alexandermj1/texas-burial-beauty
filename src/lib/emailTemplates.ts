@@ -168,3 +168,24 @@ I'd be happy to share the full details and pricing. When would be a good time fo
 ${signature(i.adminName)}`;
   return { id: "buyer_have", label: "We have a match", body };
 };
+
+// Seller "Listing Options" — the admin picks this, then clicks
+// "Attach listing options" to inject 3 Stripe pay buttons + the offer intro.
+// The body here is just the closing text (greeting + next steps + signature);
+// the offer intro and 3 tier cards are inserted by SendListingOptionsDialog.
+export const buildSellerListingOptionsTemplate = (i: SellerInput): EmailTemplate => {
+  const body = `Dear ${first(i.recipientName)},
+
+
+
+Next Steps
+
+1. Review the offer above and the three listing options.
+2. Select the plan (Starter, Pro, or Featured) that best aligns with your goals — simply click the button on the option you want.
+3. Or, if you have any questions about the market or our process, just reply to this email. We'll promptly send over your Exclusive Sales Agreement and guide you through listing your property.
+
+We look forward to achieving a successful sale on your behalf.
+
+${signature(i.adminName)}`;
+  return { id: "seller_listing_options", label: "Listing options (with pay buttons)", body };
+};
