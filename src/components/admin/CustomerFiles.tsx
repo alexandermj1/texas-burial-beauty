@@ -382,7 +382,37 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
           No files uploaded yet. Upload Power of Attorney, deeds, IDs, or other documents related to {customerName || "this customer"}.
         </p>
       ) : (
+        <>
+        {(() => {
+          const openFileRow = expandedId ? files.find(f => f.id === expandedId) : null;
+          if (!openFileRow) return null;
+          return (
+            <div className="mb-3 rounded-lg border border-primary/20 bg-primary/5 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-primary/15 bg-primary/10">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold min-w-0">
+                  <Sparkles className="w-3 h-3 shrink-0" />
+                  <span className="truncate">AI Summary · {openFileRow.file_name}</span>
+                </div>
+                <button
+                  onClick={() => setExpandedId(null)}
+                  className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5 shrink-0"
+                >
+                  <ChevronUp className="w-3 h-3" /> Hide
+                </button>
+              </div>
+              <div className="px-3 py-2.5 space-y-2.5">
+                {openFileRow.extracted_summary && (
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                    {openFileRow.extracted_summary}
+                  </p>
+                )}
+                {openFileRow.extracted_data && renderExtracted(openFileRow.extracted_data)}
+              </div>
+            </div>
+          );
+        })()}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+
           {files.map(f => {
             const isImg = isImageMime(f.mime_type);
             const isPdf = f.mime_type === "application/pdf";
