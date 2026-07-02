@@ -68,11 +68,23 @@ const escapeHtml = (s: string) =>
 // Each non-empty block of text becomes one <p>; consecutive blank lines become
 // empty <p><br></p> rows so the editor preserves room to type between the
 // greeting and signature without inflating the gap between regular paragraphs.
+// Every paragraph gets the same inline branded typography as the
+// listing-options intro (Georgia 15px, slate #1f2937, 14px bottom margin).
+// This keeps the greeting, closing, signature, and any user-typed lines
+// visually consistent with the injected quote block across all email
+// clients (Gmail, Outlook, Apple Mail) — none of which reliably inherit
+// wrapper CSS into nested <p> tags.
+const P_STYLE =
+  "font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#1f2937;margin:0 0 14px;";
 const textToHtml = (text: string): string => {
   if (!text) return "";
   const paragraphs = text.split(/\n{2,}/);
   return paragraphs
-    .map((p) => (p.length === 0 ? "<p><br></p>" : `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`))
+    .map((p) =>
+      p.length === 0
+        ? `<p style="${P_STYLE}"><br></p>`
+        : `<p style="${P_STYLE}">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`,
+    )
     .join("");
 };
 
