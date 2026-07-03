@@ -51,6 +51,8 @@ interface Props {
     section: string | null;
     property_type: string | null;
     spaces: string | null;
+    space_numbers?: string | null;
+    lawn?: string | null;
   } | null;
 }
 

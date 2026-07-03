@@ -1375,6 +1375,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     section: selected.section,
                     property_type: selected.property_type,
                     spaces: selected.spaces,
+                    space_numbers: (x as any)?.space_numbers ?? null,
+                    lawn: (x as any)?.lawn ?? null,
                   } : null}
                   onNewEmailSent={(meta) => {
                     if (meta?.templateId === "seller_intake" || meta?.templateId === "seller_listing_options") {
