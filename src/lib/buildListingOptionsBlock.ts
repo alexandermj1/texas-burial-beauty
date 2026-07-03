@@ -4,8 +4,7 @@
 // Gmail, Outlook, and Apple Mail.
 
 import { supabase } from "@/integrations/supabase/client";
-import { properCase, properFirstName } from "@/lib/properCase";
-import { cleanDisplayName } from "@/lib/displayName";
+import { properCase } from "@/lib/properCase";
 
 const fmtUsd = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
