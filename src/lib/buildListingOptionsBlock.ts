@@ -50,7 +50,7 @@ export async function buildListingOptionsBlock(opts: {
   const { seller, netPerPlot, plotCount, transferFee } = opts;
   const total = netPerPlot * plotCount;
   const cemLabel = properCase(seller.cemetery || "your cemetery");
-  const firstName = properFirstName(cleanDisplayName(seller.name || "")) || "there";
+  
 
   const links = await Promise.all(
     TIERS.map(async (t) => {
