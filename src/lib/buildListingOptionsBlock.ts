@@ -94,7 +94,6 @@ export async function buildListingOptionsBlock(opts: {
   const deadline = escapeHtml(nextOfferDeadline());
 
   const introHtml = `
-<p ${P}>Dear ${escapeHtml(firstName)},</p>
 <p ${P}>Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${propertyLine}.</p>
 <p ${P}>After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${escapeHtml(cemLabel)}, we are pleased to present you with a direct, transparent offer.</p>
 <h3 ${H3}>Your Final Net Payment Offer</h3>
