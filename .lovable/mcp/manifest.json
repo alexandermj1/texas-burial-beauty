@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "texas-cemetery-brokers-mcp",
+      "version": "0.1.0",
+      "title": "Texas Cemetery Brokers"
+    },
+    "tools": [
+      {
+        "name": "search_listings",
+        "title": "Search active listings",
+        "description": "Search active cemetery property listings by cemetery name, city, or plot type. Returns id, cemetery, city, plot type, spaces, and section.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "description": "Free-text match against cemetery, city, or plot type.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max rows to return (default 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_listing",
+        "title": "Get listing details",
+        "description": "Fetch full public details for a single active listing by id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Listing UUID."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "submit_inquiry",
+        "title": "Submit buyer/seller inquiry",
+        "description": "Create a new inquiry (buyer question, seller quote request, or general contact) that will land in the Texas Cemetery Brokers admin inbox.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Full name of the person inquiring."
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+              "description": "Contact email."
+            },
+            "phone": {
+              "description": "Contact phone (optional).",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "buyer",
+                "seller",
+                "general"
+              ],
+              "description": "Type of inquiry."
+            },
+            "cemetery": {
+              "description": "Cemetery of interest (optional).",
+              "type": "string"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The message body."
+            }
+          },
+          "required": [
+            "name",
+            "email",
+            "kind",
+            "message"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
