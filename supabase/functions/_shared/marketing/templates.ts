@@ -192,9 +192,17 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
       <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px rgba(30,58,138,0.08);">
 
         <!-- HEADER -->
-        <tr><td style="background:${b.primary};padding:44px 40px 40px;text-align:center;">
-          <img src="${b.logoUrl}" alt="${esc(b.name)}" width="180" style="display:inline-block;width:180px;height:auto;max-width:60%;object-fit:contain;">
-          <p style="font-family:${sans};font-size:10px;letter-spacing:.38em;text-transform:uppercase;color:#c7d2fe;margin:18px 0 0;font-weight:600;">Save families 15% – 50%</p>
+        <tr><td style="background:${b.primary};padding:20px 32px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="middle" align="left" style="line-height:0;">
+                <img src="${b.logoUrl}" alt="${esc(b.name)}" width="110" style="display:inline-block;width:110px;height:auto;object-fit:contain;">
+              </td>
+              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#c7d2fe;font-weight:600;">
+                Save families 15% – 50%
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
         <!-- INTRO -->
