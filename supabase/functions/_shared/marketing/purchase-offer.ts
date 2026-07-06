@@ -47,9 +47,9 @@ export function renderBayerPurchaseOffer(i: PurchaseOfferInput): RenderedOffer {
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
 <body style="margin:0;padding:0;background:#dbe4f2;font-family:${sans};color:#0f172a;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dbe4f2;padding:36px 14px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dbe4f2;padding:48px 20px;">
     <tr><td align="center">
-      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(30,58,138,0.12);">
+      <table role="presentation" width="820" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:820px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(30,58,138,0.14);">
 
         <!-- HEADER -->
         <tr><td align="center" style="background:#ffffff;padding:26px 40px 18px;border-bottom:1px solid #e2e8f0;">
