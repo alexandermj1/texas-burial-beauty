@@ -265,9 +265,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     if (texasSubs.length === 0) { setAwaitingMap({}); setFollowupMap({}); return; }
     const texasIds = texasSubs.map(s => s.id);
     // Lower-case address index for matching
-    const emailToSub = new Map<string, string>();
+    // One email address can belong to multiple submissions (same person
+    // inquired twice). Track every sid per address so an outgoing reply
+    // credits ALL of that customer's open submissions, not just one.
+    const emailToSub = new Map<string, string[]>();
     for (const s of texasSubs) {
-      if (s.email) emailToSub.set(s.email.trim().toLowerCase(), s.id);
+      if (!s.email) continue;
+      const key = s.email.trim().toLowerCase();
+      const arr = emailToSub.get(key) || [];
+      arr.push(s.id);
+      emailToSub.set(key, arr);
     }
     let cancelled = false;
     const extractAddr = (raw: string | null | undefined): string => {
@@ -295,8 +302,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (row.matched_submission_id && texasIds.includes(row.matched_submission_id)) {
           candidateIds.add(row.matched_submission_id);
         }
-        for (const [addr, sid] of emailToSub.entries()) {
-          if (fromAddr.includes(addr) || toAddrs.includes(addr)) candidateIds.add(sid);
+        for (const [addr, sids] of emailToSub.entries()) {
+          if (fromAddr.includes(addr) || toAddrs.includes(addr)) {
+            for (const sid of sids) candidateIds.add(sid);
+          }
         }
         for (const sid of candidateIds) {
           if (latestPerSub.has(sid)) continue;
