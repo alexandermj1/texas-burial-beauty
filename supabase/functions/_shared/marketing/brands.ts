@@ -25,9 +25,9 @@ export const BRANDS: Record<MarketingBrand, BrandConfig> = {
     key: "texas",
     name: "Texas Cemetery Brokers",
     fromName: "Texas Cemetery Brokers",
-    fromEmail: "hello@texascemeterybrokers.com",
+    fromEmail: "hello@bayerbrokers.com",
     replyTo: "info@texascemeterybrokers.com",
-    senderDomain: "texascemeterybrokers.com",
+    senderDomain: "bayerbrokers.com",
     siteUrl: "https://www.texascemeterybrokers.com",
     logoUrl:
       "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png",
@@ -42,9 +42,9 @@ export const BRANDS: Record<MarketingBrand, BrandConfig> = {
     key: "bayer",
     name: "Bayer Cemetery Brokers",
     fromName: "Bayer Cemetery Brokers",
-    fromEmail: "hello@news.bayercemeterybrokers.com",
+    fromEmail: "hello@bayerbrokers.com",
     replyTo: "info@bayercemeterybrokers.com",
-    senderDomain: "news.bayercemeterybrokers.com",
+    senderDomain: "bayerbrokers.com",
     siteUrl: "https://www.bayercemeterybrokers.com",
     logoUrl:
       "https://www.texascemeterybrokers.com/__l5e/assets-v1/71e10642-6ab0-460b-8fb1-538ab896b0d2/bayer-logo-white.png",

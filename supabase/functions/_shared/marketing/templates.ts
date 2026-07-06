@@ -167,15 +167,15 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
   };
 
   const plotCard = (p: typeof plots[number]) => `
-    <td width="50%" valign="top" style="padding:8px;">
+    <td width="50%" valign="top" style="padding:10px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(15,23,42,0.04);">
         <tr><td style="padding:0;line-height:0;position:relative;">
           <img src="${p.img}" alt="${esc(p.cemetery)}" width="270" style="display:block;width:100%;height:170px;object-fit:cover;">
-          <div style="position:absolute;top:10px;left:10px;background:${b.primary};color:#ffffff;font-family:${sans};font-size:10px;font-weight:800;letter-spacing:.1em;padding:5px 9px;border-radius:4px;">${pctOff(p.price, p.retail)}</div>
+          <div style="position:absolute;top:14px;left:14px;background:${b.primary};color:#ffffff;font-family:${sans};font-size:10px;font-weight:800;letter-spacing:.12em;padding:7px 12px;border-radius:4px;box-shadow:0 2px 6px rgba(15,23,42,0.18);">${pctOff(p.price, p.retail)}</div>
         </td></tr>
-        <tr><td style="padding:16px 18px 18px;">
+        <tr><td style="padding:18px 20px 20px;">
           <p style="font-family:${sans};font-size:15px;color:#0f172a;margin:0 0 3px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;">${esc(p.cemetery)}</p>
-          <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0 0 14px;line-height:1.4;">${esc(p.garden)}</p>
+          <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0 0 16px;line-height:1.4;">${esc(p.garden)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td valign="baseline" style="font-family:${sans};">
               <span style="font-size:13px;color:#94a3b8;text-decoration:line-through;">${esc(p.retail)}</span>
@@ -204,13 +204,13 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
       <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px rgba(30,58,138,0.08);">
 
         <!-- HEADER -->
-        <tr><td style="background:${b.primary};padding:20px 32px;">
+        <tr><td style="background:#ffffff;padding:28px 40px 20px;border-bottom:1px solid #e2e8f0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td valign="middle" align="left" style="line-height:0;">
-                <img src="${b.logoUrl}" alt="${esc(b.name)}" width="110" style="display:inline-block;width:110px;height:auto;object-fit:contain;">
+                <img src="https://mceguxfdoikjthsrbmzx.supabase.co/storage/v1/object/public/listing-photos/marketing/bayer-logo-navy.png" alt="${esc(b.name)}" width="120" style="display:inline-block;width:120px;height:auto;object-fit:contain;">
               </td>
-              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#c7d2fe;font-weight:600;">
+              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${b.primary};font-weight:700;">
                 Save families 15% – 50%
               </td>
             </tr>
