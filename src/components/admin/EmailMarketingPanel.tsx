@@ -41,7 +41,7 @@ interface Campaign {
   created_at: string;
 }
 
-type SubTab = "audience" | "compose" | "campaigns" | "offer";
+type SubTab = "audience" | "compose" | "campaigns" | "offer" | "guarantee";
 
 const EmailMarketingPanel = () => {
   const { toast } = useToast();
@@ -49,7 +49,7 @@ const EmailMarketingPanel = () => {
   const [subTab, setSubTab] = useState<SubTab>("audience");
   const brandCfg = BRAND_UI[brand];
   useEffect(() => {
-    if (subTab === "offer" && brand !== "bayer") setSubTab("audience");
+    if ((subTab === "offer" || subTab === "guarantee") && brand !== "bayer") setSubTab("audience");
   }, [brand, subTab]);
 
   return (
