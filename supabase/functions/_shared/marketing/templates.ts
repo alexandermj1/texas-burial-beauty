@@ -167,20 +167,18 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
   };
 
   const plotCard = (p: typeof plots[number]) => `
-    <td width="50%" valign="top" style="padding:10px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(15,23,42,0.04);">
+    <td width="50%" valign="top" style="padding:12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 3px 10px rgba(15,23,42,0.05);">
         <tr><td style="padding:0;line-height:0;position:relative;">
           <img src="${p.img}" alt="${esc(p.cemetery)}" width="270" style="display:block;width:100%;height:170px;object-fit:cover;">
-          <div style="position:absolute;top:14px;left:14px;background:${b.primary};color:#ffffff;font-family:${sans};font-size:10px;font-weight:800;letter-spacing:.12em;padding:7px 12px;border-radius:4px;box-shadow:0 2px 6px rgba(15,23,42,0.18);">${pctOff(p.price, p.retail)}</div>
+          <div style="position:absolute;top:14px;left:14px;background:${b.primary};color:#ffffff;font-family:${sans};font-size:10px;font-weight:800;letter-spacing:.14em;padding:8px 14px;border-radius:4px;box-shadow:0 2px 6px rgba(15,23,42,0.18);">${pctOff(p.price, p.retail)}</div>
         </td></tr>
-        <tr><td style="padding:18px 20px 20px;">
-          <p style="font-family:${sans};font-size:15px;color:#0f172a;margin:0 0 3px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;">${esc(p.cemetery)}</p>
-          <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0 0 16px;line-height:1.4;">${esc(p.garden)}</p>
+        <tr><td style="padding:20px 22px 22px;">
+          <p style="font-family:${sans};font-size:15px;color:#0f172a;margin:0 0 4px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;">${esc(p.cemetery)}</p>
+          <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0 0 18px;line-height:1.4;">${esc(p.garden)}</p>
+          <p style="font-family:${sans};font-size:13px;color:#94a3b8;text-decoration:line-through;margin:0 0 4px;">${esc(p.retail)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td valign="baseline" style="font-family:${sans};">
-              <span style="font-size:13px;color:#94a3b8;text-decoration:line-through;">${esc(p.retail)}</span>
-              &nbsp;<span style="font-size:22px;color:${b.primary};font-weight:800;letter-spacing:-0.02em;">${esc(p.price)}</span>
-            </td>
+            <td valign="baseline" style="font-family:${sans};font-size:22px;color:${b.primary};font-weight:800;letter-spacing:-0.02em;">${esc(p.price)}</td>
             <td align="right" valign="baseline" style="font-family:${sans};font-size:10px;color:#16a34a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;">● Available</td>
           </tr></table>
         </td></tr>
