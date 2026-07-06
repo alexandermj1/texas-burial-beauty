@@ -315,6 +315,9 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
   const [testEmail, setTestEmail] = useState("");
   const [activeCount, setActiveCount] = useState<number>(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [audience, setAudience] = useState<Contact[]>([]);
+  const [previewContactId, setPreviewContactId] = useState<string>("");
+  const previewContact = audience.find((c) => c.id === previewContactId) || null;
 
   // When the brand switches, snap the selected template back to that brand's first template
   useEffect(() => {
@@ -341,13 +344,33 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
         .is("complained_at", null);
       setActiveCount(count || 0);
     })();
+    (async () => {
+      const { data } = await supabase
+        .from("marketing_contacts" as any)
+        .select("*")
+        .eq("brand", brand)
+        .is("unsubscribed_at", null)
+        .is("bounced_at", null)
+        .is("complained_at", null)
+        .order("company", { ascending: true })
+        .limit(500);
+      setAudience(((data as any) || []) as Contact[]);
+      setPreviewContactId("");
+    })();
   }, [brand]);
 
   const refreshPreview = async () => {
     if (!templateKey) return;
     setPreviewLoading(true);
     const { data, error } = await supabase.functions.invoke("marketing-preview", {
-      body: { templateKey, subject, preheader },
+      body: {
+        templateKey,
+        subject,
+        preheader,
+        firstName: previewContact?.first_name || undefined,
+        company: previewContact?.company || undefined,
+        city: previewContact?.city || undefined,
+      },
     });
     setPreviewLoading(false);
     if (error || (data as any)?.error) {
@@ -356,7 +379,8 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
     }
     setPreview({ html: (data as any).html, subject: (data as any).subject });
   };
-  useEffect(() => { refreshPreview(); /* eslint-disable-next-line */ }, [templateKey, brand]);
+  useEffect(() => { refreshPreview(); /* eslint-disable-next-line */ }, [templateKey, brand, previewContactId]);
+
 
   const sendTest = async () => {
     if (!testEmail.trim()) { toast({ title: "Enter an email to send the test to", variant: "destructive" }); return; }
@@ -439,13 +463,33 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <FileText className="w-3.5 h-3.5" />
             <span>Live preview · Subject: <strong className="text-foreground">{preview?.subject || subject}</strong></span>
           </div>
-          <button onClick={refreshPreview} className="text-xs text-muted-foreground hover:text-foreground">Refresh</button>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Preview as</label>
+            <select
+              value={previewContactId}
+              onChange={(e) => setPreviewContactId(e.target.value)}
+              className="text-xs px-2 py-1.5 rounded-md border border-border bg-background max-w-[260px]"
+            >
+              <option value="">Sample contact (default)</option>
+              {audience.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {(c.company || c.email)}{c.city ? ` — ${c.city}` : ""}
+                </option>
+              ))}
+            </select>
+            <button onClick={refreshPreview} className="text-xs text-muted-foreground hover:text-foreground">Refresh</button>
+          </div>
         </div>
+        {previewContact && (
+          <div className="mb-2 text-[11px] text-muted-foreground">
+            Rendering as it would send to <strong className="text-foreground">{previewContact.email}</strong> · {previewContact.company || "—"} · {previewContact.city || "—"}
+          </div>
+        )}
         <div className="border border-border rounded-md overflow-hidden bg-white" style={{ height: 720 }}>
           {previewLoading ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
@@ -458,6 +502,7 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
           )}
         </div>
       </div>
+
 
       {confirmOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
