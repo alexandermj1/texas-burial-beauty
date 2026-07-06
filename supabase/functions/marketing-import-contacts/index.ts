@@ -31,24 +31,28 @@ Deno.serve(async (req) => {
     const cleaned: any[] = [];
     let skipped = 0;
     for (const r of rows) {
-      const email = String(r?.email || "").trim().toLowerCase();
+      const email = String(r?.email || r?.email_address || r?.e_mail || "").trim().toLowerCase();
       if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { skipped++; continue; }
       if (seen.has(email)) { skipped++; continue; }
       seen.add(email);
+      const website = str(r.website || r.website_domain || r.domain);
+      const extra = { ...(r._extra || {}) };
+      if (website) extra.website = website;
       cleaned.push({
         brand,
         email,
         first_name: str(r.first_name || r.firstname || r.fname),
         last_name: str(r.last_name || r.lastname || r.lname),
-        company: str(r.company || r.mortuary || r.funeral_home || r.organization),
+        company: str(r.company || r.mortuary || r.funeral_home || r.funeral_home_name || r.organization),
         city: str(r.city),
         state: str(r.state),
         phone: str(r.phone || r.telephone),
-        extra: r._extra || {},
+        extra,
         source: "csv_upload",
         csv_batch_id: batchId,
       });
     }
+
     if (!cleaned.length) return json({ error: "No valid rows", skipped }, 400);
 
     // Chunked upsert to avoid oversized single requests.
