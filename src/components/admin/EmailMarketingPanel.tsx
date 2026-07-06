@@ -1,11 +1,12 @@
 // Admin → Email Marketing tab.
 // Brand switcher (Texas / Bayer) with three sub-tabs: Audience, Compose, Campaigns.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Upload, Send, Loader2, Trash2, Search, Mail, Users, History, FileText, CheckCircle2, AlertCircle, FileSignature } from "lucide-react";
+import { Upload, Send, Loader2, Trash2, Search, Mail, Users, History, FileText, CheckCircle2, AlertCircle, FileSignature, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BRAND_UI, MARKETING_TEMPLATES, type MarketingBrand } from "@/lib/marketingBrands";
 import BayerPurchaseOfferPanel from "./BayerPurchaseOfferPanel";
+import BayerGuaranteeOfferPanel from "./BayerGuaranteeOfferPanel";
 
 interface Contact {
   id: string;
@@ -40,7 +41,7 @@ interface Campaign {
   created_at: string;
 }
 
-type SubTab = "audience" | "compose" | "campaigns" | "offer";
+type SubTab = "audience" | "compose" | "campaigns" | "offer" | "guarantee";
 
 const EmailMarketingPanel = () => {
   const { toast } = useToast();
@@ -48,7 +49,7 @@ const EmailMarketingPanel = () => {
   const [subTab, setSubTab] = useState<SubTab>("audience");
   const brandCfg = BRAND_UI[brand];
   useEffect(() => {
-    if (subTab === "offer" && brand !== "bayer") setSubTab("audience");
+    if ((subTab === "offer" || subTab === "guarantee") && brand !== "bayer") setSubTab("audience");
   }, [brand, subTab]);
 
   return (
@@ -87,7 +88,12 @@ const EmailMarketingPanel = () => {
             { key: "audience", label: "Audience", Icon: Users },
             { key: "compose", label: "Compose", Icon: Mail },
             { key: "campaigns", label: "Campaigns", Icon: History },
-            ...(brand === "bayer" ? [{ key: "offer" as SubTab, label: "Purchase Offer", Icon: FileSignature }] : []),
+            ...(brand === "bayer"
+              ? [
+                  { key: "offer" as SubTab, label: "Purchase Offer", Icon: FileSignature },
+                  { key: "guarantee" as SubTab, label: "Guaranteed Offer", Icon: ShieldCheck },
+                ]
+              : []),
           ] as { key: SubTab; label: string; Icon: any }[]).map(({ key, label, Icon }) => {
             const active = subTab === key;
             return (
@@ -112,6 +118,7 @@ const EmailMarketingPanel = () => {
       {subTab === "compose" && <ComposePanel brand={brand} />}
       {subTab === "campaigns" && <CampaignsPanel brand={brand} />}
       {subTab === "offer" && brand === "bayer" && <BayerPurchaseOfferPanel />}
+      {subTab === "guarantee" && brand === "bayer" && <BayerGuaranteeOfferPanel />}
 
       {/* DNS setup reminder */}
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
