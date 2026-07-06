@@ -21,8 +21,8 @@ export const BRAND_UI: Record<MarketingBrand, BrandUiConfig> = {
     primary: "#7c3a2e",
     primaryFg: "#ffffff",
     bgAccent: "#f7f1e8",
-    senderDomain: "news.texascemeterybrokers.com",
-    fromEmail: "hello@news.texascemeterybrokers.com",
+    senderDomain: "texascemeterybrokers.com",
+    fromEmail: "hello@texascemeterybrokers.com",
     siteUrl: "https://www.texascemeterybrokers.com",
     logoUrl:
       "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png",
