@@ -37,7 +37,7 @@ export const BRAND_UI: Record<MarketingBrand, BrandUiConfig> = {
     fromEmail: "hello@news.bayercemeterybrokers.com",
     siteUrl: "https://www.bayercemeterybrokers.com",
     logoUrl:
-      "https://www.texascemeterybrokers.com/__l5e/assets-v1/3eba0545-2b18-4d2d-9a68-16a3556b90b1/bayer-logo-white.png",
+      "https://www.texascemeterybrokers.com/__l5e/assets-v1/71e10642-6ab0-460b-8fb1-538ab896b0d2/bayer-logo-white.png",
   },
 };
 
