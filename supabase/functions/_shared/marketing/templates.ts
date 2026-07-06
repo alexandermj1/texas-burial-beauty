@@ -211,8 +211,8 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
         <tr><td style="padding:40px 40px 8px;">
           <p style="font-family:${sans};font-size:15px;line-height:1.6;color:#0f172a;margin:0 0 20px;">${salutation(ctx.firstName)}</p>
           <h1 style="font-family:${sans};font-size:28px;line-height:1.2;color:#0f172a;margin:0 0 20px;font-weight:700;letter-spacing:-0.02em;">A partnership that pays ${companyName}${cityLine}.</h1>
-          <p style="font-family:${sans};font-size:15px;line-height:1.7;color:#334155;margin:0 0 18px;">Families you serve often own cemetery property they no longer need — inherited plots, duplicate spaces, or a burial arrangement that no longer fits. Cemeteries won't buy it back, and families come to you looking for options.</p>
-          <p style="font-family:${sans};font-size:15px;line-height:1.7;color:#334155;margin:0 0 8px;"><strong style="color:#0f172a;">Bayer Cemetery Brokers</strong> lists those plots at <strong>15%–50% below retail</strong> — pricing your families can actually afford — and pays your funeral home a referral commission on every closed sale. Zero paperwork. Zero risk. Zero listing fees to you.</p>
+          <p style="font-family:${sans};font-size:15px;line-height:1.7;color:#334155;margin:0 0 18px;">Cemetery plots in Southern California now run <strong>$8,000–$25,000+</strong> at retail — a number most families you serve simply can't absorb on top of funeral costs. When budget becomes the conversation, options are limited and uncomfortable.</p>
+          <p style="font-family:${sans};font-size:15px;line-height:1.7;color:#334155;margin:0 0 8px;"><strong style="color:#0f172a;">Bayer Cemetery Brokers</strong> maintains a live inventory of <strong>1,100+ resale plots priced 15%–50% below retail</strong> at the same cemeteries your families are already asking about. Refer a family to us and we help them secure the burial they want at a price they can actually afford — while your funeral home earns a referral commission on every closed sale.</p>
         </td></tr>
 
         <!-- STAT STRIP -->
@@ -239,7 +239,7 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
         </td></tr>
 
         <!-- FEATURED PLOTS -->
-        <tr><td style="padding:32px 32px 8px;">
+        <tr><td style="padding:16px 32px 8px;">
           <p style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:700;text-align:center;">This month's featured inventory</p>
           <h2 style="font-family:${sans};font-size:22px;color:#0f172a;margin:0 0 20px;font-weight:700;letter-spacing:-0.01em;text-align:center;">Real plots. Real savings.</h2>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
