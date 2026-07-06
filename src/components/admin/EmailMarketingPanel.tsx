@@ -344,13 +344,33 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
         .is("complained_at", null);
       setActiveCount(count || 0);
     })();
+    (async () => {
+      const { data } = await supabase
+        .from("marketing_contacts" as any)
+        .select("*")
+        .eq("brand", brand)
+        .is("unsubscribed_at", null)
+        .is("bounced_at", null)
+        .is("complained_at", null)
+        .order("company", { ascending: true })
+        .limit(500);
+      setAudience(((data as any) || []) as Contact[]);
+      setPreviewContactId("");
+    })();
   }, [brand]);
 
   const refreshPreview = async () => {
     if (!templateKey) return;
     setPreviewLoading(true);
     const { data, error } = await supabase.functions.invoke("marketing-preview", {
-      body: { templateKey, subject, preheader },
+      body: {
+        templateKey,
+        subject,
+        preheader,
+        firstName: previewContact?.first_name || undefined,
+        company: previewContact?.company || undefined,
+        city: previewContact?.city || undefined,
+      },
     });
     setPreviewLoading(false);
     if (error || (data as any)?.error) {
@@ -359,7 +379,8 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
     }
     setPreview({ html: (data as any).html, subject: (data as any).subject });
   };
-  useEffect(() => { refreshPreview(); /* eslint-disable-next-line */ }, [templateKey, brand]);
+  useEffect(() => { refreshPreview(); /* eslint-disable-next-line */ }, [templateKey, brand, previewContactId]);
+
 
   const sendTest = async () => {
     if (!testEmail.trim()) { toast({ title: "Enter an email to send the test to", variant: "destructive" }); return; }
