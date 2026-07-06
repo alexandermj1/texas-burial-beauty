@@ -815,6 +815,8 @@ const Admin = () => {
               standalone
             />
           )}
+
+          {tab === "email_marketing" && <EmailMarketingPanel />}
           <div className="mt-10 flex items-center justify-end gap-3 flex-wrap">
             <button
               onClick={async () => {
