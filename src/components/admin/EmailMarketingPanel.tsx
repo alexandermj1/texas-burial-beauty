@@ -88,7 +88,12 @@ const EmailMarketingPanel = () => {
             { key: "audience", label: "Audience", Icon: Users },
             { key: "compose", label: "Compose", Icon: Mail },
             { key: "campaigns", label: "Campaigns", Icon: History },
-            ...(brand === "bayer" ? [{ key: "offer" as SubTab, label: "Purchase Offer", Icon: FileSignature }] : []),
+            ...(brand === "bayer"
+              ? [
+                  { key: "offer" as SubTab, label: "Purchase Offer", Icon: FileSignature },
+                  { key: "guarantee" as SubTab, label: "Guaranteed Offer", Icon: ShieldCheck },
+                ]
+              : []),
           ] as { key: SubTab; label: string; Icon: any }[]).map(({ key, label, Icon }) => {
             const active = subTab === key;
             return (
@@ -113,6 +118,7 @@ const EmailMarketingPanel = () => {
       {subTab === "compose" && <ComposePanel brand={brand} />}
       {subTab === "campaigns" && <CampaignsPanel brand={brand} />}
       {subTab === "offer" && brand === "bayer" && <BayerPurchaseOfferPanel />}
+      {subTab === "guarantee" && brand === "bayer" && <BayerGuaranteeOfferPanel />}
 
       {/* DNS setup reminder */}
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
