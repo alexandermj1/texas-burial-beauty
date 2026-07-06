@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
 import AccountingPanel from "@/components/admin/AccountingPanel";
 import CustomersPanel from "@/components/admin/CustomersPanel";
 import InventoryRequestsPanel from "@/components/admin/InventoryRequestsPanel";
 import CaliforniaInventoryPanel from "@/components/admin/CaliforniaInventoryPanel";
+import EmailMarketingPanel from "@/components/admin/EmailMarketingPanel";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -57,7 +58,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -373,6 +374,7 @@ const Admin = () => {
     { key: "inventory_requests", label: "Inv. Requests", Icon: ClipboardList },
     { key: "ca_inventory", label: "CA Inventory", Icon: Package },
     { key: "cemeteries", label: "Cemeteries", Icon: Building2 },
+    { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
   ];
 
   const searchPlaceholder =
@@ -382,7 +384,7 @@ const Admin = () => {
     tab === "listings" ? "Search listings..." :
     "Search anything...";
 
-  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory";
+  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && tab !== "email_marketing";
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-sand-light/60 via-background to-sage-light/40 dark:from-background dark:via-background dark:to-background">
