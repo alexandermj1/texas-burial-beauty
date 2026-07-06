@@ -303,10 +303,19 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
   const [activeCount, setActiveCount] = useState<number>(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // When the brand switches, snap the selected template back to that brand's first template
   useEffect(() => {
-    const t = templates.find((x) => x.key === templateKey) || templates[0];
+    const first = MARKETING_TEMPLATES.find((t) => t.brand === brand);
+    if (first && first.key !== templateKey) {
+      setTemplateKey(first.key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brand]);
+
+  useEffect(() => {
+    const t = MARKETING_TEMPLATES.find((x) => x.key === templateKey);
     if (t) { setSubject(t.defaultSubject); setPreheader(t.defaultPreheader); }
-  }, [templateKey, brand]);
+  }, [templateKey]);
 
   useEffect(() => {
     (async () => {
