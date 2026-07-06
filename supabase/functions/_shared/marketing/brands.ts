@@ -25,9 +25,9 @@ export const BRANDS: Record<MarketingBrand, BrandConfig> = {
     key: "texas",
     name: "Texas Cemetery Brokers",
     fromName: "Texas Cemetery Brokers",
-    fromEmail: "hello@texascemeterybrokers.com",
+    fromEmail: "hello@bayerbrokers.com",
     replyTo: "info@texascemeterybrokers.com",
-    senderDomain: "texascemeterybrokers.com",
+    senderDomain: "bayerbrokers.com",
     siteUrl: "https://www.texascemeterybrokers.com",
     logoUrl:
       "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png",
