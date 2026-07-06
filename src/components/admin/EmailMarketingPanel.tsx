@@ -1,11 +1,12 @@
 // Admin → Email Marketing tab.
 // Brand switcher (Texas / Bayer) with three sub-tabs: Audience, Compose, Campaigns.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Upload, Send, Loader2, Trash2, Search, Mail, Users, History, FileText, CheckCircle2, AlertCircle, FileSignature } from "lucide-react";
+import { Upload, Send, Loader2, Trash2, Search, Mail, Users, History, FileText, CheckCircle2, AlertCircle, FileSignature, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BRAND_UI, MARKETING_TEMPLATES, type MarketingBrand } from "@/lib/marketingBrands";
 import BayerPurchaseOfferPanel from "./BayerPurchaseOfferPanel";
+import BayerGuaranteeOfferPanel from "./BayerGuaranteeOfferPanel";
 
 interface Contact {
   id: string;
