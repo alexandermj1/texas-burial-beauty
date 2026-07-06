@@ -159,23 +159,35 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
     },
   ];
 
+  const pctOff = (price: string, retail: string) => {
+    const p = parseFloat(price.replace(/[^0-9.]/g, ""));
+    const r = parseFloat(retail.replace(/[^0-9.]/g, ""));
+    if (!p || !r || r <= p) return "";
+    return `${Math.round((1 - p / r) * 100)}% OFF`;
+  };
+
   const plotCard = (p: typeof plots[number]) => `
     <td width="50%" valign="top" style="padding:8px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-        <tr><td style="padding:0;line-height:0;">
-          <img src="${p.img}" alt="${esc(p.cemetery)}" width="270" style="display:block;width:100%;height:160px;object-fit:cover;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(15,23,42,0.04);">
+        <tr><td style="padding:0;line-height:0;position:relative;">
+          <img src="${p.img}" alt="${esc(p.cemetery)}" width="270" style="display:block;width:100%;height:170px;object-fit:cover;">
+          <div style="position:absolute;top:10px;left:10px;background:${b.primary};color:#ffffff;font-family:${sans};font-size:10px;font-weight:800;letter-spacing:.1em;padding:5px 9px;border-radius:4px;">${pctOff(p.price, p.retail)}</div>
         </td></tr>
-        <tr><td style="padding:14px 16px 16px;">
-          <p style="font-family:${sans};font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${b.primary};margin:0 0 4px;font-weight:700;">${esc(p.cemetery)}</p>
-          <p style="font-family:${sans};font-size:12px;color:#475569;margin:0 0 10px;line-height:1.4;">${esc(p.garden)}</p>
-          <p style="font-family:${sans};margin:0;">
-            <span style="font-size:20px;color:${b.primary};font-weight:800;letter-spacing:-0.01em;">${esc(p.price)}</span>
-            <span style="font-size:13px;color:#94a3b8;text-decoration:line-through;margin-left:8px;">${esc(p.retail)}</span>
-          </p>
-          <p style="font-family:${sans};font-size:10px;color:#16a34a;margin:6px 0 0;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">✓ Available now</p>
+        <tr><td style="padding:16px 18px 18px;">
+          <p style="font-family:${sans};font-size:15px;color:#0f172a;margin:0 0 3px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;">${esc(p.cemetery)}</p>
+          <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0 0 14px;line-height:1.4;">${esc(p.garden)}</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td valign="baseline" style="font-family:${sans};">
+              <span style="font-size:13px;color:#94a3b8;text-decoration:line-through;">${esc(p.retail)}</span>
+              &nbsp;<span style="font-size:22px;color:${b.primary};font-weight:800;letter-spacing:-0.02em;">${esc(p.price)}</span>
+            </td>
+            <td align="right" valign="baseline" style="font-family:${sans};font-size:10px;color:#16a34a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;">● Available</td>
+          </tr></table>
         </td></tr>
       </table>
     </td>`;
+
+
 
   const regions = ["Los Angeles", "San Bernardino", "Orange County", "San Diego"];
   const regionPills = regions.map((r) =>
@@ -192,9 +204,17 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
       <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px rgba(30,58,138,0.08);">
 
         <!-- HEADER -->
-        <tr><td style="background:${b.primary};padding:44px 40px 40px;text-align:center;">
-          <img src="${b.logoUrl}" alt="${esc(b.name)}" width="180" style="display:inline-block;width:180px;height:auto;max-width:60%;object-fit:contain;">
-          <p style="font-family:${sans};font-size:10px;letter-spacing:.38em;text-transform:uppercase;color:#c7d2fe;margin:18px 0 0;font-weight:600;">Save families 15% – 50%</p>
+        <tr><td style="background:${b.primary};padding:20px 32px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="middle" align="left" style="line-height:0;">
+                <img src="${b.logoUrl}" alt="${esc(b.name)}" width="110" style="display:inline-block;width:110px;height:auto;object-fit:contain;">
+              </td>
+              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#c7d2fe;font-weight:600;">
+                Save families 15% – 50%
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
         <!-- INTRO -->
@@ -325,13 +345,22 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
         <!-- SIGNATURE -->
         <tr><td style="padding:32px 40px 40px;">
-          <p style="font-family:${sans};font-size:14px;line-height:1.6;color:#334155;margin:0 0 6px;">Best regards,</p>
-          <p style="font-family:${sans};font-size:15px;line-height:1.5;color:#0f172a;margin:0;font-weight:700;">Simon</p>
-          <p style="font-family:${sans};font-size:13px;line-height:1.5;color:#64748b;margin:2px 0 8px;">CEO, Bayer Cemetery Brokers</p>
-          <p style="font-family:${sans};font-size:13px;line-height:1.6;color:#334155;margin:0;">
-            <a href="mailto:Simon@BayerBrokers.com" style="color:${b.primary};text-decoration:none;font-weight:600;">Simon@BayerBrokers.com</a>
-            &nbsp;·&nbsp; <a href="tel:+12139520731" style="color:${b.primary};text-decoration:none;font-weight:600;">(213) 952-0731</a>
-          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="top" width="88" style="padding-right:18px;">
+                <img src="${cdnHost}/__l5e/assets-v1/7653b838-cbae-4f70-838d-71062f1654e2/simon-ceo.jpg" alt="Simon, CEO" width="72" height="72" style="display:block;width:72px;height:72px;border-radius:999px;object-fit:cover;border:2px solid ${b.bgAccent};">
+              </td>
+              <td valign="middle">
+                <p style="font-family:${sans};font-size:13px;line-height:1.5;color:#64748b;margin:0 0 2px;">Best regards,</p>
+                <p style="font-family:${sans};font-size:16px;line-height:1.3;color:#0f172a;margin:0;font-weight:700;letter-spacing:-0.01em;">Simon</p>
+                <p style="font-family:${sans};font-size:12px;line-height:1.4;color:#64748b;margin:2px 0 6px;">CEO · Bayer Cemetery Brokers</p>
+                <p style="font-family:${sans};font-size:12px;line-height:1.5;color:#334155;margin:0;">
+                  <a href="mailto:Simon@BayerBrokers.com" style="color:${b.primary};text-decoration:none;font-weight:600;">Simon@BayerBrokers.com</a>
+                  &nbsp;·&nbsp; <a href="tel:+12139520731" style="color:${b.primary};text-decoration:none;font-weight:600;">(213) 952-0731</a>
+                </p>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
         <!-- FOOTER -->
