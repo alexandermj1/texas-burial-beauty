@@ -47,6 +47,9 @@ const EmailMarketingPanel = () => {
   const [brand, setBrand] = useState<MarketingBrand>("texas");
   const [subTab, setSubTab] = useState<SubTab>("audience");
   const brandCfg = BRAND_UI[brand];
+  useEffect(() => {
+    if (subTab === "offer" && brand !== "bayer") setSubTab("audience");
+  }, [brand, subTab]);
 
   return (
     <div className="space-y-6">
