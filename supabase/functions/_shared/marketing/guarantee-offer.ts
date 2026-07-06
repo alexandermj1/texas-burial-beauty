@@ -1,33 +1,44 @@
 // Bayer Cemetery Brokers — one-off Guaranteed Sale Offer email.
-// Positions the offer as: we guarantee 100% purchase at the set net price
-// within a fixed window (default 2 years), even if the plot never sells on
-// the open market — some plots take up to a decade.
+// Multi-tier: multiple offer options with different timeframes (e.g. immediate
+// direct purchase, 12-month guarantee, 24-month guarantee).
+// Each tier renders as a clickable card that opens a mailto: acceptance.
+// A contract link + attachment is generated from the same input fields.
 
 import { BRANDS } from "./brands.ts";
+
+export interface OfferTier {
+  id: string;              // "immediate" | "guarantee-12" | "guarantee-24" | ...
+  name: string;            // "Immediate Cash Purchase"
+  timeframe: string;       // "Paid within 45 days of transfer"
+  amount: string;          // "$14,500.00" (per plot net to seller)
+  description: string;     // Short blurb
+  badge?: string;          // Optional pill: "Fastest" / "Best value"
+  highlight?: boolean;     // If true rendered in Bayer primary color
+}
 
 export interface GuaranteeOfferInput {
   recipientName: string;
   cemeteryName: string;
-  cemeteryLocation: string;      // e.g. "Corona Del Mar, CA"
-  propertyDescription: string;   // e.g. "Double Grave A, Lot 805, Bayview Terrace"
-  numberOfPlots: string;         // e.g. "One (1)"
-  guaranteedNetPayment: string;  // per-plot net e.g. "$18,875.00"
-  totalGuaranteed: string;       // total across plots e.g. "$18,875.00"
-  transferFeeCoverage: string;   // e.g. "$700.00"
-  guaranteeWindow: string;       // e.g. "24 months (2 years)"
-  paymentTimeline: string;       // e.g. "45 calendar days of transfer of title"
-  typicalResaleWindow: string;   // e.g. "up to 10 years"
-  acceptDeadline: string;        // e.g. "5:00 PM on Friday, July 18, 2026"
-  option1Fee: string;            // e.g. "$99"
-  option2CancelFee: string;      // e.g. "$299"
-  option2MinTerm: string;        // e.g. "36 months"
+  cemeteryLocation: string;
+  propertyDescription: string;
+  numberOfPlots: string;
+  transferFeeCoverage: string;
+  paymentTimeline: string;
+  typicalResaleWindow: string;
+  acceptDeadline: string;
+  option1Fee: string;
+  option2CancelFee: string;
+  option2MinTerm: string;
   officePhone: string;
   agentName: string;
   agentTitle: string;
   agentEmail: string;
   companyAddress: string;
+  tiers: OfferTier[];
   subject?: string;
   preheader?: string;
+  // Injected by the edge function so the URL contains the encoded offer
+  contractUrl?: string;
 }
 
 export interface RenderedOffer {
@@ -39,13 +50,67 @@ export interface RenderedOffer {
 const esc = (s: string) =>
   (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+const enc = (s: string) => encodeURIComponent(s || "");
+
+function buildAcceptMailto(i: GuaranteeOfferInput, tier: OfferTier): string {
+  const subject = `Bayer Cemetery Brokers — I select "${tier.name}" for ${i.cemeteryName}`;
+  const body =
+    `Hi ${i.agentName.split(" ")[0]},\n\n` +
+    `I've reviewed the Guaranteed Sale Offer for the property below and I'd like to proceed with the option indicated.\n\n` +
+    `Property: ${i.cemeteryName}, ${i.cemeteryLocation}\n` +
+    `${i.propertyDescription}\n` +
+    `Plots: ${i.numberOfPlots}\n\n` +
+    `Selected option: ${tier.name}\n` +
+    `Timeframe: ${tier.timeframe}\n` +
+    `Guaranteed net payment: ${tier.amount}\n\n` +
+    `Please send the agreement across for signature and let me know the next steps.\n\n` +
+    `Thanks,\n${i.recipientName}`;
+  return `mailto:${i.agentEmail}?subject=${enc(subject)}&body=${enc(body)}`;
+}
+
 export function renderBayerGuaranteeOffer(i: GuaranteeOfferInput): RenderedOffer {
   const b = BRANDS.bayer;
   const sans = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+  const primaryTier = i.tiers.find((t) => t.highlight) || i.tiers[0];
   const subject = i.subject || `Guaranteed Sale Offer — ${i.cemeteryName}`;
   const preheader = i.preheader ||
-    `We guarantee ${i.guaranteedNetPayment} net for your property at ${i.cemeteryName} within ${i.guaranteeWindow}, even if it never sells on the open market.`;
+    `Multiple guaranteed options for your property at ${i.cemeteryName} — including a fully-backed ${primaryTier?.amount || ""} written guarantee.`;
   const logoUrl = "https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png";
+
+  const tierCards = i.tiers.map((t) => {
+    const mailto = buildAcceptMailto(i, t);
+    const border = t.highlight ? `2px solid ${b.primary}` : `1px solid #e2e8f0`;
+    const amountColor = t.highlight ? b.primary : "#0f172a";
+    const badge = t.badge
+      ? `<span style="display:inline-block;font-family:${sans};font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:${b.primary};background:${b.bgAccent};padding:4px 10px;border-radius:999px;font-weight:800;margin-left:8px;vertical-align:middle;">${esc(t.badge)}</span>`
+      : "";
+    return `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;">
+        <tr><td>
+          <a href="${esc(mailto)}" style="display:block;text-decoration:none;color:inherit;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:${border};border-radius:10px;background:#ffffff;">
+              <tr><td style="padding:20px 22px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td valign="top" style="padding-right:16px;">
+                    <p style="font-family:${sans};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:800;">Option${badge}</p>
+                    <p style="font-family:${sans};font-size:18px;line-height:1.25;color:#0f172a;margin:0 0 4px;font-weight:800;letter-spacing:-0.01em;">${esc(t.name)}</p>
+                    <p style="font-family:${sans};font-size:13px;line-height:1.55;color:#64748b;margin:0 0 10px;font-weight:600;">${esc(t.timeframe)}</p>
+                    <p style="font-family:${sans};font-size:14px;line-height:1.6;color:#334155;margin:0;">${esc(t.description)}</p>
+                  </td>
+                  <td valign="top" align="right" width="200" style="min-width:180px;">
+                    <p style="font-family:${sans};font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:${b.primary};margin:0 0 4px;font-weight:700;">Net to you</p>
+                    <p style="font-family:${sans};font-size:26px;color:${amountColor};margin:0 0 12px;font-weight:800;letter-spacing:-0.02em;line-height:1;">${esc(t.amount)}</p>
+                    <span style="display:inline-block;font-family:${sans};font-size:12px;font-weight:700;color:#ffffff;background:${b.primary};padding:8px 14px;border-radius:6px;text-transform:uppercase;letter-spacing:.08em;">Select this option →</span>
+                  </td>
+                </tr></table>
+              </td></tr>
+            </table>
+          </a>
+        </td></tr>
+      </table>`;
+  }).join("");
+
+  const contractHref = i.contractUrl || "#";
 
   const html = `<!doctype html>
 <html lang="en">
@@ -65,7 +130,7 @@ export function renderBayerGuaranteeOffer(i: GuaranteeOfferInput): RenderedOffer
         <!-- BODY -->
         <tr><td style="padding:36px 44px 8px;">
           <p style="font-family:${sans};font-size:15px;line-height:1.6;color:#0f172a;margin:0 0 18px;">Dear ${esc(i.recipientName)},</p>
-          <p style="font-family:${sans};font-size:15px;line-height:1.7;color:#334155;margin:0 0 18px;">Thank you for the opportunity to review your property. Because the resale market for individual interment rights can be slow — some plots take <strong>${esc(i.typicalResaleWindow)}</strong> to sell privately — I&rsquo;m writing to extend a firm, written guarantee that removes that uncertainty completely.</p>
+          <p style="font-family:${sans};font-size:15px;line-height:1.7;color:#334155;margin:0 0 18px;">Thank you for the opportunity to review your property. Private plot resales can take <strong>${esc(i.typicalResaleWindow)}</strong>, so I&rsquo;ve outlined several written-guarantee options below — from an immediate direct purchase to longer horizons with higher net payments. Every option is backed by our firm commitment to buy the property ourselves at the stated amount if it hasn&rsquo;t sold within the window.</p>
 
           <!-- PROPERTY -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${b.bgAccent};border-radius:8px;margin:0 0 22px;">
@@ -77,54 +142,35 @@ export function renderBayerGuaranteeOffer(i: GuaranteeOfferInput): RenderedOffer
             </td></tr>
           </table>
 
-          <!-- HEADLINE OFFER -->
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:2px solid ${b.primary};border-radius:10px;margin:0 0 22px;">
-            <tr><td style="padding:24px 26px;">
-              <p style="font-family:${sans};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:800;">The Guarantee</p>
-              <p style="font-family:${sans};font-size:22px;line-height:1.25;color:#0f172a;margin:0 0 14px;font-weight:800;letter-spacing:-0.01em;">100% purchase within ${esc(i.guaranteeWindow)} — guaranteed in writing.</p>
+          <p style="font-family:${sans};font-size:16px;color:#0f172a;margin:8px 0 12px;font-weight:800;letter-spacing:-0.01em;">Choose the option that fits you best</p>
+          <p style="font-family:${sans};font-size:13px;line-height:1.6;color:#64748b;margin:0 0 18px;">Click any option below to reply with your selection. Nothing is finalised until you sign the agreement — this just tells us which route you&rsquo;d like to explore.</p>
 
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${b.bgAccent};border-radius:6px;margin:0 0 18px;">
-                <tr><td style="padding:16px 18px;">
-                  <p style="font-family:${sans};font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:700;">Guaranteed Net Payment (per plot)</p>
-                  <p style="font-family:${sans};font-size:32px;color:${b.primary};margin:0 0 10px;font-weight:800;letter-spacing:-0.02em;line-height:1;">${esc(i.guaranteedNetPayment)}</p>
-                  <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0;">Total guaranteed across all plots: <strong style="color:#0f172a;">${esc(i.totalGuaranteed)}</strong></p>
-                </td></tr>
-              </table>
+          ${tierCards}
 
-              ${bullet("How the guarantee works", `We list and actively market your property. If a private buyer isn&rsquo;t secured within <strong>${esc(i.guaranteeWindow)}</strong>, <strong>Bayer purchases the property directly</strong> at the full Guaranteed Net Payment above. You are paid either way.`)}
-              ${bullet("No open-ended waiting", `The industry average for private plot resales runs anywhere from months to <strong>${esc(i.typicalResaleWindow)}</strong>. Our guarantee caps your exposure at ${esc(i.guaranteeWindow)}.`)}
-              ${bullet("Broker absorbs the risk", `The Guaranteed Net Payment is what you receive. Bayer absorbs the market risk for any shortfall between the eventual sale price and the guaranteed amount.`)}
-              ${bullet("Cemetery fees covered", `We cover the ${esc(i.cemeteryName)} transfer and mandatory third-party cemetery-imposed costs up to <strong>${esc(i.transferFeeCoverage)}</strong>, so those fees do not reduce your net.`)}
-              ${bullet("Fast remittance on sale", `Net proceeds are remitted to you within <strong>${esc(i.paymentTimeline)}</strong>.`)}
+          <!-- COVERAGE + TIMELINE -->
+          ${bullet("Cemetery fees covered", `We cover the ${esc(i.cemeteryName)} transfer and mandatory third-party cemetery-imposed costs up to <strong>${esc(i.transferFeeCoverage)}</strong>, so those fees do not reduce your net.`)}
+          ${bullet("Payment timeline", `Net proceeds are remitted to you within <strong>${esc(i.paymentTimeline)}</strong> once title transfers.`)}
+          ${bullet("Broker absorbs the risk", `The Guaranteed Net Payment is what you receive on the option you select. Bayer absorbs any market-price shortfall.`)}
+
+          <!-- CONTRACT -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:10px;margin:22px 0 22px;background:#f8fafc;">
+            <tr><td style="padding:22px 24px;">
+              <p style="font-family:${sans};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:800;">Agreement</p>
+              <p style="font-family:${sans};font-size:16px;line-height:1.35;color:#0f172a;margin:0 0 10px;font-weight:800;">Exclusive Right-to-Sell Agreement</p>
+              <p style="font-family:${sans};font-size:14px;line-height:1.65;color:#334155;margin:0 0 14px;">A copy of the full agreement is attached to this email as a PDF (<em>Bayer-Guarantee-Agreement.pdf</em>) and can also be viewed online. All figures above are already pre-filled based on your property details. When you select an option we&rsquo;ll circulate the final agreement for e-signature.</p>
+              <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#334155;margin:0 0 10px;">Agreement commitment options:</p>
+              <p style="font-family:${sans};font-size:13.5px;line-height:1.7;color:#334155;margin:0 0 4px;"><strong style="color:#0f172a;">Option A — Standard:</strong> ${esc(i.option1Fee)} one-time, non-refundable fee. Cancel any time with 10 days written notice.</p>
+              <p style="font-family:${sans};font-size:13.5px;line-height:1.7;color:#334155;margin:0 0 16px;"><strong style="color:#0f172a;">Option B — Zero upfront:</strong> No upfront fee. ${esc(i.option2CancelFee)} early cancellation fee only if cancelled before ${esc(i.option2MinTerm)}. Same written guarantee.</p>
+              <a href="${esc(contractHref)}" style="display:inline-block;font-family:${sans};font-size:13px;font-weight:800;color:#ffffff;background:${b.primary};padding:12px 20px;border-radius:8px;text-decoration:none;letter-spacing:.04em;">View agreement online →</a>
+              <span style="display:inline-block;font-family:${sans};font-size:12px;color:#64748b;margin-left:12px;">PDF attached to this email</span>
             </td></tr>
           </table>
 
-          <!-- AGREEMENT OPTIONS -->
-          <p style="font-family:${sans};font-size:16px;color:#0f172a;margin:8px 0 12px;font-weight:800;letter-spacing:-0.01em;">Choose your agreement</p>
-
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:10px;margin:0 0 14px;">
-            <tr><td style="padding:20px 24px;">
-              <p style="font-family:${sans};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:800;">Option 1 · Standard Agreement</p>
-              <p style="font-family:${sans};font-size:17px;line-height:1.3;color:#0f172a;margin:0 0 8px;font-weight:800;">${esc(i.option1Fee)} one-time, non-refundable fee</p>
-              <p style="font-family:${sans};font-size:14px;line-height:1.65;color:#334155;margin:0;">Full flexibility — you can cancel at any time with ten (10) days written notice, no additional penalty.</p>
-            </td></tr>
-          </table>
-
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:10px;margin:0 0 22px;">
-            <tr><td style="padding:20px 24px;">
-              <p style="font-family:${sans};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:800;">Option 2 · Zero Upfront Cost</p>
-              <p style="font-family:${sans};font-size:17px;line-height:1.3;color:#0f172a;margin:0 0 8px;font-weight:800;">No upfront fee</p>
-              <p style="font-family:${sans};font-size:14px;line-height:1.65;color:#334155;margin:0;">${esc(i.option2CancelFee)} early cancellation fee applies only if the agreement is cancelled by you before ${esc(i.option2MinTerm)}. Otherwise identical terms and the same written guarantee.</p>
-            </td></tr>
-          </table>
-
-          <!-- NEXT STEPS -->
-          <p style="font-family:${sans};font-size:16px;color:#0f172a;margin:8px 0 12px;font-weight:800;letter-spacing:-0.01em;">Next Steps &amp; Deadline</p>
-          <p style="font-family:${sans};font-size:14px;line-height:1.7;color:#334155;margin:0 0 14px;">The Guaranteed Net Payment is time-specific and reflects current market conditions and our capital allocation for this section. To lock in the figures above, please confirm your preferred option and return the signed agreement.</p>
+          <!-- DEADLINE -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${b.bgAccent};border-left:4px solid ${b.primary};border-radius:6px;margin:0 0 14px;">
             <tr><td style="padding:16px 20px;">
               <p style="font-family:${sans};font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:800;">To Accept</p>
-              <p style="font-family:${sans};font-size:14px;line-height:1.6;color:#0f172a;margin:0;">This offer is valid for acceptance until <strong>${esc(i.acceptDeadline)}</strong>. Reply to this email or call our office and we will send the Exclusive Right-to-Sell Agreement in your chosen option for e-signature.</p>
+              <p style="font-family:${sans};font-size:14px;line-height:1.6;color:#0f172a;margin:0;">This offer is valid for acceptance until <strong>${esc(i.acceptDeadline)}</strong>. Click any option above, reply to this email, or call our office.</p>
             </td></tr>
           </table>
 
@@ -161,31 +207,34 @@ export function renderBayerGuaranteeOffer(i: GuaranteeOfferInput): RenderedOffer
   </table>
 </body></html>`;
 
+  const tierText = i.tiers.map((t, idx) =>
+    `${idx + 1}. ${t.name} — ${t.amount}\n   ${t.timeframe}\n   ${t.description}\n   Reply / mailto: ${buildAcceptMailto(i, t)}`
+  ).join("\n\n");
+
   const text = `Dear ${i.recipientName},
 
-Thank you for the opportunity to review your property. Because the resale market for individual interment rights can be slow — some plots take ${i.typicalResaleWindow} to sell privately — I'm writing to extend a firm, written guarantee that removes that uncertainty.
+Thank you for the opportunity to review your property. Private plot resales can take ${i.typicalResaleWindow}, so I've outlined several written-guarantee options below.
 
 PROPERTY
 ${i.cemeteryName}, ${i.cemeteryLocation}
 ${i.propertyDescription}
 Number of plots: ${i.numberOfPlots}
 
-THE GUARANTEE — 100% purchase within ${i.guaranteeWindow}
-Guaranteed Net Payment (per plot): ${i.guaranteedNetPayment}
-Total guaranteed across all plots: ${i.totalGuaranteed}
+OFFER OPTIONS
+${tierText}
 
-- How it works: We list and actively market your property. If no private buyer is secured within ${i.guaranteeWindow}, Bayer purchases the property directly at the full Guaranteed Net Payment. You are paid either way.
-- No open-ended waiting: Private plot resales can take ${i.typicalResaleWindow}. Our guarantee caps your exposure at ${i.guaranteeWindow}.
-- Broker absorbs the risk: The Guaranteed Net Payment is what you receive. Bayer absorbs any market-price shortfall.
+TERMS
 - Cemetery fees covered up to ${i.transferFeeCoverage}.
-- Net proceeds remitted within ${i.paymentTimeline}.
+- Net proceeds remitted within ${i.paymentTimeline} of transfer.
+- Bayer absorbs any market shortfall for the option you select.
 
-AGREEMENT OPTIONS
-Option 1 — Standard Agreement: ${i.option1Fee} one-time, non-refundable fee. Cancel any time with 10 days written notice.
-Option 2 — Zero Upfront Cost: No upfront fee. ${i.option2CancelFee} early cancellation fee applies only if cancelled before ${i.option2MinTerm}. Same written guarantee.
+AGREEMENT
+The Exclusive Right-to-Sell Agreement is attached as a PDF. View online: ${contractHref}
+- Option A — Standard: ${i.option1Fee} one-time, non-refundable. Cancel any time with 10 days notice.
+- Option B — Zero upfront: No upfront fee. ${i.option2CancelFee} early cancel fee if cancelled before ${i.option2MinTerm}.
 
 TO ACCEPT
-This offer is valid until ${i.acceptDeadline}. Reply to this email or call ${i.officePhone} and we will send the Exclusive Right-to-Sell Agreement for e-signature.
+This offer is valid until ${i.acceptDeadline}. Reply to this email or call ${i.officePhone}.
 
 Warm Regards,
 ${i.agentName.split(" ")[0]}
@@ -211,16 +260,41 @@ function bullet(label: string, body: string): string {
   </table>`;
 }
 
+export const DEFAULT_TIERS: OfferTier[] = [
+  {
+    id: "immediate",
+    name: "Immediate Direct Purchase",
+    timeframe: "Bayer buys directly — paid within 45 days of transfer",
+    amount: "$14,500.00",
+    description: "Fastest possible exit. Bayer purchases the property directly for cash; you don't wait for a private buyer.",
+    badge: "Fastest",
+  },
+  {
+    id: "guarantee-12",
+    name: "12-Month Guaranteed Sale",
+    timeframe: "Guaranteed sold within 12 months — or Bayer buys it",
+    amount: "$16,500.00",
+    description: "Balanced option. We actively market for 12 months; if no private buyer is found, Bayer purchases at the guaranteed amount.",
+    badge: "Balanced",
+  },
+  {
+    id: "guarantee-24",
+    name: "24-Month Guaranteed Sale",
+    timeframe: "Guaranteed sold within 24 months — or Bayer buys it",
+    amount: "$18,875.00",
+    description: "Highest net payment. Longer marketing window (24 months) with the same written buy-back guarantee at the end.",
+    badge: "Highest net",
+    highlight: true,
+  },
+];
+
 export const GUARANTEE_OFFER_DEFAULTS: GuaranteeOfferInput = {
   recipientName: "Ana Del Rio",
   cemeteryName: "Pacific View M.P.",
   cemeteryLocation: "Corona Del Mar, CA",
   propertyDescription: "Double Grave A, Lot 805, Bayview Terrace",
   numberOfPlots: "One (1)",
-  guaranteedNetPayment: "$18,875.00",
-  totalGuaranteed: "$18,875.00",
   transferFeeCoverage: "$700.00",
-  guaranteeWindow: "24 months (2 years)",
   paymentTimeline: "45 calendar days of transfer of title",
   typicalResaleWindow: "up to 10 years",
   acceptDeadline: "5:00 PM on Friday, July 17, 2026",
@@ -232,4 +306,5 @@ export const GUARANTEE_OFFER_DEFAULTS: GuaranteeOfferInput = {
   agentTitle: "Portfolio Manager; Licensed Cemetery Salesperson",
   agentEmail: "emma@bayerbrokers.com",
   companyAddress: "12277 Apple Valley Rd, Ste 449, Apple Valley, CA 92308-1701, USA",
+  tiers: DEFAULT_TIERS,
 };
