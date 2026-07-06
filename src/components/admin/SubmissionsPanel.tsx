@@ -265,9 +265,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     if (texasSubs.length === 0) { setAwaitingMap({}); setFollowupMap({}); return; }
     const texasIds = texasSubs.map(s => s.id);
     // Lower-case address index for matching
-    const emailToSub = new Map<string, string>();
+    // One email address can belong to multiple submissions (same person
+    // inquired twice). Track every sid per address so an outgoing reply
+    // credits ALL of that customer's open submissions, not just one.
+    const emailToSub = new Map<string, string[]>();
     for (const s of texasSubs) {
-      if (s.email) emailToSub.set(s.email.trim().toLowerCase(), s.id);
+      if (!s.email) continue;
+      const key = s.email.trim().toLowerCase();
+      const arr = emailToSub.get(key) || [];
+      arr.push(s.id);
+      emailToSub.set(key, arr);
     }
     let cancelled = false;
     const extractAddr = (raw: string | null | undefined): string => {
