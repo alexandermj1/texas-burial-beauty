@@ -135,9 +135,9 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6fb;padding:32px 12px;">
     <tr><td align="center">
       <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:6px;overflow:hidden;box-shadow:0 6px 24px rgba(30,58,138,0.08);">
-        <tr><td style="background:${b.primary};padding:36px 40px;text-align:center;">
-          <img src="${b.logoUrl}" alt="${esc(b.name)}" width="72" height="72" style="display:inline-block;width:72px;height:72px;object-fit:contain;">
-          <p style="font-family:${sans};font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#c7d2fe;margin:14px 0 0;font-weight:600;">${esc(b.name)}</p>
+        <tr><td style="background:${b.primary};padding:44px 40px 40px;text-align:center;">
+          <img src="${b.logoUrl}" alt="${esc(b.name)}" width="180" style="display:inline-block;width:180px;height:auto;max-width:60%;object-fit:contain;">
+          <p style="font-family:${sans};font-size:10px;letter-spacing:.38em;text-transform:uppercase;color:#c7d2fe;margin:18px 0 0;font-weight:600;">Nationwide cemetery resale</p>
         </td></tr>
         <tr><td style="padding:40px 40px 8px;">
           <p style="font-family:${sans};font-size:15px;line-height:1.6;color:#0f172a;margin:0 0 20px;">${salutation(ctx.firstName)}</p>
