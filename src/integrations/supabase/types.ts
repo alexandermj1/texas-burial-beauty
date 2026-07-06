@@ -1011,6 +1011,258 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaigns: {
+        Row: {
+          body_overrides: Json
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          created_at: string
+          created_by: string | null
+          from_email: string
+          from_name: string
+          id: string
+          name: string
+          preheader: string | null
+          reply_to: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["marketing_campaign_status"]
+          subject: string
+          template_key: string
+          total_bounced: number
+          total_clicked: number
+          total_failed: number
+          total_opened: number
+          total_recipients: number
+          total_sent: number
+          total_unsubscribed: number
+          updated_at: string
+        }
+        Insert: {
+          body_overrides?: Json
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          created_at?: string
+          created_by?: string | null
+          from_email: string
+          from_name: string
+          id?: string
+          name: string
+          preheader?: string | null
+          reply_to?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["marketing_campaign_status"]
+          subject: string
+          template_key: string
+          total_bounced?: number
+          total_clicked?: number
+          total_failed?: number
+          total_opened?: number
+          total_recipients?: number
+          total_sent?: number
+          total_unsubscribed?: number
+          updated_at?: string
+        }
+        Update: {
+          body_overrides?: Json
+          brand?: Database["public"]["Enums"]["marketing_brand"]
+          created_at?: string
+          created_by?: string | null
+          from_email?: string
+          from_name?: string
+          id?: string
+          name?: string
+          preheader?: string | null
+          reply_to?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["marketing_campaign_status"]
+          subject?: string
+          template_key?: string
+          total_bounced?: number
+          total_clicked?: number
+          total_failed?: number
+          total_opened?: number
+          total_recipients?: number
+          total_sent?: number
+          total_unsubscribed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_contacts: {
+        Row: {
+          bounced_at: string | null
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          city: string | null
+          company: string | null
+          complained_at: string | null
+          created_at: string
+          csv_batch_id: string | null
+          email: string
+          extra: Json
+          first_name: string | null
+          id: string
+          last_name: string | null
+          last_sent_at: string | null
+          phone: string | null
+          source: string
+          state: string | null
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          bounced_at?: string | null
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          city?: string | null
+          company?: string | null
+          complained_at?: string | null
+          created_at?: string
+          csv_batch_id?: string | null
+          email: string
+          extra?: Json
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          last_sent_at?: string | null
+          phone?: string | null
+          source?: string
+          state?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bounced_at?: string | null
+          brand?: Database["public"]["Enums"]["marketing_brand"]
+          city?: string | null
+          company?: string | null
+          complained_at?: string | null
+          created_at?: string
+          csv_batch_id?: string | null
+          email?: string
+          extra?: Json
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          last_sent_at?: string | null
+          phone?: string | null
+          source?: string
+          state?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_sends: {
+        Row: {
+          bounced_at: string | null
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          campaign_id: string
+          clicked_at: string | null
+          complained_at: string | null
+          contact_id: string | null
+          created_at: string
+          email: string
+          error: string | null
+          id: string
+          opened_at: string | null
+          resend_email_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["marketing_send_status"]
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          bounced_at?: string | null
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          campaign_id: string
+          clicked_at?: string | null
+          complained_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          email: string
+          error?: string | null
+          id?: string
+          opened_at?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["marketing_send_status"]
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          bounced_at?: string | null
+          brand?: Database["public"]["Enums"]["marketing_brand"]
+          campaign_id?: string
+          clicked_at?: string | null
+          complained_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          email?: string
+          error?: string | null
+          id?: string
+          opened_at?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["marketing_send_status"]
+          unsubscribed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_sends_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_unsubscribe_tokens: {
+        Row: {
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          campaign_id: string | null
+          contact_id: string | null
+          created_at: string
+          email: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          brand: Database["public"]["Enums"]["marketing_brand"]
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          email: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          brand?: Database["public"]["Enums"]["marketing_brand"]
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          email?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_unsubscribe_tokens_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_unsubscribe_tokens_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_transactions: {
         Row: {
           amount_cents: number
@@ -1785,6 +2037,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "agent"
+      marketing_brand: "texas" | "bayer"
+      marketing_campaign_status: "draft" | "sending" | "sent" | "failed"
+      marketing_send_status:
+        | "pending"
+        | "sent"
+        | "failed"
+        | "bounced"
+        | "complained"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1913,6 +2173,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "agent"],
+      marketing_brand: ["texas", "bayer"],
+      marketing_campaign_status: ["draft", "sending", "sent", "failed"],
+      marketing_send_status: [
+        "pending",
+        "sent",
+        "failed",
+        "bounced",
+        "complained",
+      ],
     },
   },
 } as const
