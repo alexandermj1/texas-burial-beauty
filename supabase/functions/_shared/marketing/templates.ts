@@ -239,7 +239,7 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
         </td></tr>
 
         <!-- FEATURED PLOTS -->
-        <tr><td style="padding:32px 32px 8px;">
+        <tr><td style="padding:16px 32px 8px;">
           <p style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${b.primary};margin:0 0 6px;font-weight:700;text-align:center;">This month's featured inventory</p>
           <h2 style="font-family:${sans};font-size:22px;color:#0f172a;margin:0 0 20px;font-weight:700;letter-spacing:-0.01em;text-align:center;">Real plots. Real savings.</h2>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
