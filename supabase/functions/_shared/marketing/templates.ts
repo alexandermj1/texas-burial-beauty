@@ -516,7 +516,7 @@ export const TEXAS_INTRO: TemplateDef = {
   label: "Intro to mortuaries",
   brand: "texas",
   defaultSubject: "We'll source the cemetery plot your family needs",
-  defaultPreheader: "Tell us the location and price point — we source below-retail plots across Texas and pay your funeral home a referral commission on every sale.",
+  defaultPreheader: "Tell us the cemeteries and price points your families ask for — we keep standing inventory ready and pay approximately $1,000 per referral.",
   render: renderTexasIntro,
 };
 
