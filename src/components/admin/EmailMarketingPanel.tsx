@@ -463,13 +463,33 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <FileText className="w-3.5 h-3.5" />
             <span>Live preview · Subject: <strong className="text-foreground">{preview?.subject || subject}</strong></span>
           </div>
-          <button onClick={refreshPreview} className="text-xs text-muted-foreground hover:text-foreground">Refresh</button>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Preview as</label>
+            <select
+              value={previewContactId}
+              onChange={(e) => setPreviewContactId(e.target.value)}
+              className="text-xs px-2 py-1.5 rounded-md border border-border bg-background max-w-[260px]"
+            >
+              <option value="">Sample contact (default)</option>
+              {audience.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {(c.company || c.email)}{c.city ? ` — ${c.city}` : ""}
+                </option>
+              ))}
+            </select>
+            <button onClick={refreshPreview} className="text-xs text-muted-foreground hover:text-foreground">Refresh</button>
+          </div>
         </div>
+        {previewContact && (
+          <div className="mb-2 text-[11px] text-muted-foreground">
+            Rendering as it would send to <strong className="text-foreground">{previewContact.email}</strong> · {previewContact.company || "—"} · {previewContact.city || "—"}
+          </div>
+        )}
         <div className="border border-border rounded-md overflow-hidden bg-white" style={{ height: 720 }}>
           {previewLoading ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
@@ -482,6 +502,7 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
           )}
         </div>
       </div>
+
 
       {confirmOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
