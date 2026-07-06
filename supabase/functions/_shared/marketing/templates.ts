@@ -215,7 +215,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
   const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
 
-Texas Cemetery Brokers partners with funeral homes across Texas. We pay approximately $1,000 per family you refer that closes with us.
+Texas Cemetery Brokers gives your families real discounts on resale cemetery property AND gives them their time back. Our compassionate staff meets every family in person and walks them through each property that fits — so they get the most choice at the lowest price without driving cemetery to cemetery in the hardest week of their life. We also pay approximately $1,000 per referred family that closes with us.
 
 The part most partners value most: TELL US THE CEMETERIES AND AREAS YOUR FAMILIES ASK FOR, AND WE MAINTAIN STANDING INVENTORY IN THOSE PLACES.
 - Cemeteries & areas your families most often need
