@@ -23,12 +23,15 @@ Deno.serve(async (req) => {
     const tpl = getTemplate(templateKey);
     if (!tpl) return j({ error: "Unknown template" }, 400);
     const brand = BRANDS[tpl.brand];
+    const brandDefaults = tpl.brand === "bayer"
+      ? { firstName: "Alex", company: "Sample Funeral Home", city: "Long Beach" }
+      : { firstName: "Alex", company: "Sample Funeral Home", city: "Dallas" };
     const rendered = tpl.render(
       {
         brand: tpl.brand,
-        firstName: firstName || "Alex",
-        company: company || "Sample Funeral Home",
-        city: city || "Dallas",
+        firstName: firstName || brandDefaults.firstName,
+        company: company || brandDefaults.company,
+        city: city || brandDefaults.city,
         unsubscribeUrl: `${brand.siteUrl}/unsubscribe?token=PREVIEW&brand=${tpl.brand}`,
         siteUrl: brand.siteUrl,
       },
