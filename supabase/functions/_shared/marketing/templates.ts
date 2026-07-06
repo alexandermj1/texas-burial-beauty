@@ -70,12 +70,11 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
         <!-- INTRO -->
         <tr><td style="padding:40px 44px 8px;">
-          <p style="font-family:${serif};font-size:15px;line-height:1.6;color:#1f2937;margin:0 0 20px;">${salutation(ctx.firstName)}</p>
-          <h1 style="font-family:${serif};font-size:26px;line-height:1.25;color:#1f2937;margin:0 0 20px;font-weight:400;letter-spacing:-0.01em;">The most choice, at the lowest price — with compassionate hands guiding every family from ${companyName}${cityLine}.</h1>
-          <p style="font-family:${serif};font-size:15px;line-height:1.75;color:#334155;margin:0 0 16px;"><strong style="color:#1f2937;">Texas Cemetery Brokers</strong> gives your families <strong>real discounts on resale cemetery property</strong> — and, just as importantly, gives them <strong>their time back</strong>. Instead of driving from cemetery to cemetery in the hardest week of their life, our compassionate staff <strong>meets every family in person and walks them through each property</strong> that fits what they're looking for.</p>
-          <p style="font-family:${serif};font-size:15px;line-height:1.75;color:#334155;margin:0 0 8px;">The result: more options to choose from, lower prices than buying direct, and a shoulder to lean on through every visit — plus a <strong>referral commission of approximately $1,000</strong> mailed to your funeral home on every closed family.</p>
-
+          <p style="font-family:${serif};font-size:11px;line-height:1;color:${b.primary};margin:0 0 12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;">${salutation(ctx.firstName)}</p>
+          <h1 style="font-family:${serif};font-size:26px;line-height:1.25;color:${b.primary};margin:0 0 22px;font-weight:400;letter-spacing:-0.01em;">We source <em style="font-style:italic;">discounted cemetery plots</em> for the families ${companyName}${cityLine} serves — and pay you a <strong style="font-weight:700;">$1,000 referral</strong> on every close.</h1>
+          <p style="font-family:${serif};font-size:15px;line-height:1.7;color:#334155;margin:0;">In-person, local service that saves your families time and thousands on premium burial property — during the week they can least afford either.</p>
         </td></tr>
+
 
         <!-- SOURCING CALLOUT (the emphasis) -->
         <tr><td style="padding:22px 44px 8px;">
@@ -215,7 +214,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
   const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
 
-Texas Cemetery Brokers gives your families real discounts on resale cemetery property AND gives them their time back. Our compassionate staff meets every family in person and walks them through each property that fits — so they get the most choice at the lowest price without driving cemetery to cemetery in the hardest week of their life. We also pay approximately $1,000 per referred family that closes with us.
+We source discounted cemetery plots for the families you serve — and pay you a $1,000 referral on every close. In-person, local service that saves your families time and thousands on premium burial property, during the week they can least afford either.
 
 The part most partners value most: TELL US THE CEMETERIES AND AREAS YOUR FAMILIES ASK FOR, AND WE MAINTAIN STANDING INVENTORY IN THOSE PLACES.
 - Cemeteries & areas your families most often need
