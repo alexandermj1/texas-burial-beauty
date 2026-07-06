@@ -208,7 +208,7 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td valign="middle" align="left" style="line-height:0;">
-                <img src="https://mceguxfdoikjthsrbmzx.supabase.co/storage/v1/object/public/listing-photos/marketing/bayer-logo-navy.png" alt="${esc(b.name)}" width="120" style="display:inline-block;width:120px;height:auto;object-fit:contain;">
+                <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png" alt="${esc(b.name)}" width="120" style="display:inline-block;width:120px;height:auto;object-fit:contain;">
               </td>
               <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${b.primary};font-weight:700;">
                 Save families 15% – 50%
