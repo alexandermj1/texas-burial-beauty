@@ -167,8 +167,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
               <p style="font-family:${serif};font-size:13px;color:${b.primary};margin:0 0 12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">What we handle for you</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Sourcing plots to match location &amp; budget</td>
-                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ Valuation &amp; competitive pricing</td>
+                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Standing inventory in your cemeteries</td>
+                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ Pricing within your families' budgets</td>
                 </tr>
                 <tr>
                   <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Contracts &amp; escrow</td>
@@ -176,7 +176,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
                 </tr>
                 <tr>
                   <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Family communication</td>
-                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ Referral commission to you</td>
+                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ ~$1,000 commission per referral</td>
+
                 </tr>
               </table>
             </td></tr>
