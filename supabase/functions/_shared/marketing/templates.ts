@@ -214,20 +214,21 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
   const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
 
-Texas Cemetery Brokers helps funeral homes offer families affordable cemetery property — and pays a referral commission on every closed sale.
+Texas Cemetery Brokers partners with funeral homes across Texas. We pay approximately $1,000 per family you refer that closes with us.
 
-The part most partners value most: TELL US WHAT THE FAMILY NEEDS AND WE SOURCE THE PLOT.
-- Location: cemetery, city, or area of Texas
-- Price point: budget and how many spaces
-We reach out to our statewide seller network and typically come back within 24-48 hours with real options — priced 15%-50% below retail.
+The part most partners value most: TELL US THE CEMETERIES AND AREAS YOUR FAMILIES ASK FOR, AND WE MAINTAIN STANDING INVENTORY IN THOSE PLACES.
+- Cemeteries & areas your families most often need
+- Typical price points they work within
+So when a family walks in, options are already on the shelf — not something we scramble to find after the call.
 
 How it works:
-1. Send us the family's location + price point.
-2. We source, present, and handle every step (contracts, cemetery transfer, family comms).
-3. You get a referral check at closing.
+1. Tell us your cemeteries and price points, once.
+2. Refer families to us — we handle contracts, cemetery transfer, family communication.
+3. You get approximately $1,000 per referral at closing.
 
 Become a partner: ${ctx.siteUrl || b.siteUrl}/partners
-Or reply to this email with what a family needs — we'll start sourcing today.
+Or reply with the cemeteries and price points your families ask for.
+
 
 Warmly,
 The team at Texas Cemetery Brokers
