@@ -167,20 +167,18 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
   };
 
   const plotCard = (p: typeof plots[number]) => `
-    <td width="50%" valign="top" style="padding:10px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(15,23,42,0.04);">
+    <td width="50%" valign="top" style="padding:12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 3px 10px rgba(15,23,42,0.05);">
         <tr><td style="padding:0;line-height:0;position:relative;">
           <img src="${p.img}" alt="${esc(p.cemetery)}" width="270" style="display:block;width:100%;height:170px;object-fit:cover;">
-          <div style="position:absolute;top:14px;left:14px;background:${b.primary};color:#ffffff;font-family:${sans};font-size:10px;font-weight:800;letter-spacing:.12em;padding:7px 12px;border-radius:4px;box-shadow:0 2px 6px rgba(15,23,42,0.18);">${pctOff(p.price, p.retail)}</div>
+          <div style="position:absolute;top:14px;left:14px;background:${b.primary};color:#ffffff;font-family:${sans};font-size:10px;font-weight:800;letter-spacing:.14em;padding:8px 14px;border-radius:4px;box-shadow:0 2px 6px rgba(15,23,42,0.18);">${pctOff(p.price, p.retail)}</div>
         </td></tr>
-        <tr><td style="padding:18px 20px 20px;">
-          <p style="font-family:${sans};font-size:15px;color:#0f172a;margin:0 0 3px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;">${esc(p.cemetery)}</p>
-          <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0 0 16px;line-height:1.4;">${esc(p.garden)}</p>
+        <tr><td style="padding:20px 22px 22px;">
+          <p style="font-family:${sans};font-size:15px;color:#0f172a;margin:0 0 4px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;">${esc(p.cemetery)}</p>
+          <p style="font-family:${sans};font-size:12px;color:#64748b;margin:0 0 18px;line-height:1.4;">${esc(p.garden)}</p>
+          <p style="font-family:${sans};font-size:13px;color:#94a3b8;text-decoration:line-through;margin:0 0 4px;">${esc(p.retail)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td valign="baseline" style="font-family:${sans};">
-              <span style="font-size:13px;color:#94a3b8;text-decoration:line-through;">${esc(p.retail)}</span>
-              &nbsp;<span style="font-size:22px;color:${b.primary};font-weight:800;letter-spacing:-0.02em;">${esc(p.price)}</span>
-            </td>
+            <td valign="baseline" style="font-family:${sans};font-size:22px;color:${b.primary};font-weight:800;letter-spacing:-0.02em;">${esc(p.price)}</td>
             <td align="right" valign="baseline" style="font-family:${sans};font-size:10px;color:#16a34a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;">● Available</td>
           </tr></table>
         </td></tr>
@@ -197,24 +195,16 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
   const html = `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
-<body style="margin:0;padding:0;background:#f4f6fb;font-family:${sans};color:#0f172a;">
+<body style="margin:0;padding:0;background:#dbe4f2;font-family:${sans};color:#0f172a;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6fb;padding:32px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dbe4f2;padding:36px 14px;">
     <tr><td align="center">
-      <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px rgba(30,58,138,0.08);">
+      <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(30,58,138,0.12);">
 
         <!-- HEADER -->
-        <tr><td style="background:#ffffff;padding:28px 40px 20px;border-bottom:1px solid #e2e8f0;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td valign="middle" align="left" style="line-height:0;">
-                <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png" alt="${esc(b.name)}" width="120" style="display:inline-block;width:120px;height:auto;object-fit:contain;">
-              </td>
-              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${b.primary};font-weight:700;">
-                Save families 15% – 50%
-              </td>
-            </tr>
-          </table>
+        <tr><td align="center" style="background:#ffffff;padding:26px 40px 18px;border-bottom:1px solid #e2e8f0;">
+          <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png" alt="${esc(b.name)}" width="92" style="display:block;width:92px;height:auto;object-fit:contain;margin:0 auto 10px;">
+          <p style="font-family:${sans};font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:${b.primary};font-weight:700;margin:0;">Save families 15% – 50%</p>
         </td></tr>
 
         <!-- INTRO -->
