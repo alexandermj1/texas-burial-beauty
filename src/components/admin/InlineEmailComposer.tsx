@@ -80,14 +80,34 @@ const P_STYLE =
   "font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#1f2937;margin:0 0 14px;";
 const textToHtml = (text: string): string => {
   if (!text) return "";
-  const paragraphs = text.split(/\n{2,}/);
-  return paragraphs
-    .map((p) =>
-      p.length === 0
-        ? `<p style="${P_STYLE}"><br></p>`
-        : `<p style="${P_STYLE}">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`,
-    )
-    .join("");
+  const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  const html: string[] = [];
+  let paragraph: string[] = [];
+  let blankCount = 0;
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    html.push(`<p style="${P_STYLE}">${escapeHtml(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
+    paragraph = [];
+  };
+
+  lines.forEach((line) => {
+    if (line.trim() === "") {
+      flushParagraph();
+      blankCount += 1;
+      return;
+    }
+    if (blankCount > 1) {
+      for (let i = 1; i < blankCount; i += 1) html.push(`<p style="${P_STYLE}"><br></p>`);
+    }
+    blankCount = 0;
+    paragraph.push(line);
+  });
+  flushParagraph();
+  if (blankCount > 1) {
+    for (let i = 1; i < blankCount; i += 1) html.push(`<p style="${P_STYLE}"><br></p>`);
+  }
+  return html.join("");
 };
 
 
@@ -111,8 +131,85 @@ const htmlToText = (html: string): string => {
   wrap.querySelectorAll("p, div, li, h1, h2, h3").forEach((el) => {
     el.append("\n");
   });
-  const text = (wrap.textContent ?? "").replace(/\n{3,}/g, "\n\n").trim();
+  const text = (wrap.textContent ?? "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{7,}/g, "\n\n\n\n\n\n")
+    .trim();
   return text;
+};
+
+const mergeInlineStyle = (el: HTMLElement, style: string) => {
+  const current = el.getAttribute("style") || "";
+  el.setAttribute("style", `${style}${current ? ` ${current}` : ""}`);
+};
+
+const isBlankBlock = (el: HTMLElement) => {
+  if (el.querySelector("img,table,hr,ul,ol,blockquote")) return false;
+  const withoutBreaks = el.innerHTML
+    .replace(/&nbsp;/gi, " ")
+    .replace(/<br\s*\/?>/gi, "")
+    .trim();
+  return withoutBreaks === "" && (el.textContent || "").replace(/\u00a0/g, " ").trim() === "";
+};
+
+const preserveTypedWhitespace = (root: HTMLElement) => {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes: Text[] = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text;
+    const parent = node.parentElement;
+    if (!parent || parent.closest("table,style,script,pre,[data-listing-options='1']")) continue;
+    if (/[\n\r]| {2,}/.test(node.nodeValue || "")) nodes.push(node);
+  }
+
+  nodes.forEach((node) => {
+    const value = (node.nodeValue || "").replace(/\r\n?/g, "\n");
+    const frag = document.createDocumentFragment();
+    value.split("\n").forEach((part, idx) => {
+      if (idx > 0) frag.appendChild(document.createElement("br"));
+      frag.appendChild(document.createTextNode(part.replace(/ {2,}/g, (m) => ` ${"\u00a0".repeat(m.length - 1)}`)));
+    });
+    node.replaceWith(frag);
+  });
+};
+
+// The editor preview gets spacing from CSS classes, but sent emails need inline
+// styles. Normalize user-created blocks so blank lines and multiple spaces make
+// it all the way to Gmail/Outlook instead of being collapsed by the email client.
+const normalizeComposerHtmlForEmail = (rawHtml: string): string => {
+  if (!rawHtml || typeof document === "undefined") return rawHtml;
+  const root = document.createElement("div");
+  root.innerHTML = rawHtml;
+
+  root.querySelectorAll("p, div").forEach((node) => {
+    const el = node as HTMLElement;
+    if (el.closest("table,[data-listing-options='1']")) return;
+    if (isBlankBlock(el)) {
+      el.innerHTML = "&nbsp;";
+      el.setAttribute(
+        "style",
+        "font-family:Georgia,serif;font-size:15px;line-height:14px;color:#1f2937;margin:0 0 14px;height:14px;",
+      );
+      return;
+    }
+    mergeInlineStyle(el, P_STYLE);
+  });
+
+  root.querySelectorAll("ul, ol").forEach((node) => {
+    const el = node as HTMLElement;
+    if (el.closest("table,[data-listing-options='1']")) return;
+    mergeInlineStyle(el, "font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#1f2937;margin:0 0 14px;padding-left:22px;");
+  });
+
+  root.querySelectorAll("li").forEach((node) => {
+    const el = node as HTMLElement;
+    if (el.closest("table,[data-listing-options='1']")) return;
+    mergeInlineStyle(el, "font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#1f2937;margin:0 0 6px;");
+  });
+
+  preserveTypedWhitespace(root);
+  return root.innerHTML;
 };
 
 // Vogue-style branded shell wrapped around every outgoing email so replies from
@@ -218,7 +315,8 @@ const InlineEmailComposer = ({
       return;
     }
     setSending(true);
-    const brandedHtml = wrapInBrandedShell(html);
+    const normalizedHtml = normalizeComposerHtmlForEmail(html);
+    const brandedHtml = wrapInBrandedShell(normalizedHtml);
     const { data, error } = await supabase.functions.invoke("gmail-action", {
       body: {
         action: "send",
