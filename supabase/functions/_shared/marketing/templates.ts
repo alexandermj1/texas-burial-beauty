@@ -204,13 +204,13 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
       <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px rgba(30,58,138,0.08);">
 
         <!-- HEADER -->
-        <tr><td style="background:${b.primary};padding:20px 32px;">
+        <tr><td style="background:#ffffff;padding:28px 40px 20px;border-bottom:1px solid #e2e8f0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td valign="middle" align="left" style="line-height:0;">
-                <img src="${b.logoUrl}" alt="${esc(b.name)}" width="110" style="display:inline-block;width:110px;height:auto;object-fit:contain;">
+                <img src="https://mceguxfdoikjthsrbmzx.supabase.co/storage/v1/object/public/listing-photos/marketing/bayer-logo-navy.png" alt="${esc(b.name)}" width="120" style="display:inline-block;width:120px;height:auto;object-fit:contain;">
               </td>
-              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#c7d2fe;font-weight:600;">
+              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${b.primary};font-weight:700;">
                 Save families 15% – 50%
               </td>
             </tr>
