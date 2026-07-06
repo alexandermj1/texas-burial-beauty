@@ -47,8 +47,19 @@ export interface RenderedOffer {
   text: string;
 }
 
-const esc = (s: string) =>
-  (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const esc = (s: string) => {
+  const base = (s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+  // Preserve author-entered whitespace: newlines become <br>, and runs of
+  // spaces keep their width by converting extras to &nbsp;.
+  return base
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n/g, "<br>")
+    .replace(/ {2,}/g, (m) => " " + "&nbsp;".repeat(m.length - 1));
+};
 
 const enc = (s: string) => encodeURIComponent(s || "");
 
