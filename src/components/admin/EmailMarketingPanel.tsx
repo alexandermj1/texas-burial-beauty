@@ -315,6 +315,9 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
   const [testEmail, setTestEmail] = useState("");
   const [activeCount, setActiveCount] = useState<number>(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [audience, setAudience] = useState<Contact[]>([]);
+  const [previewContactId, setPreviewContactId] = useState<string>("");
+  const previewContact = audience.find((c) => c.id === previewContactId) || null;
 
   // When the brand switches, snap the selected template back to that brand's first template
   useEffect(() => {
