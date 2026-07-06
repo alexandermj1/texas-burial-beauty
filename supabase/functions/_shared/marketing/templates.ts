@@ -71,31 +71,31 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
         <!-- INTRO -->
         <tr><td style="padding:40px 44px 8px;">
           <p style="font-family:${serif};font-size:15px;line-height:1.6;color:#1f2937;margin:0 0 20px;">${salutation(ctx.firstName)}</p>
-          <h1 style="font-family:${serif};font-size:26px;line-height:1.25;color:#1f2937;margin:0 0 20px;font-weight:400;letter-spacing:-0.01em;">A partnership that pays ${companyName}${cityLine}.</h1>
-          <p style="font-family:${serif};font-size:15px;line-height:1.75;color:#334155;margin:0 0 16px;">Cemetery plots across Texas now run <strong>$5,000–$20,000+</strong> at retail — a number many families you serve simply can't absorb on top of funeral costs. When budget becomes the conversation, options are limited and uncomfortable.</p>
-          <p style="font-family:${serif};font-size:15px;line-height:1.75;color:#334155;margin:0 0 8px;"><strong style="color:#1f2937;">Texas Cemetery Brokers</strong> maintains a live, statewide inventory of resale plots priced <strong>15%–50% below retail</strong> — and when we don't already have a match, <strong>we actively source one for your family</strong>. Tell us the cemetery (or the area) and the price point, and we go find it.</p>
+          <h1 style="font-family:${serif};font-size:26px;line-height:1.25;color:#1f2937;margin:0 0 20px;font-weight:400;letter-spacing:-0.01em;">A standing inventory of cemetery plots for the families ${companyName}${cityLine} serves.</h1>
+          <p style="font-family:${serif};font-size:15px;line-height:1.75;color:#334155;margin:0 0 16px;"><strong style="color:#1f2937;">Texas Cemetery Brokers</strong> works differently from a typical broker. Instead of hunting for plots after a family asks, we ask <em>you</em> up front which cemeteries and areas your families most often need — and then we make sure we always have resale inventory ready in those places, priced well below retail.</p>
+          <p style="font-family:${serif};font-size:15px;line-height:1.75;color:#334155;margin:0 0 8px;">On top of that, <strong>we pay approximately $1,000 per family you refer</strong> that closes with us. No invoicing, no chasing — a check goes to your funeral home after closing.</p>
         </td></tr>
 
         <!-- SOURCING CALLOUT (the emphasis) -->
         <tr><td style="padding:22px 44px 8px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${b.bgAccent};border-radius:6px;border-left:4px solid ${b.primary};">
             <tr><td style="padding:26px 26px 24px;">
-              <p style="font-family:${serif};font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:${b.primary};margin:0 0 10px;font-weight:700;">Custom sourcing for your families</p>
-              <h2 style="font-family:${serif};font-size:20px;line-height:1.3;color:#1f2937;margin:0 0 12px;font-weight:400;">Tell us what the family needs — we'll find the plot.</h2>
-              <p style="font-family:${serif};font-size:14px;line-height:1.7;color:#334155;margin:0 0 14px;">Send us two things and we'll go to work the same day:</p>
+              <p style="font-family:${serif};font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:${b.primary};margin:0 0 10px;font-weight:700;">Inventory built around your funeral home</p>
+              <h2 style="font-family:${serif};font-size:20px;line-height:1.3;color:#1f2937;margin:0 0 12px;font-weight:400;">Tell us the cemeteries and areas you serve — we'll keep them stocked.</h2>
+              <p style="font-family:${serif};font-size:14px;line-height:1.7;color:#334155;margin:0 0 14px;">Two things from you, once:</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td width="50%" valign="top" style="padding:6px 10px 6px 0;">
-                    <p style="font-family:${serif};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${b.primary};margin:0 0 4px;font-weight:700;">Location</p>
-                    <p style="font-family:${serif};font-size:14px;line-height:1.55;color:#1f2937;margin:0;">The cemetery, city, or area of Texas the family has in mind.</p>
+                    <p style="font-family:${serif};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${b.primary};margin:0 0 4px;font-weight:700;">Cemeteries &amp; areas</p>
+                    <p style="font-family:${serif};font-size:14px;line-height:1.55;color:#1f2937;margin:0;">The specific cemeteries and parts of Texas your families ask about most.</p>
                   </td>
                   <td width="50%" valign="top" style="padding:6px 0 6px 10px;">
-                    <p style="font-family:${serif};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${b.primary};margin:0 0 4px;font-weight:700;">Price point</p>
-                    <p style="font-family:${serif};font-size:14px;line-height:1.55;color:#1f2937;margin:0;">The budget they're working within, and how many spaces they need.</p>
+                    <p style="font-family:${serif};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${b.primary};margin:0 0 4px;font-weight:700;">Typical price points</p>
+                    <p style="font-family:${serif};font-size:14px;line-height:1.55;color:#1f2937;margin:0;">The budget range families you serve usually work within.</p>
                   </td>
                 </tr>
               </table>
-              <p style="font-family:${serif};font-size:13px;line-height:1.65;color:#475569;margin:16px 0 0;font-style:italic;">We reach out to our seller network across Texas and get back to you — often within 24–48 hours — with plots that fit. If nothing matches, we say so honestly. No pressure, no cost to the family until they choose to move forward.</p>
+              <p style="font-family:${serif};font-size:13px;line-height:1.65;color:#475569;margin:16px 0 0;font-style:italic;">We then hold ongoing inventory in those cemeteries and price bands, so when a family walks in options are already available — not something we scramble to find after the call.</p>
             </td></tr>
           </table>
         </td></tr>
@@ -105,14 +105,14 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:8px 0;">
             <tr>
               <td width="33%" valign="top" style="background:${b.bgAccent};padding:22px 18px;border-radius:6px;">
-                <p style="font-family:${serif};font-size:24px;color:${b.primary};margin:0 0 6px;font-weight:700;line-height:1;">15–50%</p>
-                <p style="font-family:${serif};font-size:11px;line-height:1.5;color:#1f2937;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Below retail</p>
-                <p style="font-family:${serif};font-size:12px;line-height:1.5;color:#475569;margin:6px 0 0;">Instant savings for grieving families.</p>
+                <p style="font-family:${serif};font-size:24px;color:${b.primary};margin:0 0 6px;font-weight:700;line-height:1;">~$1,000</p>
+                <p style="font-family:${serif};font-size:11px;line-height:1.5;color:#1f2937;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Per referral</p>
+                <p style="font-family:${serif};font-size:12px;line-height:1.5;color:#475569;margin:6px 0 0;">Paid to your funeral home at closing.</p>
               </td>
               <td width="33%" valign="top" style="background:${b.bgAccent};padding:22px 18px;border-radius:6px;">
-                <p style="font-family:${serif};font-size:24px;color:${b.primary};margin:0 0 6px;font-weight:700;line-height:1;">24–48h</p>
-                <p style="font-family:${serif};font-size:11px;line-height:1.5;color:#1f2937;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Sourcing turnaround</p>
-                <p style="font-family:${serif};font-size:12px;line-height:1.5;color:#475569;margin:6px 0 0;">From your request to real options.</p>
+                <p style="font-family:${serif};font-size:24px;color:${b.primary};margin:0 0 6px;font-weight:700;line-height:1;">Ready</p>
+                <p style="font-family:${serif};font-size:11px;line-height:1.5;color:#1f2937;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Standing inventory</p>
+                <p style="font-family:${serif};font-size:12px;line-height:1.5;color:#475569;margin:6px 0 0;">In the cemeteries your families ask for.</p>
               </td>
               <td width="34%" valign="top" style="background:${b.bgAccent};padding:22px 18px;border-radius:6px;">
                 <p style="font-family:${serif};font-size:24px;color:${b.primary};margin:0 0 6px;font-weight:700;line-height:1;">0h</p>
@@ -122,6 +122,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
             </tr>
           </table>
         </td></tr>
+
 
         <!-- HOW IT WORKS -->
         <tr><td style="padding:36px 44px 8px;">
@@ -133,8 +134,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
                 <div style="width:36px;height:36px;background:${b.primary};color:#ffffff;border-radius:999px;font-family:${serif};font-size:15px;font-weight:700;text-align:center;line-height:36px;">1</div>
               </td>
               <td valign="top" style="padding:0 0 20px 0;">
-                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">Send us the family's location + price point.</p>
-                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">A quick email or 2-minute call is enough. Which cemetery or area, how many spaces, and the budget.</p>
+                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">Tell us your cemeteries and price points — once.</p>
+                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">A quick email or 5-minute call. We build a standing inventory around what your families need.</p>
               </td>
             </tr>
             <tr>
@@ -142,8 +143,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
                 <div style="width:36px;height:36px;background:${b.primary};color:#ffffff;border-radius:999px;font-family:${serif};font-size:15px;font-weight:700;text-align:center;line-height:36px;">2</div>
               </td>
               <td valign="top" style="padding:0 0 20px 0;">
-                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">We source, present, and handle every step.</p>
-                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">Matching plots from inventory or actively sourced from our seller network — plus contracts, cemetery transfer paperwork, and family communication.</p>
+                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">Refer families to us — we handle every step.</p>
+                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">Options are already on the shelf. We handle contracts, cemetery transfer paperwork, and family communication.</p>
               </td>
             </tr>
             <tr>
@@ -151,10 +152,11 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
                 <div style="width:36px;height:36px;background:${b.primary};color:#ffffff;border-radius:999px;font-family:${serif};font-size:15px;font-weight:700;text-align:center;line-height:36px;">3</div>
               </td>
               <td valign="top" style="padding:0 0 20px 0;">
-                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">You get a referral check at closing.</p>
-                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">Every closed sale pays a referral commission mailed directly to your funeral home. No invoicing, no chasing.</p>
+                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">You get ~$1,000 per referral at closing.</p>
+                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">A referral commission of approximately $1,000 per closed family, mailed directly to your funeral home.</p>
               </td>
             </tr>
+
           </table>
         </td></tr>
 
@@ -165,8 +167,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
               <p style="font-family:${serif};font-size:13px;color:${b.primary};margin:0 0 12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">What we handle for you</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Sourcing plots to match location &amp; budget</td>
-                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ Valuation &amp; competitive pricing</td>
+                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Standing inventory in your cemeteries</td>
+                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ Pricing within your families' budgets</td>
                 </tr>
                 <tr>
                   <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Contracts &amp; escrow</td>
@@ -174,7 +176,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
                 </tr>
                 <tr>
                   <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 8px 4px 0;line-height:1.6;">✓ Family communication</td>
-                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ Referral commission to you</td>
+                  <td width="50%" valign="top" style="font-family:${serif};font-size:14px;color:#1f2937;padding:4px 0 4px 8px;line-height:1.6;">✓ ~$1,000 commission per referral</td>
+
                 </tr>
               </table>
             </td></tr>
@@ -183,15 +186,16 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
         <!-- COVERAGE -->
         <tr><td style="padding:28px 44px 8px;text-align:center;">
-          <p style="font-family:${serif};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#9a8f7a;margin:0 0 10px;font-weight:700;">Sourcing statewide across</p>
+          <p style="font-family:${serif};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#9a8f7a;margin:0 0 10px;font-weight:700;">Inventory statewide across</p>
           <div>${regionPills}</div>
         </td></tr>
 
         <!-- CTA -->
         <tr><td align="center" style="padding:32px 44px 8px;">
           <a href="${esc(ctx.siteUrl || b.siteUrl)}/partners" style="display:inline-block;background:${b.primary};color:${b.primaryFg};font-family:${serif};font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:14px 32px;text-decoration:none;font-weight:600;">Become a Referral Partner</a>
-          <p style="font-family:${serif};font-size:12px;color:#9a8f7a;margin:14px 0 0;font-style:italic;">Or just reply with what a family needs — we'll start sourcing today.</p>
+          <p style="font-family:${serif};font-size:12px;color:#9a8f7a;margin:14px 0 0;font-style:italic;">Or just reply with the cemeteries and price points your families ask for — we'll build your inventory.</p>
         </td></tr>
+
 
         <!-- SIGNATURE -->
         <tr><td style="padding:32px 44px 40px;">
@@ -210,20 +214,21 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
   const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
 
-Texas Cemetery Brokers helps funeral homes offer families affordable cemetery property — and pays a referral commission on every closed sale.
+Texas Cemetery Brokers partners with funeral homes across Texas. We pay approximately $1,000 per family you refer that closes with us.
 
-The part most partners value most: TELL US WHAT THE FAMILY NEEDS AND WE SOURCE THE PLOT.
-- Location: cemetery, city, or area of Texas
-- Price point: budget and how many spaces
-We reach out to our statewide seller network and typically come back within 24-48 hours with real options — priced 15%-50% below retail.
+The part most partners value most: TELL US THE CEMETERIES AND AREAS YOUR FAMILIES ASK FOR, AND WE MAINTAIN STANDING INVENTORY IN THOSE PLACES.
+- Cemeteries & areas your families most often need
+- Typical price points they work within
+So when a family walks in, options are already on the shelf — not something we scramble to find after the call.
 
 How it works:
-1. Send us the family's location + price point.
-2. We source, present, and handle every step (contracts, cemetery transfer, family comms).
-3. You get a referral check at closing.
+1. Tell us your cemeteries and price points, once.
+2. Refer families to us — we handle contracts, cemetery transfer, family communication.
+3. You get approximately $1,000 per referral at closing.
 
 Become a partner: ${ctx.siteUrl || b.siteUrl}/partners
-Or reply to this email with what a family needs — we'll start sourcing today.
+Or reply with the cemeteries and price points your families ask for.
+
 
 Warmly,
 The team at Texas Cemetery Brokers
@@ -511,7 +516,7 @@ export const TEXAS_INTRO: TemplateDef = {
   label: "Intro to mortuaries",
   brand: "texas",
   defaultSubject: "We'll source the cemetery plot your family needs",
-  defaultPreheader: "Tell us the location and price point — we source below-retail plots across Texas and pay your funeral home a referral commission on every sale.",
+  defaultPreheader: "Tell us the cemeteries and price points your families ask for — we keep standing inventory ready and pay approximately $1,000 per referral.",
   render: renderTexasIntro,
 };
 
