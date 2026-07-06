@@ -302,8 +302,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (row.matched_submission_id && texasIds.includes(row.matched_submission_id)) {
           candidateIds.add(row.matched_submission_id);
         }
-        for (const [addr, sid] of emailToSub.entries()) {
-          if (fromAddr.includes(addr) || toAddrs.includes(addr)) candidateIds.add(sid);
+        for (const [addr, sids] of emailToSub.entries()) {
+          if (fromAddr.includes(addr) || toAddrs.includes(addr)) {
+            for (const sid of sids) candidateIds.add(sid);
+          }
         }
         for (const sid of candidateIds) {
           if (latestPerSub.has(sid)) continue;
