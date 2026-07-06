@@ -197,24 +197,16 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
   const html = `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
-<body style="margin:0;padding:0;background:#f4f6fb;font-family:${sans};color:#0f172a;">
+<body style="margin:0;padding:0;background:#dbe4f2;font-family:${sans};color:#0f172a;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6fb;padding:32px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dbe4f2;padding:36px 14px;">
     <tr><td align="center">
-      <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px rgba(30,58,138,0.08);">
+      <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(30,58,138,0.12);">
 
         <!-- HEADER -->
-        <tr><td style="background:#ffffff;padding:28px 40px 20px;border-bottom:1px solid #e2e8f0;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td valign="middle" align="left" style="line-height:0;">
-                <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png" alt="${esc(b.name)}" width="120" style="display:inline-block;width:120px;height:auto;object-fit:contain;">
-              </td>
-              <td valign="middle" align="right" style="font-family:${sans};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${b.primary};font-weight:700;">
-                Save families 15% – 50%
-              </td>
-            </tr>
-          </table>
+        <tr><td align="center" style="background:#ffffff;padding:26px 40px 18px;border-bottom:1px solid #e2e8f0;">
+          <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png" alt="${esc(b.name)}" width="92" style="display:block;width:92px;height:auto;object-fit:contain;margin:0 auto 10px;">
+          <p style="font-family:${sans};font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:${b.primary};font-weight:700;margin:0;">Save families 15% – 50%</p>
         </td></tr>
 
         <!-- INTRO -->
