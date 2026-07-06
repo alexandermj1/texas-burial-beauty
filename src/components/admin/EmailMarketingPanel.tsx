@@ -1,10 +1,11 @@
 // Admin → Email Marketing tab.
 // Brand switcher (Texas / Bayer) with three sub-tabs: Audience, Compose, Campaigns.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Upload, Send, Loader2, Trash2, Search, Mail, Users, History, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { Upload, Send, Loader2, Trash2, Search, Mail, Users, History, FileText, CheckCircle2, AlertCircle, FileSignature } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BRAND_UI, MARKETING_TEMPLATES, type MarketingBrand } from "@/lib/marketingBrands";
+import BayerPurchaseOfferPanel from "./BayerPurchaseOfferPanel";
 
 interface Contact {
   id: string;
@@ -39,7 +40,7 @@ interface Campaign {
   created_at: string;
 }
 
-type SubTab = "audience" | "compose" | "campaigns";
+type SubTab = "audience" | "compose" | "campaigns" | "offer";
 
 const EmailMarketingPanel = () => {
   const { toast } = useToast();
@@ -78,11 +79,12 @@ const EmailMarketingPanel = () => {
             })}
           </div>
         </div>
-        <div className="mt-4 flex gap-1 border-b border-border">
+        <div className="mt-4 flex gap-1 border-b border-border flex-wrap">
           {([
             { key: "audience", label: "Audience", Icon: Users },
             { key: "compose", label: "Compose", Icon: Mail },
             { key: "campaigns", label: "Campaigns", Icon: History },
+            ...(brand === "bayer" ? [{ key: "offer" as SubTab, label: "Purchase Offer", Icon: FileSignature }] : []),
           ] as { key: SubTab; label: string; Icon: any }[]).map(({ key, label, Icon }) => {
             const active = subTab === key;
             return (
@@ -106,6 +108,7 @@ const EmailMarketingPanel = () => {
       {subTab === "audience" && <AudiencePanel brand={brand} />}
       {subTab === "compose" && <ComposePanel brand={brand} />}
       {subTab === "campaigns" && <CampaignsPanel brand={brand} />}
+      {subTab === "offer" && brand === "bayer" && <BayerPurchaseOfferPanel />}
 
       {/* DNS setup reminder */}
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
