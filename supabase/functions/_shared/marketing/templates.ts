@@ -510,8 +510,8 @@ export const TEXAS_INTRO: TemplateDef = {
   key: "texas-intro-mortuaries",
   label: "Intro to mortuaries",
   brand: "texas",
-  defaultSubject: "A quieter revenue stream for your funeral home",
-  defaultPreheader: "We list unused cemetery plots for families you serve — and pay you a referral commission on every sale.",
+  defaultSubject: "We'll source the cemetery plot your family needs",
+  defaultPreheader: "Tell us the location and price point — we source below-retail plots across Texas and pay your funeral home a referral commission on every sale.",
   render: renderTexasIntro,
 };
 
