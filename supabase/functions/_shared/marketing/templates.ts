@@ -345,13 +345,22 @@ function renderBayerIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
         <!-- SIGNATURE -->
         <tr><td style="padding:32px 40px 40px;">
-          <p style="font-family:${sans};font-size:14px;line-height:1.6;color:#334155;margin:0 0 6px;">Best regards,</p>
-          <p style="font-family:${sans};font-size:15px;line-height:1.5;color:#0f172a;margin:0;font-weight:700;">Simon</p>
-          <p style="font-family:${sans};font-size:13px;line-height:1.5;color:#64748b;margin:2px 0 8px;">CEO, Bayer Cemetery Brokers</p>
-          <p style="font-family:${sans};font-size:13px;line-height:1.6;color:#334155;margin:0;">
-            <a href="mailto:Simon@BayerBrokers.com" style="color:${b.primary};text-decoration:none;font-weight:600;">Simon@BayerBrokers.com</a>
-            &nbsp;·&nbsp; <a href="tel:+12139520731" style="color:${b.primary};text-decoration:none;font-weight:600;">(213) 952-0731</a>
-          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="top" width="88" style="padding-right:18px;">
+                <img src="${cdnHost}/__l5e/assets-v1/7653b838-cbae-4f70-838d-71062f1654e2/simon-ceo.jpg" alt="Simon, CEO" width="72" height="72" style="display:block;width:72px;height:72px;border-radius:999px;object-fit:cover;border:2px solid ${b.bgAccent};">
+              </td>
+              <td valign="middle">
+                <p style="font-family:${sans};font-size:13px;line-height:1.5;color:#64748b;margin:0 0 2px;">Best regards,</p>
+                <p style="font-family:${sans};font-size:16px;line-height:1.3;color:#0f172a;margin:0;font-weight:700;letter-spacing:-0.01em;">Simon</p>
+                <p style="font-family:${sans};font-size:12px;line-height:1.4;color:#64748b;margin:2px 0 6px;">CEO · Bayer Cemetery Brokers</p>
+                <p style="font-family:${sans};font-size:12px;line-height:1.5;color:#334155;margin:0;">
+                  <a href="mailto:Simon@BayerBrokers.com" style="color:${b.primary};text-decoration:none;font-weight:600;">Simon@BayerBrokers.com</a>
+                  &nbsp;·&nbsp; <a href="tel:+12139520731" style="color:${b.primary};text-decoration:none;font-weight:600;">(213) 952-0731</a>
+                </p>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
         <!-- FOOTER -->
