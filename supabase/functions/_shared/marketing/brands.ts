@@ -42,9 +42,9 @@ export const BRANDS: Record<MarketingBrand, BrandConfig> = {
     key: "bayer",
     name: "Bayer Cemetery Brokers",
     fromName: "Bayer Cemetery Brokers",
-    fromEmail: "hello@news.bayercemeterybrokers.com",
+    fromEmail: "hello@bayerbrokers.com",
     replyTo: "info@bayercemeterybrokers.com",
-    senderDomain: "news.bayercemeterybrokers.com",
+    senderDomain: "bayerbrokers.com",
     siteUrl: "https://www.bayercemeterybrokers.com",
     logoUrl:
       "https://www.texascemeterybrokers.com/__l5e/assets-v1/71e10642-6ab0-460b-8fb1-538ab896b0d2/bayer-logo-white.png",
