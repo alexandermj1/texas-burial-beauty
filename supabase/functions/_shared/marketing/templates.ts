@@ -186,15 +186,16 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
         <!-- COVERAGE -->
         <tr><td style="padding:28px 44px 8px;text-align:center;">
-          <p style="font-family:${serif};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#9a8f7a;margin:0 0 10px;font-weight:700;">Sourcing statewide across</p>
+          <p style="font-family:${serif};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#9a8f7a;margin:0 0 10px;font-weight:700;">Inventory statewide across</p>
           <div>${regionPills}</div>
         </td></tr>
 
         <!-- CTA -->
         <tr><td align="center" style="padding:32px 44px 8px;">
           <a href="${esc(ctx.siteUrl || b.siteUrl)}/partners" style="display:inline-block;background:${b.primary};color:${b.primaryFg};font-family:${serif};font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:14px 32px;text-decoration:none;font-weight:600;">Become a Referral Partner</a>
-          <p style="font-family:${serif};font-size:12px;color:#9a8f7a;margin:14px 0 0;font-style:italic;">Or just reply with what a family needs — we'll start sourcing today.</p>
+          <p style="font-family:${serif};font-size:12px;color:#9a8f7a;margin:14px 0 0;font-style:italic;">Or just reply with the cemeteries and price points your families ask for — we'll build your inventory.</p>
         </td></tr>
+
 
         <!-- SIGNATURE -->
         <tr><td style="padding:32px 44px 40px;">
