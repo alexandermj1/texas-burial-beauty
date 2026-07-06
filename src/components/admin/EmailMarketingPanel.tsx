@@ -590,7 +590,14 @@ function parseCsv(text: string): Record<string, string>[] {
   if (field.length || cur.length) { cur.push(field); rows.push(cur); }
   if (rows.length < 2) return [];
   const header = rows[0].map((h) => h.trim().toLowerCase().replace(/\s+/g, "_"));
-  const known = new Set(["email", "first_name", "firstname", "fname", "last_name", "lastname", "lname", "company", "mortuary", "funeral_home", "organization", "city", "state", "phone", "telephone"]);
+  const known = new Set([
+    "email", "email_address", "e_mail",
+    "first_name", "firstname", "fname",
+    "last_name", "lastname", "lname",
+    "company", "mortuary", "funeral_home", "funeral_home_name", "organization",
+    "city", "state", "phone", "telephone",
+    "website", "website_domain", "domain",
+  ]);
   return rows.slice(1).filter((r) => r.some((v) => v.trim())).map((r) => {
     const obj: Record<string, any> = { _extra: {} };
     header.forEach((h, idx) => {
@@ -601,6 +608,7 @@ function parseCsv(text: string): Record<string, string>[] {
     });
     return obj;
   });
+
 }
 
 export default EmailMarketingPanel;
