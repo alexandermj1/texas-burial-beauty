@@ -106,7 +106,10 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     };
     const map = new Map<string, Stat>();
     for (const r of rows) {
-      const c = r.canonical_name || canonical(r.name);
+      // Use the same canonical rule as submissions so directory rows and
+      // submission-derived cemeteries line up (the stored canonical_name
+      // column strips words like "memorial park" and no longer matches).
+      const c = canonical(r.name);
       if (!c) continue;
       map.set(c, {
         canon: c,
