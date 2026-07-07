@@ -547,6 +547,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return m;
   }, [texasSubmissions]);
 
+  // Texas cemetery directory profiles, keyed by canonical name. Used to enrich the
+  // selected submission's cemetery box with our known transfer fee / contact /
+  // description / section pricing.
+  const [texasCemProfiles, setTexasCemProfiles] = useState<Map<string, any>>(new Map());
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from("texas_cemeteries" as any).select("*");
+      if (cancelled || !data) return;
+      const m = new Map<string, any>();
+      for (const row of data as any[]) {
+        const k = _canon(row.name || "");
+        if (k) m.set(k, row);
+      }
+      setTexasCemProfiles(m);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  const [expandedCemetery, setExpandedCemetery] = useState(false);
+
+
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
