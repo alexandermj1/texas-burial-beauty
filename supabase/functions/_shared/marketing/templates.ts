@@ -75,6 +75,26 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
           <p style="font-family:${serif};font-size:15px;line-height:1.65;color:#334155;margin:0;">We handle everything for the families ${companyName}${cityLine} serves — in person, at the cemetery of their choice. Partner funeral homes receive a <strong>$1,000 referral</strong> at closing.</p>
         </td></tr>
 
+        <!-- PHOTO STRIP -->
+        <tr><td style="padding:24px 44px 8px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:6px 0;">
+            <tr>
+              <td width="34%" valign="top" style="line-height:0;">
+                <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/e129d242-4623-4bcc-acee-75da380da434/cemetery-grounds-1.jpg" alt="Cemetery grounds" width="180" style="display:block;width:100%;height:130px;object-fit:cover;border-radius:6px;">
+              </td>
+              <td width="33%" valign="top" style="line-height:0;">
+                <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/f66efcf6-8bad-4a28-88ac-54165f569077/cemetery-grounds-2.jpg" alt="Cemetery grounds" width="180" style="display:block;width:100%;height:130px;object-fit:cover;border-radius:6px;">
+              </td>
+              <td width="33%" valign="top" style="line-height:0;">
+                <img src="https://www.texascemeterybrokers.com/__l5e/assets-v1/c9c185d2-cbce-4be6-9720-812587be823e/cemetery-grounds-3.jpg" alt="Cemetery grounds" width="180" style="display:block;width:100%;height:130px;object-fit:cover;border-radius:6px;">
+              </td>
+            </tr>
+          </table>
+          <p style="font-family:${serif};font-size:11px;line-height:1.5;color:#9a8f7a;margin:10px 0 0;text-align:center;font-style:italic;">Real families. Real cemeteries. Real savings across Texas.</p>
+        </td></tr>
+
+
+
 
         <!-- SOURCING CALLOUT (the emphasis) -->
         <tr><td style="padding:22px 44px 8px;">
