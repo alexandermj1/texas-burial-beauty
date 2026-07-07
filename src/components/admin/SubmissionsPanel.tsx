@@ -56,7 +56,7 @@ const cemCountBadgeTint = (count: number): string => {
   if (count >= 100) return "bg-rose-600 text-white";
   if (count >= 50)  return "bg-amber-600 text-white";
   if (count >= 25)  return "bg-orange-500 text-white";
-  if (count >= 10)  return "bg-emerald-600 text-white";
+  if (count >= 10)  return "bg-teal-600 text-white";
   if (count >= 3)   return "bg-sky-600 text-white";
   if (count >= 1)   return "bg-primary text-primary-foreground";
   return "bg-muted text-muted-foreground";
