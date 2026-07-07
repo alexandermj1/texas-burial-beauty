@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               from: `${brandCfg.fromName} <${brandCfg.fromEmail}>`,
               to: [c.email],
+              bcc: [brandCfg.replyTo],
               reply_to: brandCfg.replyTo,
               subject: rendered.subject,
               html: rendered.html,
