@@ -1315,12 +1315,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
-                {selectedBayerStage && (
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border ${BAYER_STAGE_META[selectedBayerStage].cls}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${BAYER_STAGE_META[selectedBayerStage].dot}`} />
-                    {BAYER_STAGE_META[selectedBayerStage].label}
-                  </span>
-                )}
+                {selected.cemetery && (() => {
+                  const selCanon = _canon(selected.cemetery || "");
+                  const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
+                  return (
+                    <button
+                      onClick={() => {
+                        if (!selCanon) return;
+                        setRegionFilter("texas");
+                        setCemeteryCanon(selCanon);
+                        setCemeteryLabel(selected.cemetery);
+                        setSelectedId(null);
+                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border max-w-[240px] transition-colors hover:opacity-90 ${cemCountTint(subCount)}`}
+                      title={`Filter to submissions at ${selected.cemetery} (${subCount})`}
+                    >
+                      <Building2 className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{selected.cemetery}</span>
+                      <span className={`shrink-0 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded-full text-[10px] font-bold ${cemCountBadgeTint(subCount)}`}>
+                        {subCount}
+                      </span>
+                    </button>
+                  );
+                })()}
                 {(() => {
                   const sViewers = viewersFor(selected.id);
                   return (
