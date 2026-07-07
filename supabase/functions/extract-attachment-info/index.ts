@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
 
     const { data: row, error: rowErr } = await supabase
       .from("customer_files")
-      .select("id, file_path, file_name, mime_type, file_size, extraction_status")
+      .select("id, file_path, file_name, mime_type, file_size, extraction_status, customer_profile_id")
       .eq("id", fileId)
       .maybeSingle();
     if (rowErr || !row) return json({ error: `file lookup failed: ${rowErr?.message || "not found"}` }, 404);
@@ -124,6 +124,36 @@ Deno.serve(async (req) => {
         extracted_at: new Date().toISOString(),
       }).eq("id", fileId);
       return json({ status: "too_large" });
+    }
+
+    // Per-customer rate limiting so a spammy uploader can't burn the AI budget.
+    // Caps: 25 successful extractions in the last 24h, 150 lifetime per customer.
+    const DAILY_CAP = 25;
+    const LIFETIME_CAP = 150;
+    if (row.customer_profile_id) {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count: dayCount } = await supabase
+        .from("customer_files")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_profile_id", row.customer_profile_id)
+        .eq("extraction_status", "done")
+        .gte("extracted_at", since);
+      const { count: lifeCount } = await supabase
+        .from("customer_files")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_profile_id", row.customer_profile_id)
+        .eq("extraction_status", "done");
+      if ((dayCount ?? 0) >= DAILY_CAP || (lifeCount ?? 0) >= LIFETIME_CAP) {
+        const reason = (dayCount ?? 0) >= DAILY_CAP
+          ? `Daily extraction cap reached (${DAILY_CAP}/24h) for this customer`
+          : `Lifetime extraction cap reached (${LIFETIME_CAP}) for this customer`;
+        await supabase.from("customer_files").update({
+          extraction_status: "rate_limited",
+          extraction_error: reason,
+          extracted_at: new Date().toISOString(),
+        }).eq("id", fileId);
+        return json({ status: "rate_limited", reason });
+      }
     }
 
     // Mark pending so the UI can show progress
