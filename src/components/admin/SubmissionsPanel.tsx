@@ -576,7 +576,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
 
   // Record a view for this admin when they open a submission
-  useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); }, [selected?.id, myId]);
+  useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); setEditCemeteryInline(false); }, [selected?.id, myId]);
 
   // Pull deed-extracted owner names for the currently selected submission so the
   // seller-intake template can ask the right ownership follow-up question.
