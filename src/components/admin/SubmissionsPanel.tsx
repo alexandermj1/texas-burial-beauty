@@ -1803,6 +1803,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const aiDeed = aiByLabel.get("Owner(s) on record") || aiByLabel.get("Purchaser");
               const customerDeed = s.deed_owner_names ? String(s.deed_owner_names).trim() : "";
               const rows: Array<{ label: string; value: string }> = [
+                { label: "Cemetery name", value: (s.cemetery_original as string) || s.cemetery || "" },
                 { label: "Property type", value: s.property_type || "" },
                 { label: "Timeline", value: s.timeline || "" },
                 { label: "Budget", value: s.budget || "" },
