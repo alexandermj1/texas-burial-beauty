@@ -37,6 +37,16 @@ const salutation = (firstName?: string | null) => {
   return n ? `Dear ${esc(n)},` : "Hello,";
 };
 
+// Texas mortuary campaigns are sent to a funeral home, not an individual —
+// address the mortuary by name (falls back to first name, then generic).
+const mortuarySalutation = (ctx: RenderContext) => {
+  const company = (ctx.company || "").trim();
+  if (company) return `Dear ${esc(company)},`;
+  const n = (ctx.firstName || "").trim().split(/\s+/)[0] || "";
+  return n ? `Dear ${esc(n)},` : "Hello,";
+};
+
+
 // -------------------- Texas Cemetery Brokers --------------------
 
 function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; preheader?: string }): RenderedEmail {
@@ -70,7 +80,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
         <!-- INTRO -->
         <tr><td style="padding:40px 44px 8px;">
-          <p style="font-family:${serif};font-size:11px;line-height:1;color:${b.primary};margin:0 0 12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;">${salutation(ctx.firstName)}</p>
+          <p style="font-family:${serif};font-size:11px;line-height:1;color:${b.primary};margin:0 0 12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;">${mortuarySalutation(ctx)}</p>
           <h1 style="font-family:${serif};font-size:28px;line-height:1.2;color:${b.primary};margin:0 0 18px;font-weight:400;letter-spacing:-0.01em;">Save your families <strong style="font-weight:700;">15–50%</strong> on cemetery plots — and get paid for the referral.</h1>
           <p style="font-family:${serif};font-size:15px;line-height:1.65;color:#334155;margin:0;">We handle everything for the families ${companyName}${cityLine} serves — in person, at the cemetery of their choice. Partner funeral homes receive a <strong>$1,000 referral</strong> at closing.</p>
         </td></tr>
@@ -239,7 +249,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
   </table>
 </body></html>`;
 
-  const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
+  const text = `${mortuarySalutation(ctx).replace(/&amp;/g, "&")}
+
 
 Save your families 15–50% on cemetery plots — and get paid for the referral. We handle everything for the families ${ctx.company || "your funeral home"}${ctx.city ? ` in ${ctx.city}` : ""} serves, in person at the cemetery of their choice. Partner funeral homes receive a $1,000 referral at closing.
 
