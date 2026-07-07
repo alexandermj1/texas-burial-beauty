@@ -221,7 +221,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
   const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
 
-We help the families you serve save 15–50% on cemetery plots — with compassionate, in-person service during the week they need it most. Our staff personally walks every family through options at the cemetery of their choice, giving them the most choice at the lowest price and saving your team hours per case. Partner funeral homes also receive a $1,000 referral at closing.
+Save your families 15–50% on cemetery plots — and get paid for the referral. We handle everything for the families ${ctx.company || "your funeral home"}${ctx.city ? ` in ${ctx.city}` : ""} serves, in person at the cemetery of their choice. Partner funeral homes receive a $1,000 referral at closing.
 
 The part most partners value most: TELL US THE CEMETERIES AND AREAS YOUR FAMILIES ASK FOR, AND WE MAINTAIN STANDING INVENTORY IN THOSE PLACES.
 - Cemeteries & areas your families most often need
