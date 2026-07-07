@@ -74,8 +74,12 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
         .select("*")
         .order("created_at", { ascending: true });
       if (cancelled) return;
+      // Always canonicalise from the display name — the stored `canonical_name`
+      // column was produced by a stricter DB helper (strips "memorial park",
+      // "cemetery", etc.) and no longer matches the app-side key used by the
+      // submissions list, which caused profiles to look empty.
       const match = ((data as any[]) || []).find(
-        (r) => (r.canonical_name || canonicalize(r.name)) === canon
+        (r) => canonicalize(r.name) === canon
       );
       setProfile((match as any) || null);
       setLoading(false);
