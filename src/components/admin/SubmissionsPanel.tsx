@@ -47,7 +47,7 @@ const cemCountTint = (count: number): string => {
   if (count >= 100) return "bg-rose-100/70 dark:bg-rose-950/40 border-rose-300/60 dark:border-rose-900/60";
   if (count >= 50)  return "bg-amber-100/60 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-900/60";
   if (count >= 25)  return "bg-orange-50/80 dark:bg-orange-950/25 border-orange-200/70 dark:border-orange-900/50";
-  if (count >= 10)  return "bg-emerald-50/80 dark:bg-emerald-950/25 border-emerald-200/70 dark:border-emerald-900/50";
+  if (count >= 10)  return "bg-teal-50/80 dark:bg-teal-950/25 border-teal-200/70 dark:border-teal-900/50";
   if (count >= 3)   return "bg-sky-50/70 dark:bg-sky-950/25 border-sky-200/70 dark:border-sky-900/40";
   if (count >= 1)   return "bg-primary/5 border-primary/30";
   return "bg-muted/40 border-border/50";
@@ -56,7 +56,7 @@ const cemCountBadgeTint = (count: number): string => {
   if (count >= 100) return "bg-rose-600 text-white";
   if (count >= 50)  return "bg-amber-600 text-white";
   if (count >= 25)  return "bg-orange-500 text-white";
-  if (count >= 10)  return "bg-emerald-600 text-white";
+  if (count >= 10)  return "bg-teal-600 text-white";
   if (count >= 3)   return "bg-sky-600 text-white";
   if (count >= 1)   return "bg-primary text-primary-foreground";
   return "bg-muted text-muted-foreground";
@@ -1315,12 +1315,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
-                {selectedBayerStage && (
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border ${BAYER_STAGE_META[selectedBayerStage].cls}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${BAYER_STAGE_META[selectedBayerStage].dot}`} />
-                    {BAYER_STAGE_META[selectedBayerStage].label}
-                  </span>
-                )}
+                {selected.cemetery && (() => {
+                  const selCanon = _canon(selected.cemetery || "");
+                  const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
+                  return (
+                    <button
+                      onClick={() => {
+                        if (!selCanon) return;
+                        setRegionFilter("texas");
+                        setCemeteryCanon(selCanon);
+                        setCemeteryLabel(selected.cemetery);
+                        setSelectedId(null);
+                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border max-w-[240px] transition-colors hover:opacity-90 ${cemCountTint(subCount)}`}
+                      title={`Filter to submissions at ${selected.cemetery} (${subCount})`}
+                    >
+                      <Building2 className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{selected.cemetery}</span>
+                      <span className={`shrink-0 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded-full text-[10px] font-bold ${cemCountBadgeTint(subCount)}`}>
+                        {subCount}
+                      </span>
+                    </button>
+                  );
+                })()}
                 {(() => {
                   const sViewers = viewersFor(selected.id);
                   return (
