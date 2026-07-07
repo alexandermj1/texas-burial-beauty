@@ -2127,6 +2127,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               spaces={selected.spaces}
             />
           )}
+          <ReassignCemeteryDialog
+            open={reassignCemeteryOpen}
+            onClose={() => setReassignCemeteryOpen(false)}
+            submissionId={selected.id}
+            currentCemetery={selected.cemetery}
+            customerOriginal={(selected as any).cemetery_original}
+            onSaved={() => onRefresh?.()}
+          />
         </>
       )}
 
