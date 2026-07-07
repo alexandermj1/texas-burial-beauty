@@ -123,19 +123,59 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
           date: s.date || todayISO(),
         }));
     }
+    const oldName = profile.name;
+    const newName = typeof payload.name === "string" ? payload.name.trim() : oldName;
+    const nameChanged = !!newName && newName !== oldName;
+    if (payload.name !== undefined) payload.name = newName;
+
     const { error } = await supabase
       .from("texas_cemeteries" as any)
       .update(payload)
       .eq("id", profile.id);
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
       return;
     }
+
+    // If the cemetery was renamed, cascade the new name onto every
+    // submission that was previously matched to the old name so the
+    // existing assignments stay intact (just with the updated name).
+    if (nameChanged) {
+      const { data: subs, error: subsErr } = await supabase
+        .from("contact_submissions" as any)
+        .select("id, cemetery, cemetery_original, cemetery_merge_history")
+        .eq("cemetery", oldName);
+      if (subsErr) {
+        toast({ title: "Renamed, but couldn't update submissions", description: subsErr.message, variant: "destructive" });
+      } else if (subs && subs.length) {
+        const stamp = new Date().toISOString();
+        await Promise.all(
+          (subs as any[]).map((s) => {
+            const history = Array.isArray(s.cemetery_merge_history) ? s.cemetery_merge_history : [];
+            const patch: any = {
+              cemetery: newName,
+              cemetery_merge_history: [
+                ...history,
+                { at: stamp, from: oldName, to: newName, kind: "rename" },
+              ],
+            };
+            if (!s.cemetery_original) patch.cemetery_original = oldName;
+            return supabase.from("contact_submissions" as any).update(patch).eq("id", s.id);
+          })
+        );
+        toast({ title: "Profile saved", description: `Renamed and updated ${subs.length} submission${subs.length === 1 ? "" : "s"}.` });
+      } else {
+        toast({ title: "Profile saved" });
+      }
+    } else {
+      toast({ title: "Profile saved" });
+    }
+
+    setSaving(false);
     setProfile({ ...profile, ...(payload as any) });
     setEdits({});
     setEditing(false);
-    toast({ title: "Profile saved" });
   };
 
   const v = <K extends keyof Profile>(k: K): any => (edits[k] !== undefined ? edits[k] : (profile?.[k] ?? ""));
