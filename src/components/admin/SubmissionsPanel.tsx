@@ -910,12 +910,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             onClick={async () => {
               const { data, error } = await supabase
                 .from("contact_submissions" as any)
-                .select("cemetery,cemetery_city,property_type,section,lawn,space_numbers,spaces,plot_count,seller_attachments,created_at")
+                .select("id,customer_profile_id,cemetery,cemetery_city,property_type,section,lawn,space_numbers,spaces,plot_count,seller_attachments,created_at")
                 .is("deleted_at", null)
-                .not("seller_attachments", "is", null)
                 .order("cemetery", { ascending: true });
               if (error) { alert(error.message); return; }
-              const rows = ((data as any[]) || []).filter(r => Array.isArray(r.seller_attachments) && r.seller_attachments.length > 0);
+              const all = (data as any[]) || [];
+              const profileIds = Array.from(new Set(all.map(r => r.customer_profile_id).filter(Boolean)));
+              let profilesWithFiles = new Set<string>();
+              if (profileIds.length > 0) {
+                const { data: cf } = await supabase
+                  .from("customer_files" as any)
+                  .select("customer_profile_id")
+                  .in("customer_profile_id", profileIds);
+                profilesWithFiles = new Set(((cf as any[]) || []).map(r => r.customer_profile_id));
+              }
+              const rows = all.filter(r =>
+                (Array.isArray(r.seller_attachments) && r.seller_attachments.length > 0) ||
+                (r.customer_profile_id && profilesWithFiles.has(r.customer_profile_id))
+              );
               if (rows.length === 0) { alert("No submissions with attachments found."); return; }
               const esc = (v: any) => {
                 const s = v == null ? "" : String(v);
@@ -937,6 +949,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               document.body.appendChild(a); a.click(); a.remove();
               URL.revokeObjectURL(url);
             }}
+
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
             title="Download a CSV of all submissions with attachments — cemetery, section, and plot location — for retail price calls"
           >
