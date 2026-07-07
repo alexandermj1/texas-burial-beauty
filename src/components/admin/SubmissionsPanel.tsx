@@ -1724,9 +1724,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <RefreshCw className="w-3.5 h-3.5" /> Match to different cemetery
                   </button>
                 </div>
-                {selected.region && (
-                  <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
-                )}
                 {editCemeteryInline && selCanon && (
                   <div className="mt-3 pt-3 border-t border-border/40">
                     <CemeteryInfoCard
