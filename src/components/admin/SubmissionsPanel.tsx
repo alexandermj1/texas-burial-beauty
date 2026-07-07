@@ -567,6 +567,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { cancelled = true; };
   }, []);
   const [expandedCemetery, setExpandedCemetery] = useState(false);
+  const [editCemeteryInline, setEditCemeteryInline] = useState(false);
+  const [reassignCemeteryOpen, setReassignCemeteryOpen] = useState(false);
 
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
