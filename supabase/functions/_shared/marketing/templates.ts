@@ -37,6 +37,16 @@ const salutation = (firstName?: string | null) => {
   return n ? `Dear ${esc(n)},` : "Hello,";
 };
 
+// Texas mortuary campaigns are sent to a funeral home, not an individual —
+// address the mortuary by name (falls back to first name, then generic).
+const mortuarySalutation = (ctx: RenderContext) => {
+  const company = (ctx.company || "").trim();
+  if (company) return `Dear ${esc(company)},`;
+  const n = (ctx.firstName || "").trim().split(/\s+/)[0] || "";
+  return n ? `Dear ${esc(n)},` : "Hello,";
+};
+
+
 // -------------------- Texas Cemetery Brokers --------------------
 
 function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; preheader?: string }): RenderedEmail {
