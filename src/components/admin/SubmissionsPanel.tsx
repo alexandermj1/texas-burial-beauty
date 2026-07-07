@@ -1523,13 +1523,45 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               )}
             </div>
 
-            {/* Texas submissions: just show what the customer wrote — no CA contact directory */}
-            {selected.cemetery && (((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (() => {
+            {/* Texas submissions: show what the customer wrote + our matched
+                cemetery profile (transfer fee, contact, description, section pricing).
+                Tinted by submission volume, matching the Cemeteries directory panel. */}
+            {selected.cemetery && subRegion(selected) === "texas" && (() => {
               const selCanon = _canon(selected.cemetery || "");
+              const profile = selCanon ? texasCemProfiles.get(selCanon) : null;
+              const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
+              const sections: any[] = Array.isArray(profile?.sections) ? profile!.sections : [];
+              const hasProfileInfo = !!profile && !!(
+                profile.description || profile.typical_prices || profile.transfer_fee ||
+                profile.notes || profile.contact_name || profile.contact_phone ||
+                profile.contact_email || profile.address || profile.website ||
+                profile.process_info || sections.length
+              );
               return (
-              <div className="bg-muted/40 rounded-lg p-4 border border-border/50">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
-                <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
+              <div className={`rounded-lg p-4 border transition-colors ${cemCountTint(subCount)}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
+                    <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
+                    {profile && profile.name && _canon(profile.name) !== selCanon && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Matched profile: <span className="font-medium text-foreground">{profile.name}</span>
+                      </p>
+                    )}
+                    {profile?.city && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{profile.city}</p>
+                    )}
+                  </div>
+                  {selCanon && (
+                    <span
+                      className={`shrink-0 inline-flex items-center justify-center min-w-[36px] h-7 px-2 rounded-full text-[11px] font-bold ${cemCountBadgeTint(subCount)}`}
+                      title={`${subCount} submission${subCount === 1 ? "" : "s"} at this cemetery`}
+                    >
+                      {subCount}
+                    </span>
+                  )}
+                </div>
+
                 {(selected as any).cemetery_original && (selected as any).cemetery_original !== selected.cemetery && (
                   <div className="mt-2 pt-2 border-t border-border/40">
                     <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--status-nodocs-fg))] mb-1">
@@ -1552,6 +1584,89 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     )}
                   </div>
                 )}
+
+                {/* Matched profile summary + expandable detail */}
+                {profile && hasProfileInfo && (
+                  <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      {profile.transfer_fee != null && (
+                        <span className="text-foreground"><span className="text-muted-foreground">Transfer fee:</span> <span className="font-medium">${Number(profile.transfer_fee).toLocaleString()}</span></span>
+                      )}
+                      {profile.contact_phone && (
+                        <a href={`tel:${String(profile.contact_phone).replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                          <Phone className="w-3 h-3" /> {profile.contact_phone}
+                        </a>
+                      )}
+                      {profile.contact_email && (
+                        <a href={`mailto:${profile.contact_email}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                          <Mail className="w-3 h-3" /> {profile.contact_email}
+                        </a>
+                      )}
+                      {profile.website && (
+                        <a href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                          <ExternalLink className="w-3 h-3" /> Website
+                        </a>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setExpandedCemetery(v => !v)}
+                      className="text-[11px] text-primary hover:underline"
+                    >
+                      {expandedCemetery ? "Hide cemetery details" : "Show cemetery details"}
+                    </button>
+                    {expandedCemetery && (
+                      <div className="space-y-2 text-xs text-foreground/90">
+                        {profile.description && <p className="whitespace-pre-wrap">{profile.description}</p>}
+                        {profile.address && <p><span className="text-muted-foreground">Address:</span> {profile.address}</p>}
+                        {profile.contact_name && <p><span className="text-muted-foreground">Contact:</span> {profile.contact_name}</p>}
+                        {profile.process_info && (
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1">Transfer process</p>
+                            <p className="whitespace-pre-wrap">{profile.process_info}</p>
+                          </div>
+                        )}
+                        {sections.length > 0 && (
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1 mb-1">Section pricing</p>
+                            <div className="rounded-md border border-border overflow-hidden bg-background/60">
+                              <table className="w-full text-[11px]">
+                                <thead className="bg-muted/50 text-muted-foreground">
+                                  <tr>
+                                    <th className="text-left font-medium px-2 py-1">Section</th>
+                                    <th className="text-left font-medium px-2 py-1">Type</th>
+                                    <th className="text-right font-medium px-2 py-1">Price</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {[...sections].sort((a, b) => (b.date || "").localeCompare(a.date || "")).map((s: any) => (
+                                    <tr key={s.id} className="border-t border-border/60">
+                                      <td className="px-2 py-1 text-foreground">{s.name || "—"}</td>
+                                      <td className="px-2 py-1 text-muted-foreground">{s.property_type || "—"}</td>
+                                      <td className="px-2 py-1 text-right font-medium">{s.price != null ? `$${Number(s.price).toLocaleString()}` : "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                        {profile.typical_prices && (
+                          <p><span className="text-muted-foreground">Typical prices:</span> <span className="whitespace-pre-wrap">{profile.typical_prices}</span></p>
+                        )}
+                        {profile.notes && (
+                          <p><span className="text-muted-foreground">Internal notes:</span> <span className="whitespace-pre-wrap">{profile.notes}</span></p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {profile && !hasProfileInfo && (
+                  <p className="mt-3 pt-3 border-t border-border/40 text-[11px] text-muted-foreground italic">
+                    Profile exists but is empty — add transfer fee, contacts, and section pricing from the Cemeteries tab.
+                  </p>
+                )}
+
                 {selected.region && (
                   <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
                 )}
@@ -1574,8 +1689,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Cemetery contact directory + inventory match — CA submissions only */}
-            {selected.cemetery && !(((selected as any).inquiry_channel === "texas_buy_wizard") || (selected as any).state === "TX") && (() => {
+            {/* Cemetery contact directory + inventory match — Bayer (non-Texas) submissions only */}
+            {selected.cemetery && subRegion(selected) !== "texas" && (() => {
               const count = countFor(selected.cemetery);
               const match = lookupCemeteryContactMatch(selected.cemetery);
               const contact = match?.contact ?? null;
