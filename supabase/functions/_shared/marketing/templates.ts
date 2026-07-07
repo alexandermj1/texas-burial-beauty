@@ -249,7 +249,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
   </table>
 </body></html>`;
 
-  const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
+  const text = `${mortuarySalutation(ctx).replace(/&amp;/g, "&")}
+
 
 Save your families 15–50% on cemetery plots — and get paid for the referral. We handle everything for the families ${ctx.company || "your funeral home"}${ctx.city ? ` in ${ctx.city}` : ""} serves, in person at the cemetery of their choice. Partner funeral homes receive a $1,000 referral at closing.
 
