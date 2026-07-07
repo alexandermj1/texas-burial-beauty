@@ -82,7 +82,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
         <tr><td style="padding:40px 44px 8px;">
           <p style="font-family:${serif};font-size:11px;line-height:1;color:${b.primary};margin:0 0 12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;">${mortuarySalutation(ctx)}</p>
           <h1 style="font-family:${serif};font-size:28px;line-height:1.2;color:${b.primary};margin:0 0 18px;font-weight:400;letter-spacing:-0.01em;">Save your families <strong style="font-weight:700;">15–50%</strong> on cemetery plots — and get paid for the referral.</h1>
-          <p style="font-family:${serif};font-size:15px;line-height:1.65;color:#334155;margin:0;">We handle everything for the families ${companyName}${cityLine} serves — in person, at the cemetery of their choice. Partner funeral homes receive a <strong>$1,000 referral</strong> at closing.</p>
+          <p style="font-family:${serif};font-size:15px;line-height:1.65;color:#334155;margin:0;">We believe we can help save the families ${companyName} serves meaningful money on cemetery plots — and pay ${companyName} a <strong>$1,000 referral fee</strong> for every family we're able to help.</p>
         </td></tr>
 
         <!-- PHOTO STRIP -->
