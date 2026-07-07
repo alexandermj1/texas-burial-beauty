@@ -907,6 +907,42 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
           )}
           <button
+            onClick={async () => {
+              const { data, error } = await supabase
+                .from("contact_submissions" as any)
+                .select("cemetery,cemetery_city,property_type,section,lawn,space_numbers,spaces,plot_count,seller_attachments,created_at")
+                .is("deleted_at", null)
+                .not("seller_attachments", "is", null)
+                .order("cemetery", { ascending: true });
+              if (error) { alert(error.message); return; }
+              const rows = ((data as any[]) || []).filter(r => Array.isArray(r.seller_attachments) && r.seller_attachments.length > 0);
+              if (rows.length === 0) { alert("No submissions with attachments found."); return; }
+              const esc = (v: any) => {
+                const s = v == null ? "" : String(v);
+                return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+              };
+              const header = ["Cemetery","City","Property Type","Section","Lawn","Space / Row / Crypt","# of Spaces","Submitted"];
+              const csv = [header.join(",")].concat(
+                rows.map(r => [
+                  r.cemetery, r.cemetery_city, r.property_type, r.section, r.lawn,
+                  r.space_numbers, r.spaces ?? r.plot_count,
+                  r.created_at ? new Date(r.created_at).toLocaleDateString() : "",
+                ].map(esc).join(","))
+              ).join("\n");
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `cemetery-call-sheet-${new Date().toISOString().slice(0,10)}.csv`;
+              document.body.appendChild(a); a.click(); a.remove();
+              URL.revokeObjectURL(url);
+            }}
+            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
+            title="Download a CSV of all submissions with attachments — cemetery, section, and plot location — for retail price calls"
+          >
+            <FileText className="w-3.5 h-3.5" /> Call sheet
+          </button>
+          <button
             onClick={() => setTrashOpen(true)}
             aria-label="Recently deleted submissions"
             title={`Recently deleted${deletedSubmissions.length ? ` (${deletedSubmissions.length})` : ""}`}
