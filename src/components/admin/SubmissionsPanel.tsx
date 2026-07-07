@@ -18,6 +18,7 @@ import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryInfoCard from "./CemeteryInfoCard";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
+import ReassignCemeteryDialog from "./ReassignCemeteryDialog";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
@@ -566,6 +567,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { cancelled = true; };
   }, []);
   const [expandedCemetery, setExpandedCemetery] = useState(false);
+  const [editCemeteryInline, setEditCemeteryInline] = useState(false);
+  const [reassignCemeteryOpen, setReassignCemeteryOpen] = useState(false);
 
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
@@ -573,7 +576,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
 
   // Record a view for this admin when they open a submission
-  useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); }, [selected?.id, myId]);
+  useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); setEditCemeteryInline(false); }, [selected?.id, myId]);
 
   // Pull deed-extracted owner names for the currently selected submission so the
   // seller-intake template can ask the right ownership follow-up question.
@@ -1688,20 +1691,49 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {selected.region && (
                   <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
                 )}
-                {selCanon && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {selCanon && (
+                    <button
+                      onClick={() => {
+                        setRegionFilter("texas");
+                        setCemeteryCanon(selCanon);
+                        setCemeteryLabel(selected.cemetery);
+                        setSelectedId(null);
+                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                      title="Search Texas submissions for this cemetery (fuzzy match, handles spelling variations)"
+                    >
+                      <Search className="w-3.5 h-3.5" /> Search submissions at this cemetery
+                    </button>
+                  )}
+                  {selCanon && (
+                    <button
+                      onClick={() => setEditCemeteryInline(v => !v)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background border border-border text-foreground hover:bg-muted transition-colors"
+                      title="Edit this cemetery's profile without leaving the submission"
+                    >
+                      <Building2 className="w-3.5 h-3.5" /> {editCemeteryInline ? "Close cemetery editor" : "Edit cemetery info"}
+                    </button>
+                  )}
                   <button
-                    onClick={() => {
-                      setRegionFilter("texas");
-                      setCemeteryCanon(selCanon);
-                      setCemeteryLabel(selected.cemetery);
-                      setSelectedId(null);
-                      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                    title="Search Texas submissions for this cemetery (fuzzy match, handles spelling variations)"
+                    onClick={() => setReassignCemeteryOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background border border-border text-foreground hover:bg-muted transition-colors"
+                    title="Match this submission to a different cemetery profile"
                   >
-                    <Search className="w-3.5 h-3.5" /> Search submissions at this cemetery
+                    <RefreshCw className="w-3.5 h-3.5" /> Match to different cemetery
                   </button>
+                </div>
+                {editCemeteryInline && selCanon && (
+                  <div className="mt-3 pt-3 border-t border-border/40">
+                    <CemeteryInfoCard
+                      key={`edit-${selCanon}`}
+                      canon={selCanon}
+                      displayName={selected.cemetery}
+                      submissionCount={subCount}
+                      onClear={() => setEditCemeteryInline(false)}
+                    />
+                  </div>
                 )}
               </div>
               );
@@ -1800,6 +1832,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const aiDeed = aiByLabel.get("Owner(s) on record") || aiByLabel.get("Purchaser");
               const customerDeed = s.deed_owner_names ? String(s.deed_owner_names).trim() : "";
               const rows: Array<{ label: string; value: string }> = [
+                { label: "Cemetery name", value: (s.cemetery_original as string) || s.cemetery || "" },
                 { label: "Property type", value: s.property_type || "" },
                 { label: "Timeline", value: s.timeline || "" },
                 { label: "Budget", value: s.budget || "" },
@@ -2094,6 +2127,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               spaces={selected.spaces}
             />
           )}
+          <ReassignCemeteryDialog
+            open={reassignCemeteryOpen}
+            onClose={() => setReassignCemeteryOpen(false)}
+            submissionId={selected.id}
+            currentCemetery={selected.cemetery}
+            customerOriginal={(selected as any).cemetery_original}
+            onSaved={() => onRefresh?.()}
+          />
         </>
       )}
 
