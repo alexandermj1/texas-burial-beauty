@@ -71,8 +71,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
         <!-- INTRO -->
         <tr><td style="padding:40px 44px 8px;">
           <p style="font-family:${serif};font-size:11px;line-height:1;color:${b.primary};margin:0 0 12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;">${salutation(ctx.firstName)}</p>
-          <h1 style="font-family:${serif};font-size:26px;line-height:1.25;color:${b.primary};margin:0 0 22px;font-weight:400;letter-spacing:-0.01em;">We help the families ${companyName}${cityLine} serves save <strong style="font-weight:700;">15–50%</strong> on cemetery plots — with compassionate, in-person service during the week they need it most.</h1>
-          <p style="font-family:${serif};font-size:15px;line-height:1.7;color:#334155;margin:0;">Our staff personally walks every family through options at the cemetery of their choice, giving them the most choice at the lowest price — and saving your team hours per case. Partner funeral homes also receive a <strong>$1,000 referral</strong> at closing.</p>
+          <h1 style="font-family:${serif};font-size:28px;line-height:1.2;color:${b.primary};margin:0 0 18px;font-weight:400;letter-spacing:-0.01em;">Save your families <strong style="font-weight:700;">15–50%</strong> on cemetery plots — and get paid for the referral.</h1>
+          <p style="font-family:${serif};font-size:15px;line-height:1.65;color:#334155;margin:0;">We handle everything for the families ${companyName}${cityLine} serves — in person, at the cemetery of their choice. Partner funeral homes receive a <strong>$1,000 referral</strong> at closing.</p>
         </td></tr>
 
 
@@ -221,7 +221,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
   const text = `${salutation(ctx.firstName).replace(/&amp;/g, "&")}
 
-We help the families you serve save 15–50% on cemetery plots — with compassionate, in-person service during the week they need it most. Our staff personally walks every family through options at the cemetery of their choice, giving them the most choice at the lowest price and saving your team hours per case. Partner funeral homes also receive a $1,000 referral at closing.
+Save your families 15–50% on cemetery plots — and get paid for the referral. We handle everything for the families ${ctx.company || "your funeral home"}${ctx.city ? ` in ${ctx.city}` : ""} serves, in person at the cemetery of their choice. Partner funeral homes receive a $1,000 referral at closing.
 
 The part most partners value most: TELL US THE CEMETERIES AND AREAS YOUR FAMILIES ASK FOR, AND WE MAINTAIN STANDING INVENTORY IN THOSE PLACES.
 - Cemeteries & areas your families most often need
