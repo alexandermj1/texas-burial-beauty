@@ -192,7 +192,14 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
 
         <!-- CTA -->
         <tr><td align="center" style="padding:32px 44px 8px;">
-          <a href="${esc(ctx.siteUrl || b.siteUrl)}/partners" style="display:inline-block;background:${b.primary};color:${b.primaryFg};font-family:${serif};font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:14px 32px;text-decoration:none;font-weight:600;">Become a Referral Partner</a>
+          <a href="${esc(ctx.siteUrl || b.siteUrl)}" style="display:inline-block;background:${b.primary};color:${b.primaryFg};font-family:${serif};font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:14px 32px;text-decoration:none;font-weight:600;">Become a Referral Partner</a>
+          <p style="font-family:${serif};font-size:13px;color:#334155;margin:18px 0 4px;">Reply to this email or reach us directly:</p>
+          <p style="font-family:${serif};font-size:14px;color:#1f2937;margin:0 0 4px;font-weight:700;">
+            <a href="mailto:${esc(b.replyTo)}" style="color:${b.primary};text-decoration:none;">${esc(b.replyTo)}</a>
+          </p>
+          <p style="font-family:${serif};font-size:13px;color:#475569;margin:0;">
+            <a href="${esc(ctx.siteUrl || b.siteUrl)}" style="color:${b.primary};text-decoration:underline;">${esc((ctx.siteUrl || b.siteUrl).replace(/^https?:\/\//, ""))}</a>
+          </p>
           <p style="font-family:${serif};font-size:12px;color:#9a8f7a;margin:14px 0 0;font-style:italic;">Or just reply with the cemeteries and price points your families ask for — we'll build your inventory.</p>
         </td></tr>
 
