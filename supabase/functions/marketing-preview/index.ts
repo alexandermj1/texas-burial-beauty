@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const brand = BRANDS[tpl.brand];
     const brandDefaults = tpl.brand === "bayer"
       ? { firstName: "Alex", company: "Sample Funeral Home", city: "Long Beach" }
-      : { firstName: "Alex", company: "your funeral home", city: "" };
+      : { firstName: "", company: "your funeral home", city: "" };
     const rendered = tpl.render(
       {
         brand: tpl.brand,
