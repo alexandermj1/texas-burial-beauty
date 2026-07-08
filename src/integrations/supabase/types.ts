@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_locations: {
+        Row: {
+          address: string | null
+          city: string | null
+          color: string | null
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          notes: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_sales: {
         Row: {
           agent_name: string
@@ -1819,7 +1861,10 @@ export type Database = {
           created_by: string | null
           description: string | null
           endowment_notes: string | null
+          geocoded_at: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           name: string
           notes: string | null
           process_info: string | null
@@ -1841,7 +1886,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           endowment_notes?: string | null
+          geocoded_at?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name: string
           notes?: string | null
           process_info?: string | null
@@ -1863,7 +1911,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           endowment_notes?: string | null
+          geocoded_at?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           notes?: string | null
           process_info?: string | null
