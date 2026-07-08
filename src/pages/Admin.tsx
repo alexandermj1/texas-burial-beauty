@@ -59,7 +59,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
