@@ -819,6 +819,7 @@ const Admin = () => {
           )}
 
           {tab === "email_marketing" && <EmailMarketingPanel />}
+          {tab === "map" && <TexasMapPanel />}
           <div className="mt-10 flex items-center justify-end gap-3 flex-wrap">
             <button
               onClick={async () => {
