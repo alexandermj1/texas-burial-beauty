@@ -375,6 +375,7 @@ const Admin = () => {
     { key: "inventory_requests", label: "Inv. Requests", Icon: ClipboardList },
     { key: "ca_inventory", label: "CA Inventory", Icon: Package },
     { key: "cemeteries", label: "Cemeteries", Icon: Building2 },
+    { key: "map", label: "Map", Icon: MapIcon },
     { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
   ];
 
