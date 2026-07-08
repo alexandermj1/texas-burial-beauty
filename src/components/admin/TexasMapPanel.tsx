@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, MapPin, Plus, Trash2, Route, RefreshCw, X, Search, ExternalLink, Phone, Globe, ArrowRight, Navigation } from "lucide-react";
+import { Loader2, MapPin, Plus, Trash2, Route, RefreshCw, X, Search, Phone, Globe, ArrowRight, Navigation } from "lucide-react";
 
 type Cemetery = {
   id: string; name: string; city: string | null; address: string | null;
