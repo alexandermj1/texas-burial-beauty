@@ -137,7 +137,7 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
               <td width="33%" valign="top" style="background:${b.bgAccent};padding:22px 18px;border-radius:6px;">
                 <p style="font-family:${serif};font-size:24px;color:${b.primary};margin:0 0 6px;font-weight:700;line-height:1;">~$1,000</p>
                 <p style="font-family:${serif};font-size:11px;line-height:1.5;color:#1f2937;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Per referral</p>
-                <p style="font-family:${serif};font-size:12px;line-height:1.5;color:#475569;margin:6px 0 0;">Paid to your funeral home at closing.</p>
+                <p style="font-family:${serif};font-size:12px;line-height:1.5;color:#475569;margin:6px 0 0;">Paid per family we help.</p>
               </td>
               <td width="33%" valign="top" style="background:${b.bgAccent};padding:22px 18px;border-radius:6px;">
                 <p style="font-family:${serif};font-size:24px;color:${b.primary};margin:0 0 6px;font-weight:700;line-height:1;">Ready</p>
@@ -182,8 +182,8 @@ function renderTexasIntro(ctx: RenderContext, overrides: { subject?: string; pre
                 <div style="width:36px;height:36px;background:${b.primary};color:#ffffff;border-radius:999px;font-family:${serif};font-size:15px;font-weight:700;text-align:center;line-height:36px;">3</div>
               </td>
               <td valign="top" style="padding:0 0 20px 0;">
-                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">You get ~$1,000 per referral at closing.</p>
-                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">A referral commission of approximately $1,000 per closed family, mailed directly to your funeral home.</p>
+                <p style="font-family:${serif};font-size:15px;color:#1f2937;margin:0 0 4px;font-weight:700;">You get ~$1,000 per family served.</p>
+                <p style="font-family:${serif};font-size:14px;color:#475569;margin:0;line-height:1.65;">A referral commission of approximately $1,000 per family we help, mailed directly to your funeral home.</p>
               </td>
             </tr>
 
@@ -262,7 +262,7 @@ So when a family walks in, options are already on the shelf — not something we
 How it works:
 1. Tell us your cemeteries and price points, once.
 2. Refer families to us — we handle contracts, cemetery transfer, family communication.
-3. You get approximately $1,000 per referral at closing.
+3. You get approximately $1,000 per family served.
 
 Reply to this email or reach us directly:
 Email: ${b.replyTo}
