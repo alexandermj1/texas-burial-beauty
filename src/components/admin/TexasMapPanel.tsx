@@ -119,19 +119,40 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Merge cemeteries with color + count
-  const enriched = useMemo(() => cemeteries.map((c) => {
-    const key = canon(c.name);
-    // also try match with city included e.g. "restland dallas"
-    const withCity = canon(`${c.name} ${c.city || ""}`);
-    let count = submissionCounts.get(key) || 0;
-    // add near-matches: sum any DB key that contains our key or vice versa
-    submissionCounts.forEach((v, k) => {
-      if (k === key || k === withCity) return;
-      if (key && (k.includes(key) || key.includes(k)) && Math.min(k.length, key.length) >= 5) count += v;
+  // Merge cemeteries with color + count.
+  // Each submission is attributed to the cemetery whose canonical name is the LONGEST
+  // token-based match, so "Restland" and "Restland Dallas" don't double-count, and a
+  // more-specific cemetery wins over a generic one.
+  const enriched = useMemo(() => {
+    const cemKeys = cemeteries.map((c) => {
+      const key = canon(c.name);
+      const withCity = canon(`${c.name} ${c.city || ""}`);
+      const tokens = new Set([key, withCity].filter((t) => t && t.length >= 4));
+      return { c, tokens };
     });
-    return { ...c, color: colorFor(c.id), count };
-  }), [cemeteries, submissionCounts]);
+
+    const counts = new Map<string, number>();
+    submissionCounts.forEach((v, subKey) => {
+      // Find best-matching cemetery: token appears in subKey OR subKey appears in token
+      let bestIdx = -1;
+      let bestLen = 0;
+      cemKeys.forEach(({ tokens }, idx) => {
+        tokens.forEach((tok) => {
+          const matches = subKey === tok || subKey.includes(tok) || tok.includes(subKey);
+          if (matches && tok.length > bestLen) {
+            bestLen = tok.length;
+            bestIdx = idx;
+          }
+        });
+      });
+      if (bestIdx >= 0) {
+        const id = cemeteries[bestIdx].id;
+        counts.set(id, (counts.get(id) || 0) + v);
+      }
+    });
+
+    return cemeteries.map((c) => ({ ...c, color: colorFor(c.id), count: counts.get(c.id) || 0 }));
+  }, [cemeteries, submissionCounts]);
 
   // Initialize map
   useEffect(() => {
