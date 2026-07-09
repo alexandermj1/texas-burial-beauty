@@ -142,6 +142,7 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
                 <ul className="divide-y divide-border">
                   {filtered.map(row => {
                     const isCurrent = row.name === currentCemetery;
+                    const n = countFor(row.name);
                     return (
                       <li key={row.id}>
                         <button
@@ -153,13 +154,25 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
                             <p className="text-sm font-medium text-foreground truncate">{row.name}</p>
                             {row.city && <p className="text-xs text-muted-foreground truncate">{row.city}</p>}
                           </div>
-                          {isCurrent ? (
-                            <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-                              <Check className="w-3 h-3" /> Current
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span
+                              className={`text-[11px] px-1.5 py-0.5 rounded-md border ${
+                                n > 0
+                                  ? "bg-primary/10 text-primary border-primary/20"
+                                  : "bg-muted text-muted-foreground border-border"
+                              }`}
+                              title={`${n} active listing${n === 1 ? "" : "s"}`}
+                            >
+                              {n} listing{n === 1 ? "" : "s"}
                             </span>
-                          ) : saving === row.id ? (
-                            <span className="text-[11px] text-muted-foreground">Saving…</span>
-                          ) : null}
+                            {isCurrent ? (
+                              <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                                <Check className="w-3 h-3" /> Current
+                              </span>
+                            ) : saving === row.id ? (
+                              <span className="text-[11px] text-muted-foreground">Saving…</span>
+                            ) : null}
+                          </div>
                         </button>
                       </li>
                     );
