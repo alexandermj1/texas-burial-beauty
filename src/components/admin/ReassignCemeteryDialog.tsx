@@ -21,6 +21,7 @@ const _canon = (s: string) =>
 
 const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, customerOriginal, onSaved }: Props) => {
   const [rows, setRows] = useState<Array<{ id: string; name: string; city: string | null }>>([]);
+  const [listingCounts, setListingCounts] = useState<Map<string, number>>(new Map());
   const [q, setQ] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,11 +31,18 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
     setQ("");
     setLoading(true);
     (async () => {
-      const { data } = await supabase
-        .from("texas_cemeteries" as any)
-        .select("id,name,city")
-        .order("name", { ascending: true });
-      setRows(((data as any[]) || []).map(r => ({ id: r.id, name: r.name, city: r.city })));
+      const [cemsRes, listingsRes] = await Promise.all([
+        supabase.from("texas_cemeteries" as any).select("id,name,city").order("name", { ascending: true }),
+        supabase.from("listings").select("cemetery").eq("status", "active"),
+      ]);
+      setRows(((cemsRes.data as any[]) || []).map(r => ({ id: r.id, name: r.name, city: r.city })));
+      const m = new Map<string, number>();
+      for (const l of (listingsRes.data as any[]) || []) {
+        const k = _canon(l.cemetery || "");
+        if (!k) continue;
+        m.set(k, (m.get(k) || 0) + 1);
+      }
+      setListingCounts(m);
       setLoading(false);
     })();
   }, [open]);
@@ -44,6 +52,8 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
     if (!query) return rows;
     return rows.filter(r => _canon(`${r.name} ${r.city || ""}`).includes(query));
   }, [rows, q]);
+
+  const countFor = (name: string) => listingCounts.get(_canon(name)) || 0;
 
   const pick = async (row: { id: string; name: string }) => {
     if (!submissionId) return;
@@ -132,6 +142,7 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
                 <ul className="divide-y divide-border">
                   {filtered.map(row => {
                     const isCurrent = row.name === currentCemetery;
+                    const n = countFor(row.name);
                     return (
                       <li key={row.id}>
                         <button
@@ -143,13 +154,25 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
                             <p className="text-sm font-medium text-foreground truncate">{row.name}</p>
                             {row.city && <p className="text-xs text-muted-foreground truncate">{row.city}</p>}
                           </div>
-                          {isCurrent ? (
-                            <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-                              <Check className="w-3 h-3" /> Current
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span
+                              className={`text-[11px] px-1.5 py-0.5 rounded-md border ${
+                                n > 0
+                                  ? "bg-primary/10 text-primary border-primary/20"
+                                  : "bg-muted text-muted-foreground border-border"
+                              }`}
+                              title={`${n} active listing${n === 1 ? "" : "s"}`}
+                            >
+                              {n} listing{n === 1 ? "" : "s"}
                             </span>
-                          ) : saving === row.id ? (
-                            <span className="text-[11px] text-muted-foreground">Saving…</span>
-                          ) : null}
+                            {isCurrent ? (
+                              <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                                <Check className="w-3 h-3" /> Current
+                              </span>
+                            ) : saving === row.id ? (
+                              <span className="text-[11px] text-muted-foreground">Saving…</span>
+                            ) : null}
+                          </div>
                         </button>
                       </li>
                     );
