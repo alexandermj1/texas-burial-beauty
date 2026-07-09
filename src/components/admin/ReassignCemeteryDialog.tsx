@@ -179,7 +179,7 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
                 <ul className="divide-y divide-border">
                   {filtered.map(row => {
                     const isCurrent = row.name === currentCemetery;
-                    const n = countFor(row.name);
+                    const n = countFor(row.id);
                     return (
                       <li key={row.id}>
                         <button
