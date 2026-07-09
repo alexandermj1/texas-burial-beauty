@@ -16,12 +16,20 @@ interface Props {
   onSaved?: () => void;
 }
 
-const _canon = (s: string) =>
-  s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+// Match the canonicalizer used in TexasMapPanel so counts stay in sync.
+const _canon = (s: string | null | undefined) => {
+  if (!s) return "";
+  return s.toLowerCase()
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\b(cemetery|memorial park|memorial|mortuary|mausoleum|association|assoc|funeral home|park|gardens?)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
 
 const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, customerOriginal, onSaved }: Props) => {
   const [rows, setRows] = useState<Array<{ id: string; name: string; city: string | null }>>([]);
-  const [listingCounts, setListingCounts] = useState<Map<string, number>>(new Map());
+  const [countsByCemId, setCountsByCemId] = useState<Map<string, number>>(new Map());
   const [q, setQ] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,18 +39,46 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
     setQ("");
     setLoading(true);
     (async () => {
-      const [cemsRes, listingsRes] = await Promise.all([
+      const [cemsRes, subsRes] = await Promise.all([
         supabase.from("texas_cemeteries" as any).select("id,name,city").order("name", { ascending: true }),
-        supabase.from("listings").select("cemetery").eq("status", "active"),
+        supabase.from("contact_submissions").select("cemetery").not("cemetery", "is", null),
       ]);
-      setRows(((cemsRes.data as any[]) || []).map(r => ({ id: r.id, name: r.name, city: r.city })));
-      const m = new Map<string, number>();
-      for (const l of (listingsRes.data as any[]) || []) {
-        const k = _canon(l.cemetery || "");
+      const cems = ((cemsRes.data as any[]) || []).map(r => ({ id: r.id, name: r.name, city: r.city }));
+      setRows(cems);
+
+      // Aggregate submissions by canonical key
+      const subMap = new Map<string, number>();
+      for (const s of (subsRes.data as any[]) || []) {
+        const k = _canon(s.cemetery);
         if (!k) continue;
-        m.set(k, (m.get(k) || 0) + 1);
+        subMap.set(k, (subMap.get(k) || 0) + 1);
       }
-      setListingCounts(m);
+
+      // Same attribution logic as TexasMapPanel: longest token-based match wins
+      const cemKeys = cems.map((c) => {
+        const key = _canon(c.name);
+        const withCity = _canon(`${c.name} ${c.city || ""}`);
+        const tokens = new Set([key, withCity].filter((t) => t && t.length >= 4));
+        return { id: c.id, tokens };
+      });
+
+      const counts = new Map<string, number>();
+      subMap.forEach((v, subKey) => {
+        let bestId: string | null = null;
+        let bestLen = 0;
+        cemKeys.forEach(({ id, tokens }) => {
+          tokens.forEach((tok) => {
+            const matches = subKey === tok || subKey.includes(tok) || tok.includes(subKey);
+            if (matches && tok.length > bestLen) {
+              bestLen = tok.length;
+              bestId = id;
+            }
+          });
+        });
+        if (bestId) counts.set(bestId, (counts.get(bestId) || 0) + v);
+      });
+
+      setCountsByCemId(counts);
       setLoading(false);
     })();
   }, [open]);
@@ -53,7 +89,8 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
     return rows.filter(r => _canon(`${r.name} ${r.city || ""}`).includes(query));
   }, [rows, q]);
 
-  const countFor = (name: string) => listingCounts.get(_canon(name)) || 0;
+  const countFor = (id: string) => countsByCemId.get(id) || 0;
+
 
   const pick = async (row: { id: string; name: string }) => {
     if (!submissionId) return;
