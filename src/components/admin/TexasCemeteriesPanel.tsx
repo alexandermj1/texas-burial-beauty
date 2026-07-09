@@ -254,6 +254,32 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
         if (error) throw error;
       }
       if (source.directoryId) {
+        // Preserve profile data: copy any non-empty source fields into the
+        // destination row, but ONLY where the destination is empty. Never
+        // overwrite info the destination already has.
+        const sourceRow = rows.find(r => r.id === source.directoryId);
+        const destRow = target.directoryId ? rows.find(r => r.id === target.directoryId) : null;
+        if (sourceRow && target.directoryId && destRow) {
+          const fields: (keyof TexasCemetery)[] = [
+            "city", "address", "contact_name", "contact_phone", "contact_email",
+            "transfer_fee", "typical_prices", "description", "website", "notes",
+          ];
+          const patch: Record<string, any> = {};
+          for (const f of fields) {
+            const srcVal = (sourceRow as any)[f];
+            const dstVal = (destRow as any)[f];
+            const srcHas = srcVal !== null && srcVal !== undefined && String(srcVal).trim() !== "";
+            const dstEmpty = dstVal === null || dstVal === undefined || String(dstVal).trim() === "";
+            if (srcHas && dstEmpty) patch[f as string] = srcVal;
+          }
+          if (Object.keys(patch).length > 0) {
+            const { error: mergeErr } = await supabase
+              .from("texas_cemeteries" as any)
+              .update(patch)
+              .eq("id", target.directoryId);
+            if (mergeErr) throw mergeErr;
+          }
+        }
         const { error } = await supabase
           .from("texas_cemeteries" as any)
           .delete()
