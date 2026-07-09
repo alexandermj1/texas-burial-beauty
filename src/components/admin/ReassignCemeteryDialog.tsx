@@ -198,9 +198,9 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
                                   ? "bg-primary/10 text-primary border-primary/20"
                                   : "bg-muted text-muted-foreground border-border"
                               }`}
-                              title={`${n} active listing${n === 1 ? "" : "s"}`}
+                              title={`${n} submission${n === 1 ? "" : "s"}`}
                             >
-                              {n} listing{n === 1 ? "" : "s"}
+                              {n} submission{n === 1 ? "" : "s"}
                             </span>
                             {isCurrent ? (
                               <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
