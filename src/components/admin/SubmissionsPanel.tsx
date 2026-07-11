@@ -2102,7 +2102,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         await supabase.from("contact_submissions" as any)
                           .update({ customer_profile_id: (data as any).id })
                           .eq("id", selected.id);
-                        onUpdate?.();
+                        await onUpdate(selected.id, { customer_profile_id: (data as any).id } as any);
+                        await onRefresh?.();
+
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
                     >
