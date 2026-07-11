@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import CemeteryFiles from "./CemeteryFiles";
+
 
 interface SectionEntry {
   id: string;
@@ -348,8 +350,13 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
               <p className="text-sm text-foreground/90 whitespace-pre-wrap">{profile.notes}</p>
             </Block>
           )}
+
+          {profile?.id && (
+            <CemeteryFiles cemeteryId={profile.id} cemeteryName={profile.name || displayName} />
+          )}
         </div>
       )}
+
 
       {!loading && editing && profile && (
         <div className="space-y-4">
