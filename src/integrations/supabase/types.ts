@@ -311,6 +311,53 @@ export type Database = {
         }
         Relationships: []
       }
+      cemetery_files: {
+        Row: {
+          cemetery_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          label: string | null
+          mime_type: string | null
+          uploaded_by_name: string | null
+          uploaded_by_user_id: string | null
+        }
+        Insert: {
+          cemetery_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          label?: string | null
+          mime_type?: string | null
+          uploaded_by_name?: string | null
+          uploaded_by_user_id?: string | null
+        }
+        Update: {
+          cemetery_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          label?: string | null
+          mime_type?: string | null
+          uploaded_by_name?: string | null
+          uploaded_by_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cemetery_files_cemetery_id_fkey"
+            columns: ["cemetery_id"]
+            isOneToOne: false
+            referencedRelation: "texas_cemeteries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           acceptance_channel: string | null
