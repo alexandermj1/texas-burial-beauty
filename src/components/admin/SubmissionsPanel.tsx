@@ -1384,7 +1384,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
               </div>
             );
-          })()}
+          })()
+        )}
         {!cemeteriesOpen && !selected && (
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
             Select a submission to view details.
