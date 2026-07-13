@@ -1317,7 +1317,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             />
           </>
         )}
-        {cemeteriesOpen && cemeteryCanon ? (
+        {cemeteriesOpen && cemeteryCanon && (
           (() => {
             const cemSubs = texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon);
             return (
