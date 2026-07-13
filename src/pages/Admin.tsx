@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
 import TexasCemeteriesPanel from "@/components/admin/TexasCemeteriesPanel";
+import CemeteryInfoCard from "@/components/admin/CemeteryInfoCard";
 import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipelinePanel";
 import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
