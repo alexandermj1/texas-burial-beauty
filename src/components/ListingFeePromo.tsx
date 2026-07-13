@@ -75,37 +75,28 @@ const ListingFeePromo = ({ compact = false }: Props) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6 }}
-            className="border-b border-foreground/15 pb-6 mb-14 flex items-end justify-between flex-wrap gap-6"
+            className="border-b border-foreground/15 pb-6 mb-14 text-center"
           >
-            <div className="max-w-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-[10px] tracking-[0.3em] uppercase font-bold px-3 py-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Limited time
-                </span>
-                <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
-                  Listing fees, reduced
-                </span>
-              </div>
-              <h2 className="font-display text-foreground tracking-tight leading-[0.98] text-[clamp(2.5rem,6vw,5rem)]">
-                Because buyer demand is high,{" "}
-                <span className="italic text-primary">we've cut every listing fee.</span>
-              </h2>
-              <p className="mt-5 text-foreground/70 leading-relaxed max-w-xl text-[15px] md:text-base font-light">
-                Three ways to list your Texas cemetery property — each one now at a lower price
-                for a limited window while we work through a high volume of qualified buyer
-                inquiries.
-              </p>
+            <div className="flex items-center justify-center gap-3 mb-5 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-[10px] tracking-[0.3em] uppercase font-bold px-3 py-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                Limited time · until July 31
+              </span>
+              <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
+                Listing fees, reduced
+              </span>
             </div>
-            <div className="hidden md:block text-right">
-              <p className="font-display italic text-foreground/60 text-lg leading-snug max-w-[22ch]">
-                A sample fee structure for a Texas property.
-              </p>
-              <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/50 mt-2">
-                N° 04 · The offering
-              </p>
-            </div>
+            <h2 className="font-display text-foreground tracking-tight leading-[0.98] text-[clamp(2.5rem,6vw,5rem)] max-w-4xl mx-auto">
+              Because buyer demand is high,{" "}
+              <span className="italic text-primary">we've cut every listing fee.</span>
+            </h2>
+            <p className="mt-5 text-foreground/70 leading-relaxed max-w-2xl mx-auto text-[15px] md:text-base font-light">
+              Three ways to list your Texas cemetery property — each one at a lower price
+              through the end of July while we work through a high volume of qualified
+              buyer inquiries.
+            </p>
           </motion.div>
+
 
           {/* Tiers */}
           <div className="grid md:grid-cols-3 gap-px bg-foreground/15 border border-foreground/15">
