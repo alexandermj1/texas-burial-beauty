@@ -493,10 +493,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
-      if (regionFilter === "texas" && cemeteryCanon) {
+      if (regionFilter === "texas" && cemeteryCanon && !cemeteriesOpen) {
         // Exact match only — a submission only belongs to the clicked cemetery
         // if its (canonicalised) cemetery name matches exactly. Uncategorised
         // submissions are intentionally left out so admins can assign them.
+        // While the Cemeteries browser is open, don't filter — the click is a
+        // preview; the list only narrows once the user clicks "View submissions".
         const sc = _canon(s.cemetery || "");
         if (sc !== cemeteryCanon) return false;
       }
