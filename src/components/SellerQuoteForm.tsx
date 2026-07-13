@@ -119,10 +119,13 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       if (check.ok !== true) return check.error;
     }
     if (s === 1) {
-      if (!form.cemetery.trim()) return "Please enter the cemetery name.";
+      if (!form.cemetery.trim()) return form.cemeteryIsCustom
+        ? "Please type your cemetery name."
+        : "Please select your cemetery from the list.";
       if (!form.propertyType) return "Please choose a property type.";
       if (!form.section.trim()) return "Please enter the section or garden name.";
     }
+
     return null;
   };
 
