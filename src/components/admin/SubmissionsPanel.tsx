@@ -972,10 +972,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
               if (rows.length === 0) { alert("No submissions with attachments found."); return; }
 
-              // Pull cemetery profiles to prefill matching fields (transfer fee, contact, etc.)
+              // Pull cemetery profiles to prefill any known phone-call fields
+              // (transfer fee, typical prices, contact phone, internal notes).
               const { data: cems } = await supabase
                 .from("texas_cemeteries" as any)
-                .select("name,city,address,contact_name,contact_phone,contact_email,website,transfer_fee,typical_prices,endowment_notes,process_info");
+                .select("name,contact_phone,transfer_fee,typical_prices,notes");
               const cemMap = new Map<string, any>();
               for (const c of ((cems as any[]) || [])) {
                 if (c?.name) cemMap.set(String(c.name).trim().toLowerCase(), c);
@@ -983,39 +984,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const lookup = (name: string | null) => (name ? cemMap.get(String(name).trim().toLowerCase()) : null) || {};
 
               const XLSX = await import("xlsx");
+              // Columns are ordered around the phone call: who the customer is,
+              // what plot to ask about, and the four things to capture on the call —
+              // retail price, endowment care, transfer fee, and transfer process.
               const header = [
-                "Customer Name","Customer Email","Customer Phone",
-                "Cemetery","City","Address","Cemetery Contact Name","Cemetery Phone","Cemetery Email","Website",
-                "Transfer Fee ($)","Typical Prices","Endowment Notes","Process / Transfer Info",
+                "Customer Name","Customer Phone","Customer Email",
+                "Cemetery","Cemetery Phone",
                 "Property Type","Section","Lawn","Space / Row / Crypt","# of Spaces",
-                "Retail Price Quoted ($)","Call Date","Call Notes","Submitted",
+                "Retail Price of Plot ($)","Endowment Care","Transfer Fee ($)","Transfer Process Info",
+                "Prior Notes","Call Date","Call Notes","Submitted",
               ];
               const aoa: any[][] = [header];
               for (const r of rows) {
                 const c = lookup(r.cemetery);
                 aoa.push([
-                  r.name || "", r.email || "", r.phone || "",
-                  r.cemetery || "", r.cemetery_city || c.city || "", c.address || "",
-                  c.contact_name || "", c.contact_phone || "", c.contact_email || "", c.website || "",
-                  c.transfer_fee ?? "", c.typical_prices || "", c.endowment_notes || "", c.process_info || "",
+                  r.name || "", r.phone || "", r.email || "",
+                  r.cemetery || "", c.contact_phone || "",
                   r.property_type || "", r.section || "", r.lawn || "",
                   r.space_numbers || "", r.spaces ?? r.plot_count ?? "",
-                  "", "", "",
+                  c.typical_prices || "", "", c.transfer_fee ?? "", "",
+                  c.notes || "", "", "",
                   r.created_at ? new Date(r.created_at).toLocaleDateString() : "",
                 ]);
               }
               const ws = XLSX.utils.aoa_to_sheet(aoa);
               ws["!cols"] = [
-                { wch: 22 },{ wch: 26 },{ wch: 16 },
-                { wch: 28 },{ wch: 16 },{ wch: 30 },{ wch: 20 },{ wch: 16 },{ wch: 24 },{ wch: 24 },
-                { wch: 14 },{ wch: 22 },{ wch: 22 },{ wch: 28 },
+                { wch: 22 },{ wch: 16 },{ wch: 26 },
+                { wch: 28 },{ wch: 16 },
                 { wch: 16 },{ wch: 12 },{ wch: 10 },{ wch: 18 },{ wch: 10 },
-                { wch: 18 },{ wch: 12 },{ wch: 34 },{ wch: 12 },
+                { wch: 20 },{ wch: 22 },{ wch: 16 },{ wch: 34 },
+                { wch: 28 },{ wch: 12 },{ wch: 34 },{ wch: 12 },
               ];
               ws["!freeze"] = { xSplit: 0, ySplit: 1 } as any;
               const wb = XLSX.utils.book_new();
               XLSX.utils.book_append_sheet(wb, ws, "Call Sheet");
-              XLSX.writeFile(wb, `cemetery-call-sheet-${new Date().toISOString().slice(0,10)}.xlsx`);
+              XLSX.writeFile(wb, `cemetery-call-sheet-${new Date().toISOString().slice(0,10)}.xlsx`, { bookType: "xlsx" });
             }}
 
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
