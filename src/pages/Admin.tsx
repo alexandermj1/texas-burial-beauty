@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
 import TexasCemeteriesPanel from "@/components/admin/TexasCemeteriesPanel";
+import CemeteryInfoCard from "@/components/admin/CemeteryInfoCard";
 import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipelinePanel";
 import InboxPanel from "@/components/admin/InboxPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
@@ -65,6 +66,7 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [cemSelected, setCemSelected] = useState<{ canon: string; name: string } | null>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   // When admin clicks "Open customer" inside the Gmail inbox, this id flows into the
   // Submissions panel and auto-selects the matching customer.
@@ -810,13 +812,55 @@ const Admin = () => {
             />
           )}
 
-          {tab === "cemeteries" && (
-            <TexasCemeteriesPanel
-              texasSubmissions={submissions.filter((s: any) => s.inquiry_channel !== "bayer_sell_a_plot")}
-              onRefresh={handleInboxRefresh}
-              standalone
-            />
-          )}
+          {tab === "cemeteries" && (() => {
+            const canonize = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+            const texasSubs = submissions.filter((s: any) => s.inquiry_channel !== "bayer_sell_a_plot");
+            const selectedCount = cemSelected
+              ? texasSubs.filter((s: any) => canonize(s.cemetery || "") === cemSelected.canon).length
+              : 0;
+            return (
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-5 items-start">
+                <div className="min-w-0">
+                  <TexasCemeteriesPanel
+                    texasSubmissions={texasSubs}
+                    onRefresh={handleInboxRefresh}
+                    standalone
+                    activeCemeteryCanon={cemSelected?.canon ?? null}
+                    onSelectCemetery={(canon, label) => {
+                      if (!canon || !label) setCemSelected(null);
+                      else setCemSelected({ canon, name: label });
+                    }}
+                    hideProfileEditor
+                  />
+                </div>
+                <aside className="lg:sticky lg:top-24 min-w-0">
+                  {cemSelected ? (
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => { setSearchQuery(cemSelected.name); setTab("submissions"); }}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
+                      >
+                        View {selectedCount} submission{selectedCount === 1 ? "" : "s"} at this cemetery
+                      </button>
+                      <CemeteryInfoCard
+                        key={cemSelected.canon}
+                        canon={cemSelected.canon}
+                        displayName={cemSelected.name}
+                        submissionCount={selectedCount}
+                        onClear={() => setCemSelected(null)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-8 text-center">
+                      <Building2 className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">Select a cemetery to preview its profile here.</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">The list stays open so you can browse freely.</p>
+                    </div>
+                  )}
+                </aside>
+              </div>
+            );
+          })()}
 
           {tab === "email_marketing" && <EmailMarketingPanel />}
           {tab === "map" && <TexasMapPanel onViewSubmissions={(name) => { setSearchQuery(name); setTab("submissions"); }} />}
