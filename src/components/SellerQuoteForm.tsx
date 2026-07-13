@@ -183,7 +183,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       const { error: attachError } = await supabase.functions.invoke("attach-seller-files", { body: { submission_id: intakeId } });
       if (attachError) console.warn("attach-seller-files failed", attachError);
     }
-    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
+    setForm({ name: "", email: "", phone: "", cemetery: "", cemeteryIsCustom: false, propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
     setFiles([]);
     setLoading(false);
     navigate("/thank-you");
