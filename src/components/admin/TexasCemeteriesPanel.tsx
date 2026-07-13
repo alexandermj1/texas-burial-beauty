@@ -42,27 +42,31 @@ interface Props {
   hideProfileEditor?: boolean;
 }
 
-// Light volume-based tint so high-traffic cemeteries are immediately recognisable
-// once we have 100+ submissions on a single cemetery. Kept subtle — never overrides
-// the active/drop-target states which use stronger borders.
-const countTint = (count: number): string => {
-  if (count >= 100) return "bg-rose-100/70 dark:bg-rose-950/40 border-rose-300/60 dark:border-rose-900/60";
-  if (count >= 50)  return "bg-amber-100/60 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-900/60";
-  if (count >= 25)  return "bg-orange-50/80 dark:bg-orange-950/25 border-orange-200/70 dark:border-orange-900/50";
-  if (count >= 10)  return "bg-teal-50/80 dark:bg-teal-950/25 border-teal-200/70 dark:border-teal-900/50";
-  if (count >= 3)   return "bg-sky-50/70 dark:bg-sky-950/25 border-sky-200/70 dark:border-sky-900/40";
-  if (count >= 1)   return "bg-card border-border/60";
-  return "bg-muted/40 border-border/50";
+// Volume tiers → left-bar accent (structural indicator) + badge tint (numeric).
+// The card body stays neutral (white/off-white) so the accent bar carries the
+// signal without turning the panel into a rainbow.
+type Tier = "t100" | "t50" | "t25" | "t10" | "t3" | "t1" | "t0";
+const tierOf = (n: number): Tier =>
+  n >= 100 ? "t100" : n >= 50 ? "t50" : n >= 25 ? "t25" : n >= 10 ? "t10" : n >= 3 ? "t3" : n >= 1 ? "t1" : "t0";
+
+const leftBar: Record<Tier, string> = {
+  t100: "bg-rose-400",
+  t50:  "bg-amber-400",
+  t25:  "bg-orange-400",
+  t10:  "bg-teal-400",
+  t3:   "bg-sky-400",
+  t1:   "bg-stone-300",
+  t0:   "bg-stone-200",
 };
 
-const countBadgeTint = (count: number): string => {
-  if (count >= 100) return "bg-rose-600 text-white";
-  if (count >= 50)  return "bg-amber-600 text-white";
-  if (count >= 25)  return "bg-orange-500 text-white";
-  if (count >= 10)  return "bg-teal-600 text-white";
-  if (count >= 3)   return "bg-sky-600 text-white";
-  if (count >= 1)   return "bg-primary text-primary-foreground";
-  return "bg-muted text-muted-foreground";
+const countBadge: Record<Tier, string> = {
+  t100: "bg-rose-50 text-rose-700 border-rose-200",
+  t50:  "bg-amber-50 text-amber-800 border-amber-200",
+  t25:  "bg-orange-50 text-orange-800 border-orange-200",
+  t10:  "bg-teal-50 text-teal-800 border-teal-200",
+  t3:   "bg-sky-50 text-sky-800 border-sky-200",
+  t1:   "bg-stone-50 text-stone-700 border-stone-200",
+  t0:   "bg-muted text-muted-foreground border-border/60",
 };
 
 const canonical = (s: string) =>
@@ -78,6 +82,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   const [dragCanon, setDragCanon] = useState<string | null>(null);
   const [overCanon, setOverCanon] = useState<string | null>(null);
   const [merging, setMerging] = useState(false);
+  const [sortMode, setSortMode] = useState<"volume" | "name" | "unprofiled">("volume");
+  const [filterMode, setFilterMode] = useState<"all" | "profiled" | "unprofiled" | "highvolume">("all");
 
 
   const load = async () => {
@@ -147,23 +153,25 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     return Array.from(map.values());
   }, [rows, texasSubmissions]);
 
+  const isProfiled = (s: (typeof cemeteryStats)[number]): boolean => {
+    if (!s.directoryId) return false;
+    const p = rows.find(r => r.id === s.directoryId);
+    return !!p && !!(p.address || p.contact_phone || p.website || p.description || p.typical_prices || p.transfer_fee || p.notes);
+  };
+
   const filteredStats = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = cemeteryStats.filter(s => {
       if (q && !s.displayName.toLowerCase().includes(q) && !Array.from(s.cities).some(c => c.toLowerCase().includes(q))) return false;
+      if (filterMode === "profiled" && !isProfiled(s)) return false;
+      if (filterMode === "unprofiled" && isProfiled(s)) return false;
+      if (filterMode === "highvolume" && s.count < 10) return false;
       return true;
     });
-    list.sort((a, b) => {
-      if (b.count !== a.count) return b.count - a.count;
-      if (b.latestAt !== a.latestAt) return b.latestAt - a.latestAt;
-      return a.displayName.localeCompare(b.displayName);
-    });
     return list;
-  }, [cemeteryStats, query]);
+  }, [cemeteryStats, query, filterMode, rows]);
 
-  // Group cemeteries by primary city, then within each group sort by submission
-  // count (busiest first). Groups themselves are ordered by total submissions,
-  // so the busiest cities float to the top.
+  // Group cemeteries by primary city; sort within groups + across groups per sortMode.
   const groupedStats = useMemo(() => {
     const primaryCity = (s: (typeof filteredStats)[number]): string => {
       const profile = s.directoryId ? rows.find(r => r.id === s.directoryId) : null;
@@ -182,15 +190,29 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       groups.set(key, g);
     }
     const arr = Array.from(groups.values());
-    for (const g of arr) g.items.sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
+    const cmp = (a: (typeof filteredStats)[number], b: (typeof filteredStats)[number]) => {
+      if (sortMode === "name") return a.displayName.localeCompare(b.displayName);
+      if (sortMode === "unprofiled") {
+        const pa = isProfiled(a) ? 1 : 0;
+        const pb = isProfiled(b) ? 1 : 0;
+        if (pa !== pb) return pa - pb; // unprofiled first
+      }
+      return b.count - a.count || a.displayName.localeCompare(b.displayName);
+    };
+    for (const g of arr) g.items.sort(cmp);
     arr.sort((a, b) => {
       if (a.city === "Uncategorised") return 1;
       if (b.city === "Uncategorised") return -1;
+      if (sortMode === "name") return a.city.localeCompare(b.city);
       if (b.total !== a.total) return b.total - a.total;
       return a.city.localeCompare(b.city);
     });
     return arr;
-  }, [filteredStats, rows]);
+  }, [filteredStats, rows, sortMode]);
+
+  const totalSubs = useMemo(() => cemeteryStats.reduce((sum, s) => sum + s.count, 0), [cemeteryStats]);
+  const profiledCount = useMemo(() => cemeteryStats.filter(isProfiled).length, [cemeteryStats, rows]);
+
 
   // Auto-create a directory row for a cemetery that's only known from submissions,
   // so the admin can immediately start filling in its profile.
@@ -332,71 +354,125 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     }
   };
 
+  const sortLabel: Record<typeof sortMode, string> = { volume: "Volume", name: "Name", unprofiled: "Unprofiled first" };
+  const filterChips: { key: typeof filterMode; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "highvolume", label: "High volume" },
+    { key: "profiled", label: "Profiled" },
+    { key: "unprofiled", label: "Unprofiled" },
+  ];
+
   const body = (
-    <div className={standalone ? "space-y-4" : "p-4 space-y-3"}>
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search cemeteries or cities…"
-            className="w-full pl-8 pr-3 py-1.5 rounded-full text-xs border border-border bg-background"
-          />
-        </div>
-        {activeCemeteryCanon && onSelectCemetery && (
+    <div className={standalone ? "space-y-5" : "p-5 space-y-4"}>
+      {/* Toolbar: search + sort + add */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search cemeteries or cities…"
+              className="w-full pl-9 pr-3 py-2 rounded-xl text-sm border border-border/60 bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+            />
+          </div>
+          <div className="relative">
+            <select
+              value={sortMode}
+              onChange={e => setSortMode(e.target.value as any)}
+              className="h-9 pl-3 pr-8 rounded-xl text-xs font-medium border border-border/60 bg-background hover:bg-muted/40 cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+              title="Sort order"
+            >
+              <option value="volume">Sort: Volume</option>
+              <option value="name">Sort: Name</option>
+              <option value="unprofiled">Sort: Unprofiled first</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+          {activeCemeteryCanon && onSelectCemetery && (
+            <button
+              onClick={() => onSelectCemetery(null, null)}
+              className="inline-flex items-center gap-1 px-3 h-9 rounded-xl text-xs font-medium border border-border/60 bg-card hover:bg-muted/50 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" /> Clear filter
+            </button>
+          )}
           <button
-            onClick={() => onSelectCemetery(null, null)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
+            onClick={addBlank}
+            className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
           >
-            <X className="w-3 h-3" /> Clear filter
+            <Plus className="w-3.5 h-3.5" /> Add cemetery
           </button>
-        )}
-        <button
-          onClick={addBlank}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
-        >
-          <Plus className="w-3 h-3" /> Add cemetery
-        </button>
+        </div>
+
+        {/* Filter chip row */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {filterChips.map(chip => {
+            const active = filterMode === chip.key;
+            return (
+              <button
+                key={chip.key}
+                onClick={() => setFilterMode(chip.key)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-medium tracking-wide transition-colors ${
+                  active
+                    ? "bg-foreground text-background"
+                    : "bg-card border border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+          <span className="ml-auto text-[11px] text-muted-foreground italic">
+            Drag one card onto another to merge.
+          </span>
+        </div>
       </div>
 
       {loading && <p className="text-xs text-muted-foreground">Loading…</p>}
       {!loading && filteredStats.length === 0 && (
-        <p className="text-xs text-muted-foreground">
-          {query.trim()
-            ? "No matches."
-            : "No cemeteries yet — they'll appear here automatically as Texas submissions come in, or you can add one manually."}
-        </p>
+        <div className="py-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            {query.trim() || filterMode !== "all"
+              ? "No matches."
+              : "No cemeteries yet — they'll appear here automatically as Texas submissions come in, or you can add one manually."}
+          </p>
+        </div>
       )}
 
-      <p className="text-[11px] text-muted-foreground">
-        Tip: drag one cemetery onto another to merge them. The destination keeps its profile and the source's submissions move over.
-      </p>
-
-      <div className="space-y-6">
+      {/* City groups */}
+      <div className="space-y-7">
         {groupedStats.map(group => (
-          <div key={group.city}>
-            <div className="flex items-baseline gap-2 mb-2 pb-1.5 border-b border-border/60">
-              <h4 className="text-[13px] font-semibold uppercase tracking-wide text-foreground/80">{group.city}</h4>
-              <span className="text-[11px] text-muted-foreground">
-                {group.items.length} {group.items.length === 1 ? "cemetery" : "cemeteries"} · {group.total} submission{group.total === 1 ? "" : "s"}
+          <section key={group.city}>
+            <div className="flex items-center gap-3 mb-3">
+              <h4 className="font-display text-sm font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+                {group.city}
+              </h4>
+              <div className="h-px flex-1 bg-border/60" />
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground tabular-nums">
+                {group.items.length}
+              </span>
+              <span className="text-[10px] text-muted-foreground/70 tabular-nums">
+                {group.total} sub{group.total === 1 ? "" : "s"}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
               {group.items.map(stat => {
                 const isActive = activeCemeteryCanon === stat.canon;
                 const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
                 const isDragging = dragCanon === stat.canon;
                 const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
-                const hasProfile = !!profile && !!(profile.description || profile.typical_prices || profile.transfer_fee || profile.notes || profile.address || profile.contact_phone || profile.website);
+                const profiled = isProfiled(stat);
+                const tier = tierOf(stat.count);
                 const websiteHost = (() => {
                   const w = profile?.website?.trim();
                   if (!w) return null;
                   try { return new URL(w.startsWith("http") ? w : `https://${w}`).host.replace(/^www\./, ""); }
                   catch { return w.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]; }
                 })();
-                const cityLabel = profile?.city || Array.from(stat.cities)[0] || null;
+
                 return (
                   <div
                     key={stat.canon}
@@ -420,148 +496,160 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                       if (!src || src === stat.canon) return;
                       mergeInto(src, { canon: stat.canon, displayName: stat.displayName, directoryId: stat.directoryId });
                     }}
-                    className={`group relative rounded-xl border transition-all overflow-hidden flex flex-col ${
+                    className={`group relative flex overflow-hidden rounded-r-xl rounded-l-sm border-y border-r transition-all ${
                       isDropTarget
-                        ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500"
+                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-400"
                         : isDragging
-                          ? "opacity-50 border-primary"
+                          ? "opacity-40 border-border/60"
                           : isActive
-                            ? "border-primary bg-primary/10 ring-1 ring-primary shadow-sm"
-                            : `${countTint(stat.count)} hover:border-primary/50 hover:shadow-sm`
+                            ? "border-primary bg-primary/[0.06] ring-1 ring-primary/40 shadow-sm"
+                            : profiled
+                              ? "border-border/50 bg-card hover:shadow-md hover:border-border"
+                              : "border-border/40 bg-muted/30 hover:bg-card hover:border-border/70 hover:shadow-sm"
                     }`}
                     title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : undefined}
                   >
-                    <GripVertical className="absolute top-2 right-2 w-3.5 h-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" />
-                    <button
-                      onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
-                      className="w-full text-left p-4 flex-1 flex flex-col gap-2.5"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <h5 className="text-[15px] font-semibold text-foreground leading-snug break-words pr-4">
-                            {stat.displayName}
-                          </h5>
-                          {cityLabel && (
-                            <p className="text-[11px] text-muted-foreground mt-0.5">{cityLabel}</p>
-                          )}
-                        </div>
-                        <span
-                          className={`shrink-0 inline-flex flex-col items-center justify-center min-w-[42px] h-11 px-2 rounded-lg text-sm font-bold leading-none ${countBadgeTint(stat.count)}`}
-                          title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
-                        >
-                          <span className="text-base">{stat.count}</span>
-                          <span className="text-[8px] font-medium uppercase tracking-wider opacity-80 mt-0.5">
-                            {stat.count === 1 ? "sub" : "subs"}
-                          </span>
-                        </span>
-                      </div>
+                    {/* Left tier bar */}
+                    <div className={`w-1 shrink-0 ${leftBar[tier]}`} aria-hidden />
 
-                      {profile && (profile.address || profile.contact_phone || websiteHost) && (
-                        <div className="space-y-1 text-[12px] text-foreground/75">
-                          {profile.address && (
-                            <div className="flex items-start gap-1.5">
-                              <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-muted-foreground" />
-                              <span className="break-words">{profile.address}</span>
-                            </div>
-                          )}
-                          {profile.contact_phone && (
-                            <div className="flex items-center gap-1.5">
-                              <Phone className="w-3 h-3 shrink-0 text-muted-foreground" />
-                              <span>{profile.contact_phone}</span>
-                            </div>
-                          )}
-                          {websiteHost && (
-                            <div className="flex items-center gap-1.5">
-                              <Globe className="w-3 h-3 shrink-0 text-muted-foreground" />
-                              <a
-                                href={profile.website!.startsWith("http") ? profile.website! : `https://${profile.website}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-primary hover:underline break-all"
-                              >
-                                {websiteHost}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {profile?.description && (
-                        <p className="text-[11.5px] text-muted-foreground leading-relaxed line-clamp-2 italic">
-                          {profile.description}
-                        </p>
-                      )}
-
-                      <div className="mt-auto pt-1 flex items-center gap-1.5 flex-wrap">
-                        {hasProfile ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium">
-                            profiled
-                          </span>
-                        ) : stat.directoryId ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border/50">
-                            in registry
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-800 border border-amber-200">
-                            unlinked
-                          </span>
-                        )}
-                        {isActive && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-primary/15 text-primary border border-primary/30 font-medium">
-                            filtering
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                    {!hideProfileEditor && (
-                      <div className="flex items-center gap-1 px-4 pb-2.5 -mt-1">
-                        <button
-                          onClick={async () => {
-                            if (profile) {
-                              setOpenId(o => (o === profile.id ? null : profile.id));
-                            } else {
-                              const id = await ensureProfile(stat);
-                              if (id) setOpenId(id);
-                            }
-                          }}
-                          className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                        >
-                          {profile && openId === profile.id ? "Hide profile" : (profile ? "Edit profile" : "Add profile info")}
-                        </button>
-                      </div>
-                    )}
-                    {!hideProfileEditor && profile && openId === profile.id && (
-                      <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-background/50">
-                        <Inp label="Name" value={(edits[profile.id]?.name as any) ?? profile.name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], name: v } }))} />
-                        <Inp label="City" value={(edits[profile.id]?.city as any) ?? profile.city ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], city: v } }))} />
-                        <Inp label="Address" value={(edits[profile.id]?.address as any) ?? profile.address ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], address: v } }))} className="sm:col-span-2" />
-                        <Inp label="Website" value={(edits[profile.id]?.website as any) ?? profile.website ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], website: v } }))} />
-                        <Inp label="Transfer fee ($)" type="number" value={(edits[profile.id]?.transfer_fee as any) ?? profile.transfer_fee ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], transfer_fee: v === "" ? null : Number(v) } }))} />
-                        <Inp label="Contact name" value={(edits[profile.id]?.contact_name as any) ?? profile.contact_name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_name: v } }))} />
-                        <Inp label="Contact phone" value={(edits[profile.id]?.contact_phone as any) ?? profile.contact_phone ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_phone: v } }))} />
-                        <Inp label="Contact email" value={(edits[profile.id]?.contact_email as any) ?? profile.contact_email ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_email: v } }))} className="sm:col-span-2" />
-                        <Ta label="Description" rows={3} value={(edits[profile.id]?.description as any) ?? profile.description ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], description: v } }))} />
-                        <Ta label="Typical prices" rows={3} value={(edits[profile.id]?.typical_prices as any) ?? profile.typical_prices ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], typical_prices: v } }))} />
-                        <Ta label="Internal notes" rows={3} value={(edits[profile.id]?.notes as any) ?? profile.notes ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], notes: v } }))} className="sm:col-span-2" />
-                        <div className="sm:col-span-2 flex justify-end">
-                          <button
-                            onClick={() => save(profile.id)}
-                            disabled={!edits[profile.id]}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <button
+                        onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
+                        className="w-full text-left p-4 flex-1 cursor-pointer"
+                      >
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <h5 className={`font-display text-[17px] leading-tight break-words ${profiled ? "text-foreground" : "text-foreground/70"}`}>
+                              {stat.displayName}
+                            </h5>
+                            {profile?.address ? (
+                              <p className="text-[11.5px] text-muted-foreground flex items-start gap-1 leading-snug">
+                                <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-muted-foreground/70" />
+                                <span className="break-words">{profile.address}</span>
+                              </p>
+                            ) : profile?.city || Array.from(stat.cities)[0] ? (
+                              <p className="text-[11.5px] text-muted-foreground/80">
+                                {profile?.city || Array.from(stat.cities)[0]}
+                              </p>
+                            ) : (
+                              <p className="text-[11.5px] text-muted-foreground/60 italic">
+                                No profile details available
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className={`shrink-0 inline-flex items-center justify-center min-w-[38px] px-2 py-1 rounded-lg text-xs font-bold tabular-nums border ${countBadge[tier]}`}
+                            title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
                           >
-                            <Save className="w-3.5 h-3.5" /> Save profile
+                            {stat.count}
+                          </span>
+                        </div>
+
+                        {(profile?.contact_phone || websiteHost) && (
+                          <div className="mt-3 pt-3 border-t border-border/40 grid grid-cols-2 gap-y-1.5 gap-x-3 text-[11.5px] text-foreground/70">
+                            {profile?.contact_phone && (
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <Phone className="w-3 h-3 shrink-0 text-muted-foreground/70" />
+                                <span className="truncate">{profile.contact_phone}</span>
+                              </div>
+                            )}
+                            {websiteHost && (
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <Globe className="w-3 h-3 shrink-0 text-muted-foreground/70" />
+                                <a
+                                  href={profile!.website!.startsWith("http") ? profile!.website! : `https://${profile!.website}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-primary hover:underline truncate"
+                                >
+                                  {websiteHost}
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {profile?.description && (
+                          <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground italic line-clamp-2">
+                            {profile.description}
+                          </p>
+                        )}
+
+                        {isActive && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-primary/15 text-primary border border-primary/30 font-medium">
+                              filtering submissions
+                            </span>
+                          </div>
+                        )}
+                      </button>
+
+                      {!hideProfileEditor && (
+                        <div className="flex items-center justify-between gap-2 px-4 pb-2.5">
+                          <GripVertical className="w-3.5 h-3.5 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <button
+                            onClick={async () => {
+                              if (profile) {
+                                setOpenId(o => (o === profile.id ? null : profile.id));
+                              } else {
+                                const id = await ensureProfile(stat);
+                                if (id) setOpenId(id);
+                              }
+                            }}
+                            className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {profile && openId === profile.id ? "Hide" : (profile ? "Edit" : "Add profile")}
                           </button>
                         </div>
-                      </div>
-                    )}
+                      )}
+
+                      {!hideProfileEditor && profile && openId === profile.id && (
+                        <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-background/50">
+                          <Inp label="Name" value={(edits[profile.id]?.name as any) ?? profile.name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], name: v } }))} />
+                          <Inp label="City" value={(edits[profile.id]?.city as any) ?? profile.city ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], city: v } }))} />
+                          <Inp label="Address" value={(edits[profile.id]?.address as any) ?? profile.address ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], address: v } }))} className="sm:col-span-2" />
+                          <Inp label="Website" value={(edits[profile.id]?.website as any) ?? profile.website ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], website: v } }))} />
+                          <Inp label="Transfer fee ($)" type="number" value={(edits[profile.id]?.transfer_fee as any) ?? profile.transfer_fee ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], transfer_fee: v === "" ? null : Number(v) } }))} />
+                          <Inp label="Contact name" value={(edits[profile.id]?.contact_name as any) ?? profile.contact_name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_name: v } }))} />
+                          <Inp label="Contact phone" value={(edits[profile.id]?.contact_phone as any) ?? profile.contact_phone ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_phone: v } }))} />
+                          <Inp label="Contact email" value={(edits[profile.id]?.contact_email as any) ?? profile.contact_email ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_email: v } }))} className="sm:col-span-2" />
+                          <Ta label="Description" rows={3} value={(edits[profile.id]?.description as any) ?? profile.description ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], description: v } }))} />
+                          <Ta label="Typical prices" rows={3} value={(edits[profile.id]?.typical_prices as any) ?? profile.typical_prices ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], typical_prices: v } }))} />
+                          <Ta label="Internal notes" rows={3} value={(edits[profile.id]?.notes as any) ?? profile.notes ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], notes: v } }))} className="sm:col-span-2" />
+                          <div className="sm:col-span-2 flex justify-end">
+                            <button
+                              onClick={() => save(profile.id)}
+                              disabled={!edits[profile.id]}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                            >
+                              <Save className="w-3.5 h-3.5" /> Save profile
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </section>
         ))}
       </div>
+
+      {/* Legend footer */}
+      {!loading && filteredStats.length > 0 && (
+        <div className="pt-4 mt-2 border-t border-border/50 flex items-center justify-between flex-wrap gap-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+          <span>{filteredStats.length} of {cemeteryStats.length} · {profiledCount} profiled · {totalSubs} submissions</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-400" />100+</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" />50+</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-400" />25+</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-400" />10+</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-sky-400" />3+</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 
