@@ -171,6 +171,7 @@ const Index = () => {
       />
 
       <SellerPromoAnimation />
+      <ListingFeePromo />
       <PriceComparison />
       <HowItWorksSection />
 
