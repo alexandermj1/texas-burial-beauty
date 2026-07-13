@@ -42,27 +42,31 @@ interface Props {
   hideProfileEditor?: boolean;
 }
 
-// Light volume-based tint so high-traffic cemeteries are immediately recognisable
-// once we have 100+ submissions on a single cemetery. Kept subtle — never overrides
-// the active/drop-target states which use stronger borders.
-const countTint = (count: number): string => {
-  if (count >= 100) return "bg-rose-100/70 dark:bg-rose-950/40 border-rose-300/60 dark:border-rose-900/60";
-  if (count >= 50)  return "bg-amber-100/60 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-900/60";
-  if (count >= 25)  return "bg-orange-50/80 dark:bg-orange-950/25 border-orange-200/70 dark:border-orange-900/50";
-  if (count >= 10)  return "bg-teal-50/80 dark:bg-teal-950/25 border-teal-200/70 dark:border-teal-900/50";
-  if (count >= 3)   return "bg-sky-50/70 dark:bg-sky-950/25 border-sky-200/70 dark:border-sky-900/40";
-  if (count >= 1)   return "bg-card border-border/60";
-  return "bg-muted/40 border-border/50";
+// Volume tiers → left-bar accent (structural indicator) + badge tint (numeric).
+// The card body stays neutral (white/off-white) so the accent bar carries the
+// signal without turning the panel into a rainbow.
+type Tier = "t100" | "t50" | "t25" | "t10" | "t3" | "t1" | "t0";
+const tierOf = (n: number): Tier =>
+  n >= 100 ? "t100" : n >= 50 ? "t50" : n >= 25 ? "t25" : n >= 10 ? "t10" : n >= 3 ? "t3" : n >= 1 ? "t1" : "t0";
+
+const leftBar: Record<Tier, string> = {
+  t100: "bg-rose-400",
+  t50:  "bg-amber-400",
+  t25:  "bg-orange-400",
+  t10:  "bg-teal-400",
+  t3:   "bg-sky-400",
+  t1:   "bg-stone-300",
+  t0:   "bg-stone-200",
 };
 
-const countBadgeTint = (count: number): string => {
-  if (count >= 100) return "bg-rose-600 text-white";
-  if (count >= 50)  return "bg-amber-600 text-white";
-  if (count >= 25)  return "bg-orange-500 text-white";
-  if (count >= 10)  return "bg-teal-600 text-white";
-  if (count >= 3)   return "bg-sky-600 text-white";
-  if (count >= 1)   return "bg-primary text-primary-foreground";
-  return "bg-muted text-muted-foreground";
+const countBadge: Record<Tier, string> = {
+  t100: "bg-rose-50 text-rose-700 border-rose-200",
+  t50:  "bg-amber-50 text-amber-800 border-amber-200",
+  t25:  "bg-orange-50 text-orange-800 border-orange-200",
+  t10:  "bg-teal-50 text-teal-800 border-teal-200",
+  t3:   "bg-sky-50 text-sky-800 border-sky-200",
+  t1:   "bg-stone-50 text-stone-700 border-stone-200",
+  t0:   "bg-muted text-muted-foreground border-border/60",
 };
 
 const canonical = (s: string) =>
