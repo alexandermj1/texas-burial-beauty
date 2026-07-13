@@ -5,7 +5,7 @@
 // another to merge — the destination cemetery keeps its profile; only the source
 // submissions get relabelled.
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X } from "lucide-react";
+import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, MapPin, Phone, Globe, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
@@ -383,13 +383,20 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                 {group.items.length} {group.items.length === 1 ? "cemetery" : "cemeteries"} · {group.total} submission{group.total === 1 ? "" : "s"}
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {group.items.map(stat => {
                 const isActive = activeCemeteryCanon === stat.canon;
                 const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
                 const isDragging = dragCanon === stat.canon;
                 const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
-                const hasProfile = !!profile && !!(profile.description || profile.typical_prices || profile.transfer_fee || profile.notes);
+                const hasProfile = !!profile && !!(profile.description || profile.typical_prices || profile.transfer_fee || profile.notes || profile.address || profile.contact_phone || profile.website);
+                const websiteHost = (() => {
+                  const w = profile?.website?.trim();
+                  if (!w) return null;
+                  try { return new URL(w.startsWith("http") ? w : `https://${w}`).host.replace(/^www\./, ""); }
+                  catch { return w.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]; }
+                })();
+                const cityLabel = profile?.city || Array.from(stat.cities)[0] || null;
                 return (
                   <div
                     key={stat.canon}
@@ -413,51 +420,102 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                       if (!src || src === stat.canon) return;
                       mergeInto(src, { canon: stat.canon, displayName: stat.displayName, directoryId: stat.directoryId });
                     }}
-                    className={`rounded-xl border transition-all overflow-hidden cursor-grab active:cursor-grabbing ${
+                    className={`group relative rounded-xl border transition-all overflow-hidden flex flex-col ${
                       isDropTarget
                         ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500"
                         : isDragging
                           ? "opacity-50 border-primary"
                           : isActive
-                            ? "border-primary bg-primary/10 ring-1 ring-primary"
-                            : `${countTint(stat.count)} hover:border-primary/40`
+                            ? "border-primary bg-primary/10 ring-1 ring-primary shadow-sm"
+                            : `${countTint(stat.count)} hover:border-primary/50 hover:shadow-sm`
                     }`}
-                    title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : "Drag onto another cemetery to merge"}
+                    title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : undefined}
                   >
+                    <GripVertical className="absolute top-2 right-2 w-3.5 h-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" />
                     <button
                       onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
-                      className="w-full text-left p-3.5"
+                      className="w-full text-left p-4 flex-1 flex flex-col gap-2.5"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                          <p className="text-[15px] font-semibold text-foreground leading-snug break-words">{stat.displayName}</p>
-                          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground">
-                            {hasProfile && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium">
-                                profiled
-                              </span>
-                            )}
-                            {stat.directoryId ? (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
-                                in registry
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                                unlinked
-                              </span>
-                            )}
-                          </div>
+                          <h5 className="text-[15px] font-semibold text-foreground leading-snug break-words pr-4">
+                            {stat.displayName}
+                          </h5>
+                          {cityLabel && (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{cityLabel}</p>
+                          )}
                         </div>
                         <span
-                          className={`shrink-0 inline-flex items-center justify-center min-w-[36px] h-8 px-2 rounded-full text-sm font-bold ${countBadgeTint(stat.count)}`}
+                          className={`shrink-0 inline-flex flex-col items-center justify-center min-w-[42px] h-11 px-2 rounded-lg text-sm font-bold leading-none ${countBadgeTint(stat.count)}`}
                           title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
                         >
-                          {stat.count}
+                          <span className="text-base">{stat.count}</span>
+                          <span className="text-[8px] font-medium uppercase tracking-wider opacity-80 mt-0.5">
+                            {stat.count === 1 ? "sub" : "subs"}
+                          </span>
                         </span>
+                      </div>
+
+                      {profile && (profile.address || profile.contact_phone || websiteHost) && (
+                        <div className="space-y-1 text-[12px] text-foreground/75">
+                          {profile.address && (
+                            <div className="flex items-start gap-1.5">
+                              <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-muted-foreground" />
+                              <span className="break-words">{profile.address}</span>
+                            </div>
+                          )}
+                          {profile.contact_phone && (
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="w-3 h-3 shrink-0 text-muted-foreground" />
+                              <span>{profile.contact_phone}</span>
+                            </div>
+                          )}
+                          {websiteHost && (
+                            <div className="flex items-center gap-1.5">
+                              <Globe className="w-3 h-3 shrink-0 text-muted-foreground" />
+                              <a
+                                href={profile.website!.startsWith("http") ? profile.website! : `https://${profile.website}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-primary hover:underline break-all"
+                              >
+                                {websiteHost}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {profile?.description && (
+                        <p className="text-[11.5px] text-muted-foreground leading-relaxed line-clamp-2 italic">
+                          {profile.description}
+                        </p>
+                      )}
+
+                      <div className="mt-auto pt-1 flex items-center gap-1.5 flex-wrap">
+                        {hasProfile ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium">
+                            profiled
+                          </span>
+                        ) : stat.directoryId ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-muted text-muted-foreground border border-border/50">
+                            in registry
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-800 border border-amber-200">
+                            unlinked
+                          </span>
+                        )}
+                        {isActive && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-primary/15 text-primary border border-primary/30 font-medium">
+                            filtering
+                          </span>
+                        )}
                       </div>
                     </button>
                     {!hideProfileEditor && (
-                      <div className="flex items-center gap-1 px-3.5 pb-2.5">
+                      <div className="flex items-center gap-1 px-4 pb-2.5 -mt-1">
                         <button
                           onClick={async () => {
                             if (profile) {
