@@ -5,7 +5,7 @@
 // another to merge — the destination cemetery keeps its profile; only the source
 // submissions get relabelled.
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X } from "lucide-react";
+import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, MapPin, Phone, Globe, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
