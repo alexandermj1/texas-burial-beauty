@@ -762,9 +762,14 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                       <p className="text-sm text-muted-foreground mb-6">Where is it and what kind of property is it?</p>
                       <div className="grid sm:grid-cols-2 gap-5">
                         <div className="sm:col-span-2">
-                          <label className={labelCls}>Cemetery name</label>
-                          <input className={inputCls} value={form.cemetery} onChange={(e) => setForm({ ...form, cemetery: e.target.value })} placeholder="e.g. Restland Memorial Park, Dallas" maxLength={200} />
+                          <label className={labelCls}>Cemetery</label>
+                          <CemeteryPicker
+                            value={form.cemetery}
+                            isCustom={form.cemeteryIsCustom}
+                            onChange={(name, isCustom) => setForm({ ...form, cemetery: name, cemeteryIsCustom: isCustom })}
+                          />
                         </div>
+
                         <div>
                           <label className={labelCls}>Property type</label>
                           <select value={form.propertyType} onChange={(e) => setForm({ ...form, propertyType: e.target.value })} className={inputCls + " cursor-pointer"}>
