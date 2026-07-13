@@ -254,15 +254,20 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       {
         chapter: "The property",
         title: <>Which <span className="italic font-medium text-primary">cemetery</span> is it in?</>,
-        helper: "Just the cemetery name and city — we'll match it to our records.",
-        validate: () => (!form.cemetery.trim() ? "Please enter the cemetery name." : null),
+        helper: "Pick from the list so we can match it to our records. If yours isn't shown, tap \"My cemetery isn't listed\".",
+        validate: () => (!form.cemetery.trim()
+          ? (form.cemeteryIsCustom ? "Please type your cemetery name." : "Please select your cemetery from the list.")
+          : null),
         body: (
-          <input
-            autoFocus value={form.cemetery} onChange={(e) => setForm({ ...form, cemetery: e.target.value })}
-            placeholder="e.g. Restland Memorial Park, Dallas" maxLength={200}
-            className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl md:text-4xl text-foreground placeholder:text-foreground/25 placeholder:italic py-3"
+          <CemeteryPicker
+            variant="editorial"
+            autoFocus
+            value={form.cemetery}
+            isCustom={form.cemeteryIsCustom}
+            onChange={(name, isCustom) => setForm({ ...form, cemetery: name, cemeteryIsCustom: isCustom })}
           />
         ),
+
       },
       {
         chapter: "The property",
