@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
+import ListingFeePromo from "@/components/ListingFeePromo";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
@@ -183,6 +184,9 @@ const SellProperty = () => {
         </div>
       </section>
 
+
+      {/* Listing fee promo — reduced pricing while buyer demand is high */}
+      <ListingFeePromo compact />
 
       {/* Seller Journey Video */}
       <section className="py-16 bg-[hsl(var(--sand-light))] border-t border-foreground/10">

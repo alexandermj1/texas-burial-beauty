@@ -8,6 +8,7 @@ import HeroSection from "@/components/HeroSection";
 import AboutSeoSection from "@/components/AboutSeoSection";
 import { BuyerPromoAnimation, SellerPromoAnimation } from "@/components/PromoAnimation";
 import PriceComparison from "@/components/PriceComparison";
+import ListingFeePromo from "@/components/ListingFeePromo";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import WhyUsSection from "@/components/WhyUsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
@@ -170,6 +171,7 @@ const Index = () => {
       />
 
       <SellerPromoAnimation />
+      <ListingFeePromo />
       <PriceComparison />
       <HowItWorksSection />
 
