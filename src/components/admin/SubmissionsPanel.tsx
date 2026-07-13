@@ -201,6 +201,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
   // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
+  const [expandedCemSubId, setExpandedCemSubId] = useState<string | null>(null);
   const [cemeteryLabel, setCemeteryLabel] = useState<string | null>(null);
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
@@ -1333,41 +1334,74 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {cemSubs.map((s: any) => {
                       const sKind = resolveKind(s.customer_kind, s.source);
                       const fresh = isNew(s);
+                      const isExpanded = expandedCemSubId === s.id;
                       return (
-                        <button
-                          key={s.id}
-                          onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); setCemeteriesOpen(false); }}
-                          className="w-full text-left px-4 py-3 border-b border-border/40 hover:bg-muted/40 transition-colors flex items-start gap-3"
-                        >
-                          <img
-                            src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
-                            alt=""
-                            className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-0.5">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
-                                {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
-                                {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
-                                {hasDocs(s) && (
-                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))]" title="Has attachments">
-                                    <Paperclip className="w-3 h-3" />
-                                  </span>
+                        <div key={s.id} className="border-b border-border/40">
+                          <button
+                            onClick={() => { recordView(s.id); setExpandedCemSubId(isExpanded ? null : s.id); }}
+                            className="w-full text-left px-4 py-3 hover:bg-muted/40 transition-colors flex items-start gap-3"
+                          >
+                            <img
+                              src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                              alt=""
+                              className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2 mb-0.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
+                                  {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
+                                  {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
+                                  {hasDocs(s) && (
+                                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))]" title="Has attachments">
+                                      <Paperclip className="w-3 h-3" />
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate">
+                                <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
+                                {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
+                              </p>
+                              {!isExpanded && (
+                                <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
+                                  {s.message || s.details || s.email || s.phone || "—"}
+                                </p>
+                              )}
+                            </div>
+                            <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                          </button>
+                          {isExpanded && (
+                            <div className="px-4 pb-4 pt-1 bg-muted/10 space-y-3">
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                {s.email && (
+                                  <a href={`mailto:${s.email}`} className="flex items-center gap-1.5 text-primary hover:underline truncate">
+                                    <Mail className="w-3 h-3 shrink-0" />{s.email}
+                                  </a>
+                                )}
+                                {s.phone && (
+                                  <a href={`tel:${s.phone}`} className="flex items-center gap-1.5 text-primary hover:underline truncate">
+                                    <Phone className="w-3 h-3 shrink-0" />{s.phone}
+                                  </a>
                                 )}
                               </div>
-                              <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
+                              {(s.message || s.details) && (
+                                <div className="text-xs text-foreground/90 whitespace-pre-wrap bg-background/60 rounded-lg p-3 border border-border/40">
+                                  {s.message || s.details}
+                                </div>
+                              )}
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); setCemeteriesOpen(false); }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> Open full view
+                                </button>
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate">
-                              <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
-                              {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
-                            </p>
-                            <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
-                              {s.message || s.details || s.email || s.phone || "—"}
-                            </p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-1" />
-                        </button>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
