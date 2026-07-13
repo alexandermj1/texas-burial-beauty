@@ -201,7 +201,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
   // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
-  const [expandedCemSubId, setExpandedCemSubId] = useState<string | null>(null);
+  
   const [cemeteryLabel, setCemeteryLabel] = useState<string | null>(null);
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
@@ -1317,7 +1317,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             />
           </>
         )}
-        {cemeteriesOpen && cemeteryCanon ? (
+        {cemeteriesOpen && cemeteryCanon && (
           (() => {
             const cemSubs = texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon);
             return (
@@ -1334,12 +1334,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {cemSubs.map((s: any) => {
                       const sKind = resolveKind(s.customer_kind, s.source);
                       const fresh = isNew(s);
-                      const isExpanded = expandedCemSubId === s.id;
+                      const isExpanded = selectedId === s.id;
                       return (
                         <div key={s.id} className="border-b border-border/40">
                           <button
-                            onClick={() => { recordView(s.id); setExpandedCemSubId(isExpanded ? null : s.id); }}
-                            className="w-full text-left px-4 py-3 hover:bg-muted/40 transition-colors flex items-start gap-3"
+                            onClick={() => {
+                              if (isExpanded) { setSelectedId(null); return; }
+                              setSelectedId(s.id);
+                              setNotesDraft(s.admin_notes || "");
+                              recordView(s.id);
+                            }}
+                            className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${isExpanded ? "bg-muted/40" : "hover:bg-muted/40"}`}
                           >
                             <img
                               src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
@@ -1372,35 +1377,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </div>
                             <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                           </button>
-                          {isExpanded && (
-                            <div className="px-4 pb-4 pt-1 bg-muted/10 space-y-3">
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                {s.email && (
-                                  <a href={`mailto:${s.email}`} className="flex items-center gap-1.5 text-primary hover:underline truncate">
-                                    <Mail className="w-3 h-3 shrink-0" />{s.email}
-                                  </a>
-                                )}
-                                {s.phone && (
-                                  <a href={`tel:${s.phone}`} className="flex items-center gap-1.5 text-primary hover:underline truncate">
-                                    <Phone className="w-3 h-3 shrink-0" />{s.phone}
-                                  </a>
-                                )}
-                              </div>
-                              {(s.message || s.details) && (
-                                <div className="text-xs text-foreground/90 whitespace-pre-wrap bg-background/60 rounded-lg p-3 border border-border/40">
-                                  {s.message || s.details}
-                                </div>
-                              )}
-                              <div className="flex flex-wrap gap-2 pt-1">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); setCemeteriesOpen(false); }}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90"
-                                >
-                                  <ExternalLink className="w-3 h-3" /> Open full view
-                                </button>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       );
                     })}
@@ -1409,11 +1385,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             );
           })()
-        ) : !selected ? (
+        )}
+        {!cemeteriesOpen && !selected && (
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
-            {cemeteryCanon ? "Select a submission from the list to view its details." : "Select a submission to view details."}
+            Select a submission to view details.
           </div>
-        ) : (
+        )}
+        {selected && (
           <motion.div
             key={selected.id}
             initial={{ opacity: 0, y: 8 }}
