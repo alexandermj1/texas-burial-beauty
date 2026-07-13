@@ -161,6 +161,37 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     return list;
   }, [cemeteryStats, query]);
 
+  // Group cemeteries by primary city, then within each group sort by submission
+  // count (busiest first). Groups themselves are ordered by total submissions,
+  // so the busiest cities float to the top.
+  const groupedStats = useMemo(() => {
+    const primaryCity = (s: (typeof filteredStats)[number]): string => {
+      const profile = s.directoryId ? rows.find(r => r.id === s.directoryId) : null;
+      const fromProfile = profile?.city?.trim();
+      if (fromProfile) return fromProfile;
+      const fromSubs = Array.from(s.cities).map(c => c.trim()).filter(Boolean);
+      return fromSubs[0] || "Uncategorised";
+    };
+    const groups = new Map<string, { city: string; items: typeof filteredStats; total: number }>();
+    for (const s of filteredStats) {
+      const city = primaryCity(s);
+      const key = city.toLowerCase();
+      const g = groups.get(key) || { city, items: [], total: 0 };
+      g.items.push(s);
+      g.total += s.count;
+      groups.set(key, g);
+    }
+    const arr = Array.from(groups.values());
+    for (const g of arr) g.items.sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
+    arr.sort((a, b) => {
+      if (a.city === "Uncategorised") return 1;
+      if (b.city === "Uncategorised") return -1;
+      if (b.total !== a.total) return b.total - a.total;
+      return a.city.localeCompare(b.city);
+    });
+    return arr;
+  }, [filteredStats, rows]);
+
   // Auto-create a directory row for a cemetery that's only known from submissions,
   // so the admin can immediately start filling in its profile.
   const ensureProfile = async (stat: { canon: string; displayName: string; sample?: Submission }) => {
