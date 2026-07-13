@@ -493,10 +493,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
-      if (regionFilter === "texas" && cemeteryCanon) {
+      if (regionFilter === "texas" && cemeteryCanon && !cemeteriesOpen) {
         // Exact match only — a submission only belongs to the clicked cemetery
         // if its (canonicalised) cemetery name matches exactly. Uncategorised
         // submissions are intentionally left out so admins can assign them.
+        // While the Cemeteries browser is open, don't filter — the click is a
+        // preview; the list only narrows once the user clicks "View submissions".
         const sc = _canon(s.cemetery || "");
         if (sc !== cemeteryCanon) return false;
       }
@@ -529,7 +531,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]).sort(byNewest);
     return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
 
-  }, [submissions, regionFilter, cemeteryCanon, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
@@ -1113,46 +1115,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
         {cemeteriesOpen && (
           <div className="border-b border-border bg-muted/20 p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-4 items-start">
-              <div className="min-w-0">
-                <TexasCemeteriesPanel
-                  texasSubmissions={texasSubmissions}
-                  activeCemeteryCanon={cemeteryCanon}
-                  onSelectCemetery={(canon, label) => {
-                    setCemeteryCanon(canon);
-                    setCemeteryLabel(label);
-                  }}
-                  onRefresh={onRefresh}
-                  standalone
-                  hideProfileEditor
-                />
-              </div>
-              <aside className="lg:sticky lg:top-24 min-w-0">
-                {cemeteryCanon && cemeteryLabel ? (
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => setCemeteriesOpen(false)}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
-                    >
-                      View submissions at {cemeteryLabel}
-                    </button>
-                    <CemeteryInfoCard
-                      key={cemeteryCanon}
-                      canon={cemeteryCanon}
-                      displayName={cemeteryLabel}
-                      submissionCount={texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon).length}
-                      onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
-                    />
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-8 text-center">
-                    <Building2 className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Select a cemetery to preview its profile here.</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">The list stays open so you can keep browsing.</p>
-                  </div>
-                )}
-              </aside>
-            </div>
+            <TexasCemeteriesPanel
+              texasSubmissions={texasSubmissions}
+              activeCemeteryCanon={cemeteryCanon}
+              onSelectCemetery={(canon, label) => {
+                setCemeteryCanon(canon);
+                setCemeteryLabel(label);
+              }}
+              onRefresh={onRefresh}
+              standalone
+              hideProfileEditor
+            />
           </div>
         )}
 
@@ -1325,13 +1298,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
       <div data-tour="detail-panel" className={`lg:col-span-7 lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
         {cemeteryCanon && cemeteryLabel && (
-          <CemeteryInfoCard
-            key={cemeteryCanon}
-            canon={cemeteryCanon}
-            displayName={cemeteryLabel}
-            submissionCount={filtered.length}
-            onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
-          />
+          <>
+            {cemeteriesOpen && (
+              <button
+                onClick={() => setCemeteriesOpen(false)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
+              >
+                View submissions at {cemeteryLabel}
+              </button>
+            )}
+            <CemeteryInfoCard
+              key={cemeteryCanon}
+              canon={cemeteryCanon}
+              displayName={cemeteryLabel}
+              submissionCount={texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon).length}
+              onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
+            />
+          </>
         )}
         {!selected ? (
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
