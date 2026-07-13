@@ -1316,7 +1316,66 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             />
           </>
         )}
-        {!selected ? (
+        {cemeteriesOpen && cemeteryCanon ? (
+          (() => {
+            const cemSubs = texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon);
+            return (
+              <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border/50 bg-muted/20 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {cemSubs.length} submission{cemSubs.length === 1 ? "" : "s"} at {cemeteryLabel}
+                  </span>
+                </div>
+                {cemSubs.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-muted-foreground">No submissions at this cemetery yet.</div>
+                ) : (
+                  <div className="max-h-[calc(100vh-380px)] overflow-y-auto">
+                    {cemSubs.map((s: any) => {
+                      const sKind = resolveKind(s.customer_kind, s.source);
+                      const fresh = isNew(s);
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => { setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); setCemeteriesOpen(false); }}
+                          className="w-full text-left px-4 py-3 border-b border-border/40 hover:bg-muted/40 transition-colors flex items-start gap-3"
+                        >
+                          <img
+                            src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2 mb-0.5">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
+                                {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
+                                {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
+                                {hasDocs(s) && (
+                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))]" title="Has attachments">
+                                    <Paperclip className="w-3 h-3" />
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">
+                              <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
+                              {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
+                            </p>
+                            <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
+                              {s.message || s.details || s.email || s.phone || "—"}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-1" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()
+        ) : !selected ? (
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
             {cemeteryCanon ? "Select a submission from the list to view its details." : "Select a submission to view details."}
           </div>
