@@ -82,6 +82,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   const [dragCanon, setDragCanon] = useState<string | null>(null);
   const [overCanon, setOverCanon] = useState<string | null>(null);
   const [merging, setMerging] = useState(false);
+  const [sortMode, setSortMode] = useState<"volume" | "name" | "unprofiled">("volume");
+  const [filterMode, setFilterMode] = useState<"all" | "profiled" | "unprofiled" | "highvolume">("all");
 
 
   const load = async () => {
