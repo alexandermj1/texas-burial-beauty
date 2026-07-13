@@ -185,6 +185,9 @@ const SellProperty = () => {
       </section>
 
 
+      {/* Listing fee promo — reduced pricing while buyer demand is high */}
+      <ListingFeePromo compact />
+
       {/* Seller Journey Video */}
       <section className="py-16 bg-[hsl(var(--sand-light))] border-t border-foreground/10">
         <div className="container mx-auto px-6">
