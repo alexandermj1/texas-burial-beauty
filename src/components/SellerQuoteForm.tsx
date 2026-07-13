@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, Upload, Lock, X, FileText, User, MapPin, FileSignature, Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
+import CemeteryPicker from "@/components/CemeteryPicker";
+
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +64,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     email: "",
     phone: "",
     cemetery: defaultCemetery,
+    cemeteryIsCustom: false,
     propertyType: "",
     propertyTypeOther: "",
     spaces: "",
@@ -74,6 +77,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     purchaseInfo: "",
     prepaidEndowmentInfo: "",
   });
+
 
   const handleFiles = async (picked: FileList | null) => {
     if (!picked || picked.length === 0) return;
@@ -115,10 +119,13 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       if (check.ok !== true) return check.error;
     }
     if (s === 1) {
-      if (!form.cemetery.trim()) return "Please enter the cemetery name.";
+      if (!form.cemetery.trim()) return form.cemeteryIsCustom
+        ? "Please type your cemetery name."
+        : "Please select your cemetery from the list.";
       if (!form.propertyType) return "Please choose a property type.";
       if (!form.section.trim()) return "Please enter the section or garden name.";
     }
+
     return null;
   };
 
@@ -176,7 +183,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       const { error: attachError } = await supabase.functions.invoke("attach-seller-files", { body: { submission_id: intakeId } });
       if (attachError) console.warn("attach-seller-files failed", attachError);
     }
-    setForm({ name: "", email: "", phone: "", cemetery: "", propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
+    setForm({ name: "", email: "", phone: "", cemetery: "", cemeteryIsCustom: false, propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
     setFiles([]);
     setLoading(false);
     navigate("/thank-you");
@@ -247,15 +254,20 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       {
         chapter: "The property",
         title: <>Which <span className="italic font-medium text-primary">cemetery</span> is it in?</>,
-        helper: "Just the cemetery name and city — we'll match it to our records.",
-        validate: () => (!form.cemetery.trim() ? "Please enter the cemetery name." : null),
+        helper: "Pick from the list so we can match it to our records. If yours isn't shown, tap \"My cemetery isn't listed\".",
+        validate: () => (!form.cemetery.trim()
+          ? (form.cemeteryIsCustom ? "Please type your cemetery name." : "Please select your cemetery from the list.")
+          : null),
         body: (
-          <input
-            autoFocus value={form.cemetery} onChange={(e) => setForm({ ...form, cemetery: e.target.value })}
-            placeholder="e.g. Restland Memorial Park, Dallas" maxLength={200}
-            className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl md:text-4xl text-foreground placeholder:text-foreground/25 placeholder:italic py-3"
+          <CemeteryPicker
+            variant="editorial"
+            autoFocus
+            value={form.cemetery}
+            isCustom={form.cemeteryIsCustom}
+            onChange={(name, isCustom) => setForm({ ...form, cemetery: name, cemeteryIsCustom: isCustom })}
           />
         ),
+
       },
       {
         chapter: "The property",
@@ -750,9 +762,14 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                       <p className="text-sm text-muted-foreground mb-6">Where is it and what kind of property is it?</p>
                       <div className="grid sm:grid-cols-2 gap-5">
                         <div className="sm:col-span-2">
-                          <label className={labelCls}>Cemetery name</label>
-                          <input className={inputCls} value={form.cemetery} onChange={(e) => setForm({ ...form, cemetery: e.target.value })} placeholder="e.g. Restland Memorial Park, Dallas" maxLength={200} />
+                          <label className={labelCls}>Cemetery</label>
+                          <CemeteryPicker
+                            value={form.cemetery}
+                            isCustom={form.cemeteryIsCustom}
+                            onChange={(name, isCustom) => setForm({ ...form, cemetery: name, cemeteryIsCustom: isCustom })}
+                          />
                         </div>
+
                         <div>
                           <label className={labelCls}>Property type</label>
                           <select value={form.propertyType} onChange={(e) => setForm({ ...form, propertyType: e.target.value })} className={inputCls + " cursor-pointer"}>
