@@ -153,23 +153,25 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     return Array.from(map.values());
   }, [rows, texasSubmissions]);
 
+  const isProfiled = (s: (typeof cemeteryStats)[number]): boolean => {
+    if (!s.directoryId) return false;
+    const p = rows.find(r => r.id === s.directoryId);
+    return !!p && !!(p.address || p.contact_phone || p.website || p.description || p.typical_prices || p.transfer_fee || p.notes);
+  };
+
   const filteredStats = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = cemeteryStats.filter(s => {
       if (q && !s.displayName.toLowerCase().includes(q) && !Array.from(s.cities).some(c => c.toLowerCase().includes(q))) return false;
+      if (filterMode === "profiled" && !isProfiled(s)) return false;
+      if (filterMode === "unprofiled" && isProfiled(s)) return false;
+      if (filterMode === "highvolume" && s.count < 10) return false;
       return true;
     });
-    list.sort((a, b) => {
-      if (b.count !== a.count) return b.count - a.count;
-      if (b.latestAt !== a.latestAt) return b.latestAt - a.latestAt;
-      return a.displayName.localeCompare(b.displayName);
-    });
     return list;
-  }, [cemeteryStats, query]);
+  }, [cemeteryStats, query, filterMode, rows]);
 
-  // Group cemeteries by primary city, then within each group sort by submission
-  // count (busiest first). Groups themselves are ordered by total submissions,
-  // so the busiest cities float to the top.
+  // Group cemeteries by primary city; sort within groups + across groups per sortMode.
   const groupedStats = useMemo(() => {
     const primaryCity = (s: (typeof filteredStats)[number]): string => {
       const profile = s.directoryId ? rows.find(r => r.id === s.directoryId) : null;
@@ -188,15 +190,29 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       groups.set(key, g);
     }
     const arr = Array.from(groups.values());
-    for (const g of arr) g.items.sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
+    const cmp = (a: (typeof filteredStats)[number], b: (typeof filteredStats)[number]) => {
+      if (sortMode === "name") return a.displayName.localeCompare(b.displayName);
+      if (sortMode === "unprofiled") {
+        const pa = isProfiled(a) ? 1 : 0;
+        const pb = isProfiled(b) ? 1 : 0;
+        if (pa !== pb) return pa - pb; // unprofiled first
+      }
+      return b.count - a.count || a.displayName.localeCompare(b.displayName);
+    };
+    for (const g of arr) g.items.sort(cmp);
     arr.sort((a, b) => {
       if (a.city === "Uncategorised") return 1;
       if (b.city === "Uncategorised") return -1;
+      if (sortMode === "name") return a.city.localeCompare(b.city);
       if (b.total !== a.total) return b.total - a.total;
       return a.city.localeCompare(b.city);
     });
     return arr;
-  }, [filteredStats, rows]);
+  }, [filteredStats, rows, sortMode]);
+
+  const totalSubs = useMemo(() => cemeteryStats.reduce((sum, s) => sum + s.count, 0), [cemeteryStats]);
+  const profiledCount = useMemo(() => cemeteryStats.filter(isProfiled).length, [cemeteryStats, rows]);
+
 
   // Auto-create a directory row for a cemetery that's only known from submissions,
   // so the admin can immediately start filling in its profile.
