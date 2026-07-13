@@ -1,7 +1,12 @@
 // Searchable cemetery picker used in the seller forms. The customer MUST pick
 // from the list (or explicitly choose "My cemetery isn't listed" and type it)
 // so we stop getting 30 spellings of the same place.
-import { useEffect, useMemo, useRef, useState } from "react";
+//
+// The dropdown is rendered in a portal (position: fixed) so it never gets
+// clipped by parent overflow-hidden / rounded containers — the form panels
+// crop it otherwise. Position is recomputed on scroll/resize.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, MapPin, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,7 +26,9 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
   const [rows, setRows] = useState<Cemetery[]>([]);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState<{ top: number; left: number; width: number; placeAbove: boolean } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -33,14 +40,51 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
     })();
   }, []);
 
+  // Close on outside click / escape
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(e.target as Node)) setOpen(false);
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
-    window.addEventListener("mousedown", onClick);
-    return () => window.removeEventListener("mousedown", onClick);
-  }, []);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  // Recompute portal position (below trigger, or above if not enough room)
+  const updateRect = () => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const desiredHeight = 460;
+    const spaceBelow = window.innerHeight - r.bottom;
+    const placeAbove = spaceBelow < 260 && r.top > spaceBelow;
+    setRect({
+      top: placeAbove ? Math.max(8, r.top - 8) : r.bottom + 8,
+      left: r.left,
+      width: r.width,
+      placeAbove,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updateRect();
+    const onScroll = () => updateRect();
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [open]);
 
   const grouped = useMemo(() => {
     const q = norm(query);
@@ -58,9 +102,73 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
   }, [rows, query]);
 
   const selected = rows.find(r => r.name === value && !isCustom);
+  const isEditorial = variant === "editorial";
+
+  // Shared portal-rendered dropdown menu
+  const menu = open && rect ? createPortal(
+    <div
+      ref={menuRef}
+      style={{
+        position: "fixed",
+        top: rect.placeAbove ? undefined : rect.top,
+        bottom: rect.placeAbove ? window.innerHeight - rect.top : undefined,
+        left: rect.left,
+        width: rect.width,
+        maxHeight: "min(460px, 70vh)",
+        zIndex: 9999,
+      }}
+      className="bg-background border border-border/70 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95"
+    >
+      <div className="relative border-b border-border/50 shrink-0">
+        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search cemeteries or cities…"
+          className="w-full pl-10 pr-3 py-3 bg-transparent text-sm focus:outline-none"
+        />
+      </div>
+      <div className="overflow-y-auto flex-1 min-h-0">
+        {grouped.length === 0 ? (
+          <p className="p-6 text-sm text-muted-foreground text-center">No matches.</p>
+        ) : (
+          grouped.map(([city, items]) => (
+            <div key={city}>
+              <p className="px-3.5 pt-2.5 pb-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground bg-muted/50 sticky top-0">{city}</p>
+              {items.map(r => {
+                const isSel = value === r.name && !isCustom;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => { onChange(r.name, false); setOpen(false); setQuery(""); }}
+                    className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 transition-colors ${
+                      isSel ? "bg-primary/10 text-primary" : "hover:bg-primary/5 text-foreground"
+                    }`}
+                  >
+                    <span className="text-sm truncate">{r.name}</span>
+                    {isSel && <Check className="w-4 h-4 text-primary shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          ))
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={() => { onChange("", true); setOpen(false); setQuery(""); }}
+        className="w-full px-3.5 py-3 border-t border-border/60 text-left text-sm text-primary hover:bg-primary/5 flex items-center gap-2 shrink-0"
+      >
+        <MapPin className="w-4 h-4" /> My cemetery isn't listed
+      </button>
+    </div>,
+    document.body,
+  ) : null;
 
   // ────────── Editorial variant (large, underlined, magazine style) ──────────
-  if (variant === "editorial") {
+  if (isEditorial) {
     if (isCustom) {
       return (
         <div className="space-y-3">
@@ -83,12 +191,13 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
       );
     }
     return (
-      <div ref={wrapRef} className="relative">
+      <div className="relative">
         <button
+          ref={triggerRef}
           type="button"
           autoFocus={autoFocus}
           onClick={() => setOpen(v => !v)}
-          className="w-full flex items-center justify-between gap-4 bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:outline-none font-display text-2xl md:text-4xl text-left py-3 group"
+          className="w-full flex items-center justify-between gap-4 bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:outline-none font-display text-2xl md:text-4xl text-left py-3"
         >
           <span className={selected ? "text-foreground truncate" : "text-foreground/25 italic"}>
             {selected ? selected.name : "Choose your cemetery…"}
@@ -98,49 +207,7 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
         {selected?.city && (
           <p className="mt-2 text-xs uppercase tracking-[0.25em] text-foreground/50">{selected.city}</p>
         )}
-        {open && (
-          <div className="absolute z-30 mt-2 w-full bg-background border border-border/70 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="relative border-b border-border/50">
-              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search cemeteries or cities…"
-                className="w-full pl-11 pr-4 py-3.5 bg-transparent text-base focus:outline-none"
-              />
-            </div>
-            <div className="max-h-[380px] overflow-y-auto">
-              {grouped.length === 0 ? (
-                <p className="p-6 text-sm text-muted-foreground text-center">No matches.</p>
-              ) : (
-                grouped.map(([city, items]) => (
-                  <div key={city}>
-                    <p className="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-[0.25em] text-muted-foreground bg-muted/40">{city}</p>
-                    {items.map(r => (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => { onChange(r.name, false); setOpen(false); setQuery(""); }}
-                        className="w-full text-left px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-primary/5"
-                      >
-                        <span className="text-sm text-foreground truncate">{r.name}</span>
-                        {value === r.name && <Check className="w-4 h-4 text-primary shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                ))
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => { onChange("", true); setOpen(false); setQuery(""); }}
-              className="w-full px-4 py-3 border-t border-border/60 text-left text-sm text-primary hover:bg-primary/5 flex items-center gap-2"
-            >
-              <MapPin className="w-4 h-4" /> My cemetery isn't listed
-            </button>
-          </div>
-        )}
+        {menu}
       </div>
     );
   }
@@ -148,8 +215,8 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
   // ────────── Standard variant (matches inputCls in seller form) ──────────
   const btnCls =
     "w-full h-12 px-4 rounded-xl bg-background border border-border/60 text-left text-[15px] " +
-    "transition-all flex items-center justify-between gap-2 " +
-    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40";
+    "text-foreground transition-all flex items-center justify-between gap-2 " +
+    "hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40";
 
   if (isCustom) {
     return (
@@ -183,56 +250,14 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
   }
 
   return (
-    <div ref={wrapRef} className="relative">
-      <button type="button" onClick={() => setOpen(v => !v)} className={btnCls}>
+    <div className="relative">
+      <button ref={triggerRef} type="button" onClick={() => setOpen(v => !v)} className={btnCls}>
         <span className={`truncate ${selected ? "text-foreground" : "text-muted-foreground"}`}>
           {selected ? `${selected.name}${selected.city ? ` — ${selected.city}` : ""}` : "Select your cemetery…"}
         </span>
         <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && (
-        <div className="absolute z-30 mt-2 w-full bg-background border border-border/70 rounded-2xl shadow-xl overflow-hidden">
-          <div className="relative border-b border-border/50">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search cemeteries or cities…"
-              className="w-full pl-10 pr-3 py-3 bg-transparent text-sm focus:outline-none"
-            />
-          </div>
-          <div className="max-h-[320px] overflow-y-auto">
-            {grouped.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground text-center">No matches.</p>
-            ) : (
-              grouped.map(([city, items]) => (
-                <div key={city}>
-                  <p className="px-3.5 pt-2.5 pb-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground bg-muted/40">{city}</p>
-                  {items.map(r => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => { onChange(r.name, false); setOpen(false); setQuery(""); }}
-                      className="w-full text-left px-3.5 py-2 flex items-center justify-between gap-3 hover:bg-primary/5"
-                    >
-                      <span className="text-sm text-foreground truncate">{r.name}</span>
-                      {value === r.name && <Check className="w-4 h-4 text-primary shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              ))
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => { onChange("", true); setOpen(false); setQuery(""); }}
-            className="w-full px-3.5 py-2.5 border-t border-border/60 text-left text-sm text-primary hover:bg-primary/5 flex items-center gap-2"
-          >
-            <MapPin className="w-4 h-4" /> My cemetery isn't listed
-          </button>
-        </div>
-      )}
+      {menu}
     </div>
   );
 };
