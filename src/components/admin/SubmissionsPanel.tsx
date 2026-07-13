@@ -1641,6 +1641,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               )}
             </div>
 
+            {/* No cemetery on file yet (e.g. general contact form) — let admins assign one. */}
+            {!selected.cemetery && (
+              <div className="rounded-lg p-4 border border-dashed border-border bg-muted/30 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
+                  <p className="text-sm text-foreground">No cemetery on file for this submission.</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Match them to a cemetery profile to add them to that cemetery's submissions.</p>
+                </div>
+                <button
+                  onClick={() => setReassignCemeteryOpen(true)}
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  title="Assign this submission to a cemetery"
+                >
+                  <Building2 className="w-3.5 h-3.5" /> Add to cemetery
+                </button>
+              </div>
+            )}
+
             {/* Texas submissions: show what the customer wrote + our matched
                 cemetery profile (transfer fee, contact, description, section pricing).
                 Tinted by submission volume, matching the Cemeteries directory panel. */}
