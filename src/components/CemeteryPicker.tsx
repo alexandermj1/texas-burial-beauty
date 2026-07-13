@@ -6,12 +6,12 @@
 // rich cards showing the cemetery name, city and street address so it's
 // easy to recognize the right one visually.
 //
-// Menu is portal-rendered (position: fixed) so parent overflow-hidden /
-// rounded panels don't clip it. Position recomputes on scroll/resize.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+// Menu is rendered inline (embedded in the form flow) so it feels like part
+// of the surrounding form rather than a floating popover.
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, MapPin, Search, X, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
 
 interface Cemetery {
   id: string;
@@ -61,7 +61,6 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [rect, setRect] = useState<{ top: number; left: number; width: number; placeAbove: boolean } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -91,34 +90,11 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
     };
   }, [open]);
 
-  // Recompute portal position (below trigger, or above if not enough room)
-  const updateRect = () => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - r.bottom;
-    const placeAbove = spaceBelow < 320 && r.top > spaceBelow;
-    setRect({
-      top: placeAbove ? Math.max(8, r.top - 8) : r.bottom + 8,
-      left: r.left,
-      width: r.width,
-      placeAbove,
-    });
-  };
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    updateRect();
-    // focus the search field on open
-    requestAnimationFrame(() => searchRef.current?.focus());
-    const onScroll = () => updateRect();
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onScroll);
-    };
+  // Focus search when menu opens
+  useEffect(() => {
+    if (open) requestAnimationFrame(() => searchRef.current?.focus());
   }, [open]);
+
 
   // Search-first: with no query, show a compact prompt + a few popular cities'
   // top entries so it isn't a wall of names. With a query, show flat ranked results.
@@ -147,20 +123,11 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
   const selected = rows.find((r) => r.name === value && !isCustom);
   const isEditorial = variant === "editorial";
 
-  // Shared portal-rendered dropdown menu
-  const menu = open && rect ? createPortal(
+  // Shared inline dropdown menu (embedded in form flow, not floating)
+  const menu = open ? (
     <div
       ref={menuRef}
-      style={{
-        position: "fixed",
-        top: rect.placeAbove ? undefined : rect.top,
-        bottom: rect.placeAbove ? window.innerHeight - rect.top : undefined,
-        left: rect.left,
-        width: rect.width,
-        maxHeight: "min(540px, 75vh)",
-        zIndex: 9999,
-      }}
-      className="bg-background border border-border/70 rounded-2xl shadow-[0_24px_60px_-15px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95"
+      className="mt-2 bg-background border border-border/70 rounded-2xl overflow-hidden flex flex-col animate-in fade-in-0 slide-in-from-top-1"
     >
       {/* Search header */}
       <div className="relative border-b border-border/50 shrink-0 bg-muted/30">
@@ -185,7 +152,7 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
       </div>
 
       {/* Results */}
-      <div className="overflow-y-auto flex-1 min-h-0 p-2">
+      <div className="overflow-y-auto flex-1 min-h-0 p-2 max-h-[420px]">
         {results.length === 0 ? (
           <div className="px-6 py-10 text-center">
             <MapPin className="w-6 h-6 mx-auto mb-2 text-muted-foreground/60" />
@@ -205,6 +172,9 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
             {results.map((r) => {
               const isSel = value === r.name && !isCustom;
               const a = accentFor(r.id);
+              const addressLine = [r.address, r.city && (!r.address || !r.address.toLowerCase().includes(r.city.toLowerCase())) ? r.city : null]
+                .filter(Boolean)
+                .join(" · ");
               return (
                 <li key={r.id}>
                   <button
@@ -216,11 +186,9 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
                         : "hover:bg-muted/60"
                     }`}
                   >
-                    {/* Monogram tile */}
                     <div className={`shrink-0 w-11 h-11 rounded-lg ${a.bg} ring-1 ${a.ring} flex items-center justify-center ${a.fg} font-serif text-sm font-semibold tracking-wide`}>
                       {initials(r.name)}
                     </div>
-                    {/* Body */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="text-[14.5px] font-medium text-foreground truncate">{r.name}</p>
@@ -228,18 +196,7 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
                       </div>
                       <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3 shrink-0 opacity-70" />
-                        <span className="truncate">
-                          {r.address ? (
-                            <>
-                              {r.address}
-                              {r.city && !r.address.toLowerCase().includes(r.city.toLowerCase()) && (
-                                <span className="text-muted-foreground/70"> · {r.city}</span>
-                              )}
-                            </>
-                          ) : (
-                            r.city || "Texas"
-                          )}
-                        </span>
+                        <span className="truncate">{addressLine || "Texas"}</span>
                       </p>
                     </div>
                   </button>
@@ -258,9 +215,9 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
       >
         <Building2 className="w-4 h-4" /> My cemetery isn't listed — I'll type it
       </button>
-    </div>,
-    document.body,
+    </div>
   ) : null;
+
 
   // ────────── Editorial variant (large, underlined, magazine style) ──────────
   if (isEditorial) {
@@ -360,14 +317,17 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
                 </span>
               );
             })()}
-            <span className="min-w-0 flex-1">
+            <span className="min-w-0 flex-1 flex flex-col">
               <span className="block text-[14.5px] text-foreground truncate">{selected.name}</span>
               {(selected.address || selected.city) && (
-                <span className="block text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
                   <MapPin className="w-2.5 h-2.5 shrink-0" />
-                  {selected.address || selected.city}
+                  <span className="truncate">
+                    {[selected.address, selected.city && (!selected.address || !selected.address.toLowerCase().includes(selected.city.toLowerCase())) ? selected.city : null].filter(Boolean).join(" · ")}
+                  </span>
                 </span>
               )}
+
             </span>
           </span>
         ) : (
