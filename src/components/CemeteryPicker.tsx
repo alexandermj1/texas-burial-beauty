@@ -61,7 +61,6 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [rect, setRect] = useState<{ top: number; left: number; width: number; placeAbove: boolean } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -91,34 +90,11 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
     };
   }, [open]);
 
-  // Recompute portal position (below trigger, or above if not enough room)
-  const updateRect = () => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - r.bottom;
-    const placeAbove = spaceBelow < 320 && r.top > spaceBelow;
-    setRect({
-      top: placeAbove ? Math.max(8, r.top - 8) : r.bottom + 8,
-      left: r.left,
-      width: r.width,
-      placeAbove,
-    });
-  };
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    updateRect();
-    // focus the search field on open
-    requestAnimationFrame(() => searchRef.current?.focus());
-    const onScroll = () => updateRect();
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onScroll);
-    };
+  // Focus search when menu opens
+  useEffect(() => {
+    if (open) requestAnimationFrame(() => searchRef.current?.focus());
   }, [open]);
+
 
   // Search-first: with no query, show a compact prompt + a few popular cities'
   // top entries so it isn't a wall of names. With a query, show flat ranked results.
