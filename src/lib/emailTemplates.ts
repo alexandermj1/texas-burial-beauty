@@ -118,11 +118,11 @@ export const buildSellerIntakeTemplate = (i: SellerInput): EmailTemplate => {
 
 
   const ask = missing.length
-    ? `Thank you for providing the details you've shared so far — the more complete the picture, the higher the valuation we're typically able to come back with. To finalise your complimentary evaluation, could you send across the following:\n\n${missing.map(m => `• ${m}`).join("\n")}\n\n`
+    ? `Thank you for providing the details you've shared so far - the more complete the picture, the more accurate the valuation we're able to come back with. To finalise your complimentary evaluation, please can you send across the following as a reply to this email:\n\n${missing.map(m => `• ${m}`).join("\n")}\n\n`
     : `Thank you for providing such complete details in the form — it genuinely helps us come back to you with the highest possible number.\n\n`;
 
   const closing = missing.length
-    ? `As soon as we have these, we'll do our very best to get back to you promptly with an evaluation.\n\n`
+    ? `As soon as we have this information, we'll be able to proceed with the appraisal.\n\n`
     : `We'll do our very best to get back to you promptly with an evaluation.\n\n`;
 
   const body = `Dear ${first(i.recipientName)},
