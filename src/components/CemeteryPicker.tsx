@@ -6,12 +6,12 @@
 // rich cards showing the cemetery name, city and street address so it's
 // easy to recognize the right one visually.
 //
-// Menu is portal-rendered (position: fixed) so parent overflow-hidden /
-// rounded panels don't clip it. Position recomputes on scroll/resize.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+// Menu is rendered inline (embedded in the form flow) so it feels like part
+// of the surrounding form rather than a floating popover.
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, MapPin, Search, X, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
 
 interface Cemetery {
   id: string;
