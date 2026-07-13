@@ -952,7 +952,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             onClick={async () => {
               const { data, error } = await supabase
                 .from("contact_submissions" as any)
-                .select("id,customer_profile_id,cemetery,cemetery_city,property_type,section,lawn,space_numbers,spaces,plot_count,seller_attachments,created_at")
+                .select("id,name,email,phone,customer_profile_id,cemetery,cemetery_city,property_type,section,lawn,space_numbers,spaces,plot_count,seller_attachments,created_at")
                 .is("deleted_at", null)
                 .order("cemetery", { ascending: true });
               if (error) { alert(error.message); return; }
@@ -971,32 +971,59 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 (r.customer_profile_id && profilesWithFiles.has(r.customer_profile_id))
               );
               if (rows.length === 0) { alert("No submissions with attachments found."); return; }
-              const esc = (v: any) => {
-                const s = v == null ? "" : String(v);
-                return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-              };
-              const header = ["Cemetery","City","Property Type","Section","Lawn","Space / Row / Crypt","# of Spaces","Submitted"];
-              const csv = [header.join(",")].concat(
-                rows.map(r => [
-                  r.cemetery, r.cemetery_city, r.property_type, r.section, r.lawn,
-                  r.space_numbers, r.spaces ?? r.plot_count,
+
+              // Pull cemetery profiles to prefill matching fields (transfer fee, contact, etc.)
+              const { data: cems } = await supabase
+                .from("texas_cemeteries" as any)
+                .select("name,city,address,contact_name,contact_phone,contact_email,website,transfer_fee,typical_prices,endowment_notes,process_info");
+              const cemMap = new Map<string, any>();
+              for (const c of ((cems as any[]) || [])) {
+                if (c?.name) cemMap.set(String(c.name).trim().toLowerCase(), c);
+              }
+              const lookup = (name: string | null) => (name ? cemMap.get(String(name).trim().toLowerCase()) : null) || {};
+
+              const XLSX = await import("xlsx");
+              const header = [
+                "Customer Name","Customer Email","Customer Phone",
+                "Cemetery","City","Address","Cemetery Contact Name","Cemetery Phone","Cemetery Email","Website",
+                "Transfer Fee ($)","Typical Prices","Endowment Notes","Process / Transfer Info",
+                "Property Type","Section","Lawn","Space / Row / Crypt","# of Spaces",
+                "Retail Price Quoted ($)","Call Date","Call Notes","Submitted",
+              ];
+              const aoa: any[][] = [header];
+              for (const r of rows) {
+                const c = lookup(r.cemetery);
+                aoa.push([
+                  r.name || "", r.email || "", r.phone || "",
+                  r.cemetery || "", r.cemetery_city || c.city || "", c.address || "",
+                  c.contact_name || "", c.contact_phone || "", c.contact_email || "", c.website || "",
+                  c.transfer_fee ?? "", c.typical_prices || "", c.endowment_notes || "", c.process_info || "",
+                  r.property_type || "", r.section || "", r.lawn || "",
+                  r.space_numbers || "", r.spaces ?? r.plot_count ?? "",
+                  "", "", "",
                   r.created_at ? new Date(r.created_at).toLocaleDateString() : "",
-                ].map(esc).join(","))
-              ).join("\n");
-              const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `cemetery-call-sheet-${new Date().toISOString().slice(0,10)}.csv`;
-              document.body.appendChild(a); a.click(); a.remove();
-              URL.revokeObjectURL(url);
+                ]);
+              }
+              const ws = XLSX.utils.aoa_to_sheet(aoa);
+              ws["!cols"] = [
+                { wch: 22 },{ wch: 26 },{ wch: 16 },
+                { wch: 28 },{ wch: 16 },{ wch: 30 },{ wch: 20 },{ wch: 16 },{ wch: 24 },{ wch: 24 },
+                { wch: 14 },{ wch: 22 },{ wch: 22 },{ wch: 28 },
+                { wch: 16 },{ wch: 12 },{ wch: 10 },{ wch: 18 },{ wch: 10 },
+                { wch: 18 },{ wch: 12 },{ wch: 34 },{ wch: 12 },
+              ];
+              ws["!freeze"] = { xSplit: 0, ySplit: 1 } as any;
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Call Sheet");
+              XLSX.writeFile(wb, `cemetery-call-sheet-${new Date().toISOString().slice(0,10)}.xlsx`);
             }}
 
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
-            title="Download a CSV of all submissions with attachments — cemetery, section, and plot location — for retail price calls"
+            title="Download an Excel call sheet with customer names and cemetery profile fields (transfer fee, contact, pricing) to fill in during retail-price calls"
           >
             <FileText className="w-3.5 h-3.5" /> Call sheet
           </button>
+
           <button
             onClick={() => setTrashOpen(true)}
             aria-label="Recently deleted submissions"
