@@ -66,6 +66,7 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [cemSelected, setCemSelected] = useState<{ canon: string; name: string } | null>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   // When admin clicks "Open customer" inside the Gmail inbox, this id flows into the
   // Submissions panel and auto-selects the matching customer.
