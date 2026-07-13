@@ -13,7 +13,7 @@ import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const benefits = [
-  { num: "01", kicker: "No upfront cost", title: "Free or $99 to list.", desc: "Choose a free listing or our premium $99 listing. No appraisal fees. No hidden charges. Ever." },
+  { num: "01", kicker: "Reduced through July 31", title: "List from $0 to $299.", desc: "Starter is now $0 (was $299), Pro is $99 (was $399), and Featured is $299 (was $599). No appraisal fees. No hidden charges." },
   { num: "02", kicker: "Free valuation", title: "An honest market price.", desc: "We research recent sales in your cemetery and give you a fair, no-obligation estimate." },
   { num: "03", kicker: "Done for you", title: "We handle every form.", desc: "Cemetery transfers, deeds, escrow, paperwork — every call, every signature, on us." },
   { num: "04", kicker: "You decide", title: "Nothing happens without you.", desc: "List with us and stay in control. We negotiate on your behalf. You approve every offer." },
@@ -23,7 +23,7 @@ const benefits = [
 
 const faqs = [
   { q: "What types of property can I sell?", a: "We help sell all types of cemetery property: single plots, side-by-side plots, family estates, crypts, mausoleum spaces, niches, and more." },
-  { q: "How much does it cost to list?", a: "We offer two options: a free listing and a premium $99 listing. No marketing costs or hidden charges." },
+  { q: "How much does it cost to list?", a: "Through July 31, listing fees are reduced: Starter is $0 (was $299), Pro is $99 (was $399), and Featured is $299 (was $599). No marketing costs or hidden charges." },
   { q: "How do you determine the value of my property?", a: "We research recent sales of similar properties in the same cemetery, considering factors like location within the cemetery, property type, and current market demand." },
   { q: "What if I inherited property and don't have the deed?", a: "No problem. We can help you navigate the process of obtaining a replacement deed or the necessary documentation from the cemetery." },
 ];
@@ -42,7 +42,7 @@ const SellProperty = () => {
             serviceType: "Cemetery Plot Resale",
             provider: { "@id": "https://texascemeterybrokers.com/#organization" },
             areaServed: "Texas, United States",
-            offers: { "@type": "Offer", description: "Free listing or $99 premium listing" },
+            offers: { "@type": "Offer", description: "Reduced listing fees through July 31: Starter $0, Pro $99, Featured $299" },
           },
           {
             "@context": "https://schema.org",
