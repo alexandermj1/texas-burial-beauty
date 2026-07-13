@@ -64,6 +64,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     email: "",
     phone: "",
     cemetery: defaultCemetery,
+    cemeteryIsCustom: false,
     propertyType: "",
     propertyTypeOther: "",
     spaces: "",
@@ -76,6 +77,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     purchaseInfo: "",
     prepaidEndowmentInfo: "",
   });
+
 
   const handleFiles = async (picked: FileList | null) => {
     if (!picked || picked.length === 0) return;
