@@ -374,111 +374,135 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
         Tip: drag one cemetery onto another to merge them. The destination keeps its profile and the source's submissions move over.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        {filteredStats.map(stat => {
-          const isActive = activeCemeteryCanon === stat.canon;
-          const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
-          const isDragging = dragCanon === stat.canon;
-          const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
-          const hasProfile = !!profile && !!(profile.description || profile.typical_prices || profile.transfer_fee || profile.notes);
-          return (
-            <div
-              key={stat.canon}
-              draggable={!merging}
-              onDragStart={(e) => {
-                setDragCanon(stat.canon);
-                e.dataTransfer.effectAllowed = "move";
-                e.dataTransfer.setData("text/plain", stat.canon);
-              }}
-              onDragEnd={() => { setDragCanon(null); setOverCanon(null); }}
-              onDragOver={(e) => {
-                if (!dragCanon || dragCanon === stat.canon) return;
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
-                if (overCanon !== stat.canon) setOverCanon(stat.canon);
-              }}
-              onDragLeave={() => { if (overCanon === stat.canon) setOverCanon(null); }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const src = e.dataTransfer.getData("text/plain") || dragCanon;
-                if (!src || src === stat.canon) return;
-                mergeInto(src, { canon: stat.canon, displayName: stat.displayName, directoryId: stat.directoryId });
-              }}
-              className={`rounded-lg border transition-all overflow-hidden cursor-grab active:cursor-grabbing ${
-                isDropTarget
-                  ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500"
-                  : isDragging
-                    ? "opacity-50 border-primary"
-                    : isActive
-                      ? "border-primary bg-primary/10 ring-1 ring-primary"
-                      : `${countTint(stat.count)} hover:border-primary/40`
-              }`}
-              title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : "Drag onto another cemetery to merge"}
-            >
-              <button
-                onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
-                className="w-full text-left p-2.5"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground truncate">{stat.displayName}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">
-                      {Array.from(stat.cities).filter(Boolean).slice(0, 2).join(", ") || "—"}
-                      {hasProfile && <span className="ml-1.5 text-emerald-700 font-medium">· profiled</span>}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded-full text-[11px] font-bold ${countBadgeTint(stat.count)}`}
-                    title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
-                  >
-                    {stat.count}
-                  </span>
-                </div>
-              </button>
-              {!hideProfileEditor && (
-                <div className="flex items-center gap-1 px-2.5 pb-2">
-                  <button
-                    onClick={async () => {
-                      if (profile) {
-                        setOpenId(o => (o === profile.id ? null : profile.id));
-                      } else {
-                        const id = await ensureProfile(stat);
-                        if (id) setOpenId(id);
-                      }
-                    }}
-                    className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                  >
-                    {profile && openId === profile.id ? "Hide profile" : (profile ? "Edit profile" : "Add profile info")}
-                  </button>
-                </div>
-              )}
-              {!hideProfileEditor && profile && openId === profile.id && (
-                <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-background/50">
-                  <Inp label="Name" value={(edits[profile.id]?.name as any) ?? profile.name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], name: v } }))} />
-                  <Inp label="City" value={(edits[profile.id]?.city as any) ?? profile.city ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], city: v } }))} />
-                  <Inp label="Address" value={(edits[profile.id]?.address as any) ?? profile.address ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], address: v } }))} className="sm:col-span-2" />
-                  <Inp label="Website" value={(edits[profile.id]?.website as any) ?? profile.website ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], website: v } }))} />
-                  <Inp label="Transfer fee ($)" type="number" value={(edits[profile.id]?.transfer_fee as any) ?? profile.transfer_fee ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], transfer_fee: v === "" ? null : Number(v) } }))} />
-                  <Inp label="Contact name" value={(edits[profile.id]?.contact_name as any) ?? profile.contact_name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_name: v } }))} />
-                  <Inp label="Contact phone" value={(edits[profile.id]?.contact_phone as any) ?? profile.contact_phone ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_phone: v } }))} />
-                  <Inp label="Contact email" value={(edits[profile.id]?.contact_email as any) ?? profile.contact_email ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_email: v } }))} className="sm:col-span-2" />
-                  <Ta label="Description" rows={3} value={(edits[profile.id]?.description as any) ?? profile.description ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], description: v } }))} />
-                  <Ta label="Typical prices" rows={3} value={(edits[profile.id]?.typical_prices as any) ?? profile.typical_prices ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], typical_prices: v } }))} />
-                  <Ta label="Internal notes" rows={3} value={(edits[profile.id]?.notes as any) ?? profile.notes ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], notes: v } }))} className="sm:col-span-2" />
-                  <div className="sm:col-span-2 flex justify-end">
-                    <button
-                      onClick={() => save(profile.id)}
-                      disabled={!edits[profile.id]}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
-                    >
-                      <Save className="w-3.5 h-3.5" /> Save profile
-                    </button>
-                  </div>
-                </div>
-              )}
+      <div className="space-y-6">
+        {groupedStats.map(group => (
+          <div key={group.city}>
+            <div className="flex items-baseline gap-2 mb-2 pb-1.5 border-b border-border/60">
+              <h4 className="text-[13px] font-semibold uppercase tracking-wide text-foreground/80">{group.city}</h4>
+              <span className="text-[11px] text-muted-foreground">
+                {group.items.length} {group.items.length === 1 ? "cemetery" : "cemeteries"} · {group.total} submission{group.total === 1 ? "" : "s"}
+              </span>
             </div>
-          );
-        })}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {group.items.map(stat => {
+                const isActive = activeCemeteryCanon === stat.canon;
+                const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
+                const isDragging = dragCanon === stat.canon;
+                const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
+                const hasProfile = !!profile && !!(profile.description || profile.typical_prices || profile.transfer_fee || profile.notes);
+                return (
+                  <div
+                    key={stat.canon}
+                    draggable={!merging}
+                    onDragStart={(e) => {
+                      setDragCanon(stat.canon);
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", stat.canon);
+                    }}
+                    onDragEnd={() => { setDragCanon(null); setOverCanon(null); }}
+                    onDragOver={(e) => {
+                      if (!dragCanon || dragCanon === stat.canon) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (overCanon !== stat.canon) setOverCanon(stat.canon);
+                    }}
+                    onDragLeave={() => { if (overCanon === stat.canon) setOverCanon(null); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const src = e.dataTransfer.getData("text/plain") || dragCanon;
+                      if (!src || src === stat.canon) return;
+                      mergeInto(src, { canon: stat.canon, displayName: stat.displayName, directoryId: stat.directoryId });
+                    }}
+                    className={`rounded-xl border transition-all overflow-hidden cursor-grab active:cursor-grabbing ${
+                      isDropTarget
+                        ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500"
+                        : isDragging
+                          ? "opacity-50 border-primary"
+                          : isActive
+                            ? "border-primary bg-primary/10 ring-1 ring-primary"
+                            : `${countTint(stat.count)} hover:border-primary/40`
+                    }`}
+                    title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : "Drag onto another cemetery to merge"}
+                  >
+                    <button
+                      onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
+                      className="w-full text-left p-3.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[15px] font-semibold text-foreground leading-snug break-words">{stat.displayName}</p>
+                          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground">
+                            {hasProfile && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium">
+                                profiled
+                              </span>
+                            )}
+                            {stat.directoryId ? (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
+                                in registry
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                                unlinked
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span
+                          className={`shrink-0 inline-flex items-center justify-center min-w-[36px] h-8 px-2 rounded-full text-sm font-bold ${countBadgeTint(stat.count)}`}
+                          title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
+                        >
+                          {stat.count}
+                        </span>
+                      </div>
+                    </button>
+                    {!hideProfileEditor && (
+                      <div className="flex items-center gap-1 px-3.5 pb-2.5">
+                        <button
+                          onClick={async () => {
+                            if (profile) {
+                              setOpenId(o => (o === profile.id ? null : profile.id));
+                            } else {
+                              const id = await ensureProfile(stat);
+                              if (id) setOpenId(id);
+                            }
+                          }}
+                          className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                        >
+                          {profile && openId === profile.id ? "Hide profile" : (profile ? "Edit profile" : "Add profile info")}
+                        </button>
+                      </div>
+                    )}
+                    {!hideProfileEditor && profile && openId === profile.id && (
+                      <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-background/50">
+                        <Inp label="Name" value={(edits[profile.id]?.name as any) ?? profile.name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], name: v } }))} />
+                        <Inp label="City" value={(edits[profile.id]?.city as any) ?? profile.city ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], city: v } }))} />
+                        <Inp label="Address" value={(edits[profile.id]?.address as any) ?? profile.address ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], address: v } }))} className="sm:col-span-2" />
+                        <Inp label="Website" value={(edits[profile.id]?.website as any) ?? profile.website ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], website: v } }))} />
+                        <Inp label="Transfer fee ($)" type="number" value={(edits[profile.id]?.transfer_fee as any) ?? profile.transfer_fee ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], transfer_fee: v === "" ? null : Number(v) } }))} />
+                        <Inp label="Contact name" value={(edits[profile.id]?.contact_name as any) ?? profile.contact_name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_name: v } }))} />
+                        <Inp label="Contact phone" value={(edits[profile.id]?.contact_phone as any) ?? profile.contact_phone ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_phone: v } }))} />
+                        <Inp label="Contact email" value={(edits[profile.id]?.contact_email as any) ?? profile.contact_email ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], contact_email: v } }))} className="sm:col-span-2" />
+                        <Ta label="Description" rows={3} value={(edits[profile.id]?.description as any) ?? profile.description ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], description: v } }))} />
+                        <Ta label="Typical prices" rows={3} value={(edits[profile.id]?.typical_prices as any) ?? profile.typical_prices ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], typical_prices: v } }))} />
+                        <Ta label="Internal notes" rows={3} value={(edits[profile.id]?.notes as any) ?? profile.notes ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], notes: v } }))} className="sm:col-span-2" />
+                        <div className="sm:col-span-2 flex justify-end">
+                          <button
+                            onClick={() => save(profile.id)}
+                            disabled={!edits[profile.id]}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity"
+                          >
+                            <Save className="w-3.5 h-3.5" /> Save profile
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
