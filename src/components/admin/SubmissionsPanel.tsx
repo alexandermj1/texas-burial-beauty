@@ -201,6 +201,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
   // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
+  const [expandedCemSubId, setExpandedCemSubId] = useState<string | null>(null);
   const [cemeteryLabel, setCemeteryLabel] = useState<string | null>(null);
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
