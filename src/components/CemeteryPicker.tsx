@@ -320,11 +320,14 @@ const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoF
             <span className="min-w-0 flex-1">
               <span className="block text-[14.5px] text-foreground truncate">{selected.name}</span>
               {(selected.address || selected.city) && (
-                <span className="block text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
                   <MapPin className="w-2.5 h-2.5 shrink-0" />
-                  {selected.address || selected.city}
+                  <span className="truncate">
+                    {[selected.address, selected.city && (!selected.address || !selected.address.toLowerCase().includes(selected.city.toLowerCase())) ? selected.city : null].filter(Boolean).join(" · ")}
+                  </span>
                 </span>
               )}
+
             </span>
           </span>
         ) : (
