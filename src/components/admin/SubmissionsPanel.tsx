@@ -1384,12 +1384,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
               </div>
             );
-          })()
-        ) : !selected ? (
+          })()}
+        {!cemeteriesOpen && !selected && (
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
-            {cemeteryCanon ? "Select a submission from the list to view its details." : "Select a submission to view details."}
+            Select a submission to view details.
           </div>
-        ) : (
+        )}
+        {selected && (
           <motion.div
             key={selected.id}
             initial={{ opacity: 0, y: 8 }}
