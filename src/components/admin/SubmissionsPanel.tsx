@@ -1298,13 +1298,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
       <div data-tour="detail-panel" className={`lg:col-span-7 lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
         {cemeteryCanon && cemeteryLabel && (
-          <CemeteryInfoCard
-            key={cemeteryCanon}
-            canon={cemeteryCanon}
-            displayName={cemeteryLabel}
-            submissionCount={filtered.length}
-            onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
-          />
+          <>
+            {cemeteriesOpen && (
+              <button
+                onClick={() => setCemeteriesOpen(false)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
+              >
+                View submissions at {cemeteryLabel}
+              </button>
+            )}
+            <CemeteryInfoCard
+              key={cemeteryCanon}
+              canon={cemeteryCanon}
+              displayName={cemeteryLabel}
+              submissionCount={texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon).length}
+              onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
+            />
+          </>
         )}
         {!selected ? (
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-10 text-center text-sm text-muted-foreground">
