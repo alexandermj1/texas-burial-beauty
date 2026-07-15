@@ -206,6 +206,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
   const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
+  const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
   // Soft-delete UX: a deliberate confirmation dialog + a "Recently deleted" panel for restore.
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
