@@ -73,7 +73,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
-            Net / plot (USD)
+            Authorized sale / plot (USD)
           </label>
           <input
             type="number"
