@@ -105,6 +105,7 @@ export default function PaymentLinkDialog({ open, onClose, submission, adminName
           recipientEmail: recipient.trim(),
           recipientName: recipientName.trim(),
           ...(kind === "listing_fee" && { listingTier: listingFee }),
+          environment: getPaymentsEnvironment(),
         },
       });
       if (error) throw error;
