@@ -892,29 +892,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
                   {(selected as any).quote_response === "accepted" && (() => {
-                    const tierKey = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
-                    const tierLabel = tierKey && TIER_LABEL[tierKey as "starter" | "pro" | "featured"];
-                    const price = (selected as any).accepted_quote_amount ?? (selected as any).quote_amount;
+                    const quoted = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
+                    if (!quoted) return null;
+                    const retail = quoted / 0.42;
+                    const sales = retail * 0.68;
+                    const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
                     return (
-                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
-                        <DollarSign className="w-4 h-4" strokeWidth={2.5} />
-                        <span className="text-[10px] uppercase tracking-wide font-bold opacity-80">Accepted</span>
-                        {tierLabel && (
-                          <span className="text-[11px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white">
-                            {tierLabel}
-                          </span>
-                        )}
-                        {price != null && (
-                          <span className="font-display text-lg font-bold tabular-nums">
-                            ${Number(price).toLocaleString()}
-                          </span>
-                        )}
-                        {(selected as any).quote_responded_at && (
-                          <span className="text-[10px] opacity-70">· {new Date((selected as any).quote_responded_at).toLocaleDateString()}</span>
-                        )}
-                        {(selected as any).acceptance_channel && (
-                          <span className="text-[10px] opacity-70 italic">via {(selected as any).acceptance_channel}</span>
-                        )}
+                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                          <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
+                        </div>
+                        <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                          <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
+                        </div>
+                        <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted / accepted</span>
+                          <span className="text-sm font-semibold tabular-nums">{fmt(quoted)}</span>
+                        </div>
                       </div>
                     );
                   })()}
@@ -2310,17 +2306,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                         {(s as any).quote_sent_at && (() => {
                           const accepted = (s as any).quote_response === "accepted";
-                          const amt = Number((s as any).quote_amount || 0);
-                          const cls = accepted
-                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700"
-                            : "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800";
-                          const title = accepted
-                            ? `Quote accepted${amt ? ` · $${amt.toLocaleString()}` : ""}`
-                            : `Quote sent · ${formatDate((s as any).quote_sent_at)}`;
+                          const quoted = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
+                          if (accepted && quoted > 0) {
+                            const sales = Math.round((quoted / 0.42) * 0.68);
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm tabular-nums"
+                                title={`Sales price · quoted $${quoted.toLocaleString()} → retail $${Math.round(quoted/0.42).toLocaleString()} → sales $${sales.toLocaleString()}`}
+                              >
+                                <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
+                                ${sales.toLocaleString()}
+                              </span>
+                            );
+                          }
                           return (
                             <span
-                              className={`inline-flex items-center justify-center w-5 h-5 rounded-full border shadow-sm ${cls}`}
-                              title={title}
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-full border shadow-sm bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800"
+                              title={`Quote sent · ${formatDate((s as any).quote_sent_at)}`}
                             >
                               <DollarSign className="w-3 h-3" strokeWidth={2.5} />
                             </span>
