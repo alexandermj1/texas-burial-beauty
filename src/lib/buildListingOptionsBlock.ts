@@ -43,14 +43,18 @@ const LI = 'style="margin:0 0 6px;"';
 
 export async function buildListingOptionsBlock(opts: {
   seller: SellerForBlock;
+  /** Authorized minimum sale price per space (gross, before 15% commission). */
   netPerPlot: number;
   plotCount: number;
   transferFee: number;
 }): Promise<string> {
   const { seller, netPerPlot, plotCount, transferFee } = opts;
-  const total = netPerPlot * plotCount;
+  const salePerSpace = netPerPlot;
+  const commissionPerSpace = Math.round(salePerSpace * 0.15);
+  const proceedsPerSpace = salePerSpace - commissionPerSpace;
+  const totalSale = salePerSpace * plotCount;
+  const totalProceeds = proceedsPerSpace * plotCount;
   const cemLabel = properCase(seller.cemetery || "your cemetery");
-  
 
   const links = await Promise.all(
     TIERS.map(async (t) => {
@@ -86,24 +90,46 @@ export async function buildListingOptionsBlock(opts: {
     plotCount,
   });
 
-  const totalLine = plotCount > 1
-    ? ` (Totaling <strong>${fmtUsd(total)}</strong> when all ${plotCount} spaces sell)`
+  const spaceWord = plotCount === 1 ? "space" : "spaces";
+  const acrossLine = plotCount > 1
+    ? ` (${fmtUsd(totalSale)} across all ${plotCount} spaces)`
+    : "";
+  const proceedsTotalLine = plotCount > 1
+    ? ` (${fmtUsd(totalProceeds)} total)`
     : "";
 
   const deadline = escapeHtml(nextOfferDeadline());
 
   const introHtml = `
-<p ${P}>Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${propertyLine}.</p>
-<p ${P}>After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${escapeHtml(cemLabel)}, we are pleased to present you with a direct, transparent offer.</p>
-<h3 ${H3}>Your Final Net Payment Offer</h3>
-<p ${P}><strong>Total Final Net Payment: ${fmtUsd(netPerPlot)} per space</strong>${totalLine}</p>
-<p ${P_MUTED}>We have positioned this quote to offer the highest value release for the property compared to current active listings and recently-closed comparable plot sales. The cemetery resale market is highly sensitive to pricing. Pricing plots higher typically results in buyers choosing other options or purchasing direct from the cemetery; furthermore, because resale inventory is continuously added to the market, overpriced properties simply sit unsold. Our goal is to provide a realistic, accurate valuation that positions the property competitively for buyers and results in an actual sale.</p>
-${transferFee > 0 ? `<p ${P_MUTED}>Additionally, as part of this offer, we handle the significant cemetery-imposed costs, which are a mandatory part of any property transfer at ${escapeHtml(cemLabel)}. We cover these fees up to <strong>${fmtUsd(transferFee)}</strong> so they do not come out of your final net proceeds, ensuring you receive the <strong>${fmtUsd(total)}</strong> quoted above when the property is sold.</p>` : ""}
+<p ${P}>Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${propertyLine} (${plotCount} ${spaceWord}).</p>
+<p ${P}>After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${escapeHtml(cemLabel)}, we are pleased to present your authorized sale quote.</p>
+
+<h3 ${H3}>How This Works</h3>
+<p ${P_MUTED}>Our process is simple: you authorize us to sell your property at (or above) an agreed minimum price, and we handle everything from there — marketing, buyer negotiations, cemetery paperwork, and the closing itself. Because we can complete a sale the moment a qualified buyer commits, without coming back to you for approval on each offer, your property stays competitive with buyers who need to move quickly. When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. All cemetery transfer fees and any optional buyer services are paid by the buyer, so they never touch your proceeds.</p>
+
+<h3 ${H3}>Your Authorized Sale Price</h3>
+<p ${P}><strong>Authorized Minimum Sale Price: ${fmtUsd(salePerSpace)} per space${acrossLine}</strong></p>
+<p ${P_MUTED}>This is the minimum figure at which you authorize us to complete a sale on your behalf. In practice, we always pursue the highest achievable price — the final sale may close at this figure or above it, depending on buyer demand at the time. Any amount achieved above the authorized minimum flows through to your proceeds on the same terms.</p>
+<p ${P_MUTED}>We have positioned this figure to offer the highest realistic value release compared to current active listings and recently-closed comparable plot sales. The cemetery resale market is highly sensitive to pricing: plots priced near cemetery retail typically sit unsold, because resale buyers are specifically seeking meaningful savings versus buying direct from the cemetery. This valuation positions your property to actually sell.</p>
+
+<h3 ${H3}>Why Pre-Authorization Matters</h3>
+<p ${P_MUTED}>A significant share of cemetery resales are at-need transfers — families who have just experienced a loss and need to complete a purchase within days, sometimes hours. These buyers cannot wait on a back-and-forth approval process, and properties that require one are routinely passed over for ones that can close immediately. Your authorization allows us to act the moment a qualified buyer commits, at your authorized price or better, without risking the sale on delays.</p>
+
+<h3 ${H3}>Your Proceeds</h3>
+<p ${P_MUTED}>Upon sale, our brokerage commission of 15% of the final sale price is deducted, and the balance is remitted to you. At the authorized minimum, that means:</p>
+<ul ${OL}>
+  <li ${LI}>Sale price: <strong>${fmtUsd(salePerSpace)}</strong> per space</li>
+  <li ${LI}>Commission (15%): <strong>–${fmtUsd(commissionPerSpace)}</strong> per space</li>
+  <li ${LI}>Your proceeds: <strong>${fmtUsd(proceedsPerSpace)}</strong> per space${proceedsTotalLine} — or more if the property sells above the minimum</li>
+</ul>
+
+<h3 ${H3}>Buyer-Paid Costs</h3>
+<p ${P_MUTED}>For clarity on the closing statement you'll eventually see: the mandatory cemetery transfer fee at ${escapeHtml(cemLabel)}${transferFee > 0 ? ` (${fmtUsd(transferFee)})` : ""} is paid by the buyer, not you. Buyers may also elect additional services through our company — financing, mortuary referral coordination, in-person showings, and similar — which are likewise billed to the buyer and itemized separately. As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.</p>
 `.trim();
 
-  const nextStepsHtml = `<h3 ${H3}>Next Steps</h3><ol ${OL}><li ${LI}><strong>Review the Offer:</strong> Take your time to consider the net payment and the competitive market strategy we have outlined.</li><li ${LI}><strong>Select Your Listing Option:</strong> Choose the plan (Starter, Pro, or Featured) that best aligns with your goals — simply click the button on the option you want.</li><li ${LI}><strong>Confirm Your Acceptance or Ask Questions:</strong> To accept this offer, or if you have any questions about the market or our process, please simply reply to this email. We will promptly send over your Exclusive Sales Agreement and guide you through listing your property.</li></ol><p ${P}>We look forward to achieving a successful sale on your behalf.</p>`;
+  const nextStepsHtml = `<h3 ${H3}>Next Steps</h3><ol ${OL}><li ${LI}><strong>Review the Quote:</strong> Consider the authorized sale price and the market strategy outlined above.</li><li ${LI}><strong>Select Your Listing Option:</strong> Choose Starter, Pro, or Featured — simply click the button on the option you want.</li><li ${LI}><strong>Authorize the Sale:</strong> Reply to this email to confirm your authorization for us to sell at the quoted price or higher. We will promptly send your Exclusive Sales Agreement, which formalizes the authorization and commission terms, and guide you through listing.</li></ol><p ${P}>We look forward to achieving a successful sale on your behalf.</p>`;
 
-  return `<div data-listing-options="1" style="margin:14px 0;">${introHtml}<h3 ${H3}>Listing Options</h3><p ${P_MUTED}>To move forward, we offer three tailored listing options. There are no additional broker fees or commissions due upon the sale of your plot in any of these options:</p>${cards}<p ${P_ITALIC_MUTED}>This offer is valid until ${deadline}.</p>${nextStepsHtml}</div><p><br></p>`;
+  return `<div data-listing-options="1" style="margin:14px 0;">${introHtml}<h3 ${H3}>Listing Options</h3><p ${P_MUTED}>To move forward, we offer three tailored listing options. There are no additional broker fees beyond the 15% commission in any of these options:</p>${cards}<p ${P_ITALIC_MUTED}>This quote is valid until ${deadline}.</p>${nextStepsHtml}</div><p><br></p>`;
 }
 
 function escapeHtml(s: string) {
