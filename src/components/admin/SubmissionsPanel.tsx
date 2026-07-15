@@ -1958,7 +1958,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               return (
                 <button
                   onClick={() => setQuotedFilter(!isActive)}
-                  title={isActive ? "Showing only sellers we've quoted — click to clear" : "Show only sellers we've already sent a quote to"}
+                  title={isActive ? `Showing only sellers we've quoted (${quotedCount}) — click to clear` : `Show only sellers we've quoted (${quotedCount})`}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
                     isActive
                       ? "bg-purple-600 text-white border-purple-600 shadow-sm"
@@ -1966,7 +1966,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   }`}
                 >
                   <DollarSign className="w-3 h-3" strokeWidth={2.5} />
-                  Quote sent ({quotedCount})
+                  ({quotedCount})
+                </button>
+              );
+            })()}
+            {(() => {
+              const acceptedCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).quote_response === "accepted").length;
+              const isActive = acceptedFilter;
+              return (
+                <button
+                  onClick={() => setAcceptedFilter(!isActive)}
+                  title={isActive ? `Showing only accepted quotes (${acceptedCount}) — click to clear` : `Show only sellers who accepted our quote (${acceptedCount})`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                      : "bg-card text-emerald-700 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  }`}
+                >
+                  <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+                  ({acceptedCount})
                 </button>
               );
             })()}
