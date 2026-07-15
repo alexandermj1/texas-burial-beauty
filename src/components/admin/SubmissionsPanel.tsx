@@ -516,7 +516,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
-      if (eFilter === "needs_quote" && !(s as any).needs_quote) return false;
+      if (eFilter === "needs_quote" && !needsQuoteActive(s)) return false;
       if (eFilter === "needs_followup" && !followupMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
