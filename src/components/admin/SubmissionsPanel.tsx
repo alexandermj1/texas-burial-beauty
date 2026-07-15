@@ -537,6 +537,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
 
+  // Submissions that belong to the currently-open cemetery directory entry. Used both for the
+  // right-panel cemetery list and to decide whether the selected submission should expand inline.
+  const cemeteryListSubs = useMemo(() => {
+    if (!cemeteriesOpen || !cemeteryCanon) return [];
+    return texasSubmissions.filter(s => _canon(s.cemetery || "") === cemeteryCanon);
+  }, [cemeteriesOpen, cemeteryCanon, texasSubmissions]);
+
   // Texas-only: count submissions per canonical cemetery name for the "N other submissions" chip.
   const texasCemeteryCounts = useMemo(() => {
     const m = new Map<string, number>();
@@ -572,8 +579,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
-  const selectedKind = selected ? resolveKind(selected.customer_kind, selected.source) : null;
-  const selectedBayerStage = selected && selectedKind === "seller" ? deriveBayerStage(selected as any) : null;
+  const selectedIsInCemeteryList = useMemo(() => {
+    if (!selected || !cemeteriesOpen || !cemeteryCanon) return false;
+    return cemeteryListSubs.some(s => s.id === selected.id);
+  }, [selected, cemeteryListSubs, cemeteriesOpen, cemeteryCanon]);
 
   // Record a view for this admin when they open a submission
   useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); setEditCemeteryInline(false); }, [selected?.id, myId]);
@@ -800,6 +809,854 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     () => submissions.filter(s => resolveKind(s.customer_kind, s.source) === "seller"),
     [submissions],
   );
+
+
+  // Render the full submission detail card. The same card is used both in the right-hand detail panel
+  // and inline underneath the selected row in the cemetery directory list.
+  const renderSubmissionDetail = (selected: Submission) => {
+    const kind = resolveKind(selected.customer_kind, selected.source);
+    const bayerStage = kind === "seller" ? deriveBayerStage(selected as any) : null;
+    return (
+          <motion.div
+            key={selected.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <img
+                  src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)}
+                  alt=""
+                  className="w-14 h-14 rounded-xl object-cover bg-muted/40 shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
+                    <BayerBadge inquiryChannel={selected.inquiry_channel} />
+                    <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} source={selected.source} sourceEmailId={(selected as any).source_email_id} />
+                    <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source, selected.inquiry_channel)}</p>
+                    {selected.source === "manual_phone" && (selected as any).handled_by_name && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))]">
+                        <UserPlus className="w-3 h-3" /> Added by {cleanDisplayName((selected as any).handled_by_name)}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
+                      .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
+                  </p>
+
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1.5">
+                {selected.cemetery && (() => {
+                  const selCanon = _canon(selected.cemetery || "");
+                  const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
+                  return (
+                    <button
+                      onClick={() => {
+                        if (!selCanon) return;
+                        setRegionFilter("texas");
+                        setCemeteryCanon(selCanon);
+                        setCemeteryLabel(selected.cemetery);
+                        setSelectedId(null);
+                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border max-w-[240px] transition-colors hover:opacity-90 ${cemCountTint(subCount)}`}
+                      title={`Filter to submissions at ${selected.cemetery} (${subCount})`}
+                    >
+                      <Building2 className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{selected.cemetery}</span>
+                      <span className={`shrink-0 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded-full text-[10px] font-bold ${cemCountBadgeTint(subCount)}`}>
+                        {subCount}
+                      </span>
+                    </button>
+                  );
+                })()}
+                {(() => {
+                  const sViewers = viewersFor(selected.id);
+                  return (
+                    <div className="flex items-center gap-1.5">
+                      {isNew(selected) && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[hsl(var(--status-new))] text-white">New today</span>
+                      )}
+                      {sViewers.length > 0 && (
+                        <div className="flex items-center gap-1.5" title={`Viewed by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
+                          <div className="flex -space-x-1">
+                            {sViewers.slice(0, 4).map(v => (
+                              <span key={v.user_id} className="w-5 h-5 rounded-full ring-1 ring-card flex items-center justify-center text-[9px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
+                                {(v.user_name || "?").charAt(0).toUpperCase()}
+                              </span>
+                            ))}
+                            {sViewers.length > 4 && (
+                              <span className="w-5 h-5 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-medium">+{sViewers.length - 4}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Reply / follow-up state — Texas only */}
+            {subRegion(selected) === "texas" && (() => {
+              const isAwaiting = !!awaitingMap[selected.id];
+              const isFollowup = !!followupMap[selected.id];
+              const manualFollowup = !!(selected as any).manual_followup;
+              return (
+                <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
+                  {isAwaiting && (
+                    <button
+                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))] hover:bg-[hsl(var(--status-nodocs-soft))]/70 transition-colors"
+                      title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Doesn't need a reply
+                    </button>
+                  )}
+                  {!isAwaiting && (selected as any).reply_dismissed_at && (
+                    <button
+                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: null } as any)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
+                      title="Undo — re-enable Needs reply detection"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Re-enable needs reply
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      const next = !manualFollowup;
+                      const patch: any = { manual_followup: next };
+                      // Marking needs-follow-up implies we're not waiting on a reply from them.
+                      if (next) patch.reply_dismissed_at = new Date().toISOString();
+                      onUpdate(selected.id, patch);
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      manualFollowup
+                        ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
+                        : "bg-card text-foreground border-border hover:bg-muted/60"
+                    }`}
+                    title="Manually flag this submission for follow-up so it never falls through the cracks"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
+                    {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
+                  </button>
+                  {(() => {
+                    const needsQuote = !!(selected as any).needs_quote;
+                    return (
+                      <button
+                        onClick={() => onUpdate(selected.id, { needs_quote: !needsQuote } as any)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                          needsQuote
+                            ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
+                            : "bg-card text-foreground border-border hover:bg-muted/60"
+                        }`}
+                        title="Flag this submission as awaiting a quote from us"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-[hsl(var(--status-quote))]" : "bg-muted-foreground/40"}`} />
+                        {needsQuote ? "Marked needs quote" : "Mark needs quote"}
+                      </button>
+                    );
+                  })()}
+                  {isFollowup && !manualFollowup && (
+                    <span className="text-[11px] text-muted-foreground italic">
+                      Auto-flagged from outgoing promise
+                    </span>
+                  )}
+                  {/* Plot reservations have been retired — high demand means
+                      we no longer offer 3-day holds. Cards now display a
+                      polite note in place of the hold link. */}
+                </div>
+              );
+            })()}
+
+
+
+            {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
+            {subRegion(selected) === "texas" && (() => {
+              const kind = resolveKind(selected.customer_kind, selected.source);
+              const x = selected as any;
+              const templates = kind === "buyer"
+                ? [
+                    buildBuyerHaveItTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery, propertyType: selected.property_type, spaces: selected.spaces }),
+                    buildBuyerNoInventoryTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery }),
+                  ]
+                : [
+                    buildSellerIntakeTemplate({
+                      recipientName: selected.name,
+                      adminName,
+                      cemetery: selected.cemetery,
+                      section: selected.section,
+                      spaces: selected.spaces,
+                      propertyType: selected.property_type,
+                      spaceNumbers: x.space_numbers,
+                      deedOwnerNames: x.deed_owner_names,
+                      deedOwnersStatus: x.deed_owners_status,
+                      relationshipToOwner: x.relationship_to_owner,
+                      hasAttachments: hasDocs(selected),
+                      deedExtractedOwners: selectedDeedOwners,
+                    }),
+                    buildSellerListingOptionsTemplate({
+                      recipientName: selected.name,
+                      adminName,
+                      cemetery: selected.cemetery,
+                    }),
+                  ];
+              return (
+                <EmailThread
+                  submissionId={selected.id}
+                  customerEmail={selected.email}
+                  customerName={selected.name}
+                  cemetery={x.cemetery_original || selected.cemetery}
+                  newEmailTemplates={templates}
+                  buyerContext={kind === "buyer" ? {
+                    id: selected.id,
+                    name: selected.name,
+                    email: selected.email,
+                    cemetery: selected.cemetery,
+                    property_type: selected.property_type,
+                  } : null}
+                  sellerContext={kind !== "buyer" ? {
+                    id: selected.id,
+                    name: selected.name,
+                    email: selected.email,
+                    cemetery: selected.cemetery,
+                    section: selected.section,
+                    property_type: selected.property_type,
+                    spaces: selected.spaces,
+                    space_numbers: (x as any)?.space_numbers ?? null,
+                    lawn: (x as any)?.lawn ?? null,
+                  } : null}
+                  onNewEmailSent={(meta) => {
+                    if (meta?.templateId === "seller_intake" || meta?.templateId === "seller_listing_options") {
+                      onUpdate(selected.id, { needs_quote: true } as any);
+                    }
+                  }}
+                />
+              );
+            })()}
+
+            {/* Contact actions */}
+            <div className="flex flex-wrap gap-2">
+              {selected.email && (
+                <a
+                  href={buildGmailComposeUrl({ to: selected.email })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Mail className="w-3.5 h-3.5" /> {selected.email}
+                </a>
+              )}
+              {selected.phone && (
+                <a
+                  href={`tel:${selected.phone.replace(/[^\d+]/g, "")}`}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-foreground text-background rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Phone className="w-3.5 h-3.5" /> {selected.phone}
+                </a>
+              )}
+              <button
+                onClick={() => setPaymentLinkOpen(true)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--accent-gold-bg))] text-[hsl(var(--accent-gold-fg))] border border-[hsl(var(--accent-gold-fg))]/20 hover:opacity-90 transition-opacity"
+              >
+                <DollarSign className="w-3.5 h-3.5" /> Send payment link
+              </button>
+              {kind === "buyer" && (
+                <button
+                  onClick={() => setPlotCardsOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <Send className="w-3.5 h-3.5" /> Send plot cards
+                </button>
+              )}
+            </div>
+
+            {/* No cemetery on file yet (e.g. general contact form) — let admins assign one. */}
+            {!selected.cemetery && (
+              <div className="rounded-lg p-4 border border-dashed border-border bg-muted/30 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
+                  <p className="text-sm text-foreground">No cemetery on file for this submission.</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Match them to a cemetery profile to add them to that cemetery's submissions.</p>
+                </div>
+                <button
+                  onClick={() => setReassignCemeteryOpen(true)}
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  title="Assign this submission to a cemetery"
+                >
+                  <Building2 className="w-3.5 h-3.5" /> Add to cemetery
+                </button>
+              </div>
+            )}
+
+            {/* Texas submissions: show what the customer wrote + our matched
+                cemetery profile (transfer fee, contact, description, section pricing).
+                Tinted by submission volume, matching the Cemeteries directory panel. */}
+            {selected.cemetery && subRegion(selected) === "texas" && (() => {
+              const selCanon = _canon(selected.cemetery || "");
+              const profile = selCanon ? texasCemProfiles.get(selCanon) : null;
+              const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
+              const sections: any[] = Array.isArray(profile?.sections) ? profile!.sections : [];
+              const hasProfileInfo = !!profile && !!(
+                profile.description || profile.typical_prices || profile.transfer_fee ||
+                profile.notes || profile.contact_name || profile.contact_phone ||
+                profile.contact_email || profile.address || profile.website ||
+                profile.process_info || sections.length
+              );
+              return (
+              <div className={`rounded-lg p-4 border transition-colors ${cemCountTint(subCount)}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
+                    <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
+                    {profile && profile.name && _canon(profile.name) !== selCanon && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Matched profile: <span className="font-medium text-foreground">{profile.name}</span>
+                      </p>
+                    )}
+                    {profile?.city && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{profile.city}</p>
+                    )}
+                  </div>
+                  {selCanon && (
+                    <span
+                      className={`shrink-0 inline-flex items-center justify-center min-w-[36px] h-7 px-2 rounded-full text-[11px] font-bold ${cemCountBadgeTint(subCount)}`}
+                      title={`${subCount} submission${subCount === 1 ? "" : "s"} at this cemetery`}
+                    >
+                      {subCount}
+                    </span>
+                  )}
+                </div>
+
+                {(selected as any).cemetery_original && (selected as any).cemetery_original !== selected.cemetery && (
+                  <div className="mt-2 pt-2 border-t border-border/40">
+                    <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--status-nodocs-fg))] mb-1">
+                      Originally written by customer
+                    </p>
+                    <p className="text-xs text-foreground break-words italic">"{(selected as any).cemetery_original}"</p>
+
+                  </div>
+                )}
+
+                {/* Matched profile summary + expandable detail */}
+                {profile && hasProfileInfo && (
+                  <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      {profile.transfer_fee != null && (
+                        <span className="text-foreground"><span className="text-muted-foreground">Transfer fee:</span> <span className="font-medium">${Number(profile.transfer_fee).toLocaleString()}</span></span>
+                      )}
+                      {profile.contact_phone && (
+                        <a href={`tel:${String(profile.contact_phone).replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                          <Phone className="w-3 h-3" /> {profile.contact_phone}
+                        </a>
+                      )}
+                      {profile.contact_email && (
+                        <a href={`mailto:${profile.contact_email}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                          <Mail className="w-3 h-3" /> {profile.contact_email}
+                        </a>
+                      )}
+                      {profile.website && (
+                        <a href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                          <ExternalLink className="w-3 h-3" /> Website
+                        </a>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setExpandedCemetery(v => !v)}
+                      className="text-[11px] text-primary hover:underline"
+                    >
+                      {expandedCemetery ? "Hide cemetery details" : "Show cemetery details"}
+                    </button>
+                    {expandedCemetery && (
+                      <div className="space-y-2 text-xs text-foreground/90">
+                        {profile.description && <p className="whitespace-pre-wrap">{profile.description}</p>}
+                        {profile.address && <p><span className="text-muted-foreground">Address:</span> {profile.address}</p>}
+                        {profile.contact_name && <p><span className="text-muted-foreground">Contact:</span> {profile.contact_name}</p>}
+                        {profile.process_info && (
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1">Transfer process</p>
+                            <p className="whitespace-pre-wrap">{profile.process_info}</p>
+                          </div>
+                        )}
+                        {sections.length > 0 && (
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1 mb-1">Section pricing</p>
+                            <div className="rounded-md border border-border overflow-hidden bg-background/60">
+                              <table className="w-full text-[11px]">
+                                <thead className="bg-muted/50 text-muted-foreground">
+                                  <tr>
+                                    <th className="text-left font-medium px-2 py-1">Section</th>
+                                    <th className="text-left font-medium px-2 py-1">Type</th>
+                                    <th className="text-right font-medium px-2 py-1">Price</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {[...sections].sort((a, b) => (b.date || "").localeCompare(a.date || "")).map((s: any) => (
+                                    <tr key={s.id} className="border-t border-border/60">
+                                      <td className="px-2 py-1 text-foreground">{s.name || "—"}</td>
+                                      <td className="px-2 py-1 text-muted-foreground">{s.property_type || "—"}</td>
+                                      <td className="px-2 py-1 text-right font-medium">{s.price != null ? `$${Number(s.price).toLocaleString()}` : "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                        {profile.typical_prices && (
+                          <p><span className="text-muted-foreground">Typical prices:</span> <span className="whitespace-pre-wrap">{profile.typical_prices}</span></p>
+                        )}
+                        {profile.notes && (
+                          <p><span className="text-muted-foreground">Internal notes:</span> <span className="whitespace-pre-wrap">{profile.notes}</span></p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {profile && !hasProfileInfo && (
+                  <p className="mt-3 pt-3 border-t border-border/40 text-[11px] text-muted-foreground italic">
+                    Profile exists but is empty — add transfer fee, contacts, and section pricing from the Cemeteries tab.
+                  </p>
+                )}
+
+                {selected.region && (
+                  <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
+                )}
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {selCanon && (
+                    <button
+                      onClick={() => {
+                        setRegionFilter("texas");
+                        setCemeteryCanon(selCanon);
+                        setCemeteryLabel(selected.cemetery);
+                        setSelectedId(null);
+                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                      title="Search Texas submissions for this cemetery (fuzzy match, handles spelling variations)"
+                    >
+                      <Search className="w-3.5 h-3.5" /> Search submissions at this cemetery
+                    </button>
+                  )}
+                  {selCanon && (
+                    <button
+                      onClick={() => setEditCemeteryInline(v => !v)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background border border-border text-foreground hover:bg-muted transition-colors"
+                      title="Edit this cemetery's profile without leaving the submission"
+                    >
+                      <Building2 className="w-3.5 h-3.5" /> {editCemeteryInline ? "Close cemetery editor" : "Edit cemetery info"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setReassignCemeteryOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background border border-border text-foreground hover:bg-muted transition-colors"
+                    title="Match this submission to a different cemetery profile"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Match to different cemetery
+                  </button>
+                </div>
+                {editCemeteryInline && selCanon && (
+                  <div className="mt-3 pt-3 border-t border-border/40">
+                    <CemeteryInfoCard
+                      key={`edit-${selCanon}`}
+                      canon={selCanon}
+                      displayName={selected.cemetery}
+                      submissionCount={subCount}
+                      onClear={() => setEditCemeteryInline(false)}
+                    />
+                  </div>
+                )}
+              </div>
+              );
+            })()}
+
+            {/* Cemetery contact directory + inventory match — Bayer (non-Texas) submissions only */}
+            {selected.cemetery && subRegion(selected) !== "texas" && (() => {
+              const count = countFor(selected.cemetery);
+              const match = lookupCemeteryContactMatch(selected.cemetery);
+              const contact = match?.contact ?? null;
+              const uncertain = match?.uncertain ?? false;
+              return (
+                <div data-tour="cemetery-box" className="bg-muted/40 rounded-lg p-4 border border-border/50 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery (as written by customer)</p>
+                      <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
+                      {contact && (
+                        <p className={`text-[11px] mt-1 ${uncertain ? "text-[hsl(var(--status-nodocs-fg))]" : "text-muted-foreground"}`}>
+                          {uncertain ? "⚠ Best guess match — please verify: " : "Matched directory entry: "}
+                          <span className="font-medium text-foreground">{contact.name}</span>
+                        </p>
+                      )}
+                      {contact?.address && <p className="text-[11px] text-muted-foreground mt-0.5">{contact.address}</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMatchOpen(true)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 transition-all hover:opacity-90 ${
+                        count > 0 ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-border"
+                      }`}
+                      title="View matched inventory and recent comps at this cemetery"
+                    >
+                      <Layers className="w-3 h-3" />
+                      View inventory & comps
+                    </button>
+                  </div>
+
+                  {contact ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      {contact.salesPhone && (
+                        <a href={`tel:${contact.salesPhone.replace(/[^\d+]/g, "")}`} className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
+                          <Phone className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sales</p>
+                            <p className="text-foreground font-medium">{contact.salesPhone}</p>
+                            {contact.salesHours && <p className="text-[10px] text-muted-foreground mt-0.5">{contact.salesHours}</p>}
+                          </div>
+                        </a>
+                      )}
+                      {contact.transferPhone && (
+                        <a href={`tel:${contact.transferPhone.replace(/[^\d+]/g, "")}`} className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
+                          <FileSignature className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Transfer office</p>
+                            <p className="text-foreground font-medium">{contact.transferPhone}</p>
+                            {contact.transferFee && <p className="text-[10px] text-muted-foreground mt-0.5">Fee: {contact.transferFee}</p>}
+                          </div>
+                        </a>
+                      )}
+                      {contact.website && (
+                        <a href={`https://${contact.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
+                          <ExternalLink className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Website</p>
+                            <p className="text-foreground font-medium truncate">{contact.website}</p>
+                          </div>
+                        </a>
+                      )}
+                      {contact.notes && (
+                        <div className="sm:col-span-2 text-[11px] text-muted-foreground p-2 rounded-md bg-card/50 border border-border/40">
+                          <span className="font-medium text-foreground">Notes: </span>{contact.notes}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <a
+                      href={cemeterySearchUrl(selected.cemetery)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Not in directory — search Google for phone
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Property details grid — only customer-submitted values. The Deed owner(s) field
+                is special: it always shows the customer's answer alongside the AI-extracted owners
+                from the uploaded deed so the admin can compare both. */}
+            {(() => {
+              const s: any = selected;
+              const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
+              const aiDeed = aiByLabel.get("Owner(s) on record") || aiByLabel.get("Purchaser");
+              const customerDeed = s.deed_owner_names ? String(s.deed_owner_names).trim() : "";
+              const rows: Array<{ label: string; value: string }> = [
+                { label: "Cemetery name", value: (s.cemetery_original as string) || s.cemetery || "" },
+                { label: "Property type", value: s.property_type || "" },
+                { label: "Timeline", value: s.timeline || "" },
+                { label: "Budget", value: s.budget || "" },
+                { label: "Region", value: s.region || "" },
+                { label: "Spaces", value: s.spaces != null ? String(s.spaces) : "" },
+                { label: "Section / Lot", value: s.section || "" },
+                { label: "Cemetery city/state", value: s.cemetery_city || "" },
+                { label: "Owner status", value: s.deed_owners_status || "" },
+                { label: "Relationship to owner", value: s.relationship_to_owner || "" },
+                { label: "Purchase date / amount", value: s.purchase_info || "" },
+                { label: "Prepaid endowment / fees", value: s.prepaid_endowment_info || "" },
+                { label: "Bayer entry #", value: s.bayer_entry_id || "" },
+              ].filter(r => r.value && r.value.trim());
+              const showDeedBox = customerDeed || aiDeed;
+              return (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  {rows.map(({ label, value }) => (
+                    <Field key={label} label={label} value={value} />
+                  ))}
+                  {showDeedBox && (() => {
+                    const matches = customerDeed && aiDeed && aiDeed.status === "match";
+                    const differs = customerDeed && aiDeed && aiDeed.status === "differs";
+                    const tone = matches
+                      ? { border: "border-emerald-500/40", bg: "bg-emerald-500/5", label: "text-emerald-800", note: "Match — customer's answer matches the deed." }
+                      : differs
+                      ? { border: "border-red-500/40", bg: "bg-red-500/5", label: "text-red-800", note: "Mismatch — customer's answer and the name(s) on the deed don't match." }
+                      : { border: "border-border/60", bg: "bg-background/60", label: "text-muted-foreground", note: "" };
+                    return (
+                      <div className={`col-span-2 md:col-span-3 rounded-md border ${tone.border} ${tone.bg} p-3`}>
+                        <p className={`text-[10px] uppercase tracking-wide font-semibold mb-2 ${tone.label}`}>Deed owner(s)</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm items-start">
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Customer answered</p>
+                            <p className="text-sm text-foreground leading-snug break-words">
+                              {customerDeed || <span className="text-muted-foreground italic">— not provided —</span>}
+                            </p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 inline-flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" /> From deed (AI)
+                            </p>
+                            <p className="text-sm text-foreground leading-snug break-words">
+                              {aiDeed?.value || <span className="text-muted-foreground italic">— no deed uploaded / none found —</span>}
+                            </p>
+                            {aiDeed?.source && (
+                              <p className="mt-1 text-[10px] text-muted-foreground/70 italic truncate" title={aiDeed.source}>from {aiDeed.source}</p>
+                            )}
+                          </div>
+                        </div>
+                        {tone.note && (
+                          <p className={`mt-2 text-[11px] font-medium ${tone.label}`}>{tone.note}</p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            })()}
+
+            {/* AI-extracted facts from uploaded documents (AI-only). */}
+            {(() => {
+              type Row = { label: string; value: string; source: string };
+              const rows: Row[] = [];
+              const seenKey = new Set<string>();
+              for (const f of aiFacts) {
+                const str = String(f.value || "").trim();
+                if (!str) continue;
+                const key = `${f.label.toLowerCase()}::${str.toLowerCase()}`;
+                if (seenKey.has(key)) continue;
+                seenKey.add(key);
+                rows.push({ label: f.label, value: str, source: f.source });
+              }
+              if (rows.length === 0) return null;
+              return (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                    <Sparkles className="w-3 h-3" /> AI-extracted from uploaded documents
+                  </div>
+                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
+                    {rows.map((r, i) => (
+                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
+                        <span className="text-foreground break-words">{r.value}</span>
+                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
+
+
+            {/* Files the seller uploaded with the form */}
+            {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
+              <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
+            )}
+
+
+
+            {/* Message / details */}
+            {(selected.message || selected.details) && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                  {selected.message ? "Message" : "Additional details"}
+                </p>
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {selected.message || selected.details}
+                </p>
+              </div>
+            )}
+
+            {/* Mobile keeps it lean — view-only. Notes, pipelines, reply/action buttons and files
+                are hidden on mobile since admin work is done from desktop. */}
+            {!isMobile && (
+              <>
+                {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
+                <div data-tour="notes-section">
+                  <CustomerNotes submissionId={selected.id} customerName={selected.name} />
+                </div>
+
+                {/* Texas pipeline now lives at the top of the detail view — no duplicate here. */}
+
+
+                {/* Sellers (Bayer): pipeline below notes, above listings/dropbox */}
+                {subRegion(selected) === "bayer" && kind === "seller" && (() => {
+                  const dropboxStages: BayerStage[] = [
+                    "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
+                    "la_confirmed_poa_issued", "awaiting_notarized_docs",
+                    "file_compiled", "listing_live",
+                  ];
+                  const showDropbox = bayerStage ? dropboxStages.includes(bayerStage) : false;
+                  return (
+                    <div data-tour="seller-pipeline">
+                      <BayerPipelinePanel
+                        submission={selected}
+                        onPatch={(patch) => onUpdate(selected.id, patch)}
+                      />
+                      {showDropbox && (
+                        <CustomerJourney
+                          submission={selected}
+                          onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                        />
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {subRegion(selected) === "bayer" && kind === "buyer" && (
+                  <div data-tour="buyer-pipeline">
+                    <BuyerJourneyPanel
+                      submission={selected}
+                      onOpenSend={() => setBuyerOpen(true)}
+                    />
+                  </div>
+                )}
+
+                {subRegion(selected) === "bayer" && kind !== "seller" && kind !== "buyer" && (
+                  <CustomerJourney
+                    submission={selected}
+                    onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
+                  />
+                )}
+                {/* Typing banner — iMessage style */}
+                {typingUsers.length > 0 && (
+                  <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--status-nodocs-border))] bg-[hsl(var(--status-nodocs-soft))] px-3 py-2">
+                    <span className="inline-flex gap-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "120ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "240ms" }} />
+                    </span>
+                    <p className="text-xs text-[hsl(var(--status-nodocs-fg))]">
+                      <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
+                    </p>
+                  </div>
+                )}
+
+                {/* Actions — sellers: only show quote/decline before/at the quote stages.
+                    Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
+                {(() => {
+                  const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
+                  const sellerCanQuote = kind === "seller" && (!bayerStage || sellerEarlyStages.includes(bayerStage));
+                  const showQuoteBtn = kind !== "seller" || sellerCanQuote;
+                  const showDeclineBtn = kind !== "seller" || sellerCanQuote;
+                  return (
+                    <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {showQuoteBtn && (kind === "seller" ? (
+                          <button
+                            onClick={guard("Send seller quote", () => setQuoteOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={guard("Send available plots", () => setPlotCardsOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            Send available plots
+                          </button>
+                        ))}
+
+                        {showDeclineBtn && (
+                          <button
+                            onClick={guard("Polite decline", () => setDeclineOpen(true))}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
+                          >
+                            <MessageCircleX className="w-3.5 h-3.5" />
+                            Polite decline
+                          </button>
+                        )}
+
+                        {kind === "seller" && !sellerCanQuote && (
+                          <span className="text-[11px] text-muted-foreground italic">
+                            Seller is past the quote stage — use the pipeline above to advance.
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
+                        title="Move to trash — you can restore it later from Recently deleted"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+
+                    </div>
+                  );
+                })()}
+
+                {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
+                {(selected as any).customer_profile_id ? (
+                  <div data-tour="files-section" className="border-t border-border/40 pt-4">
+                    <CustomerFiles
+                      customerId={(selected as any).customer_profile_id}
+                      customerName={selected.name}
+                    />
+                  </div>
+                ) : (
+                  <div className="border-t border-border/40 pt-4">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <Paperclip className="w-3 h-3" /> Files & documents
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      This submission isn't linked to a customer profile yet. Create one to start attaching labeled files (POA, deed, ID, contracts…).
+                    </p>
+                    <button
+                      onClick={async () => {
+                        const name = selected.name || "Unknown";
+                        const email = (selected as any).email || null;
+                        const phone = (selected as any).phone || null;
+                        const kind = (selected as any).customer_kind === "seller" || (selected as any).customer_kind === "buyer"
+                          ? (selected as any).customer_kind
+                          : "contact";
+                        const { data, error } = await supabase.from("customer_profiles" as any).insert({
+                          primary_name: name,
+                          primary_email: email,
+                          primary_phone: phone,
+                          customer_kind: kind,
+                        }).select("id").single();
+                        if (error || !data) {
+                          alert(`Could not create profile: ${error?.message || "unknown"}`);
+                          return;
+                        }
+                        await supabase.from("contact_submissions" as any)
+                          .update({ customer_profile_id: (data as any).id })
+                          .eq("id", selected.id);
+                        await onUpdate(selected.id, { customer_profile_id: (data as any).id } as any);
+                        await onRefresh?.();
+
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
+                    >
+                      <Paperclip className="w-3.5 h-3.5" /> Create profile & attach files
+                    </button>
+                  </div>
+                )}
+
+              </>
+            )}
+          </motion.div>
+    );
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -1319,7 +2176,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         )}
         {cemeteriesOpen && cemeteryCanon && (
           (() => {
-            const cemSubs = texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon);
+            const cemSubs = cemeteryListSubs;
             return (
               <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border/50 bg-muted/20 flex items-center justify-between">
@@ -1377,6 +2234,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </div>
                             <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                           </button>
+                          {isExpanded && (
+                            <div className="border-t border-border/40 bg-card/50">
+                              {renderSubmissionDetail(s)}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1391,846 +2253,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             Select a submission to view details.
           </div>
         )}
-        {selected && (
-          <motion.div
-            key={selected.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <img
-                  src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)}
-                  alt=""
-                  className="w-14 h-14 rounded-xl object-cover bg-muted/40 shrink-0"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
-                    <BayerBadge inquiryChannel={selected.inquiry_channel} />
-                    <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} source={selected.source} sourceEmailId={(selected as any).source_email_id} />
-                    <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source, selected.inquiry_channel)}</p>
-                    {selected.source === "manual_phone" && (selected as any).handled_by_name && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))]">
-                        <UserPlus className="w-3 h-3" /> Added by {cleanDisplayName((selected as any).handled_by_name)}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
-                      .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
-                  </p>
-
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1.5">
-                {selected.cemetery && (() => {
-                  const selCanon = _canon(selected.cemetery || "");
-                  const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
-                  return (
-                    <button
-                      onClick={() => {
-                        if (!selCanon) return;
-                        setRegionFilter("texas");
-                        setCemeteryCanon(selCanon);
-                        setCemeteryLabel(selected.cemetery);
-                        setSelectedId(null);
-                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border max-w-[240px] transition-colors hover:opacity-90 ${cemCountTint(subCount)}`}
-                      title={`Filter to submissions at ${selected.cemetery} (${subCount})`}
-                    >
-                      <Building2 className="w-3 h-3 shrink-0" />
-                      <span className="truncate">{selected.cemetery}</span>
-                      <span className={`shrink-0 inline-flex items-center justify-center min-w-[20px] h-4 px-1 rounded-full text-[10px] font-bold ${cemCountBadgeTint(subCount)}`}>
-                        {subCount}
-                      </span>
-                    </button>
-                  );
-                })()}
-                {(() => {
-                  const sViewers = viewersFor(selected.id);
-                  return (
-                    <div className="flex items-center gap-1.5">
-                      {isNew(selected) && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-[hsl(var(--status-new))] text-white">New today</span>
-                      )}
-                      {sViewers.length > 0 && (
-                        <div className="flex items-center gap-1.5" title={`Viewed by: ${sViewers.map(v => v.user_name || "teammate").join(", ")}`}>
-                          <div className="flex -space-x-1">
-                            {sViewers.slice(0, 4).map(v => (
-                              <span key={v.user_id} className="w-5 h-5 rounded-full ring-1 ring-card flex items-center justify-center text-[9px] font-bold text-white" style={{ background: colorFor(v.user_id) }}>
-                                {(v.user_name || "?").charAt(0).toUpperCase()}
-                              </span>
-                            ))}
-                            {sViewers.length > 4 && (
-                              <span className="w-5 h-5 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-medium">+{sViewers.length - 4}</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Reply / follow-up state — Texas only */}
-            {subRegion(selected) === "texas" && (() => {
-              const isAwaiting = !!awaitingMap[selected.id];
-              const isFollowup = !!followupMap[selected.id];
-              const manualFollowup = !!(selected as any).manual_followup;
-              return (
-                <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
-                  {isAwaiting && (
-                    <button
-                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))] hover:bg-[hsl(var(--status-nodocs-soft))]/70 transition-colors"
-                      title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
-                    >
-                      <CheckCircle className="w-3.5 h-3.5" /> Doesn't need a reply
-                    </button>
-                  )}
-                  {!isAwaiting && (selected as any).reply_dismissed_at && (
-                    <button
-                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: null } as any)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
-                      title="Undo — re-enable Needs reply detection"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" /> Re-enable needs reply
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      const next = !manualFollowup;
-                      const patch: any = { manual_followup: next };
-                      // Marking needs-follow-up implies we're not waiting on a reply from them.
-                      if (next) patch.reply_dismissed_at = new Date().toISOString();
-                      onUpdate(selected.id, patch);
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      manualFollowup
-                        ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
-                        : "bg-card text-foreground border-border hover:bg-muted/60"
-                    }`}
-                    title="Manually flag this submission for follow-up so it never falls through the cracks"
-                  >
-                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
-                    {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
-                  </button>
-                  {(() => {
-                    const needsQuote = !!(selected as any).needs_quote;
-                    return (
-                      <button
-                        onClick={() => onUpdate(selected.id, { needs_quote: !needsQuote } as any)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                          needsQuote
-                            ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
-                            : "bg-card text-foreground border-border hover:bg-muted/60"
-                        }`}
-                        title="Flag this submission as awaiting a quote from us"
-                      >
-                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-[hsl(var(--status-quote))]" : "bg-muted-foreground/40"}`} />
-                        {needsQuote ? "Marked needs quote" : "Mark needs quote"}
-                      </button>
-                    );
-                  })()}
-                  {isFollowup && !manualFollowup && (
-                    <span className="text-[11px] text-muted-foreground italic">
-                      Auto-flagged from outgoing promise
-                    </span>
-                  )}
-                  {/* Plot reservations have been retired — high demand means
-                      we no longer offer 3-day holds. Cards now display a
-                      polite note in place of the hold link. */}
-                </div>
-              );
-            })()}
-
-
-
-            {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
-            {subRegion(selected) === "texas" && (() => {
-              const kind = resolveKind(selected.customer_kind, selected.source);
-              const x = selected as any;
-              const templates = kind === "buyer"
-                ? [
-                    buildBuyerHaveItTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery, propertyType: selected.property_type, spaces: selected.spaces }),
-                    buildBuyerNoInventoryTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery }),
-                  ]
-                : [
-                    buildSellerIntakeTemplate({
-                      recipientName: selected.name,
-                      adminName,
-                      cemetery: selected.cemetery,
-                      section: selected.section,
-                      spaces: selected.spaces,
-                      propertyType: selected.property_type,
-                      spaceNumbers: x.space_numbers,
-                      deedOwnerNames: x.deed_owner_names,
-                      deedOwnersStatus: x.deed_owners_status,
-                      relationshipToOwner: x.relationship_to_owner,
-                      hasAttachments: hasDocs(selected),
-                      deedExtractedOwners: selectedDeedOwners,
-                    }),
-                    buildSellerListingOptionsTemplate({
-                      recipientName: selected.name,
-                      adminName,
-                      cemetery: selected.cemetery,
-                    }),
-                  ];
-              return (
-                <EmailThread
-                  submissionId={selected.id}
-                  customerEmail={selected.email}
-                  customerName={selected.name}
-                  cemetery={x.cemetery_original || selected.cemetery}
-                  newEmailTemplates={templates}
-                  buyerContext={kind === "buyer" ? {
-                    id: selected.id,
-                    name: selected.name,
-                    email: selected.email,
-                    cemetery: selected.cemetery,
-                    property_type: selected.property_type,
-                  } : null}
-                  sellerContext={kind !== "buyer" ? {
-                    id: selected.id,
-                    name: selected.name,
-                    email: selected.email,
-                    cemetery: selected.cemetery,
-                    section: selected.section,
-                    property_type: selected.property_type,
-                    spaces: selected.spaces,
-                    space_numbers: (x as any)?.space_numbers ?? null,
-                    lawn: (x as any)?.lawn ?? null,
-                  } : null}
-                  onNewEmailSent={(meta) => {
-                    if (meta?.templateId === "seller_intake" || meta?.templateId === "seller_listing_options") {
-                      onUpdate(selected.id, { needs_quote: true } as any);
-                    }
-                  }}
-                />
-              );
-            })()}
-
-            {/* Contact actions */}
-            <div className="flex flex-wrap gap-2">
-              {selected.email && (
-                <a
-                  href={buildGmailComposeUrl({ to: selected.email })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
-                >
-                  <Mail className="w-3.5 h-3.5" /> {selected.email}
-                </a>
-              )}
-              {selected.phone && (
-                <a
-                  href={`tel:${selected.phone.replace(/[^\d+]/g, "")}`}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-foreground text-background rounded-full text-xs font-medium hover:opacity-90 transition-opacity"
-                >
-                  <Phone className="w-3.5 h-3.5" /> {selected.phone}
-                </a>
-              )}
-              <button
-                onClick={() => setPaymentLinkOpen(true)}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--accent-gold-bg))] text-[hsl(var(--accent-gold-fg))] border border-[hsl(var(--accent-gold-fg))]/20 hover:opacity-90 transition-opacity"
-              >
-                <DollarSign className="w-3.5 h-3.5" /> Send payment link
-              </button>
-              {selectedKind === "buyer" && (
-                <button
-                  onClick={() => setPlotCardsOpen(true)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                >
-                  <Send className="w-3.5 h-3.5" /> Send plot cards
-                </button>
-              )}
-            </div>
-
-            {/* No cemetery on file yet (e.g. general contact form) — let admins assign one. */}
-            {!selected.cemetery && (
-              <div className="rounded-lg p-4 border border-dashed border-border bg-muted/30 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
-                  <p className="text-sm text-foreground">No cemetery on file for this submission.</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Match them to a cemetery profile to add them to that cemetery's submissions.</p>
-                </div>
-                <button
-                  onClick={() => setReassignCemeteryOpen(true)}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                  title="Assign this submission to a cemetery"
-                >
-                  <Building2 className="w-3.5 h-3.5" /> Add to cemetery
-                </button>
-              </div>
-            )}
-
-            {/* Texas submissions: show what the customer wrote + our matched
-                cemetery profile (transfer fee, contact, description, section pricing).
-                Tinted by submission volume, matching the Cemeteries directory panel. */}
-            {selected.cemetery && subRegion(selected) === "texas" && (() => {
-              const selCanon = _canon(selected.cemetery || "");
-              const profile = selCanon ? texasCemProfiles.get(selCanon) : null;
-              const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
-              const sections: any[] = Array.isArray(profile?.sections) ? profile!.sections : [];
-              const hasProfileInfo = !!profile && !!(
-                profile.description || profile.typical_prices || profile.transfer_fee ||
-                profile.notes || profile.contact_name || profile.contact_phone ||
-                profile.contact_email || profile.address || profile.website ||
-                profile.process_info || sections.length
-              );
-              return (
-              <div className={`rounded-lg p-4 border transition-colors ${cemCountTint(subCount)}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery</p>
-                    <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
-                    {profile && profile.name && _canon(profile.name) !== selCanon && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Matched profile: <span className="font-medium text-foreground">{profile.name}</span>
-                      </p>
-                    )}
-                    {profile?.city && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{profile.city}</p>
-                    )}
-                  </div>
-                  {selCanon && (
-                    <span
-                      className={`shrink-0 inline-flex items-center justify-center min-w-[36px] h-7 px-2 rounded-full text-[11px] font-bold ${cemCountBadgeTint(subCount)}`}
-                      title={`${subCount} submission${subCount === 1 ? "" : "s"} at this cemetery`}
-                    >
-                      {subCount}
-                    </span>
-                  )}
-                </div>
-
-                {(selected as any).cemetery_original && (selected as any).cemetery_original !== selected.cemetery && (
-                  <div className="mt-2 pt-2 border-t border-border/40">
-                    <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--status-nodocs-fg))] mb-1">
-                      Originally written by customer
-                    </p>
-                    <p className="text-xs text-foreground break-words italic">"{(selected as any).cemetery_original}"</p>
-
-                  </div>
-                )}
-
-                {/* Matched profile summary + expandable detail */}
-                {profile && hasProfileInfo && (
-                  <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                      {profile.transfer_fee != null && (
-                        <span className="text-foreground"><span className="text-muted-foreground">Transfer fee:</span> <span className="font-medium">${Number(profile.transfer_fee).toLocaleString()}</span></span>
-                      )}
-                      {profile.contact_phone && (
-                        <a href={`tel:${String(profile.contact_phone).replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-                          <Phone className="w-3 h-3" /> {profile.contact_phone}
-                        </a>
-                      )}
-                      {profile.contact_email && (
-                        <a href={`mailto:${profile.contact_email}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-                          <Mail className="w-3 h-3" /> {profile.contact_email}
-                        </a>
-                      )}
-                      {profile.website && (
-                        <a href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
-                          <ExternalLink className="w-3 h-3" /> Website
-                        </a>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setExpandedCemetery(v => !v)}
-                      className="text-[11px] text-primary hover:underline"
-                    >
-                      {expandedCemetery ? "Hide cemetery details" : "Show cemetery details"}
-                    </button>
-                    {expandedCemetery && (
-                      <div className="space-y-2 text-xs text-foreground/90">
-                        {profile.description && <p className="whitespace-pre-wrap">{profile.description}</p>}
-                        {profile.address && <p><span className="text-muted-foreground">Address:</span> {profile.address}</p>}
-                        {profile.contact_name && <p><span className="text-muted-foreground">Contact:</span> {profile.contact_name}</p>}
-                        {profile.process_info && (
-                          <div>
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1">Transfer process</p>
-                            <p className="whitespace-pre-wrap">{profile.process_info}</p>
-                          </div>
-                        )}
-                        {sections.length > 0 && (
-                          <div>
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1 mb-1">Section pricing</p>
-                            <div className="rounded-md border border-border overflow-hidden bg-background/60">
-                              <table className="w-full text-[11px]">
-                                <thead className="bg-muted/50 text-muted-foreground">
-                                  <tr>
-                                    <th className="text-left font-medium px-2 py-1">Section</th>
-                                    <th className="text-left font-medium px-2 py-1">Type</th>
-                                    <th className="text-right font-medium px-2 py-1">Price</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {[...sections].sort((a, b) => (b.date || "").localeCompare(a.date || "")).map((s: any) => (
-                                    <tr key={s.id} className="border-t border-border/60">
-                                      <td className="px-2 py-1 text-foreground">{s.name || "—"}</td>
-                                      <td className="px-2 py-1 text-muted-foreground">{s.property_type || "—"}</td>
-                                      <td className="px-2 py-1 text-right font-medium">{s.price != null ? `$${Number(s.price).toLocaleString()}` : "—"}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )}
-                        {profile.typical_prices && (
-                          <p><span className="text-muted-foreground">Typical prices:</span> <span className="whitespace-pre-wrap">{profile.typical_prices}</span></p>
-                        )}
-                        {profile.notes && (
-                          <p><span className="text-muted-foreground">Internal notes:</span> <span className="whitespace-pre-wrap">{profile.notes}</span></p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {profile && !hasProfileInfo && (
-                  <p className="mt-3 pt-3 border-t border-border/40 text-[11px] text-muted-foreground italic">
-                    Profile exists but is empty — add transfer fee, contacts, and section pricing from the Cemeteries tab.
-                  </p>
-                )}
-
-                {selected.region && (
-                  <p className="text-[11px] text-muted-foreground mt-2">Region: {selected.region}</p>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {selCanon && (
-                    <button
-                      onClick={() => {
-                        setRegionFilter("texas");
-                        setCemeteryCanon(selCanon);
-                        setCemeteryLabel(selected.cemetery);
-                        setSelectedId(null);
-                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                      title="Search Texas submissions for this cemetery (fuzzy match, handles spelling variations)"
-                    >
-                      <Search className="w-3.5 h-3.5" /> Search submissions at this cemetery
-                    </button>
-                  )}
-                  {selCanon && (
-                    <button
-                      onClick={() => setEditCemeteryInline(v => !v)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background border border-border text-foreground hover:bg-muted transition-colors"
-                      title="Edit this cemetery's profile without leaving the submission"
-                    >
-                      <Building2 className="w-3.5 h-3.5" /> {editCemeteryInline ? "Close cemetery editor" : "Edit cemetery info"}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setReassignCemeteryOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-background border border-border text-foreground hover:bg-muted transition-colors"
-                    title="Match this submission to a different cemetery profile"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" /> Match to different cemetery
-                  </button>
-                </div>
-                {editCemeteryInline && selCanon && (
-                  <div className="mt-3 pt-3 border-t border-border/40">
-                    <CemeteryInfoCard
-                      key={`edit-${selCanon}`}
-                      canon={selCanon}
-                      displayName={selected.cemetery}
-                      submissionCount={subCount}
-                      onClear={() => setEditCemeteryInline(false)}
-                    />
-                  </div>
-                )}
-              </div>
-              );
-            })()}
-
-            {/* Cemetery contact directory + inventory match — Bayer (non-Texas) submissions only */}
-            {selected.cemetery && subRegion(selected) !== "texas" && (() => {
-              const count = countFor(selected.cemetery);
-              const match = lookupCemeteryContactMatch(selected.cemetery);
-              const contact = match?.contact ?? null;
-              const uncertain = match?.uncertain ?? false;
-              return (
-                <div data-tour="cemetery-box" className="bg-muted/40 rounded-lg p-4 border border-border/50 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Cemetery (as written by customer)</p>
-                      <p className="text-sm font-medium text-foreground break-words">{selected.cemetery}</p>
-                      {contact && (
-                        <p className={`text-[11px] mt-1 ${uncertain ? "text-[hsl(var(--status-nodocs-fg))]" : "text-muted-foreground"}`}>
-                          {uncertain ? "⚠ Best guess match — please verify: " : "Matched directory entry: "}
-                          <span className="font-medium text-foreground">{contact.name}</span>
-                        </p>
-                      )}
-                      {contact?.address && <p className="text-[11px] text-muted-foreground mt-0.5">{contact.address}</p>}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setMatchOpen(true)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium border shrink-0 transition-all hover:opacity-90 ${
-                        count > 0 ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-border"
-                      }`}
-                      title="View matched inventory and recent comps at this cemetery"
-                    >
-                      <Layers className="w-3 h-3" />
-                      View inventory & comps
-                    </button>
-                  </div>
-
-                  {contact ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                      {contact.salesPhone && (
-                        <a href={`tel:${contact.salesPhone.replace(/[^\d+]/g, "")}`} className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
-                          <Phone className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sales</p>
-                            <p className="text-foreground font-medium">{contact.salesPhone}</p>
-                            {contact.salesHours && <p className="text-[10px] text-muted-foreground mt-0.5">{contact.salesHours}</p>}
-                          </div>
-                        </a>
-                      )}
-                      {contact.transferPhone && (
-                        <a href={`tel:${contact.transferPhone.replace(/[^\d+]/g, "")}`} className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
-                          <FileSignature className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Transfer office</p>
-                            <p className="text-foreground font-medium">{contact.transferPhone}</p>
-                            {contact.transferFee && <p className="text-[10px] text-muted-foreground mt-0.5">Fee: {contact.transferFee}</p>}
-                          </div>
-                        </a>
-                      )}
-                      {contact.website && (
-                        <a href={`https://${contact.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 p-2 rounded-md bg-card border border-border/50 hover:border-primary/40 transition-colors">
-                          <ExternalLink className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Website</p>
-                            <p className="text-foreground font-medium truncate">{contact.website}</p>
-                          </div>
-                        </a>
-                      )}
-                      {contact.notes && (
-                        <div className="sm:col-span-2 text-[11px] text-muted-foreground p-2 rounded-md bg-card/50 border border-border/40">
-                          <span className="font-medium text-foreground">Notes: </span>{contact.notes}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <a
-                      href={cemeterySearchUrl(selected.cemetery)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                    >
-                      <ExternalLink className="w-3 h-3" /> Not in directory — search Google for phone
-                    </a>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Property details grid — only customer-submitted values. The Deed owner(s) field
-                is special: it always shows the customer's answer alongside the AI-extracted owners
-                from the uploaded deed so the admin can compare both. */}
-            {(() => {
-              const s: any = selected;
-              const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
-              const aiDeed = aiByLabel.get("Owner(s) on record") || aiByLabel.get("Purchaser");
-              const customerDeed = s.deed_owner_names ? String(s.deed_owner_names).trim() : "";
-              const rows: Array<{ label: string; value: string }> = [
-                { label: "Cemetery name", value: (s.cemetery_original as string) || s.cemetery || "" },
-                { label: "Property type", value: s.property_type || "" },
-                { label: "Timeline", value: s.timeline || "" },
-                { label: "Budget", value: s.budget || "" },
-                { label: "Region", value: s.region || "" },
-                { label: "Spaces", value: s.spaces != null ? String(s.spaces) : "" },
-                { label: "Section / Lot", value: s.section || "" },
-                { label: "Cemetery city/state", value: s.cemetery_city || "" },
-                { label: "Owner status", value: s.deed_owners_status || "" },
-                { label: "Relationship to owner", value: s.relationship_to_owner || "" },
-                { label: "Purchase date / amount", value: s.purchase_info || "" },
-                { label: "Prepaid endowment / fees", value: s.prepaid_endowment_info || "" },
-                { label: "Bayer entry #", value: s.bayer_entry_id || "" },
-              ].filter(r => r.value && r.value.trim());
-              const showDeedBox = customerDeed || aiDeed;
-              return (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                  {rows.map(({ label, value }) => (
-                    <Field key={label} label={label} value={value} />
-                  ))}
-                  {showDeedBox && (() => {
-                    const matches = customerDeed && aiDeed && aiDeed.status === "match";
-                    const differs = customerDeed && aiDeed && aiDeed.status === "differs";
-                    const tone = matches
-                      ? { border: "border-emerald-500/40", bg: "bg-emerald-500/5", label: "text-emerald-800", note: "Match — customer's answer matches the deed." }
-                      : differs
-                      ? { border: "border-red-500/40", bg: "bg-red-500/5", label: "text-red-800", note: "Mismatch — customer's answer and the name(s) on the deed don't match." }
-                      : { border: "border-border/60", bg: "bg-background/60", label: "text-muted-foreground", note: "" };
-                    return (
-                      <div className={`col-span-2 md:col-span-3 rounded-md border ${tone.border} ${tone.bg} p-3`}>
-                        <p className={`text-[10px] uppercase tracking-wide font-semibold mb-2 ${tone.label}`}>Deed owner(s)</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm items-start">
-                          <div className="min-w-0">
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Customer answered</p>
-                            <p className="text-sm text-foreground leading-snug break-words">
-                              {customerDeed || <span className="text-muted-foreground italic">— not provided —</span>}
-                            </p>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 inline-flex items-center gap-1">
-                              <Sparkles className="w-3 h-3" /> From deed (AI)
-                            </p>
-                            <p className="text-sm text-foreground leading-snug break-words">
-                              {aiDeed?.value || <span className="text-muted-foreground italic">— no deed uploaded / none found —</span>}
-                            </p>
-                            {aiDeed?.source && (
-                              <p className="mt-1 text-[10px] text-muted-foreground/70 italic truncate" title={aiDeed.source}>from {aiDeed.source}</p>
-                            )}
-                          </div>
-                        </div>
-                        {tone.note && (
-                          <p className={`mt-2 text-[11px] font-medium ${tone.label}`}>{tone.note}</p>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            })()}
-
-            {/* AI-extracted facts from uploaded documents (AI-only). */}
-            {(() => {
-              type Row = { label: string; value: string; source: string };
-              const rows: Row[] = [];
-              const seenKey = new Set<string>();
-              for (const f of aiFacts) {
-                const str = String(f.value || "").trim();
-                if (!str) continue;
-                const key = `${f.label.toLowerCase()}::${str.toLowerCase()}`;
-                if (seenKey.has(key)) continue;
-                seenKey.add(key);
-                rows.push({ label: f.label, value: str, source: f.source });
-              }
-              if (rows.length === 0) return null;
-              return (
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
-                    <Sparkles className="w-3 h-3" /> AI-extracted from uploaded documents
-                  </div>
-                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
-                    {rows.map((r, i) => (
-                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
-                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
-                        <span className="text-foreground break-words">{r.value}</span>
-                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })()}
-
-
-            {/* Files the seller uploaded with the form */}
-            {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
-              <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
-            )}
-
-
-
-            {/* Message / details */}
-            {(selected.message || selected.details) && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                  {selected.message ? "Message" : "Additional details"}
-                </p>
-                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                  {selected.message || selected.details}
-                </p>
-              </div>
-            )}
-
-            {/* Mobile keeps it lean — view-only. Notes, pipelines, reply/action buttons and files
-                are hidden on mobile since admin work is done from desktop. */}
-            {!isMobile && (
-              <>
-                {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-                <div data-tour="notes-section">
-                  <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-                </div>
-
-                {/* Texas pipeline now lives at the top of the detail view — no duplicate here. */}
-
-
-                {/* Sellers (Bayer): pipeline below notes, above listings/dropbox */}
-                {subRegion(selected) === "bayer" && selectedKind === "seller" && (() => {
-                  const dropboxStages: BayerStage[] = [
-                    "la_issued", "la_signed_awaiting_payment", "la_signed_paid",
-                    "la_confirmed_poa_issued", "awaiting_notarized_docs",
-                    "file_compiled", "listing_live",
-                  ];
-                  const showDropbox = selectedBayerStage ? dropboxStages.includes(selectedBayerStage) : false;
-                  return (
-                    <div data-tour="seller-pipeline">
-                      <BayerPipelinePanel
-                        submission={selected}
-                        onPatch={(patch) => onUpdate(selected.id, patch)}
-                      />
-                      {showDropbox && (
-                        <CustomerJourney
-                          submission={selected}
-                          onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
-                        />
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {subRegion(selected) === "bayer" && selectedKind === "buyer" && (
-                  <div data-tour="buyer-pipeline">
-                    <BuyerJourneyPanel
-                      submission={selected}
-                      onOpenSend={() => setBuyerOpen(true)}
-                    />
-                  </div>
-                )}
-
-                {subRegion(selected) === "bayer" && selectedKind !== "seller" && selectedKind !== "buyer" && (
-                  <CustomerJourney
-                    submission={selected}
-                    onSubmissionPatched={(patch) => onUpdate(selected.id, patch)}
-                  />
-                )}
-                {/* Typing banner — iMessage style */}
-                {typingUsers.length > 0 && (
-                  <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--status-nodocs-border))] bg-[hsl(var(--status-nodocs-soft))] px-3 py-2">
-                    <span className="inline-flex gap-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "120ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-quote))] animate-bounce" style={{ animationDelay: "240ms" }} />
-                    </span>
-                    <p className="text-xs text-[hsl(var(--status-nodocs-fg))]">
-                      <span className="font-semibold">{typingUsers.map(t => t.name).join(", ")}</span> {typingUsers.length === 1 ? "is" : "are"} typing a note… please wait before sending.
-                    </p>
-                  </div>
-                )}
-
-                {/* Actions — sellers: only show quote/decline before/at the quote stages.
-                    Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
-                {(() => {
-                  const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
-                  const sellerCanQuote = selectedKind === "seller" && (!selectedBayerStage || sellerEarlyStages.includes(selectedBayerStage));
-                  const showQuoteBtn = selectedKind !== "seller" || sellerCanQuote;
-                  const showDeclineBtn = selectedKind !== "seller" || sellerCanQuote;
-                  return (
-                    <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {showQuoteBtn && (selectedKind === "seller" ? (
-                          <button
-                            onClick={guard("Send seller quote", () => setQuoteOpen(true))}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={guard("Send available plots", () => setPlotCardsOpen(true))}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                          >
-                            <Send className="w-3.5 h-3.5" />
-                            Send available plots
-                          </button>
-                        ))}
-
-                        {showDeclineBtn && (
-                          <button
-                            onClick={guard("Polite decline", () => setDeclineOpen(true))}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
-                          >
-                            <MessageCircleX className="w-3.5 h-3.5" />
-                            Polite decline
-                          </button>
-                        )}
-
-                        {selectedKind === "seller" && !sellerCanQuote && (
-                          <span className="text-[11px] text-muted-foreground italic">
-                            Seller is past the quote stage — use the pipeline above to advance.
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
-                        title="Move to trash — you can restore it later from Recently deleted"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
-                      </button>
-
-                    </div>
-                  );
-                })()}
-
-                {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
-                {(selected as any).customer_profile_id ? (
-                  <div data-tour="files-section" className="border-t border-border/40 pt-4">
-                    <CustomerFiles
-                      customerId={(selected as any).customer_profile_id}
-                      customerName={selected.name}
-                    />
-                  </div>
-                ) : (
-                  <div className="border-t border-border/40 pt-4">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
-                      <Paperclip className="w-3 h-3" /> Files & documents
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      This submission isn't linked to a customer profile yet. Create one to start attaching labeled files (POA, deed, ID, contracts…).
-                    </p>
-                    <button
-                      onClick={async () => {
-                        const name = selected.name || "Unknown";
-                        const email = (selected as any).email || null;
-                        const phone = (selected as any).phone || null;
-                        const kind = (selected as any).customer_kind === "seller" || (selected as any).customer_kind === "buyer"
-                          ? (selected as any).customer_kind
-                          : "contact";
-                        const { data, error } = await supabase.from("customer_profiles" as any).insert({
-                          primary_name: name,
-                          primary_email: email,
-                          primary_phone: phone,
-                          customer_kind: kind,
-                        }).select("id").single();
-                        if (error || !data) {
-                          alert(`Could not create profile: ${error?.message || "unknown"}`);
-                          return;
-                        }
-                        await supabase.from("contact_submissions" as any)
-                          .update({ customer_profile_id: (data as any).id })
-                          .eq("id", selected.id);
-                        await onUpdate(selected.id, { customer_profile_id: (data as any).id } as any);
-                        await onRefresh?.();
-
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
-                    >
-                      <Paperclip className="w-3.5 h-3.5" /> Create profile & attach files
-                    </button>
-                  </div>
-                )}
-
-              </>
-            )}
-          </motion.div>
-        )}
+        {selected && !selectedIsInCemeteryList && renderSubmissionDetail(selected)}
       </div>
 
       {selected && (
