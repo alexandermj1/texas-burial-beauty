@@ -892,29 +892,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
                   {(selected as any).quote_response === "accepted" && (() => {
-                    const tierKey = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
-                    const tierLabel = tierKey && TIER_LABEL[tierKey as "starter" | "pro" | "featured"];
-                    const price = (selected as any).accepted_quote_amount ?? (selected as any).quote_amount;
+                    const quoted = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
+                    if (!quoted) return null;
+                    const retail = quoted / 0.42;
+                    const sales = retail * 0.68;
+                    const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
                     return (
-                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
-                        <DollarSign className="w-4 h-4" strokeWidth={2.5} />
-                        <span className="text-[10px] uppercase tracking-wide font-bold opacity-80">Accepted</span>
-                        {tierLabel && (
-                          <span className="text-[11px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white">
-                            {tierLabel}
-                          </span>
-                        )}
-                        {price != null && (
-                          <span className="font-display text-lg font-bold tabular-nums">
-                            ${Number(price).toLocaleString()}
-                          </span>
-                        )}
-                        {(selected as any).quote_responded_at && (
-                          <span className="text-[10px] opacity-70">· {new Date((selected as any).quote_responded_at).toLocaleDateString()}</span>
-                        )}
-                        {(selected as any).acceptance_channel && (
-                          <span className="text-[10px] opacity-70 italic">via {(selected as any).acceptance_channel}</span>
-                        )}
+                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                          <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
+                        </div>
+                        <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                          <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
+                        </div>
+                        <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted / accepted</span>
+                          <span className="text-sm font-semibold tabular-nums">{fmt(quoted)}</span>
+                        </div>
                       </div>
                     );
                   })()}
