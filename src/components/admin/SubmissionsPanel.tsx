@@ -210,6 +210,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
   const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
+  const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
   // Soft-delete UX: a deliberate confirmation dialog + a "Recently deleted" panel for restore.
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
@@ -513,6 +514,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (docsFilter === "without" && has) return false;
       }
       if (quotedFilter && !(s as any).quote_sent_at) return false;
+      if (acceptedFilter && (s as any).quote_response !== "accepted") return false;
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
@@ -537,7 +539,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
     return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
 
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
@@ -852,6 +854,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
+                  {(selected as any).quote_response === "accepted" && (selected as any).quote_amount != null && (
+                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm">
+                      <DollarSign className="w-4 h-4" strokeWidth={2.5} />
+                      <span className="text-[10px] uppercase tracking-wide font-bold opacity-80">Accepted quote</span>
+                      <span className="font-display text-lg font-bold tabular-nums">
+                        ${Number((selected as any).quote_amount).toLocaleString()}
+                      </span>
+                      {(selected as any).quote_responded_at && (
+                        <span className="text-[10px] opacity-70">· {new Date((selected as any).quote_responded_at).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  )}
 
                 </div>
               </div>
@@ -1956,7 +1970,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               return (
                 <button
                   onClick={() => setQuotedFilter(!isActive)}
-                  title={isActive ? "Showing only sellers we've quoted — click to clear" : "Show only sellers we've already sent a quote to"}
+                  title={isActive ? `Showing only sellers we've quoted (${quotedCount}) — click to clear` : `Show only sellers we've quoted (${quotedCount})`}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
                     isActive
                       ? "bg-purple-600 text-white border-purple-600 shadow-sm"
@@ -1964,7 +1978,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   }`}
                 >
                   <DollarSign className="w-3 h-3" strokeWidth={2.5} />
-                  Quote sent ({quotedCount})
+                  ({quotedCount})
+                </button>
+              );
+            })()}
+            {(() => {
+              const acceptedCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).quote_response === "accepted").length;
+              const isActive = acceptedFilter;
+              return (
+                <button
+                  onClick={() => setAcceptedFilter(!isActive)}
+                  title={isActive ? `Showing only accepted quotes (${acceptedCount}) — click to clear` : `Show only sellers who accepted our quote (${acceptedCount})`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                      : "bg-card text-emerald-700 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  }`}
+                >
+                  <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+                  ({acceptedCount})
                 </button>
               );
             })()}
@@ -2089,14 +2121,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             <Paperclip className="w-3 h-3" />
                           </span>
                         )}
-                        {(s as any).quote_sent_at && (
-                          <span
-                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shadow-sm"
-                            title={`Quote sent · ${formatDate((s as any).quote_sent_at)}`}
-                          >
-                            <DollarSign className="w-3 h-3" strokeWidth={2.5} />
-                          </span>
-                        )}
+                        {(s as any).quote_sent_at && (() => {
+                          const accepted = (s as any).quote_response === "accepted";
+                          const amt = Number((s as any).quote_amount || 0);
+                          const cls = accepted
+                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700"
+                            : "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800";
+                          const title = accepted
+                            ? `Quote accepted${amt ? ` · $${amt.toLocaleString()}` : ""}`
+                            : `Quote sent · ${formatDate((s as any).quote_sent_at)}`;
+                          return (
+                            <span
+                              className={`inline-flex items-center justify-center w-5 h-5 rounded-full border shadow-sm ${cls}`}
+                              title={title}
+                            >
+                              <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
