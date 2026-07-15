@@ -237,6 +237,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
   const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
+  // Draft for the editable accepted-price field (per submission). Keyed by submission id.
+  const [acceptedPriceDraft, setAcceptedPriceDraft] = useState<Record<string, string>>({});
   // Soft-delete UX: a deliberate confirmation dialog + a "Recently deleted" panel for restore.
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
@@ -892,7 +894,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   {(selected as any).quote_response === "accepted" && (() => {
                     const tierKey = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
                     const tierLabel = tierKey && TIER_LABEL[tierKey as "starter" | "pro" | "featured"];
-                    const price = (selected as any).accepted_quote_amount ?? (tierKey ? TIER_PRICE[tierKey as "starter" | "pro" | "featured"] : (selected as any).quote_amount);
+                    const price = (selected as any).accepted_quote_amount ?? (selected as any).quote_amount;
                     return (
                       <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
                         <DollarSign className="w-4 h-4" strokeWidth={2.5} />
@@ -1050,14 +1052,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const isAccepted = (selected as any).quote_response === "accepted";
               const currentTier = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
               const suggestion = acceptSuggestMap[selected.id];
+              // Default acceptance price = what we quoted the seller (e.g. $8,800),
+              // NOT the listing tier fee. Admin can override via the editable field.
+              const quotedPrice = Number((selected as any).quote_amount || 0);
+              const savedAcceptedPrice = (selected as any).accepted_quote_amount;
+              const displayedPrice = savedAcceptedPrice != null ? Number(savedAcceptedPrice) : quotedPrice;
+              const priceDraft = acceptedPriceDraft[selected.id] ?? (displayedPrice ? String(displayedPrice) : "");
               const markAccepted = (tier: "starter" | "pro" | "featured") => {
+                const parsed = Number(String(priceDraft).replace(/[^0-9.]/g, "")) || quotedPrice || 0;
                 onUpdate(selected.id, {
                   quote_response: "accepted",
                   quote_responded_at: new Date().toISOString(),
                   listing_tier: tier,
-                  accepted_quote_amount: TIER_PRICE[tier],
+                  accepted_quote_amount: parsed,
                   acceptance_channel: "manual",
                 } as any);
+              };
+              const savePrice = () => {
+                const parsed = Number(String(priceDraft).replace(/[^0-9.]/g, ""));
+                if (!isFinite(parsed) || parsed < 0) return;
+                onUpdate(selected.id, { accepted_quote_amount: parsed } as any);
               };
               return (
                 <div className="bg-card rounded-xl border border-border/50 p-3 space-y-2">
@@ -1070,13 +1084,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </div>
                     {isAccepted && (
                       <button
-                        onClick={() => onUpdate(selected.id, {
-                          quote_response: null,
-                          quote_responded_at: null,
-                          listing_tier: null,
-                          accepted_quote_amount: null,
-                          acceptance_channel: null,
-                        } as any)}
+                        onClick={() => {
+                          setAcceptedPriceDraft(d => { const n = { ...d }; delete n[selected.id]; return n; });
+                          onUpdate(selected.id, {
+                            quote_response: null,
+                            quote_responded_at: null,
+                            listing_tier: null,
+                            accepted_quote_amount: null,
+                            acceptance_channel: null,
+                          } as any);
+                        }}
                         className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
                         title="Undo — mark as not yet accepted"
                       >
@@ -1096,13 +1113,44 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           onClick={() => markAccepted(suggestion.tier!)}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-600 text-white hover:opacity-90"
                         >
-                          Confirm — {TIER_LABEL[suggestion.tier]} · ${TIER_PRICE[suggestion.tier]}
+                          Confirm — {TIER_LABEL[suggestion.tier]} at ${(Number(priceDraft.replace(/[^0-9.]/g, "")) || quotedPrice || 0).toLocaleString()}
                         </button>
                       ) : (
                         <p className="text-[11px] text-muted-foreground">Pick the tier below to confirm.</p>
                       )}
                     </div>
                   )}
+
+                  {/* Editable agreed price */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="text-[11px] text-muted-foreground">Agreed price</label>
+                    <div className="relative">
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">$</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={priceDraft}
+                        onChange={e => setAcceptedPriceDraft(d => ({ ...d, [selected.id]: e.target.value }))}
+                        onBlur={() => { if (isAccepted) savePrice(); }}
+                        onKeyDown={e => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
+                        placeholder={quotedPrice ? quotedPrice.toLocaleString() : "0"}
+                        className="pl-5 pr-2 py-1 rounded-md border border-border bg-card text-sm w-32 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                      />
+                    </div>
+                    {isAccepted && (
+                      <button
+                        onClick={savePrice}
+                        className="text-[11px] px-2 py-1 rounded-md bg-emerald-600 text-white hover:opacity-90"
+                      >
+                        Save price
+                      </button>
+                    )}
+                    {quotedPrice > 0 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        Quoted: ${quotedPrice.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
 
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] text-muted-foreground mr-1">
@@ -1119,9 +1167,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
                               : "bg-card text-emerald-700 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                           }`}
-                          title={`Mark accepted — ${TIER_LABEL[t]} ($${TIER_PRICE[t]})`}
+                          title={`Mark accepted as ${TIER_LABEL[t]} (listing fee $${TIER_PRICE[t]})`}
                         >
-                          {TIER_LABEL[t]} · ${TIER_PRICE[t]}
+                          {TIER_LABEL[t]}
+                          <span className="opacity-60">· fee ${TIER_PRICE[t]}</span>
                         </button>
                       );
                     })}
@@ -1129,6 +1178,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               );
             })()}
+
 
 
 
