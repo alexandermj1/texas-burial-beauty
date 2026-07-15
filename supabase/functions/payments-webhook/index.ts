@@ -52,13 +52,18 @@ function encodeBase64Url(s: string): string {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+function encodeSubject(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return /[^\x00-\x7F]/.test(s) ? `=?UTF-8?B?${encodeBase64Url(s).replace(/-/g, "+").replace(/_/g, "/")}?=` : s;
+}
+
 function buildRawEmail(to: string, subject: string, html: string): string {
   const boundary = `=_tcb_${crypto.randomUUID().replace(/-/g, "")}`;
   const plain = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const lines = [
     `From: ${MAILBOX}`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeSubject(subject)}`,
     "MIME-Version: 1.0",
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     "",
