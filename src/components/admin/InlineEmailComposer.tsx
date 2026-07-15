@@ -495,6 +495,7 @@ const InlineEmailComposer = ({
             setHtml(next);
             setBodyTouched(true);
             setListingBlockInserted(true);
+            setSubject(quoteSubjectFor(sellerContext?.cemetery));
           }}
         />
       )}
