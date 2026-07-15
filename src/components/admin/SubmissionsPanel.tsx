@@ -159,6 +159,10 @@ const subRegion = (s: Submission): "texas" | "bayer" => {
   return "texas";
 };
 
+// Once a quote has actually been sent, the submission is no longer considered
+// "needs quote" regardless of the manual flag.
+const needsQuoteActive = (s: Submission) => !!(s as any).needs_quote && !(s as any).quote_sent_at;
+
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries }: Props) => {
