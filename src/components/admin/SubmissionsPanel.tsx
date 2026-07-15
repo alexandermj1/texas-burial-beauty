@@ -1928,35 +1928,44 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
         {regionFilter === "texas" && (
-          <div className="flex items-center gap-1.5 flex-wrap px-3 py-2.5 border-b border-border/50 bg-sand-light/30 dark:bg-muted/20">
-
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mr-1">Attachments:</span>
-            {(["all", "with", "without"] as const).map(f => {
-              const labels = { all: "All", with: "With attachments", without: "Without attachments" } as const;
-              const counts = {
-                all: regionFilter === "texas" ? submissions.filter(s => subRegion(s) === "texas").length : 0,
-                with: submissions.filter(s => subRegion(s) === "texas" && hasDocs(s)).length,
-                without: submissions.filter(s => subRegion(s) === "texas" && !hasDocs(s)).length,
-              };
-              const isActive = docsFilter === f;
+          <div className="flex items-center gap-2 flex-wrap px-3 py-2.5 border-b border-border/50 bg-sand-light/30 dark:bg-muted/20">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mr-1">Filter:</span>
+            {(() => {
+              const withCount = submissions.filter(s => subRegion(s) === "texas" && hasDocs(s)).length;
+              const isActive = docsFilter === "with";
               return (
                 <button
-                  key={f}
-                  onClick={() => setDocsFilter(f)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                  onClick={() => setDocsFilter(isActive ? "all" : "with")}
+                  title={isActive ? "Showing only submissions with attachments — click to clear" : "Show only submissions with attachments"}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
                     isActive
-                      ? f === "with"
-                        ? "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))]"
-                        : f === "without"
-                          ? "bg-[hsl(var(--status-nodocs))] text-white border-[hsl(var(--status-nodocs))]"
-                          : "bg-foreground text-background border-foreground"
-                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                      ? "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))] shadow-sm"
+                      : "bg-card text-[hsl(var(--status-docs-fg))] border-border hover:bg-[hsl(var(--status-docs-soft))]"
                   }`}
                 >
-                  {labels[f]} ({counts[f]})
+                  <Paperclip className="w-3 h-3" />
+                  Attachments ({withCount})
                 </button>
               );
-            })}
+            })()}
+            {(() => {
+              const quotedCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).quote_sent_at).length;
+              const isActive = quotedFilter;
+              return (
+                <button
+                  onClick={() => setQuotedFilter(!isActive)}
+                  title={isActive ? "Showing only sellers we've quoted — click to clear" : "Show only sellers we've already sent a quote to"}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                      : "bg-card text-purple-700 dark:text-purple-300 border-border hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                  }`}
+                >
+                  <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+                  Quote sent ({quotedCount})
+                </button>
+              );
+            })()}
           </div>
         )}
         {regionFilter === "texas" && cemeteryLabel && (
