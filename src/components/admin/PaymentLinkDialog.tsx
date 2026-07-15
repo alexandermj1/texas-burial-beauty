@@ -4,6 +4,7 @@ import { X, DollarSign, Link2, Mail, Loader2, Check, Copy, ExternalLink } from "
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { properCase } from "@/lib/properCase";
+import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 
 interface Props {
   open: boolean;
