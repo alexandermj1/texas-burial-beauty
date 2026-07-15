@@ -836,7 +836,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
                     <BayerBadge inquiryChannel={selected.inquiry_channel} />
-                    <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} source={selected.source} sourceEmailId={(selected as any).source_email_id} />
                     <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source, selected.inquiry_channel)}</p>
                     {selected.source === "manual_phone" && (selected as any).handled_by_name && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))]">
