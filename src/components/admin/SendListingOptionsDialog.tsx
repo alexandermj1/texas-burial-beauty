@@ -80,6 +80,7 @@ export default function SendListingOptionsDialog({ open, onClose, seller, onAtta
                 recipientEmail: seller.email || "",
                 recipientName: properCase(seller.name || ""),
                 listingTier: t.id,
+                environment: getPaymentsEnvironment(),
               },
             });
             if (error) throw error;
