@@ -509,6 +509,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (docsFilter === "with" && !has) return false;
         if (docsFilter === "without" && has) return false;
       }
+      if (quotedFilter && !(s as any).quote_sent_at) return false;
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
