@@ -424,6 +424,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       setAwaitingMap(nextAwaiting);
       setFollowupMap(nextFollowup);
+      setAcceptSuggestMap(nextAcceptSuggest);
     };
     recompute();
     const ch = supabase.channel("email_messages_awaiting")
