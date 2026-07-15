@@ -117,11 +117,12 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
           {canGenerate ? (
             <>
               {fmtUsd(nppNum)} × {countNum} plot{countNum === 1 ? "" : "s"} ={" "}
-              <span className="text-foreground font-semibold">{fmtUsd(total)}</span>
-              {feeNum > 0 ? <> · {fmtUsd(feeNum)} transfer fee covered</> : null}
+              <span className="text-foreground font-semibold">{fmtUsd(total)}</span>{" "}
+              authorized sale · seller nets {fmtUsd(Math.round(nppNum * 0.85))}/plot after 15% commission
+              {feeNum > 0 ? <> · {fmtUsd(feeNum)} buyer-paid transfer fee</> : null}
             </>
           ) : (
-            "Enter the net payment per plot to generate the quote email."
+            "Enter the authorized sale price per plot to generate the quote email."
           )}
         </p>
         <button
