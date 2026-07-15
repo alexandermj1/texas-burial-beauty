@@ -171,19 +171,12 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
   const tierLabel = TIER_LABEL[tier] || "Listing";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — we've received your <strong>${escapeHtml(tierLabel)} listing</strong> payment. Please keep this email as your official receipt.</p>
+    <p>Thank you. We've received your ${escapeHtml(tierLabel)} listing payment. Please keep this email as your receipt.</p>
     ${receiptBlock(tx, `${tierLabel} Listing`, cardBrand, cardLast4)}
-    <p>Your plot is now in our active marketing rotation. Here's what happens next:</p>
-    <ol>
-      <li>We finalise your listing copy and any photography within 1–2 business days.</li>
-      <li>It goes live to our buyer network across Texas.</li>
-      <li>We notify you the moment a qualified buyer is matched.</li>
-    </ol>
-    <p>If you have additional documentation (deed, photos, cemetery letters), simply reply to this email and attach them.</p>
-    <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Receipt — ${tierLabel} listing ${fmt(tx.amount_cents)}`);
+    <p>Regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
+  `, `Receipt - ${tierLabel} listing ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Receipt — ${tierLabel} listing (${fmt(tx.amount_cents)})`, html);
+    await sendEmail(tx.recipient_email, `Receipt - ${tierLabel} listing (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Listing fee paid",
