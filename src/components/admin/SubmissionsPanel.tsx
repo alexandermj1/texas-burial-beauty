@@ -2306,17 +2306,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                         {(s as any).quote_sent_at && (() => {
                           const accepted = (s as any).quote_response === "accepted";
-                          const amt = Number((s as any).quote_amount || 0);
-                          const cls = accepted
-                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700"
-                            : "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800";
-                          const title = accepted
-                            ? `Quote accepted${amt ? ` · $${amt.toLocaleString()}` : ""}`
-                            : `Quote sent · ${formatDate((s as any).quote_sent_at)}`;
+                          const quoted = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
+                          if (accepted && quoted > 0) {
+                            const sales = Math.round((quoted / 0.42) * 0.68);
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm tabular-nums"
+                                title={`Sales price · quoted $${quoted.toLocaleString()} → retail $${Math.round(quoted/0.42).toLocaleString()} → sales $${sales.toLocaleString()}`}
+                              >
+                                <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
+                                ${sales.toLocaleString()}
+                              </span>
+                            );
+                          }
                           return (
                             <span
-                              className={`inline-flex items-center justify-center w-5 h-5 rounded-full border shadow-sm ${cls}`}
-                              title={title}
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-full border shadow-sm bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800"
+                              title={`Quote sent · ${formatDate((s as any).quote_sent_at)}`}
                             >
                               <DollarSign className="w-3 h-3" strokeWidth={2.5} />
                             </span>
