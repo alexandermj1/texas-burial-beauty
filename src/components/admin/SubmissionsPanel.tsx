@@ -532,9 +532,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     // Order: Needs reply → Needs quote → Needs follow-up → everything else.
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byNewest);
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && (s as any).needs_quote).sort(byNewest);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id]).sort(byNewest);
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]).sort(byNewest);
+    const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
+    const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
+    const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
     return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
 
   }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
