@@ -10,6 +10,7 @@ import { X, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { properCase } from "@/lib/properCase";
+import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 
 interface Props {
   open: boolean;
@@ -79,6 +80,7 @@ export default function SendListingOptionsDialog({ open, onClose, seller, onAtta
                 recipientEmail: seller.email || "",
                 recipientName: properCase(seller.name || ""),
                 listingTier: t.id,
+                environment: getPaymentsEnvironment(),
               },
             });
             if (error) throw error;

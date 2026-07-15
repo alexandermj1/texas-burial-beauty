@@ -4,6 +4,7 @@ import { X, DollarSign, Link2, Mail, Loader2, Check, Copy, ExternalLink } from "
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { properCase } from "@/lib/properCase";
+import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 
 interface Props {
   open: boolean;
@@ -104,6 +105,7 @@ export default function PaymentLinkDialog({ open, onClose, submission, adminName
           recipientEmail: recipient.trim(),
           recipientName: recipientName.trim(),
           ...(kind === "listing_fee" && { listingTier: listingFee }),
+          environment: getPaymentsEnvironment(),
         },
       });
       if (error) throw error;

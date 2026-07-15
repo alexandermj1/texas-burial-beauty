@@ -10,6 +10,7 @@ import { X, Mail, Search, Loader2, Check, DollarSign, Sparkles } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { properCase } from "@/lib/properCase";
+import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 
 interface Props {
   open: boolean;
@@ -190,6 +191,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                 description: desc,
                 recipientEmail: buyer.email || undefined,
                 recipientName: properCase(buyer.name || ""),
+                environment: getPaymentsEnvironment(),
               },
             });
             if (error || !data?.url) throw new Error(error?.message || "no url");

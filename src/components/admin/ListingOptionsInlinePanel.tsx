@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
+import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import {
   buildListingOptionsBlock,
   parseSpaces,
@@ -49,6 +50,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
         netPerPlot: nppNum,
         plotCount: countNum,
         transferFee: feeNum,
+        environment: getPaymentsEnvironment(),
       });
       onGenerated(html);
       toast({
