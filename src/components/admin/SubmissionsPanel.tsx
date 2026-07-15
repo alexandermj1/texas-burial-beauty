@@ -2253,7 +2253,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             Select a submission to view details.
           </div>
         )}
-        {selected && !selectedIsInCemeteryList && renderSubmissionDetail(selected)}
+        {selected && !selectedIsInCemeteryList && !cemeteriesOpen && renderSubmissionDetail(selected)}
       </div>
 
       {selected && (
