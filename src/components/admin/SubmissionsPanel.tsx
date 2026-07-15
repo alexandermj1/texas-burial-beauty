@@ -150,6 +150,29 @@ const FOLLOWUP_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 // currently have inventory" buyer template) and should NOT auto-flag follow-up.
 const FOLLOWUP_EXCLUDE_RX = /(don['’]?t have anything matching|keep your request on file|nothing matching your request|the moment something fitting becomes available|new inventory comes in often)/i;
 
+// Listing tier pricing (in dollars) — mirrors SendListingOptionsDialog.
+const TIER_PRICE: Record<"starter" | "pro" | "featured", number> = { starter: 0, pro: 99, featured: 299 };
+const TIER_LABEL: Record<"starter" | "pro" | "featured", string> = { starter: "Starter", pro: "Pro", featured: "Featured" };
+
+// Detect an acceptance-of-quote reply in inbound email body. Returns tier + snippet.
+const ACCEPT_RX = /\b(i\s+accept|we\s+accept|accepted|i['’]?ll\s+(take|go\s+with|do)|let['’]?s\s+(go|do|proceed)|sounds\s+good|sign\s+me\s+up|let['’]?s\s+move\s+forward|please\s+proceed|go\s+ahead|yes[\s,\.!]+(let|please|proceed)|i\s+want\s+to\s+list|list\s+(it|my)|move\s+forward\s+with|proceed\s+with)\b/i;
+const TIER_RX: Array<[RegExp, "starter" | "pro" | "featured"]> = [
+  [/\bstarter\b/i, "starter"],
+  [/\bpro\b/i, "pro"],
+  [/\bfeatured\b/i, "featured"],
+];
+const detectAcceptance = (body: string): { tier: "starter" | "pro" | "featured" | null; snippet: string } | null => {
+  if (!body) return null;
+  const m = body.match(ACCEPT_RX);
+  if (!m) return null;
+  let tier: "starter" | "pro" | "featured" | null = null;
+  for (const [rx, t] of TIER_RX) { if (rx.test(body)) { tier = t; break; } }
+  // Grab a snippet around the match
+  const idx = Math.max(0, (m.index ?? 0) - 40);
+  const snippet = body.slice(idx, Math.min(body.length, (m.index ?? 0) + m[0].length + 80)).trim();
+  return { tier, snippet };
+};
+
 
 // Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
 // A submission is Bayer iff its visible badge is Bayer (inquiry_channel === "bayer_sell_a_plot").
