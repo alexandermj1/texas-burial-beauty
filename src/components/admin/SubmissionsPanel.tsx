@@ -2088,6 +2088,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             <Paperclip className="w-3 h-3" />
                           </span>
                         )}
+                        {(s as any).quote_sent_at && (
+                          <span
+                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shadow-sm"
+                            title={`Quote sent · ${formatDate((s as any).quote_sent_at)}`}
+                          >
+                            <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
