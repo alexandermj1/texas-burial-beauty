@@ -191,6 +191,7 @@ export default function SendBuyerPlotCardsDialog({ open, onClose, buyer, adminNa
                 description: desc,
                 recipientEmail: buyer.email || undefined,
                 recipientName: properCase(buyer.name || ""),
+                environment: getPaymentsEnvironment(),
               },
             });
             if (error || !data?.url) throw new Error(error?.message || "no url");
