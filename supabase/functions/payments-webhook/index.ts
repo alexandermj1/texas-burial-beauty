@@ -54,8 +54,13 @@ function encodeBase64Url(s: string): string {
 
 function encodeSubject(s: string): string {
   // eslint-disable-next-line no-control-regex
-  return /[^\x00-\x7F]/.test(s) ? `=?UTF-8?B?${encodeBase64Url(s).replace(/-/g, "+").replace(/_/g, "/")}?=` : s;
+  if (!/[^\x00-\x7F]/.test(s)) return s;
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return `=?UTF-8?B?${btoa(bin)}?=`;
 }
+
 
 function buildRawEmail(to: string, subject: string, html: string): string {
   const boundary = `=_tcb_${crypto.randomUUID().replace(/-/g, "")}`;
