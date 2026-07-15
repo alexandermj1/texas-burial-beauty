@@ -300,8 +300,8 @@ const InlineEmailComposer = ({
   const quoteSubjectFor = (cemetery?: string | null) => {
     const c = (cemetery || "").trim();
     return c
-      ? `Your Property Valuation is Complete – Listing Offer for ${c}`
-      : `Your Property Valuation is Complete – Listing Offer`;
+      ? `Your Property Valuation is Complete - Listing Offer for ${c}`
+      : `Your Property Valuation is Complete - Listing Offer`;
   };
 
   const applyTemplate = (id: string) => {
