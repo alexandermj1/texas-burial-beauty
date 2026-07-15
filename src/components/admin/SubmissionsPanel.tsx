@@ -534,7 +534,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]).sort(byNewest);
     return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
 
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
