@@ -237,6 +237,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
   const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
+  // Draft for the editable accepted-price field (per submission). Keyed by submission id.
+  const [acceptedPriceDraft, setAcceptedPriceDraft] = useState<Record<string, string>>({});
   // Soft-delete UX: a deliberate confirmation dialog + a "Recently deleted" panel for restore.
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
