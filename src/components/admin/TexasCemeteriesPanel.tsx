@@ -5,7 +5,7 @@
 // another to merge — the destination cemetery keeps its profile; only the source
 // submissions get relabelled.
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, MapPin, Phone, Globe, GripVertical } from "lucide-react";
+import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, MapPin, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
@@ -466,12 +466,6 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                 const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
                 const profiled = isProfiled(stat);
                 const tier = tierOf(stat.count);
-                const websiteHost = (() => {
-                  const w = profile?.website?.trim();
-                  if (!w) return null;
-                  try { return new URL(w.startsWith("http") ? w : `https://${w}`).host.replace(/^www\./, ""); }
-                  catch { return w.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]; }
-                })();
 
                 return (
                   <div
