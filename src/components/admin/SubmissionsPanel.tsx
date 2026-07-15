@@ -889,18 +889,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
-                  {(selected as any).quote_response === "accepted" && (selected as any).quote_amount != null && (
-                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm">
-                      <DollarSign className="w-4 h-4" strokeWidth={2.5} />
-                      <span className="text-[10px] uppercase tracking-wide font-bold opacity-80">Accepted quote</span>
-                      <span className="font-display text-lg font-bold tabular-nums">
-                        ${Number((selected as any).quote_amount).toLocaleString()}
-                      </span>
-                      {(selected as any).quote_responded_at && (
-                        <span className="text-[10px] opacity-70">· {new Date((selected as any).quote_responded_at).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                  )}
+                  {(selected as any).quote_response === "accepted" && (() => {
+                    const tierKey = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
+                    const tierLabel = tierKey && TIER_LABEL[tierKey as "starter" | "pro" | "featured"];
+                    const price = (selected as any).accepted_quote_amount ?? (tierKey ? TIER_PRICE[tierKey as "starter" | "pro" | "featured"] : (selected as any).quote_amount);
+                    return (
+                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
+                        <DollarSign className="w-4 h-4" strokeWidth={2.5} />
+                        <span className="text-[10px] uppercase tracking-wide font-bold opacity-80">Accepted</span>
+                        {tierLabel && (
+                          <span className="text-[11px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                            {tierLabel}
+                          </span>
+                        )}
+                        {price != null && (
+                          <span className="font-display text-lg font-bold tabular-nums">
+                            ${Number(price).toLocaleString()}
+                          </span>
+                        )}
+                        {(selected as any).quote_responded_at && (
+                          <span className="text-[10px] opacity-70">· {new Date((selected as any).quote_responded_at).toLocaleDateString()}</span>
+                        )}
+                        {(selected as any).acceptance_channel && (
+                          <span className="text-[10px] opacity-70 italic">via {(selected as any).acceptance_channel}</span>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                 </div>
               </div>
