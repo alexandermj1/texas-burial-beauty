@@ -1,12 +1,11 @@
 export type PaymentsEnv = "sandbox" | "live";
 
 /**
- * Derive the Lovable Stripe environment from the publishable client token.
- * - pk_live_* → live (real money)
- * - pk_test_* or missing → sandbox (test mode)
+ * Always route real payment links to the LIVE Stripe account (Texas Cemetery Brokers)
+ * so admins can collect real money regardless of whether they are working from the
+ * preview URL or the published site. The Lovable-managed live Stripe key is
+ * available in both preview and production edge function environments.
  */
 export function getPaymentsEnvironment(): PaymentsEnv {
-  const token = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
-  if (token?.startsWith("pk_live_")) return "live";
-  return "sandbox";
+  return "live";
 }
