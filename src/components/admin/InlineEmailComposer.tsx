@@ -338,6 +338,22 @@ const InlineEmailComposer = ({
       return;
     }
     toast({ title: "Email sent", description: `Sent to ${to}` });
+    // If a listing-options quote block was inserted OR the seller_listing_options
+    // template was used, stamp the submission's quote_sent_at so it moves to the
+    // "Quoted" pipeline stage / gets the quoted tag.
+    try {
+      const isQuoteSend =
+        (listingBlockInserted || activeTemplateId === "seller_listing_options") &&
+        sellerContext?.id;
+      if (isQuoteSend) {
+        await supabase
+          .from("contact_submissions")
+          .update({ quote_sent_at: new Date().toISOString() })
+          .eq("id", sellerContext!.id);
+      }
+    } catch (e) {
+      console.warn("quote_sent_at update failed", e);
+    }
     setHtml(templateHtml);
     editorRef.current?.setHtml(templateHtml);
     setBodyTouched(false);
