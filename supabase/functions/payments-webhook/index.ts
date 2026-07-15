@@ -218,13 +218,12 @@ async function handleCustomPaid(tx: any, cardBrand?: string, cardLast4?: string)
   const itemLabel = tx.description || "Invoice";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — we've received your payment. Please keep this email as your official receipt.</p>
+    <p>Thank you. We've received your payment. Please keep this email as your receipt.</p>
     ${receiptBlock(tx, itemLabel, cardBrand, cardLast4)}
-    <p>Reply to this email anytime with questions.</p>
-    <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Receipt — ${fmt(tx.amount_cents)}`);
+    <p>Regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
+  `, `Receipt - ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Receipt — ${BRAND} (${fmt(tx.amount_cents)})`, html);
+    await sendEmail(tx.recipient_email, `Receipt - ${BRAND} (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Invoice paid",
