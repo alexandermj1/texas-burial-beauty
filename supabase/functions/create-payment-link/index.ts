@@ -134,6 +134,9 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       ui_mode: "hosted_page",
+      // Force plain card checkout — skips Stripe Link's "Pay with Link"
+      // landing screen and the SMS/phone confirmation step that goes with it.
+      payment_method_types: ["card"],
       line_items: [{
         price_data: {
           currency: "usd",
