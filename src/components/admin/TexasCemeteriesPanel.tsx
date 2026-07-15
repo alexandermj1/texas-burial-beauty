@@ -5,7 +5,7 @@
 // another to merge — the destination cemetery keeps its profile; only the source
 // submissions get relabelled.
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, MapPin, Phone, Globe, GripVertical } from "lucide-react";
+import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, MapPin, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
@@ -466,12 +466,6 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                 const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
                 const profiled = isProfiled(stat);
                 const tier = tierOf(stat.count);
-                const websiteHost = (() => {
-                  const w = profile?.website?.trim();
-                  if (!w) return null;
-                  try { return new URL(w.startsWith("http") ? w : `https://${w}`).host.replace(/^www\./, ""); }
-                  catch { return w.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]; }
-                })();
 
                 return (
                   <div
@@ -496,21 +490,19 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                       if (!src || src === stat.canon) return;
                       mergeInto(src, { canon: stat.canon, displayName: stat.displayName, directoryId: stat.directoryId });
                     }}
-                    className={`group relative flex overflow-hidden rounded-r-xl rounded-l-sm border-y border-r transition-all ${
+                    className={`group relative flex overflow-hidden rounded-xl border transition-all ${
                       isDropTarget
                         ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-400"
                         : isDragging
                           ? "opacity-40 border-border/60"
                           : isActive
-                            ? "border-primary bg-primary/[0.06] ring-1 ring-primary/40 shadow-sm"
-                            : profiled
-                              ? "border-border/50 bg-card hover:shadow-md hover:border-border"
-                              : "border-border/40 bg-muted/30 hover:bg-card hover:border-border/70 hover:shadow-sm"
+                            ? "border-primary bg-background ring-2 ring-primary/30 shadow-md"
+                            : "border-border/60 bg-background hover:border-primary/40 hover:shadow-lg"
                     }`}
                     title={isDropTarget ? `Drop to merge into "${stat.displayName}"` : undefined}
                   >
                     {/* Left tier bar */}
-                    <div className={`w-1 shrink-0 ${leftBar[tier]}`} aria-hidden />
+                    <div className={`w-1.5 shrink-0 ${leftBar[tier]}`} aria-hidden />
 
                     <div className="flex-1 min-w-0 flex flex-col">
                       <button
@@ -518,67 +510,34 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                         className="w-full text-left p-4 flex-1 cursor-pointer"
                       >
                         <div className="flex justify-between items-start gap-3">
-                          <div className="min-w-0 flex-1 space-y-0.5">
-                            <h5 className={`font-display text-[17px] leading-tight break-words ${profiled ? "text-foreground" : "text-foreground/70"}`}>
+                          <div className="min-w-0 flex-1">
+                            <h5 className="font-display text-lg font-semibold leading-snug break-words text-foreground">
                               {stat.displayName}
                             </h5>
-                            {profile?.address ? (
-                              <p className="text-[11.5px] text-muted-foreground flex items-start gap-1 leading-snug">
-                                <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-muted-foreground/70" />
-                                <span className="break-words">{profile.address}</span>
-                              </p>
-                            ) : profile?.city || Array.from(stat.cities)[0] ? (
-                              <p className="text-[11.5px] text-muted-foreground/80">
-                                {profile?.city || Array.from(stat.cities)[0]}
-                              </p>
-                            ) : (
-                              <p className="text-[11.5px] text-muted-foreground/60 italic">
-                                No profile details available
-                              </p>
-                            )}
+                            <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
+                              <span className="truncate">
+                                {profile?.address || profile?.city || Array.from(stat.cities)[0] || "Location unknown"}
+                              </span>
+                            </div>
                           </div>
                           <span
-                            className={`shrink-0 inline-flex items-center justify-center min-w-[38px] px-2 py-1 rounded-lg text-xs font-bold tabular-nums border ${countBadge[tier]}`}
+                            className={`shrink-0 inline-flex items-center justify-center min-w-[32px] px-1.5 py-0.5 rounded-md text-[11px] font-bold tabular-nums border ${countBadge[tier]}`}
                             title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
                           >
                             {stat.count}
                           </span>
                         </div>
 
-                        {(profile?.contact_phone || websiteHost) && (
-                          <div className="mt-3 pt-3 border-t border-border/40 grid grid-cols-2 gap-y-1.5 gap-x-3 text-[11.5px] text-foreground/70">
-                            {profile?.contact_phone && (
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <Phone className="w-3 h-3 shrink-0 text-muted-foreground/70" />
-                                <span className="truncate">{profile.contact_phone}</span>
-                              </div>
-                            )}
-                            {websiteHost && (
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <Globe className="w-3 h-3 shrink-0 text-muted-foreground/70" />
-                                <a
-                                  href={profile!.website!.startsWith("http") ? profile!.website! : `https://${profile!.website}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-primary hover:underline truncate"
-                                >
-                                  {websiteHost}
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
                         {profile?.description && (
-                          <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground italic line-clamp-2">
+                          <p className="mt-3 text-[11.5px] leading-relaxed text-muted-foreground/80 line-clamp-2">
                             {profile.description}
                           </p>
                         )}
 
                         {isActive && (
-                          <div className="mt-2">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] bg-primary/15 text-primary border border-primary/30 font-medium">
+                          <div className="mt-3">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-primary/15 text-primary border border-primary/30 font-medium">
                               filtering submissions
                             </span>
                           </div>
