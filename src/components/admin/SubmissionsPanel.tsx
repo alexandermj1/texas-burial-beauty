@@ -1044,6 +1044,93 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
+            {/* Acceptance controls — Texas + quote already sent. Manual toggle + tier picker.
+                When there's an auto-detected acceptance in the latest inbound email, surface a suggestion. */}
+            {subRegion(selected) === "texas" && (selected as any).quote_sent_at && (() => {
+              const isAccepted = (selected as any).quote_response === "accepted";
+              const currentTier = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
+              const suggestion = acceptSuggestMap[selected.id];
+              const markAccepted = (tier: "starter" | "pro" | "featured") => {
+                onUpdate(selected.id, {
+                  quote_response: "accepted",
+                  quote_responded_at: new Date().toISOString(),
+                  listing_tier: tier,
+                  accepted_quote_amount: TIER_PRICE[tier],
+                  acceptance_channel: "manual",
+                } as any);
+              };
+              return (
+                <div className="bg-card rounded-xl border border-border/50 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-emerald-600" strokeWidth={2.5} />
+                      <span className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
+                        Quote acceptance
+                      </span>
+                    </div>
+                    {isAccepted && (
+                      <button
+                        onClick={() => onUpdate(selected.id, {
+                          quote_response: null,
+                          quote_responded_at: null,
+                          listing_tier: null,
+                          accepted_quote_amount: null,
+                          acceptance_channel: null,
+                        } as any)}
+                        className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+                        title="Undo — mark as not yet accepted"
+                      >
+                        Undo acceptance
+                      </button>
+                    )}
+                  </div>
+
+                  {suggestion && !isAccepted && (
+                    <div className="rounded-lg border-2 border-emerald-500/40 bg-emerald-500/10 p-2.5 space-y-1.5">
+                      <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        Reply looks like acceptance{suggestion.tier ? ` — mentioned ${TIER_LABEL[suggestion.tier]}` : ""}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground italic line-clamp-2">"{suggestion.snippet}"</p>
+                      {suggestion.tier ? (
+                        <button
+                          onClick={() => markAccepted(suggestion.tier!)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-600 text-white hover:opacity-90"
+                        >
+                          Confirm — {TIER_LABEL[suggestion.tier]} · ${TIER_PRICE[suggestion.tier]}
+                        </button>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground">Pick the tier below to confirm.</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] text-muted-foreground mr-1">
+                      {isAccepted ? "Accepted tier:" : "Mark accepted as:"}
+                    </span>
+                    {(["starter", "pro", "featured"] as const).map(t => {
+                      const active = currentTier === t && isAccepted;
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => markAccepted(t)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                            active
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              : "bg-card text-emerald-700 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                          }`}
+                          title={`Mark accepted — ${TIER_LABEL[t]} ($${TIER_PRICE[t]})`}
+                        >
+                          {TIER_LABEL[t]} · ${TIER_PRICE[t]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+
 
 
             {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
