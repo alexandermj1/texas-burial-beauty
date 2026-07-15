@@ -951,7 +951,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
                     {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
                   </button>
-                  {(() => {
+                  {!(selected as any).quote_sent_at && (() => {
                     const needsQuote = !!(selected as any).needs_quote;
                     return (
                       <button
