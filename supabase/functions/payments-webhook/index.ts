@@ -199,13 +199,12 @@ async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: strin
   const itemLabel = tx.description || "Cemetery plot";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — your payment for <em>${escapeHtml(itemLabel)}</em> has been received. Please keep this email as your official receipt.</p>
+    <p>Thank you. Your payment for ${escapeHtml(itemLabel)} has been received. Please keep this email as your receipt.</p>
     ${receiptBlock(tx, itemLabel, cardBrand, cardLast4)}
-    <p>The plot is now reserved in your name. Our transfer team will be in touch within one business day with the cemetery transfer paperwork and next steps.</p>
-    <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Receipt — ${fmt(tx.amount_cents)} for your cemetery plot.`);
+    <p>Regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
+  `, `Receipt - plot purchase ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Receipt — Plot purchase (${fmt(tx.amount_cents)})`, html);
+    await sendEmail(tx.recipient_email, `Receipt - plot purchase (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Plot sold",
