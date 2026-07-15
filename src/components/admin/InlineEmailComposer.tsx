@@ -297,6 +297,13 @@ const InlineEmailComposer = ({
     setSubject(defaultSubject);
   }, [defaultSubject]);
 
+  const quoteSubjectFor = (cemetery?: string | null) => {
+    const c = (cemetery || "").trim();
+    return c
+      ? `Your Property Valuation is Complete – Listing Offer for ${c}`
+      : `Your Property Valuation is Complete – Listing Offer`;
+  };
+
   const applyTemplate = (id: string) => {
     const t = templates?.find((x) => x.id === id);
     if (!t) return;
@@ -306,6 +313,9 @@ const InlineEmailComposer = ({
     editorRef.current?.setHtml(next);
     setBodyTouched(false);
     setListingBlockInserted(false);
+    if (id === "seller_listing_options") {
+      setSubject(quoteSubjectFor(sellerContext?.cemetery));
+    }
   };
 
   const send = async () => {
@@ -316,7 +326,10 @@ const InlineEmailComposer = ({
     }
     setSending(true);
     const normalizedHtml = normalizeComposerHtmlForEmail(html);
-    const brandedHtml = wrapInBrandedShell(normalizedHtml);
+    // Quote emails (listing-options block already includes brand header/footer)
+    // ship without the extra masthead shell to avoid double branding.
+    const hasListingBlock = /data-listing-options="1"/.test(normalizedHtml);
+    const brandedHtml = hasListingBlock ? normalizedHtml : wrapInBrandedShell(normalizedHtml);
     const { data, error } = await supabase.functions.invoke("gmail-action", {
       body: {
         action: "send",
