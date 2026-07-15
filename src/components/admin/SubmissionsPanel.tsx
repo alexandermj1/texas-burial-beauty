@@ -189,6 +189,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
   // when WE promised to follow up and haven't sent anything since (older than threshold).
   const [followupMap, setFollowupMap] = useState<Record<string, { since: string; phrase: string }>>({});
+  // Map of submission_id -> auto-detected acceptance suggestion from inbound email
+  // { tier, snippet, at }. Only surfaced when quote_sent_at exists and not yet accepted.
+  const [acceptSuggestMap, setAcceptSuggestMap] = useState<Record<string, { tier: "starter" | "pro" | "featured" | null; snippet: string; at: string }>>({});
   const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
   const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
