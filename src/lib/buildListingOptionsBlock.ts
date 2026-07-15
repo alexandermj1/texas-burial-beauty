@@ -60,7 +60,7 @@ export async function buildListingOptionsBlock(opts: {
   /** Stripe environment — defaults to sandbox if omitted. */
   environment?: "sandbox" | "live";
 }): Promise<string> {
-  const { seller, netPerPlot, plotCount, transferFee } = opts;
+  const { seller, netPerPlot, plotCount, transferFee, environment = "sandbox" } = opts;
   const salePerSpace = netPerPlot;
   const commissionPerSpace = Math.round(salePerSpace * 0.15);
   const proceedsPerSpace = salePerSpace - commissionPerSpace;
@@ -80,6 +80,7 @@ export async function buildListingOptionsBlock(opts: {
             recipientEmail: seller.email || "",
             recipientName: properCase(seller.name || ""),
             listingTier: t.id,
+            environment,
           },
         });
         if (error) throw error;
