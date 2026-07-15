@@ -46,16 +46,56 @@ export default function SendListingOptionsDialog({ open, onClose, seller, onAtta
   const defaultSpaces = parseSpaces(seller.spaces);
   const [netPerPlot, setNetPerPlot] = useState<string>("");
   const [plotCount, setPlotCount] = useState<string>(String(defaultSpaces));
-  const [transferFee, setTransferFee] = useState<string>("395");
+  const [transferFee, setTransferFee] = useState<string>("");
+  const [feeAutofilled, setFeeAutofilled] = useState(false);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setNetPerPlot("");
-      setPlotCount(String(parseSpaces(seller.spaces)));
-      setTransferFee("395");
-    }
-  }, [open, seller.id, seller.spaces]);
+    if (!open) return;
+    setNetPerPlot("");
+    setPlotCount(String(parseSpaces(seller.spaces)));
+    setTransferFee("");
+    setFeeAutofilled(false);
+
+    // Try to autofill the transfer fee from the cemetery record.
+    const name = (seller.cemetery || "").trim();
+    if (!name) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.rpc("canonical_cemetery" as any, { name });
+        const canon = (data as any) || null;
+        let row: any = null;
+        if (canon) {
+          const { data: rows } = await supabase
+            .from("texas_cemeteries" as any)
+            .select("transfer_fee")
+            .eq("canonical_name", canon)
+            .not("transfer_fee", "is", null)
+            .limit(1);
+          row = rows?.[0] ?? null;
+        }
+        if (!row) {
+          const { data: rows } = await supabase
+            .from("texas_cemeteries" as any)
+            .select("transfer_fee")
+            .ilike("name", `%${name}%`)
+            .not("transfer_fee", "is", null)
+            .limit(1);
+          row = rows?.[0] ?? null;
+        }
+        if (cancelled) return;
+        const fee = row?.transfer_fee;
+        if (fee != null && fee !== "") {
+          setTransferFee(String(fee));
+          setFeeAutofilled(true);
+        }
+      } catch (e) {
+        console.warn("transfer fee autofill failed", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open, seller.id, seller.spaces, seller.cemetery]);
 
   const nppNum = Number(netPerPlot) || 0;
   const countNum = Math.max(1, Number(plotCount) || 1);
