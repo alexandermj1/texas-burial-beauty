@@ -8,7 +8,6 @@ import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
-import TexasBadge from "./TexasBadge";
 import CustomerJourney from "./CustomerJourney";
 import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
@@ -159,6 +158,10 @@ const subRegion = (s: Submission): "texas" | "bayer" => {
   if ((s as any).inquiry_channel === "bayer_sell_a_plot") return "bayer";
   return "texas";
 };
+
+// Once a quote has actually been sent, the submission is no longer considered
+// "needs quote" regardless of the manual flag.
+const needsQuoteActive = (s: Submission) => !!(s as any).needs_quote && !(s as any).quote_sent_at;
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
@@ -513,7 +516,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
-      if (eFilter === "needs_quote" && !(s as any).needs_quote) return false;
+      if (eFilter === "needs_quote" && !needsQuoteActive(s)) return false;
       if (eFilter === "needs_followup" && !followupMap[s.id]) return false;
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
@@ -529,9 +532,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     // Order: Needs reply → Needs quote → Needs follow-up → everything else.
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byNewest);
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && (s as any).needs_quote).sort(byNewest);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id]).sort(byNewest);
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !(s as any).needs_quote && !followupMap[s.id]).sort(byNewest);
+    const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
+    const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
+    const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
     return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
 
   }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
@@ -837,7 +840,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <CustomerKindBadge kind={resolveKind(selected.customer_kind, selected.source)} />
                     <BayerBadge inquiryChannel={selected.inquiry_channel} />
-                    <TexasBadge inquiryChannel={selected.inquiry_channel} state={(selected as any).state} source={selected.source} sourceEmailId={(selected as any).source_email_id} />
                     <p className="text-xs text-primary font-medium tracking-wide uppercase">{sourceLabel(selected.source, selected.inquiry_channel)}</p>
                     {selected.source === "manual_phone" && (selected as any).handled_by_name && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))]">
@@ -949,7 +951,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
                     {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
                   </button>
-                  {(() => {
+                  {!(selected as any).quote_sent_at && (() => {
                     const needsQuote = !!(selected as any).needs_quote;
                     return (
                       <button
@@ -1718,7 +1720,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               : f === "needs_followup"
                 ? submissions.filter(s => followupMap[s.id]).length
                 : f === "needs_quote"
-                  ? submissions.filter(s => (s as any).needs_quote).length
+                  ? submissions.filter(s => needsQuoteActive(s)).length
                   : submissions.filter(s => awaitingMap[s.id]).length;
           const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_quote: "Needs quote", needs_followup: "Follow up" } as const;
           const activeCls = f === "awaiting_reply"
@@ -2051,7 +2053,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                         {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
                         <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
-                        <TexasBadge inquiryChannel={s.inquiry_channel} state={(s as any).state} source={s.source} sourceEmailId={(s as any).source_email_id} size="xs" />
                         {awaitingMap[s.id] && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border border-[hsl(var(--status-reply-border))] shadow-sm"
@@ -2061,7 +2062,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Needs reply
                           </span>
                         )}
-                        {!awaitingMap[s.id] && (s as any).needs_quote && (
+                        {!awaitingMap[s.id] && needsQuoteActive(s) && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-[hsl(var(--status-quote))] text-white border border-[hsl(var(--status-quote))] shadow-sm"
                             title="Quote owed to seller"
@@ -2071,7 +2072,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           </span>
                         )}
 
-                        {!awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id] && (
+                        {!awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id] && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border border-[hsl(var(--status-followup-border))] shadow-sm"
                             title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
