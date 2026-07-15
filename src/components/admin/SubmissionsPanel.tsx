@@ -894,7 +894,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   {(selected as any).quote_response === "accepted" && (() => {
                     const tierKey = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
                     const tierLabel = tierKey && TIER_LABEL[tierKey as "starter" | "pro" | "featured"];
-                    const price = (selected as any).accepted_quote_amount ?? (tierKey ? TIER_PRICE[tierKey as "starter" | "pro" | "featured"] : (selected as any).quote_amount);
+                    const price = (selected as any).accepted_quote_amount ?? (selected as any).quote_amount;
                     return (
                       <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
                         <DollarSign className="w-4 h-4" strokeWidth={2.5} />
