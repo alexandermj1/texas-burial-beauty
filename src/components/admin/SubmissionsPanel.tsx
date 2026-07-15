@@ -1720,7 +1720,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               : f === "needs_followup"
                 ? submissions.filter(s => followupMap[s.id]).length
                 : f === "needs_quote"
-                  ? submissions.filter(s => (s as any).needs_quote).length
+                  ? submissions.filter(s => needsQuoteActive(s)).length
                   : submissions.filter(s => awaitingMap[s.id]).length;
           const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_quote: "Needs quote", needs_followup: "Follow up" } as const;
           const activeCls = f === "awaiting_reply"
