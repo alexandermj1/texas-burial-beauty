@@ -50,6 +50,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
         netPerPlot: nppNum,
         plotCount: countNum,
         transferFee: feeNum,
+        environment: getPaymentsEnvironment(),
       });
       onGenerated(html);
       toast({
