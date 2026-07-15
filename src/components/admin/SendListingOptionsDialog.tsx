@@ -199,8 +199,17 @@ export default function SendListingOptionsDialog({ open, onClose, seller, onAtta
                 </div>
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5 block">Cemetery transfer fee we cover (USD)</label>
-                <input type="number" min="0" step="5" value={transferFee} onChange={(e) => setTransferFee(e.target.value)}
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5 block">
+                  Cemetery transfer fee we cover (USD)
+                  {feeAutofilled && (
+                    <span className="ml-2 normal-case tracking-normal text-[10px] text-emerald-700 dark:text-emerald-400 font-normal">
+                      · autofilled from cemetery record
+                    </span>
+                  )}
+                </label>
+                <input type="number" min="0" step="5" value={transferFee}
+                  onChange={(e) => { setTransferFee(e.target.value); setFeeAutofilled(false); }}
+                  placeholder="Enter transfer fee (no record on file)"
                   className="w-full h-10 px-3 rounded-lg bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
               </div>
 
