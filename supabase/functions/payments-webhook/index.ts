@@ -52,13 +52,23 @@ function encodeBase64Url(s: string): string {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+function encodeSubject(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  if (!/[^\x00-\x7F]/.test(s)) return s;
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return `=?UTF-8?B?${btoa(bin)}?=`;
+}
+
+
 function buildRawEmail(to: string, subject: string, html: string): string {
   const boundary = `=_tcb_${crypto.randomUUID().replace(/-/g, "")}`;
   const plain = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const lines = [
     `From: ${MAILBOX}`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeSubject(subject)}`,
     "MIME-Version: 1.0",
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     "",
@@ -161,19 +171,12 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
   const tierLabel = TIER_LABEL[tier] || "Listing";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — we've received your <strong>${escapeHtml(tierLabel)} listing</strong> payment. Please keep this email as your official receipt.</p>
+    <p>Thank you. We've received your ${escapeHtml(tierLabel)} listing payment. Please keep this email as your receipt.</p>
     ${receiptBlock(tx, `${tierLabel} Listing`, cardBrand, cardLast4)}
-    <p>Your plot is now in our active marketing rotation. Here's what happens next:</p>
-    <ol>
-      <li>We finalise your listing copy and any photography within 1–2 business days.</li>
-      <li>It goes live to our buyer network across Texas.</li>
-      <li>We notify you the moment a qualified buyer is matched.</li>
-    </ol>
-    <p>If you have additional documentation (deed, photos, cemetery letters), simply reply to this email and attach them.</p>
-    <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Receipt — ${tierLabel} listing ${fmt(tx.amount_cents)}`);
+    <p>Regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
+  `, `Receipt - ${tierLabel} listing ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Receipt — ${tierLabel} listing (${fmt(tx.amount_cents)})`, html);
+    await sendEmail(tx.recipient_email, `Receipt - ${tierLabel} listing (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Listing fee paid",
@@ -196,13 +199,12 @@ async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: strin
   const itemLabel = tx.description || "Cemetery plot";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — your payment for <em>${escapeHtml(itemLabel)}</em> has been received. Please keep this email as your official receipt.</p>
+    <p>Thank you. Your payment for ${escapeHtml(itemLabel)} has been received. Please keep this email as your receipt.</p>
     ${receiptBlock(tx, itemLabel, cardBrand, cardLast4)}
-    <p>The plot is now reserved in your name. Our transfer team will be in touch within one business day with the cemetery transfer paperwork and next steps.</p>
-    <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Receipt — ${fmt(tx.amount_cents)} for your cemetery plot.`);
+    <p>Regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
+  `, `Receipt - plot purchase ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Receipt — Plot purchase (${fmt(tx.amount_cents)})`, html);
+    await sendEmail(tx.recipient_email, `Receipt - plot purchase (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Plot sold",
@@ -216,13 +218,12 @@ async function handleCustomPaid(tx: any, cardBrand?: string, cardLast4?: string)
   const itemLabel = tx.description || "Invoice";
   const html = brandedShell(`
     <p>Dear ${escapeHtml(firstName)},</p>
-    <p>Thank you — we've received your payment. Please keep this email as your official receipt.</p>
+    <p>Thank you. We've received your payment. Please keep this email as your receipt.</p>
     ${receiptBlock(tx, itemLabel, cardBrand, cardLast4)}
-    <p>Reply to this email anytime with questions.</p>
-    <p>Warm regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
-  `, `Receipt — ${fmt(tx.amount_cents)}`);
+    <p>Regards,<br><strong>${FROM_NAME}</strong><br>${FROM_TITLE}<br>${BRAND}</p>
+  `, `Receipt - ${fmt(tx.amount_cents)}`);
   if (tx.recipient_email) {
-    await sendEmail(tx.recipient_email, `Receipt — ${BRAND} (${fmt(tx.amount_cents)})`, html);
+    await sendEmail(tx.recipient_email, `Receipt - ${BRAND} (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
     "Invoice paid",
