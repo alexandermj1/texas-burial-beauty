@@ -150,6 +150,29 @@ const FOLLOWUP_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 // currently have inventory" buyer template) and should NOT auto-flag follow-up.
 const FOLLOWUP_EXCLUDE_RX = /(don['’]?t have anything matching|keep your request on file|nothing matching your request|the moment something fitting becomes available|new inventory comes in often)/i;
 
+// Listing tier pricing (in dollars) — mirrors SendListingOptionsDialog.
+const TIER_PRICE: Record<"starter" | "pro" | "featured", number> = { starter: 0, pro: 99, featured: 299 };
+const TIER_LABEL: Record<"starter" | "pro" | "featured", string> = { starter: "Starter", pro: "Pro", featured: "Featured" };
+
+// Detect an acceptance-of-quote reply in inbound email body. Returns tier + snippet.
+const ACCEPT_RX = /\b(i\s+accept|we\s+accept|accepted|i['’]?ll\s+(take|go\s+with|do)|let['’]?s\s+(go|do|proceed)|sounds\s+good|sign\s+me\s+up|let['’]?s\s+move\s+forward|please\s+proceed|go\s+ahead|yes[\s,\.!]+(let|please|proceed)|i\s+want\s+to\s+list|list\s+(it|my)|move\s+forward\s+with|proceed\s+with)\b/i;
+const TIER_RX: Array<[RegExp, "starter" | "pro" | "featured"]> = [
+  [/\bstarter\b/i, "starter"],
+  [/\bpro\b/i, "pro"],
+  [/\bfeatured\b/i, "featured"],
+];
+const detectAcceptance = (body: string): { tier: "starter" | "pro" | "featured" | null; snippet: string } | null => {
+  if (!body) return null;
+  const m = body.match(ACCEPT_RX);
+  if (!m) return null;
+  let tier: "starter" | "pro" | "featured" | null = null;
+  for (const [rx, t] of TIER_RX) { if (rx.test(body)) { tier = t; break; } }
+  // Grab a snippet around the match
+  const idx = Math.max(0, (m.index ?? 0) - 40);
+  const snippet = body.slice(idx, Math.min(body.length, (m.index ?? 0) + m[0].length + 80)).trim();
+  return { tier, snippet };
+};
+
 
 // Strict tag-based classification, matching the visible badges (BayerBadge / TexasBadge).
 // A submission is Bayer iff its visible badge is Bayer (inquiry_channel === "bayer_sell_a_plot").
@@ -189,6 +212,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
   // when WE promised to follow up and haven't sent anything since (older than threshold).
   const [followupMap, setFollowupMap] = useState<Record<string, { since: string; phrase: string }>>({});
+  // Map of submission_id -> auto-detected acceptance suggestion from inbound email
+  // { tier, snippet, at }. Only surfaced when quote_sent_at exists and not yet accepted.
+  const [acceptSuggestMap, setAcceptSuggestMap] = useState<Record<string, { tier: "starter" | "pro" | "featured" | null; snippet: string; at: string }>>({});
   const [activeWorkers, setActiveWorkers] = useState<Record<string, { user_id: string; user_name: string }[]>>({});
   const presenceChanRef = useRef<RealtimeChannel | null>(null);
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
@@ -348,9 +374,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const nextFollowup: Record<string, { since: string; phrase: string }> = {};
       const now = Date.now();
       const subById = new Map(texasSubs.map(s => [s.id, s as any]));
+      const nextAcceptSuggest: Record<string, { tier: "starter" | "pro" | "featured" | null; snippet: string; at: string }> = {};
       for (const [sid, info] of latestPerSub.entries()) {
         if (!info.outgoing) {
           nextAwaiting[sid] = info.received_at;
+          // Auto-detect acceptance in the latest inbound message — only meaningful
+          // once a quote has been sent and not yet marked accepted.
+          const sub = subById.get(sid);
+          if (sub?.quote_sent_at && sub?.quote_response !== "accepted") {
+            const hit = detectAcceptance(info.body);
+            if (hit) nextAcceptSuggest[sid] = { tier: hit.tier, snippet: hit.snippet, at: info.received_at };
+          }
         } else {
           // We sent the last message — check if it contained a follow-up promise
           // AND enough time has passed without further contact from either side.
@@ -390,6 +424,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       setAwaitingMap(nextAwaiting);
       setFollowupMap(nextFollowup);
+      setAcceptSuggestMap(nextAcceptSuggest);
     };
     recompute();
     const ch = supabase.channel("email_messages_awaiting")
@@ -854,18 +889,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
-                  {(selected as any).quote_response === "accepted" && (selected as any).quote_amount != null && (
-                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm">
-                      <DollarSign className="w-4 h-4" strokeWidth={2.5} />
-                      <span className="text-[10px] uppercase tracking-wide font-bold opacity-80">Accepted quote</span>
-                      <span className="font-display text-lg font-bold tabular-nums">
-                        ${Number((selected as any).quote_amount).toLocaleString()}
-                      </span>
-                      {(selected as any).quote_responded_at && (
-                        <span className="text-[10px] opacity-70">· {new Date((selected as any).quote_responded_at).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                  )}
+                  {(selected as any).quote_response === "accepted" && (() => {
+                    const tierKey = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
+                    const tierLabel = tierKey && TIER_LABEL[tierKey as "starter" | "pro" | "featured"];
+                    const price = (selected as any).accepted_quote_amount ?? (tierKey ? TIER_PRICE[tierKey as "starter" | "pro" | "featured"] : (selected as any).quote_amount);
+                    return (
+                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
+                        <DollarSign className="w-4 h-4" strokeWidth={2.5} />
+                        <span className="text-[10px] uppercase tracking-wide font-bold opacity-80">Accepted</span>
+                        {tierLabel && (
+                          <span className="text-[11px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                            {tierLabel}
+                          </span>
+                        )}
+                        {price != null && (
+                          <span className="font-display text-lg font-bold tabular-nums">
+                            ${Number(price).toLocaleString()}
+                          </span>
+                        )}
+                        {(selected as any).quote_responded_at && (
+                          <span className="text-[10px] opacity-70">· {new Date((selected as any).quote_responded_at).toLocaleDateString()}</span>
+                        )}
+                        {(selected as any).acceptance_channel && (
+                          <span className="text-[10px] opacity-70 italic">via {(selected as any).acceptance_channel}</span>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                 </div>
               </div>
@@ -993,6 +1043,93 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               );
             })()}
+
+            {/* Acceptance controls — Texas + quote already sent. Manual toggle + tier picker.
+                When there's an auto-detected acceptance in the latest inbound email, surface a suggestion. */}
+            {subRegion(selected) === "texas" && (selected as any).quote_sent_at && (() => {
+              const isAccepted = (selected as any).quote_response === "accepted";
+              const currentTier = ((selected as any).listing_tier || "").toLowerCase() as "starter" | "pro" | "featured" | "";
+              const suggestion = acceptSuggestMap[selected.id];
+              const markAccepted = (tier: "starter" | "pro" | "featured") => {
+                onUpdate(selected.id, {
+                  quote_response: "accepted",
+                  quote_responded_at: new Date().toISOString(),
+                  listing_tier: tier,
+                  accepted_quote_amount: TIER_PRICE[tier],
+                  acceptance_channel: "manual",
+                } as any);
+              };
+              return (
+                <div className="bg-card rounded-xl border border-border/50 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-emerald-600" strokeWidth={2.5} />
+                      <span className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
+                        Quote acceptance
+                      </span>
+                    </div>
+                    {isAccepted && (
+                      <button
+                        onClick={() => onUpdate(selected.id, {
+                          quote_response: null,
+                          quote_responded_at: null,
+                          listing_tier: null,
+                          accepted_quote_amount: null,
+                          acceptance_channel: null,
+                        } as any)}
+                        className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+                        title="Undo — mark as not yet accepted"
+                      >
+                        Undo acceptance
+                      </button>
+                    )}
+                  </div>
+
+                  {suggestion && !isAccepted && (
+                    <div className="rounded-lg border-2 border-emerald-500/40 bg-emerald-500/10 p-2.5 space-y-1.5">
+                      <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        Reply looks like acceptance{suggestion.tier ? ` — mentioned ${TIER_LABEL[suggestion.tier]}` : ""}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground italic line-clamp-2">"{suggestion.snippet}"</p>
+                      {suggestion.tier ? (
+                        <button
+                          onClick={() => markAccepted(suggestion.tier!)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-600 text-white hover:opacity-90"
+                        >
+                          Confirm — {TIER_LABEL[suggestion.tier]} · ${TIER_PRICE[suggestion.tier]}
+                        </button>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground">Pick the tier below to confirm.</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] text-muted-foreground mr-1">
+                      {isAccepted ? "Accepted tier:" : "Mark accepted as:"}
+                    </span>
+                    {(["starter", "pro", "featured"] as const).map(t => {
+                      const active = currentTier === t && isAccepted;
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => markAccepted(t)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                            active
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              : "bg-card text-emerald-700 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                          }`}
+                          title={`Mark accepted — ${TIER_LABEL[t]} ($${TIER_PRICE[t]})`}
+                        >
+                          {TIER_LABEL[t]} · ${TIER_PRICE[t]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
 
 
 
