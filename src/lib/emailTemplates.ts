@@ -179,8 +179,6 @@ ${signature(i.adminName)}`;
 export const buildSellerListingOptionsTemplate = (i: SellerInput): EmailTemplate => {
   const body = `Dear ${first(i.recipientName)},
 
-
-
 ${signature(i.adminName)}`;
   return { id: "seller_listing_options", label: "Quote (with pay buttons)", body };
 };
