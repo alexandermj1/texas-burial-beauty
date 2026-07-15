@@ -2109,14 +2109,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             <Paperclip className="w-3 h-3" />
                           </span>
                         )}
-                        {(s as any).quote_sent_at && (
-                          <span
-                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shadow-sm"
-                            title={`Quote sent · ${formatDate((s as any).quote_sent_at)}`}
-                          >
-                            <DollarSign className="w-3 h-3" strokeWidth={2.5} />
-                          </span>
-                        )}
+                        {(s as any).quote_sent_at && (() => {
+                          const accepted = (s as any).quote_response === "accepted";
+                          const amt = Number((s as any).quote_amount || 0);
+                          const cls = accepted
+                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700"
+                            : "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800";
+                          const title = accepted
+                            ? `Quote accepted${amt ? ` · $${amt.toLocaleString()}` : ""}`
+                            : `Quote sent · ${formatDate((s as any).quote_sent_at)}`;
+                          return (
+                            <span
+                              className={`inline-flex items-center justify-center w-5 h-5 rounded-full border shadow-sm ${cls}`}
+                              title={title}
+                            >
+                              <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
