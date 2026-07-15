@@ -374,9 +374,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const nextFollowup: Record<string, { since: string; phrase: string }> = {};
       const now = Date.now();
       const subById = new Map(texasSubs.map(s => [s.id, s as any]));
+      const nextAcceptSuggest: Record<string, { tier: "starter" | "pro" | "featured" | null; snippet: string; at: string }> = {};
       for (const [sid, info] of latestPerSub.entries()) {
         if (!info.outgoing) {
           nextAwaiting[sid] = info.received_at;
+          // Auto-detect acceptance in the latest inbound message — only meaningful
+          // once a quote has been sent and not yet marked accepted.
+          const sub = subById.get(sid);
+          if (sub?.quote_sent_at && sub?.quote_response !== "accepted") {
+            const hit = detectAcceptance(info.body);
+            if (hit) nextAcceptSuggest[sid] = { tier: hit.tier, snippet: hit.snippet, at: info.received_at };
+          }
         } else {
           // We sent the last message — check if it contained a follow-up promise
           // AND enough time has passed without further contact from either side.
