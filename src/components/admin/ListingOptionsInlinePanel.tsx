@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
+import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import {
   buildListingOptionsBlock,
   parseSpaces,
