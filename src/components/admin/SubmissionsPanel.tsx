@@ -2062,7 +2062,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Needs reply
                           </span>
                         )}
-                        {!awaitingMap[s.id] && (s as any).needs_quote && (
+                        {!awaitingMap[s.id] && needsQuoteActive(s) && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-[hsl(var(--status-quote))] text-white border border-[hsl(var(--status-quote))] shadow-sm"
                             title="Quote owed to seller"
@@ -2072,7 +2072,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           </span>
                         )}
 
-                        {!awaitingMap[s.id] && !(s as any).needs_quote && followupMap[s.id] && (
+                        {!awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id] && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border border-[hsl(var(--status-followup-border))] shadow-sm"
                             title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
