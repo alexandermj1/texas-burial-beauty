@@ -57,6 +57,8 @@ export async function buildListingOptionsBlock(opts: {
   netPerPlot: number;
   plotCount: number;
   transferFee: number;
+  /** Stripe environment — defaults to sandbox if omitted. */
+  environment?: "sandbox" | "live";
 }): Promise<string> {
   const { seller, netPerPlot, plotCount, transferFee } = opts;
   const salePerSpace = netPerPlot;
