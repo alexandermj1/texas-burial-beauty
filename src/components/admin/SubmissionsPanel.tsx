@@ -8,7 +8,6 @@ import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
-import TexasBadge from "./TexasBadge";
 import CustomerJourney from "./CustomerJourney";
 import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
