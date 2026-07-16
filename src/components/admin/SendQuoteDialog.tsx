@@ -241,7 +241,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1.5">Auto-filled from Stage 1.</p>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">Auto-filled from Stage 1. Quote auto-calcs at 42% of retail.</p>
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
