@@ -5,7 +5,7 @@
 // another to merge — the destination cemetery keeps its profile; only the source
 // submissions get relabelled.
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Plus, ChevronDown, ChevronRight, Save, Search, X, MapPin, GripVertical } from "lucide-react";
+import { Building2, Plus, ChevronDown, ChevronRight, Save, X, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
@@ -40,6 +40,8 @@ interface Props {
   /** When true, hide the inline "Add profile info"/"Edit profile" footer + editor.
    *  Profile editing then happens in the right-pane CemeteryInfoCard instead. */
   hideProfileEditor?: boolean;
+  /** Top-level search query used to filter the cemetery list. */
+  searchQuery?: string;
 }
 
 // Volume tiers → left-bar accent (structural indicator) + badge tint (numeric).
@@ -72,18 +74,17 @@ const countBadge: Record<Tier, string> = {
 const canonical = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 
-const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery, onRefresh, standalone = false, hideProfileEditor = false }: Props) => {
+const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery, onRefresh, standalone = false, hideProfileEditor = false, searchQuery = "" }: Props) => {
   const [rows, setRows] = useState<TexasCemetery[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, Partial<TexasCemetery>>>({});
   const [collapsed, setCollapsed] = useState(!standalone);
-  const [query, setQuery] = useState("");
   const [dragCanon, setDragCanon] = useState<string | null>(null);
   const [overCanon, setOverCanon] = useState<string | null>(null);
   const [merging, setMerging] = useState(false);
-  const [sortMode, setSortMode] = useState<"volume" | "name" | "unprofiled">("volume");
-  const [filterMode, setFilterMode] = useState<"all" | "profiled" | "unprofiled" | "highvolume">("all");
+  const [sortMode, setSortMode] = useState<"volume" | "name">("volume");
+
 
 
   const load = async () => {
@@ -153,23 +154,15 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     return Array.from(map.values());
   }, [rows, texasSubmissions]);
 
-  const isProfiled = (s: (typeof cemeteryStats)[number]): boolean => {
-    if (!s.directoryId) return false;
-    const p = rows.find(r => r.id === s.directoryId);
-    return !!p && !!(p.address || p.contact_phone || p.website || p.description || p.typical_prices || p.transfer_fee || p.notes);
-  };
-
   const filteredStats = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = cemeteryStats.filter(s => {
-      if (q && !s.displayName.toLowerCase().includes(q) && !Array.from(s.cities).some(c => c.toLowerCase().includes(q))) return false;
-      if (filterMode === "profiled" && !isProfiled(s)) return false;
-      if (filterMode === "unprofiled" && isProfiled(s)) return false;
-      if (filterMode === "highvolume" && s.count < 10) return false;
-      return true;
-    });
-    return list;
-  }, [cemeteryStats, query, filterMode, rows]);
+    const q = (searchQuery || "").trim().toLowerCase();
+    if (!q) return cemeteryStats;
+    return cemeteryStats.filter(s =>
+      s.displayName.toLowerCase().includes(q) ||
+      Array.from(s.cities).some(c => c.toLowerCase().includes(q))
+    );
+  }, [cemeteryStats, searchQuery]);
+
 
   // Group cemeteries by primary city; sort within groups + across groups per sortMode.
   const groupedStats = useMemo(() => {
@@ -192,13 +185,9 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     const arr = Array.from(groups.values());
     const cmp = (a: (typeof filteredStats)[number], b: (typeof filteredStats)[number]) => {
       if (sortMode === "name") return a.displayName.localeCompare(b.displayName);
-      if (sortMode === "unprofiled") {
-        const pa = isProfiled(a) ? 1 : 0;
-        const pb = isProfiled(b) ? 1 : 0;
-        if (pa !== pb) return pa - pb; // unprofiled first
-      }
       return b.count - a.count || a.displayName.localeCompare(b.displayName);
     };
+
     for (const g of arr) g.items.sort(cmp);
     arr.sort((a, b) => {
       if (a.city === "Uncategorised") return 1;
@@ -211,7 +200,7 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   }, [filteredStats, rows, sortMode]);
 
   const totalSubs = useMemo(() => cemeteryStats.reduce((sum, s) => sum + s.count, 0), [cemeteryStats]);
-  const profiledCount = useMemo(() => cemeteryStats.filter(isProfiled).length, [cemeteryStats, rows]);
+
 
 
   // Auto-create a directory row for a cemetery that's only known from submissions,
@@ -354,92 +343,54 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     }
   };
 
-  const sortLabel: Record<typeof sortMode, string> = { volume: "Volume", name: "Name", unprofiled: "Unprofiled first" };
-  const filterChips: { key: typeof filterMode; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "highvolume", label: "High volume" },
-    { key: "profiled", label: "Profiled" },
-    { key: "unprofiled", label: "Unprofiled" },
-  ];
-
   const body = (
-    <div className={standalone ? "space-y-5" : "p-5 space-y-4"}>
-      {/* Toolbar: search + sort + add */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search cemeteries or cities…"
-              className="w-full pl-9 pr-3 py-2 rounded-xl text-sm border border-border/60 bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
-            />
-          </div>
-          <div className="relative">
-            <select
-              value={sortMode}
-              onChange={e => setSortMode(e.target.value as any)}
-              className="h-9 pl-3 pr-8 rounded-xl text-xs font-medium border border-border/60 bg-background hover:bg-muted/40 cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20"
-              title="Sort order"
-            >
-              <option value="volume">Sort: Volume</option>
-              <option value="name">Sort: Name</option>
-              <option value="unprofiled">Sort: Unprofiled first</option>
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-          {activeCemeteryCanon && onSelectCemetery && (
-            <button
-              onClick={() => onSelectCemetery(null, null)}
-              className="inline-flex items-center gap-1 px-3 h-9 rounded-xl text-xs font-medium border border-border/60 bg-card hover:bg-muted/50 transition-colors"
-            >
-              <X className="w-3.5 h-3.5" /> Clear filter
-            </button>
-          )}
-          <button
-            onClick={addBlank}
-            className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-3.5 h-3.5" /> Add cemetery
-          </button>
-        </div>
 
-        {/* Filter chip row */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {filterChips.map(chip => {
-            const active = filterMode === chip.key;
-            return (
-              <button
-                key={chip.key}
-                onClick={() => setFilterMode(chip.key)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-medium tracking-wide transition-colors ${
-                  active
-                    ? "bg-foreground text-background"
-                    : "bg-card border border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
-                }`}
-              >
-                {chip.label}
-              </button>
-            );
-          })}
-          <span className="ml-auto text-[11px] text-muted-foreground italic">
-            Drag one card onto another to merge.
-          </span>
+    <div className={standalone ? "space-y-5" : "p-5 space-y-4"}>
+      {/* Toolbar: sort + add + clear */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative">
+          <select
+            value={sortMode}
+            onChange={e => setSortMode(e.target.value as any)}
+            className="h-9 pl-3 pr-8 rounded-xl text-xs font-medium border border-border/60 bg-background hover:bg-muted/40 cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+            title="Sort order"
+          >
+            <option value="volume">Sort: Volume</option>
+            <option value="name">Sort: Name</option>
+          </select>
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
+        {activeCemeteryCanon && onSelectCemetery && (
+          <button
+            onClick={() => onSelectCemetery(null, null)}
+            className="inline-flex items-center gap-1 px-3 h-9 rounded-xl text-xs font-medium border border-border/60 bg-card hover:bg-muted/50 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" /> Clear filter
+          </button>
+        )}
+        <button
+          onClick={addBlank}
+          className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add cemetery
+        </button>
+        <span className="ml-auto text-[11px] text-muted-foreground italic">
+          Drag one card onto another to merge.
+        </span>
       </div>
+
 
       {loading && <p className="text-xs text-muted-foreground">Loading…</p>}
       {!loading && filteredStats.length === 0 && (
         <div className="py-10 text-center">
           <p className="text-sm text-muted-foreground">
-            {query.trim() || filterMode !== "all"
+            {(searchQuery || "").trim()
               ? "No matches."
               : "No cemeteries yet — they'll appear here automatically as Texas submissions come in, or you can add one manually."}
           </p>
         </div>
       )}
+
 
       {/* City groups */}
       <div className="space-y-7">
@@ -464,8 +415,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                 const profile = stat.directoryId ? rows.find(r => r.id === stat.directoryId) : null;
                 const isDragging = dragCanon === stat.canon;
                 const isDropTarget = overCanon === stat.canon && dragCanon && dragCanon !== stat.canon;
-                const profiled = isProfiled(stat);
                 const tier = tierOf(stat.count);
+
 
                 return (
                   <div
@@ -509,18 +460,10 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                         onClick={() => onSelectCemetery?.(isActive ? null : stat.canon, isActive ? null : stat.displayName)}
                         className="w-full text-left p-4 flex-1 cursor-pointer"
                       >
-                        <div className="flex justify-between items-start gap-3">
-                          <div className="min-w-0 flex-1">
-                            <h5 className="font-display text-lg font-semibold leading-snug break-words text-foreground">
-                              {stat.displayName}
-                            </h5>
-                            <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                              <span className="truncate">
-                                {profile?.address || profile?.city || Array.from(stat.cities)[0] || "Location unknown"}
-                              </span>
-                            </div>
-                          </div>
+                        <div className="flex justify-between items-center gap-3">
+                          <h5 className="font-display text-lg font-semibold leading-snug break-words text-foreground min-w-0 flex-1">
+                            {stat.displayName}
+                          </h5>
                           <span
                             className={`shrink-0 inline-flex items-center justify-center min-w-[32px] px-1.5 py-0.5 rounded-md text-[11px] font-bold tabular-nums border ${countBadge[tier]}`}
                             title={`${stat.count} submission${stat.count === 1 ? "" : "s"}`}
@@ -529,13 +472,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                           </span>
                         </div>
 
-                        {profile?.description && (
-                          <p className="mt-3 text-[11.5px] leading-relaxed text-muted-foreground/80 line-clamp-2">
-                            {profile.description}
-                          </p>
-                        )}
-
                         {isActive && (
+
                           <div className="mt-3">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-primary/15 text-primary border border-primary/30 font-medium">
                               filtering submissions
@@ -599,7 +537,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       {/* Legend footer */}
       {!loading && filteredStats.length > 0 && (
         <div className="pt-4 mt-2 border-t border-border/50 flex items-center justify-between flex-wrap gap-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-          <span>{filteredStats.length} of {cemeteryStats.length} · {profiledCount} profiled · {totalSubs} submissions</span>
+          <span>{filteredStats.length} of {cemeteryStats.length} · {totalSubs} submissions</span>
+
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-400" />100+</span>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" />50+</span>

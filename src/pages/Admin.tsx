@@ -831,7 +831,9 @@ const Admin = () => {
                       else setCemSelected({ canon, name: label });
                     }}
                     hideProfileEditor
+                    searchQuery={searchQuery}
                   />
+
                 </div>
                 <aside className="lg:sticky lg:top-24 min-w-0">
                   {cemSelected ? (
