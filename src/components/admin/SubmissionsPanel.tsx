@@ -1984,48 +1984,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Status pills (desktop only) */}
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2.5">
-        {(["awaiting_reply", "needs_quote", "needs_followup", "new", "all"] as const).map(f => {
-          const count = f === "all"
-            ? submissions.length
-            : f === "new"
-              ? submissions.filter(s => isNew(s)).length
-              : f === "needs_followup"
-                ? submissions.filter(s => followupMap[s.id]).length
-                : f === "needs_quote"
-                  ? submissions.filter(s => needsQuoteActive(s)).length
-                  : submissions.filter(s => awaitingMap[s.id]).length;
-          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_quote: "Needs quote", needs_followup: "Follow up" } as const;
-          const activeCls = f === "awaiting_reply"
-            ? "bg-[hsl(var(--status-reply))] text-white border-[hsl(var(--status-reply))]"
-            : f === "needs_quote"
-              ? "bg-[hsl(var(--status-quote))] text-white border-[hsl(var(--status-quote))]"
-              : f === "needs_followup"
-                ? "bg-[hsl(var(--status-followup))] text-white border-[hsl(var(--status-followup))]"
-                : "bg-foreground text-background border-foreground";
-          // Tint the inactive pill so each status is visually identifiable at a glance,
-          // not just a row of muted gray pills.
-          const inactiveCls = f === "awaiting_reply"
-            ? "bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border-[hsl(var(--status-reply-border))] hover:bg-[hsl(var(--status-reply-soft))]/70"
-            : f === "needs_quote"
-              ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
-              : f === "needs_followup"
-                ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
-                : "bg-card text-muted-foreground border-border hover:text-foreground";
-          return (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                filter === f ? activeCls : inactiveCls
-              }`}
-            >
-              {labels[f]} ({count})
-            </button>
-          );
-        })}
-
-        {/* Divider + customer-kind pills */}
-        <span className="w-px h-5 bg-border mx-1" />
+        {/* Type filters */}
         {(["all", "seller", "buyer", "contact"] as const).map(k => {
           const isActive = kindFilter === k;
           const labels: Record<KindFilter, string> = { all: "All types", seller: "Sellers", buyer: "Buyers", contact: "General" };
