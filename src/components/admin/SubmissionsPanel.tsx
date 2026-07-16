@@ -2099,8 +2099,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             <FileText className="w-3.5 h-3.5" /> Call sheet
           </button>
+          {(() => {
+            const total = submissions.length;
+            const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+            const today = submissions.filter(s => {
+              const d = (s as any).created_at ? new Date((s as any).created_at) : null;
+              return d && d >= startOfToday;
+            }).length;
+            return (
+              <span
+                className="ml-auto inline-flex items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground"
+                title="Total submissions in view / new today"
+              >
+                <span><span className="text-foreground font-semibold">{total}</span> total</span>
+                <span className="opacity-40">•</span>
+                <span><span className="text-primary font-semibold">{today}</span> today</span>
+              </span>
+            );
+          })()}
       </div>
       )}
+
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
       <AddSubmissionDialog
         open={addOpen}
