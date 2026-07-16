@@ -565,12 +565,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
     });
-    // Within each group, always sort newest → oldest by created_at so brand-new
+    // Within each group, sort newest → oldest by created_at so brand-new
     // submissions surface at the top of their bucket.
     const byNewest = (a: Submission, b: Submission) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    // For "Needs reply", sort by the timestamp of their latest inbound email
+    // instead — so someone who just emailed back today jumps to the top even
+    // if their original submission is weeks old.
+    const byLatestInbound = (a: Submission, b: Submission) => {
+      const at = new Date(awaitingMap[a.id] || a.created_at).getTime();
+      const bt = new Date(awaitingMap[b.id] || b.created_at).getTime();
+      return bt - at;
+    };
     // Order: Needs reply → Needs quote → Needs follow-up → everything else.
-    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byNewest);
+    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
     const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
     const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
     const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
