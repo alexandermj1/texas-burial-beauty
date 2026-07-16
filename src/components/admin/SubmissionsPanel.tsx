@@ -913,21 +913,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     fn();
   };
 
-  // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
-  const kindBase = useMemo(() => submissions.filter(s => {
-    if (filter === "new" && !isNew(s)) return false;
-    return true;
-  }), [submissions, filter, startOfToday]);
-  const kindCount = (k: KindFilter) =>
-    k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
-
-  // Stage counts (sellers only).
-  const stageBase = useMemo(
-    () => kindBase.filter(s => resolveKind(s.customer_kind, s.source) === "seller"),
-    [kindBase],
-  );
-  const stageCount = (st: BayerStage | "all") =>
-    st === "all" ? stageBase.length : stageBase.filter(s => deriveBayerStage(s as any) === st).length;
 
   // Team-wide pipeline overview — all sellers regardless of current filter.
   const sellersAll = useMemo(
@@ -1981,93 +1966,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Mobile: refresh lives in the admin header to save space */}
 
-      {/* Status pills (desktop only) */}
+      {/* Toolbar (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2.5">
-        {(["awaiting_reply", "needs_quote", "needs_followup", "new", "all"] as const).map(f => {
-          const count = f === "all"
-            ? submissions.length
-            : f === "new"
-              ? submissions.filter(s => isNew(s)).length
-              : f === "needs_followup"
-                ? submissions.filter(s => followupMap[s.id]).length
-                : f === "needs_quote"
-                  ? submissions.filter(s => needsQuoteActive(s)).length
-                  : submissions.filter(s => awaitingMap[s.id]).length;
-          const labels = { new: "New today", all: "All", awaiting_reply: "Needs reply", needs_quote: "Needs quote", needs_followup: "Follow up" } as const;
-          const activeCls = f === "awaiting_reply"
-            ? "bg-[hsl(var(--status-reply))] text-white border-[hsl(var(--status-reply))]"
-            : f === "needs_quote"
-              ? "bg-[hsl(var(--status-quote))] text-white border-[hsl(var(--status-quote))]"
-              : f === "needs_followup"
-                ? "bg-[hsl(var(--status-followup))] text-white border-[hsl(var(--status-followup))]"
-                : "bg-foreground text-background border-foreground";
-          // Tint the inactive pill so each status is visually identifiable at a glance,
-          // not just a row of muted gray pills.
-          const inactiveCls = f === "awaiting_reply"
-            ? "bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border-[hsl(var(--status-reply-border))] hover:bg-[hsl(var(--status-reply-soft))]/70"
-            : f === "needs_quote"
-              ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
-              : f === "needs_followup"
-                ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
-                : "bg-card text-muted-foreground border-border hover:text-foreground";
-          return (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                filter === f ? activeCls : inactiveCls
-              }`}
-            >
-              {labels[f]} ({count})
-            </button>
-          );
-        })}
-
-        {/* Divider + customer-kind pills */}
-        <span className="w-px h-5 bg-border mx-1" />
-        {(["all", "seller", "buyer", "contact"] as const).map(k => {
-          const isActive = kindFilter === k;
-          const labels: Record<KindFilter, string> = { all: "All types", seller: "Sellers", buyer: "Buyers", contact: "General" };
-          const activeCls: Record<KindFilter, string> = {
-            all: "bg-foreground text-background border-foreground",
-            seller: "bg-primary text-primary-foreground border-primary",
-            buyer: "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))]",
-            contact: "bg-foreground text-background border-foreground",
-          };
-          return (
-            <button
-              key={k}
-              onClick={() => setKindFilter(k)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
-                isActive ? activeCls[k] : "bg-card text-muted-foreground border-border hover:text-foreground"
-              }`}
-            >
-              {k !== "all" && <CustomerKindBadge kind={k} variant="dot" />}
-              {labels[k]} ({kindCount(k)})
-            </button>
-          );
-        })}
-
-        <div className="ml-auto flex items-center gap-1.5">
+      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-1.5 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-2 py-2">
           <button
             onClick={() => setCemeteriesOpen(o => !o)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
               cemeteriesOpen
                 ? "bg-foreground text-background border-foreground"
                 : "bg-card text-muted-foreground border-border hover:text-foreground"
             }`}
             title="Show the Cemeteries directory in this tab"
           >
-            <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide cemeteries" : "Cemeteries"}
+            <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide" : "Cemeteries"}
           </button>
           <button
             data-tour="add-submission"
             onClick={() => setAddOpen(true)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
+            className="px-2 py-1 rounded-full text-[11px] font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
             title="Add a submission manually (e.g. info taken over the phone)"
           >
-            <UserPlus className="w-3.5 h-3.5" /> Add submission
+            <UserPlus className="w-3.5 h-3.5" /> Add
           </button>
           {onRefresh && (
             <button
@@ -2077,11 +1996,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 try { await onRefresh(); } finally { setRefreshing(false); }
               }}
               disabled={refreshing}
-              className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+              className="px-2 py-1 rounded-full text-[11px] font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
               title="Sync Gmail and reload submissions"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Refreshing..." : "Refresh inbox"}
+              {refreshing ? "..." : "Refresh"}
             </button>
           )}
           <button
@@ -2110,7 +2029,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )
               );
               if (rows.length === 0) { alert("No submissions with attachments found (excluding quoted)."); return; }
-
 
               // Pull cemetery profiles to prefill any known phone-call fields
               // (transfer fee, typical prices, contact phone, internal notes).
@@ -2161,27 +2079,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               XLSX.writeFile(wb, `cemetery-call-sheet-${new Date().toISOString().slice(0,10)}.xlsx`, { bookType: "xlsx" });
             }}
 
-            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
+            className="px-2 py-1 rounded-full text-[11px] font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
             title="Download an Excel call sheet with customer names and cemetery profile fields (transfer fee, contact, pricing) to fill in during retail-price calls"
           >
             <FileText className="w-3.5 h-3.5" /> Call sheet
           </button>
-
-          <button
-            onClick={() => setTrashOpen(true)}
-            aria-label="Recently deleted submissions"
-            title={`Recently deleted${deletedSubmissions.length ? ` (${deletedSubmissions.length})` : ""}`}
-            className="relative w-8 h-8 inline-flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            {deletedSubmissions.length > 0 && (
-              <span className="absolute -top-1 -right-1 text-[9px] leading-none px-1 py-0.5 rounded-full bg-muted text-foreground font-semibold border border-border">
-                {deletedSubmissions.length}
-              </span>
-            )}
-          </button>
-
-        </div>
       </div>
       )}
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
@@ -2495,6 +2397,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           return <>{filtered.map((s, i) => renderRow(s, i))}</>;
 
         })()}
+        <div className="border-t border-border/50 px-3 py-2 flex justify-end">
+          <button
+            onClick={() => setTrashOpen(true)}
+            aria-label="Recently deleted submissions"
+            title={`Recently deleted${deletedSubmissions.length ? ` (${deletedSubmissions.length})` : ""}`}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium text-muted-foreground hover:text-foreground border border-border bg-card transition-all"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Recently deleted
+            {deletedSubmissions.length > 0 && (
+              <span className="text-[10px] leading-none px-1.5 py-0.5 rounded-full bg-muted text-foreground font-semibold border border-border">
+                {deletedSubmissions.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
 
