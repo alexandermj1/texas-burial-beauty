@@ -2584,6 +2584,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             open={quoteOpen}
             onClose={() => setQuoteOpen(false)}
             onSave={onUpdate}
+            directoryTransferFee={(() => {
+              const k = _canon(selected.cemetery || "");
+              const prof = k ? texasCemProfiles.get(k) : null;
+              const fee = prof?.transfer_fee;
+              return fee != null && fee !== "" ? String(fee) : null;
+            })()}
           />
           <SendBuyerQuoteDialog
             submission={selected}
