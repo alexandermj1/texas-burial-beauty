@@ -666,6 +666,52 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Record a view for this admin when they open a submission
   useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); setEditCemeteryInline(false); }, [selected?.id, myId]);
 
+  // Auto-link / auto-create a customer profile for the selected submission so files
+  // & documents are always visible. Every submission IS the profile — the admin
+  // shouldn't have to click a button to make one. If any prior submission from the
+  // same email already has a profile, reuse it so duplicates share one file cabinet.
+  useEffect(() => {
+    if (!selected?.id) return;
+    if ((selected as any).customer_profile_id) return;
+    let cancelled = false;
+    (async () => {
+      const email = ((selected as any).email || "").trim().toLowerCase();
+      let profileId: string | null = null;
+
+      if (email) {
+        const dupWithProfile = submissions.find(
+          s => (s.email || "").trim().toLowerCase() === email && (s as any).customer_profile_id
+        );
+        if (dupWithProfile) profileId = (dupWithProfile as any).customer_profile_id;
+      }
+
+      if (!profileId) {
+        const name = selected.name || "Unknown";
+        const phone = (selected as any).phone || null;
+        const kind = (selected as any).customer_kind === "seller" || (selected as any).customer_kind === "buyer"
+          ? (selected as any).customer_kind
+          : "contact";
+        const { data, error } = await supabase.from("customer_profiles" as any).insert({
+          primary_name: name,
+          primary_email: (selected as any).email || null,
+          primary_phone: phone,
+          customer_kind: kind,
+        }).select("id").single();
+        if (error || !data) return;
+        profileId = (data as any).id;
+      }
+
+      if (cancelled || !profileId) return;
+      await supabase.from("contact_submissions" as any)
+        .update({ customer_profile_id: profileId })
+        .eq("id", selected.id);
+      await onUpdate(selected.id, { customer_profile_id: profileId } as any);
+      onRefresh?.();
+    })();
+    return () => { cancelled = true; };
+  }, [selected?.id]);
+
+
   // Pull deed-extracted owner names for the currently selected submission so the
   // seller-intake template can ask the right ownership follow-up question.
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
@@ -1853,38 +1899,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
                       <Paperclip className="w-3 h-3" /> Files & documents
                     </p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      This submission isn't linked to a customer profile yet. Create one to start attaching labeled files (POA, deed, ID, contracts…).
-                    </p>
-                    <button
-                      onClick={async () => {
-                        const name = selected.name || "Unknown";
-                        const email = (selected as any).email || null;
-                        const phone = (selected as any).phone || null;
-                        const kind = (selected as any).customer_kind === "seller" || (selected as any).customer_kind === "buyer"
-                          ? (selected as any).customer_kind
-                          : "contact";
-                        const { data, error } = await supabase.from("customer_profiles" as any).insert({
-                          primary_name: name,
-                          primary_email: email,
-                          primary_phone: phone,
-                          customer_kind: kind,
-                        }).select("id").single();
-                        if (error || !data) {
-                          alert(`Could not create profile: ${error?.message || "unknown"}`);
-                          return;
-                        }
-                        await supabase.from("contact_submissions" as any)
-                          .update({ customer_profile_id: (data as any).id })
-                          .eq("id", selected.id);
-                        await onUpdate(selected.id, { customer_profile_id: (data as any).id } as any);
-                        await onRefresh?.();
-
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
-                    >
-                      <Paperclip className="w-3.5 h-3.5" /> Create profile & attach files
-                    </button>
+                    <p className="text-xs text-muted-foreground">Setting up file storage for this submission…</p>
                   </div>
                 )}
 
@@ -2313,9 +2328,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           return (
                             <span
                               className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border"
-                              title={`This person has submitted the form ${dupCount} times — showing most recent. ${earlier} earlier ${earlier === 1 ? "submission" : "submissions"} merged.`}
+                              title={`This person submitted the form ${dupCount} times — showing the most recent. ${earlier} older ${earlier === 1 ? "submission is" : "submissions are"} merged into this record.`}
                             >
-                              +{earlier} earlier
+                              {earlier} prior form{earlier === 1 ? "" : "s"}
                             </span>
                           );
                         })()}
