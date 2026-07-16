@@ -1984,30 +1984,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {/* Status pills (desktop only) */}
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 flex items-center gap-1.5 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-2 py-2">
-        {(["all", "seller", "buyer", "contact"] as const).map(k => {
-          const isActive = kindFilter === k;
-          const labels: Record<KindFilter, string> = { all: "All types", seller: "Sellers", buyer: "Buyers", contact: "General" };
-          const activeCls: Record<KindFilter, string> = {
-            all: "bg-foreground text-background border-foreground",
-            seller: "bg-primary text-primary-foreground border-primary",
-            buyer: "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))]",
-            contact: "bg-foreground text-background border-foreground",
-          };
-          return (
-            <button
-              key={k}
-              onClick={() => setKindFilter(k)}
-              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
-                isActive ? activeCls[k] : "bg-card text-muted-foreground border-border hover:text-foreground"
-              }`}
-            >
-              {k !== "all" && <CustomerKindBadge kind={k} variant="dot" />}
-              {labels[k]} ({kindCount(k)})
-            </button>
-          );
-        })}
-
-        <div className="ml-auto flex items-center gap-1.5">
           <button
             onClick={() => setCemeteriesOpen(o => !o)}
             className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
@@ -2123,7 +2099,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             <FileText className="w-3.5 h-3.5" /> Call sheet
           </button>
-        </div>
       </div>
       )}
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
