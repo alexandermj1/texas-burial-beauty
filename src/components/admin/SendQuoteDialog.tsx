@@ -17,6 +17,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSave: (id: string, patch: Partial<Submission>) => Promise<void>;
+  /** Preferred transfer fee from the texas_cemeteries directory (numeric string). */
+  directoryTransferFee?: string | null;
 }
 
 const PHONE = "(214) 230-4740";
