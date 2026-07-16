@@ -2313,9 +2313,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           return (
                             <span
                               className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border"
-                              title={`This person has submitted the form ${dupCount} times — showing most recent. ${earlier} earlier ${earlier === 1 ? "submission" : "submissions"} merged.`}
+                              title={`This person submitted the form ${dupCount} times — showing the most recent. ${earlier} older ${earlier === 1 ? "submission is" : "submissions are"} merged into this record.`}
                             >
-                              +{earlier} earlier
+                              {earlier} prior form{earlier === 1 ? "" : "s"}
                             </span>
                           );
                         })()}
