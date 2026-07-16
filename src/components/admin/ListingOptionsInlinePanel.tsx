@@ -30,6 +30,12 @@ const fmtUsd = (n: number) =>
 
 const round100 = (n: number) => Math.round(n / 100) * 100;
 
+const feeString = (raw: number | string | null | undefined) => {
+  if (raw === null || raw === undefined || raw === "") return "395";
+  const n = Number(String(raw).replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? String(n) : "395";
+};
+
 export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGenerated }: Props) {
   const { toast } = useToast();
   const defaultSpaces = parseSpaces(seller.spaces);
@@ -39,7 +45,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const [netTouched, setNetTouched] = useState(false);
   const [salesTouched, setSalesTouched] = useState(false);
   const [plotCount, setPlotCount] = useState<string>(String(defaultSpaces));
-  const [transferFee, setTransferFee] = useState<string>("395");
+  const [transferFee, setTransferFee] = useState<string>(() => feeString(seller.transfer_fee_amount));
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -49,7 +55,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
     setSalesPrice("");
     setNetTouched(false);
     setSalesTouched(false);
-  }, [seller.id, seller.spaces]);
+    setTransferFee(feeString(seller.transfer_fee_amount));
+  }, [seller.id, seller.spaces, seller.transfer_fee_amount]);
 
   const handleRetailChange = (v: string) => {
     setRetail(v);
@@ -90,6 +97,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
             .update({
               cemetery_retail: retailNum > 0 ? retailNum : null,
               quote_amount: nppNum > 0 ? nppNum : null,
+              transfer_fee_amount: feeNum > 0 ? feeNum : null,
             } as any)
             .eq("id", seller.id);
         }

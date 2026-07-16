@@ -132,11 +132,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
       setRetail(retailStr);
       setQuote(savedQuote || computeQuoteFromRetail(retailStr));
       setQuoteTouched(!!savedQuote);
-      setTransferFee(
-        submission.transfer_fee_amount != null
-          ? String(submission.transfer_fee_amount)
-          : (dirFeeFromTable || directoryFee)
-      );
+      setTransferFee(dirFeeFromTable || (submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : directoryFee));
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
     }

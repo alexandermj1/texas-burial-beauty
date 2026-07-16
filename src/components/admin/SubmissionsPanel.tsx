@@ -645,8 +645,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (cancelled || !data) return;
       const m = new Map<string, any>();
       for (const row of data as any[]) {
-        const k = _canon(row.name || "");
-        if (k) m.set(k, row);
+        for (const raw of [row.name, row.canonical_name]) {
+          const k = _canon(raw || "");
+          if (k) m.set(k, row);
+        }
       }
       setTexasCemProfiles(m);
     })();
@@ -658,6 +660,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
+  const cemeteryProfileFor = (cemetery: string | null | undefined) => {
+    const k = _canon(cemetery || "");
+    if (!k) return null;
+    const exact = texasCemProfiles.get(k);
+    if (exact) return exact;
+    let best: { row: any; score: number } | null = null;
+    for (const row of texasCemProfiles.values()) {
+      const s = cemeteryScore(cemetery || "", row?.name || row?.canonical_name || "");
+      if (!best || s > best.score) best = { row, score: s };
+    }
+    return best && best.score >= 0.75 ? best.row : null;
+  };
   const selectedIsInCemeteryList = useMemo(() => {
     if (!selected || !cemeteriesOpen || !cemeteryCanon) return false;
     return cemeteryListSubs.some(s => s.id === selected.id);
@@ -1324,6 +1338,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     spaces: selected.spaces,
                     space_numbers: (x as any)?.space_numbers ?? null,
                     lawn: (x as any)?.lawn ?? null,
+                    transfer_fee_amount: cemeteryProfileFor(selected.cemetery)?.transfer_fee ?? selected.transfer_fee_amount ?? null,
                   } : null}
                   onNewEmailSent={(meta) => {
                     if (meta?.templateId === "seller_intake" || meta?.templateId === "seller_listing_options") {
@@ -2528,8 +2543,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             onClose={() => setQuoteOpen(false)}
             onSave={onUpdate}
             directoryTransferFee={(() => {
-              const k = _canon(selected.cemetery || "");
-              const prof = k ? texasCemProfiles.get(k) : null;
+              const prof = cemeteryProfileFor(selected.cemetery);
               const fee = prof?.transfer_fee;
               return fee != null && fee !== "" ? String(fee) : null;
             })()}
