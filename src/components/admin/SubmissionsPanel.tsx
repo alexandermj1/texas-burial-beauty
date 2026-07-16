@@ -995,6 +995,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     );
                   })()}
+                  {(selected as any).quote_response !== "accepted" && (selected as any).quote_sent_at && (() => {
+                    const quoted = Number((selected as any).quote_amount) || 0;
+                    if (!quoted) return null;
+                    const retailSaved = Number((selected as any).cemetery_retail) || 0;
+                    const retail = retailSaved > 0 ? retailSaved : quoted / 0.42;
+                    const sales = retail * 0.68;
+                    const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+                    return (
+                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-500/10 border-2 border-purple-500/40 text-purple-700 dark:text-purple-300 shadow-sm flex-wrap">
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                          <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
+                        </div>
+                        <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                          <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
+                        </div>
+                        <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted (pending)</span>
+                          <span className="text-sm font-semibold tabular-nums">{fmt(quoted)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                 </div>
               </div>
