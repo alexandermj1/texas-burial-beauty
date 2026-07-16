@@ -721,7 +721,28 @@ const Admin = () => {
             </>
           )}
 
-          {tab === "submissions" && (
+          {tab === "submissions" && (() => {
+            const canonize = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+            const q = searchQuery.trim().toLowerCase();
+            let matchedCem: { canon: string; name: string; count: number } | null = null;
+            if (q.length >= 3) {
+              const tally = new Map<string, { name: string; count: number }>();
+              for (const s of submissions as any[]) {
+                const cem = (s.cemetery || "").trim();
+                if (!cem) continue;
+                if (!cem.toLowerCase().includes(q)) continue;
+                const c = canonize(cem);
+                const cur = tally.get(c);
+                if (cur) cur.count += 1;
+                else tally.set(c, { name: cem, count: 1 });
+              }
+              let best: { canon: string; name: string; count: number } | null = null;
+              for (const [canon, v] of tally) {
+                if (!best || v.count > best.count) best = { canon, name: v.name, count: v.count };
+              }
+              matchedCem = best;
+            }
+            const submissionsPanel = (
             <SubmissionsPanel
               submissions={submissions}
               searchQuery={searchQuery}
