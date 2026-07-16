@@ -582,9 +582,36 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
     const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
     const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
-    return [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
-
+    const ordered = [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+    // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
+    // row per email in the visible list. The kept row remains sorted by its bucket and
+    // recency, so if the same person filled the form again today they surface at top.
+    const seenEmails = new Set<string>();
+    const deduped: Submission[] = [];
+    for (const s of ordered) {
+      const key = (s.email || "").trim().toLowerCase();
+      if (!key) { deduped.push(s); continue; }
+      if (seenEmails.has(key)) continue;
+      seenEmails.add(key);
+      deduped.push(s);
+    }
+    return deduped;
   }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
+
+  // Map lowercased email → all submission ids that share it, oldest → newest. Used
+  // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
+  const dupIdsByEmail = useMemo(() => {
+    const m = new Map<string, Array<{ id: string; created_at: string; message?: string | null }>>();
+    for (const s of submissions) {
+      const key = (s.email || "").trim().toLowerCase();
+      if (!key) continue;
+      const arr = m.get(key) || [];
+      arr.push({ id: s.id, created_at: s.created_at, message: (s as any).message });
+      m.set(key, arr);
+    }
+    for (const arr of m.values()) arr.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    return m;
+  }, [submissions]);
 
 
   const texasSubmissions = useMemo(() => submissions.filter(s => subRegion(s) === "texas"), [submissions]);
