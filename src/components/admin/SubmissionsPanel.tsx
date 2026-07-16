@@ -2303,6 +2303,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                         {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
                         <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
+                        {(() => {
+                          const key = (s.email || "").trim().toLowerCase();
+                          const dupCount = key ? (dupIdsByEmail.get(key)?.length || 1) : 1;
+                          if (dupCount <= 1) return null;
+                          const earlier = dupCount - 1;
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border"
+                              title={`This person has submitted the form ${dupCount} times — showing most recent. ${earlier} earlier ${earlier === 1 ? "submission" : "submissions"} merged.`}
+                            >
+                              +{earlier} earlier
+                            </span>
+                          );
+                        })()}
                         {awaitingMap[s.id] && (
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border border-[hsl(var(--status-reply-border))] shadow-sm"
