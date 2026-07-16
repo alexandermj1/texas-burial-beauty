@@ -1983,8 +1983,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Status pills (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-2 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2.5">
-        {/* Type filters */}
+      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-1.5 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-2 py-2">
         {(["all", "seller", "buyer", "contact"] as const).map(k => {
           const isActive = kindFilter === k;
           const labels: Record<KindFilter, string> = { all: "All types", seller: "Sellers", buyer: "Buyers", contact: "General" };
@@ -1998,7 +1997,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             <button
               key={k}
               onClick={() => setKindFilter(k)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
                 isActive ? activeCls[k] : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
@@ -2011,22 +2010,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         <div className="ml-auto flex items-center gap-1.5">
           <button
             onClick={() => setCemeteriesOpen(o => !o)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
               cemeteriesOpen
                 ? "bg-foreground text-background border-foreground"
                 : "bg-card text-muted-foreground border-border hover:text-foreground"
             }`}
             title="Show the Cemeteries directory in this tab"
           >
-            <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide cemeteries" : "Cemeteries"}
+            <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide" : "Cemeteries"}
           </button>
           <button
             data-tour="add-submission"
             onClick={() => setAddOpen(true)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
+            className="px-2 py-1 rounded-full text-[11px] font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
             title="Add a submission manually (e.g. info taken over the phone)"
           >
-            <UserPlus className="w-3.5 h-3.5" /> Add submission
+            <UserPlus className="w-3.5 h-3.5" /> Add
           </button>
           {onRefresh && (
             <button
@@ -2036,11 +2035,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 try { await onRefresh(); } finally { setRefreshing(false); }
               }}
               disabled={refreshing}
-              className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+              className="px-2 py-1 rounded-full text-[11px] font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
               title="Sync Gmail and reload submissions"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Refreshing..." : "Refresh inbox"}
+              {refreshing ? "..." : "Refresh"}
             </button>
           )}
           <button
@@ -2069,7 +2068,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )
               );
               if (rows.length === 0) { alert("No submissions with attachments found (excluding quoted)."); return; }
-
 
               // Pull cemetery profiles to prefill any known phone-call fields
               // (transfer fee, typical prices, contact phone, internal notes).
@@ -2120,26 +2118,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               XLSX.writeFile(wb, `cemetery-call-sheet-${new Date().toISOString().slice(0,10)}.xlsx`, { bookType: "xlsx" });
             }}
 
-            className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
+            className="px-2 py-1 rounded-full text-[11px] font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5"
             title="Download an Excel call sheet with customer names and cemetery profile fields (transfer fee, contact, pricing) to fill in during retail-price calls"
           >
             <FileText className="w-3.5 h-3.5" /> Call sheet
           </button>
-
-          <button
-            onClick={() => setTrashOpen(true)}
-            aria-label="Recently deleted submissions"
-            title={`Recently deleted${deletedSubmissions.length ? ` (${deletedSubmissions.length})` : ""}`}
-            className="relative w-8 h-8 inline-flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            {deletedSubmissions.length > 0 && (
-              <span className="absolute -top-1 -right-1 text-[9px] leading-none px-1 py-0.5 rounded-full bg-muted text-foreground font-semibold border border-border">
-                {deletedSubmissions.length}
-              </span>
-            )}
-          </button>
-
         </div>
       </div>
       )}
