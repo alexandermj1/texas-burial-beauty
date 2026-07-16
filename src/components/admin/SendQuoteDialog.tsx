@@ -252,7 +252,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                         <input
                           type="number"
                           value={quote}
-                          onChange={(e) => setQuote(e.target.value)}
+                          onChange={(e) => handleQuoteChange(e.target.value)}
                           placeholder="e.g. 4500"
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
