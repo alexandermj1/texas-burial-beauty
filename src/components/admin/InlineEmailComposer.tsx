@@ -51,6 +51,7 @@ interface Props {
     spaces: string | null;
     space_numbers?: string | null;
     lawn?: string | null;
+    transfer_fee_amount?: number | string | null;
   } | null;
 }
 
