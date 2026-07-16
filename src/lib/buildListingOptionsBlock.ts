@@ -34,6 +34,7 @@ export interface SellerForBlock {
   spaces: string | null;
   space_numbers?: string | null;
   lawn?: string | null;
+  transfer_fee_amount?: number | string | null;
 }
 
 // ── Texas brand tokens ──────────────────────────────────────────────
