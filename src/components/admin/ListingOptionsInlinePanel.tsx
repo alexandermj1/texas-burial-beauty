@@ -97,6 +97,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
             .update({
               cemetery_retail: retailNum > 0 ? retailNum : null,
               quote_amount: nppNum > 0 ? nppNum : null,
+              transfer_fee_amount: feeNum > 0 ? feeNum : null,
             } as any)
             .eq("id", seller.id);
         }
