@@ -1001,7 +1001,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (!quoted) return null;
                     const retailSaved = Number((selected as any).cemetery_retail) || 0;
                     const retail = retailSaved > 0 ? retailSaved : quoted / 0.42;
-                    const sales = retail * 0.68;
+                    const sales = Math.round((retail * 0.67) / 100) * 100;
                     const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
                     return (
                       <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-500/10 border-2 border-purple-500/40 text-purple-700 dark:text-purple-300 shadow-sm flex-wrap">
