@@ -17,6 +17,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSave: (id: string, patch: Partial<Submission>) => Promise<void>;
+  /** Preferred transfer fee from the texas_cemeteries directory (numeric string). */
+  directoryTransferFee?: string | null;
 }
 
 const PHONE = "(214) 230-4740";
@@ -99,8 +101,16 @@ ${PHONE}
 ${WEBSITE}`;
 };
 
-const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
+const computeQuoteFromRetail = (retailStr: string): string => {
+  const r = Number(retailStr);
+  if (!isFinite(r) || r <= 0) return "";
+  const raw = r * 0.42;
+  return String(Math.round(raw / 100) * 100);
+};
+
+const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferFee }: Props) => {
   const [quote, setQuote] = useState("");
+  const [quoteTouched, setQuoteTouched] = useState(false);
   const [transferFee, setTransferFee] = useState("");
   const [retail, setRetail] = useState("");
   const [customMessage, setCustomMessage] = useState("");
@@ -111,22 +121,36 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
     if (open) {
       // Auto-populate from the Stage 1 intake fields (cemetery_retail /
       // transfer_fee_amount) so the admin doesn't have to retype them.
-      // Transfer fee falls back to the cemetery directory's known fee when
-      // nothing is set on the submission yet.
+      // Transfer fee prefers the texas_cemeteries directory value (kept
+      // current by admins) and falls back to the static contact directory.
       const intakeRetail = (submission as any).cemetery_retail;
       const directoryContact = lookupCemeteryContact(submission.cemetery);
       const directoryFee = parseDirectoryFee(directoryContact?.transferFee);
-      setQuote(submission.quote_amount ? String(submission.quote_amount) : "");
+      const dirFeeFromTable = directoryTransferFee ? String(directoryTransferFee) : "";
+      const retailStr = intakeRetail != null ? String(intakeRetail) : "";
+      const savedQuote = submission.quote_amount ? String(submission.quote_amount) : "";
+      setRetail(retailStr);
+      setQuote(savedQuote || computeQuoteFromRetail(retailStr));
+      setQuoteTouched(!!savedQuote);
       setTransferFee(
         submission.transfer_fee_amount != null
           ? String(submission.transfer_fee_amount)
-          : directoryFee
+          : (dirFeeFromTable || directoryFee)
       );
-      setRetail(intakeRetail != null ? String(intakeRetail) : "");
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
     }
-  }, [open, submission]);
+  }, [open, submission, directoryTransferFee]);
+
+  const handleRetailChange = (v: string) => {
+    setRetail(v);
+    if (!quoteTouched) setQuote(computeQuoteFromRetail(v));
+  };
+  const handleQuoteChange = (v: string) => {
+    setQuote(v);
+    setQuoteTouched(true);
+  };
+
 
   const subject = buildSubject(submission);
   const body = buildBody(submission, quote, transferFee, customMessage);
@@ -212,12 +236,12 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
                         <input
                           type="number"
                           value={retail}
-                          onChange={(e) => setRetail(e.target.value)}
+                          onChange={(e) => handleRetailChange(e.target.value)}
                           placeholder="from intake"
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1.5">Auto-filled from Stage 1.</p>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">Auto-filled from Stage 1. Quote auto-calcs at 42% of retail.</p>
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
@@ -228,7 +252,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
                         <input
                           type="number"
                           value={quote}
-                          onChange={(e) => setQuote(e.target.value)}
+                          onChange={(e) => handleQuoteChange(e.target.value)}
                           placeholder="e.g. 4500"
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
