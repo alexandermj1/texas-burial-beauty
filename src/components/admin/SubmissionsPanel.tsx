@@ -2437,6 +2437,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           return <>{filtered.map((s, i) => renderRow(s, i))}</>;
 
         })()}
+        <div className="border-t border-border/50 px-3 py-2 flex justify-end">
+          <button
+            onClick={() => setTrashOpen(true)}
+            aria-label="Recently deleted submissions"
+            title={`Recently deleted${deletedSubmissions.length ? ` (${deletedSubmissions.length})` : ""}`}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium text-muted-foreground hover:text-foreground border border-border bg-card transition-all"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Recently deleted
+            {deletedSubmissions.length > 0 && (
+              <span className="text-[10px] leading-none px-1.5 py-0.5 rounded-full bg-muted text-foreground font-semibold border border-border">
+                {deletedSubmissions.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
 
