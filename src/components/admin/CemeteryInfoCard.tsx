@@ -276,12 +276,18 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
                 label="Website"
                 icon={<ExternalLink className="w-3 h-3" />}
                 value={
-                  <a href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all">
-                    {profile.website}
+                  <a
+                    href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-primary hover:bg-primary/20 transition"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Visit website
                   </a>
                 }
               />
             )}
+
             {(profile?.contact_name || profile?.contact_phone || profile?.contact_email) && (
               <Fact
                 label="Cemetery contact"
