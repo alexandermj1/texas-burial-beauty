@@ -1853,38 +1853,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
                       <Paperclip className="w-3 h-3" /> Files & documents
                     </p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      This submission isn't linked to a customer profile yet. Create one to start attaching labeled files (POA, deed, ID, contracts…).
-                    </p>
-                    <button
-                      onClick={async () => {
-                        const name = selected.name || "Unknown";
-                        const email = (selected as any).email || null;
-                        const phone = (selected as any).phone || null;
-                        const kind = (selected as any).customer_kind === "seller" || (selected as any).customer_kind === "buyer"
-                          ? (selected as any).customer_kind
-                          : "contact";
-                        const { data, error } = await supabase.from("customer_profiles" as any).insert({
-                          primary_name: name,
-                          primary_email: email,
-                          primary_phone: phone,
-                          customer_kind: kind,
-                        }).select("id").single();
-                        if (error || !data) {
-                          alert(`Could not create profile: ${error?.message || "unknown"}`);
-                          return;
-                        }
-                        await supabase.from("contact_submissions" as any)
-                          .update({ customer_profile_id: (data as any).id })
-                          .eq("id", selected.id);
-                        await onUpdate(selected.id, { customer_profile_id: (data as any).id } as any);
-                        await onRefresh?.();
-
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
-                    >
-                      <Paperclip className="w-3.5 h-3.5" /> Create profile & attach files
-                    </button>
+                    <p className="text-xs text-muted-foreground">Setting up file storage for this submission…</p>
                   </div>
                 )}
 
