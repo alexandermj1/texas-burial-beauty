@@ -913,21 +913,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     fn();
   };
 
-  // Counts for the kind pills (respect status filter so the numbers reflect what you'd see).
-  const kindBase = useMemo(() => submissions.filter(s => {
-    if (filter === "new" && !isNew(s)) return false;
-    return true;
-  }), [submissions, filter, startOfToday]);
-  const kindCount = (k: KindFilter) =>
-    k === "all" ? kindBase.length : kindBase.filter(s => resolveKind(s.customer_kind, s.source) === k).length;
-
-  // Stage counts (sellers only).
-  const stageBase = useMemo(
-    () => kindBase.filter(s => resolveKind(s.customer_kind, s.source) === "seller"),
-    [kindBase],
-  );
-  const stageCount = (st: BayerStage | "all") =>
-    st === "all" ? stageBase.length : stageBase.filter(s => deriveBayerStage(s as any) === st).length;
 
   // Team-wide pipeline overview — all sellers regardless of current filter.
   const sellersAll = useMemo(
