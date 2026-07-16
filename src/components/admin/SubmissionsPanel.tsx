@@ -2063,8 +2063,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             onClick={async () => {
               const { data, error } = await supabase
                 .from("contact_submissions" as any)
-                .select("id,name,email,phone,customer_profile_id,cemetery,cemetery_city,property_type,section,lawn,space_numbers,spaces,plot_count,seller_attachments,created_at")
+                .select("id,name,email,phone,customer_profile_id,cemetery,cemetery_city,property_type,section,lawn,space_numbers,spaces,plot_count,seller_attachments,quote_sent_at,created_at")
                 .is("deleted_at", null)
+                .is("quote_sent_at", null)
                 .order("cemetery", { ascending: true });
               if (error) { alert(error.message); return; }
               const all = (data as any[]) || [];
@@ -2078,10 +2079,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 profilesWithFiles = new Set(((cf as any[]) || []).map(r => r.customer_profile_id));
               }
               const rows = all.filter(r =>
-                (Array.isArray(r.seller_attachments) && r.seller_attachments.length > 0) ||
-                (r.customer_profile_id && profilesWithFiles.has(r.customer_profile_id))
+                !r.quote_sent_at && (
+                  (Array.isArray(r.seller_attachments) && r.seller_attachments.length > 0) ||
+                  (r.customer_profile_id && profilesWithFiles.has(r.customer_profile_id))
+                )
               );
-              if (rows.length === 0) { alert("No submissions with attachments found."); return; }
+              if (rows.length === 0) { alert("No submissions with attachments found (excluding quoted)."); return; }
+
 
               // Pull cemetery profiles to prefill any known phone-call fields
               // (transfer fee, typical prices, contact phone, internal notes).
