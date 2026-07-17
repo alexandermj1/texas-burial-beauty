@@ -366,6 +366,7 @@ export type Database = {
           authorization_confirmed: boolean | null
           authorization_notes: string | null
           bayer_entry_id: string | null
+          bluenotary_session_url: string | null
           budget: string | null
           cemetery: string | null
           cemetery_city: string | null
@@ -375,6 +376,7 @@ export type Database = {
           cemetery_verified_ownership: boolean | null
           closed_at: string | null
           closed_outcome: string | null
+          contracts_completed_at: string | null
           created_at: string
           customer_kind: string | null
           customer_profile_id: string | null
@@ -425,6 +427,8 @@ export type Database = {
           pipeline_region: string | null
           pipeline_stage_override: string | null
           plot_count: number | null
+          poa_notarized_at: string | null
+          poa_signed_at: string | null
           prepaid_endowment_info: string | null
           property_type: string | null
           purchase_info: string | null
@@ -471,6 +475,7 @@ export type Database = {
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
           bayer_entry_id?: string | null
+          bluenotary_session_url?: string | null
           budget?: string | null
           cemetery?: string | null
           cemetery_city?: string | null
@@ -480,6 +485,7 @@ export type Database = {
           cemetery_verified_ownership?: boolean | null
           closed_at?: string | null
           closed_outcome?: string | null
+          contracts_completed_at?: string | null
           created_at?: string
           customer_kind?: string | null
           customer_profile_id?: string | null
@@ -530,6 +536,8 @@ export type Database = {
           pipeline_region?: string | null
           pipeline_stage_override?: string | null
           plot_count?: number | null
+          poa_notarized_at?: string | null
+          poa_signed_at?: string | null
           prepaid_endowment_info?: string | null
           property_type?: string | null
           purchase_info?: string | null
@@ -576,6 +584,7 @@ export type Database = {
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
           bayer_entry_id?: string | null
+          bluenotary_session_url?: string | null
           budget?: string | null
           cemetery?: string | null
           cemetery_city?: string | null
@@ -585,6 +594,7 @@ export type Database = {
           cemetery_verified_ownership?: boolean | null
           closed_at?: string | null
           closed_outcome?: string | null
+          contracts_completed_at?: string | null
           created_at?: string
           customer_kind?: string | null
           customer_profile_id?: string | null
@@ -635,6 +645,8 @@ export type Database = {
           pipeline_region?: string | null
           pipeline_stage_override?: string | null
           plot_count?: number | null
+          poa_notarized_at?: string | null
+          poa_signed_at?: string | null
           prepaid_endowment_info?: string | null
           property_type?: string | null
           purchase_info?: string | null
@@ -687,6 +699,104 @@ export type Database = {
             columns: ["source_email_id"]
             isOneToOne: false
             referencedRelation: "email_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          bluenotary_sent_at: string | null
+          bluenotary_session_url: string | null
+          co_owner_signature_image: string | null
+          co_owner_signature_name: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          fill_data: Json
+          filled_pdf_path: string | null
+          id: string
+          kind: Database["public"]["Enums"]["contract_kind"]
+          notarized_at: string | null
+          notarized_pdf_path: string | null
+          sent_at: string | null
+          sign_token: string | null
+          sign_token_expires_at: string | null
+          signature_image: string | null
+          signature_initials: string | null
+          signature_name: string | null
+          signed_at: string | null
+          signed_pdf_path: string | null
+          signer_ip: string | null
+          signer_user_agent: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          submission_id: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          bluenotary_sent_at?: string | null
+          bluenotary_session_url?: string | null
+          co_owner_signature_image?: string | null
+          co_owner_signature_name?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          fill_data?: Json
+          filled_pdf_path?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["contract_kind"]
+          notarized_at?: string | null
+          notarized_pdf_path?: string | null
+          sent_at?: string | null
+          sign_token?: string | null
+          sign_token_expires_at?: string | null
+          signature_image?: string | null
+          signature_initials?: string | null
+          signature_name?: string | null
+          signed_at?: string | null
+          signed_pdf_path?: string | null
+          signer_ip?: string | null
+          signer_user_agent?: string | null
+          status?: Database["public"]["Enums"]["contract_status"]
+          submission_id: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          bluenotary_sent_at?: string | null
+          bluenotary_session_url?: string | null
+          co_owner_signature_image?: string | null
+          co_owner_signature_name?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          fill_data?: Json
+          filled_pdf_path?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["contract_kind"]
+          notarized_at?: string | null
+          notarized_pdf_path?: string | null
+          sent_at?: string | null
+          sign_token?: string | null
+          sign_token_expires_at?: string | null
+          signature_image?: string | null
+          signature_initials?: string | null
+          signature_name?: string | null
+          signed_at?: string | null
+          signed_pdf_path?: string | null
+          signer_ip?: string | null
+          signer_user_agent?: string | null
+          status?: Database["public"]["Enums"]["contract_status"]
+          submission_id?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -2135,6 +2245,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "agent"
+      contract_kind: "listing_agreement" | "poa"
+      contract_status:
+        | "draft"
+        | "sent"
+        | "viewed"
+        | "signed"
+        | "notarized"
+        | "completed"
+        | "void"
       marketing_brand: "texas" | "bayer"
       marketing_campaign_status: "draft" | "sending" | "sent" | "failed"
       marketing_send_status:
@@ -2271,6 +2390,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "agent"],
+      contract_kind: ["listing_agreement", "poa"],
+      contract_status: [
+        "draft",
+        "sent",
+        "viewed",
+        "signed",
+        "notarized",
+        "completed",
+        "void",
+      ],
       marketing_brand: ["texas", "bayer"],
       marketing_campaign_status: ["draft", "sending", "sent", "failed"],
       marketing_send_status: [

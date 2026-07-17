@@ -1,22 +1,4 @@
 project_id = "mceguxfdoikjthsrbmzx"
 
-[functions.sync-inbox]
-verify_jwt = false
-
-[functions.inquiry-notification-email]
-verify_jwt = false
-
-[functions.daily-summary-email]
-verify_jwt = false
-
-[functions.attach-seller-files]
-verify_jwt = false
-
-[functions.payments-webhook]
-verify_jwt = false
-
-[functions.get-payment-summary]
-verify_jwt = false
-
-[functions.bayer-guarantee-offer]
+[functions.sign-contract]
 verify_jwt = false
