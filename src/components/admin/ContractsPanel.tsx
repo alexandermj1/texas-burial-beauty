@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
-  Stamp, ScrollText, Shield, Mail,
+  Stamp, ScrollText, Shield, Mail, PenLine,
 } from "lucide-react";
+
 
 type Contract = {
   id: string;
@@ -17,14 +19,18 @@ type Contract = {
   filled_pdf_path: string | null;
   signed_pdf_path: string | null;
   notarized_pdf_path: string | null;
+  countersigned_pdf_path: string | null;
   sent_at: string | null;
   viewed_at: string | null;
   signed_at: string | null;
+  countersigned_at: string | null;
+  countersigner_name: string | null;
   notarized_at: string | null;
   signed_copy_emailed_at: string | null;
   bluenotary_session_url: string | null;
   bluenotary_sent_at: string | null;
 };
+
 
 type Props = {
   submissionId: string;
@@ -47,16 +53,21 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [countersignFor, setCountersignFor] = useState<Contract | null>(null);
+  const [csName, setCsName] = useState("");
+  const [csSig, setCsSig] = useState<string | null>(null);
+
+
 
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
       .from("contracts").select("*").eq("submission_id", submissionId);
     setContracts((data ?? []) as Contract[]);
-    // Refresh signed URLs
     const map: Record<string, string> = {};
     for (const c of data ?? []) {
-      const path = (c as Contract).signed_pdf_path
+      const path = (c as Contract).countersigned_pdf_path
+        ?? (c as Contract).signed_pdf_path
         ?? (c as Contract).notarized_pdf_path
         ?? (c as Contract).filled_pdf_path;
       if (path) {
@@ -68,6 +79,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     setUrls(map);
     setLoading(false);
   };
+
 
   useEffect(() => { void load(); }, [submissionId]);
 
@@ -118,6 +130,34 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       setBusy(null);
     }
   };
+
+  const submitCountersign = async () => {
+    if (!countersignFor) return;
+    if (!csName.trim()) return toast.error("Type your name");
+    if (!csSig) return toast.error("Draw your signature");
+    setBusy(countersignFor.id);
+    try {
+      const { error } = await supabase.functions.invoke("sign-contract", {
+        body: {
+          action: "countersign",
+          contract_id: countersignFor.id,
+          countersigner_name: csName.trim(),
+          countersigner_signature: csSig,
+        },
+      });
+      if (error) throw error;
+      toast.success("Countersigned — fully executed copy emailed to seller");
+      setCountersignFor(null);
+      setCsName(""); setCsSig(null);
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+
 
 
   const sendToBlueNotary = async (c: Contract) => {
@@ -223,6 +263,22 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
                 {contract.signed_copy_emailed_at ? "Re-email" : "Email copy"}
               </Button>
             )}
+            {contract?.signed_at && kind === "listing_agreement" && !contract.countersigned_at && (
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => { setCountersignFor(contract); setCsName(""); setCsSig(null); }}
+                disabled={pending}
+              >
+                <PenLine className="w-3.5 h-3.5 mr-1" />Countersign
+              </Button>
+            )}
+            {contract?.countersigned_at && (
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                Fully executed
+              </span>
+            )}
             <Button
               size="sm"
               variant={contract ? "outline" : "default"}
@@ -322,6 +378,81 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
           </p>
         </div>
       )}
+
+      <Dialog open={!!countersignFor} onOpenChange={(o) => !o && setCountersignFor(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Countersign Listing Agreement</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              The seller has signed. Add your broker signature to fully execute the contract. A copy will be
+              emailed to {sellerEmail ?? "the seller"} automatically.
+            </p>
+            <div>
+              <Label>Your name</Label>
+              <Input value={csName} onChange={(e) => setCsName(e.target.value)} placeholder="e.g. John Smith, Broker" />
+            </div>
+            <CountersignPad onChange={setCsSig} />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setCountersignFor(null)}>Cancel</Button>
+              <Button onClick={submitCountersign} disabled={busy === countersignFor?.id}>
+                {busy === countersignFor?.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Countersign & send
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+function CountersignPad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  const drawing = useRef(false);
+  const has = useRef(false);
+
+  useEffect(() => {
+    const c = ref.current!;
+    const ctx = c.getContext("2d")!;
+    ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2; ctx.lineCap = "round";
+    const pos = (e: PointerEvent) => {
+      const r = c.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    const down = (e: PointerEvent) => {
+      drawing.current = true; has.current = true;
+      const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    };
+    const move = (e: PointerEvent) => {
+      if (!drawing.current) return;
+      const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
+    };
+    const up = () => { drawing.current = false; onChange(has.current ? c.toDataURL("image/png") : null); };
+    c.addEventListener("pointerdown", down);
+    c.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      c.removeEventListener("pointerdown", down);
+      c.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [onChange]);
+
+  const clear = () => {
+    const c = ref.current!;
+    c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+    has.current = false;
+    onChange(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Draw your signature</Label>
+      <canvas ref={ref} width={460} height={140} className="w-full h-36 border-2 border-dashed rounded-md bg-background touch-none" />
+      <button type="button" onClick={clear} className="text-xs text-muted-foreground underline">Clear</button>
+    </div>
+  );
+}
+

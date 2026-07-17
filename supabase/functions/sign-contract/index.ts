@@ -1,17 +1,24 @@
-// Public endpoint: lets a seller view a contract by token and submit their signature.
-// GET  ?token=... returns metadata (submission info + signed PDF URL to display)
-// POST { token, signature_name, signature_image, initials, consent, co_owner_name?, co_owner_image? }
-//   -> stamps signature onto the template's signature block, stamps initials at
-//      every page footer, appends a UETA / E-SIGN Act certification page, and
-//      saves the tamper-evident signed copy.
+// Public endpoint for the seller signing flow + admin countersign.
+// GET   ?token=...                              → contract metadata + signed PDF URL
+// POST  { action: "refresh", token, fields }    → merge seller-entered fields into
+//                                                  fill_data and regenerate filled PDF
+// POST  { token, signature_name, signature_image, initials, consent, ... }
+//                                                → seller signs (stamps sig, initials,
+//                                                  cert page; emails signed copy)
+// POST  { action: "countersign", contract_id,
+//         countersigner_name, countersigner_signature }
+//                                                → admin (JWT required) stamps broker
+//                                                  signature; emails fully-executed copy
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
+import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
+
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -94,6 +101,144 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+    const action = body.action as string | undefined;
+
+    // ================= REFRESH: seller updates missing fields on the sign page =================
+    if (action === 'refresh') {
+      const { token, fields } = body;
+      if (!token || !fields || typeof fields !== 'object') {
+        return new Response(JSON.stringify({ error: 'missing_fields' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const c = await loadContract(token);
+      if (!c) return new Response(JSON.stringify({ error: 'invalid' }), { status: 404, headers: corsHeaders });
+      if (c.signed_at) return new Response(JSON.stringify({ error: 'already_signed' }), { status: 409, headers: corsHeaders });
+
+      const allowed = [
+        'seller_name', 'co_owner_name', 'address', 'city_state_zip',
+        'phone', 'email', 'plot_description', 'plot_count',
+      ] as const;
+      const merged: FillData = { ...(c.fill_data ?? {}) } as FillData;
+      for (const k of allowed) {
+        if (typeof fields[k] === 'string' && fields[k].trim()) (merged as Record<string, unknown>)[k] = fields[k].trim();
+        else if (typeof fields[k] === 'number') (merged as Record<string, unknown>)[k] = fields[k];
+      }
+
+      const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
+      const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${tmplFile}`);
+      if (!tmpl) throw new Error('template missing');
+      const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
+      const filled = await buildFilledPdf(tmplBytes, c.kind as 'listing_agreement' | 'poa', merged);
+
+      const newPath = `${c.submission_id}/${c.kind}-${Date.now()}.pdf`;
+      const { error: upE } = await svc.storage.from('contracts')
+        .upload(newPath, filled, { contentType: 'application/pdf', upsert: true });
+      if (upE) throw upE;
+      await svc.from('contracts').update({ fill_data: merged, filled_pdf_path: newPath }).eq('id', c.id);
+
+      const { data: signedUrl } = await svc.storage.from('contracts').createSignedUrl(newPath, 60 * 60);
+      return new Response(JSON.stringify({ ok: true, pdf_url: signedUrl?.signedUrl, fill_data: merged }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ================= COUNTERSIGN: admin stamps broker signature =================
+    if (action === 'countersign') {
+      const { contract_id, countersigner_name, countersigner_signature } = body;
+      const authHeader = req.headers.get('Authorization') ?? '';
+      const asUser = createClient(SUPABASE_URL, SERVICE_KEY, { global: { headers: { Authorization: authHeader } } });
+      const { data: userData } = await asUser.auth.getUser();
+      if (!userData?.user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders });
+
+      if (!contract_id || !countersigner_name || !countersigner_signature) {
+        return new Response(JSON.stringify({ error: 'missing_fields' }), { status: 400, headers: corsHeaders });
+      }
+      const { data: c } = await svc.from('contracts').select('*').eq('id', contract_id).maybeSingle();
+      if (!c) return new Response(JSON.stringify({ error: 'not_found' }), { status: 404, headers: corsHeaders });
+      if (!c.signed_at) return new Response(JSON.stringify({ error: 'seller_not_signed' }), { status: 409, headers: corsHeaders });
+
+      const { data: file } = await svc.storage.from('contracts').download(c.signed_pdf_path);
+      if (!file) throw new Error('signed pdf missing');
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const pdf = await PDFDocument.load(bytes);
+      const font = await pdf.embedFont(StandardFonts.Helvetica);
+      const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+      const pages = pdf.getPages();
+      const brokerImg = await decodeSignature(pdf, countersigner_signature);
+      const nowIso = new Date().toISOString();
+      const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      if (c.kind === 'listing_agreement' && pages.length >= 8) {
+        const p8 = pages[7];
+        // Broker block sits below the seller block on page 8 of the LA template.
+        stampText(p8, countersigner_name, 225, 165, font, 11);
+        if (brokerImg) {
+          const d = brokerImg.scaleToFit(200, 28);
+          p8.drawImage(brokerImg, { x: 225, y: 125, width: d.width, height: d.height });
+        }
+        stampText(p8, today, 225, 108, font, 11);
+        stampText(p8, 'BROKER — Texas Cemetery Brokers, LLC', 225, 92, font, 9, MUTED);
+      }
+
+      // Add a "Fully Executed" stamp on the certification page (last page).
+      const cert = pages[pages.length - 1];
+      cert.drawText('— FULLY EXECUTED —', { x: 50, y: 20, size: 10, font: bold, color: INK });
+      cert.drawText(`Countersigned by ${countersigner_name} on ${nowIso}`, { x: 200, y: 20, size: 9, font, color: MUTED });
+
+      const out = await pdf.save();
+      const outHash = await sha256Hex(out);
+      const outPath = `${c.submission_id}/${c.kind}-executed-${Date.now()}.pdf`;
+      const { error: upE } = await svc.storage.from('contracts')
+        .upload(outPath, out, { contentType: 'application/pdf', upsert: true });
+      if (upE) throw upE;
+
+      await svc.from('contracts').update({
+        status: 'signed',
+        countersigned_at: nowIso,
+        countersigned_by: userData.user.id,
+        countersigner_name,
+        countersigner_signature,
+        countersigned_pdf_path: outPath,
+        signed_hash: outHash,
+      }).eq('id', c.id);
+      if (c.kind === 'listing_agreement') {
+        await svc.from('contact_submissions').update({ la_countersigned_at: nowIso }).eq('id', c.submission_id);
+      }
+
+      // Email the fully executed copy to the seller
+      try {
+        const { data: sub } = await svc.from('contact_submissions')
+          .select('email, name, cemetery').eq('id', c.submission_id).maybeSingle();
+        const RESEND_KEY = Deno.env.get('RESEND_API_KEY');
+        if (sub?.email && RESEND_KEY) {
+          const CHUNK = 0x8000;
+          let bin = '';
+          for (let i = 0; i < out.length; i += CHUNK) bin += String.fromCharCode(...out.subarray(i, i + CHUNK));
+          const b64 = btoa(bin);
+          const filename = `${(sub.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-${c.kind}-executed.pdf`;
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+            body: JSON.stringify({
+              from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
+              to: [sub.email],
+              bcc: ['contracts@texascemeterybrokers.com'],
+              subject: `Fully executed ${c.kind === 'poa' ? 'Power of Attorney' : 'Listing Agreement'}${sub.cemetery ? ` — ${sub.cemetery}` : ''}`,
+              html: `<div style="font-family:Georgia,serif;color:#222;max-width:560px"><p>Hi ${sub.name ?? ''},</p><p>Your ${c.kind === 'poa' ? 'Power of Attorney' : 'Listing Agreement'} has been countersigned by Texas Cemetery Brokers and is now fully executed. A copy is attached for your records.</p><p style="margin-top:24px">— Texas Cemetery Brokers</p></div>`,
+              attachments: [{ filename, content: b64 }],
+            }),
+          });
+          await svc.from('contracts').update({ signed_copy_emailed_at: nowIso }).eq('id', c.id);
+        }
+      } catch (e) { console.error('countersign email failed', e); }
+
+      return new Response(JSON.stringify({ ok: true, pdf_path: outPath }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ================= SELLER SIGN (default POST) =================
     const {
       token, signature_name, signature_image, initials, consent,
       co_owner_name, co_owner_image,
@@ -103,6 +248,7 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     const c = await loadContract(token);
     if (!c) return new Response(JSON.stringify({ error: 'invalid' }), { status: 404, headers: corsHeaders });
