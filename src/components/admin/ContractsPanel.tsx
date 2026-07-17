@@ -115,6 +115,25 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     toast.success("Signing link copied");
   };
 
+  const emailSignLink = async (c: Contract) => {
+    if (!c.sign_token) return;
+    setBusy(c.id);
+    try {
+      const link = `${window.location.origin}/sign/${c.sign_token}`;
+      const { data, error } = await supabase.functions.invoke("send-contract-link", {
+        body: { contract_id: c.id, sign_url: link },
+      });
+      if (error) throw error;
+      toast.success("Signing link emailed", { description: `Sent to ${data?.to ?? sellerEmail ?? "seller"}` });
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+
   const emailSignedCopy = async (c: Contract) => {
     setBusy(c.id);
     try {
