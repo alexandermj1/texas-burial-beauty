@@ -263,6 +263,22 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
                 {contract.signed_copy_emailed_at ? "Re-email" : "Email copy"}
               </Button>
             )}
+            {contract?.signed_at && kind === "listing_agreement" && !contract.countersigned_at && (
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => { setCountersignFor(contract); setCsName(""); setCsSig(null); }}
+                disabled={pending}
+              >
+                <PenLine className="w-3.5 h-3.5 mr-1" />Countersign
+              </Button>
+            )}
+            {contract?.countersigned_at && (
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                Fully executed
+              </span>
+            )}
             <Button
               size="sm"
               variant={contract ? "outline" : "default"}
