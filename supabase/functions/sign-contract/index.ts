@@ -25,8 +25,8 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const svc = createClient(SUPABASE_URL, SERVICE_KEY);
 
-const INK = rgb(0.05, 0.15, 0.28);
-const MUTED = rgb(0.35, 0.35, 0.35);
+const INK = rgb(0.08, 0.08, 0.08);
+const MUTED = rgb(0.28, 0.28, 0.28);
 
 async function loadContract(token: string) {
   const { data } = await svc.from('contracts').select('*').eq('sign_token', token).maybeSingle();
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
 
       const allowed = [
         'seller_name', 'co_owner_name', 'address', 'city_state_zip',
-        'phone', 'email', 'plot_description', 'plot_count',
+        'phone', 'email', 'plot_description', 'plot_count', 'listing_option',
       ] as const;
       const merged: FillData = { ...(c.fill_data ?? {}) } as FillData;
       for (const k of allowed) {
@@ -162,8 +162,8 @@ Deno.serve(async (req) => {
       if (!file) throw new Error('signed pdf missing');
       const bytes = new Uint8Array(await file.arrayBuffer());
       const pdf = await PDFDocument.load(bytes);
-      const font = await pdf.embedFont(StandardFonts.Helvetica);
-      const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+      const font = await pdf.embedFont(StandardFonts.TimesRoman);
+      const bold = await pdf.embedFont(StandardFonts.TimesRomanBold);
       const pages = pdf.getPages();
       const brokerImg = await decodeSignature(pdf, countersigner_signature);
       const nowIso = new Date().toISOString();
@@ -261,8 +261,8 @@ Deno.serve(async (req) => {
     const preSignHash = await sha256Hex(preSignBytes);
 
     const pdf = await PDFDocument.load(preSignBytes);
-    const font = await pdf.embedFont(StandardFonts.Helvetica);
-    const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const font = await pdf.embedFont(StandardFonts.TimesRoman);
+    const bold = await pdf.embedFont(StandardFonts.TimesRomanBold);
     const pages = pdf.getPages();
 
     const sigImg = await decodeSignature(pdf, signature_image);
@@ -308,17 +308,14 @@ Deno.serve(async (req) => {
     const nowIso = new Date().toISOString();
     const serif = await pdf.embedFont(StandardFonts.TimesRoman);
     const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
-    const CORAL = rgb(0.86, 0.36, 0.30);
-    const SAGE = rgb(0.30, 0.42, 0.34);
-    const PAPER = rgb(0.96, 0.94, 0.88);
-    const HAIRLINE = rgb(0.78, 0.76, 0.70);
+    const HAIRLINE = rgb(0.68, 0.68, 0.68);
     const certPage = pdf.addPage([612, 792]);
     const pageW = 612;
 
     // Masthead
-    certPage.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: CORAL });
-    certPage.drawText('Certificate of Electronic Signature', { x: 50, y: 712, size: 20, font: serifBold, color: INK });
-    certPage.drawLine({ start: { x: 50, y: 700 }, end: { x: 130, y: 700 }, thickness: 1.5, color: CORAL });
+    certPage.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
+    certPage.drawText('Certificate of Electronic Signature', { x: 50, y: 712, size: 18, font: serifBold, color: INK });
+    certPage.drawLine({ start: { x: 50, y: 700 }, end: { x: pageW - 50, y: 700 }, thickness: 0.6, color: HAIRLINE });
     certPage.drawText('Executed under the U.S. E-SIGN Act (15 U.S.C. §§ 7001 et seq.) and the Texas Uniform',
       { x: 50, y: 682, size: 9.5, font, color: MUTED });
     certPage.drawText('Electronic Transactions Act (Tex. Bus. & Com. Code Ann. Ch. 322).',
@@ -340,12 +337,12 @@ Deno.serve(async (req) => {
     );
     const cardH = 34 + rowsCard.length * 20 + 10;
     let cy = 648;
-    certPage.drawRectangle({ x: 50, y: cy - cardH, width: pageW - 100, height: cardH, color: PAPER, borderColor: HAIRLINE, borderWidth: 0.6 });
-    certPage.drawText('SIGNATURE RECORD', { x: 68, y: cy - 20, size: 9, font: bold, color: SAGE });
+    certPage.drawRectangle({ x: 50, y: cy - cardH, width: pageW - 100, height: cardH, borderColor: HAIRLINE, borderWidth: 0.5 });
+    certPage.drawText('SIGNATURE RECORD', { x: 68, y: cy - 20, size: 8.5, font: bold, color: INK });
     certPage.drawLine({ start: { x: 68, y: cy - 26 }, end: { x: pageW - 68, y: cy - 26 }, thickness: 0.4, color: HAIRLINE });
     let ry = cy - 44;
     for (const [l, v] of rowsCard) {
-      certPage.drawText(l, { x: 68, y: ry, size: 8, font: bold, color: MUTED });
+      certPage.drawText(l, { x: 68, y: ry, size: 8, font, color: MUTED });
       certPage.drawText(String(v), { x: 210, y: ry, size: 10.5, font: serif, color: INK });
       ry -= 20;
     }
@@ -367,8 +364,8 @@ Deno.serve(async (req) => {
     if (sigImg) {
       const d = sigImg.scaleToFit(240, 60);
       const boxY = 100, boxH = 90;
-      certPage.drawRectangle({ x: 50, y: boxY, width: pageW - 100, height: boxH, color: PAPER, borderColor: HAIRLINE, borderWidth: 0.6 });
-      certPage.drawText('CAPTURED SIGNATURE', { x: 68, y: boxY + boxH - 18, size: 9, font: bold, color: SAGE });
+      certPage.drawRectangle({ x: 50, y: boxY, width: pageW - 100, height: boxH, borderColor: HAIRLINE, borderWidth: 0.5 });
+      certPage.drawText('CAPTURED SIGNATURE', { x: 68, y: boxY + boxH - 18, size: 8.5, font: bold, color: INK });
       certPage.drawImage(sigImg, { x: 68, y: boxY + 22, width: d.width, height: d.height });
       certPage.drawLine({ start: { x: 68, y: boxY + 18 }, end: { x: 68 + d.width + 20, y: boxY + 18 }, thickness: 0.5, color: MUTED });
       certPage.drawText(`${signature_name}  •  ${nowIso}`, { x: 68, y: boxY + 6, size: 9, font: serif, color: INK });
