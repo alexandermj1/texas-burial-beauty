@@ -108,9 +108,13 @@ Deno.serve(async (req) => {
 
     const subject = `Your Listing Agreement${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — ready to sign`;
 
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'X-Connection-Api-Key': RESEND_KEY,
+      },
       body: JSON.stringify({
         from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
         to: [to],
