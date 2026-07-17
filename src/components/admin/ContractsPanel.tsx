@@ -378,6 +378,81 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
           </p>
         </div>
       )}
+
+      <Dialog open={!!countersignFor} onOpenChange={(o) => !o && setCountersignFor(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Countersign Listing Agreement</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              The seller has signed. Add your broker signature to fully execute the contract. A copy will be
+              emailed to {sellerEmail ?? "the seller"} automatically.
+            </p>
+            <div>
+              <Label>Your name</Label>
+              <Input value={csName} onChange={(e) => setCsName(e.target.value)} placeholder="e.g. John Smith, Broker" />
+            </div>
+            <CountersignPad onChange={setCsSig} />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setCountersignFor(null)}>Cancel</Button>
+              <Button onClick={submitCountersign} disabled={busy === countersignFor?.id}>
+                {busy === countersignFor?.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Countersign & send
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+function CountersignPad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  const drawing = useRef(false);
+  const has = useRef(false);
+
+  useEffect(() => {
+    const c = ref.current!;
+    const ctx = c.getContext("2d")!;
+    ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2; ctx.lineCap = "round";
+    const pos = (e: PointerEvent) => {
+      const r = c.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    const down = (e: PointerEvent) => {
+      drawing.current = true; has.current = true;
+      const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    };
+    const move = (e: PointerEvent) => {
+      if (!drawing.current) return;
+      const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
+    };
+    const up = () => { drawing.current = false; onChange(has.current ? c.toDataURL("image/png") : null); };
+    c.addEventListener("pointerdown", down);
+    c.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      c.removeEventListener("pointerdown", down);
+      c.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [onChange]);
+
+  const clear = () => {
+    const c = ref.current!;
+    c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+    has.current = false;
+    onChange(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Draw your signature</Label>
+      <canvas ref={ref} width={460} height={140} className="w-full h-36 border-2 border-dashed rounded-md bg-background touch-none" />
+      <button type="button" onClick={clear} className="text-xs text-muted-foreground underline">Clear</button>
+    </div>
+  );
+}
+
