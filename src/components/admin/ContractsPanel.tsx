@@ -318,9 +318,21 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
         )}
 
         {contract && kind === "listing_agreement" && contract.sign_token && !contract.signed_at && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="default"
+              className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+              onClick={() => emailSignLink(contract)}
+              disabled={busy === contract.id}
+            >
+              {busy === contract.id
+                ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                : <Send className="w-3.5 h-3.5 mr-1" />}
+              {contract.sent_at ? "Re-send signing link" : "Email signing link to seller"}
+            </Button>
             <Button size="sm" variant="secondary" onClick={() => copySignLink(contract)}>
-              <Copy className="w-3.5 h-3.5 mr-1" />Copy signing link
+              <Copy className="w-3.5 h-3.5 mr-1" />Copy link
             </Button>
             <a
               href={`/sign/${contract.sign_token}`}
@@ -330,8 +342,14 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
             >
               Open signing page
             </a>
+            {contract.sent_at && (
+              <span className="text-[11px] text-muted-foreground">
+                Sent {new Date(contract.sent_at).toLocaleDateString()}
+              </span>
+            )}
           </div>
         )}
+
 
         {contract && kind === "poa" && (
           <div className="space-y-2">
