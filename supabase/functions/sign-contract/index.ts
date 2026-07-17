@@ -50,10 +50,13 @@ function stampText(page: PDFPage, text: string, x: number, y: number, font: PDFF
   page.drawText(String(text), { x, y, size, font, color });
 }
 
-/** Stamp initials in the "SELLER'S INITIALS: ____" block at the bottom-right of each page. */
+/** Stamp initials on every "Seller's Initials: ____" footer line.
+ * Templates are US Letter (612x792). Position is bottom-right within the page,
+ * bold so they read like a hand-drawn stamp. */
 function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) {
   for (const p of pages) {
-    stampText(p, initials, 712, 22, font, 10);
+    const { width } = p.getSize();
+    p.drawText(initials, { x: width - 90, y: 28, size: 11, font, color: INK });
   }
 }
 
@@ -240,8 +243,9 @@ Deno.serve(async (req) => {
     // ================= SELLER SIGN (default POST) =================
     const {
       token, signature_name, signature_image, initials, consent,
-      co_owner_name, co_owner_image,
     } = body;
+    const co_owner_name: string | undefined = undefined;
+    const co_owner_image: string | undefined = undefined;
     if (!token || !signature_name || !signature_image || !initials || consent !== true) {
       return new Response(JSON.stringify({ error: 'missing_fields' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -282,20 +286,13 @@ Deno.serve(async (req) => {
       stampText(p8, todayFormatted(), 210, 225.8, font, 11);
     } else if (c.kind === 'poa' && pages.length >= 3) {
       const p3 = pages[2];
-      // Principal block (measured rects): printed 318.8, sig 289.5, date 260.3.
-      // Co-owner block: printed 231.0, sig 201.8, date 172.5.
+      // Principal block only — one signer per contract.
       stampText(p3, signature_name, 210, 321.8, font, 11);
       if (sigImg) {
         const dims = sigImg.scaleToFit(220, 32);
         p3.drawImage(sigImg, { x: 210, y: 292.5, width: dims.width, height: dims.height });
       }
       stampText(p3, todayFormatted(), 210, 263.3, font, 11);
-      if (co_owner_name) stampText(p3, co_owner_name, 210, 234, font, 11);
-      if (coSigImg) {
-        const d2 = coSigImg.scaleToFit(220, 32);
-        p3.drawImage(coSigImg, { x: 210, y: 204.8, width: d2.width, height: d2.height });
-      }
-      if (co_owner_name) stampText(p3, todayFormatted(), 210, 175.5, font, 11);
     }
 
     // Initials on the bottom-right of every content page (skip the appended certification page)

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import {
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
-  Stamp, ScrollText, Shield, Mail, PenLine,
+  Stamp, ScrollText, Shield, Mail, PenLine, Send,
 } from "lucide-react";
 
 
@@ -114,6 +114,25 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     await navigator.clipboard.writeText(link);
     toast.success("Signing link copied");
   };
+
+  const emailSignLink = async (c: Contract) => {
+    if (!c.sign_token) return;
+    setBusy(c.id);
+    try {
+      const link = `${window.location.origin}/sign/${c.sign_token}`;
+      const { data, error } = await supabase.functions.invoke("send-contract-link", {
+        body: { contract_id: c.id, sign_url: link },
+      });
+      if (error) throw error;
+      toast.success("Signing link emailed", { description: `Sent to ${data?.to ?? sellerEmail ?? "seller"}` });
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
 
   const emailSignedCopy = async (c: Contract) => {
     setBusy(c.id);
@@ -299,9 +318,21 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
         )}
 
         {contract && kind === "listing_agreement" && contract.sign_token && !contract.signed_at && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="default"
+              className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+              onClick={() => emailSignLink(contract)}
+              disabled={busy === contract.id}
+            >
+              {busy === contract.id
+                ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                : <Send className="w-3.5 h-3.5 mr-1" />}
+              {contract.sent_at ? "Re-send signing link" : "Email signing link to seller"}
+            </Button>
             <Button size="sm" variant="secondary" onClick={() => copySignLink(contract)}>
-              <Copy className="w-3.5 h-3.5 mr-1" />Copy signing link
+              <Copy className="w-3.5 h-3.5 mr-1" />Copy link
             </Button>
             <a
               href={`/sign/${contract.sign_token}`}
@@ -311,8 +342,14 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
             >
               Open signing page
             </a>
+            {contract.sent_at && (
+              <span className="text-[11px] text-muted-foreground">
+                Sent {new Date(contract.sent_at).toLocaleDateString()}
+              </span>
+            )}
           </div>
         )}
+
 
         {contract && kind === "poa" && (
           <div className="space-y-2">

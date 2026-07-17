@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, FileText } from "lucide-react";
+import { Loader2, CheckCircle2, FileText, ShieldCheck, PenLine, Lock } from "lucide-react";
 
 const FN_URL = `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1/sign-contract`;
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWd1eGZkb2lranRoc3JibXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTI4MDYsImV4cCI6MjA5MjM2ODgwNn0.YDuw7oQqllDnunSA0Fv4eENslzol1Lni7n6kfSRa9T0";
@@ -29,24 +29,19 @@ function SignaturePad({
     const c = ref.current!;
     const ctx = c.getContext("2d")!;
     ctx.strokeStyle = "#0f172a";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.2;
     ctx.lineCap = "round";
     const pos = (e: PointerEvent) => {
       const r = c.getBoundingClientRect();
       return { x: e.clientX - r.left, y: e.clientY - r.top };
     };
     const down = (e: PointerEvent) => {
-      drawing.current = true;
-      has.current = true;
-      const p = pos(e);
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
+      drawing.current = true; has.current = true;
+      const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
     };
     const move = (e: PointerEvent) => {
       if (!drawing.current) return;
-      const p = pos(e);
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
+      const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
     };
     const up = () => {
       drawing.current = false;
@@ -71,14 +66,20 @@ function SignaturePad({
 
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      <canvas
-        ref={ref}
-        width={520}
-        height={140}
-        className="w-full max-w-lg h-36 border-2 border-dashed rounded-md bg-background touch-none"
-      />
-      <button type="button" onClick={clear} className="text-xs text-muted-foreground underline">
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="relative rounded-lg border border-border bg-white shadow-inner">
+        <canvas
+          ref={ref}
+          width={720}
+          height={160}
+          className="w-full h-40 touch-none rounded-lg"
+        />
+        <div className="pointer-events-none absolute inset-x-6 bottom-6 border-b border-dashed border-muted-foreground/40" />
+        <span className="pointer-events-none absolute left-6 bottom-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+          Sign above the line
+        </span>
+      </div>
+      <button type="button" onClick={clear} className="text-xs text-muted-foreground underline hover:text-foreground">
         Clear signature
       </button>
     </div>
@@ -91,12 +92,15 @@ type SellerFields = {
   city_state_zip: string;
   phone: string;
   email: string;
-  co_owner_name: string;
   plot_description: string;
   listing_option: string;
 };
 
-const listingOptions = ["Starter", "Pro", "Featured"] as const;
+const listingOptions = [
+  { id: "Starter", tagline: "Basic exposure — priced for a fast, quiet listing." },
+  { id: "Pro", tagline: "Wider marketing, faster time-to-buyer." },
+  { id: "Featured", tagline: "Full marketing package with priority placement." },
+] as const;
 
 export default function SignContract() {
   const { token } = useParams();
@@ -108,13 +112,12 @@ export default function SignContract() {
 
   const [fields, setFields] = useState<SellerFields>({
     seller_name: "", address: "", city_state_zip: "",
-    phone: "", email: "", co_owner_name: "", plot_description: "", listing_option: "Starter",
+    phone: "", email: "", plot_description: "", listing_option: "Starter",
   });
   const [refreshing, setRefreshing] = useState(false);
 
   const [initials, setInitials] = useState("");
   const [sig, setSig] = useState<string | null>(null);
-  const [coSig, setCoSig] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -135,7 +138,6 @@ export default function SignContract() {
           city_state_zip: fd.city_state_zip ?? "",
           phone: fd.phone ?? "",
           email: fd.email ?? "",
-          co_owner_name: fd.co_owner_name ?? "",
           plot_description: fd.plot_description ?? "",
           listing_option: fd.listing_option ?? "Starter",
         });
@@ -170,8 +172,6 @@ export default function SignContract() {
     }
   };
 
-  // Debounced live-refresh: as the seller edits any field, re-stamp the PDF
-  // preview ~800ms after they stop typing so they see it fill in real-time.
   const firstLoadRef = useRef(true);
   useEffect(() => {
     if (loading || done) return;
@@ -179,8 +179,7 @@ export default function SignContract() {
     const t = setTimeout(() => { void refreshContract(true); }, 800);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.co_owner_name, fields.plot_description, fields.listing_option, loading, done]);
-
+  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, loading, done]);
 
   const submit = async () => {
     if (!fields.seller_name.trim()) return toast.error("Enter your full legal name");
@@ -192,7 +191,6 @@ export default function SignContract() {
 
     setBusy(true);
     try {
-      // Ensure contract PDF is up-to-date with the latest field values before signing
       await fetch(FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
@@ -208,8 +206,6 @@ export default function SignContract() {
           signature_image: sig,
           initials: initials.trim().toUpperCase(),
           consent: true,
-          co_owner_name: fields.co_owner_name || undefined,
-          co_owner_image: coSig || undefined,
         }),
       });
       const data = await res.json();
@@ -225,7 +221,7 @@ export default function SignContract() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f1ea]">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -233,9 +229,9 @@ export default function SignContract() {
 
   if (error || !info) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="p-8 max-w-md text-center">
-          <h1 className="text-xl font-semibold mb-2">Link not valid</h1>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-[#f5f1ea]">
+        <Card className="p-10 max-w-md text-center">
+          <h1 className="text-xl font-serif mb-2">Link not valid</h1>
           <p className="text-muted-foreground">
             {error ?? "This signing link is invalid or has expired. Please contact Texas Cemetery Brokers."}
           </p>
@@ -249,30 +245,38 @@ export default function SignContract() {
     : "Exclusive Right-to-Sell Agreement";
 
   return (
-    <div className="min-h-screen bg-muted/30 py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <header className="text-center">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Texas Cemetery Brokers</p>
-          <h1 className="text-2xl md:text-3xl font-serif mt-2">{title}</h1>
-        </header>
+    <div className="min-h-screen bg-[#f5f1ea]">
+      {/* Masthead */}
+      <div className="bg-[#1f2a37] text-white">
+        <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col items-center text-center">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-[#d9c7a3]">Texas Cemetery Brokers</p>
+          <h1 className="mt-3 text-3xl md:text-4xl font-serif">{title}</h1>
+          <p className="mt-3 text-sm text-white/70 max-w-xl">
+            A private, secure signing session for {info.kind === "poa" ? "your notary-ready Power of Attorney" : "your listing agreement"}.
+            Fill in the details on the left, review the live contract, then sign at the bottom.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-[11px] text-white/70">
+            <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> Encrypted signing session</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> E-Sign Act &amp; Texas UETA compliant</span>
+            <span className="inline-flex items-center gap-1.5"><PenLine className="h-3.5 w-3.5" /> Tamper-evident audit trail</span>
+          </div>
+        </div>
+      </div>
 
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-10 space-y-8">
         {!done && (
-          <Card className="p-6 space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold">Step 1 · Confirm your details</h2>
-              <p className="text-sm text-muted-foreground">
-                Review and complete the fields below. When you click <em>Update contract</em>, the preview
-                below will refresh with your information filled in.
-              </p>
+          <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm">
+            <div className="flex items-baseline gap-3 mb-6">
+              <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Step 1</span>
+              <h2 className="text-xl font-serif">Confirm your details</h2>
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
+            <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
+              These details will fill directly into the contract as you type. Take a moment to make sure everything is exactly as you want it on the record.
+            </p>
+            <div className="grid md:grid-cols-2 gap-5">
+              <div className="md:col-span-2">
                 <Label>Full legal name</Label>
                 <Input value={fields.seller_name} onChange={setField("seller_name")} />
-              </div>
-              <div>
-                <Label>Co-owner name (if joint)</Label>
-                <Input value={fields.co_owner_name} onChange={setField("co_owner_name")} />
               </div>
               <div className="md:col-span-2">
                 <Label>Mailing address</Label>
@@ -295,21 +299,28 @@ export default function SignContract() {
                 <Input value={fields.plot_description} onChange={setField("plot_description")} />
               </div>
               {info.kind === "listing_agreement" && (
-                <div className="md:col-span-2 space-y-2">
-                  <Label>Listing option</Label>
-                  <div className="grid sm:grid-cols-3 gap-2" role="radiogroup" aria-label="Listing option">
-                    {listingOptions.map((option) => {
-                      const selected = fields.listing_option === option;
+                <div className="md:col-span-2 space-y-3 pt-2">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Choose your listing option</Label>
+                  <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-label="Listing option">
+                    {listingOptions.map(({ id, tagline }) => {
+                      const selected = fields.listing_option === id;
                       return (
                         <button
-                          key={option}
+                          key={id}
                           type="button"
                           role="radio"
                           aria-checked={selected}
-                          onClick={() => setFields((f) => ({ ...f, listing_option: option }))}
-                          className={`rounded-md border px-4 py-3 text-left transition-colors ${selected ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-muted/60"}`}
+                          onClick={() => setFields((f) => ({ ...f, listing_option: id }))}
+                          className={`rounded-xl border p-4 text-left transition-all ${
+                            selected
+                              ? "border-[#1f2a37] bg-[#1f2a37] text-white shadow-md"
+                              : "border-border bg-background hover:border-[#1f2a37]/40 hover:bg-muted/40"
+                          }`}
                         >
-                          <span className="block text-sm font-semibold">{option}</span>
+                          <span className="block text-sm font-serif text-base">{id}</span>
+                          <span className={`block text-[11px] mt-1 leading-snug ${selected ? "text-white/70" : "text-muted-foreground"}`}>
+                            {tagline}
+                          </span>
                         </button>
                       );
                     })}
@@ -317,8 +328,13 @@ export default function SignContract() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              <Button onClick={() => refreshContract(false)} disabled={refreshing} variant="secondary">
+            <div className="mt-6 flex items-center gap-3">
+              <Button
+                onClick={() => refreshContract(false)}
+                disabled={refreshing}
+                variant="outline"
+                className="border-[#1f2a37]/30"
+              >
                 {refreshing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Refresh preview now
               </Button>
@@ -327,69 +343,74 @@ export default function SignContract() {
           </Card>
         )}
 
-        <Card className="overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/40 text-sm">
-            <FileText className="h-4 w-4" /> Step 2 · Review the full contract
+        <Card className="overflow-hidden bg-white border-border/70 shadow-sm">
+          <div className="flex items-center justify-between px-6 py-3 border-b bg-[#f5f1ea]/60">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Step 2</span>
+              <h2 className="text-sm font-serif flex items-center gap-2">
+                <FileText className="h-4 w-4" /> Review the full contract
+              </h2>
+            </div>
+            <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline hover:text-foreground">
+              Open in new tab
+            </a>
           </div>
           <iframe
             key={pdfUrl}
             title="Contract"
             src={pdfUrl}
-            className="w-full h-[70vh] bg-background"
+            className="w-full h-[75vh] bg-background"
           />
-          <div className="px-4 py-2 border-t text-xs text-muted-foreground">
-            <a href={pdfUrl} target="_blank" rel="noreferrer" className="underline">
-              Open contract in a new tab
-            </a>
-          </div>
         </Card>
 
         {done ? (
-          <Card className="p-8 text-center border-emerald-300 bg-emerald-50">
-            <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto mb-2" />
-            <h2 className="text-xl font-semibold text-emerald-900">Thank you — your signature is recorded.</h2>
-            <p className="text-sm text-emerald-800 mt-2">
+          <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
+            <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
+            <h2 className="text-2xl font-serif text-emerald-900">Thank you — your signature is recorded.</h2>
+            <p className="text-sm text-emerald-800 mt-3 max-w-md mx-auto">
               A copy has been emailed to you. Texas Cemetery Brokers will countersign and send you the fully executed document shortly.
             </p>
             {info.kind === "poa" && (
-              <p className="text-sm text-emerald-900 mt-4">
+              <p className="text-sm text-emerald-900 mt-4 max-w-md mx-auto">
                 Reminder: this Power of Attorney becomes fully effective once it is notarized. Your broker will send a separate email with the notary link.
               </p>
             )}
           </Card>
         ) : (
-          <Card className="p-6 space-y-6">
-            <h2 className="text-lg font-semibold">Step 3 · Sign this document</h2>
-            <p className="text-sm text-muted-foreground">
-              By typing your name and drawing your signature you agree that your electronic signature is legally binding,
-              equivalent to a handwritten signature under the U.S. E-Sign Act and Texas UETA.
+          <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-6">
+            <div className="flex items-baseline gap-3">
+              <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Step 3</span>
+              <h2 className="text-xl font-serif">Sign this document</h2>
+            </div>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              By typing your name and drawing your signature you agree that your electronic signature is legally binding —
+              equivalent to a handwritten signature under the U.S. E-Sign Act and Texas UETA. Your initials will be applied
+              to every required section of the contract.
             </p>
 
-            <div>
-              <Label>Your initials (for required sections)</Label>
-              <Input
-                value={initials}
-                onChange={(e) => setInitials(e.target.value.toUpperCase().slice(0, 4))}
-                placeholder="e.g. AJ"
-                className="max-w-[160px]"
-              />
+            <div className="grid md:grid-cols-[200px_1fr] gap-6 items-start">
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Your initials</Label>
+                <Input
+                  value={initials}
+                  onChange={(e) => setInitials(e.target.value.toUpperCase().slice(0, 4))}
+                  placeholder="e.g. AJ"
+                  className="text-center font-serif text-xl tracking-widest h-14"
+                />
+                <p className="text-[11px] text-muted-foreground mt-2">Stamped onto every page of the contract.</p>
+              </div>
+              <SignaturePad label="Your signature" onChange={setSig} />
             </div>
 
-            <SignaturePad label="Draw your signature" onChange={setSig} />
-
-            {fields.co_owner_name.trim() && (
-              <SignaturePad label={`Co-owner signature (${fields.co_owner_name})`} onChange={setCoSig} />
-            )}
-
-            <div className="rounded-md border bg-muted/40 p-4 text-sm space-y-3">
+            <div className="rounded-lg border border-border bg-[#f5f1ea]/50 p-5 text-sm">
               <label className="flex gap-3 items-start cursor-pointer">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-1 h-4 w-4"
+                  className="mt-1 h-4 w-4 accent-[#1f2a37]"
                 />
-                <span>
+                <span className="leading-relaxed">
                   I have reviewed the entire document above. I agree my electronic signature and initials are the legal
                   equivalent of a handwritten signature under the U.S. E-Sign Act (15 U.S.C. §§ 7001+) and the Texas
                   Uniform Electronic Transactions Act. I consent to receive records of this transaction electronically.
@@ -397,14 +418,27 @@ export default function SignContract() {
               </label>
             </div>
 
-            <Button onClick={submit} disabled={busy} size="lg" className="w-full md:w-auto">
-              {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Sign &amp; submit
-            </Button>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
+              <p className="text-[11px] text-muted-foreground max-w-sm">
+                A fully signed PDF will be emailed to you the moment you click <em>Sign &amp; submit</em>.
+              </p>
+              <Button
+                onClick={submit}
+                disabled={busy}
+                size="lg"
+                className="bg-[#1f2a37] hover:bg-[#111827] text-white px-8 h-12"
+              >
+                {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Sign &amp; submit
+              </Button>
+            </div>
           </Card>
         )}
+
+        <footer className="text-center text-[11px] text-muted-foreground py-6">
+          Texas Cemetery Brokers · www.texascemeterybrokers.com · Secure signing powered by our in-house e-signature platform.
+        </footer>
       </div>
     </div>
   );
 }
-
