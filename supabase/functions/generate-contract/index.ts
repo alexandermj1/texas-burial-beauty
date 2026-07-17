@@ -92,16 +92,16 @@ function buildLaOverlays(page1: PDFPage, page2: PDFPage, page8: PDFPage, font: P
 
   // === Page 2 – Option checkbox + Authorized minimum ===
   const opt = (data.listing_option ?? '').toLowerCase();
-  if (opt.includes('starter') || opt === 'option 1') checkMark(page2, 108, 712, bold);
-  else if (opt.includes('pro')) checkMark(page2, 108, 637, bold);
-  else if (opt.includes('featured')) checkMark(page2, 108, 562, bold);
+  if (opt.includes('starter') || opt === 'option 1') checkMark(page2, 82, 717, bold);
+  else if (opt.includes('pro')) checkMark(page2, 82, 642, bold);
+  else if (opt.includes('featured')) checkMark(page2, 82, 567, bold);
 
   // Authorized Minimum Price line
   if (data.authorized_min_per_plot != null) {
-    stamp(page2, money(data.authorized_min_per_plot).replace('$', ''), 288, 379, font, 11);
+    stamp(page2, money(data.authorized_min_per_plot).replace('$', ''), 225, 379, font, 11);
   }
   if (data.authorized_min_total != null) {
-    stamp(page2, money(data.authorized_min_total).replace('$', ''), 555, 379, font, 11);
+    stamp(page2, money(data.authorized_min_total).replace('$', ''), 400, 379, font, 11);
   }
 
   // === Page 8 – Broker signature is preprinted; Seller side left for sign-contract ===
