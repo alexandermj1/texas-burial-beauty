@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
-  Stamp, ScrollText, Shield,
+  Stamp, ScrollText, Shield, Mail,
 } from "lucide-react";
 
 type Contract = {
