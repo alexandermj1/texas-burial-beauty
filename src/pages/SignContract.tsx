@@ -147,8 +147,8 @@ export default function SignContract() {
   const setField = (k: keyof SellerFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFields((f) => ({ ...f, [k]: e.target.value }));
 
-  const refreshContract = async () => {
-    setRefreshing(true);
+  const refreshContract = async (silent = false) => {
+    if (!silent) setRefreshing(true);
     try {
       const res = await fetch(FN_URL, {
         method: "POST",
@@ -157,15 +157,26 @@ export default function SignContract() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not update contract");
-      // Bust iframe cache with new URL from server (new signed URL each time)
       setPdfUrl(data.pdf_url);
-      toast.success("Contract updated with your details");
+      if (!silent) toast.success("Contract updated with your details");
     } catch (e) {
-      toast.error((e as Error).message);
+      if (!silent) toast.error((e as Error).message);
     } finally {
-      setRefreshing(false);
+      if (!silent) setRefreshing(false);
     }
   };
+
+  // Debounced live-refresh: as the seller edits any field, re-stamp the PDF
+  // preview ~800ms after they stop typing so they see it fill in real-time.
+  const firstLoadRef = useRef(true);
+  useEffect(() => {
+    if (loading || done) return;
+    if (firstLoadRef.current) { firstLoadRef.current = false; return; }
+    const t = setTimeout(() => { void refreshContract(true); }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.co_owner_name, fields.plot_description, loading, done]);
+
 
   const submit = async () => {
     if (!fields.seller_name.trim()) return toast.error("Enter your full legal name");
@@ -280,10 +291,13 @@ export default function SignContract() {
                 <Input value={fields.plot_description} onChange={setField("plot_description")} />
               </div>
             </div>
-            <Button onClick={refreshContract} disabled={refreshing} variant="secondary">
-              {refreshing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Update contract preview
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button onClick={() => refreshContract(false)} disabled={refreshing} variant="secondary">
+                {refreshing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Refresh preview now
+              </Button>
+              <p className="text-xs text-muted-foreground">The preview below fills in automatically as you type.</p>
+            </div>
           </Card>
         )}
 
