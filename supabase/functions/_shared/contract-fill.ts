@@ -115,14 +115,12 @@ function buildLaOverlays(page1: PDFPage, page2: PDFPage, font: PDFFont, bold: PD
 
   if (data.authorized_min_per_plot != null) {
     const s = Number(data.authorized_min_per_plot).toLocaleString('en-US');
-    // Right-align within the small rect so the "$" prefix reads correctly.
-    const w = font.widthOfTextAtSize(s, FIELD_SIZE);
-    stamp(page2, s, LA_P2.authPerPlot.x + LA_P2.authPerPlot.width - w - 4, LA_P2.authPerPlot.y - 0.8, font);
+    // Left-aligned just inside the underline so the value sits on the rule like the other fields.
+    stamp(page2, s, LA_P2.authPerPlot.x + 2, LA_P2.authPerPlot.y, font);
   }
   if (data.authorized_min_total != null) {
     const s = Number(data.authorized_min_total).toLocaleString('en-US');
-    const w = font.widthOfTextAtSize(s, FIELD_SIZE);
-    stamp(page2, s, LA_P2.authTotal.x + LA_P2.authTotal.width - w - 4, LA_P2.authTotal.y - 0.8, font);
+    stamp(page2, s, LA_P2.authTotal.x + 2, LA_P2.authTotal.y, font);
   }
 }
 
