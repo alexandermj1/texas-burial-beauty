@@ -417,7 +417,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       )}
 
       <Dialog open={!!countersignFor} onOpenChange={(o) => !o && setCountersignFor(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Countersign Listing Agreement</DialogTitle>
           </DialogHeader>
