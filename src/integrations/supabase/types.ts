@@ -726,6 +726,7 @@ export type Database = {
           signature_initials: string | null
           signature_name: string | null
           signed_at: string | null
+          signed_copy_emailed_at: string | null
           signed_hash: string | null
           signed_pdf_path: string | null
           signer_ip: string | null
@@ -758,6 +759,7 @@ export type Database = {
           signature_initials?: string | null
           signature_name?: string | null
           signed_at?: string | null
+          signed_copy_emailed_at?: string | null
           signed_hash?: string | null
           signed_pdf_path?: string | null
           signer_ip?: string | null
@@ -790,6 +792,7 @@ export type Database = {
           signature_initials?: string | null
           signature_name?: string | null
           signed_at?: string | null
+          signed_copy_emailed_at?: string | null
           signed_hash?: string | null
           signed_pdf_path?: string | null
           signer_ip?: string | null

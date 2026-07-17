@@ -247,6 +247,50 @@ Deno.serve(async (req) => {
       }).eq('id', c.submission_id);
     }
 
+    // === Email a signed copy to the seller (and BCC the office) ===
+    try {
+      const { data: sub } = await svc.from('contact_submissions')
+        .select('email, name, cemetery').eq('id', c.submission_id).maybeSingle();
+      const to = sub?.email;
+      const RESEND_KEY = Deno.env.get('RESEND_API_KEY');
+      if (to && RESEND_KEY) {
+        const b64 = btoa(String.fromCharCode(...out));
+        const docLabel = c.kind === 'poa' ? 'Power of Attorney' : 'Exclusive Right-to-Sell Agreement';
+        const filename = `${(sub?.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-${c.kind}-signed.pdf`;
+        const html = `
+          <div style="font-family:Georgia,serif;color:#222;max-width:560px">
+            <p>Hi ${sub?.name ?? ''},</p>
+            <p>Thank you for signing your <strong>${docLabel}</strong>${sub?.cemetery ? ` for ${sub.cemetery}` : ''}. A fully executed copy is attached to this email for your records.</p>
+            ${c.kind === 'poa' ? '<p>Reminder: the Power of Attorney becomes fully effective once it is notarized. We will send a separate email with the notary session link.</p>' : ''}
+            <p>If anything looks off, please reply to this email and we will help right away.</p>
+            <p style="margin-top:24px">— Texas Cemetery Brokers</p>
+          </div>`;
+        const emailRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+          body: JSON.stringify({
+            from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
+            to: [to],
+            bcc: ['contracts@texascemeterybrokers.com'],
+            subject: `Your signed ${docLabel} — copy for your records`,
+            html,
+            attachments: [{ filename, content: b64 }],
+          }),
+        });
+        if (emailRes.ok) {
+          await svc.from('contracts')
+            .update({ signed_copy_emailed_at: new Date().toISOString() })
+            .eq('id', c.id);
+        } else {
+          console.error('resend send failed', emailRes.status, await emailRes.text());
+        }
+      }
+    } catch (mailErr) {
+      console.error('email copy failed', mailErr);
+    }
+
+
+
     return new Response(JSON.stringify({ ok: true, completed }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
