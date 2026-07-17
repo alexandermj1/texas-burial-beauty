@@ -78,12 +78,12 @@ const LA_P1 = {
 } as const;
 
 // Page 2 (LA): option checkbox origins + authorized-min rects.
-// Option row baselines (text bottoms): Starter y≈714, Pro y≈639, Featured y≈564.
-// Boxes are 15x15 squares immediately left of the option label.
+// Checkbox vector rects measured from template: x0≈67.1, w≈14.3, h≈14.3.
+// Bottoms (pdf-lib): Starter 710.6, Pro 635.6, Featured 560.6.
 const LA_P2 = {
-  optStarter: { x: 102, y: 712 },
-  optPro: { x: 102, y: 637 },
-  optFeatured: { x: 102, y: 562 },
+  optStarter: { x: 67.1, y: 710.6 },
+  optPro: { x: 67.1, y: 635.6 },
+  optFeatured: { x: 67.1, y: 560.6 },
   authPerPlot: { x: 215, y: 381.8, width: 76 },     // rect [209.2..291.7]
   authTotal: { x: 407, y: 381.8, width: 77 },       // rect [402.0..484.5]
 } as const;
