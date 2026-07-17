@@ -59,6 +59,13 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     const { data } = await supabase
       .from("contracts").select("*").eq("submission_id", submissionId);
     setContracts((data ?? []) as Contract[]);
+    const map: Record<string, string> = {};
+    for (const c of data ?? []) {
+      const path = (c as Contract).countersigned_pdf_path
+        ?? (c as Contract).signed_pdf_path
+        ?? (c as Contract).notarized_pdf_path
+        ?? (c as Contract).filled_pdf_path;
+
     // Refresh signed URLs
     const map: Record<string, string> = {};
     for (const c of data ?? []) {
