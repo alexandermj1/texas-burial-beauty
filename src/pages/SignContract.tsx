@@ -97,6 +97,7 @@ export default function SignContract() {
   const [sig, setSig] = useState<string | null>(null);
   const [coName, setCoName] = useState("");
   const [coSig, setCoSig] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -118,11 +119,17 @@ export default function SignContract() {
     })();
   }, [token]);
 
+  const nameMatches = () => {
+    const expected = ((info?.fill_data?.seller_name as string) ?? "").trim().toLowerCase();
+    return expected.length === 0 || expected === name.trim().toLowerCase();
+  };
+
   const submit = async () => {
-    if (!name || !sig) {
-      toast.error("Type your name and draw your signature");
-      return;
-    }
+    if (!name.trim()) return toast.error("Type your full legal name");
+    if (!nameMatches()) return toast.error("The name you typed does not match the seller name on the contract");
+    if (!initials.trim() || initials.trim().length < 2) return toast.error("Enter your initials (2+ letters)");
+    if (!sig) return toast.error("Draw your signature");
+    if (!consent) return toast.error("Please confirm your consent to sign electronically");
     setBusy(true);
     try {
       const res = await fetch(FN_URL, {
@@ -130,9 +137,10 @@ export default function SignContract() {
         headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
         body: JSON.stringify({
           token,
-          signature_name: name,
+          signature_name: name.trim(),
           signature_image: sig,
-          initials,
+          initials: initials.trim().toUpperCase(),
+          consent: true,
           co_owner_name: coName || undefined,
           co_owner_image: coSig || undefined,
         }),
