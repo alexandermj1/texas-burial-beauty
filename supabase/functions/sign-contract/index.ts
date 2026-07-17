@@ -243,8 +243,9 @@ Deno.serve(async (req) => {
     // ================= SELLER SIGN (default POST) =================
     const {
       token, signature_name, signature_image, initials, consent,
-      co_owner_name, co_owner_image,
     } = body;
+    const co_owner_name: string | undefined = undefined;
+    const co_owner_image: string | undefined = undefined;
     if (!token || !signature_name || !signature_image || !initials || consent !== true) {
       return new Response(JSON.stringify({ error: 'missing_fields' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
