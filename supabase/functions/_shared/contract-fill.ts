@@ -46,11 +46,12 @@ function stamp(page: PDFPage, text: string, x: number, lineY: number, font: PDFF
   page.drawText(String(text), { x, y: lineY + FIELD_BASELINE_OFFSET, size, font, color });
 }
 
-/** Draw an X-mark inside a checkbox at the measured box origin (bottom-left x, y with 15x15 box). */
+/** Draw an X-mark inside the template's ~14x14 checkbox at bottom-left (x, y). */
 function checkBox(page: PDFPage, x: number, y: number, bold: PDFFont) {
-  // Draw a solid accent square then a white ✓ so it stands out on the tan bg.
-  page.drawRectangle({ x, y, width: 15, height: 15, color: SAGE, borderColor: SAGE, borderWidth: 0.5 });
-  page.drawText('X', { x: x + 3.2, y: y + 3, size: 12, font: bold, color: rgb(1, 1, 1) });
+  // Solid sage fill inside the box, white X centered over it. Sized to sit
+  // just inside the template stroke so the box outline stays visible.
+  page.drawRectangle({ x: x + 0.6, y: y + 0.6, width: 13.1, height: 13.1, color: SAGE });
+  page.drawText('X', { x: x + 2.6, y: y + 2.4, size: 12, font: bold, color: rgb(1, 1, 1) });
 }
 
 /** Wrap by width using font metrics, so long descriptions never overflow. */
