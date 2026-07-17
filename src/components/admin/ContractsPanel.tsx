@@ -21,6 +21,7 @@ type Contract = {
   viewed_at: string | null;
   signed_at: string | null;
   notarized_at: string | null;
+  signed_copy_emailed_at: string | null;
   bluenotary_session_url: string | null;
   bluenotary_sent_at: string | null;
 };
