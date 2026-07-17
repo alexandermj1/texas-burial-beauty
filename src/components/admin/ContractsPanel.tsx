@@ -131,6 +131,34 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     }
   };
 
+  const submitCountersign = async () => {
+    if (!countersignFor) return;
+    if (!csName.trim()) return toast.error("Type your name");
+    if (!csSig) return toast.error("Draw your signature");
+    setBusy(countersignFor.id);
+    try {
+      const { error } = await supabase.functions.invoke("sign-contract", {
+        body: {
+          action: "countersign",
+          contract_id: countersignFor.id,
+          countersigner_name: csName.trim(),
+          countersigner_signature: csSig,
+        },
+      });
+      if (error) throw error;
+      toast.success("Countersigned — fully executed copy emailed to seller");
+      setCountersignFor(null);
+      setCsName(""); setCsSig(null);
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+
+
 
   const sendToBlueNotary = async (c: Contract) => {
     // BlueNotary "Send to Signer" flow: opens a prefilled URL in a new tab.
