@@ -710,6 +710,7 @@ export type Database = {
           co_owner_signature_image: string | null
           co_owner_signature_name: string | null
           completed_at: string | null
+          consent_accepted_at: string | null
           created_at: string
           created_by: string | null
           fill_data: Json
@@ -725,11 +726,13 @@ export type Database = {
           signature_initials: string | null
           signature_name: string | null
           signed_at: string | null
+          signed_hash: string | null
           signed_pdf_path: string | null
           signer_ip: string | null
           signer_user_agent: string | null
           status: Database["public"]["Enums"]["contract_status"]
           submission_id: string
+          template_hash: string | null
           updated_at: string
           viewed_at: string | null
         }
@@ -739,6 +742,7 @@ export type Database = {
           co_owner_signature_image?: string | null
           co_owner_signature_name?: string | null
           completed_at?: string | null
+          consent_accepted_at?: string | null
           created_at?: string
           created_by?: string | null
           fill_data?: Json
@@ -754,11 +758,13 @@ export type Database = {
           signature_initials?: string | null
           signature_name?: string | null
           signed_at?: string | null
+          signed_hash?: string | null
           signed_pdf_path?: string | null
           signer_ip?: string | null
           signer_user_agent?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           submission_id: string
+          template_hash?: string | null
           updated_at?: string
           viewed_at?: string | null
         }
@@ -768,6 +774,7 @@ export type Database = {
           co_owner_signature_image?: string | null
           co_owner_signature_name?: string | null
           completed_at?: string | null
+          consent_accepted_at?: string | null
           created_at?: string
           created_by?: string | null
           fill_data?: Json
@@ -783,11 +790,13 @@ export type Database = {
           signature_initials?: string | null
           signature_name?: string | null
           signed_at?: string | null
+          signed_hash?: string | null
           signed_pdf_path?: string | null
           signer_ip?: string | null
           signer_user_agent?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           submission_id?: string
+          template_hash?: string | null
           updated_at?: string
           viewed_at?: string | null
         }

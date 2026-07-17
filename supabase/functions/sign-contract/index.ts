@@ -1,9 +1,11 @@
 // Public endpoint: lets a seller view a contract by token and submit their signature.
 // GET  ?token=... returns metadata (submission info + signed PDF URL to display)
-// POST { token, signature_name, signature_image, initials, co_owner_name?, co_owner_image? }
-//   -> stamps signature onto PDF, saves signed copy, marks contract signed.
+// POST { token, signature_name, signature_image, initials, consent, co_owner_name?, co_owner_image? }
+//   -> stamps signature onto the template's signature block, stamps initials at
+//      every page footer, appends a UETA / E-SIGN Act certification page, and
+//      saves the tamper-evident signed copy.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
-import { PDFDocument, StandardFonts, rgb } from 'npm:pdf-lib@1.17.1';
+import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,10 +18,40 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const svc = createClient(SUPABASE_URL, SERVICE_KEY);
 
+const INK = rgb(0.05, 0.15, 0.28);
+const MUTED = rgb(0.35, 0.35, 0.35);
+
 async function loadContract(token: string) {
-  const { data } = await svc
-    .from('contracts').select('*').eq('sign_token', token).maybeSingle();
+  const { data } = await svc.from('contracts').select('*').eq('sign_token', token).maybeSingle();
   return data;
+}
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function decodeSignature(pdf: PDFDocument, dataUrl: string): Promise<PDFImage | null> {
+  const m = /^data:image\/(png|jpeg);base64,(.+)$/.exec(dataUrl);
+  if (!m) return null;
+  const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+  return m[1] === 'png' ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+}
+
+function stampText(page: PDFPage, text: string, x: number, y: number, font: PDFFont, size = 11, color = INK) {
+  if (!text) return;
+  page.drawText(String(text), { x, y, size, font, color });
+}
+
+/** Stamp initials in the "SELLER'S INITIALS: ____" block at the bottom-right of each page. */
+function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) {
+  for (const p of pages) {
+    stampText(p, initials, 712, 22, font, 10);
+  }
+}
+
+function todayFormatted(): string {
+  return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 Deno.serve(async (req) => {
@@ -40,9 +72,11 @@ Deno.serve(async (req) => {
           status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      // Mark viewed
       if (!c.viewed_at) {
-        await svc.from('contracts').update({ viewed_at: new Date().toISOString(), status: c.status === 'sent' ? 'viewed' : c.status }).eq('id', c.id);
+        await svc.from('contracts').update({
+          viewed_at: new Date().toISOString(),
+          status: c.status === 'sent' ? 'viewed' : c.status,
+        }).eq('id', c.id);
       }
       const path = c.signed_pdf_path ?? c.filled_pdf_path;
       const { data: signed } = await svc.storage.from('contracts').createSignedUrl(path, 60 * 60);
@@ -60,8 +94,11 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { token, signature_name, signature_image, initials, co_owner_name, co_owner_image } = body;
-    if (!token || !signature_name || !signature_image) {
+    const {
+      token, signature_name, signature_image, initials, consent,
+      co_owner_name, co_owner_image,
+    } = body;
+    if (!token || !signature_name || !signature_image || !initials || consent !== true) {
       return new Response(JSON.stringify({ error: 'missing_fields' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -73,82 +110,131 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'already_signed' }), { status: 409, headers: corsHeaders });
     }
 
-    // Load existing filled PDF
     const { data: file } = await svc.storage.from('contracts').download(c.filled_pdf_path);
     if (!file) throw new Error('filled pdf missing');
-    const pdf = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()));
+    const preSignBytes = new Uint8Array(await file.arrayBuffer());
+    const preSignHash = await sha256Hex(preSignBytes);
+
+    const pdf = await PDFDocument.load(preSignBytes);
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const pages = pdf.getPages();
 
-    const page = pdf.addPage([612, 792]);
-    let y = 740;
-    page.drawText('SIGNATURE CERTIFICATION', { x: 50, y, size: 16, font: bold, color: rgb(0.15, 0.28, 0.22) });
-    y -= 30;
-    page.drawText(`Signed by: ${signature_name}`, { x: 50, y, size: 12, font: bold });
-    y -= 18;
-    page.drawText(`Date: ${new Date().toUTCString()}`, { x: 50, y, size: 10, font });
-    y -= 14;
+    const sigImg = await decodeSignature(pdf, signature_image);
+    const coSigImg = co_owner_image ? await decodeSignature(pdf, co_owner_image) : null;
+
+    // === Stamp signature block on the correct template page ===
+    if (c.kind === 'listing_agreement' && pages.length >= 8) {
+      const p8 = pages[7];
+      stampText(p8, signature_name, 225, 279, font, 11);
+      if (sigImg) {
+        const dims = sigImg.scaleToFit(200, 28);
+        p8.drawImage(sigImg, { x: 225, y: 240, width: dims.width, height: dims.height });
+      }
+      stampText(p8, todayFormatted(), 225, 220, font, 11);
+    } else if (c.kind === 'poa' && pages.length >= 3) {
+      const p3 = pages[2];
+      stampText(p3, signature_name, 225, 316, font, 11);
+      if (sigImg) {
+        const dims = sigImg.scaleToFit(200, 28);
+        p3.drawImage(sigImg, { x: 225, y: 280, width: dims.width, height: dims.height });
+      }
+      stampText(p3, todayFormatted(), 225, 251, font, 11);
+      if (co_owner_name) stampText(p3, co_owner_name, 225, 228, font, 11);
+      if (coSigImg) {
+        const d2 = coSigImg.scaleToFit(200, 28);
+        p3.drawImage(coSigImg, { x: 225, y: 192, width: d2.width, height: d2.height });
+      }
+      if (co_owner_name) stampText(p3, todayFormatted(), 225, 163, font, 11);
+    }
+
+    // Initials on the bottom-right of every content page (skip the appended certification page)
+    stampFooterInitials(pages, initials.slice(0, 6).toUpperCase(), bold);
+
+    // === Certification / audit page (E-SIGN + UETA compliance) ===
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
     const ua = req.headers.get('user-agent') ?? '';
-    page.drawText(`IP: ${ip}`, { x: 50, y, size: 9, font, color: rgb(0.3,0.3,0.3) });
+    const nowIso = new Date().toISOString();
+    const certPage = pdf.addPage([612, 792]);
+    let y = 750;
+    certPage.drawText('CERTIFICATE OF ELECTRONIC SIGNATURE', { x: 50, y, size: 15, font: bold, color: INK });
+    y -= 22;
+    certPage.drawText('Executed under the U.S. E-SIGN Act (15 U.S.C. §§ 7001 et seq.) and the Texas',
+      { x: 50, y, size: 10, font, color: MUTED });
     y -= 12;
-    page.drawText(`User agent: ${ua.slice(0, 110)}`, { x: 50, y, size: 9, font, color: rgb(0.3,0.3,0.3) });
-    y -= 30;
+    certPage.drawText('Uniform Electronic Transactions Act (Tex. Bus. & Com. Code Ann. Ch. 322).',
+      { x: 50, y, size: 10, font, color: MUTED });
+    y -= 24;
 
-    // Embed signature image (data URL)
-    async function embedSig(dataUrl: string, label: string, name: string, yStart: number): Promise<number> {
-      let yy = yStart;
-      page.drawText(label, { x: 50, y: yy, size: 10, font: bold });
-      yy -= 14;
-      const m = /^data:image\/(png|jpeg);base64,(.+)$/.exec(dataUrl);
-      if (m) {
-        const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
-        const img = m[1] === 'png' ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
-        const dims = img.scaleToFit(300, 80);
-        page.drawImage(img, { x: 50, y: yy - dims.height, width: dims.width, height: dims.height });
-        yy -= dims.height + 6;
-      }
-      page.drawLine({ start: { x: 50, y: yy }, end: { x: 380, y: yy }, thickness: 0.5, color: rgb(0.4,0.4,0.4) });
-      yy -= 12;
-      page.drawText(name, { x: 50, y: yy, size: 10, font });
-      yy -= 24;
-      return yy;
-    }
+    const row = (label: string, value: string) => {
+      certPage.drawText(label, { x: 50, y, size: 9, font: bold, color: MUTED });
+      const lines = String(value).match(/.{1,72}/g) ?? [value];
+      lines.forEach((ln, i) => certPage.drawText(ln, { x: 210, y: y - i * 12, size: 10, font, color: INK }));
+      y -= 14 + Math.max(0, (lines.length - 1) * 12);
+    };
 
-    y = await embedSig(signature_image, 'PRINCIPAL SIGNATURE', signature_name, y);
-    if (co_owner_image && co_owner_name) {
-      y = await embedSig(co_owner_image, 'CO-OWNER SIGNATURE', co_owner_name, y);
-    }
+    row('DOCUMENT', c.kind === 'poa' ? 'Special Power of Attorney' : 'Exclusive Right-to-Sell Agreement');
+    row('SIGNER (PRINTED)', signature_name);
+    if (co_owner_name) row('CO-SIGNER (PRINTED)', co_owner_name);
+    row('DATE / TIME (UTC)', nowIso);
+    row('IP ADDRESS', ip || 'unavailable');
+    row('USER AGENT', ua.slice(0, 200));
+    row('TEMPLATE SHA-256', preSignHash);
+    row('CONTRACT REF', c.id);
+    y -= 6;
 
-    if (initials) {
-      page.drawText(`Initials on required sections: ${initials}`, { x: 50, y, size: 10, font: bold });
+    certPage.drawText('Consent to electronic records and signatures:', { x: 50, y, size: 10, font: bold, color: INK });
+    y -= 14;
+    const consentText = [
+      'By typing and drawing my name above and clicking "Sign & Submit," I agreed that my',
+      'electronic signature is the legal equivalent of my manual, handwritten signature. I',
+      'confirmed I received, reviewed, and had the opportunity to print or save a copy of',
+      'this Agreement, and I consented to conduct this transaction electronically. I under-',
+      'stand I may withdraw consent for future electronic records by written notice to',
+      'Texas Cemetery Brokers before further electronic delivery.',
+    ];
+    consentText.forEach((ln) => { certPage.drawText(ln, { x: 50, y, size: 10, font, color: INK }); y -= 12; });
+    y -= 8;
+    certPage.drawText('This certificate, together with the signed pages above, forms an integral part of the executed document.',
+      { x: 50, y, size: 9, font, color: MUTED });
+
+    // Draw the actual signature image on the certificate too for at-a-glance verification.
+    if (sigImg) {
+      const d = sigImg.scaleToFit(220, 55);
+      certPage.drawText('SIGNATURE:', { x: 50, y: 120, size: 9, font: bold, color: MUTED });
+      certPage.drawImage(sigImg, { x: 50, y: 60, width: d.width, height: d.height });
+      certPage.drawLine({ start: { x: 50, y: 55 }, end: { x: 300, y: 55 }, thickness: 0.5, color: MUTED });
+      certPage.drawText(`${signature_name}  •  ${nowIso}`, { x: 50, y: 42, size: 9, font, color: INK });
     }
 
     const out = await pdf.save();
+    const signedHash = await sha256Hex(out);
     const signedPath = `${c.submission_id}/${c.kind}-signed-${Date.now()}.pdf`;
-    await svc.storage.from('contracts').upload(signedPath, out, { contentType: 'application/pdf', upsert: true });
+    const { error: upErr } = await svc.storage.from('contracts')
+      .upload(signedPath, out, { contentType: 'application/pdf', upsert: true });
+    if (upErr) throw upErr;
 
-    const now = new Date().toISOString();
     await svc.from('contracts').update({
-      status: c.kind === 'poa' ? 'signed' : 'signed',
-      signed_at: now,
+      status: 'signed',
+      signed_at: nowIso,
       signed_pdf_path: signedPath,
       signature_name,
       signature_image,
-      signature_initials: initials ?? null,
+      signature_initials: initials,
       co_owner_signature_name: co_owner_name ?? null,
       co_owner_signature_image: co_owner_image ?? null,
       signer_ip: ip,
       signer_user_agent: ua,
+      template_hash: preSignHash,
+      signed_hash: signedHash,
+      consent_accepted_at: nowIso,
     }).eq('id', c.id);
 
-    // Mirror on submission
     const patch: Record<string, unknown> = {};
-    if (c.kind === 'listing_agreement') patch.la_signed_at = now;
-    if (c.kind === 'poa') patch.poa_signed_at = now;
+    if (c.kind === 'listing_agreement') patch.la_signed_at = nowIso;
+    if (c.kind === 'poa') patch.poa_signed_at = nowIso;
     await svc.from('contact_submissions').update(patch).eq('id', c.submission_id);
 
-    // Check completion
     const { data: allContracts } = await svc
       .from('contracts').select('kind,status,notarized_at,signed_at').eq('submission_id', c.submission_id);
     const la = allContracts?.find((x) => x.kind === 'listing_agreement');
@@ -156,7 +242,7 @@ Deno.serve(async (req) => {
     const completed = !!la?.signed_at && !!(poa?.notarized_at || poa?.signed_at);
     if (completed) {
       await svc.from('contact_submissions').update({
-        contracts_completed_at: now,
+        contracts_completed_at: nowIso,
         texas_pipeline_stage: 'completed',
       }).eq('id', c.submission_id);
     }
