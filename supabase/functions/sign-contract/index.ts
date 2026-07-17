@@ -162,8 +162,8 @@ Deno.serve(async (req) => {
       if (!file) throw new Error('signed pdf missing');
       const bytes = new Uint8Array(await file.arrayBuffer());
       const pdf = await PDFDocument.load(bytes);
-      const font = await pdf.embedFont(StandardFonts.Helvetica);
-      const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+      const font = await pdf.embedFont(StandardFonts.TimesRoman);
+      const bold = await pdf.embedFont(StandardFonts.TimesRomanBold);
       const pages = pdf.getPages();
       const brokerImg = await decodeSignature(pdf, countersigner_signature);
       const nowIso = new Date().toISOString();
