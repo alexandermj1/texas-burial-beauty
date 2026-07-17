@@ -171,14 +171,13 @@ Deno.serve(async (req) => {
 
       if (c.kind === 'listing_agreement' && pages.length >= 8) {
         const p8 = pages[7];
-        // Broker block sits below the seller block on page 8 of the LA template.
-        stampText(p8, countersigner_name, 225, 165, font, 11);
+        // Broker block (measured rects): name 136.5, sig 96.8, date 70.5. x0=204.7.
+        stampText(p8, countersigner_name, 210, 139.5, font, 11);
         if (brokerImg) {
-          const d = brokerImg.scaleToFit(200, 28);
-          p8.drawImage(brokerImg, { x: 225, y: 125, width: d.width, height: d.height });
+          const d = brokerImg.scaleToFit(220, 32);
+          p8.drawImage(brokerImg, { x: 210, y: 100, width: d.width, height: d.height });
         }
-        stampText(p8, today, 225, 108, font, 11);
-        stampText(p8, 'BROKER — Texas Cemetery Brokers, LLC', 225, 92, font, 9, MUTED);
+        stampText(p8, today, 210, 73.5, font, 11);
       }
 
       // Add a "Fully Executed" stamp on the certification page (last page).
