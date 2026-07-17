@@ -1,17 +1,24 @@
-// Public endpoint: lets a seller view a contract by token and submit their signature.
-// GET  ?token=... returns metadata (submission info + signed PDF URL to display)
-// POST { token, signature_name, signature_image, initials, consent, co_owner_name?, co_owner_image? }
-//   -> stamps signature onto the template's signature block, stamps initials at
-//      every page footer, appends a UETA / E-SIGN Act certification page, and
-//      saves the tamper-evident signed copy.
+// Public endpoint for the seller signing flow + admin countersign.
+// GET   ?token=...                              → contract metadata + signed PDF URL
+// POST  { action: "refresh", token, fields }    → merge seller-entered fields into
+//                                                  fill_data and regenerate filled PDF
+// POST  { token, signature_name, signature_image, initials, consent, ... }
+//                                                → seller signs (stamps sig, initials,
+//                                                  cert page; emails signed copy)
+// POST  { action: "countersign", contract_id,
+//         countersigner_name, countersigner_signature }
+//                                                → admin (JWT required) stamps broker
+//                                                  signature; emails fully-executed copy
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
+import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
+
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
