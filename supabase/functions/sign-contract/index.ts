@@ -208,32 +208,98 @@ Deno.serve(async (req) => {
         await svc.from('contact_submissions').update({ la_countersigned_at: nowIso }).eq('id', c.submission_id);
       }
 
-      // Email the fully executed copy to the seller
+      // Email the fully executed copy to the seller (branded template via connector gateway)
       try {
         const { data: sub } = await svc.from('contact_submissions')
-          .select('email, name, cemetery').eq('id', c.submission_id).maybeSingle();
+          .select('email, name, cemetery, section, property_type, spaces').eq('id', c.submission_id).maybeSingle();
         const RESEND_KEY = Deno.env.get('RESEND_API_KEY');
-        if (sub?.email && RESEND_KEY) {
+        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+        if (sub?.email && RESEND_KEY && LOVABLE_API_KEY) {
           const CHUNK = 0x8000;
           let bin = '';
           for (let i = 0; i < out.length; i += CHUNK) bin += String.fromCharCode(...out.subarray(i, i + CHUNK));
           const b64 = btoa(bin);
-          const filename = `${(sub.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-${c.kind}-executed.pdf`;
-          await fetch('https://api.resend.com/emails', {
+          const kindLabel = c.kind === 'poa' ? 'Power of Attorney' : 'Listing Agreement';
+          const filename = `${(sub.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-${c.kind}-fully-executed.pdf`;
+          const firstName = (sub.name ?? '').trim().split(/\s+/)[0] || 'there';
+          const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const cemLine = sub.cemetery ? ` for ${esc(sub.cemetery)}` : '';
+          const execDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+          const html = `<!doctype html>
+<html><body style="margin:0;padding:0;background:#f5f1ea;font-family:Georgia,'Times New Roman',serif;color:#1f2a37;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ea;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(31,42,55,0.08);">
+        <tr><td style="background:#1f2a37;color:#ffffff;padding:34px 40px;text-align:center;">
+          <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
+          <div style="font-size:22px;margin-top:10px;font-family:Georgia,serif;">Your ${esc(kindLabel)} is fully executed</div>
+        </td></tr>
+        <tr><td style="padding:32px 40px;font-size:15px;line-height:1.65;">
+          <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
+          <p style="margin:0 0 16px;">
+            We're pleased to confirm that your <strong>${esc(kindLabel)}</strong>${cemLine} has been countersigned
+            by Texas Cemetery Brokers and is now <strong>fully executed</strong> as of ${esc(execDate)}.
+          </p>
+          <p style="margin:0 0 20px;">
+            A complete PDF copy is attached to this email for your records, including the full audit trail and
+            certificate of electronic signature. Please retain it with your important documents.
+          </p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;background:#f5f1ea;border-radius:10px;">
+            <tr><td style="padding:18px 22px;font-size:13px;color:#4a5568;line-height:1.6;">
+              <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7c3a2e;font-weight:600;margin-bottom:8px;">Document Summary</div>
+              <div><strong style="color:#1f2a37;">Document:</strong> ${esc(kindLabel)}</div>
+              ${sub.cemetery ? `<div><strong style="color:#1f2a37;">Cemetery:</strong> ${esc(sub.cemetery)}</div>` : ''}
+              ${sub.section ? `<div><strong style="color:#1f2a37;">Section:</strong> ${esc(sub.section)}</div>` : ''}
+              <div><strong style="color:#1f2a37;">Executed on:</strong> ${esc(execDate)}</div>
+              <div><strong style="color:#1f2a37;">Countersigned by:</strong> ${esc(countersigner_name)}</div>
+            </td></tr>
+          </table>
+          <p style="margin:0 0 8px;font-size:13px;color:#4a5568;"><strong style="color:#1f2a37;">What happens next:</strong></p>
+          <ol style="padding-left:20px;margin:0 0 20px;font-size:13px;color:#4a5568;line-height:1.7;">
+            <li>Your dedicated broker will begin actively marketing your property.</li>
+            <li>We'll reach out promptly with any qualified buyer interest.</li>
+            <li>You'll receive regular updates throughout the sales process.</li>
+          </ol>
+          <p style="margin:24px 0 0;font-size:14px;">
+            Thank you for entrusting Texas Cemetery Brokers with the sale of your property.
+            If you have any questions, simply reply to this email.
+          </p>
+          <p style="margin:20px 0 0;font-size:14px;">Warm regards,<br/><strong>Texas Cemetery Brokers</strong></p>
+        </td></tr>
+        <tr><td style="background:#f5f1ea;padding:18px 40px;text-align:center;font-size:11px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;">
+          Texas Cemetery Brokers · texascemeterybrokers.com
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+          const subject = `Fully executed ${kindLabel}${sub.cemetery ? ` — ${sub.cemetery}` : ''}`;
+          const emailRes = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              'X-Connection-Api-Key': RESEND_KEY,
+            },
             body: JSON.stringify({
               from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
               to: [sub.email],
               bcc: ['contracts@texascemeterybrokers.com'],
-              subject: `Fully executed ${c.kind === 'poa' ? 'Power of Attorney' : 'Listing Agreement'}${sub.cemetery ? ` — ${sub.cemetery}` : ''}`,
-              html: `<div style="font-family:Georgia,serif;color:#222;max-width:560px"><p>Hi ${sub.name ?? ''},</p><p>Your ${c.kind === 'poa' ? 'Power of Attorney' : 'Listing Agreement'} has been countersigned by Texas Cemetery Brokers and is now fully executed. A copy is attached for your records.</p><p style="margin-top:24px">— Texas Cemetery Brokers</p></div>`,
+              subject,
+              html,
               attachments: [{ filename, content: b64 }],
             }),
           });
-          await svc.from('contracts').update({ signed_copy_emailed_at: nowIso }).eq('id', c.id);
+          if (!emailRes.ok) {
+            console.error('countersign email non-ok', emailRes.status, await emailRes.text());
+          } else {
+            await svc.from('contracts').update({ signed_copy_emailed_at: nowIso }).eq('id', c.id);
+          }
         }
       } catch (e) { console.error('countersign email failed', e); }
+
 
       return new Response(JSON.stringify({ ok: true, pdf_path: outPath }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
