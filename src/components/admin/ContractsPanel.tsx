@@ -423,9 +423,29 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              The seller has signed. Add your broker signature to fully execute the contract. A copy will be
-              emailed to {sellerEmail ?? "the seller"} automatically.
+              Review the seller's signed contract below, then add your broker signature to fully execute it.
+              A branded email with the fully-executed PDF attached will be sent to {sellerEmail ?? "the seller"} automatically.
             </p>
+            {countersignFor && urls[countersignFor.id] && (
+              <div className="border rounded-lg overflow-hidden bg-muted/30">
+                <div className="flex items-center justify-between px-3 py-2 border-b bg-background">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Seller-signed copy</span>
+                  <a
+                    href={urls[countersignFor.id]}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Open in new tab
+                  </a>
+                </div>
+                <iframe
+                  src={urls[countersignFor.id]}
+                  className="w-full h-[420px] bg-white"
+                  title="Signed contract preview"
+                />
+              </div>
+            )}
             <div>
               <Label>Your name</Label>
               <Input value={csName} onChange={(e) => setCsName(e.target.value)} placeholder="e.g. John Smith, Broker" />
