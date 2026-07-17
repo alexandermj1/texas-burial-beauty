@@ -36,21 +36,18 @@ function money(n?: number | null): string {
   return `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
-async function fetchTemplate(origin: string, kind: 'listing_agreement' | 'poa'): Promise<Uint8Array> {
+async function fetchTemplate(
+  svc: ReturnType<typeof createClient>,
+  kind: 'listing_agreement' | 'poa',
+): Promise<Uint8Array> {
   const file = kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
-  // Try known public origins in order (published, preview, request origin)
-  const candidates = [
-    `${origin}/contracts/${file}`,
-    `https://texas-burial-beauty.lovable.app/contracts/${file}`,
-    `https://texascemeterybrokers.com/contracts/${file}`,
-  ];
-  for (const url of candidates) {
-    try {
-      const r = await fetch(url);
-      if (r.ok) return new Uint8Array(await r.arrayBuffer());
-    } catch { /* ignore */ }
-  }
-  throw new Error('Could not fetch contract template');
+  const { data, error } = await svc.storage.from('contracts').download(`_templates/${file}`);
+  if (error || !data) throw new Error(`Could not fetch contract template: ${error?.message ?? 'missing'}`);
+  const buf = new Uint8Array(await data.arrayBuffer());
+  // Sanity check the PDF header
+  const header = new TextDecoder().decode(buf.slice(0, 5));
+  if (header !== '%PDF-') throw new Error('Template is not a valid PDF');
+  return buf;
 }
 
 async function buildFilledPdf(
@@ -187,8 +184,7 @@ Deno.serve(async (req) => {
       transfer_fee: transferFee ?? undefined,
     };
 
-    const origin = req.headers.get('origin') ?? '';
-    const templateBytes = await fetchTemplate(origin, kind);
+    const templateBytes = await fetchTemplate(svc, kind);
     const filled = await buildFilledPdf(templateBytes, kind, fill);
 
     const path = `${submission_id}/${kind}-${Date.now()}.pdf`;
