@@ -85,17 +85,32 @@ function SignaturePad({
   );
 }
 
+type SellerFields = {
+  seller_name: string;
+  address: string;
+  city_state_zip: string;
+  phone: string;
+  email: string;
+  co_owner_name: string;
+  plot_description: string;
+};
+
 export default function SignContract() {
   const { token } = useParams();
   const [info, setInfo] = useState<ContractInfo | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  const [name, setName] = useState("");
+  const [fields, setFields] = useState<SellerFields>({
+    seller_name: "", address: "", city_state_zip: "",
+    phone: "", email: "", co_owner_name: "", plot_description: "",
+  });
+  const [refreshing, setRefreshing] = useState(false);
+
   const [initials, setInitials] = useState("");
   const [sig, setSig] = useState<string | null>(null);
-  const [coName, setCoName] = useState("");
   const [coSig, setCoSig] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -109,7 +124,17 @@ export default function SignContract() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Could not load");
         setInfo(data);
-        setName((data.fill_data?.seller_name as string) ?? "");
+        setPdfUrl(data.pdf_url);
+        const fd = (data.fill_data ?? {}) as Record<string, string>;
+        setFields({
+          seller_name: fd.seller_name ?? "",
+          address: fd.address ?? "",
+          city_state_zip: fd.city_state_zip ?? "",
+          phone: fd.phone ?? "",
+          email: fd.email ?? "",
+          co_owner_name: fd.co_owner_name ?? "",
+          plot_description: fd.plot_description ?? "",
+        });
         setDone(data.already_signed);
       } catch (e) {
         setError((e as Error).message);
@@ -119,36 +144,63 @@ export default function SignContract() {
     })();
   }, [token]);
 
-  const nameMatches = () => {
-    const expected = ((info?.fill_data?.seller_name as string) ?? "").trim().toLowerCase();
-    return expected.length === 0 || expected === name.trim().toLowerCase();
+  const setField = (k: keyof SellerFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFields((f) => ({ ...f, [k]: e.target.value }));
+
+  const refreshContract = async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
+        body: JSON.stringify({ action: "refresh", token, fields }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not update contract");
+      // Bust iframe cache with new URL from server (new signed URL each time)
+      setPdfUrl(data.pdf_url);
+      toast.success("Contract updated with your details");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const submit = async () => {
-    if (!name.trim()) return toast.error("Type your full legal name");
-    if (!nameMatches()) return toast.error("The name you typed does not match the seller name on the contract");
+    if (!fields.seller_name.trim()) return toast.error("Enter your full legal name");
+    if (!fields.address.trim() || !fields.city_state_zip.trim())
+      return toast.error("Enter your address and city/state/ZIP");
     if (!initials.trim() || initials.trim().length < 2) return toast.error("Enter your initials (2+ letters)");
     if (!sig) return toast.error("Draw your signature");
     if (!consent) return toast.error("Please confirm your consent to sign electronically");
+
     setBusy(true);
     try {
+      // Ensure contract PDF is up-to-date with the latest field values before signing
+      await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
+        body: JSON.stringify({ action: "refresh", token, fields }),
+      });
+
       const res = await fetch(FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
         body: JSON.stringify({
           token,
-          signature_name: name.trim(),
+          signature_name: fields.seller_name.trim(),
           signature_image: sig,
           initials: initials.trim().toUpperCase(),
           consent: true,
-          co_owner_name: coName || undefined,
+          co_owner_name: fields.co_owner_name || undefined,
           co_owner_image: coSig || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Sign failed");
       setDone(true);
-      toast.success("Signature recorded");
+      toast.success("Signed! A copy has been emailed to you.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -189,17 +241,64 @@ export default function SignContract() {
           <h1 className="text-2xl md:text-3xl font-serif mt-2">{title}</h1>
         </header>
 
+        {!done && (
+          <Card className="p-6 space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">Step 1 · Confirm your details</h2>
+              <p className="text-sm text-muted-foreground">
+                Review and complete the fields below. When you click <em>Update contract</em>, the preview
+                below will refresh with your information filled in.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>Full legal name</Label>
+                <Input value={fields.seller_name} onChange={setField("seller_name")} />
+              </div>
+              <div>
+                <Label>Co-owner name (if joint)</Label>
+                <Input value={fields.co_owner_name} onChange={setField("co_owner_name")} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Mailing address</Label>
+                <Input value={fields.address} onChange={setField("address")} placeholder="1234 Example Street" />
+              </div>
+              <div>
+                <Label>City, State, ZIP</Label>
+                <Input value={fields.city_state_zip} onChange={setField("city_state_zip")} placeholder="Austin, TX 78701" />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input value={fields.phone} onChange={setField("phone")} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Email</Label>
+                <Input value={fields.email} onChange={setField("email")} type="email" />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Plot description (section / block / spaces)</Label>
+                <Input value={fields.plot_description} onChange={setField("plot_description")} />
+              </div>
+            </div>
+            <Button onClick={refreshContract} disabled={refreshing} variant="secondary">
+              {refreshing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Update contract preview
+            </Button>
+          </Card>
+        )}
+
         <Card className="overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/40 text-sm">
-            <FileText className="h-4 w-4" /> Full contract preview
+            <FileText className="h-4 w-4" /> Step 2 · Review the full contract
           </div>
           <iframe
+            key={pdfUrl}
             title="Contract"
-            src={info.pdf_url}
+            src={pdfUrl}
             className="w-full h-[70vh] bg-background"
           />
           <div className="px-4 py-2 border-t text-xs text-muted-foreground">
-            <a href={info.pdf_url} target="_blank" rel="noreferrer" className="underline">
+            <a href={pdfUrl} target="_blank" rel="noreferrer" className="underline">
               Open contract in a new tab
             </a>
           </div>
@@ -210,44 +309,37 @@ export default function SignContract() {
             <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto mb-2" />
             <h2 className="text-xl font-semibold text-emerald-900">Thank you — your signature is recorded.</h2>
             <p className="text-sm text-emerald-800 mt-2">
-              A copy has been sent to Texas Cemetery Brokers. You may close this window.
+              A copy has been emailed to you. Texas Cemetery Brokers will countersign and send you the fully executed document shortly.
             </p>
             {info.kind === "poa" && (
               <p className="text-sm text-emerald-900 mt-4">
-                Reminder: this Power of Attorney is not effective until it is also notarized. Your broker will send you a link to complete online notarization with BlueNotary.
+                Reminder: this Power of Attorney becomes fully effective once it is notarized. Your broker will send a separate email with the notary link.
               </p>
             )}
           </Card>
         ) : (
           <Card className="p-6 space-y-6">
-            <h2 className="text-lg font-semibold">Sign this document</h2>
+            <h2 className="text-lg font-semibold">Step 3 · Sign this document</h2>
             <p className="text-sm text-muted-foreground">
-              By typing your name and drawing your signature you agree that your electronic signature is legally binding, equivalent to a handwritten signature under the U.S. E-Sign Act and Texas UETA.
+              By typing your name and drawing your signature you agree that your electronic signature is legally binding,
+              equivalent to a handwritten signature under the U.S. E-Sign Act and Texas UETA.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label>Full legal name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div>
-                <Label>Initials (for required sections)</Label>
-                <Input value={initials} onChange={(e) => setInitials(e.target.value.toUpperCase().slice(0, 4))} placeholder="e.g. DC" />
-              </div>
+            <div>
+              <Label>Your initials (for required sections)</Label>
+              <Input
+                value={initials}
+                onChange={(e) => setInitials(e.target.value.toUpperCase().slice(0, 4))}
+                placeholder="e.g. AJ"
+                className="max-w-[160px]"
+              />
             </div>
 
             <SignaturePad label="Draw your signature" onChange={setSig} />
 
-            <details className="text-sm">
-              <summary className="cursor-pointer text-muted-foreground">Add a co-owner signature (if the property is jointly owned)</summary>
-              <div className="mt-4 space-y-4">
-                <div>
-                  <Label>Co-owner full name</Label>
-                  <Input value={coName} onChange={(e) => setCoName(e.target.value)} />
-                </div>
-                <SignaturePad label="Co-owner signature" onChange={setCoSig} />
-              </div>
-            </details>
+            {fields.co_owner_name.trim() && (
+              <SignaturePad label={`Co-owner signature (${fields.co_owner_name})`} onChange={setCoSig} />
+            )}
 
             <div className="rounded-md border bg-muted/40 p-4 text-sm space-y-3">
               <label className="flex gap-3 items-start cursor-pointer">
@@ -258,10 +350,9 @@ export default function SignContract() {
                   className="mt-1 h-4 w-4"
                 />
                 <span>
-                  I have reviewed the entire document above. I agree my electronic signature and
-                  initials are the legal equivalent of a handwritten signature under the U.S. E-Sign
-                  Act (15 U.S.C. §§ 7001+) and the Texas Uniform Electronic Transactions Act. I
-                  consent to receive records of this transaction electronically.
+                  I have reviewed the entire document above. I agree my electronic signature and initials are the legal
+                  equivalent of a handwritten signature under the U.S. E-Sign Act (15 U.S.C. §§ 7001+) and the Texas
+                  Uniform Electronic Transactions Act. I consent to receive records of this transaction electronically.
                 </span>
               </label>
             </div>
@@ -276,3 +367,4 @@ export default function SignContract() {
     </div>
   );
 }
+
