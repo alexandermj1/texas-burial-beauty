@@ -103,6 +103,23 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     toast.success("Signing link copied");
   };
 
+  const emailSignedCopy = async (c: Contract) => {
+    setBusy(c.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("email-signed-contract", {
+        body: { contract_id: c.id },
+      });
+      if (error) throw error;
+      toast.success("Signed copy emailed", { description: `Sent to ${data?.to ?? sellerEmail ?? "seller"}` });
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+
   const sendToBlueNotary = async (c: Contract) => {
     // BlueNotary "Send to Signer" flow: opens a prefilled URL in a new tab.
     // The admin uploads the filled POA there, signer email is prefilled.
