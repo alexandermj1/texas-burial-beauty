@@ -711,6 +711,11 @@ export type Database = {
           co_owner_signature_name: string | null
           completed_at: string | null
           consent_accepted_at: string | null
+          countersigned_at: string | null
+          countersigned_by: string | null
+          countersigned_pdf_path: string | null
+          countersigner_name: string | null
+          countersigner_signature: string | null
           created_at: string
           created_by: string | null
           fill_data: Json
@@ -744,6 +749,11 @@ export type Database = {
           co_owner_signature_name?: string | null
           completed_at?: string | null
           consent_accepted_at?: string | null
+          countersigned_at?: string | null
+          countersigned_by?: string | null
+          countersigned_pdf_path?: string | null
+          countersigner_name?: string | null
+          countersigner_signature?: string | null
           created_at?: string
           created_by?: string | null
           fill_data?: Json
@@ -777,6 +787,11 @@ export type Database = {
           co_owner_signature_name?: string | null
           completed_at?: string | null
           consent_accepted_at?: string | null
+          countersigned_at?: string | null
+          countersigned_by?: string | null
+          countersigned_pdf_path?: string | null
+          countersigner_name?: string | null
+          countersigner_signature?: string | null
           created_at?: string
           created_by?: string | null
           fill_data?: Json
