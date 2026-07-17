@@ -65,13 +65,6 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
         ?? (c as Contract).signed_pdf_path
         ?? (c as Contract).notarized_pdf_path
         ?? (c as Contract).filled_pdf_path;
-
-    // Refresh signed URLs
-    const map: Record<string, string> = {};
-    for (const c of data ?? []) {
-      const path = (c as Contract).signed_pdf_path
-        ?? (c as Contract).notarized_pdf_path
-        ?? (c as Contract).filled_pdf_path;
       if (path) {
         const { data: s } = await supabase.storage
           .from("contracts").createSignedUrl(path, 60 * 60);
@@ -81,6 +74,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     setUrls(map);
     setLoading(false);
   };
+
 
   useEffect(() => { void load(); }, [submissionId]);
 
