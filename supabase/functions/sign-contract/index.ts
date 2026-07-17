@@ -302,60 +302,83 @@ Deno.serve(async (req) => {
     stampFooterInitials(pages, initials.slice(0, 6).toUpperCase(), bold);
 
     // === Certification / audit page (E-SIGN + UETA compliance) ===
+    // Styled to match the appended data-reference sheet and template chrome.
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
     const ua = req.headers.get('user-agent') ?? '';
     const nowIso = new Date().toISOString();
+    const serif = await pdf.embedFont(StandardFonts.TimesRoman);
+    const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
+    const CORAL = rgb(0.86, 0.36, 0.30);
+    const SAGE = rgb(0.30, 0.42, 0.34);
+    const PAPER = rgb(0.96, 0.94, 0.88);
+    const HAIRLINE = rgb(0.78, 0.76, 0.70);
     const certPage = pdf.addPage([612, 792]);
-    let y = 750;
-    certPage.drawText('CERTIFICATE OF ELECTRONIC SIGNATURE', { x: 50, y, size: 15, font: bold, color: INK });
-    y -= 22;
-    certPage.drawText('Executed under the U.S. E-SIGN Act (15 U.S.C. §§ 7001 et seq.) and the Texas',
-      { x: 50, y, size: 10, font, color: MUTED });
-    y -= 12;
-    certPage.drawText('Uniform Electronic Transactions Act (Tex. Bus. & Com. Code Ann. Ch. 322).',
-      { x: 50, y, size: 10, font, color: MUTED });
-    y -= 24;
+    const pageW = 612;
 
-    const row = (label: string, value: string) => {
-      certPage.drawText(label, { x: 50, y, size: 9, font: bold, color: MUTED });
-      const lines = String(value).match(/.{1,72}/g) ?? [value];
-      lines.forEach((ln, i) => certPage.drawText(ln, { x: 210, y: y - i * 12, size: 10, font, color: INK }));
-      y -= 14 + Math.max(0, (lines.length - 1) * 12);
-    };
+    // Masthead
+    certPage.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: CORAL });
+    certPage.drawText('Certificate of Electronic Signature', { x: 50, y: 712, size: 20, font: serifBold, color: INK });
+    certPage.drawLine({ start: { x: 50, y: 700 }, end: { x: 130, y: 700 }, thickness: 1.5, color: CORAL });
+    certPage.drawText('Executed under the U.S. E-SIGN Act (15 U.S.C. §§ 7001 et seq.) and the Texas Uniform',
+      { x: 50, y: 682, size: 9.5, font, color: MUTED });
+    certPage.drawText('Electronic Transactions Act (Tex. Bus. & Com. Code Ann. Ch. 322).',
+      { x: 50, y: 670, size: 9.5, font, color: MUTED });
 
-    row('DOCUMENT', c.kind === 'poa' ? 'Special Power of Attorney' : 'Exclusive Right-to-Sell Agreement');
-    row('SIGNER (PRINTED)', signature_name);
-    if (co_owner_name) row('CO-SIGNER (PRINTED)', co_owner_name);
-    row('DATE / TIME (UTC)', nowIso);
-    row('IP ADDRESS', ip || 'unavailable');
-    row('USER AGENT', ua.slice(0, 200));
-    row('TEMPLATE SHA-256', preSignHash);
-    row('CONTRACT REF', c.id);
-    y -= 6;
-
-    certPage.drawText('Consent to electronic records and signatures:', { x: 50, y, size: 10, font: bold, color: INK });
-    y -= 14;
-    const consentText = [
-      'By typing and drawing my name above and clicking "Sign & Submit," I agreed that my',
-      'electronic signature is the legal equivalent of my manual, handwritten signature. I',
-      'confirmed I received, reviewed, and had the opportunity to print or save a copy of',
-      'this Agreement, and I consented to conduct this transaction electronically. I under-',
-      'stand I may withdraw consent for future electronic records by written notice to',
-      'Texas Cemetery Brokers before further electronic delivery.',
+    // Metadata card
+    const rowsCard: Array<[string, string]> = [
+      ['Document', c.kind === 'poa' ? 'Special Power of Attorney' : 'Exclusive Right-to-Sell Agreement'],
+      ['Signer (printed)', signature_name],
     ];
-    consentText.forEach((ln) => { certPage.drawText(ln, { x: 50, y, size: 10, font, color: INK }); y -= 12; });
-    y -= 8;
-    certPage.drawText('This certificate, together with the signed pages above, forms an integral part of the executed document.',
-      { x: 50, y, size: 9, font, color: MUTED });
-
-    // Draw the actual signature image on the certificate too for at-a-glance verification.
-    if (sigImg) {
-      const d = sigImg.scaleToFit(220, 55);
-      certPage.drawText('SIGNATURE:', { x: 50, y: 120, size: 9, font: bold, color: MUTED });
-      certPage.drawImage(sigImg, { x: 50, y: 60, width: d.width, height: d.height });
-      certPage.drawLine({ start: { x: 50, y: 55 }, end: { x: 300, y: 55 }, thickness: 0.5, color: MUTED });
-      certPage.drawText(`${signature_name}  •  ${nowIso}`, { x: 50, y: 42, size: 9, font, color: INK });
+    if (co_owner_name) rowsCard.push(['Co-signer (printed)', co_owner_name]);
+    rowsCard.push(
+      ['Initials captured', initials.slice(0, 6).toUpperCase()],
+      ['Date / Time (UTC)', nowIso],
+      ['IP Address', ip || 'unavailable'],
+      ['User Agent', ua.slice(0, 90)],
+      ['Template SHA-256', preSignHash],
+      ['Contract Ref', c.id],
+    );
+    const cardH = 34 + rowsCard.length * 20 + 10;
+    let cy = 648;
+    certPage.drawRectangle({ x: 50, y: cy - cardH, width: pageW - 100, height: cardH, color: PAPER, borderColor: HAIRLINE, borderWidth: 0.6 });
+    certPage.drawText('SIGNATURE RECORD', { x: 68, y: cy - 20, size: 9, font: bold, color: SAGE });
+    certPage.drawLine({ start: { x: 68, y: cy - 26 }, end: { x: pageW - 68, y: cy - 26 }, thickness: 0.4, color: HAIRLINE });
+    let ry = cy - 44;
+    for (const [l, v] of rowsCard) {
+      certPage.drawText(l, { x: 68, y: ry, size: 8, font: bold, color: MUTED });
+      certPage.drawText(String(v), { x: 210, y: ry, size: 10.5, font: serif, color: INK });
+      ry -= 20;
     }
+
+    // Consent block
+    let cy2 = cy - cardH - 22;
+    certPage.drawText('Consent to electronic records and signatures', { x: 50, y: cy2, size: 11, font: serifBold, color: INK });
+    cy2 -= 16;
+    const consentText = [
+      'By typing my name, drawing my signature, and clicking "Sign & Submit," I agreed that my electronic',
+      'signature is the legal equivalent of my manual, handwritten signature. I confirmed I received,',
+      'reviewed, and had the opportunity to print or save a copy of this document, and I consented to',
+      'conduct this transaction electronically. I understand I may withdraw consent for future electronic',
+      'records by written notice to Texas Cemetery Brokers before further electronic delivery.',
+    ];
+    for (const ln of consentText) { certPage.drawText(ln, { x: 50, y: cy2, size: 10, font: serif, color: INK }); cy2 -= 13; }
+
+    // Signature card at bottom
+    if (sigImg) {
+      const d = sigImg.scaleToFit(240, 60);
+      const boxY = 100, boxH = 90;
+      certPage.drawRectangle({ x: 50, y: boxY, width: pageW - 100, height: boxH, color: PAPER, borderColor: HAIRLINE, borderWidth: 0.6 });
+      certPage.drawText('CAPTURED SIGNATURE', { x: 68, y: boxY + boxH - 18, size: 9, font: bold, color: SAGE });
+      certPage.drawImage(sigImg, { x: 68, y: boxY + 22, width: d.width, height: d.height });
+      certPage.drawLine({ start: { x: 68, y: boxY + 18 }, end: { x: 68 + d.width + 20, y: boxY + 18 }, thickness: 0.5, color: MUTED });
+      certPage.drawText(`${signature_name}  •  ${nowIso}`, { x: 68, y: boxY + 6, size: 9, font: serif, color: INK });
+    }
+
+    // Footer chrome
+    certPage.drawLine({ start: { x: 50, y: 55 }, end: { x: pageW - 50, y: 55 }, thickness: 0.4, color: HAIRLINE });
+    certPage.drawText('TEXASCEMETERYBROKERS.COM', { x: 50, y: 40, size: 8, font: bold, color: MUTED });
+    const cf = 'CERTIFICATE OF ELECTRONIC SIGNATURE';
+    certPage.drawText(cf, { x: pageW - 50 - bold.widthOfTextAtSize(cf, 8), y: 40, size: 8, font: bold, color: MUTED });
 
     const out = await pdf.save();
     const signedHash = await sha256Hex(out);
