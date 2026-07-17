@@ -249,9 +249,26 @@ export default function SignContract() {
               </div>
             </details>
 
+            <div className="rounded-md border bg-muted/40 p-4 text-sm space-y-3">
+              <label className="flex gap-3 items-start cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-1 h-4 w-4"
+                />
+                <span>
+                  I have reviewed the entire document above. I agree my electronic signature and
+                  initials are the legal equivalent of a handwritten signature under the U.S. E-Sign
+                  Act (15 U.S.C. §§ 7001+) and the Texas Uniform Electronic Transactions Act. I
+                  consent to receive records of this transaction electronically.
+                </span>
+              </label>
+            </div>
+
             <Button onClick={submit} disabled={busy} size="lg" className="w-full md:w-auto">
               {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Sign contract
+              Sign &amp; submit
             </Button>
           </Card>
         )}
