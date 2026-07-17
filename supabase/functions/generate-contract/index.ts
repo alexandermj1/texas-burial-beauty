@@ -184,8 +184,7 @@ Deno.serve(async (req) => {
       transfer_fee: transferFee ?? undefined,
     };
 
-    const origin = req.headers.get('origin') ?? '';
-    const templateBytes = await fetchTemplate(origin, kind);
+    const templateBytes = await fetchTemplate(svc, kind);
     const filled = await buildFilledPdf(templateBytes, kind, fill);
 
     const path = `${submission_id}/${kind}-${Date.now()}.pdf`;
