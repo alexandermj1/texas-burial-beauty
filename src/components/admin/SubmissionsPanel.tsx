@@ -23,6 +23,7 @@ import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
 import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import CustomerFiles from "./CustomerFiles";
+import ContractsPanel from "./ContractsPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -1910,6 +1911,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </div>
                   );
                 })()}
+
+                {/* Contracts: Listing Agreement (in-app e-sign) + POA (BlueNotary notarization). */}
+                <ContractsPanel
+                  submissionId={selected.id}
+                  sellerEmail={selected.email}
+                  sellerName={selected.name}
+                />
 
                 {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
                 {(selected as any).customer_profile_id ? (
