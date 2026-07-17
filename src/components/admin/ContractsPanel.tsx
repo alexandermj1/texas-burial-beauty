@@ -205,7 +205,22 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
           <div className="flex items-center gap-1">
             {contract && urls[contract.id] && (
               <Button size="sm" variant="ghost" onClick={() => window.open(urls[contract.id], "_blank")}>
-                <ExternalLink className="w-3.5 h-3.5 mr-1" />PDF
+                <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                {contract.signed_at ? "Signed PDF" : "PDF"}
+              </Button>
+            )}
+            {contract?.signed_at && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => emailSignedCopy(contract)}
+                disabled={pending}
+                title={contract.signed_copy_emailed_at
+                  ? `Last emailed ${new Date(contract.signed_copy_emailed_at).toLocaleString()}`
+                  : "Email signed copy to seller"}
+              >
+                {pending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Mail className="w-3.5 h-3.5 mr-1" />}
+                {contract.signed_copy_emailed_at ? "Re-email" : "Email copy"}
               </Button>
             )}
             <Button
@@ -219,6 +234,13 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
             </Button>
           </div>
         </div>
+
+        {contract?.signed_at && (
+          <div className="text-[11px] text-muted-foreground">
+            Signed {new Date(contract.signed_at).toLocaleString()}
+            {contract.signed_copy_emailed_at && ` · Copy emailed ${new Date(contract.signed_copy_emailed_at).toLocaleDateString()}`}
+          </div>
+        )}
 
         {contract && kind === "listing_agreement" && contract.sign_token && !contract.signed_at && (
           <div className="flex items-center gap-2">
