@@ -93,7 +93,10 @@ type SellerFields = {
   email: string;
   co_owner_name: string;
   plot_description: string;
+  listing_option: string;
 };
+
+const listingOptions = ["Starter", "Pro", "Featured"] as const;
 
 export default function SignContract() {
   const { token } = useParams();
@@ -105,7 +108,7 @@ export default function SignContract() {
 
   const [fields, setFields] = useState<SellerFields>({
     seller_name: "", address: "", city_state_zip: "",
-    phone: "", email: "", co_owner_name: "", plot_description: "",
+    phone: "", email: "", co_owner_name: "", plot_description: "", listing_option: "Starter",
   });
   const [refreshing, setRefreshing] = useState(false);
 
@@ -134,6 +137,7 @@ export default function SignContract() {
           email: fd.email ?? "",
           co_owner_name: fd.co_owner_name ?? "",
           plot_description: fd.plot_description ?? "",
+          listing_option: fd.listing_option ?? "Starter",
         });
         setDone(data.already_signed);
       } catch (e) {
@@ -175,7 +179,7 @@ export default function SignContract() {
     const t = setTimeout(() => { void refreshContract(true); }, 800);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.co_owner_name, fields.plot_description, loading, done]);
+  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.co_owner_name, fields.plot_description, fields.listing_option, loading, done]);
 
 
   const submit = async () => {
@@ -290,6 +294,28 @@ export default function SignContract() {
                 <Label>Plot description (section / block / spaces)</Label>
                 <Input value={fields.plot_description} onChange={setField("plot_description")} />
               </div>
+              {info.kind === "listing_agreement" && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Listing option</Label>
+                  <div className="grid sm:grid-cols-3 gap-2" role="radiogroup" aria-label="Listing option">
+                    {listingOptions.map((option) => {
+                      const selected = fields.listing_option === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setFields((f) => ({ ...f, listing_option: option }))}
+                          className={`rounded-md border px-4 py-3 text-left transition-colors ${selected ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-muted/60"}`}
+                        >
+                          <span className="block text-sm font-semibold">{option}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <Button onClick={() => refreshContract(false)} disabled={refreshing} variant="secondary">
