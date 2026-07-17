@@ -11,6 +11,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const RESEND_KEY = Deno.env.get('RESEND_API_KEY')!;
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!;
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -107,9 +108,13 @@ Deno.serve(async (req) => {
 
     const subject = `Your Listing Agreement${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — ready to sign`;
 
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'X-Connection-Api-Key': RESEND_KEY,
+      },
       body: JSON.stringify({
         from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
         to: [to],
