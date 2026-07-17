@@ -23,18 +23,15 @@ export interface FillData {
   transfer_fee?: number;
 }
 
-// Brand palette — pulled from the printed template so overlays feel native.
-const INK = rgb(0.05, 0.15, 0.28);           // deep navy body text
-const CORAL = rgb(0.86, 0.36, 0.30);         // section accent
-const SAGE = rgb(0.30, 0.42, 0.34);          // secondary accent
-const MUTED = rgb(0.42, 0.44, 0.46);
-const PAPER = rgb(0.96, 0.94, 0.88);         // matches the tan field boxes
-const HAIRLINE = rgb(0.78, 0.76, 0.70);
+// Restrained palette to match the printed contract: dark text, light rules, no UI-like color blocks.
+const INK = rgb(0.08, 0.08, 0.08);
+const MUTED = rgb(0.28, 0.28, 0.28);
+const HAIRLINE = rgb(0.68, 0.68, 0.68);
 
 // Every filled blank uses the same size + font so the document feels uniform.
-const FIELD_SIZE = 11;
+const FIELD_SIZE = 10.5;
 const FIELD_X = 210;         // 5pt right of the underline start (x0 = 204.7)
-const FIELD_BASELINE_OFFSET = 3; // pt above the underline y
+const FIELD_BASELINE_OFFSET = 2.2; // pt above the underline y
 
 function money(n?: number | null): string {
   if (n == null || Number.isNaN(Number(n))) return '';
@@ -48,10 +45,16 @@ function stamp(page: PDFPage, text: string, x: number, lineY: number, font: PDFF
 
 /** Draw an X-mark inside the template's ~14x14 checkbox at bottom-left (x, y). */
 function checkBox(page: PDFPage, x: number, y: number, bold: PDFFont) {
-  // Solid sage fill inside the box, white X centered over it. Sized to sit
-  // just inside the template stroke so the box outline stays visible.
-  page.drawRectangle({ x: x + 0.6, y: y + 0.6, width: 13.1, height: 13.1, color: SAGE });
-  page.drawText('X', { x: x + 2.6, y: y + 2.4, size: 12, font: bold, color: rgb(1, 1, 1) });
+  const size = 10.5;
+  const box = 14.3;
+  const glyphW = bold.widthOfTextAtSize('X', size);
+  page.drawText('X', {
+    x: x + (box - glyphW) / 2,
+    y: y + (box - size) / 2 + 0.7,
+    size,
+    font: bold,
+    color: INK,
+  });
 }
 
 /** Wrap by width using font metrics, so long descriptions never overflow. */
@@ -114,12 +117,12 @@ function buildLaOverlays(page1: PDFPage, page2: PDFPage, font: PDFFont, bold: PD
     const s = Number(data.authorized_min_per_plot).toLocaleString('en-US');
     // Right-align within the small rect so the "$" prefix reads correctly.
     const w = font.widthOfTextAtSize(s, FIELD_SIZE);
-    stamp(page2, s, LA_P2.authPerPlot.x + LA_P2.authPerPlot.width - w - 4, LA_P2.authPerPlot.y, font);
+    stamp(page2, s, LA_P2.authPerPlot.x + LA_P2.authPerPlot.width - w - 4, LA_P2.authPerPlot.y - 0.8, font);
   }
   if (data.authorized_min_total != null) {
     const s = Number(data.authorized_min_total).toLocaleString('en-US');
     const w = font.widthOfTextAtSize(s, FIELD_SIZE);
-    stamp(page2, s, LA_P2.authTotal.x + LA_P2.authTotal.width - w - 4, LA_P2.authTotal.y, font);
+    stamp(page2, s, LA_P2.authTotal.x + LA_P2.authTotal.width - w - 4, LA_P2.authTotal.y - 0.8, font);
   }
 }
 
@@ -146,21 +149,20 @@ function buildPoaOverlays(page1: PDFPage, font: PDFFont, _bold: PDFFont, data: F
 }
 
 // ---------- APPENDED DATA REFERENCE SHEET ----------
-// Redesigned to feel like a continuation of the main document: same navy ink,
-// coral eyebrow, sage rule, tan field cards with muted labels + serif values.
+// Plain contract-style data sheet: Times fonts, black ink, thin rules, no colored UI cards.
 function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: PDFFont, serifBold: PDFFont, kind: string, data: FillData) {
   const page = pdf.addPage([612, 792]);
   const { width } = page.getSize();
 
-  // Header masthead — coral eyebrow + serif title (mirrors template cover).
-  page.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: CORAL });
+  // Header masthead — deliberately conservative so it reads as part of the contract packet.
+  page.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
   page.drawText(
     kind === 'poa' ? 'Power of Attorney — Data Reference' : 'Listing Agreement — Data Reference',
-    { x: 50, y: 712, size: 20, font: serifBold, color: INK },
+    { x: 50, y: 712, size: 18, font: serifBold, color: INK },
   );
-  page.drawLine({ start: { x: 50, y: 700 }, end: { x: 130, y: 700 }, thickness: 1.5, color: CORAL });
+  page.drawLine({ start: { x: 50, y: 700 }, end: { x: width - 50, y: 700 }, thickness: 0.6, color: HAIRLINE });
   page.drawText('Verify each value below before signing. This sheet is included in the executed PDF as an audit reference.',
-    { x: 50, y: 682, size: 9, font, color: MUTED });
+    { x: 50, y: 682, size: 9, font: serif, color: MUTED });
 
   // Two-column card layout.
   const cardX = 50, cardW = width - 100;
@@ -168,17 +170,17 @@ function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: 
 
   const startCard = (title: string, rows: number) => {
     const h = 34 + rows * 22 + 10;
-    page.drawRectangle({ x: cardX, y: y - h, width: cardW, height: h, color: PAPER, borderColor: HAIRLINE, borderWidth: 0.6 });
-    page.drawText(title.toUpperCase(), { x: cardX + 18, y: y - 20, size: 9, font: bold, color: SAGE, });
+    page.drawRectangle({ x: cardX, y: y - h, width: cardW, height: h, borderColor: HAIRLINE, borderWidth: 0.5 });
+    page.drawText(title.toUpperCase(), { x: cardX + 18, y: y - 20, size: 8.5, font: bold, color: INK, });
     page.drawLine({ start: { x: cardX + 18, y: y - 26 }, end: { x: cardX + cardW - 18, y: y - 26 }, thickness: 0.4, color: HAIRLINE });
     return y - 44; // first row baseline
   };
   const endCard = (rows: number) => { y -= 34 + rows * 22 + 10 + 14; };
 
   const row = (rowY: number, label: string, value?: string | null) => {
-    page.drawText(label, { x: cardX + 18, y: rowY, size: 8, font: bold, color: MUTED });
+    page.drawText(label, { x: cardX + 18, y: rowY, size: 8, font, color: MUTED });
     page.drawText(value && String(value).trim() ? String(value) : '—',
-      { x: cardX + 180, y: rowY, size: 11, font: serif, color: INK });
+      { x: cardX + 180, y: rowY, size: 10.5, font: serif, color: INK });
   };
 
   const partyRows: Array<[string, string | undefined]> = [
@@ -235,17 +237,15 @@ export async function buildFilledPdf(
   data: FillData,
 ): Promise<Uint8Array> {
   const pdf = await PDFDocument.load(templateBytes);
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const serif = await pdf.embedFont(StandardFonts.TimesRoman);
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
   const pages = pdf.getPages();
 
   if (kind === 'listing_agreement') {
-    if (pages.length >= 8) buildLaOverlays(pages[0], pages[1], font, bold, data);
+    if (pages.length >= 8) buildLaOverlays(pages[0], pages[1], serif, serifBold, data);
   } else {
-    if (pages.length >= 3) buildPoaOverlays(pages[0], font, bold, data);
+    if (pages.length >= 3) buildPoaOverlays(pages[0], serif, serifBold, data);
   }
-  appendInfoSheet(pdf, font, bold, serif, serifBold, kind, data);
+  appendInfoSheet(pdf, serif, serifBold, serif, serifBold, kind, data);
   return await pdf.save();
 }
