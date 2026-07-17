@@ -50,10 +50,13 @@ function stampText(page: PDFPage, text: string, x: number, y: number, font: PDFF
   page.drawText(String(text), { x, y, size, font, color });
 }
 
-/** Stamp initials in the "SELLER'S INITIALS: ____" block at the bottom-right of each page. */
+/** Stamp initials on every "Seller's Initials: ____" footer line.
+ * Templates are US Letter (612x792). Position is bottom-right within the page,
+ * bold so they read like a hand-drawn stamp. */
 function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) {
   for (const p of pages) {
-    stampText(p, initials, 712, 22, font, 10);
+    const { width } = p.getSize();
+    p.drawText(initials, { x: width - 90, y: 28, size: 11, font, color: INK });
   }
 }
 
