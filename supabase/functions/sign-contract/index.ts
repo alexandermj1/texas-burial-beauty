@@ -269,28 +269,33 @@ Deno.serve(async (req) => {
     const coSigImg = co_owner_image ? await decodeSignature(pdf, co_owner_image) : null;
 
     // === Stamp signature block on the correct template page ===
+    // Coordinates measured directly from the template underline rects; stamp
+    // sits ~3pt above the rule so the baseline sits on the line.
     if (c.kind === 'listing_agreement' && pages.length >= 8) {
       const p8 = pages[7];
-      stampText(p8, signature_name, 225, 279, font, 11);
+      // Seller block (measured rects): printed name 281.3, sig 252.0, date 222.8.
+      stampText(p8, signature_name, 210, 284.3, font, 11);
       if (sigImg) {
-        const dims = sigImg.scaleToFit(200, 28);
-        p8.drawImage(sigImg, { x: 225, y: 240, width: dims.width, height: dims.height });
+        const dims = sigImg.scaleToFit(220, 32);
+        p8.drawImage(sigImg, { x: 210, y: 255, width: dims.width, height: dims.height });
       }
-      stampText(p8, todayFormatted(), 225, 220, font, 11);
+      stampText(p8, todayFormatted(), 210, 225.8, font, 11);
     } else if (c.kind === 'poa' && pages.length >= 3) {
       const p3 = pages[2];
-      stampText(p3, signature_name, 225, 316, font, 11);
+      // Principal block (measured rects): printed 318.8, sig 289.5, date 260.3.
+      // Co-owner block: printed 231.0, sig 201.8, date 172.5.
+      stampText(p3, signature_name, 210, 321.8, font, 11);
       if (sigImg) {
-        const dims = sigImg.scaleToFit(200, 28);
-        p3.drawImage(sigImg, { x: 225, y: 280, width: dims.width, height: dims.height });
+        const dims = sigImg.scaleToFit(220, 32);
+        p3.drawImage(sigImg, { x: 210, y: 292.5, width: dims.width, height: dims.height });
       }
-      stampText(p3, todayFormatted(), 225, 251, font, 11);
-      if (co_owner_name) stampText(p3, co_owner_name, 225, 228, font, 11);
+      stampText(p3, todayFormatted(), 210, 263.3, font, 11);
+      if (co_owner_name) stampText(p3, co_owner_name, 210, 234, font, 11);
       if (coSigImg) {
-        const d2 = coSigImg.scaleToFit(200, 28);
-        p3.drawImage(coSigImg, { x: 225, y: 192, width: d2.width, height: d2.height });
+        const d2 = coSigImg.scaleToFit(220, 32);
+        p3.drawImage(coSigImg, { x: 210, y: 204.8, width: d2.width, height: d2.height });
       }
-      if (co_owner_name) stampText(p3, todayFormatted(), 225, 163, font, 11);
+      if (co_owner_name) stampText(p3, todayFormatted(), 210, 175.5, font, 11);
     }
 
     // Initials on the bottom-right of every content page (skip the appended certification page)
