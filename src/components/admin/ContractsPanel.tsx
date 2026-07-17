@@ -19,14 +19,18 @@ type Contract = {
   filled_pdf_path: string | null;
   signed_pdf_path: string | null;
   notarized_pdf_path: string | null;
+  countersigned_pdf_path: string | null;
   sent_at: string | null;
   viewed_at: string | null;
   signed_at: string | null;
+  countersigned_at: string | null;
+  countersigner_name: string | null;
   notarized_at: string | null;
   signed_copy_emailed_at: string | null;
   bluenotary_session_url: string | null;
   bluenotary_sent_at: string | null;
 };
+
 
 type Props = {
   submissionId: string;
