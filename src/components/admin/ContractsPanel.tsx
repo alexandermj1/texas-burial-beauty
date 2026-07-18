@@ -60,7 +60,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
 
   type EditFields = {
     seller_name: string; address: string; city_state_zip: string;
-    phone: string; email: string; cemetery: string;
+    phone: string; email: string; cemetery: string; county_state: string;
     plot_description: string; plot_count: string;
     listing_option: string; authorized_min_total: string;
   };
@@ -108,12 +108,12 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       const authTotal = (sub as any).list_price ?? (sub as any).cemetery_retail ?? "";
       setEditFields({
         seller_name: (sub as any).name ?? "",
-        address: (sub as any).mailing_address ?? "",
-        city_state_zip: [(sub as any).cemetery_city, (sub as any).state, (sub as any).zip_code]
-          .filter(Boolean).join(", "),
+        address: "",
+        city_state_zip: "",
         phone: (sub as any).phone ?? "",
         email: (sub as any).email ?? "",
         cemetery: (sub as any).cemetery ?? "",
+        county_state: (sub as any).cemetery_city ? `${(sub as any).cemetery_city}, TX` : "",
         plot_description: [
           (sub as any).section && `Section ${(sub as any).section}`,
           (sub as any).spaces && `Spaces ${(sub as any).spaces}`,
@@ -562,6 +562,12 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
                 <Label>Cemetery</Label>
                 <Input value={editFields.cemetery}
                   onChange={(e) => setEditFields({ ...editFields, cemetery: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Cemetery county / state <span className="text-muted-foreground text-[11px]">(POA only)</span></Label>
+                <Input value={editFields.county_state}
+                  placeholder="e.g. Harris County, TX"
+                  onChange={(e) => setEditFields({ ...editFields, county_state: e.target.value })} />
               </div>
               <div className="md:col-span-2">
                 <Label>Plot description (section / block / spaces)</Label>
