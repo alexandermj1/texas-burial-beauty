@@ -108,12 +108,12 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       const authTotal = (sub as any).list_price ?? (sub as any).cemetery_retail ?? "";
       setEditFields({
         seller_name: (sub as any).name ?? "",
-        address: (sub as any).mailing_address ?? "",
-        city_state_zip: [(sub as any).cemetery_city, (sub as any).state, (sub as any).zip_code]
-          .filter(Boolean).join(", "),
+        address: "",
+        city_state_zip: "",
         phone: (sub as any).phone ?? "",
         email: (sub as any).email ?? "",
         cemetery: (sub as any).cemetery ?? "",
+        county_state: (sub as any).cemetery_city ? `${(sub as any).cemetery_city}, TX` : "",
         plot_description: [
           (sub as any).section && `Section ${(sub as any).section}`,
           (sub as any).spaces && `Spaces ${(sub as any).spaces}`,
