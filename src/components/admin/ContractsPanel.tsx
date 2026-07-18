@@ -60,7 +60,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
 
   type EditFields = {
     seller_name: string; address: string; city_state_zip: string;
-    phone: string; email: string; cemetery: string;
+    phone: string; email: string; cemetery: string; county_state: string;
     plot_description: string; plot_count: string;
     listing_option: string; authorized_min_total: string;
   };
