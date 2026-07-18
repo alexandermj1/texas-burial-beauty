@@ -174,6 +174,17 @@ Deno.serve(async (req) => {
 
       if (c.kind === 'listing_agreement' && pages.length >= 8) {
         const p8 = pages[7];
+        // The template ships with a pre-printed broker signature + typed name in the
+        // broker block. Cover those areas with opaque white before stamping our own,
+        // so the counter-signature isn't drawn on top of the pre-filled artwork.
+        const white = rgb(1, 1, 1);
+        // Broker signature line region (above underline y≈96.8, height covers glyph area)
+        p8.drawRectangle({ x: 204, y: 94, width: 300, height: 40, color: white });
+        // Broker printed-name line region (above underline y≈136.5)
+        p8.drawRectangle({ x: 204, y: 134, width: 300, height: 18, color: white });
+        // Broker date line region (above underline y≈70.5)
+        p8.drawRectangle({ x: 204, y: 68, width: 300, height: 18, color: white });
+
         // Broker block (measured rects): name 136.5, sig 96.8, date 70.5. x0=204.7.
         stampText(p8, countersigner_name, 210, 139.5, font, 11);
         if (brokerImg) {
@@ -182,6 +193,7 @@ Deno.serve(async (req) => {
         }
         stampText(p8, today, 210, 73.5, font, 11);
       }
+
 
       // Add a "Fully Executed" stamp on the certification page (last page).
       const cert = pages[pages.length - 1];
