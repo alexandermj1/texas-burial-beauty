@@ -354,7 +354,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
             <Button
               size="sm"
               variant={contract ? "outline" : "default"}
-              onClick={() => generate(kind)}
+              onClick={() => openGenerate(kind)}
               disabled={pending}
             >
               {pending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
