@@ -58,6 +58,16 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const [csName, setCsName] = useState("");
   const [csSig, setCsSig] = useState<string | null>(null);
 
+  type EditFields = {
+    seller_name: string; address: string; city_state_zip: string;
+    phone: string; email: string; cemetery: string;
+    plot_description: string; plot_count: string;
+    listing_option: string; authorized_min_total: string;
+  };
+  const [editKind, setEditKind] = useState<Contract["kind"] | null>(null);
+  const [editFields, setEditFields] = useState<EditFields | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+
 
 
   const load = async () => {
