@@ -564,6 +564,12 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
                   onChange={(e) => setEditFields({ ...editFields, cemetery: e.target.value })} />
               </div>
               <div className="md:col-span-2">
+                <Label>Cemetery county / state <span className="text-muted-foreground text-[11px]">(POA only)</span></Label>
+                <Input value={editFields.county_state}
+                  placeholder="e.g. Harris County, TX"
+                  onChange={(e) => setEditFields({ ...editFields, county_state: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
                 <Label>Plot description (section / block / spaces)</Label>
                 <Textarea rows={2} value={editFields.plot_description}
                   onChange={(e) => setEditFields({ ...editFields, plot_description: e.target.value })} />
