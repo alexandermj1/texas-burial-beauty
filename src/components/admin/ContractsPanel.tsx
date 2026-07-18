@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
@@ -57,6 +58,16 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const [csName, setCsName] = useState("");
   const [csSig, setCsSig] = useState<string | null>(null);
 
+  type EditFields = {
+    seller_name: string; address: string; city_state_zip: string;
+    phone: string; email: string; cemetery: string;
+    plot_description: string; plot_count: string;
+    listing_option: string; authorized_min_total: string;
+  };
+  const [editKind, setEditKind] = useState<Contract["kind"] | null>(null);
+  const [editFields, setEditFields] = useState<EditFields | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+
 
 
   const load = async () => {
@@ -86,20 +97,62 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const la = contracts.find((c) => c.kind === "listing_agreement");
   const poa = contracts.find((c) => c.kind === "poa");
 
-  const generate = async (kind: Contract["kind"]) => {
-    setBusy(kind);
+  const openGenerate = async (kind: Contract["kind"]) => {
+    setEditKind(kind);
+    setEditLoading(true);
+    setEditFields(null);
     try {
+      const { data: sub } = await supabase
+        .from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
+      if (!sub) throw new Error("Submission not found");
+      const authTotal = (sub as any).list_price ?? (sub as any).cemetery_retail ?? "";
+      setEditFields({
+        seller_name: (sub as any).name ?? "",
+        address: (sub as any).mailing_address ?? "",
+        city_state_zip: [(sub as any).cemetery_city, (sub as any).state, (sub as any).zip_code]
+          .filter(Boolean).join(", "),
+        phone: (sub as any).phone ?? "",
+        email: (sub as any).email ?? "",
+        cemetery: (sub as any).cemetery ?? "",
+        plot_description: [
+          (sub as any).section && `Section ${(sub as any).section}`,
+          (sub as any).spaces && `Spaces ${(sub as any).spaces}`,
+          (sub as any).space_numbers,
+        ].filter(Boolean).join(" • "),
+        plot_count: String((sub as any).plot_count ?? ""),
+        listing_option: (sub as any).listing_tier ?? (sub as any).listing_option ?? "Starter",
+        authorized_min_total: authTotal ? String(authTotal) : "",
+      });
+    } catch (e) {
+      toast.error((e as Error).message);
+      setEditKind(null);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const submitGenerate = async () => {
+    if (!editKind || !editFields) return;
+    setBusy(editKind);
+    try {
+      const overrides = {
+        ...editFields,
+        plot_count: editFields.plot_count ? Number(editFields.plot_count) : undefined,
+        authorized_min_total: editFields.authorized_min_total
+          ? Number(editFields.authorized_min_total) : undefined,
+      };
       const { data, error } = await supabase.functions.invoke("generate-contract", {
-        body: { submission_id: submissionId, kind },
+        body: { submission_id: submissionId, kind: editKind, overrides },
       });
       if (error) throw error;
-      toast.success(`${KIND_LABEL[kind]} generated`);
-      // Copy signing link to clipboard for LA
-      if (kind === "listing_agreement" && data?.sign_token) {
+      toast.success(`${KIND_LABEL[editKind]} generated with your edits`);
+      if (editKind === "listing_agreement" && data?.sign_token) {
         const link = `${window.location.origin}/sign/${data.sign_token}`;
         await navigator.clipboard.writeText(link).catch(() => {});
-        toast.message("Signing link copied", { description: link });
+        toast.message("Signing link copied to clipboard", { description: link });
       }
+      setEditKind(null);
+      setEditFields(null);
       await load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -301,7 +354,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
             <Button
               size="sm"
               variant={contract ? "outline" : "default"}
-              onClick={() => generate(kind)}
+              onClick={() => openGenerate(kind)}
               disabled={pending}
             >
               {pending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
@@ -458,6 +511,93 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
                 Countersign & send
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editKind} onOpenChange={(o) => { if (!o) { setEditKind(null); setEditFields(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review contract details before generating</DialogTitle>
+            <DialogDescription>
+              These fields will be filled into the {editKind ? KIND_LABEL[editKind] : "contract"}. Edit anything
+              that needs correcting — the seller can still adjust their own info when they sign.
+            </DialogDescription>
+          </DialogHeader>
+          {editLoading || !editFields ? (
+            <div className="py-10 flex items-center justify-center text-muted-foreground text-sm">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading submission…
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Label>Seller full legal name</Label>
+                <Input value={editFields.seller_name}
+                  onChange={(e) => setEditFields({ ...editFields, seller_name: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Mailing address</Label>
+                <Input value={editFields.address}
+                  onChange={(e) => setEditFields({ ...editFields, address: e.target.value })} />
+              </div>
+              <div>
+                <Label>City, State, ZIP</Label>
+                <Input value={editFields.city_state_zip}
+                  onChange={(e) => setEditFields({ ...editFields, city_state_zip: e.target.value })} />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input value={editFields.phone}
+                  onChange={(e) => setEditFields({ ...editFields, phone: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Email</Label>
+                <Input type="email" value={editFields.email}
+                  onChange={(e) => setEditFields({ ...editFields, email: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Cemetery</Label>
+                <Input value={editFields.cemetery}
+                  onChange={(e) => setEditFields({ ...editFields, cemetery: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Plot description (section / block / spaces)</Label>
+                <Textarea rows={2} value={editFields.plot_description}
+                  onChange={(e) => setEditFields({ ...editFields, plot_description: e.target.value })} />
+              </div>
+              <div>
+                <Label>Plot count</Label>
+                <Input type="number" value={editFields.plot_count}
+                  onChange={(e) => setEditFields({ ...editFields, plot_count: e.target.value })} />
+              </div>
+              <div>
+                <Label>Listing option</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editFields.listing_option}
+                  onChange={(e) => setEditFields({ ...editFields, listing_option: e.target.value })}
+                >
+                  <option value="Starter">Starter</option>
+                  <option value="Pro">Pro</option>
+                  <option value="Featured">Featured</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <Label>Authorized minimum total sales price ($)</Label>
+                <Input type="number" value={editFields.authorized_min_total}
+                  onChange={(e) => setEditFields({ ...editFields, authorized_min_total: e.target.value })} />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  The minimum total price you're authorized to accept. Leave blank to use the quote/retail on file.
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => { setEditKind(null); setEditFields(null); }}>Cancel</Button>
+            <Button onClick={submitGenerate} disabled={!editFields || busy === editKind}>
+              {busy === editKind && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Generate contract
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

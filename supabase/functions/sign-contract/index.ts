@@ -296,6 +296,18 @@ Deno.serve(async (req) => {
             console.error('countersign email non-ok', emailRes.status, await emailRes.text());
           } else {
             await svc.from('contracts').update({ signed_copy_emailed_at: nowIso }).eq('id', c.id);
+            try {
+              await svc.from('email_messages').insert({
+                matched_submission_id: c.submission_id,
+                direction: 'outbound',
+                from_email: 'contracts@texascemeterybrokers.com',
+                to_email: sub.email,
+                subject,
+                body_html: html,
+                body_text: `Fully executed contract attached.`,
+                received_at: new Date().toISOString(),
+              });
+            } catch (logErr) { console.error('log email_messages failed', logErr); }
           }
         }
       } catch (e) { console.error('countersign email failed', e); }
@@ -480,32 +492,48 @@ Deno.serve(async (req) => {
       }).eq('id', c.submission_id);
     }
 
-    // === Email a signed copy to the seller (and BCC the office) ===
+    // === Email a receipt copy to the seller immediately after they sign ===
     try {
       const { data: sub } = await svc.from('contact_submissions')
         .select('email, name, cemetery').eq('id', c.submission_id).maybeSingle();
       const to = sub?.email;
       const RESEND_KEY = Deno.env.get('RESEND_API_KEY');
-      if (to && RESEND_KEY) {
-        const b64 = btoa(String.fromCharCode(...out));
+      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+      if (to && RESEND_KEY && LOVABLE_API_KEY) {
+        // Chunk-safe base64 encoding for large PDFs
+        let bin = '';
+        const CHUNK = 0x8000;
+        for (let i = 0; i < out.length; i += CHUNK) {
+          bin += String.fromCharCode(...out.subarray(i, i + CHUNK));
+        }
+        const b64 = btoa(bin);
         const docLabel = c.kind === 'poa' ? 'Power of Attorney' : 'Exclusive Right-to-Sell Agreement';
         const filename = `${(sub?.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-${c.kind}-signed.pdf`;
         const html = `
-          <div style="font-family:Georgia,serif;color:#222;max-width:560px">
+          <div style="font-family:Georgia,'Times New Roman',serif;color:#1f2a37;max-width:600px;margin:0 auto;padding:32px 24px;background:#f5f1ea">
+            <div style="text-align:center;border-bottom:1px solid #d9c7a3;padding-bottom:20px;margin-bottom:24px">
+              <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8a7853">Texas Cemetery Brokers</div>
+              <div style="font-size:22px;margin-top:8px;color:#1f2a37">Signature received — thank you</div>
+            </div>
             <p>Hi ${sub?.name ?? ''},</p>
-            <p>Thank you for signing your <strong>${docLabel}</strong>${sub?.cemetery ? ` for ${sub.cemetery}` : ''}. A fully executed copy is attached to this email for your records.</p>
+            <p>We have received your signed <strong>${docLabel}</strong>${sub?.cemetery ? ` for <em>${sub.cemetery}</em>` : ''}. A copy of exactly what you signed is attached to this email for your records.</p>
+            <p><strong>What happens next:</strong> our broker will now countersign the document. As soon as that is complete you'll receive a second email with the <em>fully executed</em> copy attached.</p>
             ${c.kind === 'poa' ? '<p>Reminder: the Power of Attorney becomes fully effective once it is notarized. We will send a separate email with the notary session link.</p>' : ''}
-            <p>If anything looks off, please reply to this email and we will help right away.</p>
-            <p style="margin-top:24px">— Texas Cemetery Brokers</p>
+            <p>If anything looks off, simply reply to this email and we'll help right away.</p>
+            <p style="margin-top:28px;color:#8a7853;font-size:13px">— Texas Cemetery Brokers<br/><a href="https://www.texascemeterybrokers.com" style="color:#8a7853">www.texascemeterybrokers.com</a></p>
           </div>`;
-        const emailRes = await fetch('https://api.resend.com/emails', {
+        const emailRes = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'X-Connection-Api-Key': RESEND_KEY,
+          },
           body: JSON.stringify({
             from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
             to: [to],
             bcc: ['contracts@texascemeterybrokers.com'],
-            subject: `Your signed ${docLabel} — copy for your records`,
+            subject: `Signature received — your ${docLabel} (copy attached)`,
             html,
             attachments: [{ filename, content: b64 }],
           }),
@@ -514,12 +542,25 @@ Deno.serve(async (req) => {
           await svc.from('contracts')
             .update({ signed_copy_emailed_at: new Date().toISOString() })
             .eq('id', c.id);
+          // Also log into email_messages so it appears in the submission's email history
+          try {
+            await svc.from('email_messages').insert({
+              matched_submission_id: c.submission_id,
+              direction: 'outbound',
+              from_email: 'contracts@texascemeterybrokers.com',
+              to_email: to,
+              subject: `Signature received — your ${docLabel} (copy attached)`,
+              body_html: html,
+              body_text: `We received your signed ${docLabel}. A copy is attached.`,
+              received_at: new Date().toISOString(),
+            });
+          } catch (logErr) { console.error('log email_messages failed', logErr); }
         } else {
-          console.error('resend send failed', emailRes.status, await emailRes.text());
+          console.error('receipt email non-ok', emailRes.status, await emailRes.text());
         }
       }
     } catch (mailErr) {
-      console.error('email copy failed', mailErr);
+      console.error('email receipt failed', mailErr);
     }
 
 
