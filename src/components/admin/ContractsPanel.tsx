@@ -514,6 +514,93 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editKind} onOpenChange={(o) => { if (!o) { setEditKind(null); setEditFields(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review contract details before generating</DialogTitle>
+            <DialogDescription>
+              These fields will be filled into the {editKind ? KIND_LABEL[editKind] : "contract"}. Edit anything
+              that needs correcting — the seller can still adjust their own info when they sign.
+            </DialogDescription>
+          </DialogHeader>
+          {editLoading || !editFields ? (
+            <div className="py-10 flex items-center justify-center text-muted-foreground text-sm">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading submission…
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Label>Seller full legal name</Label>
+                <Input value={editFields.seller_name}
+                  onChange={(e) => setEditFields({ ...editFields, seller_name: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Mailing address</Label>
+                <Input value={editFields.address}
+                  onChange={(e) => setEditFields({ ...editFields, address: e.target.value })} />
+              </div>
+              <div>
+                <Label>City, State, ZIP</Label>
+                <Input value={editFields.city_state_zip}
+                  onChange={(e) => setEditFields({ ...editFields, city_state_zip: e.target.value })} />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input value={editFields.phone}
+                  onChange={(e) => setEditFields({ ...editFields, phone: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Email</Label>
+                <Input type="email" value={editFields.email}
+                  onChange={(e) => setEditFields({ ...editFields, email: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Cemetery</Label>
+                <Input value={editFields.cemetery}
+                  onChange={(e) => setEditFields({ ...editFields, cemetery: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Plot description (section / block / spaces)</Label>
+                <Textarea rows={2} value={editFields.plot_description}
+                  onChange={(e) => setEditFields({ ...editFields, plot_description: e.target.value })} />
+              </div>
+              <div>
+                <Label>Plot count</Label>
+                <Input type="number" value={editFields.plot_count}
+                  onChange={(e) => setEditFields({ ...editFields, plot_count: e.target.value })} />
+              </div>
+              <div>
+                <Label>Listing option</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editFields.listing_option}
+                  onChange={(e) => setEditFields({ ...editFields, listing_option: e.target.value })}
+                >
+                  <option value="Starter">Starter</option>
+                  <option value="Pro">Pro</option>
+                  <option value="Featured">Featured</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <Label>Authorized minimum total sales price ($)</Label>
+                <Input type="number" value={editFields.authorized_min_total}
+                  onChange={(e) => setEditFields({ ...editFields, authorized_min_total: e.target.value })} />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  The minimum total price you're authorized to accept. Leave blank to use the quote/retail on file.
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => { setEditKind(null); setEditFields(null); }}>Cancel</Button>
+            <Button onClick={submitGenerate} disabled={!editFields || busy === editKind}>
+              {busy === editKind && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Generate contract
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
