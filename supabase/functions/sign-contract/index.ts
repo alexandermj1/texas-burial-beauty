@@ -296,6 +296,18 @@ Deno.serve(async (req) => {
             console.error('countersign email non-ok', emailRes.status, await emailRes.text());
           } else {
             await svc.from('contracts').update({ signed_copy_emailed_at: nowIso }).eq('id', c.id);
+            try {
+              await svc.from('email_messages').insert({
+                matched_submission_id: c.submission_id,
+                direction: 'outbound',
+                from_email: 'contracts@texascemeterybrokers.com',
+                to_email: sub.email,
+                subject,
+                body_html: html,
+                body_text: `Fully executed contract attached.`,
+                received_at: new Date().toISOString(),
+              });
+            } catch (logErr) { console.error('log email_messages failed', logErr); }
           }
         }
       } catch (e) { console.error('countersign email failed', e); }
