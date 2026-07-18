@@ -310,9 +310,12 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Viewed</span>
             ) : contract?.sent_at ? (
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Sent</span>
+            ) : contract?.filled_pdf_path ? (
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Draft — not sent</span>
             ) : (
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Not generated</span>
             )}
+
           </div>
           <div className="flex items-center gap-1">
             {contract && urls[contract.id] && (
@@ -616,8 +619,12 @@ function CountersignPad({ onChange }: { onChange: (dataUrl: string | null) => vo
     ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2; ctx.lineCap = "round";
     const pos = (e: PointerEvent) => {
       const r = c.getBoundingClientRect();
-      return { x: e.clientX - r.left, y: e.clientY - r.top };
+      return {
+        x: (e.clientX - r.left) * (c.width / r.width),
+        y: (e.clientY - r.top) * (c.height / r.height),
+      };
     };
+
     const down = (e: PointerEvent) => {
       drawing.current = true; has.current = true;
       const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
