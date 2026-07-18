@@ -100,14 +100,14 @@ Deno.serve(async (req) => {
     const row = {
       submission_id,
       kind,
-      status: 'sent' as const,
+      status: 'draft' as const,
       sign_token: signToken,
       sign_token_expires_at: signToken ? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString() : null,
       fill_data: fill,
       filled_pdf_path: path,
-      sent_at: new Date().toISOString(),
       created_by: userData.user.id,
     };
+
     if (existing) await svc.from('contracts').update(row).eq('id', existing.id);
     else await svc.from('contracts').insert(row);
 
