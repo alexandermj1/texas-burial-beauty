@@ -97,20 +97,62 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const la = contracts.find((c) => c.kind === "listing_agreement");
   const poa = contracts.find((c) => c.kind === "poa");
 
-  const generate = async (kind: Contract["kind"]) => {
-    setBusy(kind);
+  const openGenerate = async (kind: Contract["kind"]) => {
+    setEditKind(kind);
+    setEditLoading(true);
+    setEditFields(null);
     try {
+      const { data: sub } = await supabase
+        .from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
+      if (!sub) throw new Error("Submission not found");
+      const authTotal = (sub as any).list_price ?? (sub as any).cemetery_retail ?? "";
+      setEditFields({
+        seller_name: (sub as any).name ?? "",
+        address: (sub as any).mailing_address ?? "",
+        city_state_zip: [(sub as any).cemetery_city, (sub as any).state, (sub as any).zip_code]
+          .filter(Boolean).join(", "),
+        phone: (sub as any).phone ?? "",
+        email: (sub as any).email ?? "",
+        cemetery: (sub as any).cemetery ?? "",
+        plot_description: [
+          (sub as any).section && `Section ${(sub as any).section}`,
+          (sub as any).spaces && `Spaces ${(sub as any).spaces}`,
+          (sub as any).space_numbers,
+        ].filter(Boolean).join(" • "),
+        plot_count: String((sub as any).plot_count ?? ""),
+        listing_option: (sub as any).listing_tier ?? (sub as any).listing_option ?? "Starter",
+        authorized_min_total: authTotal ? String(authTotal) : "",
+      });
+    } catch (e) {
+      toast.error((e as Error).message);
+      setEditKind(null);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const submitGenerate = async () => {
+    if (!editKind || !editFields) return;
+    setBusy(editKind);
+    try {
+      const overrides = {
+        ...editFields,
+        plot_count: editFields.plot_count ? Number(editFields.plot_count) : undefined,
+        authorized_min_total: editFields.authorized_min_total
+          ? Number(editFields.authorized_min_total) : undefined,
+      };
       const { data, error } = await supabase.functions.invoke("generate-contract", {
-        body: { submission_id: submissionId, kind },
+        body: { submission_id: submissionId, kind: editKind, overrides },
       });
       if (error) throw error;
-      toast.success(`${KIND_LABEL[kind]} generated`);
-      // Copy signing link to clipboard for LA
-      if (kind === "listing_agreement" && data?.sign_token) {
+      toast.success(`${KIND_LABEL[editKind]} generated with your edits`);
+      if (editKind === "listing_agreement" && data?.sign_token) {
         const link = `${window.location.origin}/sign/${data.sign_token}`;
         await navigator.clipboard.writeText(link).catch(() => {});
-        toast.message("Signing link copied", { description: link });
+        toast.message("Signing link copied to clipboard", { description: link });
       }
+      setEditKind(null);
+      setEditFields(null);
       await load();
     } catch (e) {
       toast.error((e as Error).message);
