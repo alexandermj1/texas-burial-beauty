@@ -213,14 +213,6 @@ function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: 
     rowY = startCard('Sale Terms', termsRows.length);
     for (const [l, v] of termsRows) { row(rowY, l, v); rowY -= 22; }
     endCard(termsRows.length);
-  } else {
-    const termsRows: Array<[string, string | undefined]> = [
-      ['Quoted to Seller', money(data.quote_amount)],
-      ['Transfer Fee (Buyer)', money(data.transfer_fee)],
-    ];
-    rowY = startCard('Transaction', termsRows.length);
-    for (const [l, v] of termsRows) { row(rowY, l, v); rowY -= 22; }
-    endCard(termsRows.length);
   }
 
   // Footer to match the template chrome.
