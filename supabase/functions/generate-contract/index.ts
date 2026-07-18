@@ -51,24 +51,32 @@ Deno.serve(async (req) => {
     if (subErr || !sub) throw subErr ?? new Error('submission not found');
 
     let transferFee: number | null = sub.transfer_fee_amount ?? null;
+    let cemeteryCity: string | null = null;
     if (sub.cemetery) {
       const { data: cem } = await svc
-        .from('texas_cemeteries').select('transfer_fee').ilike('name', sub.cemetery).maybeSingle();
+        .from('texas_cemeteries').select('transfer_fee, city').ilike('name', sub.cemetery).maybeSingle();
       if (cem?.transfer_fee != null) transferFee = Number(cem.transfer_fee);
+      cemeteryCity = cem?.city ?? null;
     }
 
     const authMinTotal = Number(overrides.authorized_min_total ?? sub.list_price ?? sub.cemetery_retail ?? 0);
     const plots = Number(sub.plot_count ?? 1) || 1;
 
+    // County/State for the Interment Property: default to the cemetery's city + TX
+    // (admin can override in the review dialog). Never mix the seller's own address here.
+    const cemLocationCity = cemeteryCity ?? sub.cemetery_city ?? '';
+    const defaultCountyState = cemLocationCity ? `${cemLocationCity}, TX` : '';
+
     const fill: FillData = {
       seller_name: overrides.seller_name ?? sub.name ?? '',
       co_owner_name: overrides.co_owner_name ?? sub.deed_owner_names ?? '',
-      address: overrides.address ?? sub.mailing_address ?? '',
-      city_state_zip: overrides.city_state_zip ?? [sub.cemetery_city, sub.state, sub.zip_code].filter(Boolean).join(', '),
+      // Seller's own mailing address — leave blank when unknown; the seller fills it on the sign page.
+      address: overrides.address ?? '',
+      city_state_zip: overrides.city_state_zip ?? '',
       phone: overrides.phone ?? sub.phone ?? '',
       email: overrides.email ?? sub.email ?? '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
-      county_state: overrides.county_state ?? [sub.cemetery_city, sub.state].filter(Boolean).join(', '),
+      county_state: overrides.county_state ?? defaultCountyState,
       plot_count: overrides.plot_count ?? sub.plot_count ?? '',
       plot_description: overrides.plot_description ??
         [sub.section && `Section ${sub.section}`, sub.spaces && `Spaces ${sub.spaces}`, sub.space_numbers]
