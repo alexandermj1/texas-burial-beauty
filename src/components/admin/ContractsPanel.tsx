@@ -619,8 +619,12 @@ function CountersignPad({ onChange }: { onChange: (dataUrl: string | null) => vo
     ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2; ctx.lineCap = "round";
     const pos = (e: PointerEvent) => {
       const r = c.getBoundingClientRect();
-      return { x: e.clientX - r.left, y: e.clientY - r.top };
+      return {
+        x: (e.clientX - r.left) * (c.width / r.width),
+        y: (e.clientY - r.top) * (c.height / r.height),
+      };
     };
+
     const down = (e: PointerEvent) => {
       drawing.current = true; has.current = true;
       const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
