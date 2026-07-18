@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
       const allowed = [
         'seller_name', 'co_owner_name', 'address', 'city_state_zip',
         'phone', 'email', 'plot_description', 'plot_count', 'listing_option',
+        'county_state', 'cemetery',
       ] as const;
       const merged: FillData = { ...(c.fill_data ?? {}) } as FillData;
       for (const k of allowed) {
