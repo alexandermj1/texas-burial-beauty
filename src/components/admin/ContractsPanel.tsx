@@ -310,9 +310,12 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Viewed</span>
             ) : contract?.sent_at ? (
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Sent</span>
+            ) : contract?.filled_pdf_path ? (
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Draft — not sent</span>
             ) : (
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Not generated</span>
             )}
+
           </div>
           <div className="flex items-center gap-1">
             {contract && urls[contract.id] && (
