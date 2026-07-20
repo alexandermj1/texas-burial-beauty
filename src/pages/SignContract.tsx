@@ -508,20 +508,35 @@ export default function SignContract() {
               </label>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
-              <p className="text-[11px] text-muted-foreground max-w-sm">
-                A fully signed PDF will be emailed to you the moment you click <em>Sign &amp; submit</em>.
-              </p>
-              <Button
-                onClick={submit}
-                disabled={busy}
-                size="lg"
-                className="bg-[#1f2a37] hover:bg-[#111827] text-white px-8 h-12"
-              >
-                {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Sign &amp; submit
-              </Button>
-            </div>
+            {(() => {
+              const allFilled =
+                fields.seller_name.trim() &&
+                fields.address.trim() &&
+                fields.city_state_zip.trim() &&
+                fields.phone.trim() &&
+                fields.email.trim() &&
+                fields.plot_description.trim() &&
+                fields.listing_option;
+              const ready = allFilled && initials.trim().length >= 2 && sig && consent;
+              return (
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
+                  <p className="text-[11px] text-muted-foreground max-w-sm">
+                    {allFilled
+                      ? <>A fully signed PDF will be emailed to you the moment you click <em>Sign &amp; submit</em>.</>
+                      : <>Please complete every field in Step 1 before signing.</>}
+                  </p>
+                  <Button
+                    onClick={submit}
+                    disabled={busy || !ready}
+                    size="lg"
+                    className="bg-[#1f2a37] hover:bg-[#111827] text-white px-8 h-12"
+                  >
+                    {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Sign &amp; submit
+                  </Button>
+                </div>
+              );
+            })()}
           </Card>
         )}
 
