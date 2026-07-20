@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
-  Stamp, ScrollText, Shield, Mail, PenLine, Send,
+  ScrollText, Shield, Mail, PenLine, Send,
 } from "lucide-react";
 
 
