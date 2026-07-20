@@ -101,7 +101,7 @@ type SellerFields = {
 };
 
 const listingOptions = [
-  { id: "Starter", tagline: "Basic exposure — priced for a fast, quiet listing." },
+  { id: "Starter", tagline: "Essential listing on our marketplace with standard exposure." },
   { id: "Pro", tagline: "Wider marketing, faster time-to-buyer." },
   { id: "Featured", tagline: "Full marketing package with priority placement." },
 ] as const;
