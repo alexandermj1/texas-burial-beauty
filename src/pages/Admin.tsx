@@ -58,6 +58,9 @@ const plotTypeOptions = [
 const Admin = () => {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isStaff, loading: staffLoading } = useStaff();
+  const hasAccess = isAdmin || isStaff;
+  const roleLoading = adminLoading || staffLoading;
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
