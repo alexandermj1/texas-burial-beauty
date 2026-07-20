@@ -59,7 +59,15 @@ Deno.serve(async (req) => {
       cemeteryCity = cem?.city ?? null;
     }
 
-    const authMinTotal = Number(overrides.authorized_min_total ?? sub.list_price ?? sub.cemetery_retail ?? 0);
+    // Authorized minimum = the quoted price we actually sent the seller (what they accepted).
+    // Fall back to list_price / retail only when no quote exists on the submission.
+    const authMinTotal = Number(
+      overrides.authorized_min_total ??
+      sub.quote_amount ??
+      sub.list_price ??
+      sub.cemetery_retail ??
+      0,
+    );
     const plots = Number(sub.plot_count ?? 1) || 1;
 
     // County/State for the Interment Property: default to the cemetery's city + TX
