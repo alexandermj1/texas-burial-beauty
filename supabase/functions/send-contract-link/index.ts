@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
 
     const { data: c } = await svc.from('contracts').select('*').eq('id', contract_id).maybeSingle();
     if (!c) throw new Error('contract not found');
-    if (c.kind !== 'listing_agreement') throw new Error('Only Listing Agreement links are sent this way');
     if (!c.sign_token) throw new Error('contract has no signing token yet');
 
     const { data: sub } = await svc.from('contact_submissions')
@@ -46,6 +45,7 @@ Deno.serve(async (req) => {
 
     const firstName = (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` for ${escapeHtml(sub.cemetery)}` : '';
+    const isPoa = c.kind === 'poa';
 
     const html = `
 <!doctype html>
