@@ -129,7 +129,7 @@ const Admin = () => {
   const [newCemetery, setNewCemetery] = useState({ name: "", city: "", region: "Peninsula & SF", address: "" });
 
   useEffect(() => {
-    if (!authLoading && !adminLoading && user && isAdmin) {
+    if (!authLoading && !roleLoading && user && hasAccess) {
       (async () => {
         // Sync the Gmail inbox on login (once per browser session) so any
         // contact-form emails that arrived while the admin was away get
@@ -143,7 +143,7 @@ const Admin = () => {
             console.warn("Login sync-inbox failed (non-fatal):", e);
           }
         }
-        await fetchAllListings();
+        if (isAdmin) await fetchAllListings();
       })();
       (async () => {
         const { count } = await supabase
@@ -154,7 +154,7 @@ const Admin = () => {
         setUnreadNotifs(count || 0);
       })();
     }
-  }, [user, isAdmin, authLoading, adminLoading]);
+  }, [user, hasAccess, isAdmin, authLoading, roleLoading]);
 
   // Auto-refresh submissions inbox: polls every 15s and listens for realtime changes
   // so newly arrived emails / submissions show up without a manual refresh.
