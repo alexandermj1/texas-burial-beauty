@@ -425,13 +425,13 @@ const Admin = () => {
     { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
   ];
 
-  // Staff (non-admin) users only get Submissions, Map, and Email Marketing.
+  // Staff users only get Submissions, Map, and Email Marketing — even if they
+  // also carry the admin role for backend access. isStaff drives UI limits.
   const staffAllowed: Array<typeof tab> = ["submissions", "map", "email_marketing"];
-  const tabsConfig = isAdmin ? allTabs : allTabs.filter(t => staffAllowed.includes(t.key));
+  const uiRestricted = isStaff;
+  const tabsConfig = uiRestricted ? allTabs.filter(t => staffAllowed.includes(t.key)) : allTabs;
 
-  // Snap staff back to submissions if they somehow land on a disallowed tab.
-  if (!isAdmin && hasAccess && !staffAllowed.includes(tab)) {
-    // Render-time guard: schedule a state update after render so React is happy.
+  if (uiRestricted && hasAccess && !staffAllowed.includes(tab)) {
     Promise.resolve().then(() => setTab("submissions"));
   }
 
