@@ -228,22 +228,23 @@ Deno.serve(async (req) => {
 
           <div style="border:1px solid #e5e0d5;border-radius:12px;padding:20px 22px;margin:0 0 18px;background:#fbf8f2;">
             <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:6px;">Option 1 — Fastest</div>
-            <div style="font-size:17px;font-family:Georgia,serif;margin-bottom:8px;">Notarize online in ~15 minutes</div>
+            <div style="font-size:17px;font-family:Georgia,serif;margin-bottom:8px;">Notarize online in ~15 minutes with Proof</div>
             <p style="margin:0 0 14px;font-size:14px;color:#4a5568;">
-              Meet a commissioned notary over live video from your phone or laptop. You'll need a photo ID
+              Upload the attached PDF directly to Proof, then meet a commissioned notary over live video
+              from your phone or laptop and download the notarized copy. You'll need a photo ID
               (driver's licence or passport) and about 15 minutes. Typical cost is $25.
             </p>
             <table role="presentation" cellpadding="0" cellspacing="0">
               <tr><td style="background:#1f2a37;border-radius:8px;">
-                <a href="https://www.notarize.com/business/documents" style="display:inline-block;padding:11px 22px;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:14px;">
-                  Start online notarization →
+                <a href="https://app.proof.com/signup/upload" style="display:inline-block;padding:11px 22px;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:14px;">
+                  Upload your PDF to Proof →
                 </a>
               </td></tr>
             </table>
             <p style="margin:10px 0 0;font-size:12px;color:#6b7280;">
-              Also works: <a href="https://www.onenotary.us/" style="color:#1f2a37;">OneNotary</a> ·
-              <a href="https://www.bluenotary.us/" style="color:#1f2a37;">BlueNotary</a> ·
-              <a href="https://notarycam.com/" style="color:#1f2a37;">NotaryCam</a>
+              Prefer another service? <a href="https://www.notarize.com/business/documents" style="color:#1f2a37;">Notarize</a> ·
+              <a href="https://www.onenotary.us/" style="color:#1f2a37;">OneNotary</a> ·
+              <a href="https://www.bluenotary.us/" style="color:#1f2a37;">BlueNotary</a>
             </p>
           </div>
 

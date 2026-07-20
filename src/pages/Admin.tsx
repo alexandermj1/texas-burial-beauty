@@ -157,8 +157,9 @@ const Admin = () => {
     }
   }, [user, hasAccess, isAdmin, authLoading, roleLoading]);
 
-  // Auto-refresh submissions inbox: polls every 15s and listens for realtime changes
-  // so newly arrived emails / submissions show up without a manual refresh.
+  // Auto-refresh submissions inbox: polls every 15s, listens for realtime changes,
+  // AND pulls new Gmail messages every 45s so replies from customers show up
+  // without requiring a manual "Refresh inbox" click.
   useEffect(() => {
     if (!user || !hasAccess) return;
     let cancelled = false;
@@ -171,7 +172,16 @@ const Admin = () => {
       if (!cancelled && data) setSubmissions(data as any);
     };
 
+    const pullGmail = async () => {
+      try { await supabase.functions.invoke("sync-inbox", { body: { maxResults: 50 } }); } catch { /* non-fatal */ }
+    };
+
     const interval = setInterval(refreshSubmissions, 15000);
+    const gmailInterval = setInterval(pullGmail, 45000);
+    // Also pull immediately on mount so a stale tab catches up fast.
+    pullGmail();
+    const onFocus = () => { pullGmail(); refreshSubmissions(); };
+    window.addEventListener("focus", onFocus);
     const channel = supabase
       .channel("admin-submissions-live")
       .on(
@@ -179,13 +189,21 @@ const Admin = () => {
         { event: "*", schema: "public", table: "contact_submissions" },
         () => { refreshSubmissions(); },
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "email_messages" },
+        () => { refreshSubmissions(); },
+      )
       .subscribe();
     return () => {
       cancelled = true;
       clearInterval(interval);
+      clearInterval(gmailInterval);
+      window.removeEventListener("focus", onFocus);
       supabase.removeChannel(channel);
     };
   }, [user, hasAccess]);
+
 
   // Honor deep links like /admin?tab=submissions&submission=<id> (e.g. notification clicks)
   useEffect(() => {
