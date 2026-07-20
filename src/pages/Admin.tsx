@@ -159,7 +159,7 @@ const Admin = () => {
   // Auto-refresh submissions inbox: polls every 15s and listens for realtime changes
   // so newly arrived emails / submissions show up without a manual refresh.
   useEffect(() => {
-    if (!user || !isAdmin) return;
+    if (!user || !hasAccess) return;
     let cancelled = false;
     const refreshSubmissions = async () => {
       const { data } = await supabase
@@ -184,7 +184,7 @@ const Admin = () => {
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [user, isAdmin]);
+  }, [user, hasAccess]);
 
   // Honor deep links like /admin?tab=submissions&submission=<id> (e.g. notification clicks)
   useEffect(() => {
