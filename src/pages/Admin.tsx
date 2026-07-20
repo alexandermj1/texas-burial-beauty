@@ -428,9 +428,10 @@ const Admin = () => {
   const staffAllowed: Array<typeof tab> = ["submissions", "map", "email_marketing"];
   const tabsConfig = isAdmin ? allTabs : allTabs.filter(t => staffAllowed.includes(t.key));
 
-  // If staff somehow lands on a disallowed tab (e.g. via deep link), snap back.
-  if (!isAdmin && !staffAllowed.includes(tab)) {
-    setTab("submissions");
+  // Snap staff back to submissions if they somehow land on a disallowed tab.
+  if (!isAdmin && hasAccess && !staffAllowed.includes(tab)) {
+    // Render-time guard: schedule a state update after render so React is happy.
+    Promise.resolve().then(() => setTab("submissions"));
   }
 
   const searchPlaceholder =
