@@ -12,6 +12,9 @@ const applyOverrides = (name: string, email?: string | null): string => {
   if (lower.startsWith("alexander") || emailLower.startsWith("alexander")) {
     return "Alexander James";
   }
+  if (lower.startsWith("sharron") || emailLower.startsWith("sharron")) {
+    return "Sharron";
+  }
   return name;
 };
 

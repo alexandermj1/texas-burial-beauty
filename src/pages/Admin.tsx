@@ -11,6 +11,7 @@ import TexasMapPanel from "@/components/admin/TexasMapPanel";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useStaff } from "@/hooks/useStaff";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -57,6 +58,9 @@ const plotTypeOptions = [
 const Admin = () => {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isStaff, loading: staffLoading } = useStaff();
+  const hasAccess = isAdmin || isStaff;
+  const roleLoading = adminLoading || staffLoading;
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +95,7 @@ const Admin = () => {
       .limit(200);
     setDeletedSubmissions((data as any) || []);
   };
-  useEffect(() => { if (user && isAdmin) refreshDeletedSubmissions(); }, [user, isAdmin]);
+  useEffect(() => { if (user && hasAccess) refreshDeletedSubmissions(); }, [user, hasAccess]);
 
 
   const handleInboxRefresh = async () => {
@@ -125,7 +129,7 @@ const Admin = () => {
   const [newCemetery, setNewCemetery] = useState({ name: "", city: "", region: "Peninsula & SF", address: "" });
 
   useEffect(() => {
-    if (!authLoading && !adminLoading && user && isAdmin) {
+    if (!authLoading && !roleLoading && user && hasAccess) {
       (async () => {
         // Sync the Gmail inbox on login (once per browser session) so any
         // contact-form emails that arrived while the admin was away get
@@ -139,7 +143,7 @@ const Admin = () => {
             console.warn("Login sync-inbox failed (non-fatal):", e);
           }
         }
-        await fetchAllListings();
+        if (isAdmin) await fetchAllListings();
       })();
       (async () => {
         const { count } = await supabase
@@ -150,12 +154,12 @@ const Admin = () => {
         setUnreadNotifs(count || 0);
       })();
     }
-  }, [user, isAdmin, authLoading, adminLoading]);
+  }, [user, hasAccess, isAdmin, authLoading, roleLoading]);
 
   // Auto-refresh submissions inbox: polls every 15s and listens for realtime changes
   // so newly arrived emails / submissions show up without a manual refresh.
   useEffect(() => {
-    if (!user || !isAdmin) return;
+    if (!user || !hasAccess) return;
     let cancelled = false;
     const refreshSubmissions = async () => {
       const { data } = await supabase
@@ -180,7 +184,7 @@ const Admin = () => {
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [user, isAdmin]);
+  }, [user, hasAccess]);
 
   // Honor deep links like /admin?tab=submissions&submission=<id> (e.g. notification clicks)
   useEffect(() => {
@@ -305,11 +309,11 @@ const Admin = () => {
   const totalCommissions = sales.reduce((s: number, sale: any) => s + (sale.commission_amount || 0), 0);
   const pendingCommissions = sales.filter((s: any) => s.commission_status === "requested").reduce((sum: number, s: any) => sum + (s.commission_amount || 0), 0);
 
-  if (authLoading || adminLoading) {
+  if (authLoading || roleLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !hasAccess) {
     const handleOAuth = async (provider: "google" | "apple") => {
       setLoginLoading(true);
       try {
@@ -324,6 +328,16 @@ const Admin = () => {
         toast({ title: "Sign-in failed", description: e?.message || String(e), variant: "destructive" });
       } finally {
         setLoginLoading(false);
+      }
+    };
+
+    const handleEmailLogin = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setLoginLoading(true);
+      const { error } = await signIn(email, password);
+      setLoginLoading(false);
+      if (error) {
+        toast({ title: "Sign-in failed", description: error.message, variant: "destructive" });
       }
     };
 
@@ -352,10 +366,39 @@ const Admin = () => {
                 Continue with Apple
               </button>
             </div>
-            {user && !isAdmin && (
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <form onSubmit={handleEmailLogin} className="space-y-3">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Email"
+                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {loginLoading ? "Signing in..." : "Sign in with email"}
+              </button>
+            </form>
+            {user && !hasAccess && (
               <p className="text-destructive text-xs mt-4 text-center">This account does not have admin access.</p>
             )}
-            <p className="text-[11px] text-muted-foreground text-center mt-4">Access restricted to authorized Google/Apple accounts.</p>
           </motion.div>
         </section>
         <Footer />
@@ -365,7 +408,7 @@ const Admin = () => {
 
   const focused = tab === "submissions" || tab === "inbox";
 
-  const tabsConfig: { key: typeof tab; label: string; Icon: any; count?: number }[] = [
+  const allTabs: { key: typeof tab; label: string; Icon: any; count?: number }[] = [
     { key: "submissions", label: "Submissions", Icon: Inbox, count: submissions.filter(s => !s.handled).length },
     { key: "inbox", label: "Gmail Inbox", Icon: Mail },
     { key: "listings", label: "Listings", Icon: Building2, count: listings.length },
@@ -380,6 +423,16 @@ const Admin = () => {
     { key: "map", label: "Map", Icon: MapIcon },
     { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
   ];
+
+  // Staff (non-admin) users only get Submissions, Map, and Email Marketing.
+  const staffAllowed: Array<typeof tab> = ["submissions", "map", "email_marketing"];
+  const tabsConfig = isAdmin ? allTabs : allTabs.filter(t => staffAllowed.includes(t.key));
+
+  // Snap staff back to submissions if they somehow land on a disallowed tab.
+  if (!isAdmin && hasAccess && !staffAllowed.includes(tab)) {
+    // Render-time guard: schedule a state update after render so React is happy.
+    Promise.resolve().then(() => setTab("submissions"));
+  }
 
   const searchPlaceholder =
     tab === "submissions" ? "Search submissions..." :
