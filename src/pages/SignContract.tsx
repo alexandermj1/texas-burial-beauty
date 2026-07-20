@@ -223,6 +223,37 @@ export default function SignContract() {
     }
   };
 
+  const submitPoa = async () => {
+    if (!fields.address.trim() || !fields.city_state_zip.trim())
+      return toast.error("Enter your mailing address and city/state/ZIP");
+    setBusy(true);
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
+        body: JSON.stringify({
+          action: "poa_finalize",
+          token,
+          fields: {
+            seller_name: fields.seller_name,
+            address: fields.address,
+            city_state_zip: fields.city_state_zip,
+            phone: fields.phone,
+            email: fields.email,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not send packet");
+      setDone(true);
+      toast.success("Notary packet emailed to you — check your inbox.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f5f1ea]">
