@@ -105,7 +105,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       const { data: sub } = await supabase
         .from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
       if (!sub) throw new Error("Submission not found");
-      const authTotal = (sub as any).list_price ?? (sub as any).cemetery_retail ?? "";
+      const authTotal = (sub as any).quote_amount ?? (sub as any).list_price ?? (sub as any).cemetery_retail ?? "";
       setEditFields({
         seller_name: (sub as any).name ?? "",
         address: "",
