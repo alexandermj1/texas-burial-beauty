@@ -58,7 +58,8 @@ const plotTypeOptions = [
 const Admin = () => {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
-  const { isStaff, loading: staffLoading } = useStaff();
+  const { isStaff: isStaffRole, loading: staffLoading } = useStaff();
+  const isStaff = isStaffRole || (user?.email?.toLowerCase() === "sharron@texascemeterybrokers.com");
   const hasAccess = isAdmin || isStaff;
   const roleLoading = adminLoading || staffLoading;
   const navigate = useNavigate();
