@@ -46,36 +46,21 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
       const cems = ((cemsRes.data as any[]) || []).map(r => ({ id: r.id, name: r.name, city: r.city }));
       setRows(cems);
 
-      // Aggregate submissions by canonical key
+      // Exact-match counts only: submissions whose `cemetery` field equals a cemetery's
+      // name (case-insensitive). No fuzzy/broad matching - a submission only counts for
+      // a cemetery if the seller picked it or an admin reassigned it there.
       const subMap = new Map<string, number>();
       for (const s of (subsRes.data as any[]) || []) {
-        const k = _canon(s.cemetery);
+        const k = String(s.cemetery || "").trim().toLowerCase();
         if (!k) continue;
         subMap.set(k, (subMap.get(k) || 0) + 1);
       }
 
-      // Same attribution logic as TexasMapPanel: longest token-based match wins
-      const cemKeys = cems.map((c) => {
-        const key = _canon(c.name);
-        const withCity = _canon(`${c.name} ${c.city || ""}`);
-        const tokens = new Set([key, withCity].filter((t) => t && t.length >= 4));
-        return { id: c.id, tokens };
-      });
-
       const counts = new Map<string, number>();
-      subMap.forEach((v, subKey) => {
-        let bestId: string | null = null;
-        let bestLen = 0;
-        cemKeys.forEach(({ id, tokens }) => {
-          tokens.forEach((tok) => {
-            const matches = subKey === tok || subKey.includes(tok) || tok.includes(subKey);
-            if (matches && tok.length > bestLen) {
-              bestLen = tok.length;
-              bestId = id;
-            }
-          });
-        });
-        if (bestId) counts.set(bestId, (counts.get(bestId) || 0) + v);
+      cems.forEach((c) => {
+        const key = String(c.name || "").trim().toLowerCase();
+        const n = subMap.get(key) || 0;
+        if (n > 0) counts.set(c.id, n);
       });
 
       setCountsByCemId(counts);

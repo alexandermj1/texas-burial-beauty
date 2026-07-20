@@ -108,7 +108,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
     if (subs.data) {
       const map = new Map<string, number>();
       (subs.data as any[]).forEach((s) => {
-        const k = canon(s.cemetery);
+        const k = String(s.cemetery || "").trim().toLowerCase();
         if (!k) return;
         map.set(k, (map.get(k) || 0) + 1);
       });
@@ -119,39 +119,14 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Merge cemeteries with color + count.
-  // Each submission is attributed to the cemetery whose canonical name is the LONGEST
-  // token-based match, so "Restland" and "Restland Dallas" don't double-count, and a
-  // more-specific cemetery wins over a generic one.
+  // Only counts submissions whose `cemetery` field EXACTLY matches this cemetery's
+  // name (case-insensitive) - either because the seller picked it from the dropdown
+  // or because an admin explicitly reassigned them here. No fuzzy/broad matching.
   const enriched = useMemo(() => {
-    const cemKeys = cemeteries.map((c) => {
-      const key = canon(c.name);
-      const withCity = canon(`${c.name} ${c.city || ""}`);
-      const tokens = new Set([key, withCity].filter((t) => t && t.length >= 4));
-      return { c, tokens };
+    return cemeteries.map((c) => {
+      const key = String(c.name || "").trim().toLowerCase();
+      return { ...c, color: colorFor(c.id), count: submissionCounts.get(key) || 0 };
     });
-
-    const counts = new Map<string, number>();
-    submissionCounts.forEach((v, subKey) => {
-      // Find best-matching cemetery: token appears in subKey OR subKey appears in token
-      let bestIdx = -1;
-      let bestLen = 0;
-      cemKeys.forEach(({ tokens }, idx) => {
-        tokens.forEach((tok) => {
-          const matches = subKey === tok || subKey.includes(tok) || tok.includes(subKey);
-          if (matches && tok.length > bestLen) {
-            bestLen = tok.length;
-            bestIdx = idx;
-          }
-        });
-      });
-      if (bestIdx >= 0) {
-        const id = cemeteries[bestIdx].id;
-        counts.set(id, (counts.get(id) || 0) + v);
-      }
-    });
-
-    return cemeteries.map((c) => ({ ...c, color: colorFor(c.id), count: counts.get(c.id) || 0 }));
   }, [cemeteries, submissionCounts]);
 
   // Initialize map
