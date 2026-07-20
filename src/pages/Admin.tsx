@@ -11,6 +11,7 @@ import TexasMapPanel from "@/components/admin/TexasMapPanel";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useStaff } from "@/hooks/useStaff";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
