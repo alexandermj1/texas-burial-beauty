@@ -187,8 +187,12 @@ export default function SignContract() {
 
   const submit = async () => {
     if (!fields.seller_name.trim()) return toast.error("Enter your full legal name");
-    if (!fields.address.trim() || !fields.city_state_zip.trim())
-      return toast.error("Enter your address and city/state/ZIP");
+    if (!fields.address.trim()) return toast.error("Enter your mailing address");
+    if (!fields.city_state_zip.trim()) return toast.error("Enter your city, state, and ZIP");
+    if (!fields.phone.trim()) return toast.error("Enter your phone number");
+    if (!fields.email.trim()) return toast.error("Enter your email");
+    if (!fields.plot_description.trim()) return toast.error("Enter the plot description (section / block / spaces)");
+    if (!fields.listing_option) return toast.error("Choose a listing option");
     if (!initials.trim() || initials.trim().length < 2) return toast.error("Enter your initials (2+ letters)");
     if (!sig) return toast.error("Draw your signature");
     if (!consent) return toast.error("Please confirm your consent to sign electronically");
