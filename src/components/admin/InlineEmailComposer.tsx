@@ -266,16 +266,19 @@ const InlineEmailComposer = ({
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
   const [plotPickerOpen, setPlotPickerOpen] = useState(false);
   const [listingBlockInserted, setListingBlockInserted] = useState(false);
+  // For replies, start with the plain greeting+signature so we don't
+  // clobber the user's reply with a full template. Templates can still be
+  // chosen from the picker below.
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
-    templates && templates.length ? templates[0].id : null,
+    inReplyToGmailId ? null : (templates && templates.length ? templates[0].id : null),
   );
 
   const editorRef = useRef<RichTextEditorHandle | null>(null);
 
   const templateText = useMemo(() => {
-    if (templates && templates.length) {
-      const t = templates.find((x) => x.id === activeTemplateId) || templates[0];
-      return t.body;
+    if (activeTemplateId && templates && templates.length) {
+      const t = templates.find((x) => x.id === activeTemplateId);
+      if (t) return t.body;
     }
     const greet = `Dear ${firstName(recipientName)},`;
     const nameBlock = adminName ? `${adminName}\nCemetery Salesperson\n` : "";
@@ -306,6 +309,12 @@ const InlineEmailComposer = ({
   };
 
   const applyTemplate = (id: string) => {
+    if (id === "__blank__") {
+      setActiveTemplateId(null);
+      setBodyTouched(false);
+      setListingBlockInserted(false);
+      return;
+    }
     const t = templates?.find((x) => x.id === id);
     if (!t) return;
     setActiveTemplateId(id);
@@ -451,9 +460,21 @@ const InlineEmailComposer = ({
       <div className="text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground">To:</span> {to}
       </div>
-      {templates && templates.length > 1 && (
+      {templates && templates.length >= 1 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
           <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Template:</span>
+          <button
+            type="button"
+            onClick={() => applyTemplate("__blank__")}
+            className={`text-[10px] font-medium px-2 py-1 rounded-full border transition-colors ${
+              activeTemplateId === null
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background text-foreground border-border hover:bg-muted"
+            }`}
+            title="Blank (greeting + signature only)"
+          >
+            Blank
+          </button>
           {templates.map((t) => (
             <button
               key={t.id}
