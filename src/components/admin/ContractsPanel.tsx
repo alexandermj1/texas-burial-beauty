@@ -232,29 +232,6 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
 
 
 
-  const sendToBlueNotary = async (c: Contract) => {
-    // BlueNotary "Send to Signer" flow: opens a prefilled URL in a new tab.
-    // The admin uploads the filled POA there, signer email is prefilled.
-    const uploadUrl = urls[c.id];
-    const params = new URLSearchParams({
-      email: sellerEmail ?? "",
-      name: sellerName ?? "",
-      doc_type: "Power of Attorney",
-    });
-    const bn = `https://app.bluenotary.us/dashboard/session/new?${params.toString()}`;
-    window.open(bn, "_blank", "noopener");
-    if (uploadUrl) window.open(uploadUrl, "_blank", "noopener");
-    await supabase.from("contracts")
-      .update({
-        bluenotary_session_url: bn,
-        bluenotary_sent_at: new Date().toISOString(),
-      })
-      .eq("id", c.id);
-    await load();
-    toast.success("BlueNotary opened", {
-      description: "Upload the POA PDF (opened in second tab), enter the signer, and send.",
-    });
-  };
 
   const uploadNotarized = async (c: Contract, file: File) => {
     setBusy(c.id);
