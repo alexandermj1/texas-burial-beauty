@@ -309,6 +309,12 @@ const InlineEmailComposer = ({
   };
 
   const applyTemplate = (id: string) => {
+    if (id === "__blank__") {
+      setActiveTemplateId(null);
+      setBodyTouched(false);
+      setListingBlockInserted(false);
+      return;
+    }
     const t = templates?.find((x) => x.id === id);
     if (!t) return;
     setActiveTemplateId(id);
