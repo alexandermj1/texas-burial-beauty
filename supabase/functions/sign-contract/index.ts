@@ -147,6 +147,167 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ================= POA FINALIZE: seller confirms address, we email notary packet =================
+    if (action === 'poa_finalize') {
+      const { token, fields } = body;
+      if (!token) {
+        return new Response(JSON.stringify({ error: 'missing_token' }), { status: 400, headers: corsHeaders });
+      }
+      const c = await loadContract(token);
+      if (!c || c.kind !== 'poa') {
+        return new Response(JSON.stringify({ error: 'invalid' }), { status: 404, headers: corsHeaders });
+      }
+
+      // Merge any newly supplied address fields into fill_data, then regenerate the PDF.
+      const allowed = ['seller_name', 'address', 'city_state_zip', 'phone', 'email'] as const;
+      const merged: FillData = { ...(c.fill_data ?? {}) } as FillData;
+      if (fields && typeof fields === 'object') {
+        for (const k of allowed) {
+          if (typeof fields[k] === 'string' && fields[k].trim()) (merged as Record<string, unknown>)[k] = fields[k].trim();
+        }
+      }
+      if (!merged.address || !merged.city_state_zip) {
+        return new Response(JSON.stringify({ error: 'address_required' }), { status: 400, headers: corsHeaders });
+      }
+
+      const { data: tmpl } = await svc.storage.from('contracts').download('_templates/poa-template.pdf');
+      if (!tmpl) throw new Error('template missing');
+      const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
+      const filled = await buildFilledPdf(tmplBytes, 'poa', merged);
+
+      const newPath = `${c.submission_id}/poa-${Date.now()}.pdf`;
+      const { error: upE } = await svc.storage.from('contracts')
+        .upload(newPath, filled, { contentType: 'application/pdf', upsert: true });
+      if (upE) throw upE;
+
+      const nowIso = new Date().toISOString();
+      await svc.from('contracts').update({
+        fill_data: merged,
+        filled_pdf_path: newPath,
+        status: 'sent_for_notary',
+        bluenotary_sent_at: nowIso,
+      }).eq('id', c.id);
+
+      // Email the seller with the filled PDF attached + notary options (online + in-person).
+      try {
+        const { data: sub } = await svc.from('contact_submissions')
+          .select('email, name, cemetery').eq('id', c.submission_id).maybeSingle();
+        const RESEND_KEY = Deno.env.get('RESEND_API_KEY');
+        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+        const to = (merged.email as string) || sub?.email;
+        if (to && RESEND_KEY && LOVABLE_API_KEY) {
+          const CHUNK = 0x8000;
+          let bin = '';
+          for (let i = 0; i < filled.length; i += CHUNK) bin += String.fromCharCode(...filled.subarray(i, i + CHUNK));
+          const b64 = btoa(bin);
+          const firstName = (sub?.name ?? merged.seller_name as string ?? '').trim().split(/\s+/)[0] || 'there';
+          const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const cemLine = sub?.cemetery ? ` for ${esc(sub.cemetery)}` : '';
+          const filename = `${(sub?.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-power-of-attorney.pdf`;
+
+          const html = `<!doctype html>
+<html><body style="margin:0;padding:0;background:#f5f1ea;font-family:Georgia,'Times New Roman',serif;color:#1f2a37;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ea;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(31,42,55,0.08);">
+        <tr><td style="background:#1f2a37;color:#ffffff;padding:34px 40px;text-align:center;">
+          <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
+          <div style="font-size:22px;margin-top:10px;font-family:Georgia,serif;">Your Power of Attorney is ready to notarize</div>
+        </td></tr>
+        <tr><td style="padding:32px 40px;font-size:15px;line-height:1.65;">
+          <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
+          <p style="margin:0 0 16px;">
+            Thank you for confirming your details. Attached to this email is your fully prepared
+            <strong>Limited Special Power of Attorney</strong>${cemLine}. This document authorises Texas
+            Cemetery Brokers to sign the plot-transfer paperwork on your behalf once the sale closes.
+          </p>
+          <p style="margin:0 0 20px;">
+            Because it authorises us to act on your behalf, Texas law requires the Power of Attorney to be
+            <strong>notarized</strong>. You have two easy options — pick whichever is more convenient:
+          </p>
+
+          <div style="border:1px solid #e5e0d5;border-radius:12px;padding:20px 22px;margin:0 0 18px;background:#fbf8f2;">
+            <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:6px;">Option 1 — Fastest</div>
+            <div style="font-size:17px;font-family:Georgia,serif;margin-bottom:8px;">Notarize online in ~15 minutes</div>
+            <p style="margin:0 0 14px;font-size:14px;color:#4a5568;">
+              Meet a commissioned notary over live video from your phone or laptop. You'll need a photo ID
+              (driver's licence or passport) and about 15 minutes. Typical cost is $25.
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr><td style="background:#1f2a37;border-radius:8px;">
+                <a href="https://www.notarize.com/business/documents" style="display:inline-block;padding:11px 22px;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:14px;">
+                  Start online notarization →
+                </a>
+              </td></tr>
+            </table>
+            <p style="margin:10px 0 0;font-size:12px;color:#6b7280;">
+              Also works: <a href="https://www.onenotary.us/" style="color:#1f2a37;">OneNotary</a> ·
+              <a href="https://www.bluenotary.us/" style="color:#1f2a37;">BlueNotary</a> ·
+              <a href="https://notarycam.com/" style="color:#1f2a37;">NotaryCam</a>
+            </p>
+          </div>
+
+          <div style="border:1px solid #e5e0d5;border-radius:12px;padding:20px 22px;margin:0 0 20px;">
+            <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:6px;">Option 2 — In person</div>
+            <div style="font-size:17px;font-family:Georgia,serif;margin-bottom:8px;">Bring the PDF to any local notary</div>
+            <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">
+              Print the attached PDF and take it, along with your photo ID, to any commissioned notary.
+              Common places that offer notary services:
+            </p>
+            <ul style="padding-left:20px;margin:0 0 4px;font-size:13px;color:#4a5568;line-height:1.7;">
+              <li>Your bank or credit union (often free for members)</li>
+              <li>UPS Store, FedEx Office, or AAA branch</li>
+              <li>Your local courthouse or county clerk's office</li>
+              <li>Public libraries in many Texas cities</li>
+            </ul>
+          </div>
+
+          <p style="margin:0 0 16px;font-size:14px;color:#4a5568;">
+            <strong style="color:#1f2a37;">Once it's notarized</strong>, just email the signed PDF back to
+            <a href="mailto:contracts@texascemeterybrokers.com" style="color:#1f2a37;">contracts@texascemeterybrokers.com</a>
+            (or reply to this email with a photo/scan) and we'll file it with the cemetery to complete your transfer.
+          </p>
+          <p style="margin:20px 0 0;font-size:13px;color:#4a5568;">
+            Any questions, just reply to this email — we're happy to walk you through it.
+          </p>
+        </td></tr>
+        <tr><td style="background:#f5f1ea;padding:20px 40px;text-align:center;font-size:11px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;">
+          Texas Cemetery Brokers · texascemeterybrokers.com
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+          await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              'X-Connection-Api-Key': RESEND_KEY,
+            },
+            body: JSON.stringify({
+              from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
+              to: [to],
+              bcc: ['contracts@texascemeterybrokers.com'],
+              subject: `Your Power of Attorney${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — notary packet attached`,
+              html,
+              attachments: [{ filename, content: b64 }],
+            }),
+          });
+        }
+      } catch (mailErr) {
+        console.error('poa_finalize email failed', mailErr);
+      }
+
+      const { data: signedUrl } = await svc.storage.from('contracts').createSignedUrl(newPath, 60 * 60);
+      return new Response(JSON.stringify({ ok: true, pdf_url: signedUrl?.signedUrl }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
     // ================= COUNTERSIGN: admin stamps broker signature =================
     if (action === 'countersign') {
       const { contract_id, countersigner_name, countersigner_signature } = body;

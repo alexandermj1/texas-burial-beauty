@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
 
     const { data: c } = await svc.from('contracts').select('*').eq('id', contract_id).maybeSingle();
     if (!c) throw new Error('contract not found');
-    if (c.kind !== 'listing_agreement') throw new Error('Only Listing Agreement links are sent this way');
     if (!c.sign_token) throw new Error('contract has no signing token yet');
 
     const { data: sub } = await svc.from('contact_submissions')
@@ -46,6 +45,46 @@ Deno.serve(async (req) => {
 
     const firstName = (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` for ${escapeHtml(sub.cemetery)}` : '';
+    const isPoa = c.kind === 'poa';
+
+    const headline = isPoa
+      ? 'Your Power of Attorney is ready to prepare'
+      : 'Your listing agreement is ready to sign';
+    const ctaLabel = isPoa
+      ? 'Confirm your address &amp; get your notary packet →'
+      : 'Review &amp; sign your agreement →';
+    const introHtml = isPoa
+      ? `<p style="margin:0 0 16px;">
+            Your <strong>Limited Special Power of Attorney</strong>${cemLine} has been prepared by
+            Texas Cemetery Brokers. This document allows us to complete the plot transfer paperwork on
+            your behalf once your property is sold.
+          </p>
+          <p style="margin:0 0 24px;">
+            Because the Power of Attorney authorises us to sign transfer paperwork for you, it must be
+            <strong>notarized</strong>. Please click below to confirm your mailing address — we'll then
+            email you the finished PDF along with a link to have it notarized online in about 15 minutes
+            (or you can bring it to any local notary in person).
+          </p>`
+      : `<p style="margin:0 0 16px;">
+            Thank you for choosing Texas Cemetery Brokers to represent the sale of your cemetery property${cemLine}.
+            Your <strong>Exclusive Right-to-Sell Agreement</strong> is now prepared and ready for your review.
+          </p>
+          <p style="margin:0 0 24px;">
+            You can review the full contract, add a couple of remaining details, and sign it electronically —
+            it takes about two minutes. Your signature is legally binding under the U.S. E-Sign Act and Texas UETA.
+          </p>`;
+    const stepsHtml = isPoa
+      ? `<ol style="padding-left:20px;margin:0 0 16px;font-size:13px;color:#4a5568;line-height:1.7;">
+              <li>Click the button above and confirm your mailing address on the secure page.</li>
+              <li>We'll email you the finished Power of Attorney PDF, plus a one-click link to notarize it online.</li>
+              <li>Or print the PDF and bring it to any local notary — a bank, UPS Store, or courthouse all work.</li>
+              <li>Once notarized, forward the signed PDF back to us and we'll file it with the cemetery.</li>
+            </ol>`
+      : `<ol style="padding-left:20px;margin:0 0 16px;font-size:13px;color:#4a5568;line-height:1.7;">
+              <li>Review the document and complete the details on the signing page.</li>
+              <li>Sign electronically — you'll get an emailed PDF copy immediately.</li>
+              <li>Your broker countersigns and returns the fully executed contract.</li>
+            </ol>`;
 
     const html = `
 <!doctype html>
@@ -57,24 +96,17 @@ Deno.serve(async (req) => {
         <tr>
           <td style="background:#1f2a37;color:#ffffff;padding:32px 40px;text-align:center;">
             <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
-            <div style="font-size:22px;margin-top:10px;font-family:Georgia,serif;">Your listing agreement is ready to sign</div>
+            <div style="font-size:22px;margin-top:10px;font-family:Georgia,serif;">${headline}</div>
           </td>
         </tr>
         <tr>
           <td style="padding:32px 40px;font-size:15px;line-height:1.6;">
             <p style="margin:0 0 16px;">Dear ${escapeHtml(firstName)},</p>
-            <p style="margin:0 0 16px;">
-              Thank you for choosing Texas Cemetery Brokers to represent the sale of your cemetery property${cemLine}.
-              Your <strong>Exclusive Right-to-Sell Agreement</strong> is now prepared and ready for your review.
-            </p>
-            <p style="margin:0 0 24px;">
-              You can review the full contract, add a couple of remaining details, and sign it electronically —
-              it takes about two minutes. Your signature is legally binding under the U.S. E-Sign Act and Texas UETA.
-            </p>
+            ${introHtml}
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;">
               <tr><td align="center" style="background:#1f2a37;border-radius:8px;">
                 <a href="${escapeHtml(sign_url)}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:16px;">
-                  Review &amp; sign your agreement →
+                  ${ctaLabel}
                 </a>
               </td></tr>
             </table>
@@ -86,11 +118,7 @@ Deno.serve(async (req) => {
             <p style="margin:0 0 12px;font-size:13px;color:#4a5568;">
               <strong style="color:#1f2a37;">What happens next:</strong>
             </p>
-            <ol style="padding-left:20px;margin:0 0 16px;font-size:13px;color:#4a5568;line-height:1.7;">
-              <li>Review the document and complete the details on the signing page.</li>
-              <li>Sign electronically — you'll get an emailed PDF copy immediately.</li>
-              <li>Your broker countersigns and returns the fully executed contract.</li>
-            </ol>
+            ${stepsHtml}
             <p style="margin:24px 0 0;font-size:13px;color:#4a5568;">
               If you have any questions, simply reply to this email — we're here to help.
             </p>
@@ -106,7 +134,9 @@ Deno.serve(async (req) => {
   </table>
 </body></html>`;
 
-    const subject = `Your Listing Agreement${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — ready to sign`;
+    const subject = isPoa
+      ? `Your Power of Attorney${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — confirm address to receive notary packet`
+      : `Your Listing Agreement${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — ready to sign`;
 
     const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
       method: 'POST',

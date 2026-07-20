@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
-  Stamp, ScrollText, Shield, Mail, PenLine, Send,
+  ScrollText, Shield, Mail, PenLine, Send,
 } from "lucide-react";
 
 
@@ -232,29 +232,6 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
 
 
 
-  const sendToBlueNotary = async (c: Contract) => {
-    // BlueNotary "Send to Signer" flow: opens a prefilled URL in a new tab.
-    // The admin uploads the filled POA there, signer email is prefilled.
-    const uploadUrl = urls[c.id];
-    const params = new URLSearchParams({
-      email: sellerEmail ?? "",
-      name: sellerName ?? "",
-      doc_type: "Power of Attorney",
-    });
-    const bn = `https://app.bluenotary.us/dashboard/session/new?${params.toString()}`;
-    window.open(bn, "_blank", "noopener");
-    if (uploadUrl) window.open(uploadUrl, "_blank", "noopener");
-    await supabase.from("contracts")
-      .update({
-        bluenotary_session_url: bn,
-        bluenotary_sent_at: new Date().toISOString(),
-      })
-      .eq("id", c.id);
-    await load();
-    toast.success("BlueNotary opened", {
-      description: "Upload the POA PDF (opened in second tab), enter the signer, and send.",
-    });
-  };
 
   const uploadNotarized = async (c: Contract, file: File) => {
     setBusy(c.id);
@@ -409,20 +386,38 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
 
         {contract && kind === "poa" && (
           <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="secondary" onClick={() => sendToBlueNotary(contract)}>
-                <Stamp className="w-3.5 h-3.5 mr-1" />Send to BlueNotary
-              </Button>
-              {contract.bluenotary_sent_at && (
-                <span className="text-[11px] text-muted-foreground">
-                  Handed off {new Date(contract.bluenotary_sent_at).toLocaleDateString()}
-                </span>
-              )}
-            </div>
+            {contract.sign_token && !contract.notarized_at && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => emailSignLink(contract)}
+                  disabled={busy === contract.id}
+                >
+                  {busy === contract.id
+                    ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    : <Send className="w-3.5 h-3.5 mr-1" />}
+                  {contract.bluenotary_sent_at
+                    ? "Re-send notary packet email"
+                    : contract.sent_at
+                      ? "Re-send address & notary email"
+                      : "Email seller to confirm address & get notary packet"}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => copySignLink(contract)}>
+                  <Copy className="w-3.5 h-3.5 mr-1" />Copy link
+                </Button>
+                {contract.bluenotary_sent_at && (
+                  <span className="text-[11px] text-emerald-700">
+                    Notary packet emailed {new Date(contract.bluenotary_sent_at).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            )}
             {!contract.notarized_at && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-1">
                 <Label className="text-xs cursor-pointer inline-flex items-center gap-1 border rounded-md px-2 py-1 hover:bg-muted">
-                  <Upload className="w-3.5 h-3.5" /> Upload notarized PDF
+                  <Upload className="w-3.5 h-3.5" /> Upload notarized PDF once returned
                   <Input
                     type="file"
                     accept="application/pdf"
