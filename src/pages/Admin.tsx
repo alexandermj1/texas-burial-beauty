@@ -425,9 +425,9 @@ const Admin = () => {
     { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
   ];
 
-  // Staff users only get Submissions, Map, and Email Marketing — even if they
-  // also carry the admin role for backend access. isStaff drives UI limits.
-  const staffAllowed: Array<typeof tab> = ["submissions", "map", "email_marketing"];
+  // Staff users only get Submissions and Map — even if they also carry the
+  // admin role for backend access. isStaff drives UI limits.
+  const staffAllowed: Array<typeof tab> = ["submissions", "map"];
   const uiRestricted = isStaff;
   const tabsConfig = uiRestricted ? allTabs.filter(t => staffAllowed.includes(t.key)) : allTabs;
 
