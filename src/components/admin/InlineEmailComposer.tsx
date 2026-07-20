@@ -454,9 +454,21 @@ const InlineEmailComposer = ({
       <div className="text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground">To:</span> {to}
       </div>
-      {templates && templates.length > 1 && (
+      {templates && templates.length >= 1 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
           <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Template:</span>
+          <button
+            type="button"
+            onClick={() => applyTemplate("__blank__")}
+            className={`text-[10px] font-medium px-2 py-1 rounded-full border transition-colors ${
+              activeTemplateId === null
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background text-foreground border-border hover:bg-muted"
+            }`}
+            title="Blank (greeting + signature only)"
+          >
+            Blank
+          </button>
           {templates.map((t) => (
             <button
               key={t.id}
