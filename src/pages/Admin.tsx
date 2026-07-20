@@ -320,6 +320,7 @@ const Admin = () => {
         const { lovable } = await import("@/integrations/lovable/index");
         const result = await lovable.auth.signInWithOAuth(provider, {
           redirect_uri: window.location.origin + "/admin",
+          extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
         });
         if (result.error) {
           toast({ title: "Sign-in failed", description: String((result.error as any)?.message || result.error), variant: "destructive" });
