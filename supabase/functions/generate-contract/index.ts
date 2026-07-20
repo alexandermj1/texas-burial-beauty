@@ -98,9 +98,10 @@ Deno.serve(async (req) => {
       .upload(path, filled, { contentType: 'application/pdf', upsert: true });
     if (upErr) throw upErr;
 
-    const signToken = kind === 'listing_agreement'
-      ? crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
-      : null;
+    // Both the Listing Agreement and the Power of Attorney get a signing token.
+    // The LA uses it for a full e-sign session; the POA uses it for a lightweight
+    // "confirm your mailing address" page that then emails the seller a notary-ready packet.
+    const signToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
 
     const { data: existing } = await svc
       .from('contracts').select('id').eq('submission_id', submission_id).eq('kind', kind).maybeSingle();
