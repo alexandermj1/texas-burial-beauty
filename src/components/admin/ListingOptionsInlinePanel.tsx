@@ -56,7 +56,46 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
     setNetTouched(false);
     setSalesTouched(false);
     setTransferFee(feeString(seller.transfer_fee_amount));
-  }, [seller.id, seller.spaces, seller.transfer_fee_amount]);
+
+    // If the submission doesn't already have a saved transfer_fee_amount,
+    // look it up from the cemetery record so admins always see the current
+    // per-cemetery rate rather than the generic $395 default.
+    if (seller.transfer_fee_amount != null && seller.transfer_fee_amount !== "") return;
+    const name = (seller.cemetery || "").trim();
+    if (!name) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: canonData } = await supabase.rpc("canonical_cemetery" as any, { name });
+        const canon = (canonData as any) || null;
+        let row: any = null;
+        if (canon) {
+          const { data: rows } = await supabase
+            .from("texas_cemeteries" as any)
+            .select("transfer_fee")
+            .eq("canonical_name", canon)
+            .not("transfer_fee", "is", null)
+            .limit(1);
+          row = rows?.[0] ?? null;
+        }
+        if (!row) {
+          const { data: rows } = await supabase
+            .from("texas_cemeteries" as any)
+            .select("transfer_fee")
+            .ilike("name", `%${name}%`)
+            .not("transfer_fee", "is", null)
+            .limit(1);
+          row = rows?.[0] ?? null;
+        }
+        if (cancelled) return;
+        const fee = row?.transfer_fee;
+        if (fee != null && fee !== "") setTransferFee(String(fee));
+      } catch (e) {
+        console.warn("transfer fee autofill failed", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [seller.id, seller.spaces, seller.cemetery, seller.transfer_fee_amount]);
 
   const handleRetailChange = (v: string) => {
     setRetail(v);
