@@ -95,7 +95,7 @@ const Admin = () => {
       .limit(200);
     setDeletedSubmissions((data as any) || []);
   };
-  useEffect(() => { if (user && isAdmin) refreshDeletedSubmissions(); }, [user, isAdmin]);
+  useEffect(() => { if (user && hasAccess) refreshDeletedSubmissions(); }, [user, hasAccess]);
 
 
   const handleInboxRefresh = async () => {
