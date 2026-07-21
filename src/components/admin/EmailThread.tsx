@@ -212,6 +212,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     inReplyToGmailId={e.gmail_message_id}
                     recipientName={customerName}
                     templates={newEmailTemplates}
+                    submissionId={submissionId}
                     buyerContext={buyerContext ?? undefined}
                     sellerContext={sellerContext ?? undefined}
                     sendLabel="Send reply"
