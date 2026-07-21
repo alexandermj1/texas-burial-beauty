@@ -605,6 +605,20 @@ const InlineEmailComposer = ({
           }}
         />
       )}
+      {submissionId && (
+        <AttachPaymentButtonDialog
+          open={paymentDialogOpen}
+          onClose={() => setPaymentDialogOpen(false)}
+          submissionId={submissionId}
+          recipientEmail={to}
+          recipientName={recipientName}
+          onAttach={(buttonHtml) => {
+            editorRef.current?.insertHtmlBeforeSignature(buttonHtml);
+            setHtml(editorRef.current?.getHtml() ?? html);
+            setBodyTouched(true);
+          }}
+        />
+      )}
     </div>
   );
 };
