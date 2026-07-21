@@ -244,6 +244,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
   const [trashOpen, setTrashOpen] = useState(false);
+  // Map of submission_id -> latest PAID listing transaction (tier + amount + when + description).
+  const [paidMap, setPaidMap] = useState<Record<string, { tier: string; amountCents: number; paidAt: string; description: string }>>({});
+
 
 
 
@@ -257,6 +260,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
     return VIEW_COLORS[h % VIEW_COLORS.length];
   };
+ 
+  // Load paid listing transactions once and subscribe to new payments so the
+  // Submissions panel shows a "Paid" badge the moment the Stripe webhook lands.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("payment_transactions" as any)
+        .select("submission_id, amount_cents, paid_at, status, description, metadata")
+        .eq("status", "paid")
+        .order("paid_at", { ascending: false });
+      if (cancelled || !data) return;
+      const map: Record<string, { tier: string; amountCents: number; paidAt: string; description: string }> = {};
+      for (const row of data as any[]) {
+        if (!row?.submission_id) continue;
+        // Keep only the latest paid txn per submission (already sorted desc).
+        if (map[row.submission_id]) continue;
+        map[row.submission_id] = {
+          tier: String(row.metadata?.listing_tier || row.metadata?.product_name || "").trim(),
+          amountCents: Number(row.amount_cents) || 0,
+          paidAt: row.paid_at || "",
+          description: row.description || row.metadata?.product_name || "",
+        };
+      }
+      setPaidMap(map);
+    };
+    load();
+    const ch = supabase
+      .channel("payment_transactions_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payment_transactions" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, []);
+
 
   // Load all view records (admin-scope) + subscribe to live changes
   useEffect(() => {
@@ -1020,9 +1057,34 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     );
                   })()}
+                  {paidMap[selected.id] && (() => {
+                    const p = paidMap[selected.id];
+                    const tierLabel = (p.tier || "").toLowerCase();
+                    const label = tierLabel === "starter" ? "Starter"
+                      : tierLabel === "pro" ? "Pro"
+                      : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
+                      : (p.description || "Listing");
+                    const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
+                    return (
+                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-teal-500/10 border-2 border-teal-500/40 text-teal-700 dark:text-teal-300 shadow-sm flex-wrap">
+                        <CheckCircle className="w-4 h-4" strokeWidth={3} />
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing paid</span>
+                          <span className="font-display text-base font-bold">{label} · {amount}</span>
+                        </div>
+                        {p.paidAt && (
+                          <div className="flex flex-col leading-tight border-l border-teal-500/30 pl-3">
+                            <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Paid on</span>
+                            <span className="text-sm font-semibold">{formatDate(p.paidAt)}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                 </div>
               </div>
+
               <div className="flex flex-col items-end gap-1.5">
                 {selected.cemetery && (() => {
                   const selCanon = _canon(selected.cemetery || "");
@@ -2367,7 +2429,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           );
                         })()}
+                        {paidMap[s.id] && (() => {
+                          const p = paidMap[s.id];
+                          const tierLabel = (p.tier || "").toLowerCase();
+                          const label = tierLabel === "starter" ? "Starter"
+                            : tierLabel === "pro" ? "Pro"
+                            : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
+                            : "Paid";
+                          const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
+                              title={`${label} listing paid · ${amount} · ${p.paidAt ? formatDate(p.paidAt) : "recently"}`}
+                            >
+                              <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                              {label} paid
+                            </span>
+                          );
+                        })()}
                       </div>
+
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
                           <div className="flex -space-x-1" title={`Also viewed by: ${otherViewers.map(v => v.user_name || "teammate").join(", ")}`}>
