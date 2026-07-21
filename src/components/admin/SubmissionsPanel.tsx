@@ -260,6 +260,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
     return VIEW_COLORS[h % VIEW_COLORS.length];
   };
+ 
+  // Load paid listing transactions once and subscribe to new payments so the
+  // Submissions panel shows a "Paid" badge the moment the Stripe webhook lands.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("payment_transactions" as any)
+        .select("submission_id, amount_cents, paid_at, status, description, metadata")
+        .eq("status", "paid")
+        .order("paid_at", { ascending: false });
+      if (cancelled || !data) return;
+      const map: Record<string, { tier: string; amountCents: number; paidAt: string; description: string }> = {};
+      for (const row of data as any[]) {
+        if (!row?.submission_id) continue;
+        // Keep only the latest paid txn per submission (already sorted desc).
+        if (map[row.submission_id]) continue;
+        map[row.submission_id] = {
+          tier: String(row.metadata?.listing_tier || row.metadata?.product_name || "").trim(),
+          amountCents: Number(row.amount_cents) || 0,
+          paidAt: row.paid_at || "",
+          description: row.description || row.metadata?.product_name || "",
+        };
+      }
+      setPaidMap(map);
+    };
+    load();
+    const ch = supabase
+      .channel("payment_transactions_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payment_transactions" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, []);
+
 
   // Load all view records (admin-scope) + subscribe to live changes
   useEffect(() => {
