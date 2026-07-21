@@ -124,6 +124,7 @@ export default function SignContract() {
   const [sig, setSig] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sectionInitials, setSectionInitials] = useState<boolean[]>([false, false, false, false, false]);
 
   useEffect(() => {
     (async () => {
