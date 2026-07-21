@@ -60,6 +60,37 @@ function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) 
   }
 }
 
+/** Inline "SELLER INITIAL HERE" acknowledgement boxes on the Listing Agreement.
+ * Coordinates measured directly from the template — the placeholder text spans
+ * roughly x=395..488, so we mask it with white and stamp the seller's initials
+ * centred on the same baseline in the same weight as a hand-written mark. */
+const LA_INLINE_INITIALS: Array<{ pageIndex: number; y: number }> = [
+  { pageIndex: 1, y: 350.1 }, // p2 — Authorized Minimum Price acknowledgement
+  { pageIndex: 1, y: 236.1 }, // p2 — Sales at or above authorized minimum
+  { pageIndex: 2, y: 197.9 }, // p3 — Compliance with applicable laws
+  { pageIndex: 4, y: 639.6 }, // p5 — Warranty of ownership
+  { pageIndex: 4, y: 569.9 }, // p5 — Warranty of plot condition
+];
+function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
+  const WHITE = rgb(1, 1, 1);
+  for (const { pageIndex, y } of LA_INLINE_INITIALS) {
+    if (pageIndex >= pages.length) continue;
+    const page = pages[pageIndex];
+    // Mask the "SELLER INITIAL HERE" placeholder.
+    page.drawRectangle({ x: 395, y: y - 3, width: 95, height: 15, color: WHITE });
+    // Stamp the initials centred within the same footprint.
+    const size = 12;
+    const w = bold.widthOfTextAtSize(initials, size);
+    page.drawText(initials, {
+      x: 395 + (95 - w) / 2,
+      y: y + 1,
+      size,
+      font: bold,
+      color: INK,
+    });
+  }
+}
+
 function todayFormatted(): string {
   return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
