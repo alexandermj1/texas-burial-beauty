@@ -118,6 +118,14 @@ export default function SignContract() {
     seller_name: "", address: "", city_state_zip: "",
     phone: "", email: "", plot_description: "", listing_option: "Starter",
   });
+  // Fields the admin already filled in on the contract — the seller sees them
+  // as read-only so they cannot alter details we've verified (name, plots,
+  // cemetery, listing option, etc.). The two address fields are always editable
+  // because that's what we need the seller to supply.
+  const [locked, setLocked] = useState<Record<keyof SellerFields, boolean>>({
+    seller_name: false, address: false, city_state_zip: false,
+    phone: false, email: false, plot_description: false, listing_option: false,
+  });
   const [refreshing, setRefreshing] = useState(false);
 
   const [initials, setInitials] = useState("");
@@ -137,7 +145,7 @@ export default function SignContract() {
         setInfo(data);
         setPdfUrl(data.pdf_url);
         const fd = (data.fill_data ?? {}) as Record<string, string>;
-        setFields({
+        const next: SellerFields = {
           seller_name: fd.seller_name ?? "",
           address: fd.address ?? "",
           city_state_zip: fd.city_state_zip ?? "",
@@ -145,6 +153,18 @@ export default function SignContract() {
           email: fd.email ?? "",
           plot_description: fd.plot_description ?? "",
           listing_option: fd.listing_option ?? "Starter",
+        };
+        setFields(next);
+        // Lock anything the admin pre-filled. Mailing address + city/state/zip
+        // are never locked — those are the seller's job to complete.
+        setLocked({
+          seller_name: !!next.seller_name.trim(),
+          address: false,
+          city_state_zip: false,
+          phone: !!next.phone.trim(),
+          email: !!next.email.trim(),
+          plot_description: !!next.plot_description.trim(),
+          listing_option: !!fd.listing_option,
         });
         setDone(data.already_signed);
       } catch (e) {
