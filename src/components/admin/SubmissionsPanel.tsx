@@ -2404,7 +2404,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           );
                         })()}
+                        {paidMap[s.id] && (() => {
+                          const p = paidMap[s.id];
+                          const tierLabel = (p.tier || "").toLowerCase();
+                          const label = tierLabel === "starter" ? "Starter"
+                            : tierLabel === "pro" ? "Pro"
+                            : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
+                            : "Paid";
+                          const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
+                              title={`${label} listing paid · ${amount} · ${p.paidAt ? formatDate(p.paidAt) : "recently"}`}
+                            >
+                              <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                              {label} paid
+                            </span>
+                          );
+                        })()}
                       </div>
+
                       <div className="flex items-center gap-1.5 shrink-0">
                         {otherViewers.length > 0 && (
                           <div className="flex -space-x-1" title={`Also viewed by: ${otherViewers.map(v => v.user_name || "teammate").join(", ")}`}>
