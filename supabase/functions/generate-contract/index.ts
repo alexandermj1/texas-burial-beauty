@@ -50,6 +50,21 @@ Deno.serve(async (req) => {
       .from('contact_submissions').select('*').eq('id', submission_id).maybeSingle();
     if (subErr || !sub) throw subErr ?? new Error('submission not found');
 
+    // Merge duplicate submissions by email: the selected row (visible "primary"
+    // after dedup) may be missing the quote we sent on a sibling row. Fill any
+    // null/empty field from whichever duplicate has it so the contract picks
+    // up quote_amount, cemetery_retail, listing_tier, plot info, etc.
+    if (sub.email) {
+      const { data: sibs } = await svc
+        .from('contact_submissions').select('*').eq('email', sub.email);
+      for (const s of sibs ?? []) {
+        if ((s as any).id === (sub as any).id) continue;
+        for (const [k, v] of Object.entries(s as any)) {
+          if ((sub as any)[k] == null || (sub as any)[k] === '') (sub as any)[k] = v;
+        }
+      }
+    }
+
     let transferFee: number | null = sub.transfer_fee_amount ?? null;
     let cemeteryCity: string | null = null;
     if (sub.cemetery) {
