@@ -61,29 +61,33 @@ function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) 
 }
 
 /** Inline "SELLER INITIAL HERE" acknowledgement boxes on the Listing Agreement.
- * Coordinates measured directly from the template — the placeholder text spans
- * roughly x=395..488, so we mask it with white and stamp the seller's initials
- * centred on the same baseline in the same weight as a hand-written mark. */
+ * Each box has a real underline rect in the template at x0=490.5, x1=558.0
+ * (width 67.5). y_bot values below are the underline baseline (pdf-lib coords),
+ * measured directly from the template rects. We mask the placeholder text and
+ * stamp the seller's initials sitting on the underline. */
+const LA_INITIAL_UNDERLINE_X = 490.5;
+const LA_INITIAL_UNDERLINE_W = 67.5;
 const LA_INLINE_INITIALS: Array<{ pageIndex: number; y: number }> = [
-  { pageIndex: 1, y: 350.1 }, // p2 — Authorized Minimum Price acknowledgement
-  { pageIndex: 1, y: 236.1 }, // p2 — Sales at or above authorized minimum
-  { pageIndex: 2, y: 197.9 }, // p3 — Compliance with applicable laws
-  { pageIndex: 4, y: 639.6 }, // p5 — Warranty of ownership
-  { pageIndex: 4, y: 569.9 }, // p5 — Warranty of plot condition
+  { pageIndex: 1, y: 353.3 }, // p2 — Authorized Minimum Price
+  { pageIndex: 1, y: 239.3 }, // p2 — Sales at or above authorized minimum
+  { pageIndex: 2, y: 201.0 }, // p3 — Buyer-Paid Broker Charges (Section 2.2)
+  { pageIndex: 4, y: 642.8 }, // p5 — Warranty of ownership
+  { pageIndex: 4, y: 573.0 }, // p5 — Warranty of plot condition
 ];
 function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
   const WHITE = rgb(1, 1, 1);
   for (const { pageIndex, y } of LA_INLINE_INITIALS) {
     if (pageIndex >= pages.length) continue;
     const page = pages[pageIndex];
-    // Mask the "SELLER INITIAL HERE" placeholder.
-    page.drawRectangle({ x: 395, y: y - 3, width: 95, height: 15, color: WHITE });
-    // Stamp the initials centred within the same footprint.
+    // Mask the "SELLER INITIAL HERE" placeholder text that sits ABOVE the underline
+    // (roughly x=395..488, ~15pt tall, baseline about 8pt above the rule).
+    page.drawRectangle({ x: 395, y: y + 2, width: 100, height: 14, color: WHITE });
+    // Stamp the initials centred over the actual underline rect, resting on the line.
     const size = 12;
     const w = bold.widthOfTextAtSize(initials, size);
     page.drawText(initials, {
-      x: 395 + (95 - w) / 2,
-      y: y + 1,
+      x: LA_INITIAL_UNDERLINE_X + (LA_INITIAL_UNDERLINE_W - w) / 2,
+      y: y + 2.2, // baseline sits ~2pt above the rule, like a handwritten mark
       size,
       font: bold,
       color: INK,
