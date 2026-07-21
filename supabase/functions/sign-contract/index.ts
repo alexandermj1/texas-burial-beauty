@@ -580,7 +580,12 @@ Deno.serve(async (req) => {
     }
 
     // Initials on the bottom-right of every content page (skip the appended certification page)
-    stampFooterInitials(pages, initials.slice(0, 6).toUpperCase(), bold);
+    const initialsStamp = initials.slice(0, 6).toUpperCase();
+    stampFooterInitials(pages, initialsStamp, bold);
+    // Listing Agreement has five "SELLER INITIAL HERE" acknowledgement boxes in
+    // the body of the document; stamp the seller's initials inside each one so
+    // every requested section is affirmatively initialed.
+    if (c.kind === 'listing_agreement') stampInlineInitials(pages, initialsStamp, bold);
 
     // === Certification / audit page (E-SIGN + UETA compliance) ===
     // Styled to match the appended data-reference sheet and template chrome.
