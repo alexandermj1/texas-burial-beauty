@@ -248,9 +248,11 @@ Deno.serve(async (req) => {
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.65;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
           <p style="margin:0 0 16px;">
-            Thank you for confirming your details. Attached to this email is your fully prepared
-            <strong>Limited Special Power of Attorney</strong>${cemLine}. This document authorises Texas
-            Cemetery Brokers to sign the plot-transfer paperwork on your behalf once the sale closes.
+            Thank you for signing the <strong>Exclusive Right-to-Sell Listing Agreement</strong> — that's
+            the first big step, and we're excited to get to work for you. Attached to this email is your
+            fully prepared <strong>Limited Special Power of Attorney</strong>${cemLine}. This second
+            document authorises Texas Cemetery Brokers to sign the plot-transfer paperwork on your behalf
+            once the sale closes, so you don't need to be present at the cemetery office.
           </p>
           <p style="margin:0 0 20px;">
             Because it authorises us to act on your behalf, Texas law requires the Power of Attorney to be
