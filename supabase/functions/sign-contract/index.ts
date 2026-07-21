@@ -60,6 +60,37 @@ function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) 
   }
 }
 
+/** Inline "SELLER INITIAL HERE" acknowledgement boxes on the Listing Agreement.
+ * Coordinates measured directly from the template — the placeholder text spans
+ * roughly x=395..488, so we mask it with white and stamp the seller's initials
+ * centred on the same baseline in the same weight as a hand-written mark. */
+const LA_INLINE_INITIALS: Array<{ pageIndex: number; y: number }> = [
+  { pageIndex: 1, y: 350.1 }, // p2 — Authorized Minimum Price acknowledgement
+  { pageIndex: 1, y: 236.1 }, // p2 — Sales at or above authorized minimum
+  { pageIndex: 2, y: 197.9 }, // p3 — Compliance with applicable laws
+  { pageIndex: 4, y: 639.6 }, // p5 — Warranty of ownership
+  { pageIndex: 4, y: 569.9 }, // p5 — Warranty of plot condition
+];
+function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
+  const WHITE = rgb(1, 1, 1);
+  for (const { pageIndex, y } of LA_INLINE_INITIALS) {
+    if (pageIndex >= pages.length) continue;
+    const page = pages[pageIndex];
+    // Mask the "SELLER INITIAL HERE" placeholder.
+    page.drawRectangle({ x: 395, y: y - 3, width: 95, height: 15, color: WHITE });
+    // Stamp the initials centred within the same footprint.
+    const size = 12;
+    const w = bold.widthOfTextAtSize(initials, size);
+    page.drawText(initials, {
+      x: 395 + (95 - w) / 2,
+      y: y + 1,
+      size,
+      font: bold,
+      color: INK,
+    });
+  }
+}
+
 function todayFormatted(): string {
   return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
@@ -217,9 +248,11 @@ Deno.serve(async (req) => {
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.65;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
           <p style="margin:0 0 16px;">
-            Thank you for confirming your details. Attached to this email is your fully prepared
-            <strong>Limited Special Power of Attorney</strong>${cemLine}. This document authorises Texas
-            Cemetery Brokers to sign the plot-transfer paperwork on your behalf once the sale closes.
+            Thank you for signing the <strong>Exclusive Right-to-Sell Listing Agreement</strong> — that's
+            the first big step, and we're excited to get to work for you. Attached to this email is your
+            fully prepared <strong>Limited Special Power of Attorney</strong>${cemLine}. This second
+            document authorises Texas Cemetery Brokers to sign the plot-transfer paperwork on your behalf
+            once the sale closes, so you don't need to be present at the cemetery office.
           </p>
           <p style="margin:0 0 20px;">
             Because it authorises us to act on your behalf, Texas law requires the Power of Attorney to be
@@ -549,7 +582,12 @@ Deno.serve(async (req) => {
     }
 
     // Initials on the bottom-right of every content page (skip the appended certification page)
-    stampFooterInitials(pages, initials.slice(0, 6).toUpperCase(), bold);
+    const initialsStamp = initials.slice(0, 6).toUpperCase();
+    stampFooterInitials(pages, initialsStamp, bold);
+    // Listing Agreement has five "SELLER INITIAL HERE" acknowledgement boxes in
+    // the body of the document; stamp the seller's initials inside each one so
+    // every requested section is affirmatively initialed.
+    if (c.kind === 'listing_agreement') stampInlineInitials(pages, initialsStamp, bold);
 
     // === Certification / audit page (E-SIGN + UETA compliance) ===
     // Styled to match the appended data-reference sheet and template chrome.
