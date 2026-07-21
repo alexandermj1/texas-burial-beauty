@@ -256,6 +256,7 @@ const InlineEmailComposer = ({
   onCancel,
   sendLabel = "Send",
   templates,
+  submissionId,
   buyerContext,
   sellerContext,
 }: Props) => {
@@ -268,6 +269,7 @@ const InlineEmailComposer = ({
   const [checking, setChecking] = useState(false);
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
   const [plotPickerOpen, setPlotPickerOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [listingBlockInserted, setListingBlockInserted] = useState(false);
   // For replies, start with the plain greeting+signature so we don't
   // clobber the user's reply with a full template. Templates can still be
