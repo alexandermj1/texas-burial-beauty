@@ -1,0 +1,2 @@
+DELETE FROM public.contracts WHERE submission_id = '6259fdd9-e579-4e33-854f-1c392b21a98a';
+UPDATE public.contact_submissions SET la_issued_at = NULL, la_signed_at = NULL WHERE id = '6259fdd9-e579-4e33-854f-1c392b21a98a';
