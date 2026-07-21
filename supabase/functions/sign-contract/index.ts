@@ -567,22 +567,25 @@ Deno.serve(async (req) => {
     // sits ~3pt above the rule so the baseline sits on the line.
     if (c.kind === 'listing_agreement' && pages.length >= 8) {
       const p8 = pages[7];
-      // Seller block (measured rects): printed name 281.3, sig 252.0, date 222.8.
-      stampText(p8, signature_name, 210, 284.3, font, 11);
+      // Seller block underline rects (pdf-lib coords, measured from template):
+      //   printed name y=282.0, signature y=252.8, date y=223.5, all x0=204.7 w=337.5.
+      stampText(p8, signature_name, 210, 284.2, font, 11);
       if (sigImg) {
-        const dims = sigImg.scaleToFit(220, 32);
-        p8.drawImage(sigImg, { x: 210, y: 255, width: dims.width, height: dims.height });
+        // Height capped at 24pt so the top of the signature never crosses into
+        // the printed-name underline just above (282 - 254 = 28pt of clear space).
+        const dims = sigImg.scaleToFit(220, 24);
+        p8.drawImage(sigImg, { x: 210, y: 254, width: dims.width, height: dims.height });
       }
-      stampText(p8, todayFormatted(), 210, 225.8, font, 11);
+      stampText(p8, todayFormatted(), 210, 225.7, font, 11);
     } else if (c.kind === 'poa' && pages.length >= 3) {
       const p3 = pages[2];
-      // Principal block only — one signer per contract.
-      stampText(p3, signature_name, 210, 321.8, font, 11);
+      // Principal block underlines: name 319.5, signature 290.3, date 261.0.
+      stampText(p3, signature_name, 210, 321.7, font, 11);
       if (sigImg) {
-        const dims = sigImg.scaleToFit(220, 32);
-        p3.drawImage(sigImg, { x: 210, y: 292.5, width: dims.width, height: dims.height });
+        const dims = sigImg.scaleToFit(220, 24);
+        p3.drawImage(sigImg, { x: 210, y: 292.3, width: dims.width, height: dims.height });
       }
-      stampText(p3, todayFormatted(), 210, 263.3, font, 11);
+      stampText(p3, todayFormatted(), 210, 263.2, font, 11);
     }
 
     // Initials on the bottom-right of every content page (skip the appended certification page)
