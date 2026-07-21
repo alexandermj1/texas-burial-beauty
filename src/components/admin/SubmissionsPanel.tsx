@@ -1057,9 +1057,34 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     );
                   })()}
+                  {paidMap[selected.id] && (() => {
+                    const p = paidMap[selected.id];
+                    const tierLabel = (p.tier || "").toLowerCase();
+                    const label = tierLabel === "starter" ? "Starter"
+                      : tierLabel === "pro" ? "Pro"
+                      : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
+                      : (p.description || "Listing");
+                    const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
+                    return (
+                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-teal-500/10 border-2 border-teal-500/40 text-teal-700 dark:text-teal-300 shadow-sm flex-wrap">
+                        <CheckCircle className="w-4 h-4" strokeWidth={3} />
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing paid</span>
+                          <span className="font-display text-base font-bold">{label} · {amount}</span>
+                        </div>
+                        {p.paidAt && (
+                          <div className="flex flex-col leading-tight border-l border-teal-500/30 pl-3">
+                            <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Paid on</span>
+                            <span className="text-sm font-semibold">{formatDate(p.paidAt)}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                 </div>
               </div>
+
               <div className="flex flex-col items-end gap-1.5">
                 {selected.cemetery && (() => {
                   const selCanon = _canon(selected.cemetery || "");
