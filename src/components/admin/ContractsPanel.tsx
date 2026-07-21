@@ -105,22 +105,37 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       const { data: sub } = await supabase
         .from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
       if (!sub) throw new Error("Submission not found");
-      const authTotal = (sub as any).quote_amount ?? (sub as any).list_price ?? (sub as any).cemetery_retail ?? "";
+      // Merge duplicate submissions by email (same seller filled the form twice).
+      // The visible "primary" row may lack the quote we sent on a sibling row;
+      // fill any missing field from whichever duplicate has it.
+      let merged: any = { ...sub };
+      const email = (sub as any).email;
+      if (email) {
+        const { data: sibs } = await supabase
+          .from("contact_submissions").select("*").eq("email", email);
+        for (const s of sibs ?? []) {
+          if ((s as any).id === (sub as any).id) continue;
+          for (const [k, v] of Object.entries(s as any)) {
+            if (merged[k] == null || merged[k] === "") merged[k] = v;
+          }
+        }
+      }
+      const authTotal = merged.quote_amount ?? merged.list_price ?? merged.cemetery_retail ?? "";
       setEditFields({
-        seller_name: (sub as any).name ?? "",
+        seller_name: merged.name ?? "",
         address: "",
         city_state_zip: "",
-        phone: (sub as any).phone ?? "",
-        email: (sub as any).email ?? "",
-        cemetery: (sub as any).cemetery ?? "",
-        county_state: (sub as any).cemetery_city ? `${(sub as any).cemetery_city}, TX` : "",
+        phone: merged.phone ?? "",
+        email: merged.email ?? "",
+        cemetery: merged.cemetery ?? "",
+        county_state: merged.cemetery_city ? `${merged.cemetery_city}, TX` : "",
         plot_description: [
-          (sub as any).section && `Section ${(sub as any).section}`,
-          (sub as any).spaces && `Spaces ${(sub as any).spaces}`,
-          (sub as any).space_numbers,
+          merged.section && `Section ${merged.section}`,
+          merged.spaces && `Spaces ${merged.spaces}`,
+          merged.space_numbers,
         ].filter(Boolean).join(" • "),
-        plot_count: String((sub as any).plot_count ?? ""),
-        listing_option: (sub as any).listing_tier ?? (sub as any).listing_option ?? "Starter",
+        plot_count: String(merged.plot_count ?? ""),
+        listing_option: merged.listing_tier ?? merged.listing_option ?? "Starter",
         authorized_min_total: authTotal ? String(authTotal) : "",
       });
     } catch (e) {
