@@ -40,6 +40,8 @@ const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const SignContract = lazy(() => import("./pages/SignContract"));
+const SelectStarter = lazy(() => import("./pages/SelectStarter"));
+
 
 const queryClient = new QueryClient();
 
@@ -84,6 +86,8 @@ const App = () => (
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
                 <Route path="/thank-you" element={<ThankYou />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/select-starter" element={<SelectStarter />} />
+
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
                 <Route path="/sign/:token" element={<SignContract />} />
