@@ -1080,10 +1080,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           const amount = paid.amountCents > 0 ? `$${(paid.amountCents / 100).toLocaleString()}` : "Free";
                           return (
                             <div className={`${bandBase} ${teal}`}>
-                              <CheckCircle className="w-4 h-4" strokeWidth={3} />
                               <div className="flex flex-col leading-tight">
                                 <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing paid</span>
-                                <span className="font-display text-base font-bold">{label} · {amount}</span>
+                                <span className="font-display text-lg font-bold tabular-nums">{label} · {amount}</span>
                               </div>
                               {paid.paidAt && (
                                 <div className="flex flex-col leading-tight border-l border-teal-500/30 pl-3">
