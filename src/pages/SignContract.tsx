@@ -510,7 +510,7 @@ export default function SignContract() {
                   {[
                     "Authorized Minimum Price — I set the minimum acceptable price and understand the broker may not accept less without my consent.",
                     "Sales At or Above Minimum — I authorize the broker to accept any offer at or above the authorized minimum without further approval.",
-                    "Compliance With Laws — I understand the sale must comply with all applicable cemetery, state, and federal regulations.",
+                    "Buyer-Paid Broker Charges (Section 2.2) — I acknowledge the broker may collect additional buyer-paid charges on top of the Gross Sale Price, that these charges are earned by and belong to the broker, and that they do not reduce my Net Proceeds.",
                     "Warranty of Ownership — I warrant that I am the lawful owner of the interment property described and have full authority to sell.",
                     "Warranty of Condition — I warrant that the interment property is free of encumbrances and has not been previously used for burial.",
                   ].map((label, i) => {
