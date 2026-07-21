@@ -33,6 +33,8 @@ interface Props {
   sendLabel?: string;
   /** Optional preset templates to pick from. First one is loaded by default. */
   templates?: EmailTemplate[];
+  /** Enables the "Attach payment button" action when set. */
+  submissionId?: string | null;
   /** When provided, shows an "Attach plot cards" button (Texas buyer flow only). */
   buyerContext?: {
     id: string;
