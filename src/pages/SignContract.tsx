@@ -118,6 +118,14 @@ export default function SignContract() {
     seller_name: "", address: "", city_state_zip: "",
     phone: "", email: "", plot_description: "", listing_option: "Starter",
   });
+  // Fields the admin already filled in on the contract — the seller sees them
+  // as read-only so they cannot alter details we've verified (name, plots,
+  // cemetery, listing option, etc.). The two address fields are always editable
+  // because that's what we need the seller to supply.
+  const [locked, setLocked] = useState<Record<keyof SellerFields, boolean>>({
+    seller_name: false, address: false, city_state_zip: false,
+    phone: false, email: false, plot_description: false, listing_option: false,
+  });
   const [refreshing, setRefreshing] = useState(false);
 
   const [initials, setInitials] = useState("");
@@ -137,7 +145,7 @@ export default function SignContract() {
         setInfo(data);
         setPdfUrl(data.pdf_url);
         const fd = (data.fill_data ?? {}) as Record<string, string>;
-        setFields({
+        const next: SellerFields = {
           seller_name: fd.seller_name ?? "",
           address: fd.address ?? "",
           city_state_zip: fd.city_state_zip ?? "",
@@ -145,6 +153,18 @@ export default function SignContract() {
           email: fd.email ?? "",
           plot_description: fd.plot_description ?? "",
           listing_option: fd.listing_option ?? "Starter",
+        };
+        setFields(next);
+        // Lock anything the admin pre-filled. Mailing address + city/state/zip
+        // are never locked — those are the seller's job to complete.
+        setLocked({
+          seller_name: !!next.seller_name.trim(),
+          address: false,
+          city_state_zip: false,
+          phone: !!next.phone.trim(),
+          email: !!next.email.trim(),
+          plot_description: !!next.plot_description.trim(),
+          listing_option: !!fd.listing_option,
         });
         setDone(data.already_signed);
       } catch (e) {
@@ -313,49 +333,57 @@ export default function SignContract() {
               <h2 className="text-xl font-serif">Confirm your details</h2>
             </div>
             <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
-              These details will fill directly into the contract as you type. Take a moment to make sure everything is exactly as you want it on the record.
+              The details we already have on file are shown below and locked — please review them for accuracy.
+              Only your <strong>mailing address</strong> is editable; if anything else looks wrong, reply to the
+              email that sent you this link and we'll update it for you.
             </p>
             <div className="grid md:grid-cols-2 gap-5">
               <div className="md:col-span-2">
                 <Label>Full legal name</Label>
-                <Input value={fields.seller_name} onChange={setField("seller_name")} />
+                <Input value={fields.seller_name} onChange={setField("seller_name")} readOnly={locked.seller_name} disabled={locked.seller_name} />
               </div>
               <div className="md:col-span-2">
-                <Label>Mailing address</Label>
-                <Input value={fields.address} onChange={setField("address")} placeholder="1234 Example Street" />
+                <Label>Mailing address <span className="text-[10px] uppercase tracking-widest text-[#8a6d3b] ml-1">Required</span></Label>
+                <Input value={fields.address} onChange={setField("address")} placeholder="1234 Example Street" autoFocus />
               </div>
               <div>
-                <Label>City, State, ZIP</Label>
+                <Label>City, State, ZIP <span className="text-[10px] uppercase tracking-widest text-[#8a6d3b] ml-1">Required</span></Label>
                 <Input value={fields.city_state_zip} onChange={setField("city_state_zip")} placeholder="Austin, TX 78701" />
               </div>
               <div>
                 <Label>Phone</Label>
-                <Input value={fields.phone} onChange={setField("phone")} />
+                <Input value={fields.phone} onChange={setField("phone")} readOnly={locked.phone} disabled={locked.phone} />
               </div>
               <div className="md:col-span-2">
                 <Label>Email</Label>
-                <Input value={fields.email} onChange={setField("email")} type="email" />
+                <Input value={fields.email} onChange={setField("email")} type="email" readOnly={locked.email} disabled={locked.email} />
               </div>
               <div className="md:col-span-2">
                 <Label>Plot description (section / block / spaces)</Label>
-                <Input value={fields.plot_description} onChange={setField("plot_description")} />
+                <Input value={fields.plot_description} onChange={setField("plot_description")} readOnly={locked.plot_description} disabled={locked.plot_description} />
               </div>
               {info.kind === "listing_agreement" && (
                 <div className="md:col-span-2 space-y-3 pt-2">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Choose your listing option</Label>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Listing option {locked.listing_option && <span className="normal-case tracking-normal text-muted-foreground/80">— set by Texas Cemetery Brokers</span>}
+                  </Label>
                   <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-label="Listing option">
                     {listingOptions.map(({ id, tagline }) => {
                       const selected = fields.listing_option === id;
+                      const disabled = locked.listing_option && !selected;
                       return (
                         <button
                           key={id}
                           type="button"
                           role="radio"
                           aria-checked={selected}
-                          onClick={() => setFields((f) => ({ ...f, listing_option: id }))}
+                          disabled={disabled}
+                          onClick={() => { if (!locked.listing_option) setFields((f) => ({ ...f, listing_option: id })); }}
                           className={`rounded-xl border p-4 text-left transition-all ${
                             selected
                               ? "border-[#1f2a37] bg-[#1f2a37] text-white shadow-md"
+                              : disabled
+                              ? "border-border bg-muted/40 opacity-50 cursor-not-allowed"
                               : "border-border bg-background hover:border-[#1f2a37]/40 hover:bg-muted/40"
                           }`}
                         >

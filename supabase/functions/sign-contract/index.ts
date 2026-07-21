@@ -61,29 +61,33 @@ function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) 
 }
 
 /** Inline "SELLER INITIAL HERE" acknowledgement boxes on the Listing Agreement.
- * Coordinates measured directly from the template — the placeholder text spans
- * roughly x=395..488, so we mask it with white and stamp the seller's initials
- * centred on the same baseline in the same weight as a hand-written mark. */
+ * Each box has a real underline rect in the template at x0=490.5, x1=558.0
+ * (width 67.5). y_bot values below are the underline baseline (pdf-lib coords),
+ * measured directly from the template rects. We mask the placeholder text and
+ * stamp the seller's initials sitting on the underline. */
+const LA_INITIAL_UNDERLINE_X = 490.5;
+const LA_INITIAL_UNDERLINE_W = 67.5;
 const LA_INLINE_INITIALS: Array<{ pageIndex: number; y: number }> = [
-  { pageIndex: 1, y: 350.1 }, // p2 — Authorized Minimum Price acknowledgement
-  { pageIndex: 1, y: 236.1 }, // p2 — Sales at or above authorized minimum
-  { pageIndex: 2, y: 197.9 }, // p3 — Compliance with applicable laws
-  { pageIndex: 4, y: 639.6 }, // p5 — Warranty of ownership
-  { pageIndex: 4, y: 569.9 }, // p5 — Warranty of plot condition
+  { pageIndex: 1, y: 353.3 }, // p2 — Authorized Minimum Price
+  { pageIndex: 1, y: 239.3 }, // p2 — Sales at or above authorized minimum
+  { pageIndex: 2, y: 201.0 }, // p3 — Buyer-Paid Broker Charges (Section 2.2)
+  { pageIndex: 4, y: 642.8 }, // p5 — Warranty of ownership
+  { pageIndex: 4, y: 573.0 }, // p5 — Warranty of plot condition
 ];
 function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
   const WHITE = rgb(1, 1, 1);
   for (const { pageIndex, y } of LA_INLINE_INITIALS) {
     if (pageIndex >= pages.length) continue;
     const page = pages[pageIndex];
-    // Mask the "SELLER INITIAL HERE" placeholder.
-    page.drawRectangle({ x: 395, y: y - 3, width: 95, height: 15, color: WHITE });
-    // Stamp the initials centred within the same footprint.
+    // Mask the "SELLER INITIAL HERE" placeholder text that sits ABOVE the underline
+    // (roughly x=395..488, ~15pt tall, baseline about 8pt above the rule).
+    page.drawRectangle({ x: 395, y: y + 2, width: 100, height: 14, color: WHITE });
+    // Stamp the initials centred over the actual underline rect, resting on the line.
     const size = 12;
     const w = bold.widthOfTextAtSize(initials, size);
     page.drawText(initials, {
-      x: 395 + (95 - w) / 2,
-      y: y + 1,
+      x: LA_INITIAL_UNDERLINE_X + (LA_INITIAL_UNDERLINE_W - w) / 2,
+      y: y + 2.2, // baseline sits ~2pt above the rule, like a handwritten mark
       size,
       font: bold,
       color: INK,
@@ -149,15 +153,24 @@ Deno.serve(async (req) => {
       if (!c) return new Response(JSON.stringify({ error: 'invalid' }), { status: 404, headers: corsHeaders });
       if (c.signed_at) return new Response(JSON.stringify({ error: 'already_signed' }), { status: 409, headers: corsHeaders });
 
-      const allowed = [
-        'seller_name', 'co_owner_name', 'address', 'city_state_zip',
-        'phone', 'email', 'plot_description', 'plot_count', 'listing_option',
-        'county_state', 'cemetery',
-      ] as const;
-      const merged: FillData = { ...(c.fill_data ?? {}) } as FillData;
-      for (const k of allowed) {
-        if (typeof fields[k] === 'string' && fields[k].trim()) (merged as Record<string, unknown>)[k] = fields[k].trim();
-        else if (typeof fields[k] === 'number') (merged as Record<string, unknown>)[k] = fields[k];
+      // Seller-editable fields on the sign page. Anything the admin already
+      // filled into fill_data is locked and cannot be overwritten by the seller
+      // — they can only supply the fields we don't already have.
+      const SELLER_EDITABLE = new Set([
+        'seller_name', 'address', 'city_state_zip', 'phone', 'email',
+        'plot_description', 'listing_option',
+      ]);
+      const existing = (c.fill_data ?? {}) as Record<string, unknown>;
+      const merged: FillData = { ...existing } as FillData;
+      for (const k of Object.keys(fields)) {
+        if (!SELLER_EDITABLE.has(k)) continue;
+        const preFilled = typeof existing[k] === 'string'
+          ? (existing[k] as string).trim() !== ''
+          : existing[k] != null;
+        if (preFilled) continue; // locked — keep the admin value
+        const v = (fields as Record<string, unknown>)[k];
+        if (typeof v === 'string' && v.trim()) (merged as Record<string, unknown>)[k] = v.trim();
+        else if (typeof v === 'number') (merged as Record<string, unknown>)[k] = v;
       }
 
       const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
@@ -563,22 +576,25 @@ Deno.serve(async (req) => {
     // sits ~3pt above the rule so the baseline sits on the line.
     if (c.kind === 'listing_agreement' && pages.length >= 8) {
       const p8 = pages[7];
-      // Seller block (measured rects): printed name 281.3, sig 252.0, date 222.8.
-      stampText(p8, signature_name, 210, 284.3, font, 11);
+      // Seller block underline rects (pdf-lib coords, measured from template):
+      //   printed name y=282.0, signature y=252.8, date y=223.5, all x0=204.7 w=337.5.
+      stampText(p8, signature_name, 210, 284.2, font, 11);
       if (sigImg) {
-        const dims = sigImg.scaleToFit(220, 32);
-        p8.drawImage(sigImg, { x: 210, y: 255, width: dims.width, height: dims.height });
+        // Height capped at 24pt so the top of the signature never crosses into
+        // the printed-name underline just above (282 - 254 = 28pt of clear space).
+        const dims = sigImg.scaleToFit(220, 24);
+        p8.drawImage(sigImg, { x: 210, y: 254, width: dims.width, height: dims.height });
       }
-      stampText(p8, todayFormatted(), 210, 225.8, font, 11);
+      stampText(p8, todayFormatted(), 210, 225.7, font, 11);
     } else if (c.kind === 'poa' && pages.length >= 3) {
       const p3 = pages[2];
-      // Principal block only — one signer per contract.
-      stampText(p3, signature_name, 210, 321.8, font, 11);
+      // Principal block underlines: name 319.5, signature 290.3, date 261.0.
+      stampText(p3, signature_name, 210, 321.7, font, 11);
       if (sigImg) {
-        const dims = sigImg.scaleToFit(220, 32);
-        p3.drawImage(sigImg, { x: 210, y: 292.5, width: dims.width, height: dims.height });
+        const dims = sigImg.scaleToFit(220, 24);
+        p3.drawImage(sigImg, { x: 210, y: 292.3, width: dims.width, height: dims.height });
       }
-      stampText(p3, todayFormatted(), 210, 263.3, font, 11);
+      stampText(p3, todayFormatted(), 210, 263.2, font, 11);
     }
 
     // Initials on the bottom-right of every content page (skip the appended certification page)
