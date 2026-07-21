@@ -275,15 +275,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const map: Record<string, { tier: string; amountCents: number; paidAt: string; description: string }> = {};
       for (const row of data as any[]) {
         if (!row?.submission_id) continue;
+        // Starter is free ($0) — a "paid" row gets recorded automatically
+        // when the checkout link is generated/visited, which is misleading
+        // (the seller hasn't actually done anything). Only surface real,
+        // money-paid transactions in the UI.
+        const cents = Number(row.amount_cents) || 0;
+        if (cents <= 0) continue;
         // Keep only the latest paid txn per submission (already sorted desc).
         if (map[row.submission_id]) continue;
         map[row.submission_id] = {
           tier: String(row.metadata?.listing_tier || row.metadata?.product_name || "").trim(),
-          amountCents: Number(row.amount_cents) || 0,
+          amountCents: cents,
           paidAt: row.paid_at || "",
           description: row.description || row.metadata?.product_name || "",
         };
       }
+
       setPaidMap(map);
     };
     load();
