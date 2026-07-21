@@ -550,6 +550,17 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
+        {submissionId && (
+          <button
+            type="button"
+            onClick={() => setPaymentDialogOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-600/40 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30"
+            title="Attach a Stripe payment button for any amount"
+          >
+            <CreditCard className="w-3 h-3" />
+            Attach payment
+          </button>
+        )}
         {preCheckHtml !== null && (
           <button
             type="button"
