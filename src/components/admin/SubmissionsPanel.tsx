@@ -244,6 +244,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
   const [trashOpen, setTrashOpen] = useState(false);
+  // Map of submission_id -> latest PAID listing transaction (tier + amount + when + description).
+  const [paidMap, setPaidMap] = useState<Record<string, { tier: string; amountCents: number; paidAt: string; description: string }>>({});
+
 
 
 
