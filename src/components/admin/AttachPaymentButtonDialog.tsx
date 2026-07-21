@@ -24,14 +24,22 @@ const buildButtonHtml = (opts: { amountCents: number; description: string; url: 
     minimumFractionDigits: opts.amountCents % 100 === 0 ? 0 : 2,
   });
   const desc = opts.description.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // Use a centered table (max-width ~420px) so the block stays proportional
+  // on laptop-width email views instead of stretching the full column.
   return `
-<div data-tcb-payment="1" style="margin:22px 0;padding:22px 24px;border:1px solid #e7e2d8;border-radius:10px;background:#fbf7f1;font-family:Georgia,serif;color:#1f2937;text-align:center;">
-  <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#9a8f7a;">Secure Payment</p>
-  <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:#1f2937;font-style:italic;">${desc}</p>
-  <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:28px;font-weight:600;color:#7c3a2e;letter-spacing:.02em;">${dollars}</p>
-  <a href="${opts.url}" target="_blank" rel="noopener" style="display:inline-block;padding:12px 28px;background:#7c3a2e;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;border-radius:6px;font-weight:600;">Pay Securely</a>
-  <p style="margin:14px 0 0;font-family:Georgia,serif;font-size:11px;color:#9a8f7a;font-style:italic;">Powered by Stripe · Texas Cemetery Brokers</p>
-</div>`.trim();
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:20px auto;border-collapse:collapse;">
+  <tr><td style="padding:0;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" data-tcb-payment="1" style="width:420px;max-width:100%;border:1px solid #e7e2d8;border-radius:10px;background:#fbf7f1;font-family:Georgia,serif;color:#1f2937;">
+      <tr><td style="padding:18px 22px;text-align:center;">
+        <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#9a8f7a;">Secure Payment</p>
+        <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:14px;color:#1f2937;font-style:italic;line-height:1.4;">${desc}</p>
+        <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:24px;font-weight:600;color:#7c3a2e;letter-spacing:.02em;">${dollars}</p>
+        <a href="${opts.url}" target="_blank" rel="noopener" style="display:inline-block;padding:11px 26px;background:#7c3a2e;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;border-radius:6px;font-weight:600;">Pay Securely</a>
+        <p style="margin:12px 0 0;font-family:Georgia,serif;font-size:10px;color:#9a8f7a;font-style:italic;">Powered by Stripe · Texas Cemetery Brokers</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>`.trim();
 };
 
 const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail, recipientName, onAttach }: Props) => {
