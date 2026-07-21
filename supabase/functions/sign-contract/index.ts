@@ -153,15 +153,24 @@ Deno.serve(async (req) => {
       if (!c) return new Response(JSON.stringify({ error: 'invalid' }), { status: 404, headers: corsHeaders });
       if (c.signed_at) return new Response(JSON.stringify({ error: 'already_signed' }), { status: 409, headers: corsHeaders });
 
-      const allowed = [
-        'seller_name', 'co_owner_name', 'address', 'city_state_zip',
-        'phone', 'email', 'plot_description', 'plot_count', 'listing_option',
-        'county_state', 'cemetery',
-      ] as const;
-      const merged: FillData = { ...(c.fill_data ?? {}) } as FillData;
-      for (const k of allowed) {
-        if (typeof fields[k] === 'string' && fields[k].trim()) (merged as Record<string, unknown>)[k] = fields[k].trim();
-        else if (typeof fields[k] === 'number') (merged as Record<string, unknown>)[k] = fields[k];
+      // Seller-editable fields on the sign page. Anything the admin already
+      // filled into fill_data is locked and cannot be overwritten by the seller
+      // — they can only supply the fields we don't already have.
+      const SELLER_EDITABLE = new Set([
+        'seller_name', 'address', 'city_state_zip', 'phone', 'email',
+        'plot_description', 'listing_option',
+      ]);
+      const existing = (c.fill_data ?? {}) as Record<string, unknown>;
+      const merged: FillData = { ...existing } as FillData;
+      for (const k of Object.keys(fields)) {
+        if (!SELLER_EDITABLE.has(k)) continue;
+        const preFilled = typeof existing[k] === 'string'
+          ? (existing[k] as string).trim() !== ''
+          : existing[k] != null;
+        if (preFilled) continue; // locked — keep the admin value
+        const v = (fields as Record<string, unknown>)[k];
+        if (typeof v === 'string' && v.trim()) (merged as Record<string, unknown>)[k] = v.trim();
+        else if (typeof v === 'number') (merged as Record<string, unknown>)[k] = v;
       }
 
       const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
