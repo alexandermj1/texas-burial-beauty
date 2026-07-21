@@ -275,9 +275,8 @@ function buildListingCard(
   const buttonLabel = tier.price === 0 ? "Select Starter" : `Pay & select ${tier.label}`;
   const button = url
     ? `<a href="${url}" style="display:inline-block;background:#7c3a2e;color:#ffffff;padding:14px 28px;border-radius:999px;text-decoration:none;font-family:Georgia,serif;font-size:15px;font-weight:600;letter-spacing:.02em;">${buttonLabel}</a>`
-    : free
-      ? `<span style="display:inline-block;background:#f1ece2;color:#4b4537;padding:14px 28px;border-radius:999px;font-family:Georgia,serif;font-size:15px;font-weight:600;border:1px solid #e7e2d8;">Reply to select</span>`
-      : `<span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:14px 28px;border-radius:999px;font-family:Georgia,serif;font-size:15px;font-weight:500;border:1px solid #e7e2d8;">Payment link unavailable — reply to select</span>`;
+    : `<span style="display:inline-block;background:#f1ece2;color:#9a8f7a;padding:14px 28px;border-radius:999px;font-family:Georgia,serif;font-size:15px;font-weight:500;border:1px solid #e7e2d8;">Link unavailable — reply to select</span>`;
+
 
   return `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 14px;border-collapse:separate;border:1px solid #e7e2d8;border-radius:14px;background:#fbf8f3;overflow:hidden;">
