@@ -134,6 +134,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
             recipientName={customerName}
             templates={newEmailTemplates}
+            submissionId={submissionId}
             buyerContext={buyerContext ?? undefined}
             sellerContext={sellerContext ?? undefined}
             onSent={(meta) => { setComposeNew(false); onNewEmailSent?.(meta); refresh(); }}
