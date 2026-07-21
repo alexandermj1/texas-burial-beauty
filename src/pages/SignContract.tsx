@@ -495,6 +495,56 @@ export default function SignContract() {
               <SignaturePad label="Your signature" onChange={setSig} />
             </div>
 
+            {info?.kind === "listing_agreement" && (
+              <div className="rounded-lg border border-border bg-white p-5 space-y-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Section acknowledgements</div>
+                    <p className="text-sm font-serif mt-1">Initial each section below to affirm you've read and agree to it.</p>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {sectionInitials.filter(Boolean).length} / {sectionInitials.length} initialed
+                  </div>
+                </div>
+                <ul className="divide-y divide-border/70">
+                  {[
+                    "Authorized Minimum Price — I set the minimum acceptable price and understand the broker may not accept less without my consent.",
+                    "Sales At or Above Minimum — I authorize the broker to accept any offer at or above the authorized minimum without further approval.",
+                    "Compliance With Laws — I understand the sale must comply with all applicable cemetery, state, and federal regulations.",
+                    "Warranty of Ownership — I warrant that I am the lawful owner of the interment property described and have full authority to sell.",
+                    "Warranty of Condition — I warrant that the interment property is free of encumbrances and has not been previously used for burial.",
+                  ].map((label, i) => {
+                    const done = sectionInitials[i];
+                    const canInitial = initials.trim().length >= 2;
+                    return (
+                      <li key={i} className="flex items-start gap-4 py-3">
+                        <div className="flex-1 text-sm text-foreground/90 leading-relaxed">{label}</div>
+                        <button
+                          type="button"
+                          disabled={!canInitial || done}
+                          onClick={() =>
+                            setSectionInitials((s) => s.map((v, idx) => (idx === i ? true : v)))
+                          }
+                          className={`min-w-[92px] h-10 px-3 rounded-md text-xs font-serif tracking-widest border transition ${
+                            done
+                              ? "bg-[#1f2a37] text-white border-[#1f2a37]"
+                              : canInitial
+                              ? "bg-white text-[#1f2a37] border-[#1f2a37] hover:bg-[#1f2a37] hover:text-white"
+                              : "bg-muted text-muted-foreground border-border cursor-not-allowed"
+                          }`}
+                        >
+                          {done ? initials.trim().toUpperCase() : "Initial"}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {initials.trim().length < 2 && (
+                  <p className="text-[11px] text-muted-foreground">Enter your initials above to enable these buttons.</p>
+                )}
+              </div>
+            )}
+
             <div className="rounded-lg border border-border bg-[#f5f1ea]/50 p-5 text-sm">
               <label className="flex gap-3 items-start cursor-pointer">
                 <input
