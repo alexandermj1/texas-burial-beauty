@@ -232,7 +232,17 @@ export async function buildFilledPdf(
   const pages = pdf.getPages();
 
   if (kind === 'listing_agreement') {
-    if (pages.length >= 8) buildLaOverlays(pages[0], pages[1], serif, serifBold, data);
+    if (pages.length >= 8) {
+      buildLaOverlays(pages[0], pages[1], serif, serifBold, data);
+      // The template ships with a pre-printed broker signature + typed name in the
+      // broker block on the signature page. Cover those areas with opaque white
+      // so the seller sees a blank broker block until we counter-sign.
+      const p8 = pages[7];
+      const white = rgb(1, 1, 1);
+      p8.drawRectangle({ x: 204, y: 94, width: 300, height: 40, color: white });
+      p8.drawRectangle({ x: 204, y: 134, width: 300, height: 18, color: white });
+      p8.drawRectangle({ x: 204, y: 68, width: 300, height: 18, color: white });
+    }
   } else {
     if (pages.length >= 3) buildPoaOverlays(pages[0], serif, serifBold, data);
   }
