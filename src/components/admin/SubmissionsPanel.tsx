@@ -2327,7 +2327,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               title={`${label} listing paid · ${amount} · ${p.paidAt ? formatDate(p.paidAt) : "recently"}`}
                             >
                               <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
-                              {label} paid
+                              {amount}
                             </span>
                           );
                         })()}
