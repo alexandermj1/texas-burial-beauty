@@ -195,6 +195,8 @@ export default function SignContract() {
     if (!fields.plot_description.trim()) return toast.error("Enter the plot description (section / block / spaces)");
     if (!fields.listing_option) return toast.error("Choose a listing option");
     if (!initials.trim() || initials.trim().length < 2) return toast.error("Enter your initials (2+ letters)");
+    if (info?.kind === "listing_agreement" && sectionInitials.some((v) => !v))
+      return toast.error("Please initial each highlighted section of the agreement");
     if (!sig) return toast.error("Draw your signature");
     if (!consent) return toast.error("Please confirm your consent to sign electronically");
 
