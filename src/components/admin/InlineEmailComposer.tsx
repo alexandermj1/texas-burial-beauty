@@ -6,7 +6,7 @@
 // (bold, italic, underline, bulleted/numbered lists, links) — sent as
 // multipart/alternative so recipients see formatting in Gmail.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2 } from "lucide-react";
+import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, CreditCard } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
+import AttachPaymentButtonDialog from "./AttachPaymentButtonDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
 
@@ -32,6 +33,8 @@ interface Props {
   sendLabel?: string;
   /** Optional preset templates to pick from. First one is loaded by default. */
   templates?: EmailTemplate[];
+  /** Enables the "Attach payment button" action when set. */
+  submissionId?: string | null;
   /** When provided, shows an "Attach plot cards" button (Texas buyer flow only). */
   buyerContext?: {
     id: string;
@@ -253,6 +256,7 @@ const InlineEmailComposer = ({
   onCancel,
   sendLabel = "Send",
   templates,
+  submissionId,
   buyerContext,
   sellerContext,
 }: Props) => {
@@ -265,6 +269,7 @@ const InlineEmailComposer = ({
   const [checking, setChecking] = useState(false);
   const [preCheckHtml, setPreCheckHtml] = useState<string | null>(null);
   const [plotPickerOpen, setPlotPickerOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [listingBlockInserted, setListingBlockInserted] = useState(false);
   // For replies, start with the plain greeting+signature so we don't
   // clobber the user's reply with a full template. Templates can still be
@@ -545,6 +550,17 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
+        {submissionId && (
+          <button
+            type="button"
+            onClick={() => setPaymentDialogOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-600/40 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30"
+            title="Attach a Stripe payment button for any amount"
+          >
+            <CreditCard className="w-3 h-3" />
+            Attach payment
+          </button>
+        )}
         {preCheckHtml !== null && (
           <button
             type="button"
@@ -584,6 +600,20 @@ const InlineEmailComposer = ({
           mode="attach"
           onAttach={(cardsHtml) => {
             editorRef.current?.insertHtmlBeforeSignature(cardsHtml);
+            setHtml(editorRef.current?.getHtml() ?? html);
+            setBodyTouched(true);
+          }}
+        />
+      )}
+      {submissionId && (
+        <AttachPaymentButtonDialog
+          open={paymentDialogOpen}
+          onClose={() => setPaymentDialogOpen(false)}
+          submissionId={submissionId}
+          recipientEmail={to}
+          recipientName={recipientName}
+          onAttach={(buttonHtml) => {
+            editorRef.current?.insertHtmlBeforeSignature(buttonHtml);
             setHtml(editorRef.current?.getHtml() ?? html);
             setBodyTouched(true);
           }}
