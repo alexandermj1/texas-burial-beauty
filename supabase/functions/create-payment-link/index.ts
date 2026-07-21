@@ -10,6 +10,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Accepts a bare email OR a "Name <email@x.com>" mailbox — Gmail replies
+// supply the latter. We normalise below before Zod validates.
 const BodySchema = z.object({
   submissionId: z.string().uuid(),
   kind: z.enum(["listing_fee", "plot_sale", "custom"]),
@@ -20,6 +22,14 @@ const BodySchema = z.object({
   listingTier: z.enum(["starter", "pro", "custom_plus"]).optional(),
   environment: z.enum(["sandbox", "live"]).optional(),
 });
+
+/** Pull the bare email out of a mailbox like `"Name" <a@b.com>`. */
+function extractEmail(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const s = raw.trim();
+  const m = s.match(/<([^>]+)>/);
+  return (m ? m[1] : s).trim();
+}
 
 const BRAND_NAME = "Texas Cemetery Brokers";
 
