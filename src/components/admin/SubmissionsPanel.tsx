@@ -1016,78 +1016,88 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
-                  {(selected as any).quote_response === "accepted" && (() => {
-                    const quoted = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
-                    if (!quoted) return null;
-                    const retailSaved = Number((selected as any).cemetery_retail) || 0;
-                    const retail = retailSaved > 0 ? retailSaved : quoted / 0.42;
-                    const sales = Math.round((retail * 0.67) / 100) * 100;
+                  {(() => {
+                    const isAccepted = (selected as any).quote_response === "accepted";
+                    const hasQuote = !!(selected as any).quote_sent_at;
+                    const quotedAccepted = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
+                    const quotedPending = Number((selected as any).quote_amount) || 0;
+                    const paid = paidMap[selected.id];
+                    const showAccepted = isAccepted && quotedAccepted > 0;
+                    const showPending = !isAccepted && hasQuote && quotedPending > 0;
+                    if (!showAccepted && !showPending && !paid) return null;
+
                     const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
-                    return (
-                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 shadow-sm flex-wrap">
-                        <div className="flex flex-col leading-tight">
-                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
-                          <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
-                        </div>
-                        <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
-                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
-                          <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
-                        </div>
-                        <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
-                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted / accepted</span>
-                          <span className="text-sm font-semibold tabular-nums">{fmt(quoted)}</span>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  {(selected as any).quote_response !== "accepted" && (selected as any).quote_sent_at && (() => {
-                    const quoted = Number((selected as any).quote_amount) || 0;
-                    if (!quoted) return null;
                     const retailSaved = Number((selected as any).cemetery_retail) || 0;
-                    const retail = retailSaved > 0 ? retailSaved : quoted / 0.42;
+                    const q = showAccepted ? quotedAccepted : quotedPending;
+                    const retail = retailSaved > 0 ? retailSaved : q / 0.42;
                     const sales = Math.round((retail * 0.67) / 100) * 100;
-                    const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+
+                    const bandBase = "inline-flex items-center gap-3 px-3 py-1.5 rounded-lg border-2 shadow-sm flex-wrap";
+                    const emerald = "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
+                    const purple = "bg-purple-500/10 border-purple-500/40 text-purple-700 dark:text-purple-300";
+                    const teal = "bg-teal-500/10 border-teal-500/40 text-teal-700 dark:text-teal-300";
+
                     return (
-                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-purple-500/10 border-2 border-purple-500/40 text-purple-700 dark:text-purple-300 shadow-sm flex-wrap">
-                        <div className="flex flex-col leading-tight">
-                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
-                          <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
-                        </div>
-                        <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
-                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
-                          <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
-                        </div>
-                        <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
-                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted (pending)</span>
-                          <span className="text-sm font-semibold tabular-nums">{fmt(quoted)}</span>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  {paidMap[selected.id] && (() => {
-                    const p = paidMap[selected.id];
-                    const tierLabel = (p.tier || "").toLowerCase();
-                    const label = tierLabel === "starter" ? "Starter"
-                      : tierLabel === "pro" ? "Pro"
-                      : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
-                      : (p.description || "Listing");
-                    const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
-                    return (
-                      <div className="mt-2 inline-flex items-center gap-3 px-3 py-1.5 rounded-lg bg-teal-500/10 border-2 border-teal-500/40 text-teal-700 dark:text-teal-300 shadow-sm flex-wrap">
-                        <CheckCircle className="w-4 h-4" strokeWidth={3} />
-                        <div className="flex flex-col leading-tight">
-                          <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing paid</span>
-                          <span className="font-display text-base font-bold">{label} · {amount}</span>
-                        </div>
-                        {p.paidAt && (
-                          <div className="flex flex-col leading-tight border-l border-teal-500/30 pl-3">
-                            <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Paid on</span>
-                            <span className="text-sm font-semibold">{formatDate(p.paidAt)}</span>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {showAccepted && (
+                          <div className={`${bandBase} ${emerald}`}>
+                            <div className="flex flex-col leading-tight">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                              <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                              <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted / accepted</span>
+                              <span className="text-sm font-semibold tabular-nums">{fmt(q)}</span>
+                            </div>
                           </div>
                         )}
+                        {showPending && (
+                          <div className={`${bandBase} ${purple}`}>
+                            <div className="flex flex-col leading-tight">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                              <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                              <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted (pending)</span>
+                              <span className="text-sm font-semibold tabular-nums">{fmt(q)}</span>
+                            </div>
+                          </div>
+                        )}
+                        {paid && (() => {
+                          const tierLabel = (paid.tier || "").toLowerCase();
+                          const label = tierLabel === "starter" ? "Starter"
+                            : tierLabel === "pro" ? "Pro"
+                            : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
+                            : (paid.description || "Listing");
+                          const amount = paid.amountCents > 0 ? `$${(paid.amountCents / 100).toLocaleString()}` : "Free";
+                          return (
+                            <div className={`${bandBase} ${teal}`}>
+                              <CheckCircle className="w-4 h-4" strokeWidth={3} />
+                              <div className="flex flex-col leading-tight">
+                                <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing paid</span>
+                                <span className="font-display text-base font-bold">{label} · {amount}</span>
+                              </div>
+                              {paid.paidAt && (
+                                <div className="flex flex-col leading-tight border-l border-teal-500/30 pl-3">
+                                  <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Paid on</span>
+                                  <span className="text-sm font-semibold">{formatDate(paid.paidAt)}</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })()}
+
 
                 </div>
               </div>

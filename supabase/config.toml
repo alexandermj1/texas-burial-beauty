@@ -2,3 +2,6 @@ project_id = "mceguxfdoikjthsrbmzx"
 
 [functions.sign-contract]
 verify_jwt = false
+
+[functions.activate-starter-listing]
+verify_jwt = false
