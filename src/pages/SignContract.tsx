@@ -570,7 +570,8 @@ export default function SignContract() {
                 fields.email.trim() &&
                 fields.plot_description.trim() &&
                 fields.listing_option;
-              const ready = allFilled && initials.trim().length >= 2 && sig && consent;
+              const sectionsOk = info?.kind !== "listing_agreement" || sectionInitials.every(Boolean);
+              const ready = allFilled && initials.trim().length >= 2 && sig && consent && sectionsOk;
               return (
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
                   <p className="text-[11px] text-muted-foreground max-w-sm">
