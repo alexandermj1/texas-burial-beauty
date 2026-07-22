@@ -145,9 +145,9 @@ Deno.serve(async (req) => {
 
     const { data: signedUrl } = await svc.storage.from('contracts').createSignedUrl(path, 60 * 60 * 24);
 
-    if (kind === 'listing_agreement') {
-      await svc.from('contact_submissions').update({ la_issued_at: new Date().toISOString() }).eq('id', submission_id);
-    }
+    // Note: la_issued_at is intentionally NOT set here — generating a draft does
+    // not mean the seller has received it. That flag is set in send-contract-link
+    // once the signing link is actually emailed.
 
     return new Response(JSON.stringify({
       ok: true, sign_token: signToken, pdf_url: signedUrl?.signedUrl ?? null, pdf_path: path,
