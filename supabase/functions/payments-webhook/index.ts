@@ -288,18 +288,25 @@ async function fetchCardDetails(paymentIntentId: string | null, env: StripeEnv):
   }
 }
 
-async function markPaid(sessionId: string, paymentIntentId: string | null, env: StripeEnv) {
-  const { data: tx } = await db()
-    .from("payment_transactions")
-    .update({
-      status: "paid",
-      paid_at: new Date().toISOString(),
-      stripe_payment_intent_id: paymentIntentId,
-    })
-    .eq("stripe_session_id", sessionId)
-    .eq("environment", env)
-    .select()
-    .maybeSingle();
+async function markPaid(sessionId: string, paymentIntentId: string | null, env: StripeEnv, paymentLinkId?: string | null) {
+  // Match by checkout session id OR (for Payment Link payments) by the plink_...
+  // id we stored when generating the custom payment button.
+  const idsToTry = [sessionId, paymentLinkId].filter(Boolean) as string[];
+  let tx: any = null;
+  for (const id of idsToTry) {
+    const { data } = await db()
+      .from("payment_transactions")
+      .update({
+        status: "paid",
+        paid_at: new Date().toISOString(),
+        stripe_payment_intent_id: paymentIntentId,
+      })
+      .eq("stripe_session_id", id)
+      .eq("environment", env)
+      .select()
+      .maybeSingle();
+    if (data) { tx = data; break; }
+  }
 
   if (!tx) return;
   const { brand, last4 } = await fetchCardDetails(paymentIntentId, env);
@@ -349,7 +356,8 @@ Deno.serve(async (req) => {
       case "transaction.completed": {
         const obj: any = event.data.object;
         const paymentIntentId = typeof obj.payment_intent === "string" ? obj.payment_intent : null;
-        await markPaid(obj.id, paymentIntentId, env);
+        const paymentLinkId = typeof obj.payment_link === "string" ? obj.payment_link : (obj.payment_link?.id ?? null);
+        await markPaid(obj.id, paymentIntentId, env, paymentLinkId);
         break;
       }
       case "transaction.payment_failed":
