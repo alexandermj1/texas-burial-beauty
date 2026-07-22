@@ -12,7 +12,7 @@ import CustomerJourney from "./CustomerJourney";
 import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
-import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate } from "@/lib/emailTemplates";
+import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate, buildListingOptionsRecommendationTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryInfoCard from "./CemeteryInfoCard";
