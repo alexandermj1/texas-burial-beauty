@@ -12,6 +12,7 @@ const corsHeaders = {
 
 const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const TARGET_MAILBOX = "info@texascemeterybrokers.com";
+const TARGET_GMAIL_KEY_ENV = "GOOGLE_MAIL_API_KEY_1";
 
 const SendSchema = z.object({
   action: z.literal("send"),
@@ -100,6 +101,15 @@ function buildRfc2822(opts: {
 let cachedGmailKey: string | null = null;
 async function resolveGmailKey(lovableKey: string): Promise<string | null> {
   if (cachedGmailKey) return cachedGmailKey;
+  // The info@ mailbox is the second linked Gmail connector in this project.
+  // Use its injected key directly instead of calling /profile on every send:
+  // Gmail started rate-limiting those profile probes, which made sends fall
+  // back to the wrong mailbox and return provider errors.
+  const targetKey = Deno.env.get(TARGET_GMAIL_KEY_ENV);
+  if (targetKey) {
+    cachedGmailKey = targetKey;
+    return cachedGmailKey;
+  }
   const keys: string[] = [];
   const seen = new Set<string>();
   const push = (v?: string | null) => { if (v && !seen.has(v)) { seen.add(v); keys.push(v); } };
@@ -113,8 +123,7 @@ async function resolveGmailKey(lovableKey: string): Promise<string | null> {
       if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) { cachedGmailKey = k; return k; }
     } catch { /* try next */ }
   }
-  cachedGmailKey = keys[0] ?? null;
-  return cachedGmailKey;
+  return null;
 }
 
 Deno.serve(async (req) => {
