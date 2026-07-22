@@ -12,6 +12,7 @@ const corsHeaders = {
 
 const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const TARGET_MAILBOX = "info@texascemeterybrokers.com";
+const TARGET_GMAIL_KEY_ENV = "GOOGLE_MAIL_API_KEY_1";
 
 const SendSchema = z.object({
   action: z.literal("send"),
@@ -100,6 +101,15 @@ function buildRfc2822(opts: {
 let cachedGmailKey: string | null = null;
 async function resolveGmailKey(lovableKey: string): Promise<string | null> {
   if (cachedGmailKey) return cachedGmailKey;
+  // The info@ mailbox is the second linked Gmail connector in this project.
+  // Use its injected key directly instead of calling /profile on every send:
+  // Gmail started rate-limiting those profile probes, which made sends fall
+  // back to the wrong mailbox and return provider errors.
+  const targetKey = Deno.env.get(TARGET_GMAIL_KEY_ENV);
+  if (targetKey) {
+    cachedGmailKey = targetKey;
+    return cachedGmailKey;
+  }
   const keys: string[] = [];
   const seen = new Set<string>();
   const push = (v?: string | null) => { if (v && !seen.has(v)) { seen.add(v); keys.push(v); } };
@@ -113,8 +123,7 @@ async function resolveGmailKey(lovableKey: string): Promise<string | null> {
       if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) { cachedGmailKey = k; return k; }
     } catch { /* try next */ }
   }
-  cachedGmailKey = keys[0] ?? null;
-  return cachedGmailKey;
+  return null;
 }
 
 Deno.serve(async (req) => {
@@ -148,7 +157,7 @@ Deno.serve(async (req) => {
     if (input.action === "send") {
       let inReplyTo: string | undefined;
       let references: string | undefined;
-      let threadId = input.threadId;
+      let threadId: string | undefined;
 
       // If replying, fetch original message headers to set In-Reply-To / References.
       if (input.inReplyToGmailId) {
@@ -165,7 +174,14 @@ Deno.serve(async (req) => {
           const refs = find("References");
           if (mid) inReplyTo = mid;
           if (mid) references = refs ? `${refs} ${mid}` : mid;
+        } else {
+          // If this message was cached from an older/wrong Gmail connector,
+          // its thread id will not exist in the info@ mailbox. Sending with
+          // that stale thread id causes Gmail's 404 "entity not found".
+          threadId = undefined;
         }
+      } else {
+        threadId = input.threadId || undefined;
       }
 
       const raw2822 = buildRfc2822({
@@ -184,9 +200,12 @@ Deno.serve(async (req) => {
       if (threadId) payload.threadId = threadId;
 
       // Retry transient failures (network hiccups, 502/503/504, 429 rate limit).
+      // If Gmail says the thread is missing, retry once without threadId so
+      // the email still sends as a normal message instead of failing outright.
       let sendRes: Response | null = null;
       let sendText = "";
       let lastErr: unknown = null;
+      let retriedWithoutThread = false;
       for (let attempt = 0; attempt < 4; attempt++) {
         try {
           sendRes = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
@@ -196,6 +215,11 @@ Deno.serve(async (req) => {
           });
           sendText = await sendRes.text();
           if (sendRes.ok) break;
+          if (sendRes.status === 404 && payload.threadId && !retriedWithoutThread) {
+            delete payload.threadId;
+            retriedWithoutThread = true;
+            continue;
+          }
           if (![502, 503, 504, 429].includes(sendRes.status)) break;
         } catch (e) {
           lastErr = e;
@@ -204,11 +228,11 @@ Deno.serve(async (req) => {
         const delay = sendRes?.status === 429 ? 2000 * (attempt + 1) : 500 * (attempt + 1);
         await new Promise((r) => setTimeout(r, delay));
       }
-      if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 502);
+      if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 200);
       if (sendRes.status === 429) {
-        return json({ error: "Gmail is rate-limiting sends right now. Wait ~1 minute and try again." }, 429);
+        return json({ error: "Gmail is rate-limiting sends right now. Wait about 1 minute and try again.", rateLimited: true }, 200);
       }
-      if (!sendRes.ok) return json({ error: `Send failed: ${sendRes.status} ${sendText}` }, 502);
+      if (!sendRes.ok) return json({ error: `Send failed: ${sendRes.status} ${sendText}` }, 200);
       let sent: any = {};
       try { sent = JSON.parse(sendText); } catch { /* */ }
 

@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
+const TARGET_MAILBOX = "info@texascemeterybrokers.com";
+const TARGET_GMAIL_KEY_ENV = "GOOGLE_MAIL_API_KEY_1";
 // Include Sent folder so we know which submissions we've already replied to.
 // Drafts stay excluded.
 const DEFAULT_QUERY = "-in:draft";
@@ -20,6 +22,8 @@ const BodySchema = z.object({
   threadBackfillLimit: z.number().int().min(0).max(2000).optional().default(400),
   maxThreadsPerSync: z.number().int().min(0).max(2000).optional().default(400),
 });
+
+let cachedGmailKeys: string[] | null = null;
 
 interface GmailHeader { name: string; value: string }
 interface GmailPart { partId?: string; mimeType: string; filename?: string; body: { data?: string; size?: number; attachmentId?: string }; parts?: GmailPart[] }
@@ -269,36 +273,39 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    // Collect all linked Gmail mailbox keys: GOOGLE_MAIL_API_KEY plus
-    // GOOGLE_MAIL_API_KEY_1, GOOGLE_MAIL_API_KEY_2, ... (added when a second
-    // Gmail account like info@texascemeterybrokers.com is connected).
-    const gmailKeys: string[] = [];
-    const seenKeys = new Set<string>();
-    const pushKey = (v?: string | null) => { if (v && !seenKeys.has(v)) { seenKeys.add(v); gmailKeys.push(v); } };
-    pushKey(Deno.env.get("GOOGLE_MAIL_API_KEY"));
-    for (let i = 1; i <= 9; i++) pushKey(Deno.env.get(`GOOGLE_MAIL_API_KEY_${i}`));
-
     if (!lovableKey) return json({ error: "LOVABLE_API_KEY is not configured" }, 500);
-    if (gmailKeys.length === 0) return json({ error: "No Gmail connector keys configured" }, 500);
+    let gmailKeys = cachedGmailKeys;
+    if (!gmailKeys) {
+      const targetKey = Deno.env.get(TARGET_GMAIL_KEY_ENV);
+      if (targetKey) {
+        // The info@ mailbox is the explicitly linked second Gmail connector.
+        // Avoid repeated /profile probes here because they were exhausting
+        // Gmail's user-rate limit and causing the submissions drawer to error.
+        gmailKeys = [targetKey];
+      } else {
+        // Fallback for future connector changes: discover the matching mailbox
+        // once per warm function instance, then cache it.
+        const allKeys: string[] = [];
+        const seenKeys = new Set<string>();
+        const pushKey = (v?: string | null) => { if (v && !seenKeys.has(v)) { seenKeys.add(v); allKeys.push(v); } };
+        pushKey(Deno.env.get("GOOGLE_MAIL_API_KEY"));
+        for (let i = 1; i <= 9; i++) pushKey(Deno.env.get(`GOOGLE_MAIL_API_KEY_${i}`));
+        if (allKeys.length === 0) return json({ error: "No Gmail connector keys configured" }, 500);
 
-    // Only sync the info@texascemeterybrokers.com mailbox. Other connected
-    // Gmail accounts (e.g. Alexander's personal inbox) must NOT be ingested —
-    // they would pollute the admin inbox with unrelated mail.
-    const TARGET_MAILBOX = "info@texascemeterybrokers.com";
-    const filteredKeys: string[] = [];
-    for (const k of gmailKeys) {
-      try {
-        const r = await fetch(`${GMAIL_GATEWAY}/users/me/profile`, { headers: gmailHeaders(lovableKey, k) });
-        if (!r.ok) continue;
-        const j = await r.json();
-        if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) filteredKeys.push(k);
-      } catch { /* skip */ }
+        const filteredKeys: string[] = [];
+        for (const k of allKeys) {
+          try {
+            const r = await fetch(`${GMAIL_GATEWAY}/users/me/profile`, { headers: gmailHeaders(lovableKey, k) });
+            if (!r.ok) continue;
+            const j = await r.json();
+            if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) filteredKeys.push(k);
+          } catch { /* skip */ }
+        }
+        gmailKeys = filteredKeys;
+      }
+      cachedGmailKeys = gmailKeys;
     }
-    if (filteredKeys.length === 0) {
-      return json({ error: `No Gmail connector linked for ${TARGET_MAILBOX}` }, 500);
-    }
-    gmailKeys.length = 0;
-    gmailKeys.push(...filteredKeys);
+    if (gmailKeys.length === 0) return json({ error: `No Gmail connector linked for ${TARGET_MAILBOX}` }, 500);
 
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
@@ -341,6 +348,14 @@ Deno.serve(async (req) => {
 
     if (!listRes.ok) {
       const t = await listRes.text();
+      if (listRes.status === 429) {
+        return json({
+          ok: false,
+          rateLimited: true,
+          error: "Gmail is temporarily rate-limiting inbox sync. Wait about 1 minute and refresh again.",
+          details: t,
+        });
+      }
       return json({ error: `Gmail list failed: ${listRes.status} ${t}` }, 502);
     }
 
