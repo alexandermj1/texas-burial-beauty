@@ -356,7 +356,8 @@ Deno.serve(async (req) => {
       case "transaction.completed": {
         const obj: any = event.data.object;
         const paymentIntentId = typeof obj.payment_intent === "string" ? obj.payment_intent : null;
-        await markPaid(obj.id, paymentIntentId, env);
+        const paymentLinkId = typeof obj.payment_link === "string" ? obj.payment_link : (obj.payment_link?.id ?? null);
+        await markPaid(obj.id, paymentIntentId, env, paymentLinkId);
         break;
       }
       case "transaction.payment_failed":
