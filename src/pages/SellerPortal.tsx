@@ -1469,34 +1469,51 @@ const SubmittedScreen = ({
   state: PortalState;
   onStartOver: () => void;
 }) => (
-  <div className="min-h-screen bg-gradient-warm flex items-center justify-center px-6">
+  <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
     <Seo title="Application submitted" description="" path="/seller-portal" noindex />
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-xl w-full text-center bg-card/80 backdrop-blur border border-border/60 rounded-3xl p-12 shadow-soft"
-    >
-      <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
-        <CheckCircle2 className="w-8 h-8" />
-      </div>
-      <div className="text-[11px] tracking-[0.22em] uppercase text-primary mb-3">
-        Application received
-      </div>
-      <h1 className="font-display text-4xl text-foreground leading-tight mb-4">
-        Thank you, {state.account.fullName.split(" ")[0] || "friend"}.
-      </h1>
-      <p className="text-muted-foreground leading-relaxed mb-8">
-        A licensed broker will audit your file within one business day. When you're approved, we'll
-        release your Power of Attorney and Listing Agreement directly into this portal for you to
-        sign — and your listing will go live the moment they're returned.
-      </p>
-      <button
-        onClick={onStartOver}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+    <Navbar forceScrolled />
+    <BotanicalBackdrop />
+    <main className="flex-1 flex items-center justify-center px-6 pt-24 pb-16 relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative max-w-xl w-full text-center bg-card/90 backdrop-blur-xl border border-border/60 rounded-[28px] p-14 shadow-soft overflow-hidden"
       >
-        Start a new application
-      </button>
-    </motion.div>
+        <div
+          className="absolute -top-10 -right-10 w-40 h-40 opacity-30 pointer-events-none"
+          style={{
+            backgroundImage: `url(${hibiscusCoral.url})`,
+            backgroundSize: "contain",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-3">
+            Application received
+          </div>
+          <h1 className="font-display text-4xl md:text-5xl text-foreground leading-tight mb-4">
+            Thank you, <em className="italic text-primary">{state.account.fullName.split(" ")[0] || "friend"}</em>.
+          </h1>
+          <p className="text-muted-foreground leading-relaxed mb-8">
+            A licensed broker will audit your file within one business day. When you're approved, we'll
+            release your Power of Attorney and Listing Agreement directly into this portal for you to
+            sign — and your listing will go live the moment they're returned.
+          </p>
+          <button
+            onClick={onStartOver}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
+          >
+            Start a new application
+          </button>
+        </div>
+      </motion.div>
+    </main>
+    <Footer />
+    <HelpPill />
   </div>
 );
 
