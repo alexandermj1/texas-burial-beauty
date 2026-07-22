@@ -360,63 +360,110 @@ export default function SellerPortal() {
     return <SubmittedScreen state={state} onStartOver={startOver} />;
   }
 
+  const progress = ((stepIdx + 1) / STEPS.length) * 100;
+
   return (
-    <div className="min-h-screen bg-gradient-warm">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       <Seo
         title="Seller Portal (Beta) | Texas Cemetery Brokers"
         description="Guided, self-serve seller onboarding for cemetery property owners."
         path="/seller-portal"
         noindex
       />
-      <PortalHeader account={state.account} onStartOver={startOver} />
+      <Navbar forceScrolled />
+      <BotanicalBackdrop />
 
-      <div className="container mx-auto px-6 max-w-6xl pb-24 pt-10">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10">
-          <Stepper steps={STEPS} current={stepIdx} onJump={setStepIdx} state={state} />
+      <main className="flex-1 pt-24 pb-20 relative z-10">
+        <PortalHero
+          account={state.account}
+          onStartOver={startOver}
+          stepIdx={stepIdx}
+          totalSteps={STEPS.length}
+          currentLabel={currentStep.label}
+        />
 
-          <div>
-            <AnimatePresence mode="wait">
+        <div className="container mx-auto px-6 max-w-6xl mt-10">
+          {/* Progress rail */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between text-[10px] tracking-[0.24em] uppercase text-muted-foreground mb-3">
+              <span>Chapter {String(stepIdx + 1).padStart(2, "0")} of {String(STEPS.length).padStart(2, "0")}</span>
+              <span>{Math.round(progress)}% complete</span>
+            </div>
+            <div className="h-[3px] w-full bg-border/60 rounded-full overflow-hidden">
               <motion.div
-                key={currentStep.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-card/80 backdrop-blur border border-border/60 rounded-3xl p-8 md:p-12 shadow-soft"
-              >
-                <StepBody stepId={currentStep.id} state={state} update={update} />
-              </motion.div>
-            </AnimatePresence>
+                className="h-full bg-gradient-to-r from-primary via-accent to-primary"
+                initial={false}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+          </div>
 
-            <div className="flex items-center justify-between mt-8">
-              <button
-                onClick={goBack}
-                disabled={stepIdx === 0}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back
-              </button>
+          <div className="grid lg:grid-cols-[280px_1fr] gap-12">
+            <Stepper steps={STEPS} current={stepIdx} onJump={setStepIdx} state={state} />
 
-              {stepIdx < STEPS.length - 1 ? (
-                <button
-                  onClick={goNext}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            <div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative bg-card/85 backdrop-blur-xl border border-border/60 rounded-[28px] p-8 md:p-14 shadow-soft overflow-hidden"
                 >
-                  Continue <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
+                  <div
+                    className="absolute -top-24 -right-20 w-64 h-64 opacity-[0.06] rotate-12 pointer-events-none"
+                    style={{
+                      backgroundImage: `url(${palmFan.url})`,
+                      backgroundSize: "contain",
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                  <div className="relative">
+                    <StepBody stepId={currentStep.id} state={state} update={update} />
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="flex items-center justify-between mt-8">
                 <button
-                  onClick={handleSubmit}
-                  disabled={!canGoNext}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+                  onClick={goBack}
+                  disabled={stepIdx === 0}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
-                  Submit for review <Send className="w-4 h-4" />
+                  <ArrowLeft className="w-4 h-4" /> Back
                 </button>
-              )}
+
+                {stepIdx < STEPS.length - 1 ? (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={goNext}
+                    className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow overflow-hidden"
+                  >
+                    <span className="relative z-10">Continue</span>
+                    <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform" />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSubmit}
+                    disabled={!canGoNext}
+                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow disabled:opacity-40"
+                  >
+                    Submit for review <Send className="w-4 h-4" />
+                  </motion.button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      <Footer />
+      <HelpPill />
     </div>
   );
 }
