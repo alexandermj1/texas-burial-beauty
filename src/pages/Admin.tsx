@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
@@ -84,7 +84,6 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
   const [refreshingInbox, setRefreshingInbox] = useState(false);
-  const lastInboxPullAt = useRef(0);
   const [deletedSubmissions, setDeletedSubmissions] = useState<any[]>([]);
 
   // Fetch soft-deleted submissions so they can be restored from the Trash dialog.

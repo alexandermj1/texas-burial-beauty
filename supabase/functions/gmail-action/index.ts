@@ -147,8 +147,12 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
     if (userErr || !user) return json({ error: "Unauthorized" }, 401);
-    const { data: role } = await userClient.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-    if (!role) return json({ error: "Admin only" }, 403);
+    const { data: roles } = await userClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .in("role", ["admin", "staff"]);
+    if (!roles?.length) return json({ error: "Admin or staff only" }, 403);
 
     const gmailKey = await resolveGmailKey(lovableKey);
     if (!gmailKey) return json({ error: `No Gmail connector linked for ${TARGET_MAILBOX}` }, 500);
@@ -230,7 +234,7 @@ Deno.serve(async (req) => {
       }
       if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 200);
       if (sendRes.status === 429) {
-        return json({ error: "Gmail is rate-limiting sends right now. Wait about 1 minute and try again.", rateLimited: true }, 200);
+        return json({ error: friendlyGmailRateLimit(sendText), rateLimited: true }, 200);
       }
       if (!sendRes.ok) return json({ error: `Send failed: ${sendRes.status} ${sendText}` }, 200);
       let sent: any = {};
@@ -261,7 +265,10 @@ Deno.serve(async (req) => {
         headers: gmailHeaders(lovableKey, gmailKey),
         body: JSON.stringify({ addLabelIds: input.addLabelIds, removeLabelIds: input.removeLabelIds }),
       });
-      if (!r.ok) return json({ error: `Modify failed: ${r.status} ${await r.text()}` }, 502);
+      if (!r.ok) {
+        const text = await r.text();
+        return json({ error: r.status === 429 ? friendlyGmailRateLimit(text) : `Modify failed: ${r.status} ${text}`, rateLimited: r.status === 429 }, 200);
+      }
       // Mirror read state locally.
       if (input.removeLabelIds.includes("UNREAD")) {
         await admin.from("email_messages").update({ is_read: true }).eq("gmail_message_id", input.messageId);
@@ -277,7 +284,10 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: gmailHeaders(lovableKey, gmailKey),
       });
-      if (!r.ok) return json({ error: `Trash failed: ${r.status} ${await r.text()}` }, 502);
+      if (!r.ok) {
+        const text = await r.text();
+        return json({ error: r.status === 429 ? friendlyGmailRateLimit(text) : `Trash failed: ${r.status} ${text}`, rateLimited: r.status === 429 }, 200);
+      }
       await admin.from("email_messages").delete().eq("gmail_message_id", input.messageId);
       return json({ ok: true });
     }
@@ -286,7 +296,10 @@ Deno.serve(async (req) => {
       const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${input.messageId}?format=full`, {
         headers: gmailHeaders(lovableKey, gmailKey),
       });
-      if (!r.ok) return json({ error: `Refresh failed: ${r.status} ${await r.text()}` }, 502);
+      if (!r.ok) {
+        const text = await r.text();
+        return json({ error: r.status === 429 ? friendlyGmailRateLimit(text) : `Refresh failed: ${r.status} ${text}`, rateLimited: r.status === 429 }, 200);
+      }
       return json({ ok: true, message: await r.json() });
     }
 
@@ -296,3 +309,18 @@ Deno.serve(async (req) => {
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
+
+function friendlyGmailRateLimit(body: string): string {
+  try {
+    const parsed = JSON.parse(body);
+    const msg = String(parsed?.error?.message || parsed?.message || "");
+    const retryAt = msg.match(/Retry after ([^\n.]+(?:\.\d+Z)?)/i)?.[1];
+    if (retryAt) {
+      const d = new Date(retryAt);
+      if (!Number.isNaN(d.getTime())) {
+        return `Gmail is temporarily rate-limiting this mailbox. Try again after ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" })}.`;
+      }
+    }
+  } catch { /* keep generic message */ }
+  return "Gmail is temporarily rate-limiting this mailbox. Wait a few minutes, then send again.";
+}

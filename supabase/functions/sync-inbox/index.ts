@@ -315,9 +315,8 @@ Deno.serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleData) return json({ error: "Admin only" }, 403);
+      .in("role", ["admin", "staff"]);
+    if (!roleData?.length) return json({ error: "Admin or staff only" }, 403);
 
     const admin = createClient(supabaseUrl, serviceKey);
 
