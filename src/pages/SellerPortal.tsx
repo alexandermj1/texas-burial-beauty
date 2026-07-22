@@ -250,16 +250,22 @@ const Field = ({
   hint?: string;
 }) => (
   <label className="block">
-    <span className="block text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
+    <span className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">
       {label}
     </span>
     {children}
-    {hint && <span className="mt-1.5 block text-xs text-muted-foreground/80">{hint}</span>}
+    {hint && <span className="mt-2 block text-xs italic text-foreground/50">{hint}</span>}
   </label>
 );
 
+// Editorial underline input — no boxes, big display type, matches SellerQuoteForm editorial mode.
 const inputCls =
-  "w-full px-4 py-3 rounded-lg bg-background/60 border border-border/70 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/40 transition-all";
+  "w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl md:text-3xl text-foreground placeholder:text-foreground/30 placeholder:italic py-2";
+
+// For textareas and multi-line, a lighter serif-body style.
+const textareaCls =
+  "w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2";
+
 
 const RadioTile = ({
   active,
