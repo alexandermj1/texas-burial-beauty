@@ -1631,34 +1631,11 @@ const DocumentsStep = ({
 
       <AICallout notes={aiRecommendations(state)} />
 
-      {/* Two-way upload primer */}
-      <div className="mt-8 grid md:grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-border/60 bg-background/60 p-5">
-          <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
-            Option A
-          </div>
-          <div className="font-display text-lg text-foreground mb-1">
-            Upload from this computer
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Click <em>Upload</em> next to any document, then <em>From this
-            computer</em>. Choose the file — a JPG, PNG, HEIC, or PDF all work.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-5">
-          <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
-            Option B — new
-          </div>
-          <div className="font-display text-lg text-foreground mb-1">
-            Snap it with your phone
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Click <em>Upload</em>, choose <em>Use my phone camera</em>, and
-            point your phone at the QR code. Take the photo — it lands here in
-            seconds. No email, no cable.
-          </p>
-        </div>
-      </div>
+      {/* Two-way upload primer — subtle one-liner */}
+      <p className="mt-8 text-xs text-muted-foreground leading-relaxed">
+        For each document below, tap <em className="text-foreground">Upload</em> to choose a file from this computer, or <em className="text-foreground">Use my phone camera</em> to scan a QR code and snap the photo on your phone — it appears here in seconds. JPG, PNG, HEIC, and PDF all work.
+      </p>
+
 
       <div className="mt-6 space-y-3">
         {required.map((d) => {
