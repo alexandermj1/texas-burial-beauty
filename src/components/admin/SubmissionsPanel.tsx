@@ -1284,11 +1284,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     lawn: (x as any)?.lawn ?? null,
                     transfer_fee_amount: cemeteryProfileFor(selected.cemetery)?.transfer_fee ?? selected.transfer_fee_amount ?? null,
                   } : null}
-                  onNewEmailSent={(meta) => {
-                    if (meta?.templateId === "seller_intake" || meta?.templateId === "seller_listing_options") {
-                      onUpdate(selected.id, { needs_quote: true } as any);
-                    }
-                  }}
+                  onNewEmailSent={() => {}}
                 />
               );
             })()}
