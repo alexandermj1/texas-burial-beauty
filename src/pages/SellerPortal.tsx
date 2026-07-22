@@ -38,7 +38,7 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import DocumentUploadCard from "@/components/seller-portal/DocumentUploadCard";
-import WhyBrokerStrip, { FullServicePromise } from "@/components/seller-portal/WhyBrokerStrip";
+
 
 // -----------------------------------------------------------------------------
 // Experimental self-serve seller portal. Front-end only, persisted to
