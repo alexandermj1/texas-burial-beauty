@@ -97,7 +97,9 @@ function buildRfc2822(opts: {
   return [...headers, "", opts.body].join("\r\n");
 }
 
+let cachedGmailKey: string | null = null;
 async function resolveGmailKey(lovableKey: string): Promise<string | null> {
+  if (cachedGmailKey) return cachedGmailKey;
   const keys: string[] = [];
   const seen = new Set<string>();
   const push = (v?: string | null) => { if (v && !seen.has(v)) { seen.add(v); keys.push(v); } };
@@ -108,10 +110,11 @@ async function resolveGmailKey(lovableKey: string): Promise<string | null> {
       const r = await fetch(`${GMAIL_GATEWAY}/users/me/profile`, { headers: gmailHeaders(lovableKey, k) });
       if (!r.ok) continue;
       const j = await r.json();
-      if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) return k;
+      if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) { cachedGmailKey = k; return k; }
     } catch { /* try next */ }
   }
-  return keys[0] ?? null;
+  cachedGmailKey = keys[0] ?? null;
+  return cachedGmailKey;
 }
 
 Deno.serve(async (req) => {
