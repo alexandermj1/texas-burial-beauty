@@ -65,13 +65,14 @@ function encodeBase64Url(s: string): string {
 function buildRfc2822(opts: {
   from: string; to: string; cc?: string; bcc?: string;
   subject: string; body: string; htmlBody?: string;
-  inReplyTo?: string; references?: string;
+  inReplyTo?: string; references?: string; replyTo?: string;
 }): string {
   const headers: string[] = [];
   headers.push(`From: ${opts.from}`);
   headers.push(`To: ${opts.to}`);
   if (opts.cc) headers.push(`Cc: ${opts.cc}`);
   if (opts.bcc) headers.push(`Bcc: ${opts.bcc}`);
+  if (opts.replyTo) headers.push(`Reply-To: ${opts.replyTo}`);
   headers.push(`Subject: ${opts.subject}`);
   if (opts.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`);
   if (opts.references) headers.push(`References: ${opts.references}`);
@@ -201,6 +202,7 @@ Deno.serve(async (req) => {
           htmlBody: input.htmlBody,
           inReplyTo: from === TARGET_MAILBOX ? inReplyTo : undefined,
           references: from === TARGET_MAILBOX ? references : undefined,
+          replyTo: from === TARGET_MAILBOX ? undefined : TARGET_MAILBOX,
         });
         const p: Record<string, unknown> = { raw: encodeBase64Url(raw2822) };
         if (includeThread && threadId && from === TARGET_MAILBOX) p.threadId = threadId;
@@ -209,7 +211,7 @@ Deno.serve(async (req) => {
 
       const payload = buildPayload(TARGET_MAILBOX, true);
 
-      const sendWithKey = async (key: string, payloadForKey: Record<string, unknown>) => {
+      const sendWithKey = async (key: string, payloadForKey: Record<string, unknown>, retryRateLimit = true) => {
         let res: Response | null = null;
         let text = "";
         let err: unknown = null;
@@ -228,6 +230,7 @@ Deno.serve(async (req) => {
               retriedWithoutThread = true;
               continue;
             }
+            if (res.status === 429 && !retryRateLimit) break;
             if (![502, 503, 504, 429].includes(res.status)) break;
           } catch (e) {
             err = e;
@@ -240,12 +243,12 @@ Deno.serve(async (req) => {
 
       // Primary send through info@. If that mailbox is temporarily quota-locked,
       // use the backup linked Gmail account so customer replies can still go out.
-      let { res: sendRes, text: sendText, err: lastErr } = await sendWithKey(gmailKey, payload);
+      const fallbackKey = Deno.env.get(FALLBACK_GMAIL_KEY_ENV);
+      let { res: sendRes, text: sendText, err: lastErr } = await sendWithKey(gmailKey, payload, !fallbackKey || fallbackKey === gmailKey);
       let sentFrom = TARGET_MAILBOX;
       if (sendRes?.status === 429) {
-        const fallbackKey = Deno.env.get(FALLBACK_GMAIL_KEY_ENV);
         if (fallbackKey && fallbackKey !== gmailKey) {
-          const fallback = await sendWithKey(fallbackKey, buildPayload(FALLBACK_MAILBOX, false));
+          const fallback = await sendWithKey(fallbackKey, buildPayload(FALLBACK_MAILBOX, false), false);
           if (fallback.res?.ok) {
             sendRes = fallback.res;
             sendText = fallback.text;
@@ -255,50 +258,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      /* const raw2822 = buildRfc2822({
-        from: TARGET_MAILBOX,
-        to: input.to,
-        cc: input.cc,
-        bcc: input.bcc,
-        subject: input.subject || "(no subject)",
-        body: input.body,
-        htmlBody: input.htmlBody,
-        inReplyTo,
-        references,
-      });
-
-      const payload: Record<string, unknown> = { raw: encodeBase64Url(raw2822) };
-      if (threadId) payload.threadId = threadId;
-
-      // Retry transient failures (network hiccups, 502/503/504, 429 rate limit).
-      // If Gmail says the thread is missing, retry once without threadId so
-      // the email still sends as a normal message instead of failing outright.
-      let sendRes: Response | null = null;
-      let sendText = "";
-      let lastErr: unknown = null;
-      let retriedWithoutThread = false;
-      for (let attempt = 0; attempt < 4; attempt++) {
-        try {
-          sendRes = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
-            method: "POST",
-            headers: gmailHeaders(lovableKey, gmailKey),
-            body: JSON.stringify(payload),
-          });
-          sendText = await sendRes.text();
-          if (sendRes.ok) break;
-          if (sendRes.status === 404 && payload.threadId && !retriedWithoutThread) {
-            delete payload.threadId;
-            retriedWithoutThread = true;
-            continue;
-          }
-          if (![502, 503, 504, 429].includes(sendRes.status)) break;
-        } catch (e) {
-          lastErr = e;
-        }
-        // Longer backoff for 429s to respect Gmail's user-rate limit.
-        const delay = sendRes?.status === 429 ? 2000 * (attempt + 1) : 500 * (attempt + 1);
-        await new Promise((r) => setTimeout(r, delay));
-      } */
       if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 200);
       if (sendRes.status === 429) {
         return json({ error: friendlyGmailRateLimit(sendText), rateLimited: true }, 200);
