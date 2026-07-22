@@ -19,6 +19,15 @@ import {
   Mail,
   HelpCircle,
   X,
+  Rocket,
+  Clock,
+  ListChecks,
+  Megaphone,
+  Copy,
+  Share2,
+  PenLine,
+  Camera,
+  Leaf,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
