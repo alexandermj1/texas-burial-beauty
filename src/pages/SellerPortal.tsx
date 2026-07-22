@@ -1674,8 +1674,8 @@ const ReasonStep = ({
 }) => (
   <div>
     <StepIntro
-      eyebrow="04 · Sale details"
       title="What are you hoping the sale will achieve?"
+      accent="hoping the sale will achieve"
       body="This helps us position and price your listing. All questions are optional but the more you share, the better we can advise."
     />
     <div className="space-y-6">
