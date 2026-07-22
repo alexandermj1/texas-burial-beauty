@@ -159,6 +159,15 @@ Deno.serve(async (req) => {
       .update({ sent_at: new Date().toISOString(), status: 'sent' })
       .eq('id', c.id);
 
+    // Only now — after the signing link has actually been emailed — do we mark
+    // the submission's Listing Agreement as issued. Merely generating a draft
+    // must not flip this flag.
+    if (c.kind === 'listing_agreement' && c.submission_id) {
+      await svc.from('contact_submissions')
+        .update({ la_issued_at: new Date().toISOString() })
+        .eq('id', c.submission_id);
+    }
+
     return new Response(JSON.stringify({ ok: true, to }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
