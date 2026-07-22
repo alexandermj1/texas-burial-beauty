@@ -348,6 +348,14 @@ Deno.serve(async (req) => {
 
     if (!listRes.ok) {
       const t = await listRes.text();
+      if (listRes.status === 429) {
+        return json({
+          ok: false,
+          rateLimited: true,
+          error: "Gmail is temporarily rate-limiting inbox sync. Wait about 1 minute and refresh again.",
+          details: t,
+        });
+      }
       return json({ error: `Gmail list failed: ${listRes.status} ${t}` }, 502);
     }
 

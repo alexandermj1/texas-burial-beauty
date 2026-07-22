@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
@@ -84,6 +84,7 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
   const [refreshingInbox, setRefreshingInbox] = useState(false);
+  const lastInboxPullAt = useRef(0);
   const [deletedSubmissions, setDeletedSubmissions] = useState<any[]>([]);
 
   // Fetch soft-deleted submissions so they can be restored from the Trash dialog.
@@ -103,8 +104,9 @@ const Admin = () => {
     if (refreshingInbox) return;
     setRefreshingInbox(true);
     try {
-      const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 100 } });
+      const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 25, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 } });
       if (error) { toast({ title: "Sync failed", description: error.message, variant: "destructive" }); }
+      if ((data as any)?.rateLimited) { toast({ title: "Gmail is catching up", description: (data as any).error, variant: "destructive" }); }
       const res = await supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false });
       if (res.data) setSubmissions(res.data as any);
 
@@ -173,11 +175,16 @@ const Admin = () => {
     };
 
     const pullGmail = async () => {
-      try { await supabase.functions.invoke("sync-inbox", { body: { maxResults: 50 } }); } catch { /* non-fatal */ }
+      const now = Date.now();
+      if (now - lastInboxPullAt.current < 120000) return;
+      lastInboxPullAt.current = now;
+      try {
+        await supabase.functions.invoke("sync-inbox", { body: { maxResults: 10, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 } });
+      } catch { /* non-fatal */ }
     };
 
     const interval = setInterval(refreshSubmissions, 15000);
-    const gmailInterval = setInterval(pullGmail, 45000);
+    const gmailInterval = setInterval(pullGmail, 300000);
     // Also pull immediately on mount so a stale tab catches up fast.
     pullGmail();
     const onFocus = () => { pullGmail(); refreshSubmissions(); };
