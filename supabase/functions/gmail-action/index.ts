@@ -180,12 +180,26 @@ Deno.serve(async (req) => {
       const payload: Record<string, unknown> = { raw: encodeBase64Url(raw2822) };
       if (threadId) payload.threadId = threadId;
 
-      const sendRes = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
-        method: "POST",
-        headers: gmailHeaders(lovableKey, gmailKey),
-        body: JSON.stringify(payload),
-      });
-      const sendText = await sendRes.text();
+      // Retry transient failures (network hiccups, 502/503/504 from the gateway).
+      let sendRes: Response | null = null;
+      let sendText = "";
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          sendRes = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
+            method: "POST",
+            headers: gmailHeaders(lovableKey, gmailKey),
+            body: JSON.stringify(payload),
+          });
+          sendText = await sendRes.text();
+          if (sendRes.ok) break;
+          if (![502, 503, 504, 429].includes(sendRes.status)) break;
+        } catch (e) {
+          lastErr = e;
+        }
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      }
+      if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 502);
       if (!sendRes.ok) return json({ error: `Send failed: ${sendRes.status} ${sendText}` }, 502);
       let sent: any = {};
       try { sent = JSON.parse(sendText); } catch { /* */ }

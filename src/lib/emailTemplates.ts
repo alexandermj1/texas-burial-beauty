@@ -190,24 +190,19 @@ ${signature(i.adminName)}`;
 export const buildListingOptionsRecommendationTemplate = (i: SellerInput): EmailTemplate => {
   const body = `Dear ${first(i.recipientName)},
 
-Thank you for coming back to me — I'm glad you'd like to move forward with us.
+Thank you for coming back to me — happy to explain the difference between the three options.
 
-To answer your question directly: both packages give your property real, active representation from our sales team, who have access to every listing in our inventory regardless of tier. The $299 package adds meaningfully greater visibility — priority placement in front of our funeral home and mortuary partners, and stronger positioning across our marketing channels — but I want to be transparent that no package can guarantee a faster sale.
+All three give your property real representation from our sales team, and every plot in our inventory is shown to buyers regardless of tier. The differences are down to visibility and priority:
 
-The resale market for cemetery plots is genuinely unpredictable. Buyers make deeply personal decisions based on family history, sight lines, proximity to loved ones already interred, religious considerations, and dozens of other factors that no amount of marketing can shortcut. In practice we see properties that "should" move quickly sit for months, and quieter properties sell within weeks — a great deal comes down to the right family finding the right plot at the right moment.
+• Free listing — your property is added to our inventory and shown to buyers who ask about that cemetery. No cost, no time limit.
+• Pro ($99) — broader promotion across our marketing channels. In 2025, Pro-listed plots sold on average 22% faster than plots marketed independently through classifieds or auction sites.
+• Featured ($299) — priority placement with our funeral home and mortuary partners. Featured plots sold on average 61% faster than the same independent baseline.
 
-That said, two data points from our 2025 sales are worth sharing, because they do reflect a real pattern:
+The reason Featured performs the strongest is straightforward: around 90% of resale plot sales originate through a mortuary or funeral home referral, so being at the top of that list matters. $299 is also a good value at the moment while buyer demand is elevated and we're holding the price down.
 
-• Plots listed on the $99 Pro package sold, on average, 22% faster than comparable plots marketed independently through classifieds or auction sites.
-• Plots listed on the $299 Featured package sold, on average, 61% faster than the same independent baseline.
+That said, no package can guarantee a faster sale — the resale market is genuinely unpredictable, and buyers make deeply personal decisions based on family history, sight lines, and religious considerations. Whichever tier you choose, we handle the marketing, showings, negotiations and paperwork from here.
 
-The reason the $299 tier performs so much better is straightforward: roughly 90% of resale plot sales originate through a mortuary or funeral home referral, and Featured placement puts your property at the top of the list our partners are looking at when a family walks in needing a plot. Being the first option shown matters a great deal in that setting.
-
-I'll also mention — candidly — that $299 is a strong value at the moment. We're holding that price down while buyer demand is elevated, and it's the tier most sellers in your position are choosing right now.
-
-Whichever route you prefer, we handle everything from here — the marketing, the showings, the buyer negotiations and the paperwork. You won't need to do anything further until we bring you an offer.
-
-Happy to jump on a quick call if it's easier to talk it through.
+Happy to jump on a quick call if it's easier to talk through.
 
 ${signature(i.adminName)}`;
   return {
