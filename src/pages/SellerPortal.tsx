@@ -1302,15 +1302,39 @@ function StepBody({
   }
 }
 
-const StepIntro = ({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) => (
-  <div className="mb-10">
-    <div className="text-[11px] tracking-[0.22em] uppercase text-primary mb-3">{eyebrow}</div>
-    <h2 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05] mb-4">
-      {title}
-    </h2>
-    <p className="text-muted-foreground text-base max-w-2xl leading-relaxed">{body}</p>
-  </div>
-);
+// Editorial step intro — display-scale title with an italic accent phrase.
+// Pass `accent` to italicise a fragment inside the title.
+const StepIntro = ({
+  title,
+  accent,
+  body,
+}: {
+  title: string;
+  accent?: string;
+  body: string;
+}) => {
+  const renderTitle = () => {
+    if (!accent || !title.includes(accent)) return title;
+    const [before, after] = title.split(accent);
+    return (
+      <>
+        {before}
+        <span className="italic font-medium text-primary">{accent}</span>
+        {after}
+      </>
+    );
+  };
+  return (
+    <div className="mb-10">
+      <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.05] tracking-tight mb-5">
+        {renderTitle()}
+      </h2>
+      <p className="text-sm md:text-base text-foreground/65 leading-relaxed max-w-xl">
+        {body}
+      </p>
+    </div>
+  );
+};
 
 const AccountStep = ({
   state,
@@ -1321,14 +1345,15 @@ const AccountStep = ({
 }) => (
   <div>
     <StepIntro
-      eyebrow="01 · Your details"
-      title="Let's confirm who we're working with."
+      title="First — let's confirm who we're working with."
+      accent="who we're working with"
       body="These are the primary contact details we'll use for updates, verification calls, and the eventual sale."
     />
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="space-y-8">
       <Field label="Full legal name">
         <input
           className={inputCls}
+          placeholder="Jane Whitmore"
           value={state.account.fullName}
           onChange={(e) => update("account", { fullName: e.target.value })}
         />
@@ -1336,13 +1361,16 @@ const AccountStep = ({
       <Field label="Best contact phone">
         <input
           className={inputCls}
+          placeholder="(214) 555-0134"
           value={state.account.phone}
           onChange={(e) => update("account", { phone: e.target.value })}
         />
       </Field>
       <Field label="Email">
         <input
+          type="email"
           className={inputCls}
+          placeholder="you@email.com"
           value={state.account.email}
           onChange={(e) => update("account", { email: e.target.value })}
         />
@@ -1350,6 +1378,14 @@ const AccountStep = ({
     </div>
   </div>
 );
+
+const propertyTileOptions = [
+  { value: "single", label: "Single plot", desc: "Traditional in-ground burial", image: singlePlotImg },
+  { value: "companion", label: "Companion / double", desc: "Two side-by-side spaces", image: singlePlotImg },
+  { value: "family_estate", label: "Family estate", desc: "Larger multi-space property", image: familyEstateImg },
+  { value: "mausoleum", label: "Mausoleum crypt", desc: "Above-ground entombment", image: cryptImg },
+  { value: "niche", label: "Cremation niche", desc: "Cremated remains in a columbarium", image: nicheImg },
+] as const;
 
 const PropertyStep = ({
   state,
@@ -1360,11 +1396,50 @@ const PropertyStep = ({
 }) => (
   <div>
     <StepIntro
-      eyebrow="02 · The property"
-      title="Tell us about the plot."
-      body="The more precise you can be here, the faster the cemetery can verify your ownership."
+      title="And what kind of property is it?"
+      accent="kind of property"
+      body="Pick the type that best describes what you own, then tell us where it lives inside the cemetery."
     />
-    <div className="grid md:grid-cols-2 gap-6">
+
+    <div className="space-y-10">
+      {/* Property type — image tiles like the main seller form */}
+      <div>
+        <span className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-4">
+          Property type
+        </span>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {propertyTileOptions.map((t) => {
+            const active = state.property.propertyType === t.value;
+            return (
+              <button
+                type="button"
+                key={t.value}
+                onClick={() => update("property", { propertyType: t.value })}
+                className={`group relative text-left rounded-2xl border overflow-hidden transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/30"
+                    : "border-border/60 bg-background/60 hover:border-primary/50 hover:bg-primary/[0.03]"
+                }`}
+              >
+                <div className="aspect-[4/3] w-full flex items-center justify-center bg-[hsl(var(--sand-light))]/60 overflow-hidden">
+                  <img
+                    src={t.image}
+                    alt=""
+                    className="w-full h-full object-contain p-3 mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="px-3 py-2.5 border-t border-border/40">
+                  <div className={`text-sm font-medium leading-tight ${active ? "text-primary" : "text-foreground"}`}>
+                    {t.label}
+                  </div>
+                  <div className="text-[11px] text-foreground/55 leading-snug mt-0.5">{t.desc}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <Field label="Cemetery name">
         <input
           className={inputCls}
@@ -1373,6 +1448,7 @@ const PropertyStep = ({
           onChange={(e) => update("property", { cemeteryName: e.target.value })}
         />
       </Field>
+
       <Field label="City / county">
         <input
           className={inputCls}
@@ -1381,76 +1457,73 @@ const PropertyStep = ({
           onChange={(e) => update("property", { city: e.target.value })}
         />
       </Field>
-      <Field label="Property type">
-        <select
-          className={inputCls}
-          value={state.property.propertyType}
-          onChange={(e) => update("property", { propertyType: e.target.value })}
-        >
-          <option value="">Select…</option>
-          <option value="single">Single plot</option>
-          <option value="companion">Companion / double</option>
-          <option value="family_estate">Family estate</option>
-          <option value="mausoleum">Mausoleum crypt</option>
-          <option value="niche">Cremation niche</option>
-        </select>
-      </Field>
-      <Field label="Number of plots / spaces">
-        <input
-          type="number"
-          min={1}
-          className={inputCls}
-          value={state.property.plotCount}
-          onChange={(e) => update("property", { plotCount: e.target.value })}
-        />
-      </Field>
-      <Field label="Section">
-        <input
-          className={inputCls}
-          value={state.property.section}
-          onChange={(e) => update("property", { section: e.target.value })}
-        />
-      </Field>
-      <Field label="Lot">
-        <input
-          className={inputCls}
-          value={state.property.lot}
-          onChange={(e) => update("property", { lot: e.target.value })}
-        />
-      </Field>
-      <Field label="Space(s)">
-        <input
-          className={inputCls}
-          value={state.property.space}
-          onChange={(e) => update("property", { space: e.target.value })}
-        />
-      </Field>
-    </div>
 
-    <div className="mt-8">
-      <span className="block text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-3">
-        Do you have the original deed?
-      </span>
-      <div className="grid sm:grid-cols-3 gap-3">
-        {(
-          [
-            ["yes", "Yes, I have it", "Original certificate on hand"],
-            ["no", "No, it's lost", "We'll help you file a lost deed affidavit"],
-            ["unknown", "I'm not sure", "That's okay — we can check with the cemetery"],
-          ] as const
-        ).map(([v, t, d]) => (
-          <RadioTile
-            key={v}
-            title={t}
-            desc={d}
-            active={state.property.hasDeed === v}
-            onClick={() => update("property", { hasDeed: v })}
+      <div className="grid sm:grid-cols-2 gap-8">
+        <Field label="Section / garden">
+          <input
+            className={inputCls}
+            placeholder="Garden of Peace"
+            value={state.property.section}
+            onChange={(e) => update("property", { section: e.target.value })}
           />
-        ))}
+        </Field>
+        <Field label="Number of spaces">
+          <input
+            type="number"
+            min={1}
+            className={inputCls}
+            placeholder="1"
+            value={state.property.plotCount}
+            onChange={(e) => update("property", { plotCount: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-8">
+        <Field label="Lot">
+          <input
+            className={inputCls}
+            placeholder="Lot 14"
+            value={state.property.lot}
+            onChange={(e) => update("property", { lot: e.target.value })}
+          />
+        </Field>
+        <Field label="Space(s)">
+          <input
+            className={inputCls}
+            placeholder="Space 2"
+            value={state.property.space}
+            onChange={(e) => update("property", { space: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div>
+        <span className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-4">
+          Do you have the original deed?
+        </span>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {(
+            [
+              ["yes", "Yes, I have it", "Original certificate on hand"],
+              ["no", "No, it's lost", "We'll help you file a lost deed affidavit"],
+              ["unknown", "I'm not sure", "That's okay — we can check with the cemetery"],
+            ] as const
+          ).map(([v, t, d]) => (
+            <RadioTile
+              key={v}
+              title={t}
+              desc={d}
+              active={state.property.hasDeed === v}
+              onClick={() => update("property", { hasDeed: v })}
+            />
+          ))}
+        </div>
       </div>
     </div>
   </div>
 );
+
 
 const OwnershipStep = ({
   state,
