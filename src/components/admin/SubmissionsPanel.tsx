@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -601,8 +601,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
-      if (eFilter === "needs_quote" && (!needsQuoteActive(s) || awaitingMap[s.id])) return false;
-      if (eFilter === "needs_followup" && (!followupMap[s.id] || awaitingMap[s.id])) return false;
 
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
@@ -624,13 +622,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const bt = new Date(awaitingMap[b.id] || b.created_at).getTime();
       return bt - at;
     };
-    // Order: Needs reply → Needs quote → Needs follow-up → everything else.
-    // Paid submissions keep their paid tag but are not floated to the top.
+    // Order: Needs reply → everything else.
+    // Custom-tagged submissions rank just below Needs reply within "others".
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
-    const ordered = [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+    const rest = matches.filter(s => !awaitingMap[s.id]);
+    const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
+    const otherRows = rest.filter(s => !((s as any).custom_tag || "").trim()).sort(byNewest);
+    const ordered = [...awaitingRows, ...taggedRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
@@ -1156,11 +1154,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
-            {/* Reply / follow-up state — Texas only */}
+            {/* Reply state + custom tag — Texas only */}
             {subRegion(selected) === "texas" && (() => {
               const isAwaiting = !!awaitingMap[selected.id];
-              const isFollowup = !!followupMap[selected.id];
-              const manualFollowup = !!(selected as any).manual_followup;
+              const currentTag = ((selected as any).custom_tag || "").trim();
               return (
                 <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
                   <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
@@ -1182,49 +1179,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <RefreshCw className="w-3.5 h-3.5" /> Re-enable needs reply
                     </button>
                   )}
-                  <button
-                    onClick={() => {
-                      const next = !manualFollowup;
-                      const patch: any = { manual_followup: next };
-                      // Marking needs-follow-up implies we're not waiting on a reply from them.
-                      if (next) patch.reply_dismissed_at = new Date().toISOString();
-                      onUpdate(selected.id, patch);
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      manualFollowup
-                        ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
-                        : "bg-card text-foreground border-border hover:bg-muted/60"
-                    }`}
-                    title="Manually flag this submission for follow-up so it never falls through the cracks"
-                  >
-                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
-                    {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
-                  </button>
-                  {!(selected as any).quote_sent_at && (() => {
-                    const needsQuote = !!(selected as any).needs_quote;
-                    return (
+
+                  {/* Custom tag: edit inline; empty = remove */}
+                  <div className="inline-flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      defaultValue={currentTag}
+                      key={selected.id + ":" + currentTag}
+                      placeholder="+ Add custom tag"
+                      maxLength={40}
+                      onBlur={(e) => {
+                        const next = e.currentTarget.value.trim();
+                        if (next === currentTag) return;
+                        onUpdate(selected.id, { custom_tag: next || null } as any);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.currentTarget.blur(); }
+                        if (e.key === "Escape") { (e.currentTarget as HTMLInputElement).value = currentTag; e.currentTarget.blur(); }
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border outline-none transition-colors w-44 focus:w-56 ${
+                        currentTag
+                          ? "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-800 focus:ring-2 focus:ring-amber-400/40"
+                          : "bg-card text-foreground border-dashed border-border focus:ring-2 focus:ring-primary/30"
+                      }`}
+                      title="Add a short custom tag (e.g. waiting on deed). Press Enter to save, clear to remove."
+                    />
+                    {currentTag && (
                       <button
-                        onClick={() => onUpdate(selected.id, { needs_quote: !needsQuote } as any)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                          needsQuote
-                            ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
-                            : "bg-card text-foreground border-border hover:bg-muted/60"
-                        }`}
-                        title="Flag this submission as awaiting a quote from us"
+                        onClick={() => onUpdate(selected.id, { custom_tag: null } as any)}
+                        className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        title="Remove custom tag"
                       >
-                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-[hsl(var(--status-quote))]" : "bg-muted-foreground/40"}`} />
-                        {needsQuote ? "Marked needs quote" : "Mark needs quote"}
+                        <X className="w-3.5 h-3.5" />
                       </button>
-                    );
-                  })()}
-                  {isFollowup && !manualFollowup && (
-                    <span className="text-[11px] text-muted-foreground italic">
-                      Auto-flagged from outgoing promise
-                    </span>
-                  )}
-                  {/* Plot reservations have been retired — high demand means
-                      we no longer offer 3-day holds. Cards now display a
-                      polite note in place of the hold link. */}
+                    )}
+                  </div>
                 </div>
               );
             })()}
@@ -1295,11 +1284,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     lawn: (x as any)?.lawn ?? null,
                     transfer_fee_amount: cemeteryProfileFor(selected.cemetery)?.transfer_fee ?? selected.transfer_fee_amount ?? null,
                   } : null}
-                  onNewEmailSent={(meta) => {
-                    if (meta?.templateId === "seller_intake" || meta?.templateId === "seller_listing_options") {
-                      onUpdate(selected.id, { needs_quote: true } as any);
-                    }
-                  }}
+                  onNewEmailSent={() => {}}
                 />
               );
             })()}
@@ -2256,23 +2241,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Needs reply
                           </span>
                         )}
-                        {!awaitingMap[s.id] && needsQuoteActive(s) && (
+                        {!awaitingMap[s.id] && !!((s as any).custom_tag || "").trim() && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-[hsl(var(--status-quote))] text-white border border-[hsl(var(--status-quote))] shadow-sm"
-                            title="Quote owed to seller"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800 shadow-sm max-w-[180px] truncate"
+                            title={(s as any).custom_tag}
                           >
-                            <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
-                            Needs quote
-                          </span>
-                        )}
-
-                        {!awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id] && (
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border border-[hsl(var(--status-followup-border))] shadow-sm"
-                            title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-followup))] animate-pulse" />
-                            Follow up
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span className="truncate">{(s as any).custom_tag}</span>
                           </span>
                         )}
                         {hasDocs(s) && (

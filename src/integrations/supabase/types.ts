@@ -378,6 +378,7 @@ export type Database = {
           closed_outcome: string | null
           contracts_completed_at: string | null
           created_at: string
+          custom_tag: string | null
           customer_kind: string | null
           customer_profile_id: string | null
           death_cert_on_file: boolean | null
@@ -487,6 +488,7 @@ export type Database = {
           closed_outcome?: string | null
           contracts_completed_at?: string | null
           created_at?: string
+          custom_tag?: string | null
           customer_kind?: string | null
           customer_profile_id?: string | null
           death_cert_on_file?: boolean | null
@@ -596,6 +598,7 @@ export type Database = {
           closed_outcome?: string | null
           contracts_completed_at?: string | null
           created_at?: string
+          custom_tag?: string | null
           customer_kind?: string | null
           customer_profile_id?: string | null
           death_cert_on_file?: boolean | null
