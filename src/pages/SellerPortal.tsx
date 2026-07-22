@@ -807,9 +807,11 @@ const PortalHero = ({
               </button>
             )}
           </div>
-          <div className="flex flex-col items-start md:items-end gap-2">
-            <div className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground">Signed in as</div>
-            <div className="text-sm text-foreground font-medium">{account.fullName || account.email}</div>
+          <div className="flex flex-col items-start md:items-end gap-3">
+            <InlineHelp variant="compact" />
+            <div className="text-xs text-muted-foreground">
+              Signed in as <span className="text-foreground">{account.fullName || account.email}</span>
+            </div>
             <button
               onClick={onStartOver}
               className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
@@ -817,6 +819,7 @@ const PortalHero = ({
               Start a new application
             </button>
           </div>
+
         </motion.div>
       </div>
     </div>
