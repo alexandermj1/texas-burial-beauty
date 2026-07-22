@@ -1260,6 +1260,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       adminName,
                       cemetery: selected.cemetery,
                     }),
+                    buildListingOptionsRecommendationTemplate({
+                      recipientName: selected.name,
+                      adminName,
+                      cemetery: selected.cemetery,
+                    }),
                   ];
               return (
                 <EmailThread
