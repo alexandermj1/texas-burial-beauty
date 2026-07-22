@@ -452,17 +452,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       // Honor manual dismissal: if the admin marked "doesn't need a reply", drop the
       // Needs reply tag UNLESS a newer inbound email has arrived since they dismissed.
-      // Manually flagging "needs follow-up" also dismisses needs-reply (handled in onUpdate too).
+      // Note: manual_followup no longer suppresses needs-reply — if the customer
+      // sent us the last email, Needs reply always wins over Follow up.
       for (const sid of Object.keys(nextAwaiting)) {
         const sub = subById.get(sid);
         const dismissedAt = sub?.reply_dismissed_at;
-        if ((sub as any)?.manual_followup) { delete nextAwaiting[sid]; continue; }
         if (!dismissedAt) continue;
         const lastInbound = nextAwaiting[sid];
         if (new Date(lastInbound).getTime() <= new Date(dismissedAt).getTime()) {
           delete nextAwaiting[sid];
         }
       }
+
       // Manual "needs follow-up" toggle: always surface, even if no email promise.
       for (const s of texasSubs) {
         if ((s as any).manual_followup && !nextFollowup[s.id]) {
@@ -600,8 +601,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
-      if (eFilter === "needs_quote" && !needsQuoteActive(s)) return false;
-      if (eFilter === "needs_followup" && !followupMap[s.id]) return false;
+      if (eFilter === "needs_quote" && (!needsQuoteActive(s) || awaitingMap[s.id])) return false;
+      if (eFilter === "needs_followup" && (!followupMap[s.id] || awaitingMap[s.id])) return false;
+
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
