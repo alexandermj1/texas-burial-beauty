@@ -1154,11 +1154,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
-            {/* Reply / follow-up state — Texas only */}
+            {/* Reply state + custom tag — Texas only */}
             {subRegion(selected) === "texas" && (() => {
               const isAwaiting = !!awaitingMap[selected.id];
-              const isFollowup = !!followupMap[selected.id];
-              const manualFollowup = !!(selected as any).manual_followup;
+              const currentTag = ((selected as any).custom_tag || "").trim();
               return (
                 <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
                   <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
@@ -1180,49 +1179,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <RefreshCw className="w-3.5 h-3.5" /> Re-enable needs reply
                     </button>
                   )}
-                  <button
-                    onClick={() => {
-                      const next = !manualFollowup;
-                      const patch: any = { manual_followup: next };
-                      // Marking needs-follow-up implies we're not waiting on a reply from them.
-                      if (next) patch.reply_dismissed_at = new Date().toISOString();
-                      onUpdate(selected.id, patch);
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      manualFollowup
-                        ? "bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border-[hsl(var(--status-followup-border))] hover:bg-[hsl(var(--status-followup-soft))]/70"
-                        : "bg-card text-foreground border-border hover:bg-muted/60"
-                    }`}
-                    title="Manually flag this submission for follow-up so it never falls through the cracks"
-                  >
-                    <span className={`w-2 h-2 rounded-full ${manualFollowup ? "bg-[hsl(var(--status-followup))]" : "bg-muted-foreground/40"}`} />
-                    {manualFollowup ? "Marked needs follow-up" : "Mark needs follow-up"}
-                  </button>
-                  {!(selected as any).quote_sent_at && (() => {
-                    const needsQuote = !!(selected as any).needs_quote;
-                    return (
+
+                  {/* Custom tag: edit inline; empty = remove */}
+                  <div className="inline-flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      defaultValue={currentTag}
+                      key={selected.id + ":" + currentTag}
+                      placeholder="+ Add custom tag"
+                      maxLength={40}
+                      onBlur={(e) => {
+                        const next = e.currentTarget.value.trim();
+                        if (next === currentTag) return;
+                        onUpdate(selected.id, { custom_tag: next || null } as any);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.currentTarget.blur(); }
+                        if (e.key === "Escape") { (e.currentTarget as HTMLInputElement).value = currentTag; e.currentTarget.blur(); }
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border outline-none transition-colors w-44 focus:w-56 ${
+                        currentTag
+                          ? "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-800 focus:ring-2 focus:ring-amber-400/40"
+                          : "bg-card text-foreground border-dashed border-border focus:ring-2 focus:ring-primary/30"
+                      }`}
+                      title="Add a short custom tag (e.g. waiting on deed). Press Enter to save, clear to remove."
+                    />
+                    {currentTag && (
                       <button
-                        onClick={() => onUpdate(selected.id, { needs_quote: !needsQuote } as any)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                          needsQuote
-                            ? "bg-[hsl(var(--status-quote-soft))] text-[hsl(var(--status-quote-fg))] border-[hsl(var(--status-quote-border))] hover:bg-[hsl(var(--status-quote-soft))]/70"
-                            : "bg-card text-foreground border-border hover:bg-muted/60"
-                        }`}
-                        title="Flag this submission as awaiting a quote from us"
+                        onClick={() => onUpdate(selected.id, { custom_tag: null } as any)}
+                        className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        title="Remove custom tag"
                       >
-                        <span className={`w-2 h-2 rounded-full ${needsQuote ? "bg-[hsl(var(--status-quote))]" : "bg-muted-foreground/40"}`} />
-                        {needsQuote ? "Marked needs quote" : "Mark needs quote"}
+                        <X className="w-3.5 h-3.5" />
                       </button>
-                    );
-                  })()}
-                  {isFollowup && !manualFollowup && (
-                    <span className="text-[11px] text-muted-foreground italic">
-                      Auto-flagged from outgoing promise
-                    </span>
-                  )}
-                  {/* Plot reservations have been retired — high demand means
-                      we no longer offer 3-day holds. Cards now display a
-                      polite note in place of the hold link. */}
+                    )}
+                  </div>
                 </div>
               );
             })()}
