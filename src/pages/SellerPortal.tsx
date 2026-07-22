@@ -17,7 +17,6 @@ import {
   Send,
   Phone,
   Mail,
-  Mail,
   X,
   Rocket,
   Clock,
