@@ -97,7 +97,9 @@ function buildRfc2822(opts: {
   return [...headers, "", opts.body].join("\r\n");
 }
 
+let cachedGmailKey: string | null = null;
 async function resolveGmailKey(lovableKey: string): Promise<string | null> {
+  if (cachedGmailKey) return cachedGmailKey;
   const keys: string[] = [];
   const seen = new Set<string>();
   const push = (v?: string | null) => { if (v && !seen.has(v)) { seen.add(v); keys.push(v); } };
@@ -108,10 +110,11 @@ async function resolveGmailKey(lovableKey: string): Promise<string | null> {
       const r = await fetch(`${GMAIL_GATEWAY}/users/me/profile`, { headers: gmailHeaders(lovableKey, k) });
       if (!r.ok) continue;
       const j = await r.json();
-      if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) return k;
+      if (String(j.emailAddress || "").toLowerCase() === TARGET_MAILBOX) { cachedGmailKey = k; return k; }
     } catch { /* try next */ }
   }
-  return keys[0] ?? null;
+  cachedGmailKey = keys[0] ?? null;
+  return cachedGmailKey;
 }
 
 Deno.serve(async (req) => {
@@ -180,11 +183,11 @@ Deno.serve(async (req) => {
       const payload: Record<string, unknown> = { raw: encodeBase64Url(raw2822) };
       if (threadId) payload.threadId = threadId;
 
-      // Retry transient failures (network hiccups, 502/503/504 from the gateway).
+      // Retry transient failures (network hiccups, 502/503/504, 429 rate limit).
       let sendRes: Response | null = null;
       let sendText = "";
       let lastErr: unknown = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < 4; attempt++) {
         try {
           sendRes = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
             method: "POST",
@@ -197,9 +200,14 @@ Deno.serve(async (req) => {
         } catch (e) {
           lastErr = e;
         }
-        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+        // Longer backoff for 429s to respect Gmail's user-rate limit.
+        const delay = sendRes?.status === 429 ? 2000 * (attempt + 1) : 500 * (attempt + 1);
+        await new Promise((r) => setTimeout(r, delay));
       }
       if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 502);
+      if (sendRes.status === 429) {
+        return json({ error: "Gmail is rate-limiting sends right now. Wait ~1 minute and try again." }, 429);
+      }
       if (!sendRes.ok) return json({ error: `Send failed: ${sendRes.status} ${sendText}` }, 502);
       let sent: any = {};
       try { sent = JSON.parse(sendText); } catch { /* */ }
