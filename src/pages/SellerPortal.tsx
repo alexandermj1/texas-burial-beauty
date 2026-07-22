@@ -759,36 +759,76 @@ const PortalHero = ({
   stepIdx,
   totalSteps,
   currentLabel,
+  path,
+  onChangePath,
 }: {
   account: PortalState["account"];
   onStartOver: () => void;
   stepIdx: number;
   totalSteps: number;
   currentLabel: string;
+  path?: PortalPath;
+  onChangePath?: () => void;
 }) => {
   const firstName = (account.fullName || account.email || "friend").split(/[\s@]/)[0];
+  const pathLabel =
+    path === "advertise_first" ? "Advertise now · documents later" : "Full guided onboarding";
   return (
     <div className="container mx-auto px-6 max-w-6xl">
-      <div className="relative">
+      <div className="relative overflow-hidden rounded-[32px] border border-border/60 bg-gradient-to-br from-secondary/60 via-background to-primary/[0.06] px-8 md:px-14 py-12 md:py-16 shadow-soft">
+        {/* Layered floral motifs — richer, more editorial */}
+        <div
+          className="absolute -top-16 -left-12 w-72 h-72 opacity-40 pointer-events-none rotate-[-18deg]"
+          style={{ backgroundImage: `url(${palmFan.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+        />
+        <div
+          className="absolute -top-10 right-6 w-40 h-40 opacity-70 pointer-events-none rotate-[12deg]"
+          style={{ backgroundImage: `url(${hibiscusCoral.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+        />
+        <div
+          className="absolute -bottom-24 -right-16 w-[26rem] h-[26rem] opacity-30 pointer-events-none rotate-[15deg]"
+          style={{ backgroundImage: `url(${bananaLeaf.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+        />
+        <div
+          className="absolute bottom-4 left-1/3 w-40 h-40 opacity-50 pointer-events-none"
+          style={{ backgroundImage: `url(${plumeria.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+        />
+        <div
+          className="absolute top-1/2 -right-8 w-32 h-32 opacity-30 pointer-events-none -translate-y-1/2"
+          style={{ backgroundImage: `url(${monstera.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+        />
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col md:flex-row md:items-end md:justify-between gap-6"
+          className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6"
         >
           <div>
             <div className="flex items-center gap-3 text-[10px] tracking-[0.28em] uppercase text-primary mb-4">
+              <Leaf className="w-3 h-3" />
               <span>Seller Portal</span>
               <span className="w-8 h-px bg-primary/40" />
-              <span className="text-muted-foreground">Chapter {String(stepIdx + 1).padStart(2, "0")} — {currentLabel}</span>
+              <span className="text-muted-foreground">
+                Step {String(stepIdx + 1).padStart(2, "0")} of {String(totalSteps).padStart(2, "0")} — {currentLabel}
+              </span>
             </div>
             <h1 className="font-display text-4xl md:text-6xl text-foreground leading-[1.02]">
               Welcome, <em className="italic text-primary">{firstName}</em>.
             </h1>
             <p className="text-muted-foreground mt-4 max-w-lg leading-relaxed">
-              Move at your own pace. Everything you enter is saved automatically — close the tab
-              and pick up right where you left it.
+              Move at your own pace. Everything is saved automatically — close the tab and pick
+              up right where you left off.
             </p>
+            {path && onChangePath && (
+              <button
+                onClick={onChangePath}
+                className="mt-5 inline-flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-primary/80 hover:text-primary transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                {pathLabel} · change
+              </button>
+            )}
           </div>
           <div className="flex flex-col items-start md:items-end gap-2">
             <div className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground">Signed in as</div>
@@ -805,6 +845,282 @@ const PortalHero = ({
     </div>
   );
 };
+
+// -----------------------------------------------------------------------------
+// Intro / walkthrough — shown right after sign-in so the seller understands
+// the shape of the journey before any form appears.
+// -----------------------------------------------------------------------------
+const IntroScreen = ({
+  account,
+  onContinue,
+  onStartOver,
+}: {
+  account: PortalState["account"];
+  onContinue: () => void;
+  onStartOver: () => void;
+}) => {
+  const firstName = (account.fullName || account.email || "friend").split(/[\s@]/)[0];
+  const chapters = [
+    { icon: User, title: "Confirm your details", body: "A minute to verify contact info so we can reach you." },
+    { icon: Home, title: "Describe the property", body: "Cemetery, section, lot — as precise as you can be." },
+    { icon: Users, title: "Ownership story", body: "Sole owner, joint, inherited — we only ask what applies." },
+    { icon: ScrollText, title: "Sale intentions", body: "Timeframe, target price, anything else worth knowing." },
+    { icon: FileText, title: "Documents (optional today)", body: "Snap them with your phone or upload on the spot." },
+    { icon: Send, title: "Submit for broker review", body: "A licensed broker audits your file within one business day." },
+  ];
+  return (
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      <Seo title="Seller Portal — Your Journey" description="" path="/seller-portal" noindex />
+      <Navbar forceScrolled />
+      <BotanicalBackdrop />
+
+      <main className="flex-1 pt-24 pb-16 relative z-10">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-flex items-center gap-2 text-[10px] tracking-[0.28em] uppercase text-primary mb-6">
+              <Sparkles className="w-3 h-3" /> Here's what to expect
+            </span>
+            <h1 className="font-display text-5xl md:text-6xl text-foreground leading-[1.02]">
+              Welcome, <em className="italic text-primary">{firstName}</em>.
+            </h1>
+            <p className="text-muted-foreground mt-5 max-w-xl mx-auto leading-relaxed">
+              Before we begin — a quick look at the six short chapters ahead. Most sellers finish
+              in <strong className="text-foreground">under 15 minutes</strong>. You can save and come
+              back whenever you like.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 gap-4 mb-12">
+            {chapters.map((c, i) => (
+              <motion.div
+                key={c.title}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 + i * 0.06, duration: 0.4 }}
+                className="relative p-5 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl flex gap-4 items-start"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <c.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground mb-1">
+                    Chapter {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <div className="text-sm font-medium text-foreground mb-1">{c.title}</div>
+                  <div className="text-xs text-muted-foreground leading-relaxed">{c.body}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-3 mb-12">
+            {[
+              { icon: Clock, title: "About 15 minutes", body: "Total, if you have your details handy." },
+              { icon: ShieldCheck, title: "Auto-saved", body: "Close the tab — resume where you left off." },
+              { icon: Phone, title: "Real humans", body: "Prefer the phone? Tap 'Call our team' anytime." },
+            ].map((c) => (
+              <div key={c.title} className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                <c.icon className="w-4 h-4 text-primary mb-2" />
+                <div className="text-sm font-medium text-foreground">{c.title}</div>
+                <div className="text-xs text-muted-foreground mt-1 leading-relaxed">{c.body}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onContinue}
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow"
+            >
+              I'm ready — let's begin <ArrowRight className="w-4 h-4" />
+            </motion.button>
+            <button
+              onClick={onStartOver}
+              className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
+            >
+              Start over
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+      <HelpPill />
+    </div>
+  );
+};
+
+// -----------------------------------------------------------------------------
+// Path choice — two big cards. Upload docs now, or advertise first and hand
+// over documents later.
+// -----------------------------------------------------------------------------
+const PathChoiceScreen = ({
+  account,
+  onPick,
+  onStartOver,
+}: {
+  account: PortalState["account"];
+  onPick: (p: Exclude<PortalPath, "">) => void;
+  onStartOver: () => void;
+}) => {
+  const firstName = (account.fullName || account.email || "friend").split(/[\s@]/)[0];
+  return (
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      <Seo title="Seller Portal — Choose Your Path" description="" path="/seller-portal" noindex />
+      <Navbar forceScrolled />
+      <BotanicalBackdrop />
+
+      <main className="flex-1 pt-24 pb-16 relative z-10">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-flex items-center gap-2 text-[10px] tracking-[0.28em] uppercase text-primary mb-6">
+              <ListChecks className="w-3 h-3" /> How would you like to begin, {firstName}?
+            </span>
+            <h1 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05]">
+              Two ways in — both end at the <em className="italic text-primary">same finish line.</em>
+            </h1>
+            <p className="text-muted-foreground mt-5 max-w-xl mx-auto leading-relaxed">
+              Pick the one that fits how much you have on hand today. You can switch later.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <motion.button
+              whileHover={{ y: -4 }}
+              onClick={() => onPick("upload_now")}
+              className="group relative text-left p-8 rounded-[28px] border border-border/60 hover:border-primary/60 bg-card/80 backdrop-blur-xl shadow-soft hover:shadow-hover transition-all overflow-hidden"
+            >
+              <div
+                className="absolute -top-12 -right-10 w-40 h-40 opacity-40 pointer-events-none rotate-12"
+                style={{ backgroundImage: `url(${hibiscusCoral.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+              />
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-6">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
+                  Recommended · Fastest to live
+                </div>
+                <h2 className="font-display text-2xl text-foreground mb-3 leading-tight">
+                  Upload my documents now
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                  Snap photos with your phone or upload from this computer. Your listing can go
+                  live in as little as <strong className="text-foreground">48–72 hours</strong>.
+                </p>
+                <ul className="space-y-2 text-xs text-muted-foreground mb-6">
+                  <li className="flex gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" /> Full application in one sitting</li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" /> POA & listing agreement issued right after review</li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" /> No back-and-forth emails later</li>
+                </ul>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-primary group-hover:gap-3 transition-all">
+                  Choose this path <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ y: -4 }}
+              onClick={() => onPick("advertise_first")}
+              className="group relative text-left p-8 rounded-[28px] border border-border/60 hover:border-accent/60 bg-card/80 backdrop-blur-xl shadow-soft hover:shadow-hover transition-all overflow-hidden"
+            >
+              <div
+                className="absolute -top-12 -right-10 w-40 h-40 opacity-40 pointer-events-none rotate-12"
+                style={{ backgroundImage: `url(${plumeria.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
+              />
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full bg-accent text-accent-foreground flex items-center justify-center mb-6">
+                  <Megaphone className="w-5 h-5" />
+                </div>
+                <div className="text-[10px] tracking-[0.24em] uppercase text-accent mb-2">
+                  Start advertising · Docs later
+                </div>
+                <h2 className="font-display text-2xl text-foreground mb-3 leading-tight">
+                  Begin the listing, hand over documents later
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                  Don't have your paperwork handy? Answer the essentials and we'll start marketing
+                  the plot immediately. Our team will follow up when the documents are needed.
+                </p>
+                <ul className="space-y-2 text-xs text-muted-foreground mb-6">
+                  <li className="flex gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" /> Just the property + ownership essentials</li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" /> We'll reach out when documents are required</li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" /> Perfect if the deed is with the cemetery or lost</li>
+                </ul>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-accent group-hover:gap-3 transition-all">
+                  Choose this path <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
+            </motion.button>
+          </div>
+
+          <div className="text-center mt-10">
+            <button
+              onClick={onStartOver}
+              className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
+            >
+              Start over
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+      <HelpPill />
+    </div>
+  );
+};
+
+// -----------------------------------------------------------------------------
+// Slim horizontal chip stepper — replaces the loud sidebar + big % bar.
+// -----------------------------------------------------------------------------
+const ChipStepper = ({
+  steps,
+  current,
+  onJump,
+  state,
+}: {
+  steps: { id: StepId; label: string; icon: React.ComponentType<{ className?: string }> }[];
+  current: number;
+  onJump: (i: number) => void;
+  state: PortalState;
+}) => (
+  <div className="flex items-center flex-wrap gap-1.5 justify-center">
+    {steps.map((s, i) => {
+      const done = i < current || (i === current && validateStep(s.id, state));
+      const active = i === current;
+      const Icon = s.icon;
+      return (
+        <button
+          key={s.id}
+          onClick={() => onJump(i)}
+          className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] tracking-wide transition-all ${
+            active
+              ? "bg-primary text-primary-foreground shadow-soft"
+              : done
+              ? "bg-primary/10 text-primary hover:bg-primary/15"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          }`}
+        >
+          <Icon className="w-3 h-3" />
+          <span>{s.label}</span>
+        </button>
+      );
+    })}
+  </div>
+);
 
 // -----------------------------------------------------------------------------
 // Floating help pill — Call / Email
