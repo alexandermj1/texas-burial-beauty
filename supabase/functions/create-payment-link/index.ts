@@ -115,35 +115,34 @@ Deno.serve(async (req) => {
     const stripe = createStripeClient(env);
 
     const origin = req.headers.get("origin") || "https://texascemeterybrokers.com";
-    // Stripe Checkout Sessions default to 24h expiry; extend to 30 days so
-    // payment buttons in emails stay usable for customers who come back later.
-    const expiresAt = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      ui_mode: "hosted_page",
-      // Force plain card checkout — skips Stripe Link's "Pay with Link"
-      // landing screen and the SMS/phone confirmation step that goes with it.
+    // Use Stripe Payment Links (not Checkout Sessions) so buttons in emails
+    // never expire. Checkout Sessions cap expires_at at 24 hours; Payment
+    // Links stay live indefinitely until we deactivate them.
+    const product = await stripe.products.create({
+      name: productName,
+      ...(productDescription && { description: productDescription }),
+    });
+    const price = await stripe.prices.create({
+      currency: "usd",
+      unit_amount: amountCents,
+      product: product.id,
+    });
+
+    const paymentLink = await stripe.paymentLinks.create({
+      line_items: [{ price: price.id, quantity: 1 }],
       payment_method_types: ["card"],
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: productName,
-            ...(productDescription && { description: productDescription }),
-          },
-          unit_amount: amountCents,
-        },
-        quantity: 1,
-      }],
-      customer_email: recipientEmail,
-      expires_at: expiresAt,
+      after_completion: {
+        type: "redirect",
+        redirect: { url: `${origin}/payment-success?pl={PAYMENT_LINK}` },
+      },
       payment_intent_data: {
         description: `${BRAND_NAME} — ${productName}`,
         metadata: {
           submission_id: submissionId,
           kind,
           recipient_name: recipientName,
+          recipient_email: recipientEmail,
           ...(listingTier && { listing_tier: listingTier }),
         },
       },
@@ -154,9 +153,10 @@ Deno.serve(async (req) => {
         recipient_name: recipientName,
         ...(listingTier && { listing_tier: listingTier }),
       },
-      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/payment-cancelled`,
     });
+
+    const session = { id: paymentLink.id, url: paymentLink.url };
+
 
     const { data: tx, error: txErr } = await supabase
       .from("payment_transactions")
