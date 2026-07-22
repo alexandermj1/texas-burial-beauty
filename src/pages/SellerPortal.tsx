@@ -416,8 +416,13 @@ export default function SellerPortal() {
     return <SubmittedScreen state={state} onStartOver={startOver} />;
   }
 
+  const firstName = (state.account.fullName || state.account.email || "friend").split(/[\s@]/)[0];
+  const pathLabel =
+    state.path === "advertise_first" ? "Advertise now · documents later" : "Full guided onboarding";
+  const progressPct = ((safeIdx + 1) / activeSteps.length) * 100;
+
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[hsl(var(--sand-light))] flex flex-col relative overflow-hidden">
       <Seo
         title="Seller Portal (Beta) | Texas Cemetery Brokers"
         description="Guided, self-serve seller onboarding for cemetery property owners."
@@ -427,77 +432,114 @@ export default function SellerPortal() {
       <Navbar forceScrolled />
       <BotanicalBackdrop />
 
-      <main className="flex-1 pt-24 pb-20 relative z-10">
-        <PortalHero
-          account={state.account}
-          onStartOver={startOver}
-          stepIdx={safeIdx}
-          totalSteps={activeSteps.length}
-          currentLabel={currentStep.label}
-          path={state.path}
-          onChangePath={() => setState((s) => ({ ...s, path: "" }))}
-        />
+      <main className="flex-1 pt-28 pb-24 relative z-10">
+        <div className="container mx-auto px-6 max-w-3xl">
+          {/* Editorial chapter header — no box, no giant hero */}
+          <div className="flex items-center gap-3 mb-10 flex-wrap">
+            <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground font-display italic text-base flex items-center justify-center shadow-sm">
+              {safeIdx + 1}
+            </span>
+            <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
+              {currentStep.label}
+            </span>
+            <span className="ml-auto text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/40">
+              {String(safeIdx + 1).padStart(2, "0")}{" "}
+              <span className="italic font-normal">of</span>{" "}
+              {String(activeSteps.length).padStart(2, "0")}
+            </span>
+          </div>
 
-        <div className="container mx-auto px-6 max-w-5xl mt-12">
-          {/* Slim horizontal chip stepper — replaces the loud sidebar + % bar */}
-          <ChipStepper steps={activeSteps} current={safeIdx} onJump={setStepIdx} state={state} />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="relative"
+            >
+              <StepBody stepId={currentStep.id} state={state} update={update} />
+            </motion.div>
+          </AnimatePresence>
 
-          <div className="mt-12">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="relative"
-              >
-                <StepBody stepId={currentStep.id} state={state} update={update} />
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-14 pt-8 border-t border-border/50">
+          {/* Footer — OK button + progress line, editorial */}
+          <div className="mt-14 flex items-center gap-5 flex-wrap">
+            {safeIdx < activeSteps.length - 1 ? (
               <button
-                onClick={goBack}
-                disabled={safeIdx === 0}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                type="button"
+                onClick={goNext}
+                className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm tracking-wide hover:opacity-90 transition-all shadow-md shadow-primary/20"
               >
-                <ArrowLeft className="w-4 h-4" /> Back
+                OK{" "}
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
               </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!canGoNext}
+                className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm tracking-wide hover:opacity-90 transition-all shadow-md shadow-primary/30 disabled:opacity-40"
+              >
+                Submit for review <Send className="w-4 h-4" />
+              </button>
+            )}
+            {safeIdx < activeSteps.length - 1 && (
+              <span className="text-xs text-foreground/55">
+                press <kbd className="font-mono font-bold text-foreground/80">Enter</kbd> ↵
+              </span>
+            )}
+            {safeIdx > 0 && (
+              <button
+                type="button"
+                onClick={goBack}
+                className="ml-auto text-xs text-foreground/55 hover:text-foreground transition-colors inline-flex items-center gap-1"
+              >
+                <ArrowLeft className="w-3 h-3" /> Back
+              </button>
+            )}
+          </div>
 
+          {/* Thin progress line */}
+          <div className="mt-8 h-px w-full bg-foreground/10 relative overflow-hidden">
+            <motion.div
+              className="absolute inset-y-0 left-0 bg-primary"
+              initial={false}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            />
+          </div>
+
+          {/* Quiet meta row — signed in, path, help — no card */}
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-[11px] text-foreground/55">
+            <span>
+              Signed in as <span className="text-foreground/80">{firstName}</span>
+            </span>
+            {state.path && (
+              <button
+                onClick={() => setState((s) => ({ ...s, path: "" }))}
+                className="inline-flex items-center gap-1.5 hover:text-primary transition-colors"
+              >
+                <span className="w-1 h-1 rounded-full bg-primary" /> {pathLabel} · change
+              </button>
+            )}
+            <button
+              onClick={startOver}
+              className="hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
+            >
+              Start over
+            </button>
+            <span className="ml-auto">
               <InlineHelp variant="link" />
-
-              {safeIdx < activeSteps.length - 1 ? (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={goNext}
-                  className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow overflow-hidden"
-                >
-                  <span className="relative z-10">Continue</span>
-                  <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform" />
-                </motion.button>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSubmit}
-                  disabled={!canGoNext}
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow disabled:opacity-40"
-                >
-                  Submit for review <Send className="w-4 h-4" />
-                </motion.button>
-              )}
-            </div>
+            </span>
           </div>
         </div>
-
       </main>
 
       <Footer />
     </div>
   );
 }
+
 
 
 // -----------------------------------------------------------------------------
