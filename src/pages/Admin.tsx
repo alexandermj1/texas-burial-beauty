@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
@@ -84,7 +84,6 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
   const [refreshingInbox, setRefreshingInbox] = useState(false);
-  const lastInboxPullAt = useRef(0);
   const [deletedSubmissions, setDeletedSubmissions] = useState<any[]>([]);
 
   // Fetch soft-deleted submissions so they can be restored from the Trash dialog.
@@ -106,9 +105,13 @@ const Admin = () => {
     try {
       const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 25, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 } });
       if (error) { toast({ title: "Sync failed", description: error.message, variant: "destructive" }); }
-      if ((data as any)?.rateLimited) { toast({ title: "Gmail is catching up", description: (data as any).error, variant: "destructive" }); }
       const res = await supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false });
       if (res.data) setSubmissions(res.data as any);
+
+      if ((data as any)?.rateLimited) {
+        toast({ title: "Gmail is catching up", description: (data as any).error, variant: "destructive" });
+        return;
+      }
 
       const newCount = (data as any)?.bayer_imported ?? 0;
       toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
@@ -134,18 +137,10 @@ const Admin = () => {
   useEffect(() => {
     if (!authLoading && !roleLoading && user && hasAccess) {
       (async () => {
-        // Sync the Gmail inbox on login (once per browser session) so any
-        // contact-form emails that arrived while the admin was away get
-        // promoted to submissions.
-        const syncKey = `admin:loginSync:${user.id}`;
-        if (!sessionStorage.getItem(syncKey)) {
-          try {
-            await supabase.functions.invoke("sync-inbox", { body: { maxResults: 100 } });
-            sessionStorage.setItem(syncKey, "1");
-          } catch (e) {
-            console.warn("Login sync-inbox failed (non-fatal):", e);
-          }
-        }
+        // Do not auto-sync Gmail on login. Gmail applies a strict per-user
+        // quota and the previous login sync could run heavy backfills before
+        // the admin even sent an email, exhausting the mailbox quota. Use the
+        // explicit Refresh inbox button when new messages need to be pulled in.
         if (isAdmin) await fetchAllListings();
       })();
       (async () => {
@@ -159,9 +154,10 @@ const Admin = () => {
     }
   }, [user, hasAccess, isAdmin, authLoading, roleLoading]);
 
-  // Auto-refresh submissions inbox: polls every 15s, listens for realtime changes,
-  // AND pulls new Gmail messages every 45s so replies from customers show up
-  // without requiring a manual "Refresh inbox" click.
+  // Auto-refresh the local submissions table and listen for realtime changes.
+  // Gmail is intentionally NOT pulled automatically here: repeated Gmail list,
+  // thread, and attachment calls can exhaust the connected mailbox quota and
+  // prevent sending replies. Admins can still pull mail with Refresh inbox.
   useEffect(() => {
     if (!user || !hasAccess) return;
     let cancelled = false;
@@ -174,20 +170,8 @@ const Admin = () => {
       if (!cancelled && data) setSubmissions(data as any);
     };
 
-    const pullGmail = async () => {
-      const now = Date.now();
-      if (now - lastInboxPullAt.current < 120000) return;
-      lastInboxPullAt.current = now;
-      try {
-        await supabase.functions.invoke("sync-inbox", { body: { maxResults: 10, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 } });
-      } catch { /* non-fatal */ }
-    };
-
     const interval = setInterval(refreshSubmissions, 15000);
-    const gmailInterval = setInterval(pullGmail, 300000);
-    // Also pull immediately on mount so a stale tab catches up fast.
-    pullGmail();
-    const onFocus = () => { pullGmail(); refreshSubmissions(); };
+    const onFocus = () => { refreshSubmissions(); };
     window.addEventListener("focus", onFocus);
     const channel = supabase
       .channel("admin-submissions-live")
@@ -205,7 +189,6 @@ const Admin = () => {
     return () => {
       cancelled = true;
       clearInterval(interval);
-      clearInterval(gmailInterval);
       window.removeEventListener("focus", onFocus);
       supabase.removeChannel(channel);
     };

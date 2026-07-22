@@ -13,6 +13,8 @@ const corsHeaders = {
 const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const TARGET_MAILBOX = "info@texascemeterybrokers.com";
 const TARGET_GMAIL_KEY_ENV = "GOOGLE_MAIL_API_KEY_1";
+const FALLBACK_MAILBOX = "texascemeterybrokers@gmail.com";
+const FALLBACK_GMAIL_KEY_ENV = "GOOGLE_MAIL_API_KEY";
 
 const SendSchema = z.object({
   action: z.literal("send"),
@@ -63,13 +65,14 @@ function encodeBase64Url(s: string): string {
 function buildRfc2822(opts: {
   from: string; to: string; cc?: string; bcc?: string;
   subject: string; body: string; htmlBody?: string;
-  inReplyTo?: string; references?: string;
+  inReplyTo?: string; references?: string; replyTo?: string;
 }): string {
   const headers: string[] = [];
   headers.push(`From: ${opts.from}`);
   headers.push(`To: ${opts.to}`);
   if (opts.cc) headers.push(`Cc: ${opts.cc}`);
   if (opts.bcc) headers.push(`Bcc: ${opts.bcc}`);
+  if (opts.replyTo) headers.push(`Reply-To: ${opts.replyTo}`);
   headers.push(`Subject: ${opts.subject}`);
   if (opts.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`);
   if (opts.references) headers.push(`References: ${opts.references}`);
@@ -147,8 +150,12 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
     if (userErr || !user) return json({ error: "Unauthorized" }, 401);
-    const { data: role } = await userClient.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-    if (!role) return json({ error: "Admin only" }, 403);
+    const { data: roles } = await userClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .in("role", ["admin", "staff"]);
+    if (!roles?.length) return json({ error: "Admin or staff only" }, 403);
 
     const gmailKey = await resolveGmailKey(lovableKey);
     if (!gmailKey) return json({ error: `No Gmail connector linked for ${TARGET_MAILBOX}` }, 500);
@@ -184,53 +191,76 @@ Deno.serve(async (req) => {
         threadId = input.threadId || undefined;
       }
 
-      const raw2822 = buildRfc2822({
-        from: TARGET_MAILBOX,
-        to: input.to,
-        cc: input.cc,
-        bcc: input.bcc,
-        subject: input.subject || "(no subject)",
-        body: input.body,
-        htmlBody: input.htmlBody,
-        inReplyTo,
-        references,
-      });
+      const buildPayload = (from: string, includeThread: boolean) => {
+        const raw2822 = buildRfc2822({
+          from,
+          to: input.to,
+          cc: input.cc,
+          bcc: input.bcc,
+          subject: input.subject || "(no subject)",
+          body: input.body,
+          htmlBody: input.htmlBody,
+          inReplyTo: from === TARGET_MAILBOX ? inReplyTo : undefined,
+          references: from === TARGET_MAILBOX ? references : undefined,
+          replyTo: from === TARGET_MAILBOX ? undefined : TARGET_MAILBOX,
+        });
+        const p: Record<string, unknown> = { raw: encodeBase64Url(raw2822) };
+        if (includeThread && threadId && from === TARGET_MAILBOX) p.threadId = threadId;
+        return p;
+      };
 
-      const payload: Record<string, unknown> = { raw: encodeBase64Url(raw2822) };
-      if (threadId) payload.threadId = threadId;
+      const payload = buildPayload(TARGET_MAILBOX, true);
 
-      // Retry transient failures (network hiccups, 502/503/504, 429 rate limit).
-      // If Gmail says the thread is missing, retry once without threadId so
-      // the email still sends as a normal message instead of failing outright.
-      let sendRes: Response | null = null;
-      let sendText = "";
-      let lastErr: unknown = null;
-      let retriedWithoutThread = false;
-      for (let attempt = 0; attempt < 4; attempt++) {
-        try {
-          sendRes = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
-            method: "POST",
-            headers: gmailHeaders(lovableKey, gmailKey),
-            body: JSON.stringify(payload),
-          });
-          sendText = await sendRes.text();
-          if (sendRes.ok) break;
-          if (sendRes.status === 404 && payload.threadId && !retriedWithoutThread) {
-            delete payload.threadId;
-            retriedWithoutThread = true;
-            continue;
+      const sendWithKey = async (key: string, payloadForKey: Record<string, unknown>, retryRateLimit = true) => {
+        let res: Response | null = null;
+        let text = "";
+        let err: unknown = null;
+        let retriedWithoutThread = false;
+        for (let attempt = 0; attempt < 4; attempt++) {
+          try {
+            res = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
+              method: "POST",
+              headers: gmailHeaders(lovableKey, key),
+              body: JSON.stringify(payloadForKey),
+            });
+            text = await res.text();
+            if (res.ok) break;
+            if (res.status === 404 && payloadForKey.threadId && !retriedWithoutThread) {
+              delete payloadForKey.threadId;
+              retriedWithoutThread = true;
+              continue;
+            }
+            if (res.status === 429 && !retryRateLimit) break;
+            if (![502, 503, 504, 429].includes(res.status)) break;
+          } catch (e) {
+            err = e;
           }
-          if (![502, 503, 504, 429].includes(sendRes.status)) break;
-        } catch (e) {
-          lastErr = e;
+          const delay = res?.status === 429 ? 2000 * (attempt + 1) : 500 * (attempt + 1);
+          await new Promise((r) => setTimeout(r, delay));
         }
-        // Longer backoff for 429s to respect Gmail's user-rate limit.
-        const delay = sendRes?.status === 429 ? 2000 * (attempt + 1) : 500 * (attempt + 1);
-        await new Promise((r) => setTimeout(r, delay));
+        return { res, text, err };
+      };
+
+      // Primary send through info@. If that mailbox is temporarily quota-locked,
+      // use the backup linked Gmail account so customer replies can still go out.
+      const fallbackKey = Deno.env.get(FALLBACK_GMAIL_KEY_ENV);
+      let { res: sendRes, text: sendText, err: lastErr } = await sendWithKey(gmailKey, payload, !fallbackKey || fallbackKey === gmailKey);
+      let sentFrom = TARGET_MAILBOX;
+      if (sendRes?.status === 429) {
+        if (fallbackKey && fallbackKey !== gmailKey) {
+          const fallback = await sendWithKey(fallbackKey, buildPayload(FALLBACK_MAILBOX, false), false);
+          if (fallback.res?.ok) {
+            sendRes = fallback.res;
+            sendText = fallback.text;
+            lastErr = fallback.err;
+            sentFrom = FALLBACK_MAILBOX;
+          }
+        }
       }
+
       if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 200);
       if (sendRes.status === 429) {
-        return json({ error: "Gmail is rate-limiting sends right now. Wait about 1 minute and try again.", rateLimited: true }, 200);
+        return json({ error: friendlyGmailRateLimit(sendText), rateLimited: true }, 200);
       }
       if (!sendRes.ok) return json({ error: `Send failed: ${sendRes.status} ${sendText}` }, 200);
       let sent: any = {};
@@ -241,7 +271,7 @@ Deno.serve(async (req) => {
         await admin.from("email_messages").insert({
           gmail_message_id: sent.id || `local-${crypto.randomUUID()}`,
           gmail_thread_id: sent.threadId || threadId || null,
-          from_email: TARGET_MAILBOX,
+          from_email: sentFrom,
           from_name: "Texas Cemetery Brokers",
           to_email: input.to,
           subject: input.subject || "(no subject)",
@@ -252,7 +282,7 @@ Deno.serve(async (req) => {
         });
       } catch { /* ignore — sync will reconcile */ }
 
-      return json({ ok: true, id: sent.id, threadId: sent.threadId });
+      return json({ ok: true, id: sent.id, threadId: sent.threadId, from: sentFrom, fallbackUsed: sentFrom !== TARGET_MAILBOX });
     }
 
     if (input.action === "modify") {
@@ -261,7 +291,10 @@ Deno.serve(async (req) => {
         headers: gmailHeaders(lovableKey, gmailKey),
         body: JSON.stringify({ addLabelIds: input.addLabelIds, removeLabelIds: input.removeLabelIds }),
       });
-      if (!r.ok) return json({ error: `Modify failed: ${r.status} ${await r.text()}` }, 502);
+      if (!r.ok) {
+        const text = await r.text();
+        return json({ error: r.status === 429 ? friendlyGmailRateLimit(text) : `Modify failed: ${r.status} ${text}`, rateLimited: r.status === 429 }, 200);
+      }
       // Mirror read state locally.
       if (input.removeLabelIds.includes("UNREAD")) {
         await admin.from("email_messages").update({ is_read: true }).eq("gmail_message_id", input.messageId);
@@ -277,7 +310,10 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: gmailHeaders(lovableKey, gmailKey),
       });
-      if (!r.ok) return json({ error: `Trash failed: ${r.status} ${await r.text()}` }, 502);
+      if (!r.ok) {
+        const text = await r.text();
+        return json({ error: r.status === 429 ? friendlyGmailRateLimit(text) : `Trash failed: ${r.status} ${text}`, rateLimited: r.status === 429 }, 200);
+      }
       await admin.from("email_messages").delete().eq("gmail_message_id", input.messageId);
       return json({ ok: true });
     }
@@ -286,7 +322,10 @@ Deno.serve(async (req) => {
       const r = await fetch(`${GMAIL_GATEWAY}/users/me/messages/${input.messageId}?format=full`, {
         headers: gmailHeaders(lovableKey, gmailKey),
       });
-      if (!r.ok) return json({ error: `Refresh failed: ${r.status} ${await r.text()}` }, 502);
+      if (!r.ok) {
+        const text = await r.text();
+        return json({ error: r.status === 429 ? friendlyGmailRateLimit(text) : `Refresh failed: ${r.status} ${text}`, rateLimited: r.status === 429 }, 200);
+      }
       return json({ ok: true, message: await r.json() });
     }
 
@@ -296,3 +335,18 @@ Deno.serve(async (req) => {
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
+
+function friendlyGmailRateLimit(body: string): string {
+  try {
+    const parsed = JSON.parse(body);
+    const msg = String(parsed?.error?.message || parsed?.message || "");
+    const retryAt = msg.match(/Retry after ([^\n.]+(?:\.\d+Z)?)/i)?.[1];
+    if (retryAt) {
+      const d = new Date(retryAt);
+      if (!Number.isNaN(d.getTime())) {
+        return `Gmail is temporarily rate-limiting this mailbox. Try again after ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" })}.`;
+      }
+    }
+  } catch { /* keep generic message */ }
+  return "Gmail is temporarily rate-limiting this mailbox. Wait a few minutes, then send again.";
+}

@@ -141,7 +141,12 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
       toast({ title: "Reply failed", description: error?.message || data?.error, variant: "destructive" });
       return;
     }
-    toast({ title: "Reply sent", description: `Replied to ${selected.from_email}` });
+    toast({
+      title: "Reply sent",
+      description: data?.fallbackUsed
+        ? `Replied to ${selected.from_email} using the backup mailbox while info@ recovers.`
+        : `Replied to ${selected.from_email}`,
+    });
     setReplyBody("");
     await fetchEmails();
   };
@@ -160,7 +165,12 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
       toast({ title: "Send failed", description: error?.message || data?.error, variant: "destructive" });
       return;
     }
-    toast({ title: "Email sent", description: `Sent to ${compose.to}` });
+    toast({
+      title: "Email sent",
+      description: data?.fallbackUsed
+        ? `Sent to ${compose.to} using the backup mailbox while info@ recovers.`
+        : `Sent to ${compose.to}`,
+    });
     setCompose({ to: "", cc: "", subject: "", body: "" });
     setComposeOpen(false);
     await fetchEmails();
