@@ -41,6 +41,7 @@ const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const SignContract = lazy(() => import("./pages/SignContract"));
 const SelectStarter = lazy(() => import("./pages/SelectStarter"));
+const SellerPortal = lazy(() => import("./pages/SellerPortal"));
 
 
 const queryClient = new QueryClient();
@@ -87,6 +88,7 @@ const App = () => (
                 <Route path="/thank-you" element={<ThankYou />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/select-starter" element={<SelectStarter />} />
+                <Route path="/seller-portal" element={<SellerPortal />} />
 
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
