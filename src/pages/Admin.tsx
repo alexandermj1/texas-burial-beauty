@@ -105,9 +105,13 @@ const Admin = () => {
     try {
       const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 25, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 } });
       if (error) { toast({ title: "Sync failed", description: error.message, variant: "destructive" }); }
-      if ((data as any)?.rateLimited) { toast({ title: "Gmail is catching up", description: (data as any).error, variant: "destructive" }); }
       const res = await supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false });
       if (res.data) setSubmissions(res.data as any);
+
+      if ((data as any)?.rateLimited) {
+        toast({ title: "Gmail is catching up", description: (data as any).error, variant: "destructive" });
+        return;
+      }
 
       const newCount = (data as any)?.bayer_imported ?? 0;
       toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
