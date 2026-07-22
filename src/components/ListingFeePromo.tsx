@@ -42,7 +42,7 @@ const tiers: Tier[] = [
     name: "Featured",
     was: "$599",
     now: "$299",
-    tagline: "Our most aggressive package.",
+    tagline: "Maximum visibility for your listing.",
     desc: "One-time upfront fee. Includes targeted Google & Meta advertising for your plots, plus top placement on the priority list we send to local mortuaries and counselors — seen before any other property at your cemetery.",
     cancel: "Cancel anytime at no charge.",
   },
