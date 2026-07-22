@@ -33,7 +33,7 @@ const tiers: Tier[] = [
     was: "$399",
     now: "$99",
     tagline: "Actively marketed to Texas buyers.",
-    desc: "One-time upfront fee. Your property is actively marketed and sent directly to local mortuaries and family counselors to help find a buyer sooner.",
+    desc: "One-time upfront fee. Actively marketed to Texas buyers and sent directly to local mortuaries and family counselors — listings at this level sold with an average 22% faster time to sale.",
     cancel: "Cancel anytime at no charge.",
     featured: true,
   },
@@ -43,7 +43,7 @@ const tiers: Tier[] = [
     was: "$599",
     now: "$299",
     tagline: "Maximum visibility for your listing.",
-    desc: "One-time upfront fee. Includes targeted Google & Meta advertising for your plots, plus top placement on the priority list we send to local mortuaries and counselors — seen before any other property at your cemetery.",
+    desc: "One-time upfront fee. Includes targeted Google & Meta advertising for your plots, plus top placement on the priority list we send to local mortuaries and counselors — in 2025, listings at this tier sold 61% faster.",
     cancel: "Cancel anytime at no charge.",
   },
 ];
