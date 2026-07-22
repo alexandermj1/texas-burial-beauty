@@ -928,7 +928,12 @@ const IntroScreen = ({
               Start over
             </button>
           </div>
+
+          <div className="mt-10 flex justify-center">
+            <InlineHelp variant="compact" />
+          </div>
         </div>
+
       </main>
 
       <Footer />
