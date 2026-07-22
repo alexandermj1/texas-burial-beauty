@@ -682,7 +682,7 @@ const SignInShell = ({
       </main>
 
       <Footer />
-      <HelpPill />
+      
     </div>
   );
 };
@@ -929,7 +929,7 @@ const IntroScreen = ({
       </main>
 
       <Footer />
-      <HelpPill />
+      
     </div>
   );
 };
@@ -1055,7 +1055,7 @@ const PathChoiceScreen = ({
       </main>
 
       <Footer />
-      <HelpPill />
+      
     </div>
   );
 };
@@ -1849,7 +1849,7 @@ const SubmittedScreen = ({
       </motion.div>
     </main>
     <Footer />
-    <HelpPill />
+    
   </div>
 );
 
