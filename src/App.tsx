@@ -41,6 +41,7 @@ const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const SignContract = lazy(() => import("./pages/SignContract"));
 const SelectStarter = lazy(() => import("./pages/SelectStarter"));
+const SellerPortal = lazy(() => import("./pages/SellerPortal"));
 
 
 const queryClient = new QueryClient();
