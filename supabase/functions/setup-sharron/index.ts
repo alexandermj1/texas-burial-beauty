@@ -35,7 +35,14 @@ Deno.serve(async () => {
     });
     if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 });
     userId = data.user!.id;
+  } else {
+    // Existing account: update password + display name so it now reflects Kayla.
+    await admin.auth.admin.updateUserById(userId, {
+      password: PASSWORD,
+      user_metadata: { full_name: FULL_NAME },
+    });
   }
+
 
   // Upsert profile so display name / email lookups work
   await admin.from("profiles").upsert(
