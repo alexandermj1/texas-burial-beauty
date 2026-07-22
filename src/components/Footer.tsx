@@ -1,4 +1,4 @@
-import { Phone, Mail, Shield } from "lucide-react";
+import { Phone, Mail, Shield, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -49,12 +49,20 @@ const Footer = () => {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Texas Cemetery Brokers. All rights reserved. In partnership with Bayer Cemetery Brokers.
           </p>
-          <Link
-            to="/admin"
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-          >
-            <Shield className="w-3 h-3" /> Admin
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/seller-portal"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/40 hover:text-primary transition-colors"
+            >
+              <Sparkles className="w-3 h-3" /> Seller Portal (Beta)
+            </Link>
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            >
+              <Shield className="w-3 h-3" /> Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
