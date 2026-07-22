@@ -1051,7 +1051,8 @@ const PathChoiceScreen = ({
             </motion.button>
           </div>
 
-          <div className="text-center mt-10">
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <InlineHelp variant="compact" />
             <button
               onClick={onStartOver}
               className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
@@ -1059,6 +1060,7 @@ const PathChoiceScreen = ({
               Start over
             </button>
           </div>
+
         </div>
       </main>
 
