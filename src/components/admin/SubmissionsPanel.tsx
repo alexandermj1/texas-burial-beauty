@@ -2367,6 +2367,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Follow up
                           </span>
                         )}
+                        {actionMap[s.id] && (() => {
+                          const act = actionMap[s.id];
+                          const palette = act.kind === "payment"
+                            ? "bg-teal-500 text-white border-teal-600"
+                            : act.kind === "la_signed"
+                              ? "bg-emerald-600 text-white border-emerald-700"
+                              : "bg-amber-500 text-white border-amber-600";
+                          const Icon = act.kind === "payment" ? DollarSign : act.kind === "la_signed" ? FileSignature : Sparkles;
+                          const short = act.kind === "payment" ? act.label
+                            : act.kind === "la_signed" ? "LA signed"
+                              : "POA signed";
+                          return (
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md border shadow-sm animate-pulse ${palette}`}
+                              title={`${act.label} · ${formatDate(act.at)} — click to acknowledge`}
+                            >
+                              <Icon className="w-2.5 h-2.5" strokeWidth={3} />
+                              {short}
+                            </span>
+                          );
+                        })()}
                         {hasDocs(s) && (
                           <span
                             className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))] shadow-sm"
