@@ -1284,57 +1284,78 @@ const DocumentsStep = ({
   update: (k: "docs", p: Partial<PortalState["docs"]>) => void;
 }) => {
   const required = requiredDocuments(state);
+
+  // A stable per-draft session id lets the desktop wizard and the phone
+  // upload page meet on a shared storage path. Persist alongside the draft.
+  const [sessionId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const key = "seller-portal-session-id";
+    let existing = window.localStorage.getItem(key);
+    if (!existing || !/^[0-9a-f-]{16,}$/i.test(existing)) {
+      existing = crypto.randomUUID();
+      window.localStorage.setItem(key, existing);
+    }
+    return existing;
+  });
+
   return (
     <div>
       <StepIntro
         eyebrow="05 · Documents"
         title="Upload what we'll need to verify you."
-        body="Based on your answers, we've generated the exact list below. Drag files in or use the picker — you can replace any file at any time."
+        body="Based on your answers, we've generated the exact list below. Snap a photo with your phone, or upload straight from this computer — whichever's easier."
       />
 
       <AICallout notes={aiRecommendations(state)} />
 
-      <div className="mt-8 space-y-3">
+      {/* Two-way upload primer */}
+      <div className="mt-8 grid md:grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-border/60 bg-background/60 p-5">
+          <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
+            Option A
+          </div>
+          <div className="font-display text-lg text-foreground mb-1">
+            Upload from this computer
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Click <em>Upload</em> next to any document, then <em>From this
+            computer</em>. Choose the file — a JPG, PNG, HEIC, or PDF all work.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-5">
+          <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
+            Option B — new
+          </div>
+          <div className="font-display text-lg text-foreground mb-1">
+            Snap it with your phone
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Click <em>Upload</em>, choose <em>Use my phone camera</em>, and
+            point your phone at the QR code. Take the photo — it lands here in
+            seconds. No email, no cable.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3">
         {required.map((d) => {
           const file = state.docs[d.key] ?? null;
           return (
-            <div
+            <DocumentUploadCard
               key={d.key}
-              className="flex items-center gap-4 p-5 rounded-2xl border border-border/60 bg-background/40 hover:border-primary/30 transition-colors"
-            >
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                  file ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-                }`}
-              >
-                {file ? <CheckCircle2 className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-foreground font-medium">{d.label}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {file ? `${file.name} · ${(file.size / 1024).toFixed(0)} KB` : d.hint}
-                </div>
-              </div>
-              <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border/70 text-xs text-foreground hover:border-primary/50 hover:bg-primary/5 transition-all">
-                <Upload className="w-3.5 h-3.5" />
-                {file ? "Replace" : "Upload"}
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    update("docs", { [d.key]: { name: f.name, size: f.size } });
-                  }}
-                />
-              </label>
-            </div>
+              doc={d}
+              sessionId={sessionId}
+              file={file}
+              onFile={(meta) => update("docs", { [d.key]: meta ? { name: meta.name, size: meta.size } : null })}
+            />
           );
         })}
       </div>
     </div>
   );
 };
+
+
 
 const ReviewStep = ({
   state,
