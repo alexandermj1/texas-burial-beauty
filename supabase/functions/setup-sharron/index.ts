@@ -1,10 +1,12 @@
-// One-time seeder to create Sharron's staff login for the admin dashboard.
-// Idempotent: safe to call multiple times. Only creates the user if missing.
+// Seeder / updater for Kayla's staff login (originally Sharron).
+// Idempotent: safe to call multiple times. Updates password + full name on the
+// existing sharron@ account rather than creating a new one.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const EMAIL = "sharron@texascemeterybrokers.com";
-const PASSWORD = "Sharron!Cemetery2026";
-const FULL_NAME = "Sharron";
+const PASSWORD = "Kayla!Cemetery2026";
+const FULL_NAME = "Kayla";
+
 
 Deno.serve(async () => {
   const admin = createClient(
