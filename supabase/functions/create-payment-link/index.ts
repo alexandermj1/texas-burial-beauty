@@ -115,6 +115,10 @@ Deno.serve(async (req) => {
     const stripe = createStripeClient(env);
 
     const origin = req.headers.get("origin") || "https://texascemeterybrokers.com";
+    // Stripe Checkout Sessions default to 24h expiry; extend to 30 days so
+    // payment buttons in emails stay usable for customers who come back later.
+    const expiresAt = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       ui_mode: "hosted_page",
@@ -133,6 +137,7 @@ Deno.serve(async (req) => {
         quantity: 1,
       }],
       customer_email: recipientEmail,
+      expires_at: expiresAt,
       payment_intent_data: {
         description: `${BRAND_NAME} — ${productName}`,
         metadata: {
