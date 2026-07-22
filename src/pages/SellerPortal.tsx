@@ -17,7 +17,7 @@ import {
   Send,
   Phone,
   Mail,
-  HelpCircle,
+  Mail,
   X,
   Rocket,
   Clock,
