@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   ArrowLeft,
@@ -15,8 +15,18 @@ import {
   Users,
   ScrollText,
   Send,
-  Leaf,
+  Phone,
+  Mail,
+  HelpCircle,
+  X,
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import monstera from "@/assets/flowers/monstera.png.asset.json";
+import plumeria from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 
