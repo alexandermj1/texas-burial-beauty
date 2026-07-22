@@ -301,6 +301,86 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
   }, []);
 
+  // Load latest signed/notarized timestamps for LA + POA contracts so we can
+  // bump a submission back to the top of the list the moment a seller signs.
+  const [contractEventMap, setContractEventMap] = useState<Record<string, { la?: string; poa?: string }>>({});
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("contracts" as any)
+        .select("submission_id, kind, signed_at, notarized_at");
+      if (cancelled || !data) return;
+      const m: Record<string, { la?: string; poa?: string }> = {};
+      for (const r of data as any[]) {
+        if (!r?.submission_id) continue;
+        if (r.kind === "listing_agreement" && r.signed_at) {
+          const prev = m[r.submission_id]?.la;
+          if (!prev || new Date(r.signed_at) > new Date(prev)) {
+            m[r.submission_id] = { ...(m[r.submission_id] || {}), la: r.signed_at };
+          }
+        } else if (r.kind === "poa") {
+          const at = r.notarized_at || r.signed_at;
+          if (!at) continue;
+          const prev = m[r.submission_id]?.poa;
+          if (!prev || new Date(at) > new Date(prev)) {
+            m[r.submission_id] = { ...(m[r.submission_id] || {}), poa: at };
+          }
+        }
+      }
+      setContractEventMap(m);
+    };
+    load();
+    const ch = supabase
+      .channel("contracts_events_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, []);
+
+  // Per-submission acknowledgement of the latest actionable event (payment /
+  // LA signed / POA signed). Stored per-user in localStorage so opening the
+  // submission clears the top-of-list bump. A newer event re-surfaces the row.
+  const ACK_KEY = "tcb_submission_action_ack_v1";
+  const [ackMap, setAckMap] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem(ACK_KEY) || "{}"); } catch { return {}; }
+  });
+  const acknowledgeAction = (submissionId: string, at?: string) => {
+    if (!at) return;
+    setAckMap(prev => {
+      if (prev[submissionId] && new Date(prev[submissionId]) >= new Date(at)) return prev;
+      const next = { ...prev, [submissionId]: at };
+      try { localStorage.setItem(ACK_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  // Latest un-acknowledged actionable event per submission. Drives the
+  // "Recent action" bucket at the very top of the list plus the row badge.
+  const actionMap = useMemo(() => {
+    const m: Record<string, { kind: "payment" | "la_signed" | "poa_signed"; at: string; label: string }> = {};
+    const consider = (id: string, entry: { kind: "payment" | "la_signed" | "poa_signed"; at: string; label: string }) => {
+      if (!entry.at) return;
+      const ackAt = ackMap[id];
+      if (ackAt && new Date(ackAt).getTime() >= new Date(entry.at).getTime()) return;
+      const prev = m[id];
+      if (!prev || new Date(entry.at).getTime() > new Date(prev.at).getTime()) m[id] = entry;
+    };
+    for (const [id, p] of Object.entries(paidMap)) {
+      const tierLabel = (p.tier || "").toLowerCase();
+      const nice = tierLabel === "starter" ? "Starter" : tierLabel === "pro" ? "Pro"
+        : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured" : "Payment";
+      const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
+      consider(id, { kind: "payment", at: p.paidAt, label: `${nice} · ${amount} paid` });
+    }
+    for (const [id, e] of Object.entries(contractEventMap)) {
+      if (e.la) consider(id, { kind: "la_signed", at: e.la, label: "Listing agreement signed" });
+      if (e.poa) consider(id, { kind: "poa_signed", at: e.poa, label: "POA signed" });
+    }
+    return m;
+  }, [paidMap, contractEventMap, ackMap]);
+
+
 
   // Load all view records (admin-scope) + subscribe to live changes
   useEffect(() => {
@@ -622,12 +702,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const bt = new Date(awaitingMap[b.id] || b.created_at).getTime();
       return bt - at;
     };
-    // Order: Needs reply → Needs quote → Needs follow-up → everything else.
-    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
-    const ordered = [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+    // Order: Recent action (payment / LA signed / POA signed) → Needs reply
+    // → Needs quote → Needs follow-up → everything else. The action bucket
+    // sits at the very top so a fresh payment or signed doc jumps to the top
+    // of the list until the admin opens it (which clears the ack).
+    const byActionRecency = (a: Submission, b: Submission) => {
+      const at = actionMap[a.id]?.at ? new Date(actionMap[a.id].at).getTime() : 0;
+      const bt = actionMap[b.id]?.at ? new Date(actionMap[b.id].at).getTime() : 0;
+      return bt - at;
+    };
+    const actionRows = matches.filter(s => actionMap[s.id]).sort(byActionRecency);
+    const rest = matches.filter(s => !actionMap[s.id]);
+    const awaitingRows = rest.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
+    const quoteRows = rest.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
+    const followupRows = rest.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
+    const otherRows = rest.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
+    const ordered = [...actionRows, ...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
@@ -641,7 +731,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       deduped.push(s);
     }
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, actionMap]);
+
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
@@ -2206,6 +2297,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   onClick={() => {
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
+                    // Opening the submission = acknowledging the event that
+                    // bumped it to the top (payment / signed doc). A newer
+                    // event will re-surface it automatically.
+                    if (actionMap[s.id]) acknowledgeAction(s.id, actionMap[s.id].at);
                   }}
                   className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
                 >
@@ -2272,6 +2367,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Follow up
                           </span>
                         )}
+                        {actionMap[s.id] && (() => {
+                          const act = actionMap[s.id];
+                          const palette = act.kind === "payment"
+                            ? "bg-teal-500 text-white border-teal-600"
+                            : act.kind === "la_signed"
+                              ? "bg-emerald-600 text-white border-emerald-700"
+                              : "bg-amber-500 text-white border-amber-600";
+                          const Icon = act.kind === "payment" ? DollarSign : act.kind === "la_signed" ? FileSignature : Sparkles;
+                          const short = act.kind === "payment" ? act.label
+                            : act.kind === "la_signed" ? "LA signed"
+                              : "POA signed";
+                          return (
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md border shadow-sm animate-pulse ${palette}`}
+                              title={`${act.label} · ${formatDate(act.at)} — click to acknowledge`}
+                            >
+                              <Icon className="w-2.5 h-2.5" strokeWidth={3} />
+                              {short}
+                            </span>
+                          );
+                        })()}
                         {hasDocs(s) && (
                           <span
                             className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))] shadow-sm"
