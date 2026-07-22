@@ -702,12 +702,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const bt = new Date(awaitingMap[b.id] || b.created_at).getTime();
       return bt - at;
     };
-    // Order: Needs reply → Needs quote → Needs follow-up → everything else.
-    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
-    const ordered = [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+    // Order: Recent action (payment / LA signed / POA signed) → Needs reply
+    // → Needs quote → Needs follow-up → everything else. The action bucket
+    // sits at the very top so a fresh payment or signed doc jumps to the top
+    // of the list until the admin opens it (which clears the ack).
+    const byActionRecency = (a: Submission, b: Submission) => {
+      const at = actionMap[a.id]?.at ? new Date(actionMap[a.id].at).getTime() : 0;
+      const bt = actionMap[b.id]?.at ? new Date(actionMap[b.id].at).getTime() : 0;
+      return bt - at;
+    };
+    const actionRows = matches.filter(s => actionMap[s.id]).sort(byActionRecency);
+    const rest = matches.filter(s => !actionMap[s.id]);
+    const awaitingRows = rest.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
+    const quoteRows = rest.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
+    const followupRows = rest.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
+    const otherRows = rest.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
+    const ordered = [...actionRows, ...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
@@ -721,7 +731,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       deduped.push(s);
     }
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, actionMap]);
+
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
