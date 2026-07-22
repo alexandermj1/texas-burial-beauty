@@ -1793,8 +1793,8 @@ const ReviewStep = ({
   return (
     <div>
       <StepIntro
-        eyebrow="06 · Review"
         title="Take one last look."
+        accent="one last look"
         body="If everything looks right, submit your file. A broker will personally review it within one business day and then issue your Power of Attorney and Listing Agreement to sign, right here in your portal."
       />
 
