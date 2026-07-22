@@ -12,6 +12,8 @@ import {
   QrCode,
   X,
   ArrowRight,
+  Copy,
+  Share2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
