@@ -292,7 +292,46 @@ export const DocumentUploadCard = ({
                       </li>
                     </ol>
 
-                    <div className="mt-4 flex items-center gap-2 text-[11px]">
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(mobileUrl);
+                          } catch { /* ignore */ }
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] border border-border/70 text-foreground hover:border-primary/50 hover:bg-primary/5 transition-all"
+                      >
+                        <Copy className="w-3 h-3" /> Copy link
+                      </button>
+                      {typeof navigator !== "undefined" && "share" in navigator && (
+                        <button
+                          onClick={() => {
+                            navigator.share?.({
+                              title: "Texas Cemetery Brokers — upload",
+                              text: "Open this on your phone to upload a document photo.",
+                              url: mobileUrl,
+                            }).catch(() => { /* user cancelled */ });
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] border border-border/70 text-foreground hover:border-primary/50 hover:bg-primary/5 transition-all"
+                        >
+                          <Share2 className="w-3 h-3" /> Share to phone
+                        </button>
+                      )}
+                      <a
+                        href={`sms:?&body=${encodeURIComponent(`Texas Cemetery Brokers — upload here: ${mobileUrl}`)}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] border border-border/70 text-foreground hover:border-primary/50 hover:bg-primary/5 transition-all"
+                      >
+                        <Smartphone className="w-3 h-3" /> Text to my phone
+                      </a>
+                      <button
+                        onClick={() => setMode("phone")}
+                        className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <RefreshCcw className="w-3 h-3" /> Regenerate
+                      </button>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2 text-[11px]">
                       {waitingForPhone ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
@@ -301,13 +340,8 @@ export const DocumentUploadCard = ({
                       ) : (
                         <span className="text-muted-foreground">Ready when you are.</span>
                       )}
-                      <button
-                        onClick={() => setMode("phone")}
-                        className="ml-auto inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <RefreshCcw className="w-3 h-3" /> Regenerate
-                      </button>
                     </div>
+
                   </div>
                 </div>
               )}
