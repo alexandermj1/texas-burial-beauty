@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   ArrowLeft,
@@ -15,8 +15,18 @@ import {
   Users,
   ScrollText,
   Send,
-  Leaf,
+  Phone,
+  Mail,
+  HelpCircle,
+  X,
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import monstera from "@/assets/flowers/monstera.png.asset.json";
+import plumeria from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 
@@ -350,63 +360,110 @@ export default function SellerPortal() {
     return <SubmittedScreen state={state} onStartOver={startOver} />;
   }
 
+  const progress = ((stepIdx + 1) / STEPS.length) * 100;
+
   return (
-    <div className="min-h-screen bg-gradient-warm">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       <Seo
         title="Seller Portal (Beta) | Texas Cemetery Brokers"
         description="Guided, self-serve seller onboarding for cemetery property owners."
         path="/seller-portal"
         noindex
       />
-      <PortalHeader account={state.account} onStartOver={startOver} />
+      <Navbar forceScrolled />
+      <BotanicalBackdrop />
 
-      <div className="container mx-auto px-6 max-w-6xl pb-24 pt-10">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10">
-          <Stepper steps={STEPS} current={stepIdx} onJump={setStepIdx} state={state} />
+      <main className="flex-1 pt-24 pb-20 relative z-10">
+        <PortalHero
+          account={state.account}
+          onStartOver={startOver}
+          stepIdx={stepIdx}
+          totalSteps={STEPS.length}
+          currentLabel={currentStep.label}
+        />
 
-          <div>
-            <AnimatePresence mode="wait">
+        <div className="container mx-auto px-6 max-w-6xl mt-10">
+          {/* Progress rail */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between text-[10px] tracking-[0.24em] uppercase text-muted-foreground mb-3">
+              <span>Chapter {String(stepIdx + 1).padStart(2, "0")} of {String(STEPS.length).padStart(2, "0")}</span>
+              <span>{Math.round(progress)}% complete</span>
+            </div>
+            <div className="h-[3px] w-full bg-border/60 rounded-full overflow-hidden">
               <motion.div
-                key={currentStep.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-card/80 backdrop-blur border border-border/60 rounded-3xl p-8 md:p-12 shadow-soft"
-              >
-                <StepBody stepId={currentStep.id} state={state} update={update} />
-              </motion.div>
-            </AnimatePresence>
+                className="h-full bg-gradient-to-r from-primary via-accent to-primary"
+                initial={false}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+          </div>
 
-            <div className="flex items-center justify-between mt-8">
-              <button
-                onClick={goBack}
-                disabled={stepIdx === 0}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back
-              </button>
+          <div className="grid lg:grid-cols-[280px_1fr] gap-12">
+            <Stepper steps={STEPS} current={stepIdx} onJump={setStepIdx} state={state} />
 
-              {stepIdx < STEPS.length - 1 ? (
-                <button
-                  onClick={goNext}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            <div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative bg-card/85 backdrop-blur-xl border border-border/60 rounded-[28px] p-8 md:p-14 shadow-soft overflow-hidden"
                 >
-                  Continue <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
+                  <div
+                    className="absolute -top-24 -right-20 w-64 h-64 opacity-[0.06] rotate-12 pointer-events-none"
+                    style={{
+                      backgroundImage: `url(${palmFan.url})`,
+                      backgroundSize: "contain",
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                  <div className="relative">
+                    <StepBody stepId={currentStep.id} state={state} update={update} />
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="flex items-center justify-between mt-8">
                 <button
-                  onClick={handleSubmit}
-                  disabled={!canGoNext}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+                  onClick={goBack}
+                  disabled={stepIdx === 0}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
-                  Submit for review <Send className="w-4 h-4" />
+                  <ArrowLeft className="w-4 h-4" /> Back
                 </button>
-              )}
+
+                {stepIdx < STEPS.length - 1 ? (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={goNext}
+                    className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow overflow-hidden"
+                  >
+                    <span className="relative z-10">Continue</span>
+                    <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform" />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSubmit}
+                    disabled={!canGoNext}
+                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow disabled:opacity-40"
+                  >
+                    Submit for review <Send className="w-4 h-4" />
+                  </motion.button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      <Footer />
+      <HelpPill />
     </div>
   );
 }
@@ -433,175 +490,353 @@ const SignInShell = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-warm flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       <Seo
         title="Seller Portal Sign In | Texas Cemetery Brokers"
         description="Sign in to your guided seller portal."
         path="/seller-portal"
         noindex
       />
-      <div className="container mx-auto px-6 py-8 flex items-center justify-between">
-        <div className="flex items-baseline gap-2">
-          <Leaf className="w-4 h-4 text-primary" />
-          <span className="font-display text-lg text-foreground">Texas Cemetery</span>
-          <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
-            Seller Portal · Beta
-          </span>
-        </div>
-        <a href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-          ← Back to site
-        </a>
-      </div>
+      <Navbar forceScrolled />
+      <BotanicalBackdrop />
 
-      <div className="flex-1 grid lg:grid-cols-2">
-        <div className="hidden lg:flex flex-col justify-between px-16 py-20 bg-primary/5 border-r border-border/40">
-          <div>
-            <span className="inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-primary">
-              <Sparkles className="w-3 h-3" /> Guided by our AI concierge
-            </span>
-            <h1 className="font-display text-5xl md:text-6xl text-foreground leading-[1.05] mt-8">
-              A calmer way to list <em className="italic">your family's property.</em>
-            </h1>
-            <p className="text-muted-foreground text-lg leading-relaxed mt-6 max-w-md">
-              Answer a few questions at your own pace. We'll assemble your documents, verify your
-              ownership, and take your listing live — all from one page.
-            </p>
-          </div>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            {[
-              "Bank-grade encrypted uploads",
-              "Reviewed by a licensed broker in 24 hours",
-              "You sign the POA and listing agreement in-app",
-            ].map((t) => (
-              <div key={t} className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-primary" /> {t}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center px-6 py-16">
-          <motion.form
-            onSubmit={submit}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-md bg-card/80 backdrop-blur border border-border/60 rounded-3xl p-10 shadow-soft"
-          >
-            <h2 className="font-display text-3xl text-foreground mb-2">
-              {mode === "signup" ? "Create your seller account" : "Welcome back"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-8">
-              {mode === "signup"
-                ? "Save your progress and pick up where you left off."
-                : "Sign in to continue your application."}
-            </p>
-
-            <div className="space-y-4">
-              {mode === "signup" && (
-                <>
-                  <Field label="Full name">
-                    <input
-                      className={inputCls}
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Jane Whitmore"
-                    />
-                  </Field>
-                  <Field label="Phone">
-                    <input
-                      className={inputCls}
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="(214) 555-0134"
-                    />
-                  </Field>
-                </>
-              )}
-              <Field label="Email">
-                <input
-                  required
-                  type="email"
-                  className={inputCls}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@email.com"
-                />
-              </Field>
-              <Field label="Password">
-                <input
-                  required
-                  type="password"
-                  minLength={6}
-                  className={inputCls}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-              </Field>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full mt-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+      <main className="flex-1 pt-24 pb-16 relative z-10">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-16 items-center min-h-[calc(100vh-14rem)]">
+            {/* Editorial left */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="relative"
             >
-              {mode === "signup" ? "Create account & begin" : "Sign in"}
-            </button>
+              <span className="inline-flex items-center gap-2 text-[10px] tracking-[0.28em] uppercase text-primary mb-8">
+                <Sparkles className="w-3 h-3" /> Seller Portal · Beta
+              </span>
+              <h1 className="font-display text-[3.25rem] md:text-[4.75rem] leading-[0.98] text-foreground">
+                A calmer <em className="italic text-primary">way</em>
+                <br />
+                to list your
+                <br />
+                family's <em className="italic text-primary">property.</em>
+              </h1>
+              <p className="text-muted-foreground text-lg leading-relaxed mt-8 max-w-md">
+                Sign in and let our concierge walk you through everything — one thoughtful question
+                at a time. We assemble the paperwork, verify the ownership, and take your listing
+                live from a single, quiet page.
+              </p>
+              <div className="mt-10 space-y-3">
+                {[
+                  "Bank-grade encrypted uploads",
+                  "Reviewed by a licensed broker within 24 hours",
+                  "Sign your POA and listing agreement in-app",
+                ].map((t, i) => (
+                  <motion.div
+                    key={t}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + i * 0.1 }}
+                    className="flex items-center gap-3 text-sm text-foreground/80"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" /> {t}
+                  </motion.div>
+                ))}
+              </div>
+              <div
+                className="absolute -bottom-16 -left-20 w-56 h-56 opacity-25 pointer-events-none hidden lg:block"
+                style={{
+                  backgroundImage: `url(${monstera.url})`,
+                  backgroundSize: "contain",
+                  backgroundRepeat: "no-repeat",
+                }}
+              />
+            </motion.div>
 
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              {mode === "signup" ? "Already have an account?" : "New here?"}{" "}
-              <button
-                type="button"
-                onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-                className="text-primary font-medium hover:underline"
+            {/* Form right */}
+            <motion.form
+              onSubmit={submit}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="relative w-full max-w-md justify-self-center lg:justify-self-end bg-card/90 backdrop-blur-xl border border-border/60 rounded-[28px] p-10 shadow-soft"
+            >
+              <div
+                className="absolute -top-12 -right-8 w-32 h-32 opacity-40 pointer-events-none"
+                style={{
+                  backgroundImage: `url(${hibiscusCoral.url})`,
+                  backgroundSize: "contain",
+                  backgroundRepeat: "no-repeat",
+                }}
+              />
+              <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-3">
+                {mode === "signup" ? "Begin" : "Return"}
+              </div>
+              <h2 className="font-display text-3xl text-foreground mb-2">
+                {mode === "signup" ? "Create your account" : "Welcome back"}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-8">
+                {mode === "signup"
+                  ? "Save your progress and pick up where you left off."
+                  : "Sign in to continue your application."}
+              </p>
+
+              <div className="space-y-4">
+                {mode === "signup" && (
+                  <>
+                    <Field label="Full name">
+                      <input
+                        className={inputCls}
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Jane Whitmore"
+                      />
+                    </Field>
+                    <Field label="Phone">
+                      <input
+                        className={inputCls}
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="(214) 555-0134"
+                      />
+                    </Field>
+                  </>
+                )}
+                <Field label="Email">
+                  <input
+                    required
+                    type="email"
+                    className={inputCls}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@email.com"
+                  />
+                </Field>
+                <Field label="Password">
+                  <input
+                    required
+                    type="password"
+                    minLength={6}
+                    className={inputCls}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </Field>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                type="submit"
+                className="w-full mt-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow"
               >
-                {mode === "signup" ? "Sign in" : "Create one"}
-              </button>
-            </p>
+                {mode === "signup" ? "Create account & begin" : "Sign in"}
+              </motion.button>
 
-            <div className="mt-8 pt-6 border-t border-border/60 flex items-center gap-2 text-xs text-muted-foreground">
-              <Lock className="w-3 h-3" /> Beta preview — no data leaves your browser yet.
-            </div>
-          </motion.form>
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                {mode === "signup" ? "Already have an account?" : "New here?"}{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+                  className="text-primary font-medium hover:underline"
+                >
+                  {mode === "signup" ? "Sign in" : "Create one"}
+                </button>
+              </p>
+
+              <div className="mt-8 pt-6 border-t border-border/60 flex items-center gap-2 text-xs text-muted-foreground">
+                <Lock className="w-3 h-3" /> Beta preview — no data leaves your browser yet.
+              </div>
+            </motion.form>
+          </div>
         </div>
+      </main>
+
+      <Footer />
+      <HelpPill />
+    </div>
+  );
+};
+
+// -----------------------------------------------------------------------------
+// Botanical backdrop — floating decorative flora, parallax
+// -----------------------------------------------------------------------------
+
+const BotanicalBackdrop = () => {
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 800], [0, -120]);
+  const y2 = useTransform(scrollY, [0, 800], [0, -60]);
+  const y3 = useTransform(scrollY, [0, 800], [0, -200]);
+
+  return (
+    <div aria-hidden className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {/* soft wash */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/30 to-background" />
+      <div className="absolute top-0 left-0 w-[45rem] h-[45rem] bg-primary/[0.06] rounded-full blur-[120px] -translate-x-1/3 -translate-y-1/3" />
+      <div className="absolute bottom-0 right-0 w-[38rem] h-[38rem] bg-accent/[0.07] rounded-full blur-[120px] translate-x-1/4 translate-y-1/4" />
+
+      <motion.img
+        src={palmFan.url}
+        alt=""
+        style={{ y: y1 }}
+        className="absolute top-40 -left-24 w-96 opacity-[0.08] rotate-[-15deg] hidden md:block"
+      />
+      <motion.img
+        src={bananaLeaf.url}
+        alt=""
+        style={{ y: y2 }}
+        className="absolute top-[60%] -right-32 w-[28rem] opacity-[0.09] rotate-[20deg] hidden md:block"
+      />
+      <motion.img
+        src={plumeria.url}
+        alt=""
+        style={{ y: y3 }}
+        className="absolute top-[110%] left-1/4 w-72 opacity-[0.10] hidden md:block"
+      />
+    </div>
+  );
+};
+
+// -----------------------------------------------------------------------------
+// Editorial hero shown inside the wizard
+// -----------------------------------------------------------------------------
+
+const PortalHero = ({
+  account,
+  onStartOver,
+  stepIdx,
+  totalSteps,
+  currentLabel,
+}: {
+  account: PortalState["account"];
+  onStartOver: () => void;
+  stepIdx: number;
+  totalSteps: number;
+  currentLabel: string;
+}) => {
+  const firstName = (account.fullName || account.email || "friend").split(/[\s@]/)[0];
+  return (
+    <div className="container mx-auto px-6 max-w-6xl">
+      <div className="relative">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-6"
+        >
+          <div>
+            <div className="flex items-center gap-3 text-[10px] tracking-[0.28em] uppercase text-primary mb-4">
+              <span>Seller Portal</span>
+              <span className="w-8 h-px bg-primary/40" />
+              <span className="text-muted-foreground">Chapter {String(stepIdx + 1).padStart(2, "0")} — {currentLabel}</span>
+            </div>
+            <h1 className="font-display text-4xl md:text-6xl text-foreground leading-[1.02]">
+              Welcome, <em className="italic text-primary">{firstName}</em>.
+            </h1>
+            <p className="text-muted-foreground mt-4 max-w-lg leading-relaxed">
+              Move at your own pace. Everything you enter is saved automatically — close the tab
+              and pick up right where you left it.
+            </p>
+          </div>
+          <div className="flex flex-col items-start md:items-end gap-2">
+            <div className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground">Signed in as</div>
+            <div className="text-sm text-foreground font-medium">{account.fullName || account.email}</div>
+            <button
+              onClick={onStartOver}
+              className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
+            >
+              Start a new application
+            </button>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
 };
 
 // -----------------------------------------------------------------------------
-// Header + Stepper
+// Floating help pill — Call / Email
 // -----------------------------------------------------------------------------
 
-const PortalHeader = ({
-  account,
-  onStartOver,
-}: {
-  account: PortalState["account"];
-  onStartOver: () => void;
-}) => (
-  <header className="border-b border-border/50 bg-background/70 backdrop-blur sticky top-0 z-30">
-    <div className="container mx-auto px-6 max-w-6xl py-4 flex items-center justify-between">
-      <div className="flex items-baseline gap-2">
-        <Leaf className="w-4 h-4 text-primary self-center" />
-        <span className="font-display text-lg text-foreground">Seller Portal</span>
-        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Beta</span>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="text-right hidden sm:block">
-          <div className="text-xs text-muted-foreground">Signed in as</div>
-          <div className="text-sm text-foreground">{account.fullName || account.email}</div>
-        </div>
-        <button
-          onClick={onStartOver}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Start over
-        </button>
-      </div>
+const HelpPill = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="fixed bottom-6 right-6 z-40">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-3 w-80 bg-card border border-border rounded-3xl shadow-hover p-6 relative overflow-hidden"
+          >
+            <div
+              className="absolute -top-8 -right-8 w-28 h-28 opacity-30 pointer-events-none"
+              style={{
+                backgroundImage: `url(${hibiscusCoral.url})`,
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted"
+              aria-label="Close help"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
+              We're right here
+            </div>
+            <h4 className="font-display text-xl text-foreground mb-2">Need a hand?</h4>
+            <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
+              Our Texas team can walk you through anything — a phone call, a quick email, or both.
+            </p>
+            <div className="space-y-2">
+              <a
+                href="tel:+12142304740"
+                className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 hover:border-primary/40 hover:bg-primary/[0.04] transition-all group"
+              >
+                <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+                  <Phone className="w-4 h-4" />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-sm font-medium text-foreground">Call our team</span>
+                  <span className="block text-xs text-muted-foreground">(214) 230-4740</span>
+                </span>
+                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
+              </a>
+              <a
+                href="mailto:info@texascemeterybrokers.com?subject=Seller%20Portal%20help"
+                className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 hover:border-primary/40 hover:bg-primary/[0.04] transition-all group"
+              >
+                <span className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center shrink-0">
+                  <Mail className="w-4 h-4" />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-sm font-medium text-foreground">Email us</span>
+                  <span className="block text-xs text-muted-foreground truncate">info@texascemeterybrokers.com</span>
+                </span>
+                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.button
+        whileHover={{ scale: 1.04 }}
+        whileTap={{ scale: 0.96 }}
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 pl-4 pr-5 py-3 rounded-full bg-primary text-primary-foreground shadow-hover hover:shadow-soft transition-shadow"
+      >
+        <HelpCircle className="w-4 h-4" />
+        <span className="text-sm font-medium">Call our team for help</span>
+      </motion.button>
     </div>
-  </header>
-);
+  );
+};
 
 const Stepper = ({
   steps,
@@ -1234,34 +1469,51 @@ const SubmittedScreen = ({
   state: PortalState;
   onStartOver: () => void;
 }) => (
-  <div className="min-h-screen bg-gradient-warm flex items-center justify-center px-6">
+  <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
     <Seo title="Application submitted" description="" path="/seller-portal" noindex />
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-xl w-full text-center bg-card/80 backdrop-blur border border-border/60 rounded-3xl p-12 shadow-soft"
-    >
-      <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
-        <CheckCircle2 className="w-8 h-8" />
-      </div>
-      <div className="text-[11px] tracking-[0.22em] uppercase text-primary mb-3">
-        Application received
-      </div>
-      <h1 className="font-display text-4xl text-foreground leading-tight mb-4">
-        Thank you, {state.account.fullName.split(" ")[0] || "friend"}.
-      </h1>
-      <p className="text-muted-foreground leading-relaxed mb-8">
-        A licensed broker will audit your file within one business day. When you're approved, we'll
-        release your Power of Attorney and Listing Agreement directly into this portal for you to
-        sign — and your listing will go live the moment they're returned.
-      </p>
-      <button
-        onClick={onStartOver}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+    <Navbar forceScrolled />
+    <BotanicalBackdrop />
+    <main className="flex-1 flex items-center justify-center px-6 pt-24 pb-16 relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative max-w-xl w-full text-center bg-card/90 backdrop-blur-xl border border-border/60 rounded-[28px] p-14 shadow-soft overflow-hidden"
       >
-        Start a new application
-      </button>
-    </motion.div>
+        <div
+          className="absolute -top-10 -right-10 w-40 h-40 opacity-30 pointer-events-none"
+          style={{
+            backgroundImage: `url(${hibiscusCoral.url})`,
+            backgroundSize: "contain",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-3">
+            Application received
+          </div>
+          <h1 className="font-display text-4xl md:text-5xl text-foreground leading-tight mb-4">
+            Thank you, <em className="italic text-primary">{state.account.fullName.split(" ")[0] || "friend"}</em>.
+          </h1>
+          <p className="text-muted-foreground leading-relaxed mb-8">
+            A licensed broker will audit your file within one business day. When you're approved, we'll
+            release your Power of Attorney and Listing Agreement directly into this portal for you to
+            sign — and your listing will go live the moment they're returned.
+          </p>
+          <button
+            onClick={onStartOver}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
+          >
+            Start a new application
+          </button>
+        </div>
+      </motion.div>
+    </main>
+    <Footer />
+    <HelpPill />
   </div>
 );
 
