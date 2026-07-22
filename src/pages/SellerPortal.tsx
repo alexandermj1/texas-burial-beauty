@@ -28,6 +28,10 @@ import {
   Camera,
   Leaf,
 } from "lucide-react";
+import singlePlotImg from "@/assets/property-types/single-plot.png";
+import nicheImg from "@/assets/property-types/cremation-niche.png";
+import cryptImg from "@/assets/property-types/mausoleum.png";
+import familyEstateImg from "@/assets/property-types/family-estate.png";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
