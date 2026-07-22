@@ -17,7 +17,6 @@ import {
   Send,
   Phone,
   Mail,
-  HelpCircle,
   X,
   Rocket,
   Clock,
@@ -39,7 +38,7 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import DocumentUploadCard from "@/components/seller-portal/DocumentUploadCard";
-import WhyBrokerStrip, { FullServicePromise } from "@/components/seller-portal/WhyBrokerStrip";
+
 
 // -----------------------------------------------------------------------------
 // Experimental self-serve seller portal. Front-end only, persisted to
@@ -435,11 +434,11 @@ export default function SellerPortal() {
           onChangePath={() => setState((s) => ({ ...s, path: "" }))}
         />
 
-        <div className="container mx-auto px-6 max-w-3xl mt-10">
+        <div className="container mx-auto px-6 max-w-5xl mt-12">
           {/* Slim horizontal chip stepper — replaces the loud sidebar + % bar */}
           <ChipStepper steps={activeSteps} current={safeIdx} onJump={setStepIdx} state={state} />
 
-          <div className="mt-10">
+          <div className="mt-12">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep.id}
@@ -447,31 +446,13 @@ export default function SellerPortal() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="relative bg-card/85 backdrop-blur-xl border border-border/60 rounded-[28px] p-8 md:p-12 shadow-soft overflow-hidden"
+                className="relative"
               >
-                <div
-                  className="absolute -top-24 -right-20 w-64 h-64 opacity-[0.07] rotate-12 pointer-events-none"
-                  style={{
-                    backgroundImage: `url(${palmFan.url})`,
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-                <div
-                  className="absolute -bottom-16 -left-16 w-56 h-56 opacity-[0.05] pointer-events-none"
-                  style={{
-                    backgroundImage: `url(${monstera.url})`,
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-                <div className="relative">
-                  <StepBody stepId={currentStep.id} state={state} update={update} />
-                </div>
+                <StepBody stepId={currentStep.id} state={state} update={update} />
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex items-center justify-between mt-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-14 pt-8 border-t border-border/50">
               <button
                 onClick={goBack}
                 disabled={safeIdx === 0}
@@ -479,6 +460,8 @@ export default function SellerPortal() {
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
+
+              <InlineHelp variant="link" />
 
               {safeIdx < activeSteps.length - 1 ? (
                 <motion.button
@@ -503,22 +486,15 @@ export default function SellerPortal() {
               )}
             </div>
           </div>
-
-          <div className="mt-20">
-            <WhyBrokerStrip />
-          </div>
-          <div className="mt-14">
-            <FullServicePromise />
-          </div>
         </div>
 
       </main>
 
       <Footer />
-      <HelpPill />
     </div>
   );
 }
+
 
 // -----------------------------------------------------------------------------
 // Sign-in shell (mock — front-end only)
@@ -705,7 +681,7 @@ const SignInShell = ({
       </main>
 
       <Footer />
-      <HelpPill />
+      
     </div>
   );
 };
@@ -830,9 +806,11 @@ const PortalHero = ({
               </button>
             )}
           </div>
-          <div className="flex flex-col items-start md:items-end gap-2">
-            <div className="text-[10px] tracking-[0.24em] uppercase text-muted-foreground">Signed in as</div>
-            <div className="text-sm text-foreground font-medium">{account.fullName || account.email}</div>
+          <div className="flex flex-col items-start md:items-end gap-3">
+            <InlineHelp variant="compact" />
+            <div className="text-xs text-muted-foreground">
+              Signed in as <span className="text-foreground">{account.fullName || account.email}</span>
+            </div>
             <button
               onClick={onStartOver}
               className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
@@ -840,6 +818,7 @@ const PortalHero = ({
               Start a new application
             </button>
           </div>
+
         </motion.div>
       </div>
     </div>
@@ -948,11 +927,16 @@ const IntroScreen = ({
               Start over
             </button>
           </div>
+
+          <div className="mt-10 flex justify-center">
+            <InlineHelp variant="compact" />
+          </div>
         </div>
+
       </main>
 
       <Footer />
-      <HelpPill />
+      
     </div>
   );
 };
@@ -1066,7 +1050,8 @@ const PathChoiceScreen = ({
             </motion.button>
           </div>
 
-          <div className="text-center mt-10">
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <InlineHelp variant="compact" />
             <button
               onClick={onStartOver}
               className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
@@ -1074,11 +1059,12 @@ const PathChoiceScreen = ({
               Start over
             </button>
           </div>
+
         </div>
       </main>
 
       <Footer />
-      <HelpPill />
+      
     </div>
   );
 };
@@ -1123,88 +1109,58 @@ const ChipStepper = ({
 );
 
 // -----------------------------------------------------------------------------
-// Floating help pill — Call / Email
+// Inline help — replaces the floating pill. Rendered where it makes sense.
 // -----------------------------------------------------------------------------
 
-const HelpPill = () => {
-  const [open, setOpen] = useState(false);
+const InlineHelp = ({
+  variant = "card",
+  className = "",
+}: {
+  variant?: "card" | "link" | "compact";
+  className?: string;
+}) => {
+  if (variant === "link") {
+    return (
+      <div className={`flex items-center gap-4 text-xs text-muted-foreground ${className}`}>
+        <a href="tel:+12142304740" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
+          <Phone className="w-3.5 h-3.5" /> (214) 230-4740
+        </a>
+        <span className="w-1 h-1 rounded-full bg-border" />
+        <a href="mailto:info@texascemeterybrokers.com?subject=Seller%20Portal%20help" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
+          <Mail className="w-3.5 h-3.5" /> Email us
+        </a>
+      </div>
+    );
+  }
+  if (variant === "compact") {
+    return (
+      <div className={`inline-flex items-center gap-2 ${className}`}>
+        <a
+          href="tel:+12142304740"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-soft hover:shadow-hover transition-shadow"
+        >
+          <Phone className="w-3.5 h-3.5" /> Call our team for help
+        </a>
+        <a
+          href="mailto:info@texascemeterybrokers.com?subject=Seller%20Portal%20help"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border/60 text-xs text-foreground hover:border-primary/40 hover:text-primary transition-all"
+        >
+          <Mail className="w-3.5 h-3.5" /> Email
+        </a>
+      </div>
+    );
+  }
   return (
-    <div className="fixed bottom-6 right-6 z-40">
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-3 w-80 bg-card border border-border rounded-3xl shadow-hover p-6 relative overflow-hidden"
-          >
-            <div
-              className="absolute -top-8 -right-8 w-28 h-28 opacity-30 pointer-events-none"
-              style={{
-                backgroundImage: `url(${hibiscusCoral.url})`,
-                backgroundSize: "contain",
-                backgroundRepeat: "no-repeat",
-              }}
-            />
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted"
-              aria-label="Close help"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-            <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
-              We're right here
-            </div>
-            <h4 className="font-display text-xl text-foreground mb-2">Need a hand?</h4>
-            <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
-              Our Texas team can walk you through anything — a phone call, a quick email, or both.
-            </p>
-            <div className="space-y-2">
-              <a
-                href="tel:+12142304740"
-                className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 hover:border-primary/40 hover:bg-primary/[0.04] transition-all group"
-              >
-                <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                  <Phone className="w-4 h-4" />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-medium text-foreground">Call our team</span>
-                  <span className="block text-xs text-muted-foreground">(214) 230-4740</span>
-                </span>
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </a>
-              <a
-                href="mailto:info@texascemeterybrokers.com?subject=Seller%20Portal%20help"
-                className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 hover:border-primary/40 hover:bg-primary/[0.04] transition-all group"
-              >
-                <span className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center shrink-0">
-                  <Mail className="w-4 h-4" />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-medium text-foreground">Email us</span>
-                  <span className="block text-xs text-muted-foreground truncate">info@texascemeterybrokers.com</span>
-                </span>
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </a>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.button
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.96 }}
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 pl-4 pr-5 py-3 rounded-full bg-primary text-primary-foreground shadow-hover hover:shadow-soft transition-shadow"
-      >
-        <HelpCircle className="w-4 h-4" />
-        <span className="text-sm font-medium">Call our team for help</span>
-      </motion.button>
+    <div className={`rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${className}`}>
+      <div>
+        <div className="text-[10px] tracking-[0.22em] uppercase text-primary mb-1">Prefer to talk it through?</div>
+        <div className="text-sm text-foreground">Our Texas team can walk you through anything — one call is often faster.</div>
+      </div>
+      <InlineHelp variant="compact" />
     </div>
   );
 };
+
 
 const Stepper = ({
   steps,
@@ -1674,34 +1630,11 @@ const DocumentsStep = ({
 
       <AICallout notes={aiRecommendations(state)} />
 
-      {/* Two-way upload primer */}
-      <div className="mt-8 grid md:grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-border/60 bg-background/60 p-5">
-          <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
-            Option A
-          </div>
-          <div className="font-display text-lg text-foreground mb-1">
-            Upload from this computer
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Click <em>Upload</em> next to any document, then <em>From this
-            computer</em>. Choose the file — a JPG, PNG, HEIC, or PDF all work.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-5">
-          <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
-            Option B — new
-          </div>
-          <div className="font-display text-lg text-foreground mb-1">
-            Snap it with your phone
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Click <em>Upload</em>, choose <em>Use my phone camera</em>, and
-            point your phone at the QR code. Take the photo — it lands here in
-            seconds. No email, no cable.
-          </p>
-        </div>
-      </div>
+      {/* Two-way upload primer — subtle one-liner */}
+      <p className="mt-8 text-xs text-muted-foreground leading-relaxed">
+        For each document below, tap <em className="text-foreground">Upload</em> to choose a file from this computer, or <em className="text-foreground">Use my phone camera</em> to scan a QR code and snap the photo on your phone — it appears here in seconds. JPG, PNG, HEIC, and PDF all work.
+      </p>
+
 
       <div className="mt-6 space-y-3">
         {required.map((d) => {
@@ -1902,7 +1835,7 @@ const SubmittedScreen = ({
       </motion.div>
     </main>
     <Footer />
-    <HelpPill />
+    
   </div>
 );
 
