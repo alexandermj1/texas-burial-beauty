@@ -2245,23 +2245,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Needs reply
                           </span>
                         )}
-                        {!awaitingMap[s.id] && needsQuoteActive(s) && (
+                        {!awaitingMap[s.id] && !!((s as any).custom_tag || "").trim() && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-md bg-[hsl(var(--status-quote))] text-white border border-[hsl(var(--status-quote))] shadow-sm"
-                            title="Quote owed to seller"
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800 shadow-sm max-w-[180px] truncate"
+                            title={(s as any).custom_tag}
                           >
-                            <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
-                            Needs quote
-                          </span>
-                        )}
-
-                        {!awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id] && (
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-followup-soft))] text-[hsl(var(--status-followup-fg))] border border-[hsl(var(--status-followup-border))] shadow-sm"
-                            title={`We said: "${followupMap[s.id].phrase}" on ${new Date(followupMap[s.id].since).toLocaleString()} — no follow-up sent yet`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-followup))] animate-pulse" />
-                            Follow up
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span className="truncate">{(s as any).custom_tag}</span>
                           </span>
                         )}
                         {hasDocs(s) && (
