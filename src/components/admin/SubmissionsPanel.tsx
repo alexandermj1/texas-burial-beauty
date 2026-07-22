@@ -622,12 +622,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const bt = new Date(awaitingMap[b.id] || b.created_at).getTime();
       return bt - at;
     };
-    // Order: Needs reply → Needs quote → Needs follow-up → everything else.
-    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
-    const ordered = [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+    // Order: Paid (money in) → Needs reply → Needs quote → Needs follow-up → everything else.
+    const byPaidAt = (a: Submission, b: Submission) => {
+      const at = new Date(paidMap[a.id]?.paidAt || a.created_at).getTime();
+      const bt = new Date(paidMap[b.id]?.paidAt || b.created_at).getTime();
+      return bt - at;
+    };
+    const paidRows = matches.filter(s => paidMap[s.id]).sort(byPaidAt);
+    const notPaid = matches.filter(s => !paidMap[s.id]);
+    const awaitingRows = notPaid.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
+    const quoteRows = notPaid.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
+    const followupRows = notPaid.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
+    const otherRows = notPaid.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
+    const ordered = [...paidRows, ...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
@@ -641,7 +648,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       deduped.push(s);
     }
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
