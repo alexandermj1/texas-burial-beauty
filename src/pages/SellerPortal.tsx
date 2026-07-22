@@ -837,7 +837,6 @@ const HelpPill = () => {
     </div>
   );
 };
-);
 
 const Stepper = ({
   steps,
