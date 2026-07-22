@@ -13,6 +13,8 @@ const corsHeaders = {
 const GMAIL_GATEWAY = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const TARGET_MAILBOX = "info@texascemeterybrokers.com";
 const TARGET_GMAIL_KEY_ENV = "GOOGLE_MAIL_API_KEY_1";
+const FALLBACK_MAILBOX = "texascemeterybrokers@gmail.com";
+const FALLBACK_GMAIL_KEY_ENV = "GOOGLE_MAIL_API_KEY";
 
 const SendSchema = z.object({
   action: z.literal("send"),
@@ -188,7 +190,72 @@ Deno.serve(async (req) => {
         threadId = input.threadId || undefined;
       }
 
-      const raw2822 = buildRfc2822({
+      const buildPayload = (from: string, includeThread: boolean) => {
+        const raw2822 = buildRfc2822({
+          from,
+          to: input.to,
+          cc: input.cc,
+          bcc: input.bcc,
+          subject: input.subject || "(no subject)",
+          body: input.body,
+          htmlBody: input.htmlBody,
+          inReplyTo: from === TARGET_MAILBOX ? inReplyTo : undefined,
+          references: from === TARGET_MAILBOX ? references : undefined,
+        });
+        const p: Record<string, unknown> = { raw: encodeBase64Url(raw2822) };
+        if (includeThread && threadId && from === TARGET_MAILBOX) p.threadId = threadId;
+        return p;
+      };
+
+      const payload = buildPayload(TARGET_MAILBOX, true);
+
+      const sendWithKey = async (key: string, payloadForKey: Record<string, unknown>) => {
+        let res: Response | null = null;
+        let text = "";
+        let err: unknown = null;
+        let retriedWithoutThread = false;
+        for (let attempt = 0; attempt < 4; attempt++) {
+          try {
+            res = await fetch(`${GMAIL_GATEWAY}/users/me/messages/send`, {
+              method: "POST",
+              headers: gmailHeaders(lovableKey, key),
+              body: JSON.stringify(payloadForKey),
+            });
+            text = await res.text();
+            if (res.ok) break;
+            if (res.status === 404 && payloadForKey.threadId && !retriedWithoutThread) {
+              delete payloadForKey.threadId;
+              retriedWithoutThread = true;
+              continue;
+            }
+            if (![502, 503, 504, 429].includes(res.status)) break;
+          } catch (e) {
+            err = e;
+          }
+          const delay = res?.status === 429 ? 2000 * (attempt + 1) : 500 * (attempt + 1);
+          await new Promise((r) => setTimeout(r, delay));
+        }
+        return { res, text, err };
+      };
+
+      // Primary send through info@. If that mailbox is temporarily quota-locked,
+      // use the backup linked Gmail account so customer replies can still go out.
+      let { res: sendRes, text: sendText, err: lastErr } = await sendWithKey(gmailKey, payload);
+      let sentFrom = TARGET_MAILBOX;
+      if (sendRes?.status === 429) {
+        const fallbackKey = Deno.env.get(FALLBACK_GMAIL_KEY_ENV);
+        if (fallbackKey && fallbackKey !== gmailKey) {
+          const fallback = await sendWithKey(fallbackKey, buildPayload(FALLBACK_MAILBOX, false));
+          if (fallback.res?.ok) {
+            sendRes = fallback.res;
+            sendText = fallback.text;
+            lastErr = fallback.err;
+            sentFrom = FALLBACK_MAILBOX;
+          }
+        }
+      }
+
+      /* const raw2822 = buildRfc2822({
         from: TARGET_MAILBOX,
         to: input.to,
         cc: input.cc,
@@ -231,7 +298,7 @@ Deno.serve(async (req) => {
         // Longer backoff for 429s to respect Gmail's user-rate limit.
         const delay = sendRes?.status === 429 ? 2000 * (attempt + 1) : 500 * (attempt + 1);
         await new Promise((r) => setTimeout(r, delay));
-      }
+      } */
       if (!sendRes) return json({ error: `Send failed: ${lastErr instanceof Error ? lastErr.message : "network error"}` }, 200);
       if (sendRes.status === 429) {
         return json({ error: friendlyGmailRateLimit(sendText), rateLimited: true }, 200);
@@ -245,7 +312,7 @@ Deno.serve(async (req) => {
         await admin.from("email_messages").insert({
           gmail_message_id: sent.id || `local-${crypto.randomUUID()}`,
           gmail_thread_id: sent.threadId || threadId || null,
-          from_email: TARGET_MAILBOX,
+          from_email: sentFrom,
           from_name: "Texas Cemetery Brokers",
           to_email: input.to,
           subject: input.subject || "(no subject)",
@@ -256,7 +323,7 @@ Deno.serve(async (req) => {
         });
       } catch { /* ignore — sync will reconcile */ }
 
-      return json({ ok: true, id: sent.id, threadId: sent.threadId });
+      return json({ ok: true, id: sent.id, threadId: sent.threadId, from: sentFrom, fallbackUsed: sentFrom !== TARGET_MAILBOX });
     }
 
     if (input.action === "modify") {
