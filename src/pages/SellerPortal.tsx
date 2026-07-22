@@ -28,6 +28,10 @@ import {
   Camera,
   Leaf,
 } from "lucide-react";
+import singlePlotImg from "@/assets/property-types/single-plot.png";
+import nicheImg from "@/assets/property-types/cremation-niche.png";
+import cryptImg from "@/assets/property-types/mausoleum.png";
+import familyEstateImg from "@/assets/property-types/family-estate.png";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
@@ -246,16 +250,22 @@ const Field = ({
   hint?: string;
 }) => (
   <label className="block">
-    <span className="block text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
+    <span className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">
       {label}
     </span>
     {children}
-    {hint && <span className="mt-1.5 block text-xs text-muted-foreground/80">{hint}</span>}
+    {hint && <span className="mt-2 block text-xs italic text-foreground/50">{hint}</span>}
   </label>
 );
 
+// Editorial underline input — no boxes, big display type, matches SellerQuoteForm editorial mode.
 const inputCls =
-  "w-full px-4 py-3 rounded-lg bg-background/60 border border-border/70 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/40 transition-all";
+  "w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-2xl md:text-3xl text-foreground placeholder:text-foreground/30 placeholder:italic py-2";
+
+// For textareas and multi-line, a lighter serif-body style.
+const textareaCls =
+  "w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2";
+
 
 const RadioTile = ({
   active,
@@ -412,8 +422,13 @@ export default function SellerPortal() {
     return <SubmittedScreen state={state} onStartOver={startOver} />;
   }
 
+  const firstName = (state.account.fullName || state.account.email || "friend").split(/[\s@]/)[0];
+  const pathLabel =
+    state.path === "advertise_first" ? "Advertise now · documents later" : "Full guided onboarding";
+  const progressPct = ((safeIdx + 1) / activeSteps.length) * 100;
+
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[hsl(var(--sand-light))] flex flex-col relative overflow-hidden">
       <Seo
         title="Seller Portal (Beta) | Texas Cemetery Brokers"
         description="Guided, self-serve seller onboarding for cemetery property owners."
@@ -423,77 +438,114 @@ export default function SellerPortal() {
       <Navbar forceScrolled />
       <BotanicalBackdrop />
 
-      <main className="flex-1 pt-24 pb-20 relative z-10">
-        <PortalHero
-          account={state.account}
-          onStartOver={startOver}
-          stepIdx={safeIdx}
-          totalSteps={activeSteps.length}
-          currentLabel={currentStep.label}
-          path={state.path}
-          onChangePath={() => setState((s) => ({ ...s, path: "" }))}
-        />
+      <main className="flex-1 pt-28 pb-24 relative z-10">
+        <div className="container mx-auto px-6 max-w-3xl">
+          {/* Editorial chapter header — no box, no giant hero */}
+          <div className="flex items-center gap-3 mb-10 flex-wrap">
+            <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground font-display italic text-base flex items-center justify-center shadow-sm">
+              {safeIdx + 1}
+            </span>
+            <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
+              {currentStep.label}
+            </span>
+            <span className="ml-auto text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/40">
+              {String(safeIdx + 1).padStart(2, "0")}{" "}
+              <span className="italic font-normal">of</span>{" "}
+              {String(activeSteps.length).padStart(2, "0")}
+            </span>
+          </div>
 
-        <div className="container mx-auto px-6 max-w-5xl mt-12">
-          {/* Slim horizontal chip stepper — replaces the loud sidebar + % bar */}
-          <ChipStepper steps={activeSteps} current={safeIdx} onJump={setStepIdx} state={state} />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="relative"
+            >
+              <StepBody stepId={currentStep.id} state={state} update={update} />
+            </motion.div>
+          </AnimatePresence>
 
-          <div className="mt-12">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="relative"
-              >
-                <StepBody stepId={currentStep.id} state={state} update={update} />
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-14 pt-8 border-t border-border/50">
+          {/* Footer — OK button + progress line, editorial */}
+          <div className="mt-14 flex items-center gap-5 flex-wrap">
+            {safeIdx < activeSteps.length - 1 ? (
               <button
-                onClick={goBack}
-                disabled={safeIdx === 0}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                type="button"
+                onClick={goNext}
+                className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm tracking-wide hover:opacity-90 transition-all shadow-md shadow-primary/20"
               >
-                <ArrowLeft className="w-4 h-4" /> Back
+                OK{" "}
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
               </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!canGoNext}
+                className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-medium text-sm tracking-wide hover:opacity-90 transition-all shadow-md shadow-primary/30 disabled:opacity-40"
+              >
+                Submit for review <Send className="w-4 h-4" />
+              </button>
+            )}
+            {safeIdx < activeSteps.length - 1 && (
+              <span className="text-xs text-foreground/55">
+                press <kbd className="font-mono font-bold text-foreground/80">Enter</kbd> ↵
+              </span>
+            )}
+            {safeIdx > 0 && (
+              <button
+                type="button"
+                onClick={goBack}
+                className="ml-auto text-xs text-foreground/55 hover:text-foreground transition-colors inline-flex items-center gap-1"
+              >
+                <ArrowLeft className="w-3 h-3" /> Back
+              </button>
+            )}
+          </div>
 
+          {/* Thin progress line */}
+          <div className="mt-8 h-px w-full bg-foreground/10 relative overflow-hidden">
+            <motion.div
+              className="absolute inset-y-0 left-0 bg-primary"
+              initial={false}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            />
+          </div>
+
+          {/* Quiet meta row — signed in, path, help — no card */}
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-[11px] text-foreground/55">
+            <span>
+              Signed in as <span className="text-foreground/80">{firstName}</span>
+            </span>
+            {state.path && (
+              <button
+                onClick={() => setState((s) => ({ ...s, path: "" }))}
+                className="inline-flex items-center gap-1.5 hover:text-primary transition-colors"
+              >
+                <span className="w-1 h-1 rounded-full bg-primary" /> {pathLabel} · change
+              </button>
+            )}
+            <button
+              onClick={startOver}
+              className="hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30"
+            >
+              Start over
+            </button>
+            <span className="ml-auto">
               <InlineHelp variant="link" />
-
-              {safeIdx < activeSteps.length - 1 ? (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={goNext}
-                  className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow overflow-hidden"
-                >
-                  <span className="relative z-10">Continue</span>
-                  <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform" />
-                </motion.button>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSubmit}
-                  disabled={!canGoNext}
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow disabled:opacity-40"
-                >
-                  Submit for review <Send className="w-4 h-4" />
-                </motion.button>
-              )}
-            </div>
+            </span>
           </div>
         </div>
-
       </main>
 
       <Footer />
     </div>
   );
 }
+
 
 
 // -----------------------------------------------------------------------------
@@ -1250,15 +1302,39 @@ function StepBody({
   }
 }
 
-const StepIntro = ({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) => (
-  <div className="mb-10">
-    <div className="text-[11px] tracking-[0.22em] uppercase text-primary mb-3">{eyebrow}</div>
-    <h2 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05] mb-4">
-      {title}
-    </h2>
-    <p className="text-muted-foreground text-base max-w-2xl leading-relaxed">{body}</p>
-  </div>
-);
+// Editorial step intro — display-scale title with an italic accent phrase.
+// Pass `accent` to italicise a fragment inside the title.
+const StepIntro = ({
+  title,
+  accent,
+  body,
+}: {
+  title: string;
+  accent?: string;
+  body: string;
+}) => {
+  const renderTitle = () => {
+    if (!accent || !title.includes(accent)) return title;
+    const [before, after] = title.split(accent);
+    return (
+      <>
+        {before}
+        <span className="italic font-medium text-primary">{accent}</span>
+        {after}
+      </>
+    );
+  };
+  return (
+    <div className="mb-10">
+      <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.05] tracking-tight mb-5">
+        {renderTitle()}
+      </h2>
+      <p className="text-sm md:text-base text-foreground/65 leading-relaxed max-w-xl">
+        {body}
+      </p>
+    </div>
+  );
+};
 
 const AccountStep = ({
   state,
@@ -1269,14 +1345,15 @@ const AccountStep = ({
 }) => (
   <div>
     <StepIntro
-      eyebrow="01 · Your details"
-      title="Let's confirm who we're working with."
+      title="First — let's confirm who we're working with."
+      accent="who we're working with"
       body="These are the primary contact details we'll use for updates, verification calls, and the eventual sale."
     />
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="space-y-8">
       <Field label="Full legal name">
         <input
           className={inputCls}
+          placeholder="Jane Whitmore"
           value={state.account.fullName}
           onChange={(e) => update("account", { fullName: e.target.value })}
         />
@@ -1284,13 +1361,16 @@ const AccountStep = ({
       <Field label="Best contact phone">
         <input
           className={inputCls}
+          placeholder="(214) 555-0134"
           value={state.account.phone}
           onChange={(e) => update("account", { phone: e.target.value })}
         />
       </Field>
       <Field label="Email">
         <input
+          type="email"
           className={inputCls}
+          placeholder="you@email.com"
           value={state.account.email}
           onChange={(e) => update("account", { email: e.target.value })}
         />
@@ -1298,6 +1378,14 @@ const AccountStep = ({
     </div>
   </div>
 );
+
+const propertyTileOptions = [
+  { value: "single", label: "Single plot", desc: "Traditional in-ground burial", image: singlePlotImg },
+  { value: "companion", label: "Companion / double", desc: "Two side-by-side spaces", image: singlePlotImg },
+  { value: "family_estate", label: "Family estate", desc: "Larger multi-space property", image: familyEstateImg },
+  { value: "mausoleum", label: "Mausoleum crypt", desc: "Above-ground entombment", image: cryptImg },
+  { value: "niche", label: "Cremation niche", desc: "Cremated remains in a columbarium", image: nicheImg },
+] as const;
 
 const PropertyStep = ({
   state,
@@ -1308,11 +1396,50 @@ const PropertyStep = ({
 }) => (
   <div>
     <StepIntro
-      eyebrow="02 · The property"
-      title="Tell us about the plot."
-      body="The more precise you can be here, the faster the cemetery can verify your ownership."
+      title="And what kind of property is it?"
+      accent="kind of property"
+      body="Pick the type that best describes what you own, then tell us where it lives inside the cemetery."
     />
-    <div className="grid md:grid-cols-2 gap-6">
+
+    <div className="space-y-10">
+      {/* Property type — image tiles like the main seller form */}
+      <div>
+        <span className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-4">
+          Property type
+        </span>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {propertyTileOptions.map((t) => {
+            const active = state.property.propertyType === t.value;
+            return (
+              <button
+                type="button"
+                key={t.value}
+                onClick={() => update("property", { propertyType: t.value })}
+                className={`group relative text-left rounded-2xl border overflow-hidden transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/30"
+                    : "border-border/60 bg-background/60 hover:border-primary/50 hover:bg-primary/[0.03]"
+                }`}
+              >
+                <div className="aspect-[4/3] w-full flex items-center justify-center bg-[hsl(var(--sand-light))]/60 overflow-hidden">
+                  <img
+                    src={t.image}
+                    alt=""
+                    className="w-full h-full object-contain p-3 mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="px-3 py-2.5 border-t border-border/40">
+                  <div className={`text-sm font-medium leading-tight ${active ? "text-primary" : "text-foreground"}`}>
+                    {t.label}
+                  </div>
+                  <div className="text-[11px] text-foreground/55 leading-snug mt-0.5">{t.desc}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <Field label="Cemetery name">
         <input
           className={inputCls}
@@ -1321,6 +1448,7 @@ const PropertyStep = ({
           onChange={(e) => update("property", { cemeteryName: e.target.value })}
         />
       </Field>
+
       <Field label="City / county">
         <input
           className={inputCls}
@@ -1329,76 +1457,73 @@ const PropertyStep = ({
           onChange={(e) => update("property", { city: e.target.value })}
         />
       </Field>
-      <Field label="Property type">
-        <select
-          className={inputCls}
-          value={state.property.propertyType}
-          onChange={(e) => update("property", { propertyType: e.target.value })}
-        >
-          <option value="">Select…</option>
-          <option value="single">Single plot</option>
-          <option value="companion">Companion / double</option>
-          <option value="family_estate">Family estate</option>
-          <option value="mausoleum">Mausoleum crypt</option>
-          <option value="niche">Cremation niche</option>
-        </select>
-      </Field>
-      <Field label="Number of plots / spaces">
-        <input
-          type="number"
-          min={1}
-          className={inputCls}
-          value={state.property.plotCount}
-          onChange={(e) => update("property", { plotCount: e.target.value })}
-        />
-      </Field>
-      <Field label="Section">
-        <input
-          className={inputCls}
-          value={state.property.section}
-          onChange={(e) => update("property", { section: e.target.value })}
-        />
-      </Field>
-      <Field label="Lot">
-        <input
-          className={inputCls}
-          value={state.property.lot}
-          onChange={(e) => update("property", { lot: e.target.value })}
-        />
-      </Field>
-      <Field label="Space(s)">
-        <input
-          className={inputCls}
-          value={state.property.space}
-          onChange={(e) => update("property", { space: e.target.value })}
-        />
-      </Field>
-    </div>
 
-    <div className="mt-8">
-      <span className="block text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-3">
-        Do you have the original deed?
-      </span>
-      <div className="grid sm:grid-cols-3 gap-3">
-        {(
-          [
-            ["yes", "Yes, I have it", "Original certificate on hand"],
-            ["no", "No, it's lost", "We'll help you file a lost deed affidavit"],
-            ["unknown", "I'm not sure", "That's okay — we can check with the cemetery"],
-          ] as const
-        ).map(([v, t, d]) => (
-          <RadioTile
-            key={v}
-            title={t}
-            desc={d}
-            active={state.property.hasDeed === v}
-            onClick={() => update("property", { hasDeed: v })}
+      <div className="grid sm:grid-cols-2 gap-8">
+        <Field label="Section / garden">
+          <input
+            className={inputCls}
+            placeholder="Garden of Peace"
+            value={state.property.section}
+            onChange={(e) => update("property", { section: e.target.value })}
           />
-        ))}
+        </Field>
+        <Field label="Number of spaces">
+          <input
+            type="number"
+            min={1}
+            className={inputCls}
+            placeholder="1"
+            value={state.property.plotCount}
+            onChange={(e) => update("property", { plotCount: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-8">
+        <Field label="Lot">
+          <input
+            className={inputCls}
+            placeholder="Lot 14"
+            value={state.property.lot}
+            onChange={(e) => update("property", { lot: e.target.value })}
+          />
+        </Field>
+        <Field label="Space(s)">
+          <input
+            className={inputCls}
+            placeholder="Space 2"
+            value={state.property.space}
+            onChange={(e) => update("property", { space: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div>
+        <span className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-4">
+          Do you have the original deed?
+        </span>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {(
+            [
+              ["yes", "Yes, I have it", "Original certificate on hand"],
+              ["no", "No, it's lost", "We'll help you file a lost deed affidavit"],
+              ["unknown", "I'm not sure", "That's okay — we can check with the cemetery"],
+            ] as const
+          ).map(([v, t, d]) => (
+            <RadioTile
+              key={v}
+              title={t}
+              desc={d}
+              active={state.property.hasDeed === v}
+              onClick={() => update("property", { hasDeed: v })}
+            />
+          ))}
+        </div>
       </div>
     </div>
   </div>
 );
+
 
 const OwnershipStep = ({
   state,
@@ -1411,8 +1536,8 @@ const OwnershipStep = ({
   return (
     <div>
       <StepIntro
-        eyebrow="03 · Ownership"
         title="How did this property come to you?"
+        accent="come to you"
         body="Your answers here decide which forms we'll need. We'll only ask the follow-ups that apply."
       />
 
@@ -1549,8 +1674,8 @@ const ReasonStep = ({
 }) => (
   <div>
     <StepIntro
-      eyebrow="04 · Sale details"
       title="What are you hoping the sale will achieve?"
+      accent="hoping the sale will achieve"
       body="This helps us position and price your listing. All questions are optional but the more you share, the better we can advise."
     />
     <div className="space-y-6">
@@ -1623,8 +1748,8 @@ const DocumentsStep = ({
   return (
     <div>
       <StepIntro
-        eyebrow="05 · Documents"
         title="Upload what we'll need to verify you."
+        accent="verify you"
         body="Based on your answers, we've generated the exact list below. Snap a photo with your phone, or upload straight from this computer — whichever's easier."
       />
 
@@ -1668,8 +1793,8 @@ const ReviewStep = ({
   return (
     <div>
       <StepIntro
-        eyebrow="06 · Review"
         title="Take one last look."
+        accent="one last look"
         body="If everything looks right, submit your file. A broker will personally review it within one business day and then issue your Power of Attorney and Listing Agreement to sign, right here in your portal."
       />
 
