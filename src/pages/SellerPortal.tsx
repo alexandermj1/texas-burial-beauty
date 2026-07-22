@@ -1536,8 +1536,8 @@ const OwnershipStep = ({
   return (
     <div>
       <StepIntro
-        eyebrow="03 · Ownership"
         title="How did this property come to you?"
+        accent="come to you"
         body="Your answers here decide which forms we'll need. We'll only ask the follow-ups that apply."
       />
 
