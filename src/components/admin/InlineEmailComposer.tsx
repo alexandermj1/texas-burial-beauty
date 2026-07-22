@@ -618,9 +618,18 @@ const InlineEmailComposer = ({
           recipientEmail={to}
           recipientName={recipientName}
           onAttach={(buttonHtml) => {
+            const y = window.scrollY;
             editorRef.current?.insertHtmlBeforeSignature(buttonHtml);
             setHtml(editorRef.current?.getHtml() ?? html);
             setBodyTouched(true);
+            // Preserve the user's scroll position — inserting a tall block
+            // into a contentEditable can cause the browser to auto-scroll
+            // to the newly inserted node. Restore across two frames so the
+            // React re-render and any focus() calls don't jump the page.
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: y });
+              requestAnimationFrame(() => window.scrollTo({ top: y }));
+            });
           }}
         />
       )}
