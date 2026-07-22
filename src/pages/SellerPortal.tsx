@@ -435,11 +435,11 @@ export default function SellerPortal() {
           onChangePath={() => setState((s) => ({ ...s, path: "" }))}
         />
 
-        <div className="container mx-auto px-6 max-w-3xl mt-10">
+        <div className="container mx-auto px-6 max-w-5xl mt-12">
           {/* Slim horizontal chip stepper — replaces the loud sidebar + % bar */}
           <ChipStepper steps={activeSteps} current={safeIdx} onJump={setStepIdx} state={state} />
 
-          <div className="mt-10">
+          <div className="mt-12">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep.id}
@@ -447,31 +447,13 @@ export default function SellerPortal() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="relative bg-card/85 backdrop-blur-xl border border-border/60 rounded-[28px] p-8 md:p-12 shadow-soft overflow-hidden"
+                className="relative"
               >
-                <div
-                  className="absolute -top-24 -right-20 w-64 h-64 opacity-[0.07] rotate-12 pointer-events-none"
-                  style={{
-                    backgroundImage: `url(${palmFan.url})`,
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-                <div
-                  className="absolute -bottom-16 -left-16 w-56 h-56 opacity-[0.05] pointer-events-none"
-                  style={{
-                    backgroundImage: `url(${monstera.url})`,
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-                <div className="relative">
-                  <StepBody stepId={currentStep.id} state={state} update={update} />
-                </div>
+                <StepBody stepId={currentStep.id} state={state} update={update} />
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex items-center justify-between mt-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-14 pt-8 border-t border-border/50">
               <button
                 onClick={goBack}
                 disabled={safeIdx === 0}
@@ -479,6 +461,8 @@ export default function SellerPortal() {
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
+
+              <InlineHelp variant="link" />
 
               {safeIdx < activeSteps.length - 1 ? (
                 <motion.button
@@ -503,22 +487,15 @@ export default function SellerPortal() {
               )}
             </div>
           </div>
-
-          <div className="mt-20">
-            <WhyBrokerStrip />
-          </div>
-          <div className="mt-14">
-            <FullServicePromise />
-          </div>
         </div>
 
       </main>
 
       <Footer />
-      <HelpPill />
     </div>
   );
 }
+
 
 // -----------------------------------------------------------------------------
 // Sign-in shell (mock — front-end only)
