@@ -15,7 +15,7 @@ export default function PaymentCancelled() {
         <h1 className="font-display text-3xl text-foreground mb-4">No charge made</h1>
         <p className="text-muted-foreground mb-6">
           You closed checkout before completing payment. No card was charged. If this was unexpected, you can
-          reopen your original payment link from the email we sent — it stays active for 24 hours.
+          reopen your original payment link from the email we sent — it stays active for 30 days.
         </p>
         <Link
           to="/"
