@@ -1100,88 +1100,58 @@ const ChipStepper = ({
 );
 
 // -----------------------------------------------------------------------------
-// Floating help pill — Call / Email
+// Inline help — replaces the floating pill. Rendered where it makes sense.
 // -----------------------------------------------------------------------------
 
-const HelpPill = () => {
-  const [open, setOpen] = useState(false);
+const InlineHelp = ({
+  variant = "card",
+  className = "",
+}: {
+  variant?: "card" | "link" | "compact";
+  className?: string;
+}) => {
+  if (variant === "link") {
+    return (
+      <div className={`flex items-center gap-4 text-xs text-muted-foreground ${className}`}>
+        <a href="tel:+12142304740" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
+          <Phone className="w-3.5 h-3.5" /> (214) 230-4740
+        </a>
+        <span className="w-1 h-1 rounded-full bg-border" />
+        <a href="mailto:info@texascemeterybrokers.com?subject=Seller%20Portal%20help" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
+          <Mail className="w-3.5 h-3.5" /> Email us
+        </a>
+      </div>
+    );
+  }
+  if (variant === "compact") {
+    return (
+      <div className={`inline-flex items-center gap-2 ${className}`}>
+        <a
+          href="tel:+12142304740"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-soft hover:shadow-hover transition-shadow"
+        >
+          <Phone className="w-3.5 h-3.5" /> Call our team for help
+        </a>
+        <a
+          href="mailto:info@texascemeterybrokers.com?subject=Seller%20Portal%20help"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border/60 text-xs text-foreground hover:border-primary/40 hover:text-primary transition-all"
+        >
+          <Mail className="w-3.5 h-3.5" /> Email
+        </a>
+      </div>
+    );
+  }
   return (
-    <div className="fixed bottom-6 right-6 z-40">
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-3 w-80 bg-card border border-border rounded-3xl shadow-hover p-6 relative overflow-hidden"
-          >
-            <div
-              className="absolute -top-8 -right-8 w-28 h-28 opacity-30 pointer-events-none"
-              style={{
-                backgroundImage: `url(${hibiscusCoral.url})`,
-                backgroundSize: "contain",
-                backgroundRepeat: "no-repeat",
-              }}
-            />
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted"
-              aria-label="Close help"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-            <div className="text-[10px] tracking-[0.24em] uppercase text-primary mb-2">
-              We're right here
-            </div>
-            <h4 className="font-display text-xl text-foreground mb-2">Need a hand?</h4>
-            <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
-              Our Texas team can walk you through anything — a phone call, a quick email, or both.
-            </p>
-            <div className="space-y-2">
-              <a
-                href="tel:+12142304740"
-                className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 hover:border-primary/40 hover:bg-primary/[0.04] transition-all group"
-              >
-                <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                  <Phone className="w-4 h-4" />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-medium text-foreground">Call our team</span>
-                  <span className="block text-xs text-muted-foreground">(214) 230-4740</span>
-                </span>
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </a>
-              <a
-                href="mailto:info@texascemeterybrokers.com?subject=Seller%20Portal%20help"
-                className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 hover:border-primary/40 hover:bg-primary/[0.04] transition-all group"
-              >
-                <span className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center shrink-0">
-                  <Mail className="w-4 h-4" />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-medium text-foreground">Email us</span>
-                  <span className="block text-xs text-muted-foreground truncate">info@texascemeterybrokers.com</span>
-                </span>
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </a>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.button
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.96 }}
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 pl-4 pr-5 py-3 rounded-full bg-primary text-primary-foreground shadow-hover hover:shadow-soft transition-shadow"
-      >
-        <HelpCircle className="w-4 h-4" />
-        <span className="text-sm font-medium">Call our team for help</span>
-      </motion.button>
+    <div className={`rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${className}`}>
+      <div>
+        <div className="text-[10px] tracking-[0.22em] uppercase text-primary mb-1">Prefer to talk it through?</div>
+        <div className="text-sm text-foreground">Our Texas team can walk you through anything — one call is often faster.</div>
+      </div>
+      <InlineHelp variant="compact" />
     </div>
   );
 };
+
 
 const Stepper = ({
   steps,
