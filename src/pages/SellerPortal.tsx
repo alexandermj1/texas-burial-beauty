@@ -41,6 +41,7 @@ import WhyBrokerStrip, { FullServicePromise } from "@/components/seller-portal/W
 type OwnershipKind = "sole" | "joint" | "inherited" | "estate" | "unknown";
 type ContractStatus = "with_seller" | "with_cemetery" | "lost" | "unknown";
 type DeathCert = "yes" | "no" | "na";
+type PortalPath = "upload_now" | "advertise_first" | "";
 
 interface PortalState {
   account: {
@@ -49,6 +50,8 @@ interface PortalState {
     phone: string;
     signedIn: boolean;
   };
+  path: PortalPath;
+  sawIntro: boolean;
   property: {
     cemeteryName: string;
     city: string;
@@ -88,6 +91,8 @@ const STORAGE_KEY = "seller-portal-draft-v1";
 
 const emptyState = (): PortalState => ({
   account: { email: "", fullName: "", phone: "", signedIn: false },
+  path: "",
+  sawIntro: false,
   property: {
     cemeteryName: "",
     city: "",
