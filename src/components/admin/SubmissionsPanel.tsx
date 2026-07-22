@@ -2297,6 +2297,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   onClick={() => {
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
+                    // Opening the submission = acknowledging the event that
+                    // bumped it to the top (payment / signed doc). A newer
+                    // event will re-surface it automatically.
+                    if (actionMap[s.id]) acknowledgeAction(s.id, actionMap[s.id].at);
                   }}
                   className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
                 >
