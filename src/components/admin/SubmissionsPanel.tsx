@@ -622,13 +622,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const bt = new Date(awaitingMap[b.id] || b.created_at).getTime();
       return bt - at;
     };
-    // Order: Needs reply → Needs quote → Needs follow-up → everything else.
-    // Paid submissions keep their paid tag but are not floated to the top.
+    // Order: Needs reply → everything else.
+    // Custom-tagged submissions rank just below Needs reply within "others".
     const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
-    const quoteRows = matches.filter(s => !awaitingMap[s.id] && needsQuoteActive(s)).sort(byNewest);
-    const followupRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && followupMap[s.id]).sort(byNewest);
-    const otherRows = matches.filter(s => !awaitingMap[s.id] && !needsQuoteActive(s) && !followupMap[s.id]).sort(byNewest);
-    const ordered = [...awaitingRows, ...quoteRows, ...followupRows, ...otherRows];
+    const rest = matches.filter(s => !awaitingMap[s.id]);
+    const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
+    const otherRows = rest.filter(s => !((s as any).custom_tag || "").trim()).sort(byNewest);
+    const ordered = [...awaitingRows, ...taggedRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
