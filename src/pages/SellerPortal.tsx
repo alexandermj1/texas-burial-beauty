@@ -1748,8 +1748,8 @@ const DocumentsStep = ({
   return (
     <div>
       <StepIntro
-        eyebrow="05 · Documents"
         title="Upload what we'll need to verify you."
+        accent="verify you"
         body="Based on your answers, we've generated the exact list below. Snap a photo with your phone, or upload straight from this computer — whichever's easier."
       />
 
