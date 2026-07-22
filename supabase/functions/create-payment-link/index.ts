@@ -116,46 +116,91 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://texascemeterybrokers.com";
 
-    // Use Stripe Payment Links (not Checkout Sessions) so buttons in emails
-    // never expire. Checkout Sessions cap expires_at at 24 hours; Payment
-    // Links stay live indefinitely until we deactivate them.
-    const product = await stripe.products.create({
-      name: productName,
-      ...(productDescription && { description: productDescription }),
-    });
-    const price = await stripe.prices.create({
-      currency: "usd",
-      unit_amount: amountCents,
-      product: product.id,
-    });
+    // Two different Stripe flows depending on the kind of payment:
+    //  - listing_fee / plot_sale (from the quote email) → Checkout Session.
+    //    Keeps rich metadata (submission_id, tier, product breakdown) that
+    //    the admin panel & webhook rely on. Stripe caps Checkout Session
+    //    expires_at at 24h, so we let it default to 24h.
+    //  - custom (admin-attached payment button in a reply) → Payment Link.
+    //    These never expire, so the button in the email stays usable
+    //    indefinitely for the recipient.
+    let sessionLike: { id: string; url: string | null };
 
-    const paymentLink = await stripe.paymentLinks.create({
-      line_items: [{ price: price.id, quantity: 1 }],
-      payment_method_types: ["card"],
-      after_completion: {
-        type: "redirect",
-        redirect: { url: `${origin}/payment-success?pl={PAYMENT_LINK}` },
-      },
-      payment_intent_data: {
-        description: `${BRAND_NAME} — ${productName}`,
+    if (kind === "custom") {
+      const product = await stripe.products.create({
+        name: productName,
+        ...(productDescription && { description: productDescription }),
+      });
+      const price = await stripe.prices.create({
+        currency: "usd",
+        unit_amount: amountCents,
+        product: product.id,
+      });
+      const paymentLink = await stripe.paymentLinks.create({
+        line_items: [{ price: price.id, quantity: 1 }],
+        payment_method_types: ["card"],
+        after_completion: {
+          type: "redirect",
+          redirect: { url: `${origin}/payment-success?pl={PAYMENT_LINK}` },
+        },
+        payment_intent_data: {
+          description: `${BRAND_NAME} — ${productName}`,
+          metadata: {
+            submission_id: submissionId,
+            kind,
+            recipient_name: recipientName,
+            recipient_email: recipientEmail,
+          },
+        },
         metadata: {
           submission_id: submissionId,
           kind,
-          recipient_name: recipientName,
           recipient_email: recipientEmail,
+          recipient_name: recipientName,
+        },
+      });
+      sessionLike = { id: paymentLink.id, url: paymentLink.url };
+    } else {
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        ui_mode: "hosted_page",
+        payment_method_types: ["card"],
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: productName,
+              ...(productDescription && { description: productDescription }),
+            },
+            unit_amount: amountCents,
+          },
+          quantity: 1,
+        }],
+        customer_email: recipientEmail,
+        payment_intent_data: {
+          description: `${BRAND_NAME} — ${productName}`,
+          metadata: {
+            submission_id: submissionId,
+            kind,
+            recipient_name: recipientName,
+            ...(listingTier && { listing_tier: listingTier }),
+          },
+        },
+        metadata: {
+          submission_id: submissionId,
+          kind,
+          recipient_email: recipientEmail,
+          recipient_name: recipientName,
           ...(listingTier && { listing_tier: listingTier }),
         },
-      },
-      metadata: {
-        submission_id: submissionId,
-        kind,
-        recipient_email: recipientEmail,
-        recipient_name: recipientName,
-        ...(listingTier && { listing_tier: listingTier }),
-      },
-    });
+        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/payment-cancelled`,
+      });
+      sessionLike = { id: session.id, url: session.url };
+    }
 
-    const session = { id: paymentLink.id, url: paymentLink.url };
+    const session = sessionLike;
+
 
 
     const { data: tx, error: txErr } = await supabase
