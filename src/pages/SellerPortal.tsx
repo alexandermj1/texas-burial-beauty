@@ -332,7 +332,17 @@ export default function SellerPortal() {
     }
   }, [state]);
 
-  const currentStep = STEPS[stepIdx];
+  // Steps shown for the current path — the "advertise first" journey skips
+  // documents entirely; a broker collects those later.
+  const activeSteps = useMemo(
+    () =>
+      state.path === "advertise_first"
+        ? STEPS.filter((s) => s.id !== "documents")
+        : [...STEPS],
+    [state.path],
+  );
+  const safeIdx = Math.min(stepIdx, activeSteps.length - 1);
+  const currentStep = activeSteps[safeIdx];
   const canGoNext = useMemo(() => validateStep(currentStep.id, state), [currentStep.id, state]);
 
   const update = <K extends keyof PortalState>(key: K, patch: Partial<PortalState[K]>) =>
@@ -346,7 +356,7 @@ export default function SellerPortal() {
       });
       return;
     }
-    setStepIdx((i) => Math.min(STEPS.length - 1, i + 1));
+    setStepIdx((i) => Math.min(activeSteps.length - 1, i + 1));
   };
   const goBack = () => setStepIdx((i) => Math.max(0, i - 1));
 
@@ -372,11 +382,36 @@ export default function SellerPortal() {
     );
   }
 
+  // First stop after sign-in: what do you want to expect from this? A quick
+  // orientation, so the wizard doesn't feel like a wall of forms.
+  if (!state.sawIntro) {
+    return (
+      <IntroScreen
+        account={state.account}
+        onContinue={() => setState((s) => ({ ...s, sawIntro: true }))}
+        onStartOver={startOver}
+      />
+    );
+  }
+
+  // Second stop: pick a path — upload everything now, or start advertising
+  // now and hand documents over later.
+  if (!state.path) {
+    return (
+      <PathChoiceScreen
+        account={state.account}
+        onPick={(p) => {
+          setState((s) => ({ ...s, path: p }));
+          setStepIdx(0);
+        }}
+        onStartOver={startOver}
+      />
+    );
+  }
+
   if (state.submittedAt) {
     return <SubmittedScreen state={state} onStartOver={startOver} />;
   }
-
-  const progress = ((stepIdx + 1) / STEPS.length) * 100;
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -393,95 +428,86 @@ export default function SellerPortal() {
         <PortalHero
           account={state.account}
           onStartOver={startOver}
-          stepIdx={stepIdx}
-          totalSteps={STEPS.length}
+          stepIdx={safeIdx}
+          totalSteps={activeSteps.length}
           currentLabel={currentStep.label}
+          path={state.path}
+          onChangePath={() => setState((s) => ({ ...s, path: "" }))}
         />
 
-        <div className="container mx-auto px-6 max-w-6xl mt-10">
-          <div className="mb-10">
+        <div className="container mx-auto px-6 max-w-3xl mt-10">
+          {/* Slim horizontal chip stepper — replaces the loud sidebar + % bar */}
+          <ChipStepper steps={activeSteps} current={safeIdx} onJump={setStepIdx} state={state} />
+
+          <div className="mt-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="relative bg-card/85 backdrop-blur-xl border border-border/60 rounded-[28px] p-8 md:p-12 shadow-soft overflow-hidden"
+              >
+                <div
+                  className="absolute -top-24 -right-20 w-64 h-64 opacity-[0.07] rotate-12 pointer-events-none"
+                  style={{
+                    backgroundImage: `url(${palmFan.url})`,
+                    backgroundSize: "contain",
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+                <div
+                  className="absolute -bottom-16 -left-16 w-56 h-56 opacity-[0.05] pointer-events-none"
+                  style={{
+                    backgroundImage: `url(${monstera.url})`,
+                    backgroundSize: "contain",
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+                <div className="relative">
+                  <StepBody stepId={currentStep.id} state={state} update={update} />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex items-center justify-between mt-8">
+              <button
+                onClick={goBack}
+                disabled={safeIdx === 0}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+
+              {safeIdx < activeSteps.length - 1 ? (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={goNext}
+                  className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow overflow-hidden"
+                >
+                  <span className="relative z-10">Continue</span>
+                  <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform" />
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleSubmit}
+                  disabled={!canGoNext}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow disabled:opacity-40"
+                >
+                  Submit for review <Send className="w-4 h-4" />
+                </motion.button>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-20">
             <WhyBrokerStrip />
           </div>
-
-
-          {/* Progress rail */}
-          <div className="mb-10">
-            <div className="flex items-center justify-between text-[10px] tracking-[0.24em] uppercase text-muted-foreground mb-3">
-              <span>Chapter {String(stepIdx + 1).padStart(2, "0")} of {String(STEPS.length).padStart(2, "0")}</span>
-              <span>{Math.round(progress)}% complete</span>
-            </div>
-            <div className="h-[3px] w-full bg-border/60 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-primary via-accent to-primary"
-                initial={false}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              />
-            </div>
-          </div>
-
-          <div className="grid lg:grid-cols-[280px_1fr] gap-12">
-            <Stepper steps={STEPS} current={stepIdx} onJump={setStepIdx} state={state} />
-
-            <div>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative bg-card/85 backdrop-blur-xl border border-border/60 rounded-[28px] p-8 md:p-14 shadow-soft overflow-hidden"
-                >
-                  <div
-                    className="absolute -top-24 -right-20 w-64 h-64 opacity-[0.06] rotate-12 pointer-events-none"
-                    style={{
-                      backgroundImage: `url(${palmFan.url})`,
-                      backgroundSize: "contain",
-                      backgroundRepeat: "no-repeat",
-                    }}
-                  />
-                  <div className="relative">
-                    <StepBody stepId={currentStep.id} state={state} update={update} />
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-
-              <div className="flex items-center justify-between mt-8">
-                <button
-                  onClick={goBack}
-                  disabled={stepIdx === 0}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" /> Back
-                </button>
-
-                {stepIdx < STEPS.length - 1 ? (
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={goNext}
-                    className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow overflow-hidden"
-                  >
-                    <span className="relative z-10">Continue</span>
-                    <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform" />
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleSubmit}
-                    disabled={!canGoNext}
-                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:shadow-hover transition-shadow disabled:opacity-40"
-                  >
-                    Submit for review <Send className="w-4 h-4" />
-                  </motion.button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-16">
+          <div className="mt-14">
             <FullServicePromise />
           </div>
         </div>
