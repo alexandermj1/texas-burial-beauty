@@ -385,6 +385,11 @@ export default function SellerPortal() {
         />
 
         <div className="container mx-auto px-6 max-w-6xl mt-10">
+          <div className="mb-10">
+            <WhyBrokerStrip />
+          </div>
+
+
           {/* Progress rail */}
           <div className="mb-10">
             <div className="flex items-center justify-between text-[10px] tracking-[0.24em] uppercase text-muted-foreground mb-3">
