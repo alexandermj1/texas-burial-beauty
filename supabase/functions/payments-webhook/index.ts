@@ -165,6 +165,9 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
       listing_tier: tier,
       listing_paid_at: new Date().toISOString(),
       payment_received_at: new Date().toISOString(),
+      // Paying the listing fee implies the seller accepted our quote.
+      quote_response: "accepted",
+      quote_responded_at: new Date().toISOString(),
     }).eq("id", tx.submission_id);
   }
   const firstName = (tx.recipient_name || "").split(" ")[0] || "there";
