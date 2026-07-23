@@ -96,29 +96,40 @@ const TexasPipelinePanel = ({ submission, onPatch }: Props) => {
                 <DollarSign className="w-3.5 h-3.5" /> Generate quote email
               </button>
             )}
-            {stage === "quoted" && (submission as any).quote_response !== "accepted" && (
+            {(submission as any).quote_response !== "accepted" && (
               <>
                 <button
                   onClick={async () => {
-                    await onPatch({ quote_response: "accepted", quote_responded_at: new Date().toISOString() } as any);
-                    toast({ title: "Quote accepted", description: "Marked as accepted — sales price tag now green." });
+                    const amt = Number((submission as any).accepted_quote_amount ?? (submission as any).quote_amount) || 0;
+                    let patch: any = { quote_response: "accepted", quote_responded_at: new Date().toISOString() };
+                    if (!amt) {
+                      const entered = window.prompt("Accepted quote amount (USD) — total price seller accepted:");
+                      const n = Number((entered || "").replace(/[^0-9.]/g, ""));
+                      if (!n) return;
+                      patch.accepted_quote_amount = n;
+                      if (!(submission as any).quote_amount) patch.quote_amount = n;
+                    }
+                    await onPatch(patch);
+                    toast({ title: "Quote accepted", description: "Moved to accepted — sales price tag now green." });
                   }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-600 text-white hover:opacity-90 transition-opacity"
                 >
                   <CheckCircle className="w-3.5 h-3.5" /> Mark quote accepted
                 </button>
-                <button
-                  onClick={async () => {
-                    await onPatch({ quote_response: "declined", quote_responded_at: new Date().toISOString() } as any);
-                    toast({ title: "Marked declined" });
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-opacity"
-                >
-                  Decline
-                </button>
+                {stage === "quoted" && (
+                  <button
+                    onClick={async () => {
+                      await onPatch({ quote_response: "declined", quote_responded_at: new Date().toISOString() } as any);
+                      toast({ title: "Marked declined" });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-opacity"
+                  >
+                    Decline
+                  </button>
+                )}
               </>
             )}
-            {stage === "quoted" && (submission as any).quote_response === "accepted" && (
+            {(submission as any).quote_response === "accepted" && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-300">
                 <CheckCircle className="w-3.5 h-3.5" /> Quote accepted
               </span>
