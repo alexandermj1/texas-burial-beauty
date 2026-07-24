@@ -115,7 +115,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     const [c, a, subs] = await Promise.all([
-      supabase.from("texas_cemeteries").select("id,name,city,address,latitude,longitude,contact_phone,website,description").order("name"),
+      supabase.from("texas_cemeteries").select("id,name,city,address,county,latitude,longitude,contact_phone,website,description").order("name"),
       supabase.from("agent_locations" as any).select("*").order("name"),
       supabase.from("contact_submissions").select("cemetery").not("cemetery", "is", null),
     ]);
@@ -135,15 +135,30 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Only counts submissions whose `cemetery` field EXACTLY matches this cemetery's
-  // name (case-insensitive) - either because the seller picked it from the dropdown
-  // or because an admin explicitly reassigned them here. No fuzzy/broad matching.
+  // Color cemeteries by county so the map reads as a regional heat map at a glance.
   const enriched = useMemo(() => {
     return cemeteries.map((c) => {
       const key = String(c.name || "").trim().toLowerCase();
-      return { ...c, color: colorFor(c.id), count: submissionCounts.get(key) || 0 };
+      return { ...c, color: colorForCounty(c.county), count: submissionCounts.get(key) || 0 };
     });
   }, [cemeteries, submissionCounts]);
+
+  // County chips (sorted by count desc)
+  const countyStats = useMemo(() => {
+    const m = new Map<string, number>();
+    cemeteries.forEach((c) => {
+      const k = (c.county || "").trim();
+      if (!k) return;
+      m.set(k, (m.get(k) || 0) + 1);
+    });
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
+  }, [cemeteries]);
+
+  const visible = useMemo(
+    () => (countyFilter ? enriched.filter((c) => (c.county || "") === countyFilter) : enriched),
+    [enriched, countyFilter]
+  );
+
 
   // Initialize map
   useEffect(() => {
