@@ -264,7 +264,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
     if (count > 1 && !searchLoc && !detail) mapRef.current.fitBounds(bounds, 60);
     else if (count === 1 && !searchLoc) { mapRef.current.setCenter(bounds.getCenter()); mapRef.current.setZoom(9); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enriched, agents, mapReady, handleSelect]);
+  }, [visible, agents, mapReady, handleSelect]);
 
   // User search marker
   useEffect(() => {
