@@ -27,6 +27,8 @@ import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
 import GuidedTour from "@/components/admin/GuidedTour";
+import BroadcastDialog from "@/components/admin/BroadcastDialog";
+import { MessageSquare } from "lucide-react";
 
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 
@@ -84,6 +86,7 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
   const [refreshingInbox, setRefreshingInbox] = useState(false);
+  const [teamMsgOpen, setTeamMsgOpen] = useState(false);
   const [deletedSubmissions, setDeletedSubmissions] = useState<any[]>([]);
 
   // Fetch soft-deleted submissions so they can be restored from the Trash dialog.
@@ -497,6 +500,13 @@ const Admin = () => {
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
+                <button
+                  onClick={() => setTeamMsgOpen(true)}
+                  className="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
+                  title="Message a teammate"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
                 <div data-tour="notifications-bell" className="hidden md:block"><NotificationsBell /></div>
                 <div className="hidden md:block"><ChangePasswordDialog variant="icon" /></div>
                 {(tab === "submissions" || tab === "inbox") && (
@@ -544,6 +554,13 @@ const Admin = () => {
                   <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setTeamMsgOpen(true)}
+                    className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
+                    title="Message a teammate"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                  </button>
                   <NotificationsBell />
                   <ChangePasswordDialog variant="icon" />
                   <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
@@ -993,6 +1010,7 @@ const Admin = () => {
           </div>
         </div>
       </section>
+      <BroadcastDialog open={teamMsgOpen} onClose={() => setTeamMsgOpen(false)} />
       <Footer />
     </div>
   );
