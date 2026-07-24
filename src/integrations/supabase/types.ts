@@ -2044,6 +2044,7 @@ export type Database = {
           contact_email: string | null
           contact_name: string | null
           contact_phone: string | null
+          county: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -2069,6 +2070,7 @@ export type Database = {
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
+          county?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2094,6 +2096,7 @@ export type Database = {
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
+          county?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
