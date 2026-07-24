@@ -501,7 +501,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
 
         {/* Legend */}
         <div className="absolute bottom-3 left-3 bg-card/95 backdrop-blur rounded-lg border border-border shadow-md px-3 py-2 text-xs space-y-1">
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary border-2 border-white" /> Cemetery (# = submissions)</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary border-2 border-white" /> Cemetery — color = county, # = submissions</div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rotate-45 bg-[#c96f4a] border-2 border-white" /> Agent</div>
           {searchLoc && <div className="flex items-center gap-2"><Navigation className="w-3 h-3 text-foreground" /> Your search</div>}
         </div>
