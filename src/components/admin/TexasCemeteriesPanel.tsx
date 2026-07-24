@@ -314,9 +314,10 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
         const destRow = target.directoryId ? rows.find(r => r.id === target.directoryId) : null;
         if (sourceRow && target.directoryId && destRow) {
           const fields: (keyof TexasCemetery)[] = [
-            "city", "address", "contact_name", "contact_phone", "contact_email",
+            "city", "county", "address", "contact_name", "contact_phone", "contact_email",
             "transfer_fee", "typical_prices", "description", "website", "notes",
           ];
+
           const patch: Record<string, any> = {};
           for (const f of fields) {
             const srcVal = (sourceRow as any)[f];
