@@ -27,6 +27,7 @@ const NotificationsBell = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState<Notif[]>([]);
+  const [pendingAck, setPendingAck] = useState<Notif[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -38,18 +39,26 @@ const NotificationsBell = () => {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20);
-      if (!cancelled && data) setNotes(data as any);
+      if (!cancelled && data) {
+        setNotes(data as any);
+        // Queue any existing unread notifications for acknowledgment
+        const unread = (data as any as Notif[]).filter(n => !n.read_at);
+        if (unread.length > 0) setPendingAck(unread.slice().reverse());
+      }
     })();
 
     const channel = supabase.channel(`notif:${user.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_notifications", filter: `user_id=eq.${user.id}` }, (p) => {
-        setNotes(prev => [p.new as Notif, ...prev].slice(0, 20));
+        const newNote = p.new as Notif;
+        setNotes(prev => [newNote, ...prev].slice(0, 20));
+        setPendingAck(prev => [...prev, newNote]);
         try { new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=").play().catch(() => {}); } catch {}
       })
       .subscribe();
 
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [user]);
+
 
   const unread = notes.filter(n => !n.read_at).length;
 
