@@ -6,9 +6,11 @@ import { Loader2, MapPin, Plus, Trash2, Route, RefreshCw, X, Search, Phone, Glob
 
 type Cemetery = {
   id: string; name: string; city: string | null; address: string | null;
+  county: string | null;
   latitude: number | null; longitude: number | null;
   contact_phone: string | null; website: string | null; description: string | null;
 };
+
 type Agent = { id: string; name: string; role: string | null; city: string | null; address: string | null; latitude: number | null; longitude: number | null; color: string | null; notes: string | null };
 type Selected = { kind: "cemetery" | "agent"; id: string; name: string; lat: number; lng: number };
 
