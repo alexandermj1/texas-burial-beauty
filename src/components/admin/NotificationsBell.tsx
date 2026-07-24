@@ -139,8 +139,48 @@ const NotificationsBell = () => {
           </div>
         </>
       )}
+      {currentAck && (
+        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md bg-card border-2 border-primary rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="bg-primary/10 px-5 py-3 border-b border-border flex items-center gap-2">
+              <Bell className="w-4 h-4 text-primary" />
+              <p className="text-sm font-semibold text-foreground">New notification</p>
+              {pendingAck.length > 1 && (
+                <span className="ml-auto text-[11px] text-muted-foreground">
+                  {pendingAck.length - 1} more after this
+                </span>
+              )}
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-base font-semibold text-foreground">{currentAck.title}</p>
+              {currentAck.body && (
+                <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{currentAck.body}</p>
+              )}
+              <p className="text-[11px] text-muted-foreground mt-3">{formatWhen(currentAck.created_at)}</p>
+            </div>
+            <div className="px-5 py-3 border-t border-border flex items-center justify-end gap-2 bg-muted/30">
+              {currentAck.link_url && (
+                <button
+                  onClick={() => acknowledgeCurrent({ follow: true })}
+                  className="px-4 py-2 rounded-md text-xs font-semibold border border-border bg-background hover:bg-muted text-foreground"
+                >
+                  Open & acknowledge
+                </button>
+              )}
+              <button
+                onClick={() => acknowledgeCurrent()}
+                autoFocus
+                className="px-4 py-2 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Acknowledge
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+
 };
 
 export default NotificationsBell;
