@@ -2355,7 +2355,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             : tierLabel === "pro" ? "Pro"
                             : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
                             : "Paid";
-                          const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
+                          const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "$0";
                           return (
                             <span
                               className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
