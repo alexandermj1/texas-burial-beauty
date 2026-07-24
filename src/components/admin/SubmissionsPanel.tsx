@@ -1098,7 +1098,71 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     );
                   })()}
 
-
+                  {/* Manual status actions — fallback for when the system doesn't auto-detect */}
+                  {(() => {
+                    const isAccepted = (selected as any).quote_response === "accepted";
+                    const isDeclined = (selected as any).quote_response === "declined";
+                    return (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        {!isAccepted && (
+                          <button
+                            onClick={async () => {
+                              const existing = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
+                              let amt = existing;
+                              if (!amt) {
+                                const entered = window.prompt("Accepted quote amount (USD) — total price the seller accepted:");
+                                const n = Number((entered || "").replace(/[^0-9.]/g, ""));
+                                if (!n) return;
+                                amt = n;
+                              }
+                              const patch: any = {
+                                quote_response: "accepted",
+                                quote_responded_at: new Date().toISOString(),
+                                accepted_quote_amount: amt,
+                              };
+                              if (!(selected as any).quote_amount) patch.quote_amount = amt;
+                              if (!(selected as any).quote_sent_at) patch.quote_sent_at = new Date().toISOString();
+                              await onUpdate(selected.id, patch);
+                              toast({ title: "Marked accepted", description: `Sales price tag is now green.` });
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-600 text-white hover:opacity-90 transition-opacity"
+                          >
+                            <CheckCircle className="w-3 h-3" /> Mark quote accepted
+                          </button>
+                        )}
+                        {isAccepted && (
+                          <button
+                            onClick={async () => {
+                              if (!window.confirm("Undo accepted status?")) return;
+                              await onUpdate(selected.id, { quote_response: null, quote_responded_at: null } as any);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10"
+                          >
+                            Undo accepted
+                          </button>
+                        )}
+                        {!isAccepted && !isDeclined && (
+                          <button
+                            onClick={async () => {
+                              await onUpdate(selected.id, { quote_response: "declined", quote_responded_at: new Date().toISOString() } as any);
+                              toast({ title: "Marked declined" });
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border text-muted-foreground hover:bg-muted/50"
+                          >
+                            Mark declined
+                          </button>
+                        )}
+                        {isDeclined && (
+                          <button
+                            onClick={() => onUpdate(selected.id, { quote_response: null, quote_responded_at: null } as any)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border text-muted-foreground hover:bg-muted/50"
+                          >
+                            Undo declined
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
