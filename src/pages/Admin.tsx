@@ -554,6 +554,13 @@ const Admin = () => {
                   <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setTeamMsgOpen(true)}
+                    className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
+                    title="Message a teammate"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                  </button>
                   <NotificationsBell />
                   <ChangePasswordDialog variant="icon" />
                   <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
