@@ -6,9 +6,11 @@ import { Loader2, MapPin, Plus, Trash2, Route, RefreshCw, X, Search, Phone, Glob
 
 type Cemetery = {
   id: string; name: string; city: string | null; address: string | null;
+  county: string | null;
   latitude: number | null; longitude: number | null;
   contact_phone: string | null; website: string | null; description: string | null;
 };
+
 type Agent = { id: string; name: string; role: string | null; city: string | null; address: string | null; latitude: number | null; longitude: number | null; color: string | null; notes: string | null };
 type Selected = { kind: "cemetery" | "agent"; id: string; name: string; lat: number; lng: number };
 
@@ -47,6 +49,17 @@ function colorFor(id: string): string {
   const hue = h % 360;
   return `hsl(${hue}, 62%, 46%)`;
 }
+
+// Deterministic, warmer palette-locked color per county for at-a-glance grouping.
+function colorForCounty(county: string | null | undefined): string {
+  if (!county) return "hsl(30, 8%, 55%)";
+  let h = 0;
+  for (let i = 0; i < county.length; i++) h = (h * 33 + county.charCodeAt(i)) >>> 0;
+  const hue = h % 360;
+  return `hsl(${hue}, 58%, 44%)`;
+}
+
+
 
 // Simple canonicalizer that mirrors the DB's canonical_cemetery function loosely
 function canon(s: string | null | undefined): string {
@@ -95,11 +108,14 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
   const [addressQuery, setAddressQuery] = useState("");
   const [searchLoc, setSearchLoc] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [searching, setSearching] = useState(false);
+  const [countyFilter, setCountyFilter] = useState<string | null>(null);
+
+
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     const [c, a, subs] = await Promise.all([
-      supabase.from("texas_cemeteries").select("id,name,city,address,latitude,longitude,contact_phone,website,description").order("name"),
+      supabase.from("texas_cemeteries").select("id,name,city,address,county,latitude,longitude,contact_phone,website,description").order("name"),
       supabase.from("agent_locations" as any).select("*").order("name"),
       supabase.from("contact_submissions").select("cemetery").not("cemetery", "is", null),
     ]);
@@ -119,15 +135,30 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Only counts submissions whose `cemetery` field EXACTLY matches this cemetery's
-  // name (case-insensitive) - either because the seller picked it from the dropdown
-  // or because an admin explicitly reassigned them here. No fuzzy/broad matching.
+  // Color cemeteries by county so the map reads as a regional heat map at a glance.
   const enriched = useMemo(() => {
     return cemeteries.map((c) => {
       const key = String(c.name || "").trim().toLowerCase();
-      return { ...c, color: colorFor(c.id), count: submissionCounts.get(key) || 0 };
+      return { ...c, color: colorForCounty(c.county), count: submissionCounts.get(key) || 0 };
     });
   }, [cemeteries, submissionCounts]);
+
+  // County chips (sorted by count desc)
+  const countyStats = useMemo(() => {
+    const m = new Map<string, number>();
+    cemeteries.forEach((c) => {
+      const k = (c.county || "").trim();
+      if (!k) return;
+      m.set(k, (m.get(k) || 0) + 1);
+    });
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
+  }, [cemeteries]);
+
+  const visible = useMemo(
+    () => (countyFilter ? enriched.filter((c) => (c.county || "") === countyFilter) : enriched),
+    [enriched, countyFilter]
+  );
+
 
   // Initialize map
   useEffect(() => {
@@ -180,7 +211,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
     const bounds = new g.maps.LatLngBounds();
     let count = 0;
 
-    enriched.forEach((c) => {
+    visible.forEach((c) => {
       if (c.latitude == null || c.longitude == null) return;
       const pos = { lat: Number(c.latitude), lng: Number(c.longitude) };
       const marker = new g.maps.Marker({
@@ -233,7 +264,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
     if (count > 1 && !searchLoc && !detail) mapRef.current.fitBounds(bounds, 60);
     else if (count === 1 && !searchLoc) { mapRef.current.setCenter(bounds.getCenter()); mapRef.current.setZoom(9); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enriched, agents, mapReady, handleSelect]);
+  }, [visible, agents, mapReady, handleSelect]);
 
   // User search marker
   useEffect(() => {
@@ -427,7 +458,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
                   <h4 className="font-display text-base text-foreground leading-tight">{detail.name}</h4>
                   <button onClick={() => setDetail(null)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
                 </div>
-                {detail.city && <p className="text-xs text-muted-foreground mt-0.5">{detail.city}, TX</p>}
+                {(detail.city || detail.county) && <p className="text-xs text-muted-foreground mt-0.5">{[detail.city, detail.county ? `${detail.county} County` : null].filter(Boolean).join(" · ")}, TX</p>}
                 {detail.address && <p className="text-sm text-foreground/80 mt-2 flex items-start gap-1.5"><MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />{detail.address}</p>}
                 {detail.contact_phone && <p className="text-sm text-foreground/80 mt-1 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-muted-foreground" /><a href={`tel:${detail.contact_phone}`} className="hover:text-primary">{detail.contact_phone}</a></p>}
                 {detail.website && <p className="text-sm mt-1 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-muted-foreground" /><a href={detail.website} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">{detail.website.replace(/^https?:\/\//, "")}</a></p>}
@@ -470,7 +501,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
 
         {/* Legend */}
         <div className="absolute bottom-3 left-3 bg-card/95 backdrop-blur rounded-lg border border-border shadow-md px-3 py-2 text-xs space-y-1">
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary border-2 border-white" /> Cemetery (# = submissions)</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary border-2 border-white" /> Cemetery — color = county, # = submissions</div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rotate-45 bg-[#c96f4a] border-2 border-white" /> Agent</div>
           {searchLoc && <div className="flex items-center gap-2"><Navigation className="w-3 h-3 text-foreground" /> Your search</div>}
         </div>
@@ -509,8 +540,38 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-base text-foreground">Cemeteries</h3>
-            <span className="text-xs text-muted-foreground">{cemeteries.length} total</span>
+            <span className="text-xs text-muted-foreground">
+              {countyFilter ? `${visible.length} of ${cemeteries.length}` : `${cemeteries.length} total`}
+            </span>
           </div>
+
+          {countyStats.length > 0 && (
+            <div className="mb-3 -mx-1 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setCountyFilter(null)}
+                className={`px-2.5 py-1 rounded-full text-[11px] border transition-colors ${countyFilter === null ? "bg-foreground text-background border-foreground" : "bg-background text-muted-foreground border-border hover:bg-muted/60"}`}
+              >
+                All
+              </button>
+              {countyStats.map(([name, n]) => {
+                const active = countyFilter === name;
+                const dot = colorForCounty(name);
+                return (
+                  <button
+                    key={name}
+                    onClick={() => setCountyFilter(active ? null : name)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-colors ${active ? "border-foreground bg-muted" : "border-border bg-background hover:bg-muted/60"}`}
+                    title={`${name} County · ${n} cemeter${n === 1 ? "y" : "ies"}`}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ background: dot }} />
+                    <span className="text-foreground">{name}</span>
+                    <span className="text-muted-foreground">{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {missingGeo > 0 && (
             <div className="mb-3 text-xs bg-muted/60 rounded-lg p-2 flex items-center justify-between gap-2">
               <span className="text-muted-foreground">{missingGeo} missing coordinates</span>
@@ -520,7 +581,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
             </div>
           )}
           <div className="max-h-72 overflow-y-auto space-y-1 text-sm">
-            {loading ? <p className="text-muted-foreground text-xs">Loading…</p> : enriched.map((c) => {
+            {loading ? <p className="text-muted-foreground text-xs">Loading…</p> : visible.map((c) => {
               const has = c.latitude != null && c.longitude != null;
               return (
                 <button key={c.id}
@@ -531,12 +592,13 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.color }} />
                   <span className="flex-1 truncate">{c.name}</span>
                   {c.count > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: c.color + "22", color: c.color }}>{c.count}</span>}
-                  <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">{c.city || "—"}</span>
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[90px]">{c.county || c.city || "—"}</span>
                 </button>
               );
             })}
           </div>
         </div>
+
 
         <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
           <div className="flex items-center justify-between mb-3">

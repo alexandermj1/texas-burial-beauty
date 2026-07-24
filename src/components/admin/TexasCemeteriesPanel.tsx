@@ -15,6 +15,8 @@ interface TexasCemetery {
   name: string;
   canonical_name: string | null;
   city: string | null;
+  county: string | null;
+
   address: string | null;
   contact_name: string | null;
   contact_phone: string | null;
@@ -164,20 +166,22 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   }, [cemeteryStats, searchQuery]);
 
 
-  // Group cemeteries by primary city; sort within groups + across groups per sortMode.
+  // Group cemeteries by county (falling back to city) so admins can browse regionally.
   const groupedStats = useMemo(() => {
-    const primaryCity = (s: (typeof filteredStats)[number]): string => {
+    const primaryGroup = (s: (typeof filteredStats)[number]): string => {
       const profile = s.directoryId ? rows.find(r => r.id === s.directoryId) : null;
-      const fromProfile = profile?.city?.trim();
-      if (fromProfile) return fromProfile;
+      const fromCounty = profile?.county?.trim();
+      if (fromCounty) return `${fromCounty} County`;
+      const fromCity = profile?.city?.trim();
+      if (fromCity) return fromCity;
       const fromSubs = Array.from(s.cities).map(c => c.trim()).filter(Boolean);
       return fromSubs[0] || "Uncategorised";
     };
     const groups = new Map<string, { city: string; items: typeof filteredStats; total: number }>();
     for (const s of filteredStats) {
-      const city = primaryCity(s);
-      const key = city.toLowerCase();
-      const g = groups.get(key) || { city, items: [], total: 0 };
+      const label = primaryGroup(s);
+      const key = label.toLowerCase();
+      const g = groups.get(key) || { city: label, items: [], total: 0 };
       g.items.push(s);
       g.total += s.count;
       groups.set(key, g);
@@ -192,12 +196,19 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     arr.sort((a, b) => {
       if (a.city === "Uncategorised") return 1;
       if (b.city === "Uncategorised") return -1;
+      // Counties (labelled "X County") float above bare cities
+      const aCounty = a.city.endsWith(" County");
+      const bCounty = b.city.endsWith(" County");
+      if (aCounty !== bCounty) return aCounty ? -1 : 1;
       if (sortMode === "name") return a.city.localeCompare(b.city);
       if (b.total !== a.total) return b.total - a.total;
+      // More cemeteries per group first when counts tie
+      if (b.items.length !== a.items.length) return b.items.length - a.items.length;
       return a.city.localeCompare(b.city);
     });
     return arr;
   }, [filteredStats, rows, sortMode]);
+
 
   const totalSubs = useMemo(() => cemeteryStats.reduce((sum, s) => sum + s.count, 0), [cemeteryStats]);
 
@@ -303,9 +314,10 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
         const destRow = target.directoryId ? rows.find(r => r.id === target.directoryId) : null;
         if (sourceRow && target.directoryId && destRow) {
           const fields: (keyof TexasCemetery)[] = [
-            "city", "address", "contact_name", "contact_phone", "contact_email",
+            "city", "county", "address", "contact_name", "contact_phone", "contact_email",
             "transfer_fee", "typical_prices", "description", "website", "notes",
           ];
+
           const patch: Record<string, any> = {};
           for (const f of fields) {
             const srcVal = (sourceRow as any)[f];
@@ -505,6 +517,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                         <div className="border-t border-border/50 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-background/50">
                           <Inp label="Name" value={(edits[profile.id]?.name as any) ?? profile.name ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], name: v } }))} />
                           <Inp label="City" value={(edits[profile.id]?.city as any) ?? profile.city ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], city: v } }))} />
+                          <Inp label="County" value={(edits[profile.id]?.county as any) ?? profile.county ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], county: v } }))} />
+
                           <Inp label="Address" value={(edits[profile.id]?.address as any) ?? profile.address ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], address: v } }))} className="sm:col-span-2" />
                           <Inp label="Website" value={(edits[profile.id]?.website as any) ?? profile.website ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], website: v } }))} />
                           <Inp label="Transfer fee ($)" type="number" value={(edits[profile.id]?.transfer_fee as any) ?? profile.transfer_fee ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], transfer_fee: v === "" ? null : Number(v) } }))} />
