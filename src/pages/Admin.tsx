@@ -1010,6 +1010,7 @@ const Admin = () => {
           </div>
         </div>
       </section>
+      <BroadcastDialog open={teamMsgOpen} onClose={() => setTeamMsgOpen(false)} />
       <Footer />
     </div>
   );
