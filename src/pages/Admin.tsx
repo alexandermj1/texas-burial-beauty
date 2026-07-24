@@ -86,6 +86,7 @@ const Admin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navHiddenMobile, setNavHiddenMobile] = useState(false);
   const [refreshingInbox, setRefreshingInbox] = useState(false);
+  const [teamMsgOpen, setTeamMsgOpen] = useState(false);
   const [deletedSubmissions, setDeletedSubmissions] = useState<any[]>([]);
 
   // Fetch soft-deleted submissions so they can be restored from the Trash dialog.
