@@ -1080,7 +1080,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             : tierLabel === "pro" ? "Pro"
                             : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
                             : (paid.description || "Listing");
-                          const amount = paid.amountCents > 0 ? `$${(paid.amountCents / 100).toLocaleString()}` : "Free";
+                          const amount = paid.amountCents > 0 ? `$${(paid.amountCents / 100).toLocaleString()}` : "$0";
                           return (
                             <div className={`${bandBase} ${teal}`}>
                               <div className="flex flex-col leading-tight">
