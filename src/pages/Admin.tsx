@@ -27,6 +27,8 @@ import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
 import GuidedTour from "@/components/admin/GuidedTour";
+import BroadcastDialog from "@/components/admin/BroadcastDialog";
+import { MessageSquare } from "lucide-react";
 
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 
