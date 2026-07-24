@@ -276,16 +276,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const map: Record<string, { tier: string; amountCents: number; paidAt: string; description: string }> = {};
       for (const row of data as any[]) {
         if (!row?.submission_id) continue;
-        // Starter is free ($0) — a "paid" row gets recorded automatically
-        // when the checkout link is generated/visited, which is misleading
-        // (the seller hasn't actually done anything). Only surface real,
-        // money-paid transactions in the UI.
         const cents = Number(row.amount_cents) || 0;
-        if (cents <= 0) continue;
+        const tier = String(row.metadata?.listing_tier || row.metadata?.product_name || "").trim().toLowerCase();
+        // For $0 rows, only include actual Starter selections — those get
+        // flipped from "pending" → "paid" with a paid_at timestamp when the
+        // seller clicks the Select Starter button. Skip unclicked ($0, no
+        // paid_at) rows to avoid falsely showing a Starter tag.
+        if (cents <= 0 && !(tier === "starter" && row.paid_at)) continue;
         // Keep only the latest paid txn per submission (already sorted desc).
         if (map[row.submission_id]) continue;
         map[row.submission_id] = {
-          tier: String(row.metadata?.listing_tier || row.metadata?.product_name || "").trim(),
+          tier: tier || String(row.metadata?.product_name || "").trim(),
           amountCents: cents,
           paidAt: row.paid_at || "",
           description: row.description || row.metadata?.product_name || "",
@@ -1079,7 +1080,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             : tierLabel === "pro" ? "Pro"
                             : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
                             : (paid.description || "Listing");
-                          const amount = paid.amountCents > 0 ? `$${(paid.amountCents / 100).toLocaleString()}` : "Free";
+                          const amount = paid.amountCents > 0 ? `$${(paid.amountCents / 100).toLocaleString()}` : "$0";
                           return (
                             <div className={`${bandBase} ${teal}`}>
                               <div className="flex flex-col leading-tight">
@@ -2354,7 +2355,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             : tierLabel === "pro" ? "Pro"
                             : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
                             : "Paid";
-                          const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "Free";
+                          const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "$0";
                           return (
                             <span
                               className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
