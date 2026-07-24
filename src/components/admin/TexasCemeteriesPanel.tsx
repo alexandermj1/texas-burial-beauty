@@ -15,6 +15,8 @@ interface TexasCemetery {
   name: string;
   canonical_name: string | null;
   city: string | null;
+  county: string | null;
+
   address: string | null;
   contact_name: string | null;
   contact_phone: string | null;
