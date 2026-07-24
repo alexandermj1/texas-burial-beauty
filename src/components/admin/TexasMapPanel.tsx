@@ -50,6 +50,17 @@ function colorFor(id: string): string {
   return `hsl(${hue}, 62%, 46%)`;
 }
 
+// Deterministic, warmer palette-locked color per county for at-a-glance grouping.
+function colorForCounty(county: string | null | undefined): string {
+  if (!county) return "hsl(30, 8%, 55%)";
+  let h = 0;
+  for (let i = 0; i < county.length; i++) h = (h * 33 + county.charCodeAt(i)) >>> 0;
+  const hue = h % 360;
+  return `hsl(${hue}, 58%, 44%)`;
+}
+
+
+
 // Simple canonicalizer that mirrors the DB's canonical_cemetery function loosely
 function canon(s: string | null | undefined): string {
   if (!s) return "";
