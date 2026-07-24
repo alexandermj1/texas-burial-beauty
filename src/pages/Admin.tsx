@@ -500,6 +500,13 @@ const Admin = () => {
                   </span>
                   <span className="text-foreground font-medium truncate max-w-[140px]">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span>
                 </div>
+                <button
+                  onClick={() => setTeamMsgOpen(true)}
+                  className="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
+                  title="Message a teammate"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
                 <div data-tour="notifications-bell" className="hidden md:block"><NotificationsBell /></div>
                 <div className="hidden md:block"><ChangePasswordDialog variant="icon" /></div>
                 {(tab === "submissions" || tab === "inbox") && (
