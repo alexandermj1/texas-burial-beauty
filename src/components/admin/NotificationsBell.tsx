@@ -71,8 +71,24 @@ const NotificationsBell = () => {
 
   if (!user) return null;
 
+  const currentAck = pendingAck[0];
+
+  const acknowledgeCurrent = async (opts?: { follow?: boolean }) => {
+    if (!currentAck) return;
+    const id = currentAck.id;
+    const link = currentAck.link_url;
+    setPendingAck(prev => prev.slice(1));
+    setNotes(prev => prev.map(n => n.id === id && !n.read_at ? { ...n, read_at: new Date().toISOString() } : n));
+    await supabase.from("user_notifications" as any).update({ read_at: new Date().toISOString() }).eq("id", id);
+    if (opts?.follow && link) {
+      navigate(link);
+      setTimeout(() => window.dispatchEvent(new PopStateEvent("popstate")), 0);
+    }
+  };
+
   return (
     <div className="relative">
+
       <button
         onClick={() => { setOpen(o => !o); if (!open) markAllRead(); }}
         className="relative inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
