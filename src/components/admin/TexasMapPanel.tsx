@@ -458,7 +458,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
                   <h4 className="font-display text-base text-foreground leading-tight">{detail.name}</h4>
                   <button onClick={() => setDetail(null)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
                 </div>
-                {detail.city && <p className="text-xs text-muted-foreground mt-0.5">{detail.city}, TX</p>}
+                {(detail.city || detail.county) && <p className="text-xs text-muted-foreground mt-0.5">{[detail.city, detail.county ? `${detail.county} County` : null].filter(Boolean).join(" · ")}, TX</p>}
                 {detail.address && <p className="text-sm text-foreground/80 mt-2 flex items-start gap-1.5"><MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />{detail.address}</p>}
                 {detail.contact_phone && <p className="text-sm text-foreground/80 mt-1 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-muted-foreground" /><a href={`tel:${detail.contact_phone}`} className="hover:text-primary">{detail.contact_phone}</a></p>}
                 {detail.website && <p className="text-sm mt-1 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-muted-foreground" /><a href={detail.website} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">{detail.website.replace(/^https?:\/\//, "")}</a></p>}
