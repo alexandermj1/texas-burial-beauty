@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Bell, ArrowRight, Check } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
