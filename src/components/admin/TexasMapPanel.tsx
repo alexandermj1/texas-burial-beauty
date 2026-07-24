@@ -540,8 +540,38 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-base text-foreground">Cemeteries</h3>
-            <span className="text-xs text-muted-foreground">{cemeteries.length} total</span>
+            <span className="text-xs text-muted-foreground">
+              {countyFilter ? `${visible.length} of ${cemeteries.length}` : `${cemeteries.length} total`}
+            </span>
           </div>
+
+          {countyStats.length > 0 && (
+            <div className="mb-3 -mx-1 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setCountyFilter(null)}
+                className={`px-2.5 py-1 rounded-full text-[11px] border transition-colors ${countyFilter === null ? "bg-foreground text-background border-foreground" : "bg-background text-muted-foreground border-border hover:bg-muted/60"}`}
+              >
+                All
+              </button>
+              {countyStats.map(([name, n]) => {
+                const active = countyFilter === name;
+                const dot = colorForCounty(name);
+                return (
+                  <button
+                    key={name}
+                    onClick={() => setCountyFilter(active ? null : name)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-colors ${active ? "border-foreground bg-muted" : "border-border bg-background hover:bg-muted/60"}`}
+                    title={`${name} County · ${n} cemeter${n === 1 ? "y" : "ies"}`}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ background: dot }} />
+                    <span className="text-foreground">{name}</span>
+                    <span className="text-muted-foreground">{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {missingGeo > 0 && (
             <div className="mb-3 text-xs bg-muted/60 rounded-lg p-2 flex items-center justify-between gap-2">
               <span className="text-muted-foreground">{missingGeo} missing coordinates</span>
@@ -551,7 +581,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
             </div>
           )}
           <div className="max-h-72 overflow-y-auto space-y-1 text-sm">
-            {loading ? <p className="text-muted-foreground text-xs">Loading…</p> : enriched.map((c) => {
+            {loading ? <p className="text-muted-foreground text-xs">Loading…</p> : visible.map((c) => {
               const has = c.latitude != null && c.longitude != null;
               return (
                 <button key={c.id}
@@ -562,12 +592,13 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.color }} />
                   <span className="flex-1 truncate">{c.name}</span>
                   {c.count > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: c.color + "22", color: c.color }}>{c.count}</span>}
-                  <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">{c.city || "—"}</span>
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[90px]">{c.county || c.city || "—"}</span>
                 </button>
               );
             })}
           </div>
         </div>
+
 
         <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
           <div className="flex items-center justify-between mb-3">
