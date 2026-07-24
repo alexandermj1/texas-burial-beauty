@@ -211,7 +211,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
     const bounds = new g.maps.LatLngBounds();
     let count = 0;
 
-    enriched.forEach((c) => {
+    visible.forEach((c) => {
       if (c.latitude == null || c.longitude == null) return;
       const pos = { lat: Number(c.latitude), lng: Number(c.longitude) };
       const marker = new g.maps.Marker({
