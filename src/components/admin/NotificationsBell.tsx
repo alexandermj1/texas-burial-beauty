@@ -141,45 +141,61 @@ const NotificationsBell = () => {
           </div>
         </>
       )}
-      {currentAck && (
-        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md bg-card border-2 border-primary rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="bg-primary/10 px-5 py-3 border-b border-border flex items-center gap-2">
-              <Bell className="w-4 h-4 text-primary" />
-              <p className="text-sm font-semibold text-foreground">New notification</p>
-              {pendingAck.length > 1 && (
-                <span className="ml-auto text-[11px] text-muted-foreground">
-                  {pendingAck.length - 1} more after this
-                </span>
-              )}
+      {currentAck && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] bg-foreground/40 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-lg bg-card rounded-2xl shadow-[0_25px_80px_-20px_hsl(var(--foreground)/0.35)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 border border-border/60">
+            <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/70 to-accent" />
+            <div className="px-7 pt-7 pb-2 flex items-start gap-4">
+              <div className="shrink-0 w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center ring-4 ring-primary/5">
+                <Bell className="w-5 h-5 text-primary" strokeWidth={2.25} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+                  New notification{pendingAck.length > 1 ? ` · ${pendingAck.length - 1} more queued` : ""}
+                </p>
+                <h2 className="mt-1.5 text-xl font-serif text-foreground leading-snug">
+                  {currentAck.title}
+                </h2>
+              </div>
             </div>
-            <div className="px-5 py-4">
-              <p className="text-base font-semibold text-foreground">{currentAck.title}</p>
-              {currentAck.body && (
-                <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{currentAck.body}</p>
-              )}
-              <p className="text-[11px] text-muted-foreground mt-3">{formatWhen(currentAck.created_at)}</p>
+            {currentAck.body && (
+              <div className="px-7 pt-3">
+                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                  {currentAck.body}
+                </p>
+              </div>
+            )}
+            <div className="px-7 pt-4 pb-6">
+              <p className="text-[11px] text-muted-foreground">{formatWhen(currentAck.created_at)}</p>
             </div>
-            <div className="px-5 py-3 border-t border-border flex items-center justify-end gap-2 bg-muted/30">
+            <div className="px-7 py-4 border-t border-border/60 bg-muted/30 flex items-center justify-end gap-2.5">
               {currentAck.link_url && (
                 <button
                   onClick={() => acknowledgeCurrent({ follow: true })}
-                  className="px-4 py-2 rounded-md text-xs font-semibold border border-border bg-background hover:bg-muted text-foreground"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-medium tracking-wide border border-border bg-background hover:bg-muted text-foreground transition-colors"
                 >
                   Open & acknowledge
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
               <button
                 onClick={() => acknowledgeCurrent()}
                 autoFocus
-                className="px-4 py-2 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-xs font-semibold tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-colors"
               >
+                <Check className="w-3.5 h-3.5" />
                 Acknowledge
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
     </div>
   );
 
