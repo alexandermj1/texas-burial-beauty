@@ -107,7 +107,11 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
   const [detail, setDetail] = useState<Cemetery | null>(null);
   const [addressQuery, setAddressQuery] = useState("");
   const [searchLoc, setSearchLoc] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [addressQuery, setAddressQuery] = useState("");
+  const [searchLoc, setSearchLoc] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [searching, setSearching] = useState(false);
+  const [countyFilter, setCountyFilter] = useState<string | null>(null);
+
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
