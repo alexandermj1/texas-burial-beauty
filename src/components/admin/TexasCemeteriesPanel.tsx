@@ -166,20 +166,22 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   }, [cemeteryStats, searchQuery]);
 
 
-  // Group cemeteries by primary city; sort within groups + across groups per sortMode.
+  // Group cemeteries by county (falling back to city) so admins can browse regionally.
   const groupedStats = useMemo(() => {
-    const primaryCity = (s: (typeof filteredStats)[number]): string => {
+    const primaryGroup = (s: (typeof filteredStats)[number]): string => {
       const profile = s.directoryId ? rows.find(r => r.id === s.directoryId) : null;
-      const fromProfile = profile?.city?.trim();
-      if (fromProfile) return fromProfile;
+      const fromCounty = profile?.county?.trim();
+      if (fromCounty) return `${fromCounty} County`;
+      const fromCity = profile?.city?.trim();
+      if (fromCity) return fromCity;
       const fromSubs = Array.from(s.cities).map(c => c.trim()).filter(Boolean);
       return fromSubs[0] || "Uncategorised";
     };
     const groups = new Map<string, { city: string; items: typeof filteredStats; total: number }>();
     for (const s of filteredStats) {
-      const city = primaryCity(s);
-      const key = city.toLowerCase();
-      const g = groups.get(key) || { city, items: [], total: 0 };
+      const label = primaryGroup(s);
+      const key = label.toLowerCase();
+      const g = groups.get(key) || { city: label, items: [], total: 0 };
       g.items.push(s);
       g.total += s.count;
       groups.set(key, g);
@@ -194,12 +196,19 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     arr.sort((a, b) => {
       if (a.city === "Uncategorised") return 1;
       if (b.city === "Uncategorised") return -1;
+      // Counties (labelled "X County") float above bare cities
+      const aCounty = a.city.endsWith(" County");
+      const bCounty = b.city.endsWith(" County");
+      if (aCounty !== bCounty) return aCounty ? -1 : 1;
       if (sortMode === "name") return a.city.localeCompare(b.city);
       if (b.total !== a.total) return b.total - a.total;
+      // More cemeteries per group first when counts tie
+      if (b.items.length !== a.items.length) return b.items.length - a.items.length;
       return a.city.localeCompare(b.city);
     });
     return arr;
   }, [filteredStats, rows, sortMode]);
+
 
   const totalSubs = useMemo(() => cemeteryStats.reduce((sum, s) => sum + s.count, 0), [cemeteryStats]);
 
