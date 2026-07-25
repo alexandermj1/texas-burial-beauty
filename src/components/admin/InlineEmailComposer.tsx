@@ -511,6 +511,23 @@ const InlineEmailComposer = ({
     setHtml(nextHtml);
     editorRef.current?.setHtml(nextHtml);
     setBodyTouched(true);
+    // Track for learning signal.
+    const nowIso = new Date().toISOString();
+    if (!aiTrainingRef.current) {
+      aiTrainingRef.current = {
+        originalDraft: draft,
+        originalInstructions: aiInstructions || "",
+        revisions: [],
+        latestDraft: draft,
+      };
+    } else {
+      aiTrainingRef.current.revisions.push({
+        instructions: aiInstructions || "(polish and tighten)",
+        draft,
+        at: nowIso,
+      });
+      aiTrainingRef.current.latestDraft = draft;
+    }
     setAiHasDraft(true);
     setAiInstructions("");
     // Panel stays open so the admin can iterate on the draft.
