@@ -57,6 +57,27 @@ Business FAQ:
 - Territory: Texas.
 `.trim();
 
+const REQUIRED_DOCUMENTS_REFERENCE = `
+Documents we typically need from a seller (reference — only mention what applies to their situation):
+
+Core (almost always required):
+- Cemetery deed / certificate of ownership — the original document the cemetery issued. If the seller doesn't have it, a receipt, cemetery letter, or account statement referencing ownership can work as a substitute, or we can pull the ownership record from the cemetery directly.
+- Government-issued photo ID for every current owner on the deed.
+
+Situational:
+- Joint ownership: written consent from every listed co-owner (including spouses) before we can list.
+- Inherited / estate property:
+  - If probate is complete: letters testamentary / letters of administration (court document showing authority to sell).
+  - If probate is not complete: we'll need to walk through the estate situation before listing.
+- Deed is lost and the cemetery has no record on file: a lost-deed affidavit.
+- Death certificate for any deceased owner listed on the deed.
+
+Process notes:
+- Sellers can upload documents through their seller portal or email them to us; we accept photos or scans.
+- Once documents are in, we verify with the cemetery and confirm ownership before the listing goes live.
+- The Power of Attorney (separate from the documents above) is what authorizes us to submit transfer paperwork at closing — it's issued after the listing agreement is signed, not up front.
+`.trim();
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
