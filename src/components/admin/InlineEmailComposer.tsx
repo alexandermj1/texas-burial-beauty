@@ -464,13 +464,26 @@ const InlineEmailComposer = ({
       }
     } catch { /* non-fatal */ }
 
+    // If a draft already exists in the editor and the admin is asking for
+    // revisions, include the current draft so the model edits it rather than
+    // starting from scratch.
+    const currentPlain = (editorRef.current?.getHtml() ?? html)
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(p|div|li)>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .trim();
+    const revisionInstructions = aiHasDraft && currentPlain
+      ? `You previously drafted the reply below. Revise it per the admin's edit instructions. Keep everything the admin didn't ask to change. Output the full revised reply as plain text.\n\nCURRENT DRAFT:\n${currentPlain}\n\nEDIT INSTRUCTIONS:\n${aiInstructions || "(polish and tighten)"}`
+      : aiInstructions;
+
     const { data, error } = await supabase.functions.invoke("draft-email-reply", {
       body: {
         recipientName,
         recipientEmail: to,
         adminName,
         subject,
-        instructions: aiInstructions,
+        instructions: revisionInstructions,
         thread,
         submissionId,
       },
@@ -490,9 +503,10 @@ const InlineEmailComposer = ({
     setHtml(nextHtml);
     editorRef.current?.setHtml(nextHtml);
     setBodyTouched(true);
-    setAiOpen(false);
+    setAiHasDraft(true);
     setAiInstructions("");
-    toast({ title: "AI draft ready", description: "Review and edit before sending." });
+    // Panel stays open so the admin can iterate on the draft.
+    toast({ title: aiHasDraft ? "Draft updated" : "AI draft ready", description: "Review, edit, or ask for more changes." });
   };
 
 
