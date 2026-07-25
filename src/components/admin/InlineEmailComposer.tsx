@@ -436,6 +436,7 @@ const InlineEmailComposer = ({
   const [aiOpen, setAiOpen] = useState(false);
   const [aiInstructions, setAiInstructions] = useState("");
   const [aiDrafting, setAiDrafting] = useState(false);
+  const [aiHasDraft, setAiHasDraft] = useState(false);
 
   const draftWithAI = async () => {
     if (aiDrafting) return;
