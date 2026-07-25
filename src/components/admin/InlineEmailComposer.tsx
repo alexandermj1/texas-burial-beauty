@@ -437,6 +437,14 @@ const InlineEmailComposer = ({
   const [aiInstructions, setAiInstructions] = useState("");
   const [aiDrafting, setAiDrafting] = useState(false);
   const [aiHasDraft, setAiHasDraft] = useState(false);
+  // Learning signal: keep the original AI draft, every revision instruction,
+  // and the latest AI-produced draft so we can log admin edits on send.
+  const aiTrainingRef = useRef<{
+    originalDraft: string;
+    originalInstructions: string;
+    revisions: Array<{ instructions: string; draft: string; at: string }>;
+    latestDraft: string;
+  } | null>(null);
 
   const draftWithAI = async () => {
     if (aiDrafting) return;
