@@ -621,14 +621,31 @@ const InlineEmailComposer = ({
       </div>
       {aiOpen && (
         <div className="rounded-lg border border-violet-500/40 bg-violet-50/50 dark:bg-violet-950/20 p-2 space-y-2">
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide font-bold text-violet-700 dark:text-violet-300">
-            <Sparkles className="w-3 h-3" /> Draft with AI
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide font-bold text-violet-700 dark:text-violet-300">
+              <Sparkles className="w-3 h-3" />
+              {aiHasDraft ? "Revise draft with AI" : "Draft with AI"}
+            </div>
+            {aiHasDraft && (
+              <button
+                type="button"
+                onClick={() => { setAiHasDraft(false); setAiInstructions(""); }}
+                className="text-[10px] font-medium text-violet-700 dark:text-violet-300 hover:underline"
+                title="Discard AI context and start a new draft prompt"
+              >
+                Start over
+              </button>
+            )}
           </div>
           <textarea
             value={aiInstructions}
             onChange={(e) => setAiInstructions(e.target.value)}
-            rows={4}
-            placeholder={`Tell the AI how to reply. Example:\n"Reply in 2 short paragraphs. Say we have 2 spaces at Bluebonnet for $4,200 each, transfer fee $595. Ask if they want to schedule a call."\n\nLeave blank to just reply naturally to their last message.`}
+            rows={aiHasDraft ? 3 : 4}
+            placeholder={
+              aiHasDraft
+                ? `Tell the AI what to change. Example:\n"Make it shorter."\n"Add a line offering a phone call this week."\n"Drop the paragraph about pricing."`
+                : `Tell the AI how to reply. Example:\n"Reply in 2 short paragraphs. Say we have 2 spaces at Bluebonnet for $4,200 each, transfer fee $595. Ask if they want to schedule a call."\n\nLeave blank to just reply naturally to their last message.`
+            }
             className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-violet-500 resize-y"
           />
           <div className="flex items-center justify-end gap-2">
@@ -637,21 +654,20 @@ const InlineEmailComposer = ({
               onClick={() => { setAiOpen(false); setAiInstructions(""); }}
               className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-border bg-background hover:bg-muted"
             >
-              Cancel
+              Close
             </button>
             <button
               type="button"
               onClick={draftWithAI}
-              disabled={aiDrafting}
+              disabled={aiDrafting || (aiHasDraft && !aiInstructions.trim())}
               className="inline-flex items-center gap-1.5 text-[11px] font-medium px-3 py-1 rounded-full bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50"
             >
               {aiDrafting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              {aiDrafting ? "Drafting…" : "Generate draft"}
+              {aiDrafting
+                ? (aiHasDraft ? "Revising…" : "Drafting…")
+                : (aiHasDraft ? "Apply edits" : "Generate draft")}
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground italic">
-            Uses Gemini Flash-Lite — roughly 0.02–0.05 credits per draft. Replaces current body; you can still edit before sending.
-          </p>
         </div>
       )}
       <div className="flex items-center justify-end gap-2 flex-wrap">
