@@ -433,6 +433,66 @@ const InlineEmailComposer = ({
   };
 
   const [expanded, setExpanded] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiInstructions, setAiInstructions] = useState("");
+  const [aiDrafting, setAiDrafting] = useState(false);
+
+  const draftWithAI = async () => {
+    if (aiDrafting) return;
+    setAiDrafting(true);
+    // Pull recent messages in this thread for context (best-effort).
+    let thread: Array<{ from: string; subject?: string; body: string }> = [];
+    try {
+      const addr = (to || "").trim().toLowerCase();
+      if (addr) {
+        const { data } = await supabase
+          .from("email_messages" as any)
+          .select("from_email, subject, body_text, snippet, received_at")
+          .or(`from_email.ilike.%${addr}%,to_email.ilike.%${addr}%`)
+          .order("received_at", { ascending: true })
+          .limit(20);
+        thread = ((data as any[]) || []).map((m) => {
+          const addrLc = (m.from_email || "").toLowerCase();
+          const ours = addrLc.includes("texascemeterybrokers");
+          return {
+            from: ours ? "us" : "them",
+            subject: m.subject || undefined,
+            body: (m.body_text || m.snippet || "").slice(0, 2000),
+          };
+        });
+      }
+    } catch { /* non-fatal */ }
+
+    const { data, error } = await supabase.functions.invoke("draft-email-reply", {
+      body: {
+        recipientName,
+        recipientEmail: to,
+        adminName,
+        subject,
+        instructions: aiInstructions,
+        thread,
+      },
+    });
+    setAiDrafting(false);
+    if (error || (data as any)?.error) {
+      toast({
+        title: "AI draft failed",
+        description: error?.message || (data as any)?.error || "Unknown error",
+        variant: "destructive",
+      });
+      return;
+    }
+    const draft = (data as any)?.draft as string;
+    if (!draft) return;
+    const nextHtml = textToHtml(draft);
+    setHtml(nextHtml);
+    editorRef.current?.setHtml(nextHtml);
+    setBodyTouched(true);
+    setAiOpen(false);
+    setAiInstructions("");
+    toast({ title: "AI draft ready", description: "Review and edit before sending." });
+  };
+
 
   return (
     <div
