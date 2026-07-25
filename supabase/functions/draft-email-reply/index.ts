@@ -327,6 +327,14 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "get_ownership_authority_guide",
+      description: "Returns the guide for who has legal authority to sell a cemetery plot (living owner, deceased owner/inheritance, trust, organization), how spousal consent works, common relationship situations (siblings, in-laws, nieces/nephews, POA for a parent), and the core framing rule that document requirements depend on the situation. Call this when the customer asks who needs to sign, whether they can sell, what happens with a deceased owner, probate, wills, heirs, or if their relationship to the owner qualifies them to sell.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "get_submission_context",
       description: "Returns THIS specific customer's submission: what they told us on the form (cemetery, property, ownership, timeline), the current pipeline state (quote sent/accepted, payment, listing agreement, POA), the document checklist, and AI-extracted summaries of any documents they've already uploaded (e.g. their deed). Call this when the reply should reference the customer's own situation — what they submitted, what documents we already have from them, whether we've quoted them, whether they've signed, etc. Prefer calling this ONCE early rather than guessing.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
