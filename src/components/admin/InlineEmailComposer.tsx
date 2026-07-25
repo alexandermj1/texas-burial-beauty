@@ -688,7 +688,7 @@ const InlineEmailComposer = ({
             {aiHasDraft && (
               <button
                 type="button"
-                onClick={() => { setAiHasDraft(false); setAiInstructions(""); }}
+                onClick={() => { setAiHasDraft(false); setAiInstructions(""); aiTrainingRef.current = null; }}
                 className="text-[10px] font-medium text-violet-700 dark:text-violet-300 hover:underline"
                 title="Discard AI context and start a new draft prompt"
               >
