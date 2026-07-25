@@ -296,6 +296,7 @@ Deno.serve(async (req) => {
       instructions,
       thread,
       customerLastMessage,
+      submissionId,
     } = await req.json();
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
