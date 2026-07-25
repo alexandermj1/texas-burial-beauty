@@ -58,24 +58,89 @@ Business FAQ:
 `.trim();
 
 const REQUIRED_DOCUMENTS_REFERENCE = `
-Documents we typically need from a seller (reference — only mention what applies to their situation):
+Documents a seller typically needs — FRAME AS "GENERALLY", NEVER AS A FINAL CHECKLIST.
+The exact list depends on the cemetery and the family situation. Always offer to confirm after review.
 
-Core (almost always required):
-- Cemetery deed / certificate of ownership — the original document the cemetery issued. If the seller doesn't have it, a receipt, cemetery letter, or account statement referencing ownership can work as a substitute, or we can pull the ownership record from the cemetery directly.
-- Government-issued photo ID for every current owner on the deed.
+Baseline (almost every transfer):
+- Certificate of ownership from the cemetery (a "deed" from the cemetery office, NOT a county-recorded deed). If lost, it's usually recoverable from the cemetery's own records — reassure the seller.
+- Government photo ID for everyone who has to sign.
+- The cemetery's own transfer form and transfer fee (varies by cemetery).
+- A limited Power of Attorney to Texas Cemetery Brokers, signed AFTER the seller accepts the quote and signs the listing agreement.
 
-Situational:
-- Joint ownership: written consent from every listed co-owner (including spouses) before we can list.
-- Inherited / estate property:
-  - If probate is complete: letters testamentary / letters of administration (court document showing authority to sell).
-  - If probate is not complete: we'll need to walk through the estate situation before listing.
-- Deed is lost and the cemetery has no record on file: a lost-deed affidavit.
-- Death certificate for any deceased owner listed on the deed.
+Situational (mention only what applies):
+- Married living owner: spouse usually needs to sign a consent, even if only the owner's name is on the certificate (spouse has an interment right in Texas). Divorce decree or spouse's death certificate can clear this.
+- Deceased owner (inheritance): needs proof of authority to sell. If probated will → letters testamentary / letters of administration. If no will → heirship documentation or court process. If multiple heirs → generally ALL of them must sign; never imply one heir can act alone unless they hold proper legal authority for the others.
+- Trust-owned: trustee signs, with the trust document showing authority.
+- Organization-owned (church, lodge, company): authorized officer signs, with proof of authority.
+- Lost deed AND cemetery has no record: lost-deed affidavit.
+- Any deceased owner listed on the deed: death certificate.
 
 Process notes:
-- Sellers can upload documents through their seller portal or email them to us; we accept photos or scans.
-- Once documents are in, we verify with the cemetery and confirm ownership before the listing goes live.
-- The Power of Attorney (separate from the documents above) is what authorizes us to submit transfer paperwork at closing — it's issued after the listing agreement is signed, not up front.
+- Sellers can upload through the seller portal or email us — photos or scans are fine.
+- We verify ownership with the cemetery before the listing goes live.
+- Check what the seller has ALREADY provided via get_submission_context (deed on file, ID on file, payment received, LA signed, POA signed, etc.) before asking for anything again.
+`.trim();
+
+const OWNERSHIP_AUTHORITY_GUIDE = `
+Ownership & authority guide — use to answer "who has to sign / can I sell this?" questions.
+
+CORE FRAMING RULE (most important):
+- The honest answer to "what do you need from me" is: it depends on who owns the plot and how they came to own it.
+- Give the general shape, explain the exact list depends on their situation, offer to confirm once we've reviewed their deed and details.
+- NEVER state a definitive final document list. NEVER promise cemetery-specific requirements — cemeteries set their own rules.
+
+STABLE FACTS (safe to state):
+- A cemetery plot is not normal real estate. What's sold is the "right of sepulture" (right of burial). The ownership document is a cemetery-issued certificate of ownership, not a county-recorded deed. A lost deed is usually recoverable from the cemetery.
+- Each cemetery sets its own rules, transfer forms, fees, and requirements — they can demand more than the legal minimum.
+- We're a registered Texas broker. We sell based on the recorded owner and record the completed transfer with the cemetery.
+- A plot sold as a single unit generally cannot be split without the cemetery's consent.
+
+PROCESS IN PLAIN TERMS:
+1. Seller sends ownership documents and details.
+2. We confirm who has authority to sell.
+3. We send a quote.
+4. Seller accepts and signs the listing agreement + a limited POA appointing us.
+5. We complete and record the transfer with the cemetery.
+
+FOUR OWNERSHIP SITUATIONS (identify which one applies; if unclear, ask ONE clarifying question):
+
+1) LIVING OWNER selling their own plot — simplest. Owner signs. If married, spouse usually needs to consent even if not on the certificate. Divorce decree or spouse's death cert can clear this.
+
+2) OWNER HAS DIED (inheritance) — most common source of complexity. Be extra careful and empathetic (often bereaved families). Authority depends on:
+   - Was there a will? Probated will → executor typically has authority. No will → heirship / court process / sworn heirship document.
+   - Who inherits? If several people inherit (multiple children/siblings), ALL of them generally must sign. Do NOT imply one heir can act alone unless they hold proper legal authority for the others.
+   - Treat "the owner passed away" as a signal to be less specific and route through a human review.
+
+3) TRUST owns the plot — trustee signs; we'll need to see the trust paperwork.
+
+4) ORGANIZATION owns the plot (church, lodge, company) — an authorized officer signs, with proof of authorization.
+
+WHO SIGNS — PRINCIPLE:
+There is only ever one owner of record. Everyone else (heir, executor, trustee, officer, agent, us) acts in relation to that owner. The question is never "does this person own it?" but "does this person have provable authority to sign for the owner?"
+- Living owner signs personally (spouse consents if married).
+- Co-owners: everyone named on the certificate signs.
+- Heirs: sign once inheritance is established; all of them if there are several.
+- Executor: signs for an estate with court paperwork proving it.
+- Trustee: signs for a trust; officer signs for an organization.
+
+COMMON RELATIONSHIP SITUATIONS (safe answers):
+- "I'm one of three siblings inheriting" → Generally ALL siblings need to sign. Do not imply one can act alone.
+- "I'm the owner's niece/nephew" → Nieces/nephews usually only inherit when there are no closer relatives (no children, grandchildren, or parents of the owner), typically by stepping into a deceased parent's place. Possible, but depends on the family situation — we'll confirm.
+- "I'm the daughter-in-law / son-in-law" → In Texas, in-laws and stepchildren generally do NOT inherit directly. The heir is usually their spouse or blood relative. Gently explain and route through that person. Common, understandable misunderstanding — handle kindly.
+- "I have POA for my mother who owns it" → If the parent is LIVING, they remain the owner and the child signs in the parent's name as attorney-in-fact — nothing transfers into the child's name. Whether the POA lets us act depends on what it actually says; we'd need to review it. Cleanest path: get our authorization directly from the parent while they're able. IMPORTANT: a POA ends when the person dies — if the parent has passed away, it becomes an inheritance situation.
+
+HARD GUARDRAILS:
+- Do NOT give legal advice or interpret a will, POA, or estate. We're not attorneys. It's fine to say so.
+- Do NOT state a definitive final document checklist. Always "generally / typically", always "we'll confirm".
+- Do NOT quote statutes, thresholds, or timelines as promises.
+- Do NOT tell a customer they definitely can or cannot sell, or that their document definitely is or isn't sufficient — that determination happens after review.
+- Do NOT promise cemetery-specific requirements.
+- Do NOT assume one person can act alone when multiple owners or heirs may exist.
+
+ESCALATE TO A HUMAN when: deceased owner with a complicated or contested estate, disputes between heirs/co-owners, occupied plots, anything involving a POA or guardianship, or the customer seems confused or upset. Safe line: "I want to make sure we get this exactly right for your situation, so I'm going to have one of our team confirm the details with you."
+
+REPLY SKELETON for "what will you need from me?":
+"Thanks for reaching out — happy to help you sell your plot. In most cases we'll need your certificate of ownership (the deed from the cemetery), photo ID for anyone who needs to sign, and — once we've sent you a quote you're happy with — a short authorization form so we can complete the transfer at the cemetery for you. The exact list depends a little on your situation — for example, whether the plot is owned by one person or several, whether the original owner is still living, and if you're married, since a spouse often needs to sign too. [If deceased owner: Since it sounds like the original owner has passed away, there are usually a couple of extra steps to confirm who has the authority to sell, and we'll walk you through those.] If you can send over a copy of the deed and let me know [one or two relevant clarifiers], I'll confirm exactly what applies to you and get you a quote."
 `.trim();
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -262,6 +327,14 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "get_ownership_authority_guide",
+      description: "Returns the guide for who has legal authority to sell a cemetery plot (living owner, deceased owner/inheritance, trust, organization), how spousal consent works, common relationship situations (siblings, in-laws, nieces/nephews, POA for a parent), and the core framing rule that document requirements depend on the situation. Call this when the customer asks who needs to sign, whether they can sell, what happens with a deceased owner, probate, wills, heirs, or if their relationship to the owner qualifies them to sell.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "get_submission_context",
       description: "Returns THIS specific customer's submission: what they told us on the form (cemetery, property, ownership, timeline), the current pipeline state (quote sent/accepted, payment, listing agreement, POA), the document checklist, and AI-extracted summaries of any documents they've already uploaded (e.g. their deed). Call this when the reply should reference the customer's own situation — what they submitted, what documents we already have from them, whether we've quoted them, whether they've signed, etc. Prefer calling this ONCE early rather than guessing.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
@@ -276,6 +349,7 @@ async function runTool(name: string, args: any, ctx: { submissionId?: string }):
     case "get_pricing_and_options": return PRICING_AND_OPTIONS;
     case "get_business_faq": return BUSINESS_FAQ;
     case "get_required_documents_reference": return REQUIRED_DOCUMENTS_REFERENCE;
+    case "get_ownership_authority_guide": return OWNERSHIP_AUTHORITY_GUIDE;
     case "lookup_cemetery": return await lookupCemetery(String(args?.name || ""));
     case "get_submission_context":
       if (!ctx.submissionId) return "No submission is linked to this draft — cannot load customer context.";
@@ -327,11 +401,13 @@ RULES:
 - If a figure the customer asked for wasn't supplied, say we will follow up with the exact figure rather than guessing.
 - Never mention AI or that this reply was drafted by AI.
 - Never mention competitors or compare cemetery prices.
+- CORE FRAMING RULE for documents/authority questions: the honest answer to "what do you need from me" is "it depends on the situation." Give the general shape, then offer to confirm the exact list after we review their deed and details. NEVER give a definitive final document checklist. NEVER promise cemetery-specific requirements. NEVER tell a customer they definitely can or cannot sell, or that their document definitely is or isn't sufficient. NEVER give legal advice or interpret a will, POA, or estate — we're not attorneys. If multiple owners or heirs may exist, do not assume one person can act alone. When ambiguous, ask ONE clarifying question (typically: is the owner living or deceased? married? other heirs?). For complicated estates, disputes, occupied plots, or anything involving a POA/guardianship, offer to have a team member confirm the details.
 
 TOOLS — use sparingly to keep costs down:
 - Only call a tool when the customer's question or the admin's instructions actually require that specific information.
 - Do NOT call tools "just in case". If the reply doesn't need contract details, don't fetch them.
 - When the reply should be specific to this customer (their cemetery, their documents, their quote status, whether they've already sent us the deed), call get_submission_context ONCE early — it's a single cheap call that tells you what we already know about them.
+- For "what documents do you need" or "who has to sign" questions, call get_ownership_authority_guide (and get_required_documents_reference if useful) AFTER get_submission_context, so your answer reflects what the customer has already provided (paid, LA signed, deed uploaded, POA signed, etc.) rather than asking for it again.
 - Never call more than 3 tools for one reply unless clearly necessary.
 - After you have what you need, write the final reply as plain text — no tool calls in the final message.
 `.trim();
