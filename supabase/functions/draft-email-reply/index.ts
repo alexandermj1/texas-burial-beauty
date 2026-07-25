@@ -251,15 +251,35 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "get_required_documents_reference",
+      description: "Returns the general reference of what documents a seller typically needs (deed, ID, co-owner consent, probate paperwork, death certificates, lost-deed affidavit). Call this only when the customer asks what documents are needed, what to send, or how ownership/probate/lost-deed situations are handled. Prefer get_submission_context first so you can tell them what they've already provided.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_submission_context",
+      description: "Returns THIS specific customer's submission: what they told us on the form (cemetery, property, ownership, timeline), the current pipeline state (quote sent/accepted, payment, listing agreement, POA), the document checklist, and AI-extracted summaries of any documents they've already uploaded (e.g. their deed). Call this when the reply should reference the customer's own situation — what they submitted, what documents we already have from them, whether we've quoted them, whether they've signed, etc. Prefer calling this ONCE early rather than guessing.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
 ];
 
-async function runTool(name: string, args: any): Promise<string> {
+async function runTool(name: string, args: any, ctx: { submissionId?: string }): Promise<string> {
   switch (name) {
     case "get_listing_agreement_summary": return LISTING_AGREEMENT_SUMMARY;
     case "get_poa_summary": return POA_SUMMARY;
     case "get_pricing_and_options": return PRICING_AND_OPTIONS;
     case "get_business_faq": return BUSINESS_FAQ;
+    case "get_required_documents_reference": return REQUIRED_DOCUMENTS_REFERENCE;
     case "lookup_cemetery": return await lookupCemetery(String(args?.name || ""));
+    case "get_submission_context":
+      if (!ctx.submissionId) return "No submission is linked to this draft — cannot load customer context.";
+      return await getSubmissionContext(ctx.submissionId);
     default: return `Unknown tool: ${name}`;
   }
 }
