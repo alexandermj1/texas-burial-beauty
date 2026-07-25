@@ -387,6 +387,40 @@ const InlineEmailComposer = ({
     } catch (e) {
       console.warn("quote_sent_at update failed", e);
     }
+    // Log AI-drafted email + admin edits for future training. Best-effort.
+    try {
+      const training = aiTrainingRef.current;
+      if (training) {
+        const finalPlain = plain;
+        const latest = training.latestDraft || "";
+        // Simple length-based delta as a first-pass "edit distance" signal.
+        const editDelta = Math.abs(finalPlain.length - latest.length);
+        const { data: authData } = await supabase.auth.getUser();
+        await supabase.from("ai_draft_edits" as any).insert({
+          actor_user_id: authData?.user?.id ?? null,
+          actor_name: adminName || null,
+          submission_id: submissionId ?? null,
+          recipient_email: to,
+          recipient_name: recipientName ?? null,
+          subject: subject || null,
+          template_id: activeTemplateId,
+          original_instructions: training.originalInstructions || null,
+          revision_instructions: training.revisions.map((r) => ({
+            instructions: r.instructions,
+            at: r.at,
+          })),
+          original_draft: training.originalDraft,
+          latest_ai_draft: latest,
+          final_sent_text: finalPlain,
+          was_sent: true,
+          edit_distance: editDelta,
+        });
+      }
+    } catch (e) {
+      console.warn("ai_draft_edits log failed", e);
+    }
+    aiTrainingRef.current = null;
+    setAiHasDraft(false);
     setHtml(templateHtml);
     editorRef.current?.setHtml(templateHtml);
     setBodyTouched(false);
