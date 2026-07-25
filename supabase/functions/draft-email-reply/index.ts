@@ -408,7 +408,7 @@ Write the reply. Call tools ONLY if you need specific facts you don't already ha
         for (const tc of toolCalls) {
           let args: any = {};
           try { args = JSON.parse(tc.function?.arguments || "{}"); } catch { /* ignore */ }
-          const result = await runTool(tc.function?.name, args);
+          const result = await runTool(tc.function?.name, args, { submissionId });
           messages.push({
             role: "tool",
             tool_call_id: tc.id,
