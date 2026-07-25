@@ -101,6 +101,69 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_draft_edits: {
+        Row: {
+          actor_name: string | null
+          actor_user_id: string | null
+          created_at: string
+          edit_distance: number | null
+          final_sent_text: string | null
+          id: string
+          latest_ai_draft: string | null
+          original_draft: string
+          original_instructions: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          reviewed: boolean
+          revision_instructions: Json
+          subject: string | null
+          submission_id: string | null
+          template_id: string | null
+          training_notes: string | null
+          was_sent: boolean
+        }
+        Insert: {
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          edit_distance?: number | null
+          final_sent_text?: string | null
+          id?: string
+          latest_ai_draft?: string | null
+          original_draft: string
+          original_instructions?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          reviewed?: boolean
+          revision_instructions?: Json
+          subject?: string | null
+          submission_id?: string | null
+          template_id?: string | null
+          training_notes?: string | null
+          was_sent?: boolean
+        }
+        Update: {
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          edit_distance?: number | null
+          final_sent_text?: string | null
+          id?: string
+          latest_ai_draft?: string | null
+          original_draft?: string
+          original_instructions?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          reviewed?: boolean
+          revision_instructions?: Json
+          subject?: string | null
+          submission_id?: string | null
+          template_id?: string | null
+          training_notes?: string | null
+          was_sent?: boolean
+        }
+        Relationships: []
+      }
       buyer_recommendations: {
         Row: {
           asking_price: number | null

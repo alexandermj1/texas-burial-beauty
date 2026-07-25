@@ -387,6 +387,40 @@ const InlineEmailComposer = ({
     } catch (e) {
       console.warn("quote_sent_at update failed", e);
     }
+    // Log AI-drafted email + admin edits for future training. Best-effort.
+    try {
+      const training = aiTrainingRef.current;
+      if (training) {
+        const finalPlain = plain;
+        const latest = training.latestDraft || "";
+        // Simple length-based delta as a first-pass "edit distance" signal.
+        const editDelta = Math.abs(finalPlain.length - latest.length);
+        const { data: authData } = await supabase.auth.getUser();
+        await supabase.from("ai_draft_edits" as any).insert({
+          actor_user_id: authData?.user?.id ?? null,
+          actor_name: adminName || null,
+          submission_id: submissionId ?? null,
+          recipient_email: to,
+          recipient_name: recipientName ?? null,
+          subject: subject || null,
+          template_id: activeTemplateId,
+          original_instructions: training.originalInstructions || null,
+          revision_instructions: training.revisions.map((r) => ({
+            instructions: r.instructions,
+            at: r.at,
+          })),
+          original_draft: training.originalDraft,
+          latest_ai_draft: latest,
+          final_sent_text: finalPlain,
+          was_sent: true,
+          edit_distance: editDelta,
+        });
+      }
+    } catch (e) {
+      console.warn("ai_draft_edits log failed", e);
+    }
+    aiTrainingRef.current = null;
+    setAiHasDraft(false);
     setHtml(templateHtml);
     editorRef.current?.setHtml(templateHtml);
     setBodyTouched(false);
@@ -437,6 +471,14 @@ const InlineEmailComposer = ({
   const [aiInstructions, setAiInstructions] = useState("");
   const [aiDrafting, setAiDrafting] = useState(false);
   const [aiHasDraft, setAiHasDraft] = useState(false);
+  // Learning signal: keep the original AI draft, every revision instruction,
+  // and the latest AI-produced draft so we can log admin edits on send.
+  const aiTrainingRef = useRef<{
+    originalDraft: string;
+    originalInstructions: string;
+    revisions: Array<{ instructions: string; draft: string; at: string }>;
+    latestDraft: string;
+  } | null>(null);
 
   const draftWithAI = async () => {
     if (aiDrafting) return;
@@ -503,6 +545,23 @@ const InlineEmailComposer = ({
     setHtml(nextHtml);
     editorRef.current?.setHtml(nextHtml);
     setBodyTouched(true);
+    // Track for learning signal.
+    const nowIso = new Date().toISOString();
+    if (!aiTrainingRef.current) {
+      aiTrainingRef.current = {
+        originalDraft: draft,
+        originalInstructions: aiInstructions || "",
+        revisions: [],
+        latestDraft: draft,
+      };
+    } else {
+      aiTrainingRef.current.revisions.push({
+        instructions: aiInstructions || "(polish and tighten)",
+        draft,
+        at: nowIso,
+      });
+      aiTrainingRef.current.latestDraft = draft;
+    }
     setAiHasDraft(true);
     setAiInstructions("");
     // Panel stays open so the admin can iterate on the draft.
@@ -629,7 +688,7 @@ const InlineEmailComposer = ({
             {aiHasDraft && (
               <button
                 type="button"
-                onClick={() => { setAiHasDraft(false); setAiInstructions(""); }}
+                onClick={() => { setAiHasDraft(false); setAiInstructions(""); aiTrainingRef.current = null; }}
                 className="text-[10px] font-medium text-violet-700 dark:text-violet-300 hover:underline"
                 title="Discard AI context and start a new draft prompt"
               >
