@@ -471,6 +471,7 @@ const InlineEmailComposer = ({
         subject,
         instructions: aiInstructions,
         thread,
+        submissionId,
       },
     });
     setAiDrafting(false);
