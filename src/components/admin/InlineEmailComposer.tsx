@@ -603,7 +603,56 @@ const InlineEmailComposer = ({
           minHeight={expanded ? 520 : 200}
         />
       </div>
+      {aiOpen && (
+        <div className="rounded-lg border border-violet-500/40 bg-violet-50/50 dark:bg-violet-950/20 p-2 space-y-2">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide font-bold text-violet-700 dark:text-violet-300">
+            <Sparkles className="w-3 h-3" /> Draft with AI
+          </div>
+          <textarea
+            value={aiInstructions}
+            onChange={(e) => setAiInstructions(e.target.value)}
+            rows={4}
+            placeholder={`Tell the AI how to reply. Example:\n"Reply in 2 short paragraphs. Say we have 2 spaces at Bluebonnet for $4,200 each, transfer fee $595. Ask if they want to schedule a call."\n\nLeave blank to just reply naturally to their last message.`}
+            className="w-full text-xs px-2 py-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-violet-500 resize-y"
+          />
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => { setAiOpen(false); setAiInstructions(""); }}
+              className="text-[11px] font-medium px-2.5 py-1 rounded-full border border-border bg-background hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={draftWithAI}
+              disabled={aiDrafting}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium px-3 py-1 rounded-full bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50"
+            >
+              {aiDrafting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              {aiDrafting ? "Drafting…" : "Generate draft"}
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground italic">
+            Uses Gemini Flash-Lite — roughly 0.02–0.05 credits per draft. Replaces current body; you can still edit before sending.
+          </p>
+        </div>
+      )}
       <div className="flex items-center justify-end gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setAiOpen((v) => !v)}
+          className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+            aiOpen
+              ? "border-violet-600 bg-violet-600 text-white"
+              : "border-violet-500/40 text-violet-700 bg-violet-50 hover:bg-violet-100 dark:text-violet-300 dark:bg-violet-950/30 dark:hover:bg-violet-950/50"
+          }`}
+          title="Draft this reply with AI"
+        >
+          <Sparkles className="w-3 h-3" />
+          Draft with AI
+        </button>
+
         {buyerContext && (
           <button
             type="button"
