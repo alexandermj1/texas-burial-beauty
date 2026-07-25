@@ -331,7 +331,8 @@ RULES:
 TOOLS — use sparingly to keep costs down:
 - Only call a tool when the customer's question or the admin's instructions actually require that specific information.
 - Do NOT call tools "just in case". If the reply doesn't need contract details, don't fetch them.
-- Never call more than 2 tools for one reply unless clearly necessary.
+- When the reply should be specific to this customer (their cemetery, their documents, their quote status, whether they've already sent us the deed), call get_submission_context ONCE early — it's a single cheap call that tells you what we already know about them.
+- Never call more than 3 tools for one reply unless clearly necessary.
 - After you have what you need, write the final reply as plain text — no tool calls in the final message.
 `.trim();
 
