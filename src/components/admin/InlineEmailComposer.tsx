@@ -294,17 +294,80 @@ const InlineEmailComposer = ({
 
   const templateHtml = useMemo(() => textToHtml(templateText), [templateText]);
 
+  // Persistent draft: scoped to this recipient/thread so replies never get lost
+  // when the drawer is closed. Stored in localStorage; cleared on successful send.
+  const draftKey = useMemo(() => {
+    const base = threadId || submissionId || to || "unknown";
+    return `tcb:emailDraft:${inReplyToGmailId ? "reply" : "new"}:${base}`;
+  }, [threadId, submissionId, to, inReplyToGmailId]);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
+
   // Seed the editor on mount and whenever the template changes — but only
-  // until the user starts editing.
+  // until the user starts editing. If a saved draft exists, restore it instead.
   useEffect(() => {
     if (bodyTouched) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as { subject?: string; html?: string; savedAt?: number };
+        if (saved?.html) {
+          setHtml(saved.html);
+          editorRef.current?.setHtml(saved.html);
+          if (saved.subject != null) setSubject(saved.subject);
+          setBodyTouched(true);
+          setDraftRestored(true);
+          setDraftSavedAt(saved.savedAt ?? null);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
     setHtml(templateHtml);
     editorRef.current?.setHtml(templateHtml);
-  }, [templateHtml, bodyTouched]);
+  }, [templateHtml, bodyTouched, draftKey]);
 
   useEffect(() => {
     setSubject(defaultSubject);
   }, [defaultSubject]);
+
+  // Auto-save draft in the background as the admin types.
+  useEffect(() => {
+    if (!bodyTouched) return;
+    const t = setTimeout(() => {
+      try {
+        const payload = { subject, html, savedAt: Date.now() };
+        localStorage.setItem(draftKey, JSON.stringify(payload));
+        setDraftSavedAt(payload.savedAt);
+      } catch { /* quota / private mode — ignore */ }
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [subject, html, bodyTouched, draftKey]);
+
+  const clearDraft = () => {
+    try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+    setDraftSavedAt(null);
+    setDraftRestored(false);
+  };
+
+  const saveDraft = () => {
+    try {
+      const payload = { subject, html, savedAt: Date.now() };
+      localStorage.setItem(draftKey, JSON.stringify(payload));
+      setDraftSavedAt(payload.savedAt);
+      toast({ title: "Draft saved", description: "It will be here next time you open this thread." });
+    } catch {
+      toast({ title: "Couldn't save draft", variant: "destructive" });
+    }
+  };
+
+  const discardDraft = () => {
+    clearDraft();
+    setHtml(templateHtml);
+    editorRef.current?.setHtml(templateHtml);
+    setBodyTouched(false);
+    toast({ title: "Draft discarded" });
+  };
+
 
   const quoteSubjectFor = (cemetery?: string | null) => {
     const c = (cemetery || "").trim();
