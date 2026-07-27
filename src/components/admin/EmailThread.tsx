@@ -17,7 +17,6 @@ interface EmailRow {
   to_email: string | null;
   received_at: string;
   ai_summary: string | null;
-  ai_intent: string | null;
   snippet: string | null;
   body_text: string | null;
   gmail_thread_id: string | null;
@@ -58,38 +57,7 @@ interface Props {
   } | null;
 }
 
-type EmailCategory = "quote" | "listing_agreement" | "poa" | null;
-
-const categorizeEmail = (e: EmailRow): EmailCategory => {
-  // Only tag emails we explicitly generated via the quote / LA / POA senders —
-  // no keyword sniffing. The sender functions stamp `ai_intent` accordingly.
-  const intent = (e.ai_intent || "").toLowerCase();
-  if (intent === "quote") return "quote";
-  if (intent === "listing_agreement") return "listing_agreement";
-  if (intent === "poa") return "poa";
-  return null;
-};
-
-const CATEGORY_STYLE: Record<Exclude<EmailCategory, null>, { wrap: string; badge: string; label: string }> = {
-  quote: {
-    wrap: "bg-purple-50 border-purple-300 ring-1 ring-purple-200 dark:bg-purple-950/30 dark:border-purple-800",
-    badge: "bg-purple-600 text-white",
-    label: "Quote sent",
-  },
-  listing_agreement: {
-    wrap: "bg-amber-50 border-amber-300 ring-1 ring-amber-200 dark:bg-amber-950/30 dark:border-amber-800",
-    badge: "bg-amber-600 text-white",
-    label: "Listing agreement",
-  },
-  poa: {
-    wrap: "bg-teal-50 border-teal-300 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:border-teal-800",
-    badge: "bg-teal-600 text-white",
-    label: "Power of attorney",
-  },
-};
-
 const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext, sellerContext }: Props) => {
-
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -104,7 +72,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
     }
     const { data } = await supabase
       .from("email_messages" as any)
-      .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, ai_intent, snippet, body_text, gmail_thread_id, gmail_message_id")
+      .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text, gmail_thread_id, gmail_message_id")
       .or(orParts.join(","))
       .order("received_at", { ascending: true });
     const seen = new Set<string>();
@@ -188,17 +156,11 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
-            // Only flag *outgoing* messages — a customer replying to our quote
-            // email would otherwise get miscategorised by keyword sniffing.
-            const category = outgoing ? categorizeEmail(e) : null;
-            const catStyle = category ? CATEGORY_STYLE[category] : null;
             return (
               <li
                 key={e.id}
                 className={`rounded-lg border px-3 py-2 text-xs ${
-                  catStyle ? catStyle.wrap
-                    : outgoing ? "bg-primary/5 border-primary/20"
-                    : "bg-card border-border/50"
+                  outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -208,14 +170,8 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     }`}>
                       {outgoing ? "Sent" : "Received"}
                     </span>
-                    {catStyle && (
-                      <span className={`text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full ${catStyle.badge}`}>
-                        {catStyle.label}
-                      </span>
-                    )}
                     <p className="font-medium text-foreground truncate">{sender}</p>
                   </div>
-
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[10px] text-muted-foreground">
                       {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
