@@ -83,7 +83,11 @@ Deno.serve(async (req) => {
       sub.cemetery_retail ??
       0,
     );
-    const plots = Number(sub.plot_count ?? 1) || 1;
+    // Prefer explicit plot_count, then fall back to `spaces` (many submissions store the plot
+     // count there and leave plot_count null). Also honour an admin override from the review dialog.
+     const plots = Number(
+       overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? 1,
+     ) || 1;
 
     // County/State for the Interment Property: default to the cemetery's city + TX
     // (admin can override in the review dialog). Never mix the seller's own address here.
