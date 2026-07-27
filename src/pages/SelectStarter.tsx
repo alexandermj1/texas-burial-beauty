@@ -16,32 +16,29 @@ export default function SelectStarter() {
   const [params] = useSearchParams();
   const tx = params.get("tx");
   const [state, setState] = useState<Result | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => { document.title = "Starter listing activated — Texas Cemetery Brokers"; }, []);
+  useEffect(() => { document.title = "Confirm Starter listing — Texas Cemetery Brokers"; }, []);
 
-  useEffect(() => {
-    if (!tx) { setLoading(false); setState({ error: "Missing selection reference." }); return; }
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("activate-starter-listing", {
-          body: { transactionId: tx },
-        });
-        if (cancelled) return;
-        if (error) setState({ error: String(error.message || error) });
-        else setState(data as Result);
-      } catch (e: any) {
-        if (!cancelled) setState({ error: String(e?.message ?? e) });
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [tx]);
+  const activate = async () => {
+    if (!tx) { setState({ error: "Missing selection reference." }); return; }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("activate-starter-listing", {
+        body: { transactionId: tx },
+      });
+      if (error) setState({ error: String(error.message || error) });
+      else setState(data as Result);
+    } catch (e: any) {
+      setState({ error: String(e?.message ?? e) });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const firstName = (state?.recipientName || "").trim().split(/\s+/)[0] || "";
-  const isErr = !loading && (state?.error || !state?.ok);
+  const done = !!state?.ok;
+  const isErr = !loading && state?.error;
 
   return (
     <main className="min-h-[80vh] flex items-center justify-center bg-background px-6 py-16">
@@ -56,17 +53,15 @@ export default function SelectStarter() {
           )}
         </div>
         <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-semibold mb-2">
-          {isErr ? "Selection error" : "Starter listing activated"}
+          {isErr ? "Selection error" : done ? "Starter listing activated" : "Confirm your selection"}
         </p>
         <h1 className="font-display text-3xl text-foreground mb-4">
-          {loading ? "Activating…" : isErr ? "We couldn't activate this link" : (firstName ? `Thank you, ${firstName}` : "Thank you")}
+          {loading ? "Activating…" : isErr ? "We couldn't activate this link" : done ? (firstName ? `Thank you, ${firstName}` : "Thank you") : "Select the Starter listing"}
         </h1>
 
-        {loading ? (
-          <p className="text-muted-foreground mb-6">Marking your Starter listing as active.</p>
-        ) : isErr ? (
-          <p className="text-muted-foreground mb-6">{state?.error || "This link may have expired. Please reply to your quote email and we'll activate it manually."}</p>
-        ) : (
+        {isErr ? (
+          <p className="text-muted-foreground mb-6">{state?.error}</p>
+        ) : done ? (
           <div className="mb-6 space-y-3">
             <p className="text-muted-foreground">
               Your <strong className="text-foreground">Starter listing</strong>
@@ -77,14 +72,28 @@ export default function SelectStarter() {
               Our next step is to send your Exclusive Sales Agreement to sign. Watch your inbox — it will arrive shortly.
             </p>
           </div>
+        ) : (
+          <p className="text-muted-foreground mb-6">
+            Click below to confirm you would like to move forward with the <strong className="text-foreground">Starter listing</strong> option ($0 upfront). We'll then send your Exclusive Sales Agreement to sign.
+          </p>
         )}
 
-        <Link
-          to="/"
-          className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
-        >
-          Return home
-        </Link>
+        {done || isErr ? (
+          <Link
+            to="/"
+            className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
+          >
+            Return home
+          </Link>
+        ) : (
+          <button
+            onClick={activate}
+            disabled={loading}
+            className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-60"
+          >
+            {loading ? "Activating…" : "Confirm Starter listing"}
+          </button>
+        )}
       </div>
     </main>
   );
