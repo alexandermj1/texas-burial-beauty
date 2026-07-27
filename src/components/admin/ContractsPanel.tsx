@@ -474,6 +474,104 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
         <div className="space-y-2">
           <Row contract={la} kind="listing_agreement" />
           <Row contract={poa} kind="poa" />
+          {editKind && (
+            <div className="border-2 border-primary/40 rounded-lg p-4 bg-primary/5 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="text-sm font-semibold">Review {KIND_LABEL[editKind]} details</h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    Edit anything that needs correcting — the seller can still adjust their own info when they sign.
+                  </p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => { setEditKind(null); setEditFields(null); }}>
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              {editLoading || !editFields ? (
+                <div className="py-6 flex items-center justify-center text-muted-foreground text-sm">
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading submission…
+                </div>
+              ) : (
+                <>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="md:col-span-2">
+                      <Label className="text-xs">Seller full legal name</Label>
+                      <Input value={editFields.seller_name}
+                        onChange={(e) => setEditFields({ ...editFields, seller_name: e.target.value })} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-xs">Mailing address</Label>
+                      <Input value={editFields.address}
+                        onChange={(e) => setEditFields({ ...editFields, address: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">City, State, ZIP</Label>
+                      <Input value={editFields.city_state_zip}
+                        onChange={(e) => setEditFields({ ...editFields, city_state_zip: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Phone</Label>
+                      <Input value={editFields.phone}
+                        onChange={(e) => setEditFields({ ...editFields, phone: e.target.value })} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-xs">Email</Label>
+                      <Input type="email" value={editFields.email}
+                        onChange={(e) => setEditFields({ ...editFields, email: e.target.value })} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-xs">Cemetery</Label>
+                      <Input value={editFields.cemetery}
+                        onChange={(e) => setEditFields({ ...editFields, cemetery: e.target.value })} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-xs">Cemetery county / state <span className="text-muted-foreground text-[11px]">(POA only)</span></Label>
+                      <Input value={editFields.county_state}
+                        placeholder="e.g. Harris County, TX"
+                        onChange={(e) => setEditFields({ ...editFields, county_state: e.target.value })} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-xs">Plot description (section / block / spaces)</Label>
+                      <Textarea rows={2} value={editFields.plot_description}
+                        onChange={(e) => setEditFields({ ...editFields, plot_description: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Plot count</Label>
+                      <Input type="number" value={editFields.plot_count}
+                        onChange={(e) => setEditFields({ ...editFields, plot_count: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Listing option</Label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={editFields.listing_option}
+                        onChange={(e) => setEditFields({ ...editFields, listing_option: e.target.value })}
+                      >
+                        <option value="Starter">Starter</option>
+                        <option value="Pro">Pro</option>
+                        <option value="Featured">Featured</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-xs">Authorized minimum total sales price ($)</Label>
+                      <Input type="number" value={editFields.authorized_min_total}
+                        onChange={(e) => setEditFields({ ...editFields, authorized_min_total: e.target.value })} />
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Minimum total price you're authorized to accept. Leave blank to use the quote/retail on file.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button size="sm" variant="ghost" onClick={() => { setEditKind(null); setEditFields(null); }}>Cancel</Button>
+                    <Button size="sm" onClick={submitGenerate} disabled={!editFields || busy === editKind}>
+                      {busy === editKind && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Generate contract
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             Listing Agreement is signed in-app via the copied signing link (legally valid e-signature).
             The Power of Attorney must be notarized: click <span className="font-medium">Send to BlueNotary</span> to open a session
