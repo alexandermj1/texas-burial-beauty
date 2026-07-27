@@ -73,7 +73,8 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("contracts").select("*").eq("submission_id", submissionId);
+      .from("contracts").select("*").eq("submission_id", submissionId)
+      .order("created_at", { ascending: false });
     setContracts((data ?? []) as Contract[]);
     const map: Record<string, string> = {};
     for (const c of data ?? []) {
@@ -94,8 +95,13 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
 
   useEffect(() => { void load(); }, [submissionId]);
 
+  // Latest per kind drives the active workflow; older versions are kept as
+  // an archive so admins can review previous drafts / signed copies.
   const la = contracts.find((c) => c.kind === "listing_agreement");
   const poa = contracts.find((c) => c.kind === "poa");
+  const priorLa = contracts.filter((c) => c.kind === "listing_agreement" && c.id !== la?.id);
+  const priorPoa = contracts.filter((c) => c.kind === "poa" && c.id !== poa?.id);
+
 
   const openGenerate = async (kind: Contract["kind"]) => {
     setEditKind(kind);
