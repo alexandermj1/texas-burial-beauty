@@ -209,8 +209,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
         ref={elRef}
         contentEditable
         suppressContentEditableWarning
-        onInput={handleInput}
-        onBlur={handleInput}
+        onInput={() => { saveSelection(); handleInput(); }}
+        onBlur={() => { saveSelection(); handleInput(); }}
+        onKeyUp={saveSelection}
+        onMouseUp={saveSelection}
         data-placeholder={placeholder}
         className="px-2.5 py-2 focus:outline-none whitespace-pre-wrap text-[#1f2937] [&_p]:my-4 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-4 [&_a]:text-primary [&_a]:underline empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
         style={{ minHeight, fontFamily: "Georgia, serif", fontSize: "15px", lineHeight: 1.6 }}
