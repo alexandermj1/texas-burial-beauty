@@ -58,6 +58,18 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
 ) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const lastHtmlRef = useRef<string>(initialHtml);
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    const el = elRef.current;
+    if (!el) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (el.contains(range.commonAncestorContainer)) {
+      savedRangeRef.current = range.cloneRange();
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     setHtml: (html: string) => {
@@ -93,7 +105,48 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
       lastHtmlRef.current = el.innerHTML;
       onChange?.(lastHtmlRef.current);
     },
+    insertHtmlAtCursor: (html: string) => {
+      const el = elRef.current;
+      if (!el) return;
+      const range = savedRangeRef.current;
+      if (!range || !el.contains(range.commonAncestorContainer)) {
+        // No known caret — fall back to signature-aware insertion.
+        const SIG_RE = /\b(best regards|warm regards|kind regards|sincerely|thank(s| you)|cheers|regards)\b/i;
+        const blocks = Array.from(el.children) as HTMLElement[];
+        const sigIdx = blocks.findIndex((b) => SIG_RE.test(b.textContent || ""));
+        const wrap = document.createElement("div");
+        wrap.innerHTML = html;
+        const frag = document.createDocumentFragment();
+        while (wrap.firstChild) frag.appendChild(wrap.firstChild);
+        if (sigIdx >= 0) el.insertBefore(frag, blocks[sigIdx]);
+        else el.appendChild(frag);
+        lastHtmlRef.current = el.innerHTML;
+        onChange?.(lastHtmlRef.current);
+        return;
+      }
+      // Insert at the saved caret. Delete any current selection first.
+      range.deleteContents();
+      const wrap = document.createElement("div");
+      wrap.innerHTML = html;
+      const frag = document.createDocumentFragment();
+      let lastNode: Node | null = null;
+      while (wrap.firstChild) {
+        lastNode = wrap.firstChild;
+        frag.appendChild(wrap.firstChild);
+      }
+      range.insertNode(frag);
+      // Move caret to just after the inserted content.
+      if (lastNode) {
+        const after = document.createRange();
+        after.setStartAfter(lastNode);
+        after.collapse(true);
+        savedRangeRef.current = after.cloneRange();
+      }
+      lastHtmlRef.current = el.innerHTML;
+      onChange?.(lastHtmlRef.current);
+    },
   }));
+
 
   useEffect(() => {
     if (elRef.current && elRef.current.innerHTML !== initialHtml) {
