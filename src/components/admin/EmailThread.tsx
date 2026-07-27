@@ -17,6 +17,7 @@ interface EmailRow {
   to_email: string | null;
   received_at: string;
   ai_summary: string | null;
+  ai_intent: string | null;
   snippet: string | null;
   body_text: string | null;
   gmail_thread_id: string | null;
