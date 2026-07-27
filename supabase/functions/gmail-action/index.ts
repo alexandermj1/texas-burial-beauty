@@ -283,6 +283,8 @@ Deno.serve(async (req) => {
           body_text: input.body,
           received_at: new Date().toISOString(),
           is_read: true,
+          ai_intent: input.category ?? null,
+          matched_submission_id: input.submissionId ?? null,
         });
       } catch { /* ignore — sync will reconcile */ }
 
