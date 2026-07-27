@@ -73,7 +73,8 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("contracts").select("*").eq("submission_id", submissionId);
+      .from("contracts").select("*").eq("submission_id", submissionId)
+      .order("created_at", { ascending: false });
     setContracts((data ?? []) as Contract[]);
     const map: Record<string, string> = {};
     for (const c of data ?? []) {
@@ -94,8 +95,13 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
 
   useEffect(() => { void load(); }, [submissionId]);
 
+  // Latest per kind drives the active workflow; older versions are kept as
+  // an archive so admins can review previous drafts / signed copies.
   const la = contracts.find((c) => c.kind === "listing_agreement");
   const poa = contracts.find((c) => c.kind === "poa");
+  const priorLa = contracts.filter((c) => c.kind === "listing_agreement" && c.id !== la?.id);
+  const priorPoa = contracts.filter((c) => c.kind === "poa" && c.id !== poa?.id);
+
 
   const openGenerate = async (kind: Contract["kind"]) => {
     setEditKind(kind);
@@ -285,7 +291,38 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     }
   };
 
+  const PriorVersions = ({ items, urls }: { items: Contract[]; urls: Record<string, string> }) => (
+    <details className="border border-dashed rounded-lg px-3 py-2 bg-muted/20 text-xs">
+      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+        {items.length} previous {KIND_LABEL[items[0].kind].toLowerCase()} version{items.length === 1 ? "" : "s"}
+      </summary>
+      <ul className="mt-2 space-y-1">
+        {items.map((c) => {
+          const url = urls[c.id];
+          const label = c.countersigned_at ? "Countersigned"
+            : c.notarized_at ? "Notarized"
+            : c.signed_at ? "Signed"
+            : c.sent_at ? "Sent"
+            : "Draft";
+          return (
+            <li key={c.id} className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">
+                {new Date(c.signed_at ?? c.sent_at ?? (c as any).created_at ?? Date.now()).toLocaleString()} · {label}
+              </span>
+              {url && (
+                <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                  <ExternalLink className="w-3 h-3" /> View
+                </a>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+
   const Row = ({ contract, kind }: { contract?: Contract; kind: Contract["kind"] }) => {
+
     const Icon = KIND_ICON[kind];
     const pending = busy === kind || busy === contract?.id;
     return (
@@ -473,7 +510,10 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       ) : (
         <div className="space-y-2">
           <Row contract={la} kind="listing_agreement" />
+          {priorLa.length > 0 && <PriorVersions items={priorLa} urls={urls} />}
           <Row contract={poa} kind="poa" />
+          {priorPoa.length > 0 && <PriorVersions items={priorPoa} urls={urls} />}
+
           {editKind && (
             <div className="border-2 border-primary/40 rounded-lg p-4 bg-primary/5 space-y-3">
               <div className="flex items-start justify-between gap-2">
