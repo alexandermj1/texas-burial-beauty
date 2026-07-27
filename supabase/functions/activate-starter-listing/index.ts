@@ -56,9 +56,19 @@ Deno.serve(async (req) => {
     // Look up cemetery/name for the confirmation UI + emails.
     const { data: submission } = await supabase
       .from("contact_submissions")
-      .select("id, name, email, cemetery, quote_amount")
+      .select("id, name, email, cemetery, quote_amount, quote_sent_at")
       .eq("id", tx.submission_id)
       .maybeSingle();
+
+    // Guard: only sellers who were actually sent a quote/listing-options
+    // email can activate a Starter. Prevents URL prefetch, link scanners,
+    // and accidental opens from marking a submission as paid.
+    if (!submission?.quote_sent_at && tx.status !== "paid") {
+      return new Response(JSON.stringify({ error: "This selection link isn't active yet — please wait for your quote email before selecting a listing option." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     if (!alreadyActive) {
       // Flip pending → paid.
