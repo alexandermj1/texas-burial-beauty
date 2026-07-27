@@ -487,6 +487,7 @@ const InlineEmailComposer = ({
     setHtml(templateHtml);
     editorRef.current?.setHtml(templateHtml);
     setBodyTouched(false);
+    clearDraft();
     onSent?.({ templateId: activeTemplateId });
   };
 
