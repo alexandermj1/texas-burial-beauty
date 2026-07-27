@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       email: overrides.email ?? sub.email ?? '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
       county_state: overrides.county_state ?? defaultCountyState,
-      plot_count: overrides.plot_count ?? sub.plot_count ?? '',
+      plot_count: overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? '',
       plot_description: overrides.plot_description ??
         [sub.section && `Section ${sub.section}`, sub.spaces && `Spaces ${sub.spaces}`, sub.space_numbers]
           .filter(Boolean).join(' • '),
