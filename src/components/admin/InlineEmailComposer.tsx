@@ -794,6 +794,35 @@ const InlineEmailComposer = ({
         </div>
       )}
       <div className="flex items-center justify-end gap-2 flex-wrap">
+        {draftRestored && (
+          <span className="mr-auto inline-flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Draft restored
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="underline underline-offset-2 hover:text-amber-800"
+              title="Discard saved draft and start from the template"
+            >
+              Discard
+            </button>
+          </span>
+        )}
+        {!draftRestored && draftSavedAt && (
+          <span className="mr-auto text-[11px] text-muted-foreground">
+            Draft saved {new Date(draftSavedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={saveDraft}
+          disabled={!htmlToText(html).trim()}
+          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted disabled:opacity-50"
+          title="Save this draft so it isn't lost when you close the panel"
+        >
+          <Save className="w-3 h-3" />
+          Save draft
+        </button>
         <button
           type="button"
           onClick={() => setAiOpen((v) => !v)}
