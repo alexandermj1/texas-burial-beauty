@@ -57,7 +57,38 @@ interface Props {
   } | null;
 }
 
+type EmailCategory = "quote" | "listing_agreement" | "poa" | null;
+
+const categorizeEmail = (e: EmailRow): EmailCategory => {
+  const hay = `${e.subject || ""}\n${e.snippet || ""}\n${e.body_text || ""}`.toLowerCase();
+  // Order matters — POA and LA can both mention "sign", so match on the most
+  // specific phrases first.
+  if (/power of attorney|notary packet|proof\.com|notarize/.test(hay)) return "poa";
+  if (/listing agreement|sign your listing|\/sign-contract|countersigned/.test(hay)) return "listing_agreement";
+  if (/property valuation|listing offer|guaranteed net|starter.*pro.*featured|your quote/.test(hay)) return "quote";
+  return null;
+};
+
+const CATEGORY_STYLE: Record<Exclude<EmailCategory, null>, { wrap: string; badge: string; label: string }> = {
+  quote: {
+    wrap: "bg-purple-50 border-purple-300 ring-1 ring-purple-200 dark:bg-purple-950/30 dark:border-purple-800",
+    badge: "bg-purple-600 text-white",
+    label: "Quote sent",
+  },
+  listing_agreement: {
+    wrap: "bg-amber-50 border-amber-300 ring-1 ring-amber-200 dark:bg-amber-950/30 dark:border-amber-800",
+    badge: "bg-amber-600 text-white",
+    label: "Listing agreement",
+  },
+  poa: {
+    wrap: "bg-teal-50 border-teal-300 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:border-teal-800",
+    badge: "bg-teal-600 text-white",
+    label: "Power of attorney",
+  },
+};
+
 const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext, sellerContext }: Props) => {
+
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -156,11 +187,17 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
+            // Only flag *outgoing* messages — a customer replying to our quote
+            // email would otherwise get miscategorised by keyword sniffing.
+            const category = outgoing ? categorizeEmail(e) : null;
+            const catStyle = category ? CATEGORY_STYLE[category] : null;
             return (
               <li
                 key={e.id}
                 className={`rounded-lg border px-3 py-2 text-xs ${
-                  outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
+                  catStyle ? catStyle.wrap
+                    : outgoing ? "bg-primary/5 border-primary/20"
+                    : "bg-card border-border/50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -170,8 +207,14 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     }`}>
                       {outgoing ? "Sent" : "Received"}
                     </span>
+                    {catStyle && (
+                      <span className={`text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full ${catStyle.badge}`}>
+                        {catStyle.label}
+                      </span>
+                    )}
                     <p className="font-medium text-foreground truncate">{sender}</p>
                   </div>
+
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[10px] text-muted-foreground">
                       {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
