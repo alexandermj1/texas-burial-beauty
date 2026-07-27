@@ -479,7 +479,10 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
       ) : (
         <div className="space-y-2">
           <Row contract={la} kind="listing_agreement" />
+          {priorLa.length > 0 && <PriorVersions items={priorLa} urls={urls} />}
           <Row contract={poa} kind="poa" />
+          {priorPoa.length > 0 && <PriorVersions items={priorPoa} urls={urls} />}
+
           {editKind && (
             <div className="border-2 border-primary/40 rounded-lg p-4 bg-primary/5 space-y-3">
               <div className="flex items-start justify-between gap-2">
