@@ -61,12 +61,12 @@ interface Props {
 type EmailCategory = "quote" | "listing_agreement" | "poa" | null;
 
 const categorizeEmail = (e: EmailRow): EmailCategory => {
-  const hay = `${e.subject || ""}\n${e.snippet || ""}\n${e.body_text || ""}`.toLowerCase();
-  // Order matters — POA and LA can both mention "sign", so match on the most
-  // specific phrases first.
-  if (/power of attorney|notary packet|proof\.com|notarize/.test(hay)) return "poa";
-  if (/listing agreement|sign your listing|\/sign-contract|countersigned/.test(hay)) return "listing_agreement";
-  if (/property valuation|listing offer|guaranteed net|starter.*pro.*featured|your quote/.test(hay)) return "quote";
+  // Only tag emails we explicitly generated via the quote / LA / POA senders —
+  // no keyword sniffing. The sender functions stamp `ai_intent` accordingly.
+  const intent = (e.ai_intent || "").toLowerCase();
+  if (intent === "quote") return "quote";
+  if (intent === "listing_agreement") return "listing_agreement";
+  if (intent === "poa") return "poa";
   return null;
 };
 
