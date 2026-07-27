@@ -6,7 +6,7 @@
 // (bold, italic, underline, bulleted/numbered lists, links) — sent as
 // multipart/alternative so recipients see formatting in Gmail.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, CreditCard, Sparkles } from "lucide-react";
+import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, CreditCard, Sparkles, Save } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
