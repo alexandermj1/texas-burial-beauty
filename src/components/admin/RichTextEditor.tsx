@@ -16,6 +16,12 @@ export interface RichTextEditorHandle {
    * etc.). Falls back to appending at the end if no signature is detected.
    */
   insertHtmlBeforeSignature: (html: string) => void;
+  /**
+   * Insert HTML at the caret position last seen inside the editor. Falls
+   * back to inserting above the signature (and then appending) when no
+   * saved selection is available.
+   */
+  insertHtmlAtCursor: (html: string) => void;
 }
 
 interface Props {
@@ -52,6 +58,18 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
 ) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const lastHtmlRef = useRef<string>(initialHtml);
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    const el = elRef.current;
+    if (!el) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (el.contains(range.commonAncestorContainer)) {
+      savedRangeRef.current = range.cloneRange();
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     setHtml: (html: string) => {
@@ -87,7 +105,48 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
       lastHtmlRef.current = el.innerHTML;
       onChange?.(lastHtmlRef.current);
     },
+    insertHtmlAtCursor: (html: string) => {
+      const el = elRef.current;
+      if (!el) return;
+      const range = savedRangeRef.current;
+      if (!range || !el.contains(range.commonAncestorContainer)) {
+        // No known caret — fall back to signature-aware insertion.
+        const SIG_RE = /\b(best regards|warm regards|kind regards|sincerely|thank(s| you)|cheers|regards)\b/i;
+        const blocks = Array.from(el.children) as HTMLElement[];
+        const sigIdx = blocks.findIndex((b) => SIG_RE.test(b.textContent || ""));
+        const wrap = document.createElement("div");
+        wrap.innerHTML = html;
+        const frag = document.createDocumentFragment();
+        while (wrap.firstChild) frag.appendChild(wrap.firstChild);
+        if (sigIdx >= 0) el.insertBefore(frag, blocks[sigIdx]);
+        else el.appendChild(frag);
+        lastHtmlRef.current = el.innerHTML;
+        onChange?.(lastHtmlRef.current);
+        return;
+      }
+      // Insert at the saved caret. Delete any current selection first.
+      range.deleteContents();
+      const wrap = document.createElement("div");
+      wrap.innerHTML = html;
+      const frag = document.createDocumentFragment();
+      let lastNode: Node | null = null;
+      while (wrap.firstChild) {
+        lastNode = wrap.firstChild;
+        frag.appendChild(wrap.firstChild);
+      }
+      range.insertNode(frag);
+      // Move caret to just after the inserted content.
+      if (lastNode) {
+        const after = document.createRange();
+        after.setStartAfter(lastNode);
+        after.collapse(true);
+        savedRangeRef.current = after.cloneRange();
+      }
+      lastHtmlRef.current = el.innerHTML;
+      onChange?.(lastHtmlRef.current);
+    },
   }));
+
 
   useEffect(() => {
     if (elRef.current && elRef.current.innerHTML !== initialHtml) {
@@ -150,8 +209,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichText
         ref={elRef}
         contentEditable
         suppressContentEditableWarning
-        onInput={handleInput}
-        onBlur={handleInput}
+        onInput={() => { saveSelection(); handleInput(); }}
+        onBlur={() => { saveSelection(); handleInput(); }}
+        onKeyUp={saveSelection}
+        onMouseUp={saveSelection}
         data-placeholder={placeholder}
         className="px-2.5 py-2 focus:outline-none whitespace-pre-wrap text-[#1f2937] [&_p]:my-4 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-4 [&_a]:text-primary [&_a]:underline empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
         style={{ minHeight, fontFamily: "Georgia, serif", fontSize: "15px", lineHeight: 1.6 }}
