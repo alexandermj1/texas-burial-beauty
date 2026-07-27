@@ -408,6 +408,9 @@ const InlineEmailComposer = ({
     // ship without the extra masthead shell to avoid double branding.
     const hasListingBlock = /data-listing-options="1"/.test(normalizedHtml);
     const brandedHtml = hasListingBlock ? normalizedHtml : wrapInBrandedShell(normalizedHtml);
+    const isQuoteSendNow =
+      (listingBlockInserted || activeTemplateId === "seller_listing_options") &&
+      !!sellerContext?.id;
     const { data, error } = await supabase.functions.invoke("gmail-action", {
       body: {
         action: "send",
@@ -417,6 +420,8 @@ const InlineEmailComposer = ({
         htmlBody: brandedHtml,
         threadId: threadId || undefined,
         inReplyToGmailId: inReplyToGmailId || undefined,
+        category: isQuoteSendNow ? "quote" : undefined,
+        submissionId: submissionId || undefined,
       },
     });
     setSending(false);

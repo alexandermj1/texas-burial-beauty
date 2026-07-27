@@ -159,6 +159,28 @@ Deno.serve(async (req) => {
       .update({ sent_at: new Date().toISOString(), status: 'sent' })
       .eq('id', c.id);
 
+    // Log a record of this system email in the submission's thread so it appears
+    // (and gets colour-coded) in EmailThread. This is sent through Resend, not
+    // Gmail, so it wouldn't otherwise show up via the inbox sync.
+    try {
+      await svc.from('email_messages').insert({
+        gmail_message_id: `contract-${c.id}-${Date.now()}`,
+        gmail_thread_id: `contract-${c.id}`,
+        from_email: 'contracts@texascemeterybrokers.com',
+        from_name: 'Texas Cemetery Brokers',
+        to_email: to,
+        subject,
+        snippet: isPoa
+          ? 'Power of Attorney — confirm address to receive notary packet.'
+          : 'Listing Agreement — ready to sign.',
+        body_text: `Signing link sent to ${to}.\n\n${sign_url}`,
+        received_at: new Date().toISOString(),
+        is_read: true,
+        ai_intent: isPoa ? 'poa' : 'listing_agreement',
+        matched_submission_id: c.submission_id,
+      });
+    } catch (logErr) { console.error('log contract email failed', logErr); }
+
     // Only now — after the signing link has actually been emailed — do we mark
     // the submission's Listing Agreement as issued. Merely generating a draft
     // must not flip this flag.

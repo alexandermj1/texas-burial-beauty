@@ -26,6 +26,10 @@ const SendSchema = z.object({
   htmlBody: z.string().max(400000).optional(),
   threadId: z.string().max(200).optional(),
   inReplyToGmailId: z.string().max(200).optional(),
+  // Optional tag so the admin thread can colour-code system-generated emails
+  // (quote/listing_agreement/poa) without keyword sniffing.
+  category: z.enum(["quote", "listing_agreement", "poa"]).optional(),
+  submissionId: z.string().uuid().optional(),
 });
 
 const ModifySchema = z.object({
@@ -279,6 +283,8 @@ Deno.serve(async (req) => {
           body_text: input.body,
           received_at: new Date().toISOString(),
           is_read: true,
+          ai_intent: input.category ?? null,
+          matched_submission_id: input.submissionId ?? null,
         });
       } catch { /* ignore — sync will reconcile */ }
 
