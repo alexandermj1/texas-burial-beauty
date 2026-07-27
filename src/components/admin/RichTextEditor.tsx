@@ -16,6 +16,12 @@ export interface RichTextEditorHandle {
    * etc.). Falls back to appending at the end if no signature is detected.
    */
   insertHtmlBeforeSignature: (html: string) => void;
+  /**
+   * Insert HTML at the caret position last seen inside the editor. Falls
+   * back to inserting above the signature (and then appending) when no
+   * saved selection is available.
+   */
+  insertHtmlAtCursor: (html: string) => void;
 }
 
 interface Props {
