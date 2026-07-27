@@ -130,9 +130,10 @@ Deno.serve(async (req) => {
     // "confirm your mailing address" page that then emails the seller a notary-ready packet.
     const signToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
 
-    const { data: existing } = await svc
-      .from('contracts').select('id').eq('submission_id', submission_id).eq('kind', kind).maybeSingle();
-
+    // Always insert a new contract row when (re)generating. Previous versions
+    // are preserved so admins can look back at earlier drafts / signed copies
+    // rather than having them silently overwritten. ContractsPanel picks the
+    // latest per kind (by created_at desc) for the active workflow.
     const row = {
       submission_id,
       kind,
@@ -144,8 +145,8 @@ Deno.serve(async (req) => {
       created_by: userData.user.id,
     };
 
-    if (existing) await svc.from('contracts').update(row).eq('id', existing.id);
-    else await svc.from('contracts').insert(row);
+    await svc.from('contracts').insert(row);
+
 
     const { data: signedUrl } = await svc.storage.from('contracts').createSignedUrl(path, 60 * 60 * 24);
 
