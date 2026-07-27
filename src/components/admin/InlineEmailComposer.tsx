@@ -819,7 +819,7 @@ const InlineEmailComposer = ({
           recipientName={recipientName}
           onAttach={(buttonHtml) => {
             const y = window.scrollY;
-            editorRef.current?.insertHtmlBeforeSignature(buttonHtml);
+            editorRef.current?.insertHtmlAtCursor(buttonHtml);
             setHtml(editorRef.current?.getHtml() ?? html);
             setBodyTouched(true);
             // Preserve the user's scroll position — inserting a tall block
