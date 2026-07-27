@@ -187,11 +187,17 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
+            // Only flag *outgoing* messages — a customer replying to our quote
+            // email would otherwise get miscategorised by keyword sniffing.
+            const category = outgoing ? categorizeEmail(e) : null;
+            const catStyle = category ? CATEGORY_STYLE[category] : null;
             return (
               <li
                 key={e.id}
                 className={`rounded-lg border px-3 py-2 text-xs ${
-                  outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
+                  catStyle ? catStyle.wrap
+                    : outgoing ? "bg-primary/5 border-primary/20"
+                    : "bg-card border-border/50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -201,8 +207,14 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     }`}>
                       {outgoing ? "Sent" : "Received"}
                     </span>
+                    {catStyle && (
+                      <span className={`text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full ${catStyle.badge}`}>
+                        {catStyle.label}
+                      </span>
+                    )}
                     <p className="font-medium text-foreground truncate">{sender}</p>
                   </div>
+
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[10px] text-muted-foreground">
                       {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
