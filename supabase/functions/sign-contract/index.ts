@@ -326,6 +326,7 @@ Deno.serve(async (req) => {
   </table>
 </body></html>`;
 
+          const subject = `Your Power of Attorney${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — notary packet attached`;
           await fetch('https://connector-gateway.lovable.dev/resend/emails', {
             method: 'POST',
             headers: {
@@ -337,11 +338,28 @@ Deno.serve(async (req) => {
               from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
               to: [to],
               bcc: ['contracts@texascemeterybrokers.com'],
-              subject: `Your Power of Attorney${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — notary packet attached`,
+              subject,
               html,
               attachments: [{ filename, content: b64 }],
             }),
           });
+          // Log a record so it appears (colour-coded) in the submission's thread.
+          try {
+            await svc.from('email_messages').insert({
+              gmail_message_id: `poa-packet-${c.id}-${Date.now()}`,
+              gmail_thread_id: `contract-${c.id}`,
+              from_email: 'contracts@texascemeterybrokers.com',
+              from_name: 'Texas Cemetery Brokers',
+              to_email: to,
+              subject,
+              snippet: 'Power of Attorney notary packet sent (PDF attached).',
+              body_text: 'Notary packet emailed with the filled Power of Attorney PDF attached and Proof.com instructions.',
+              received_at: new Date().toISOString(),
+              is_read: true,
+              ai_intent: 'poa',
+              matched_submission_id: c.submission_id,
+            });
+          } catch (logErr) { console.error('log poa packet failed', logErr); }
         }
       } catch (mailErr) {
         console.error('poa_finalize email failed', mailErr);
