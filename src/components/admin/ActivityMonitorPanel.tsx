@@ -918,4 +918,20 @@ export default function ActivityMonitorPanel() {
       </div>
     </div>
   );
+
+  if (!fullscreen) return body;
+  return (
+    <>
+      <div className="fixed inset-0 z-[99] bg-slate-950/70 backdrop-blur-sm" onClick={() => setFullscreen(false)} />
+      {body}
+      <button
+        onClick={() => setFullscreen(false)}
+        className="fixed top-4 right-4 z-[101] inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-slate-200 text-xs hover:bg-slate-700"
+        title="Close (Esc)"
+      >
+        <X className="w-3.5 h-3.5" /> Close
+      </button>
+    </>
+  );
 }
+
