@@ -363,14 +363,16 @@ export default function ActivityMonitorPanel() {
     }
 
     for (const v of (views.data as any[]) || []) {
+      const who = nameFor(v.submission_id);
       feed.push({
         id: `view-${v.id}`,
         kind: "view",
         actorName: cleanDisplayName(v.user_name) || "Unknown",
         actorId: v.user_id,
         timestamp: v.viewed_at,
-        summary: "Opened a submission",
+        summary: who ? `Opened ${who}'s submission` : "Opened a submission",
         submissionId: v.submission_id,
+        customerName: who,
       });
     }
 
