@@ -19,6 +19,12 @@ import {
   Download,
   RefreshCw,
   ShieldCheck,
+  Maximize2,
+  Minimize2,
+  ChevronRight,
+  FileSignature,
+  Stamp,
+  X,
 } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { formatDistanceToNow, format } from "date-fns";
@@ -34,7 +40,12 @@ type EventKind =
   | "email_sent"
   | "quote_sent"
   | "handled"
-  | "payment";
+  | "payment"
+  | "la_sent"
+  | "la_signed"
+  | "la_countersigned"
+  | "poa_sent"
+  | "poa_signed";
 
 interface FeedEvent {
   id: string;
@@ -47,7 +58,9 @@ interface FeedEvent {
   submissionId?: string | null;
   customerName?: string | null;
   meta?: Record<string, any>;
+  children?: FeedEvent[];
 }
+
 
 const KIND_META: Record<
   EventKind,
@@ -130,6 +143,42 @@ const KIND_META: Record<
     ring: "ring-lime-400/30",
     dot: "bg-lime-400",
   },
+  la_sent: {
+    label: "LA sent",
+    Icon: FileSignature,
+    color: "text-blue-300",
+    ring: "ring-blue-400/30",
+    dot: "bg-blue-400",
+  },
+  la_signed: {
+    label: "LA signed",
+    Icon: FileSignature,
+    color: "text-emerald-300",
+    ring: "ring-emerald-400/30",
+    dot: "bg-emerald-400",
+  },
+  la_countersigned: {
+    label: "LA countersigned",
+    Icon: Stamp,
+    color: "text-teal-300",
+    ring: "ring-teal-400/30",
+    dot: "bg-teal-400",
+  },
+  poa_sent: {
+    label: "POA sent",
+    Icon: FileSignature,
+    color: "text-orange-300",
+    ring: "ring-orange-400/30",
+    dot: "bg-orange-400",
+  },
+  poa_signed: {
+    label: "POA signed",
+    Icon: Stamp,
+    color: "text-emerald-300",
+    ring: "ring-emerald-400/30",
+    dot: "bg-emerald-400",
+  },
+
 };
 
 const RANGE_OPTIONS: { key: string; label: string; hours: number }[] = [
@@ -150,13 +199,32 @@ export default function ActivityMonitorPanel() {
   const [query, setQuery] = useState("");
   const [live, setLive] = useState(true);
   const [selected, setSelected] = useState<FeedEvent | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [bundle, setBundle] = useState(true);
+  const [expandedBundles, setExpandedBundles] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selected) setSelected(null);
+        else if (fullscreen) setFullscreen(false);
+      }
+      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setFullscreen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreen, selected]);
+
 
   const load = async () => {
     setRefreshing(true);
     const range = RANGE_OPTIONS.find((r) => r.key === rangeKey) || RANGE_OPTIONS[1];
     const since = new Date(Date.now() - range.hours * 3600 * 1000).toISOString();
 
-    const [logs, notes, aiEdits, views, subs, payments] = await Promise.all([
+    const [logs, notes, aiEdits, views, subs, payments, contracts] = await Promise.all([
       supabase
         .from("customer_activity_log" as any)
         .select("*")
@@ -191,11 +259,17 @@ export default function ActivityMonitorPanel() {
         .limit(300),
       supabase
         .from("payment_transactions" as any)
-        .select("id, amount_cents, description, status, created_by_name, created_at, paid_at, submission_id")
+        .select("id, amount_cents, description, status, created_by_name, created_at, paid_at, submission_id, kind")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(300),
-    ]);
+      supabase
+        .from("contracts" as any)
+        .select("id, kind, status, submission_id, sent_at, signed_at, countersigned_at, countersigner_name, created_at, updated_at")
+        .or(`sent_at.gte.${since},signed_at.gte.${since},countersigned_at.gte.${since}`)
+        .order("updated_at", { ascending: false })
+        .limit(300),
+    ]) as any;
 
     const feed: FeedEvent[] = [];
 
@@ -209,6 +283,7 @@ export default function ActivityMonitorPanel() {
         : "file_upload";
       feed.push({
         id: `log-${row.id}`,
+
         kind,
         actorName: cleanDisplayName(row.actor_name) || "System",
         actorId: row.actor_user_id,
@@ -304,17 +379,54 @@ export default function ActivityMonitorPanel() {
     }
 
     for (const p of (payments.data as any[]) || []) {
+      const paid = p.status === "paid";
+      const amount = ((p.amount_cents || 0) / 100).toFixed(2);
       feed.push({
         id: `pay-${p.id}`,
         kind: "payment",
         actorName: cleanDisplayName(p.created_by_name) || "System",
         timestamp: p.paid_at || p.created_at,
-        summary: `${p.status === "paid" ? "Payment received" : "Payment link created"} — $${(
-          (p.amount_cents || 0) / 100
-        ).toFixed(2)}${p.description ? ` · ${p.description}` : ""}`,
+        summary: `${paid ? "Payment received" : "Payment link created"} — $${amount}${
+          p.description ? ` · ${p.description}` : ""
+        }`,
         submissionId: p.submission_id,
-        meta: { status: p.status },
+        meta: { status: p.status, kind: p.kind, paid, isLinkCreation: !paid },
       });
+    }
+
+    for (const c of (contracts?.data as any[]) || []) {
+      const isPoa = c.kind === "poa";
+      const label = isPoa ? "POA" : "Listing agreement";
+      if (c.sent_at && new Date(c.sent_at) >= new Date(since)) {
+        feed.push({
+          id: `ct-sent-${c.id}`,
+          kind: isPoa ? "poa_sent" : "la_sent",
+          actorName: "System",
+          timestamp: c.sent_at,
+          summary: `${label} sent to seller`,
+          submissionId: c.submission_id,
+        });
+      }
+      if (c.signed_at && new Date(c.signed_at) >= new Date(since)) {
+        feed.push({
+          id: `ct-signed-${c.id}`,
+          kind: isPoa ? "poa_signed" : "la_signed",
+          actorName: "Seller",
+          timestamp: c.signed_at,
+          summary: `${label} signed by seller`,
+          submissionId: c.submission_id,
+        });
+      }
+      if (c.countersigned_at && new Date(c.countersigned_at) >= new Date(since)) {
+        feed.push({
+          id: `ct-cs-${c.id}`,
+          kind: "la_countersigned",
+          actorName: cleanDisplayName(c.countersigner_name) || "Broker",
+          timestamp: c.countersigned_at,
+          summary: `${label} countersigned`,
+          submissionId: c.submission_id,
+        });
+      }
     }
 
     feed.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
@@ -322,6 +434,7 @@ export default function ActivityMonitorPanel() {
     setLoading(false);
     setRefreshing(false);
   };
+
 
   useEffect(() => {
     load();
@@ -341,7 +454,7 @@ export default function ActivityMonitorPanel() {
     return Array.from(set.entries()).sort((a, b) => b[1] - a[1]);
   }, [events]);
 
-  const filtered = useMemo(() => {
+  const filteredFlat = useMemo(() => {
     const q = query.trim().toLowerCase();
     return events.filter((e) => {
       if (actorFilter !== "all" && e.actorName !== actorFilter) return false;
@@ -354,11 +467,56 @@ export default function ActivityMonitorPanel() {
     });
   }, [events, actorFilter, kindFilter, query]);
 
+  // Bundle related events on the same submission that happen close together.
+  // e.g. "Quote sent" + payment-link creations from that same quote email get
+  // grouped under the quote as children, instead of showing 4 separate rows.
+  const filtered = useMemo(() => {
+    if (!bundle) return filteredFlat;
+    // Group priority: parent event kinds (in order) absorb nearby children.
+    const PARENT_RULES: {
+      parent: EventKind;
+      children: EventKind[];
+      windowMin: number;
+    }[] = [
+      { parent: "quote_sent", children: ["payment"], windowMin: 10 },
+      { parent: "la_sent", children: ["payment", "email_sent"], windowMin: 5 },
+      { parent: "poa_sent", children: ["payment", "email_sent"], windowMin: 5 },
+      { parent: "la_signed", children: ["email_sent"], windowMin: 5 },
+    ];
+    const used = new Set<string>();
+    const out: FeedEvent[] = [];
+    // Iterate newest-first (filteredFlat is already sorted desc).
+    for (const evt of filteredFlat) {
+      if (used.has(evt.id)) continue;
+      const rule = PARENT_RULES.find((r) => r.parent === evt.kind);
+      if (!rule || !evt.submissionId) {
+        out.push(evt);
+        used.add(evt.id);
+        continue;
+      }
+      const parentTs = new Date(evt.timestamp).getTime();
+      const children = filteredFlat.filter((c) => {
+        if (used.has(c.id) || c.id === evt.id) return false;
+        if (c.submissionId !== evt.submissionId) return false;
+        if (!rule.children.includes(c.kind)) return false;
+        // Children can be created just before or just after the parent (link
+        // rows are inserted before the quote email fires, then paid later).
+        const diff = Math.abs(new Date(c.timestamp).getTime() - parentTs);
+        return diff <= rule.windowMin * 60_000;
+      });
+      children.forEach((c) => used.add(c.id));
+      out.push({ ...evt, children: children.length ? children : undefined });
+      used.add(evt.id);
+    }
+    return out;
+  }, [filteredFlat, bundle]);
+
   const stats = useMemo(() => {
     const byKind = new Map<EventKind, number>();
-    filtered.forEach((e) => byKind.set(e.kind, (byKind.get(e.kind) || 0) + 1));
+    filteredFlat.forEach((e) => byKind.set(e.kind, (byKind.get(e.kind) || 0) + 1));
     return byKind;
-  }, [filtered]);
+  }, [filteredFlat]);
+
 
   const exportCsv = () => {
     const rows = [
@@ -381,8 +539,17 @@ export default function ActivityMonitorPanel() {
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <div className="rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl">
+  const scrollClass = fullscreen ? "max-h-[calc(100vh-220px)]" : "max-h-[70vh]";
+
+  const body = (
+    <div
+      className={`${
+        fullscreen
+          ? "fixed inset-0 z-[100] rounded-none border-0"
+          : "rounded-3xl border border-slate-800 shadow-2xl"
+      } overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100`}
+    >
+
       {/* Header bar */}
       <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 bg-slate-900/60 px-5 py-4">
         <div className="flex items-center gap-2">
@@ -438,13 +605,34 @@ export default function ActivityMonitorPanel() {
             Refresh
           </button>
           <button
+            onClick={() => setBundle((v) => !v)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
+              bundle
+                ? "border-indigo-400/40 bg-indigo-500/10 text-indigo-200"
+                : "border-slate-700 bg-slate-800/60 text-slate-400 hover:text-slate-200"
+            }`}
+            title="Group related events on the same submission (e.g. quote + its payment links)"
+          >
+            <GitBranch className="w-3.5 h-3.5" />
+            {bundle ? "Bundled" : "Flat"}
+          </button>
+          <button
             onClick={exportCsv}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-slate-700 bg-slate-800/60 text-slate-300 hover:text-white"
           >
             <Download className="w-3.5 h-3.5" /> CSV
           </button>
+          <button
+            onClick={() => setFullscreen((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-slate-700 bg-slate-800/60 text-slate-300 hover:text-white"
+            title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen (⌘/Ctrl+F)"}
+          >
+            {fullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {fullscreen ? "Exit" : "Fullscreen"}
+          </button>
         </div>
       </div>
+
 
       {/* Stat strip */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-slate-800 border-b border-slate-800">
@@ -474,7 +662,7 @@ export default function ActivityMonitorPanel() {
 
       <div className="grid md:grid-cols-[260px_1fr_minmax(0,380px)]">
         {/* Left rail: actors */}
-        <aside className="border-r border-slate-800 bg-slate-950/40 p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <aside className={`border-r border-slate-800 bg-slate-950/40 p-4 space-y-4 ${scrollClass} overflow-y-auto`}>
           <div>
             <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1">
               <UserCircle className="w-3 h-3" /> Operators
@@ -549,7 +737,7 @@ export default function ActivityMonitorPanel() {
         </aside>
 
         {/* Center: feed */}
-        <section className="max-h-[70vh] overflow-y-auto">
+        <section className={`${scrollClass} overflow-y-auto`}>
           <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur border-b border-slate-800 px-4 py-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -603,13 +791,52 @@ export default function ActivityMonitorPanel() {
                         <div className="mt-1 text-sm text-slate-300 line-clamp-2">
                           {e.summary || "(no summary)"}
                         </div>
-                        <div className="mt-1 text-[10px] text-slate-600 font-mono">
-                          {format(new Date(e.timestamp), "yyyy-MM-dd HH:mm:ss")}
-                          {e.submissionId && ` · sub ${e.submissionId.slice(0, 8)}`}
+                        <div className="mt-1 text-[10px] text-slate-600 font-mono flex items-center gap-2 flex-wrap">
+                          <span>{format(new Date(e.timestamp), "yyyy-MM-dd HH:mm:ss")}</span>
+                          {e.submissionId && <span>· sub {e.submissionId.slice(0, 8)}</span>}
+                          {e.children && e.children.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                setExpandedBundles((s) => {
+                                  const n = new Set(s);
+                                  n.has(e.id) ? n.delete(e.id) : n.add(e.id);
+                                  return n;
+                                });
+                              }}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 font-sans hover:bg-indigo-500/25"
+                            >
+                              <ChevronRight className={`w-3 h-3 transition-transform ${expandedBundles.has(e.id) ? "rotate-90" : ""}`} />
+                              +{e.children.length} related
+                            </button>
+                          )}
                         </div>
+                        {e.children && expandedBundles.has(e.id) && (
+                          <ul className="mt-2 space-y-1 border-l-2 border-indigo-500/30 pl-3">
+                            {e.children.map((c) => {
+                              const cm = KIND_META[c.kind];
+                              return (
+                                <li
+                                  key={c.id}
+                                  className="flex items-center gap-2 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer"
+                                  onClick={(ev) => { ev.stopPropagation(); setSelected(c); }}
+                                >
+                                  <cm.Icon className={`w-3 h-3 ${cm.color}`} />
+                                  <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider bg-slate-800/60 ${cm.color}`}>{cm.label}</span>
+                                  <span className="truncate">{c.summary}</span>
+                                  <span className="ml-auto font-mono text-slate-600">
+                                    {format(new Date(c.timestamp), "HH:mm:ss")}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </div>
                     </div>
                   </li>
+
                 );
               })}
             </ol>
@@ -617,7 +844,7 @@ export default function ActivityMonitorPanel() {
         </section>
 
         {/* Right: detail inspector */}
-        <aside className="border-l border-slate-800 bg-slate-950/40 max-h-[70vh] overflow-y-auto">
+        <aside className={`border-l border-slate-800 bg-slate-950/40 ${scrollClass} overflow-y-auto`}>
           {selected ? (
             <div className="p-5 space-y-4">
               <div className="flex items-start gap-3">
@@ -691,4 +918,20 @@ export default function ActivityMonitorPanel() {
       </div>
     </div>
   );
+
+  if (!fullscreen) return body;
+  return (
+    <>
+      <div className="fixed inset-0 z-[99] bg-slate-950/70 backdrop-blur-sm" onClick={() => setFullscreen(false)} />
+      {body}
+      <button
+        onClick={() => setFullscreen(false)}
+        className="fixed top-4 right-4 z-[101] inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-slate-200 text-xs hover:bg-slate-700"
+        title="Close (Esc)"
+      >
+        <X className="w-3.5 h-3.5" /> Close
+      </button>
+    </>
+  );
 }
+
