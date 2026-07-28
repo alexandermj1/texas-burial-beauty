@@ -539,8 +539,17 @@ export default function ActivityMonitorPanel() {
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <div className="rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl">
+  const scrollClass = fullscreen ? "max-h-[calc(100vh-220px)]" : "max-h-[70vh]";
+
+  const body = (
+    <div
+      className={`${
+        fullscreen
+          ? "fixed inset-0 z-[100] rounded-none border-0"
+          : "rounded-3xl border border-slate-800 shadow-2xl"
+      } overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100`}
+    >
+
       {/* Header bar */}
       <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 bg-slate-900/60 px-5 py-4">
         <div className="flex items-center gap-2">
