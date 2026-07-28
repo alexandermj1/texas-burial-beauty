@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone, Radio } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
+import ActivityMonitorPanel from "@/components/admin/ActivityMonitorPanel";
 import AccountingPanel from "@/components/admin/AccountingPanel";
 import CustomersPanel from "@/components/admin/CustomersPanel";
 import InventoryRequestsPanel from "@/components/admin/InventoryRequestsPanel";
