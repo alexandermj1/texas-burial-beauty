@@ -252,11 +252,11 @@ export default function ActivityMonitorPanel() {
       supabase
         .from("contact_submissions" as any)
         .select(
-          "id, name, email, handled_by_name, handled_at, quote_sent_at, sold_at, sold_price, accepted_quote_amount, la_issued_at, poa_signed_at, updated_at"
+          "id, name, email, handled_by_name, handled_at, quote_sent_at, sold_at, sold_price, accepted_quote_amount, la_issued_at, poa_signed_at, updated_at, cemetery"
         )
-        .or(`handled_at.gte.${since},quote_sent_at.gte.${since},sold_at.gte.${since}`)
+        .gte("updated_at", since)
         .order("updated_at", { ascending: false })
-        .limit(300),
+        .limit(500),
       supabase
         .from("payment_transactions" as any)
         .select("id, amount_cents, description, status, created_by_name, created_at, paid_at, submission_id, kind")
@@ -270,6 +270,39 @@ export default function ActivityMonitorPanel() {
         .order("updated_at", { ascending: false })
         .limit(300),
     ]) as any;
+
+    // Build submission id -> display name map so every event row shows WHO it
+    // is about, not just an 8-char UUID slice. Also fetch names for submissions
+    // referenced by other event sources but not in the recent-subs slice.
+    const subNameMap = new Map<string, string>();
+    for (const s of (subs.data as any[]) || []) {
+      const label = s.name || s.email || (s.cemetery ? `${s.cemetery} inquiry` : "Submission");
+      subNameMap.set(s.id, label);
+    }
+    const missingIds = new Set<string>();
+    const collectIds = (rows: any[] | null | undefined, key: string) => {
+      (rows || []).forEach((r) => {
+        const id = r?.[key];
+        if (id && !subNameMap.has(id)) missingIds.add(id);
+      });
+    };
+    collectIds(logs.data as any[], "submission_id");
+    collectIds(notes.data as any[], "submission_id");
+    collectIds(aiEdits.data as any[], "submission_id");
+    collectIds(views.data as any[], "submission_id");
+    collectIds(payments.data as any[], "submission_id");
+    collectIds(contracts?.data as any[], "submission_id");
+    if (missingIds.size > 0) {
+      const { data: extra } = await supabase
+        .from("contact_submissions" as any)
+        .select("id, name, email, cemetery")
+        .in("id", Array.from(missingIds));
+      for (const s of (extra as any[]) || []) {
+        const label = s.name || s.email || (s.cemetery ? `${s.cemetery} inquiry` : "Submission");
+        subNameMap.set(s.id, label);
+      }
+    }
+    const nameFor = (id?: string | null) => (id && subNameMap.get(id)) || null;
 
     const feed: FeedEvent[] = [];
 
@@ -330,14 +363,16 @@ export default function ActivityMonitorPanel() {
     }
 
     for (const v of (views.data as any[]) || []) {
+      const who = nameFor(v.submission_id);
       feed.push({
         id: `view-${v.id}`,
         kind: "view",
         actorName: cleanDisplayName(v.user_name) || "Unknown",
         actorId: v.user_id,
         timestamp: v.viewed_at,
-        summary: "Opened a submission",
+        summary: who ? `Opened ${who}'s submission` : "Opened a submission",
         submissionId: v.submission_id,
+        customerName: who,
       });
     }
 
@@ -429,6 +464,14 @@ export default function ActivityMonitorPanel() {
       }
     }
 
+    // Enrich every event with the customer/submission display name so the row
+    // and inspector can lead with WHO this is about.
+    for (const evt of feed) {
+      if (!evt.customerName) {
+        const n = nameFor(evt.submissionId);
+        if (n) evt.customerName = n;
+      }
+    }
     feed.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
     setEvents(feed);
     setLoading(false);
@@ -783,6 +826,11 @@ export default function ActivityMonitorPanel() {
                           <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider bg-slate-800 ${meta.color}`}>
                             {meta.label}
                           </span>
+                          {e.customerName && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800/70 border border-slate-700 text-slate-200">
+                              re: {e.customerName}
+                            </span>
+                          )}
                           <span className="text-slate-500 font-mono ml-auto flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {formatDistanceToNow(new Date(e.timestamp), { addSuffix: true })}
