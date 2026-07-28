@@ -143,6 +143,42 @@ const KIND_META: Record<
     ring: "ring-lime-400/30",
     dot: "bg-lime-400",
   },
+  la_sent: {
+    label: "LA sent",
+    Icon: FileSignature,
+    color: "text-blue-300",
+    ring: "ring-blue-400/30",
+    dot: "bg-blue-400",
+  },
+  la_signed: {
+    label: "LA signed",
+    Icon: FileSignature,
+    color: "text-emerald-300",
+    ring: "ring-emerald-400/30",
+    dot: "bg-emerald-400",
+  },
+  la_countersigned: {
+    label: "LA countersigned",
+    Icon: Stamp,
+    color: "text-teal-300",
+    ring: "ring-teal-400/30",
+    dot: "bg-teal-400",
+  },
+  poa_sent: {
+    label: "POA sent",
+    Icon: FileSignature,
+    color: "text-orange-300",
+    ring: "ring-orange-400/30",
+    dot: "bg-orange-400",
+  },
+  poa_signed: {
+    label: "POA signed",
+    Icon: Stamp,
+    color: "text-emerald-300",
+    ring: "ring-emerald-400/30",
+    dot: "bg-emerald-400",
+  },
+
 };
 
 const RANGE_OPTIONS: { key: string; label: string; hours: number }[] = [
