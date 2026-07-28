@@ -6,7 +6,6 @@ import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
-import SendDeclineDialog from "./SendDeclineDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
@@ -205,7 +204,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [plotCardsOpen, setPlotCardsOpen] = useState(false);
-  const [declineOpen, setDeclineOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
   // Map of submission_id -> latest incoming email received_at (ISO) when the latest
@@ -1855,24 +1853,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </div>
                 )}
 
-                {/* Actions — sellers: only show quote/decline before/at the quote stages.
+                {/* Actions — sellers: only show quote before/at the quote stages.
                     Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
                 {(() => {
                   const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
                   const sellerCanQuote = kind === "seller" && (!bayerStage || sellerEarlyStages.includes(bayerStage));
                   const showQuoteBtn = kind !== "seller" || sellerCanQuote;
-                  const showDeclineBtn = kind !== "seller" || sellerCanQuote;
                   return (
                     <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         {showQuoteBtn && (kind === "seller" ? (
-                          <button
-                            onClick={guard("Send seller quote", () => setQuoteOpen(true))}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            {selected.quote_sent_at ? "Update quote" : "Send seller quote"}
-                          </button>
+                          !selected.quote_sent_at && (
+                            <button
+                              onClick={guard("Send seller quote", () => setQuoteOpen(true))}
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              Send seller quote
+                            </button>
+                          )
                         ) : (
                           <button
                             onClick={guard("Send available plots", () => setPlotCardsOpen(true))}
@@ -1882,16 +1881,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Send available plots
                           </button>
                         ))}
-
-                        {showDeclineBtn && (
-                          <button
-                            onClick={guard("Polite decline", () => setDeclineOpen(true))}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
-                          >
-                            <MessageCircleX className="w-3.5 h-3.5" />
-                            Polite decline
-                          </button>
-                        )}
 
                         {kind === "seller" && !sellerCanQuote && (
                           <span className="text-[11px] text-muted-foreground italic">
@@ -2591,11 +2580,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               property_type: selected.property_type,
             }}
             adminName={adminName}
-          />
-          <SendDeclineDialog
-            submission={selected}
-            open={declineOpen}
-            onClose={() => setDeclineOpen(false)}
           />
           {selected.cemetery && (
             <CemeteryMatchDialog
