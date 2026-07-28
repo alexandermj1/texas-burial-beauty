@@ -19,6 +19,12 @@ import {
   Download,
   RefreshCw,
   ShieldCheck,
+  Maximize2,
+  Minimize2,
+  ChevronRight,
+  FileSignature,
+  Stamp,
+  X,
 } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { formatDistanceToNow, format } from "date-fns";
@@ -34,7 +40,12 @@ type EventKind =
   | "email_sent"
   | "quote_sent"
   | "handled"
-  | "payment";
+  | "payment"
+  | "la_sent"
+  | "la_signed"
+  | "la_countersigned"
+  | "poa_sent"
+  | "poa_signed";
 
 interface FeedEvent {
   id: string;
@@ -47,7 +58,9 @@ interface FeedEvent {
   submissionId?: string | null;
   customerName?: string | null;
   meta?: Record<string, any>;
+  children?: FeedEvent[];
 }
+
 
 const KIND_META: Record<
   EventKind,
