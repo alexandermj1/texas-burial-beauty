@@ -436,6 +436,9 @@ const Admin = () => {
     { key: "cemeteries", label: "Cemeteries", Icon: Building2 },
     { key: "map", label: "Map", Icon: MapIcon },
     { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
+    ...(user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com"
+      ? [{ key: "activity_monitor" as typeof tab, label: "Activity Monitor", Icon: Radio }]
+      : []),
   ];
 
   // Staff users only get Submissions and Map — even if they also carry the
