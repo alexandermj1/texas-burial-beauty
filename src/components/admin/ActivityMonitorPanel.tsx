@@ -805,7 +805,7 @@ export default function ActivityMonitorPanel() {
         </section>
 
         {/* Right: detail inspector */}
-        <aside className="border-l border-slate-800 bg-slate-950/40 ${scrollClass} overflow-y-auto">
+        <aside className={`border-l border-slate-800 bg-slate-950/40 ${scrollClass} overflow-y-auto`}>
           {selected ? (
             <div className="p-5 space-y-4">
               <div className="flex items-start gap-3">
