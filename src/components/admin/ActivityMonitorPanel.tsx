@@ -791,13 +791,52 @@ export default function ActivityMonitorPanel() {
                         <div className="mt-1 text-sm text-slate-300 line-clamp-2">
                           {e.summary || "(no summary)"}
                         </div>
-                        <div className="mt-1 text-[10px] text-slate-600 font-mono">
-                          {format(new Date(e.timestamp), "yyyy-MM-dd HH:mm:ss")}
-                          {e.submissionId && ` · sub ${e.submissionId.slice(0, 8)}`}
+                        <div className="mt-1 text-[10px] text-slate-600 font-mono flex items-center gap-2 flex-wrap">
+                          <span>{format(new Date(e.timestamp), "yyyy-MM-dd HH:mm:ss")}</span>
+                          {e.submissionId && <span>· sub {e.submissionId.slice(0, 8)}</span>}
+                          {e.children && e.children.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                setExpandedBundles((s) => {
+                                  const n = new Set(s);
+                                  n.has(e.id) ? n.delete(e.id) : n.add(e.id);
+                                  return n;
+                                });
+                              }}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 font-sans hover:bg-indigo-500/25"
+                            >
+                              <ChevronRight className={`w-3 h-3 transition-transform ${expandedBundles.has(e.id) ? "rotate-90" : ""}`} />
+                              +{e.children.length} related
+                            </button>
+                          )}
                         </div>
+                        {e.children && expandedBundles.has(e.id) && (
+                          <ul className="mt-2 space-y-1 border-l-2 border-indigo-500/30 pl-3">
+                            {e.children.map((c) => {
+                              const cm = KIND_META[c.kind];
+                              return (
+                                <li
+                                  key={c.id}
+                                  className="flex items-center gap-2 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer"
+                                  onClick={(ev) => { ev.stopPropagation(); setSelected(c); }}
+                                >
+                                  <cm.Icon className={`w-3 h-3 ${cm.color}`} />
+                                  <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider bg-slate-800/60 ${cm.color}`}>{cm.label}</span>
+                                  <span className="truncate">{c.summary}</span>
+                                  <span className="ml-auto font-mono text-slate-600">
+                                    {format(new Date(c.timestamp), "HH:mm:ss")}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </div>
                     </div>
                   </li>
+
                 );
               })}
             </ol>
