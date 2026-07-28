@@ -199,6 +199,25 @@ export default function ActivityMonitorPanel() {
   const [query, setQuery] = useState("");
   const [live, setLive] = useState(true);
   const [selected, setSelected] = useState<FeedEvent | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [bundle, setBundle] = useState(true);
+  const [expandedBundles, setExpandedBundles] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selected) setSelected(null);
+        else if (fullscreen) setFullscreen(false);
+      }
+      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setFullscreen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreen, selected]);
+
 
   const load = async () => {
     setRefreshing(true);
