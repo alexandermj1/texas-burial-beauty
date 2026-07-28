@@ -605,13 +605,34 @@ export default function ActivityMonitorPanel() {
             Refresh
           </button>
           <button
+            onClick={() => setBundle((v) => !v)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
+              bundle
+                ? "border-indigo-400/40 bg-indigo-500/10 text-indigo-200"
+                : "border-slate-700 bg-slate-800/60 text-slate-400 hover:text-slate-200"
+            }`}
+            title="Group related events on the same submission (e.g. quote + its payment links)"
+          >
+            <GitBranch className="w-3.5 h-3.5" />
+            {bundle ? "Bundled" : "Flat"}
+          </button>
+          <button
             onClick={exportCsv}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-slate-700 bg-slate-800/60 text-slate-300 hover:text-white"
           >
             <Download className="w-3.5 h-3.5" /> CSV
           </button>
+          <button
+            onClick={() => setFullscreen((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-slate-700 bg-slate-800/60 text-slate-300 hover:text-white"
+            title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen (⌘/Ctrl+F)"}
+          >
+            {fullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {fullscreen ? "Exit" : "Fullscreen"}
+          </button>
         </div>
       </div>
+
 
       {/* Stat strip */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-slate-800 border-b border-slate-800">
