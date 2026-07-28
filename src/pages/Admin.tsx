@@ -918,6 +918,7 @@ const Admin = () => {
 
 
           {tab === "performance" && <AgentPerformancePanel />}
+          {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}
           {tab === "accounting" && <AccountingPanel />}
           {tab === "customers" && <CustomersPanel />}
           
