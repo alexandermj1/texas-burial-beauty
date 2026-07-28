@@ -259,11 +259,17 @@ export default function ActivityMonitorPanel() {
         .limit(300),
       supabase
         .from("payment_transactions" as any)
-        .select("id, amount_cents, description, status, created_by_name, created_at, paid_at, submission_id")
+        .select("id, amount_cents, description, status, created_by_name, created_at, paid_at, submission_id, kind")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(300),
-    ]);
+      supabase
+        .from("contracts" as any)
+        .select("id, kind, status, submission_id, sent_at, signed_at, countersigned_at, countersigner_name, created_at, updated_at")
+        .or(`sent_at.gte.${since},signed_at.gte.${since},countersigned_at.gte.${since}`)
+        .order("updated_at", { ascending: false })
+        .limit(300),
+    ]) as any;
 
     const feed: FeedEvent[] = [];
 
@@ -277,6 +283,7 @@ export default function ActivityMonitorPanel() {
         : "file_upload";
       feed.push({
         id: `log-${row.id}`,
+
         kind,
         actorName: cleanDisplayName(row.actor_name) || "System",
         actorId: row.actor_user_id,
