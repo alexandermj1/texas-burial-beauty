@@ -2581,11 +2581,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             }}
             adminName={adminName}
           />
-          <SendDeclineDialog
-            submission={selected}
-            open={declineOpen}
-            onClose={() => setDeclineOpen(false)}
-          />
           {selected.cemetery && (
             <CemeteryMatchDialog
               open={matchOpen}
