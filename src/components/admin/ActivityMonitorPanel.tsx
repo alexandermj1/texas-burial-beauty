@@ -454,7 +454,7 @@ export default function ActivityMonitorPanel() {
     return Array.from(set.entries()).sort((a, b) => b[1] - a[1]);
   }, [events]);
 
-  const filtered = useMemo(() => {
+  const filteredFlat = useMemo(() => {
     const q = query.trim().toLowerCase();
     return events.filter((e) => {
       if (actorFilter !== "all" && e.actorName !== actorFilter) return false;
@@ -467,11 +467,56 @@ export default function ActivityMonitorPanel() {
     });
   }, [events, actorFilter, kindFilter, query]);
 
+  // Bundle related events on the same submission that happen close together.
+  // e.g. "Quote sent" + payment-link creations from that same quote email get
+  // grouped under the quote as children, instead of showing 4 separate rows.
+  const filtered = useMemo(() => {
+    if (!bundle) return filteredFlat;
+    // Group priority: parent event kinds (in order) absorb nearby children.
+    const PARENT_RULES: {
+      parent: EventKind;
+      children: EventKind[];
+      windowMin: number;
+    }[] = [
+      { parent: "quote_sent", children: ["payment"], windowMin: 10 },
+      { parent: "la_sent", children: ["payment", "email_sent"], windowMin: 5 },
+      { parent: "poa_sent", children: ["payment", "email_sent"], windowMin: 5 },
+      { parent: "la_signed", children: ["email_sent"], windowMin: 5 },
+    ];
+    const used = new Set<string>();
+    const out: FeedEvent[] = [];
+    // Iterate newest-first (filteredFlat is already sorted desc).
+    for (const evt of filteredFlat) {
+      if (used.has(evt.id)) continue;
+      const rule = PARENT_RULES.find((r) => r.parent === evt.kind);
+      if (!rule || !evt.submissionId) {
+        out.push(evt);
+        used.add(evt.id);
+        continue;
+      }
+      const parentTs = new Date(evt.timestamp).getTime();
+      const children = filteredFlat.filter((c) => {
+        if (used.has(c.id) || c.id === evt.id) return false;
+        if (c.submissionId !== evt.submissionId) return false;
+        if (!rule.children.includes(c.kind)) return false;
+        // Children can be created just before or just after the parent (link
+        // rows are inserted before the quote email fires, then paid later).
+        const diff = Math.abs(new Date(c.timestamp).getTime() - parentTs);
+        return diff <= rule.windowMin * 60_000;
+      });
+      children.forEach((c) => used.add(c.id));
+      out.push({ ...evt, children: children.length ? children : undefined });
+      used.add(evt.id);
+    }
+    return out;
+  }, [filteredFlat, bundle]);
+
   const stats = useMemo(() => {
     const byKind = new Map<EventKind, number>();
-    filtered.forEach((e) => byKind.set(e.kind, (byKind.get(e.kind) || 0) + 1));
+    filteredFlat.forEach((e) => byKind.set(e.kind, (byKind.get(e.kind) || 0) + 1));
     return byKind;
-  }, [filtered]);
+  }, [filteredFlat]);
+
 
   const exportCsv = () => {
     const rows = [
