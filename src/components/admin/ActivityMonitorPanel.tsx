@@ -824,6 +824,11 @@ export default function ActivityMonitorPanel() {
                           <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider bg-slate-800 ${meta.color}`}>
                             {meta.label}
                           </span>
+                          {e.customerName && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800/70 border border-slate-700 text-slate-200">
+                              re: {e.customerName}
+                            </span>
+                          )}
                           <span className="text-slate-500 font-mono ml-auto flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {formatDistanceToNow(new Date(e.timestamp), { addSuffix: true })}
