@@ -224,7 +224,7 @@ export default function ActivityMonitorPanel() {
     const range = RANGE_OPTIONS.find((r) => r.key === rangeKey) || RANGE_OPTIONS[1];
     const since = new Date(Date.now() - range.hours * 3600 * 1000).toISOString();
 
-    const [logs, notes, aiEdits, views, subs, payments] = await Promise.all([
+    const [logs, notes, aiEdits, views, subs, payments, contracts] = await Promise.all([
       supabase
         .from("customer_activity_log" as any)
         .select("*")
