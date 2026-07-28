@@ -379,17 +379,54 @@ export default function ActivityMonitorPanel() {
     }
 
     for (const p of (payments.data as any[]) || []) {
+      const paid = p.status === "paid";
+      const amount = ((p.amount_cents || 0) / 100).toFixed(2);
       feed.push({
         id: `pay-${p.id}`,
         kind: "payment",
         actorName: cleanDisplayName(p.created_by_name) || "System",
         timestamp: p.paid_at || p.created_at,
-        summary: `${p.status === "paid" ? "Payment received" : "Payment link created"} — $${(
-          (p.amount_cents || 0) / 100
-        ).toFixed(2)}${p.description ? ` · ${p.description}` : ""}`,
+        summary: `${paid ? "Payment received" : "Payment link created"} — $${amount}${
+          p.description ? ` · ${p.description}` : ""
+        }`,
         submissionId: p.submission_id,
-        meta: { status: p.status },
+        meta: { status: p.status, kind: p.kind, paid, isLinkCreation: !paid },
       });
+    }
+
+    for (const c of (contracts?.data as any[]) || []) {
+      const isPoa = c.kind === "poa";
+      const label = isPoa ? "POA" : "Listing agreement";
+      if (c.sent_at && new Date(c.sent_at) >= new Date(since)) {
+        feed.push({
+          id: `ct-sent-${c.id}`,
+          kind: isPoa ? "poa_sent" : "la_sent",
+          actorName: "System",
+          timestamp: c.sent_at,
+          summary: `${label} sent to seller`,
+          submissionId: c.submission_id,
+        });
+      }
+      if (c.signed_at && new Date(c.signed_at) >= new Date(since)) {
+        feed.push({
+          id: `ct-signed-${c.id}`,
+          kind: isPoa ? "poa_signed" : "la_signed",
+          actorName: "Seller",
+          timestamp: c.signed_at,
+          summary: `${label} signed by seller`,
+          submissionId: c.submission_id,
+        });
+      }
+      if (c.countersigned_at && new Date(c.countersigned_at) >= new Date(since)) {
+        feed.push({
+          id: `ct-cs-${c.id}`,
+          kind: "la_countersigned",
+          actorName: cleanDisplayName(c.countersigner_name) || "Broker",
+          timestamp: c.countersigned_at,
+          summary: `${label} countersigned`,
+          submissionId: c.submission_id,
+        });
+      }
     }
 
     feed.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
@@ -397,6 +434,7 @@ export default function ActivityMonitorPanel() {
     setLoading(false);
     setRefreshing(false);
   };
+
 
   useEffect(() => {
     load();
