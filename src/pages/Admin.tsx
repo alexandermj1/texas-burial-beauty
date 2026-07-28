@@ -458,7 +458,7 @@ const Admin = () => {
     tab === "listings" ? "Search listings..." :
     "Search anything...";
 
-  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && tab !== "email_marketing" && tab !== "map";
+  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && tab !== "email_marketing" && tab !== "map" && tab !== "activity_monitor";
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-sand-light/60 via-background to-sage-light/40 dark:from-background dark:via-background dark:to-background">
