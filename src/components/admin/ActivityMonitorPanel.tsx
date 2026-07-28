@@ -462,6 +462,14 @@ export default function ActivityMonitorPanel() {
       }
     }
 
+    // Enrich every event with the customer/submission display name so the row
+    // and inspector can lead with WHO this is about.
+    for (const evt of feed) {
+      if (!evt.customerName) {
+        const n = nameFor(evt.submissionId);
+        if (n) evt.customerName = n;
+      }
+    }
     feed.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
     setEvents(feed);
     setLoading(false);
