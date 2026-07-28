@@ -539,7 +539,7 @@ export default function ActivityMonitorPanel() {
     URL.revokeObjectURL(url);
   };
 
-  const scrollClass = fullscreen ? "max-h-[calc(100vh-220px)]" : "max-h-[70vh]";
+  const scrollClass = fullscreen ? "max-h-[calc(100vh-220px)]" : "${scrollClass}";
 
   const body = (
     <div
@@ -662,7 +662,7 @@ export default function ActivityMonitorPanel() {
 
       <div className="grid md:grid-cols-[260px_1fr_minmax(0,380px)]">
         {/* Left rail: actors */}
-        <aside className="border-r border-slate-800 bg-slate-950/40 p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <aside className="border-r border-slate-800 bg-slate-950/40 p-4 space-y-4 ${scrollClass} overflow-y-auto">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1">
               <UserCircle className="w-3 h-3" /> Operators
@@ -737,7 +737,7 @@ export default function ActivityMonitorPanel() {
         </aside>
 
         {/* Center: feed */}
-        <section className="max-h-[70vh] overflow-y-auto">
+        <section className="${scrollClass} overflow-y-auto">
           <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur border-b border-slate-800 px-4 py-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -805,7 +805,7 @@ export default function ActivityMonitorPanel() {
         </section>
 
         {/* Right: detail inspector */}
-        <aside className="border-l border-slate-800 bg-slate-950/40 max-h-[70vh] overflow-y-auto">
+        <aside className="border-l border-slate-800 bg-slate-950/40 ${scrollClass} overflow-y-auto">
           {selected ? (
             <div className="p-5 space-y-4">
               <div className="flex items-start gap-3">
