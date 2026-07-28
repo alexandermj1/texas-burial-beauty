@@ -539,7 +539,7 @@ export default function ActivityMonitorPanel() {
     URL.revokeObjectURL(url);
   };
 
-  const scrollClass = fullscreen ? "max-h-[calc(100vh-220px)]" : "${scrollClass}";
+  const scrollClass = fullscreen ? "max-h-[calc(100vh-220px)]" : "max-h-[70vh]";
 
   const body = (
     <div
