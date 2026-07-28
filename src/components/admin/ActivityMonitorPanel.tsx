@@ -662,7 +662,7 @@ export default function ActivityMonitorPanel() {
 
       <div className="grid md:grid-cols-[260px_1fr_minmax(0,380px)]">
         {/* Left rail: actors */}
-        <aside className="border-r border-slate-800 bg-slate-950/40 p-4 space-y-4 ${scrollClass} overflow-y-auto">
+        <aside className={`border-r border-slate-800 bg-slate-950/40 p-4 space-y-4 ${scrollClass} overflow-y-auto`}>
           <div>
             <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1">
               <UserCircle className="w-3 h-3" /> Operators
