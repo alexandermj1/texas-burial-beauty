@@ -160,6 +160,8 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
       email: form.email.trim(),
       phone: form.phone.trim() || null,
       cemetery: form.cemetery.trim(),
+      // Flag customer-typed cemeteries so staff can verify/match to the registry
+      custom_tag: form.cemeteryIsCustom ? "Customer-typed cemetery" : null,
       property_type: form.propertyType === "Other" && form.propertyTypeOther.trim() ? form.propertyTypeOther.trim() : form.propertyType,
       spaces: form.spaces || null,
       section: composedSection() || null,
