@@ -665,7 +665,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
           <div aria-hidden className="hidden md:block absolute -top-6 -left-6 w-40 h-40 rounded-full bg-primary/15 blur-3xl -z-10" />
 
           <motion.form
-            onSubmit={handleSubmit}
+            onSubmit={(e) => e.preventDefault()}
             onKeyDown={(e) => {
               // Prevent Enter from auto-submitting or advancing — user must click.
               if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
