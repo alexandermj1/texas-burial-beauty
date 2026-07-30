@@ -63,29 +63,29 @@ const ContactSection = () => {
               Reach out today for a free, no-obligation consultation. We respond within 24 hours.
             </p>
 
-            <div className="space-y-4 mb-8">
+            <div className="space-y-5 mb-8">
               <a
                 href="tel:+12142304740"
-                className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
+                className="group flex items-center gap-4 text-foreground hover:text-primary transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Phone className="w-4 h-4 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Call us</p>
-                  <p className="font-medium">(214) 230-4740</p>
+                  <p className="font-display text-xl md:text-2xl">(214) 230-4740</p>
                 </div>
               </a>
               <a
                 href="mailto:info@texascemeterybrokers.com"
-                className="group flex items-center gap-3 text-foreground hover:text-primary transition-colors"
+                className="group flex items-center gap-4 text-foreground hover:text-primary transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Mail className="w-4 h-4 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email us</p>
-                  <p className="font-medium">info@texascemeterybrokers.com</p>
+                  <p className="font-medium text-lg">info@texascemeterybrokers.com</p>
                 </div>
               </a>
             </div>
