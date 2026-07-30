@@ -195,8 +195,8 @@ Thank you for coming back to me — happy to explain the difference between the 
 All three give your property real representation from our sales team, and every plot in our inventory is shown to buyers regardless of tier. The differences are down to visibility and priority:
 
 • Free listing — your property is added to our inventory and shown to buyers who ask about that cemetery. No cost, no time limit.
-• Pro ($99) — broader promotion across our marketing channels. In 2025, Pro-listed plots sold on average 22% faster than plots marketed independently through classifieds or auction sites.
-• Featured ($299) — priority placement with our funeral home and mortuary partners. Featured plots sold on average 61% faster than the same independent baseline.
+• Pro ($99) — broader promotion across our marketing channels.
+• Featured ($299) — priority placement with our funeral home and mortuary partners, plus targeted digital advertising.
 
 The reason Featured performs the strongest is straightforward: around 90% of resale plot sales originate through a mortuary or funeral home referral, so being at the top of that list matters. $299 is also a good value at the moment while buyer demand is elevated and we're holding the price down.
 
