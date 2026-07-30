@@ -316,7 +316,9 @@ async function markPaid(sessionId: string, paymentIntentId: string | null, env: 
   if (tx.kind === "listing_fee") await handleListingFeePaid(tx, brand, last4);
   else if (tx.kind === "plot_sale") await handlePlotSalePaid(tx, brand, last4);
   else if (tx.kind === "custom") await handleCustomPaid(tx, brand, last4);
+  await sendOwnerPaymentAlert(tx, env, brand, last4);
 }
+
 
 async function markFailed(sessionId: string, env: StripeEnv) {
   await db().from("payment_transactions")
