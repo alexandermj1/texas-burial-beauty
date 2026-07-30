@@ -71,6 +71,17 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                 {link.label}
               </Link>
             ))}
+            <a
+              href="tel:+12142304740"
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                scrolled || menuOpen
+                  ? "bg-primary text-primary-foreground hover:opacity-90"
+                  : "bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/30 hover:bg-primary-foreground/20 backdrop-blur-sm"
+              }`}
+            >
+              <Phone className="w-3.5 h-3.5" />
+              (214) 230-4740
+            </a>
           </div>
 
           <button
@@ -148,11 +159,11 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                 Get in touch
               </Link>
               <a
-                href="tel:+14155551234"
+                href="tel:+12142304740"
                 className="flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm text-foreground hover:bg-muted transition-colors"
               >
                 <Phone className="w-4 h-4" />
-                Call us
+                Call (214) 230-4740
               </a>
               <p className="text-center text-[11px] text-muted-foreground mt-2">
                 Texas Cemetery Brokers

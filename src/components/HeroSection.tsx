@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
@@ -125,6 +125,17 @@ const HeroSection = () => {
         >
           Buying or selling a plot shouldn't be hard. We make it effortless — across Texas, with deep expertise in Dallas, Houston, and beyond, at 30–50% below cemetery prices.
         </motion.p>
+
+        <motion.a
+          href="tel:+12142304740"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1.05 }}
+          className="mt-5 inline-flex items-center gap-2.5 rounded-full border border-primary-foreground/40 bg-primary-foreground/10 px-5 py-2.5 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20 transition-all"
+        >
+          <Phone className="w-4 h-4" />
+          <span className="text-sm font-medium">Prefer to talk? Call (214) 230-4740</span>
+        </motion.a>
       </motion.div>
 
       {/* Buy / Sell split — minimal text links */}
