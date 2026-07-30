@@ -265,9 +265,20 @@ const SellProperty = () => {
             <h2 className="font-display text-3xl md:text-5xl text-foreground mb-4">Ready to sell your property?</h2>
             <p className="text-foreground/70 mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours — and there's never any pressure.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a href="#quote-form" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft">
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("quote-form");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    const firstField = el.querySelector<HTMLElement>("input, select, textarea");
+                    setTimeout(() => firstField?.focus({ preventScroll: true }), 600);
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all shadow-soft"
+              >
                 Get a Free Valuation <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
               <a href="mailto:info@texascemeterybrokers.com" className="inline-flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors underline underline-offset-4">
                 <Mail className="w-4 h-4" /> Or email us instead
               </a>
