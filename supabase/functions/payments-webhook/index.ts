@@ -291,7 +291,51 @@ async function fetchCardDetails(paymentIntentId: string | null, env: StripeEnv):
   }
 }
 
+// Internal alert to the owner whenever money lands.
+const OWNER_ALERT_EMAILS = ["alexandermaclarenjames@gmail.com"];
+
+const KIND_LABEL: Record<string, string> = {
+  listing_fee: "Listing fee",
+  plot_sale: "Plot sale",
+  custom: "Custom payment",
+};
+
+async function sendOwnerPaymentAlert(tx: any, env: StripeEnv, cardBrand?: string, cardLast4?: string) {
+  try {
+    const kindLabel = KIND_LABEL[tx.kind] || "Payment";
+    const tierLabel = tx.metadata?.listing_tier ? (TIER_LABEL[tx.metadata.listing_tier] || tx.metadata.listing_tier) : null;
+    const method = cardBrand && cardLast4
+      ? `${cardBrand.charAt(0).toUpperCase() + cardBrand.slice(1)} •••• ${cardLast4}`
+      : "Card payment";
+    const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", dateStyle: "medium", timeStyle: "short" });
+    const link = tx.submission_id ? `${SITE}/admin?submission=${tx.submission_id}` : `${SITE}/admin`;
+    const row = (l: string, v: string) =>
+      `<tr><td style="padding:5px 0;color:#8a7766;">${escapeHtml(l)}</td><td align="right" style="padding:5px 0;">${escapeHtml(v)}</td></tr>`;
+    const html = brandedShell(`
+      <p style="font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#a08a76;margin:0 0 8px;">Payment received${env === "sandbox" ? " (test mode)" : ""}</p>
+      <h1 style="font-family:Georgia,serif;font-size:30px;margin:0 0 18px;color:#7c3a2e;">${fmt(tx.amount_cents)} USD</h1>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border:1px solid #ead9c9;border-radius:10px;background:#faf6f0;padding:6px 18px;">
+        ${row("Customer", tx.recipient_name || "—")}
+        ${row("Email", tx.recipient_email || "—")}
+        ${row("Type", tierLabel ? `${kindLabel} — ${tierLabel}` : kindLabel)}
+        ${row("For", tx.description || "—")}
+        ${row("Method", method)}
+        ${row("Paid at", `${when} CT`)}
+        ${row("Reference", (tx.stripe_payment_intent_id || tx.stripe_session_id || tx.id || "").toString().slice(-14).toUpperCase())}
+      </table>
+      <p style="margin:22px 0 0;"><a href="${link}" style="display:inline-block;background:#7c3a2e;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:14px;">Open in CRM</a></p>
+    `, `${fmt(tx.amount_cents)} received from ${tx.recipient_name || tx.recipient_email || "a customer"}`);
+    const subject = `💰 Payment received — ${fmt(tx.amount_cents)} from ${tx.recipient_name || tx.recipient_email || "customer"}`;
+    for (const to of OWNER_ALERT_EMAILS) {
+      await sendEmail(to, subject, html);
+    }
+  } catch (e) {
+    console.error("sendOwnerPaymentAlert", e);
+  }
+}
+
 async function markPaid(sessionId: string, paymentIntentId: string | null, env: StripeEnv, paymentLinkId?: string | null) {
+
   // Match by checkout session id OR (for Payment Link payments) by the plink_...
   // id we stored when generating the custom payment button.
   const idsToTry = [sessionId, paymentLinkId].filter(Boolean) as string[];
@@ -316,7 +360,9 @@ async function markPaid(sessionId: string, paymentIntentId: string | null, env: 
   if (tx.kind === "listing_fee") await handleListingFeePaid(tx, brand, last4);
   else if (tx.kind === "plot_sale") await handlePlotSalePaid(tx, brand, last4);
   else if (tx.kind === "custom") await handleCustomPaid(tx, brand, last4);
+  await sendOwnerPaymentAlert(tx, env, brand, last4);
 }
+
 
 async function markFailed(sessionId: string, env: StripeEnv) {
   await db().from("payment_transactions")
