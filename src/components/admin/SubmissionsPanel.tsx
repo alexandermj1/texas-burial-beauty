@@ -1170,6 +1170,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {selected.cemetery && (() => {
                   const selCanon = _canon(selected.cemetery || "");
                   const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
+                  // Unmatched = what the customer typed doesn't exactly equal a
+                  // directory entry. We never auto-match — staff picks the profile.
+                  const unmatched = !!selCanon && !texasCemProfiles.get(selCanon);
+                  if (unmatched) {
+                    return (
+                      <div className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium border max-w-[280px] bg-amber-500/10 text-amber-700 border-amber-500/30">
+                        <Building2 className="w-3 h-3 shrink-0" />
+                        <span className="truncate" title={`Typed by customer: ${selected.cemetery}`}>{selected.cemetery}</span>
+                        <span className="shrink-0 text-[10px] opacity-80">typed by customer</span>
+                        <button
+                          onClick={() => setReassignCemeteryOpen(true)}
+                          className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-semibold hover:bg-amber-700"
+                        >
+                          Match
+                        </button>
+                      </div>
+                    );
+                  }
                   return (
                     <button
                       onClick={() => {
