@@ -71,6 +71,17 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                 {link.label}
               </Link>
             ))}
+            <a
+              href="tel:+12142304740"
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                scrolled || menuOpen
+                  ? "bg-primary text-primary-foreground hover:opacity-90"
+                  : "bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/30 hover:bg-primary-foreground/20 backdrop-blur-sm"
+              }`}
+            >
+              <Phone className="w-3.5 h-3.5" />
+              (214) 230-4740
+            </a>
           </div>
 
           <button
