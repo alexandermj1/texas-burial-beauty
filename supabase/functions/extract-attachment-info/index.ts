@@ -12,7 +12,7 @@ const corsHeaders = {
 };
 
 const MODEL = "google/gemini-3.1-flash-lite";
-const MAX_BYTES = 15 * 1024 * 1024; // 15 MB safety cap
+const MAX_BYTES = 32 * 1024 * 1024; // 32 MB safety cap
 
 const SYSTEM_PROMPT = `You are an expert paralegal who reads cemetery-related documents:
 deeds, certificates of ownership, powers of attorney, government IDs, death
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
 
     if (row.file_size && row.file_size > MAX_BYTES) {
       await supabase.from("customer_files").update({
-        extraction_status: "unsupported",
+        extraction_status: "too_large",
         extraction_error: `File too large (${row.file_size} bytes, max ${MAX_BYTES})`,
         extracted_at: new Date().toISOString(),
       }).eq("id", fileId);
