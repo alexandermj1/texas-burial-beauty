@@ -930,7 +930,9 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
 
               {isLast ? (
                 <button
-                  type="submit"
+                  key="final-submit"
+                  type="button"
+                  onClick={(e) => handleSubmit(e as unknown as React.FormEvent)}
                   disabled={loading}
                   className="group inline-flex items-center justify-center gap-2 px-7 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all disabled:opacity-50 shadow-md shadow-primary/30"
                 >
@@ -939,6 +941,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
                 </button>
               ) : (
                 <button
+                  key="continue"
                   type="button"
                   onClick={next}
                   className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm tracking-wide hover:opacity-90 transition-all shadow-md shadow-primary/20"
