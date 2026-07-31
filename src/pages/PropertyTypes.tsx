@@ -221,7 +221,7 @@ const ImageStrip = ({ direction = 1 }: { direction?: 1 | -1 }) => {
     <div ref={ref} className="overflow-hidden py-4">
       <motion.div style={{ x }} className="flex gap-10 px-8">
         {images.map((img, i) => (
-          <img key={i} src={img} alt="" className="w-[100px] md:w-[140px] h-auto opacity-[0.12] select-none pointer-events-none grayscale" />
+          <img loading="lazy" decoding="async" key={i} src={img} alt="" className="w-[100px] md:w-[140px] h-auto opacity-[0.12] select-none pointer-events-none grayscale" />
         ))}
       </motion.div>
     </div>

@@ -1,15 +1,20 @@
 # Texas Cemetery Brokers
+
 > Cemetery brokerage helping Texas families buy and sell cemetery plots, mausoleum crypts, and burial spaces across Dallas, Houston, Austin, and San Antonio. Operated in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) with 30+ years of experience and 9,000+ transactions. Save 30–50% versus retail cemetery prices.
 
 ## Services
 - [Buy Cemetery Plots in Texas](/buy): Browse discounted cemetery plots, niches, and crypts across Texas.
 - [Sell a Cemetery Plot in Texas](/sell): Free valuation, no upfront fees, 30–60 day close.
-- [Browse Listings](/properties): Current inventory of cemetery properties for sale across Texas.
 - [Property Types](/property-types): Guide to burial plots, crypts, niches, and family estates.
+
+## Cemeteries
+- [Texas Cemetery Directory](/cemeteries): Cemeteries across Dallas, Houston, Austin, San Antonio, Fort Worth and El Paso.
+
+## Guides
+- [Guides](/guides): Family resources on Texas cemetery property and the resale process.
+- [How to Sell a Cemetery Plot in Texas](/sell-cemetery-plot-texas): Valuation, transfer fees, paperwork and timelines.
+- [Cemetery Plots for Sale in Texas](/cemetery-plots-for-sale-texas): Buyer's guide to prices, plot types and transfers.
 
 ## About
 - [Our Partners](/partners): Our partnership with Bayer Cemetery Brokers.
-- [Our Team](/team): The Texas Cemetery Brokers team.
-
-## Resources
-- [Blog](/blog): Expert guidance on Texas cemetery property and the resale process.
+- [Contact](/contact): Request a free valuation or ask a question.

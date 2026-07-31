@@ -54,7 +54,14 @@
     <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
+  </url>
   <url>
+    <loc>https://texascemeterybrokers.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+
     <loc>https://texascemeterybrokers.com/cemeteries/restland-memorial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>

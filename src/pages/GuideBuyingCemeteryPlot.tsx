@@ -158,7 +158,7 @@ const GuideBuyingCemeteryPlot = () => (
           { bottom: "16%", left: "4%", w: 180, rot: -12, op: 0.55, src: byName("hibiscus-coral") },
         ];
         return scatter.map((s, i) => s.src ? (
-          <img key={i} src={s.src} alt="" aria-hidden
+          <img loading="lazy" decoding="async" key={i} src={s.src} alt="" aria-hidden
                className="absolute pointer-events-none select-none hidden md:block"
                style={{ top: s.top, bottom: s.bottom, left: s.left, right: s.right, width: s.w, opacity: s.op, transform: `rotate(${s.rot}deg)` }} />
         ) : null);

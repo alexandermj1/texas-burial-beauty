@@ -134,7 +134,7 @@ const GuidesCarousel = () => {
                             backgroundSize: "48px 48px",
                           }}
                         />
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={g.hero}
                           alt=""
                           aria-hidden
@@ -149,7 +149,7 @@ const GuidesCarousel = () => {
                             filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))",
                           }}
                         />
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={g.accent}
                           alt=""
                           aria-hidden

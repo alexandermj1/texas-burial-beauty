@@ -366,6 +366,33 @@ const BuyInquiryForm = () => {
 };
 
 /* ─── Page ─── */
+const CONTACT_JSONLD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "@id": "https://texascemeterybrokers.com/contact#page",
+    url: "https://texascemeterybrokers.com/contact",
+    name: "Contact Texas Cemetery Brokers",
+    about: { "@id": "https://texascemeterybrokers.com/#organization" },
+    mainEntity: {
+      "@type": "ContactPoint",
+      telephone: "+1-214-230-4740",
+      email: "info@texascemeterybrokers.com",
+      contactType: "customer service",
+      areaServed: "US-TX",
+      availableLanguage: ["English"],
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://texascemeterybrokers.com/" },
+      { "@type": "ListItem", position: 2, name: "Contact", item: "https://texascemeterybrokers.com/contact" },
+    ],
+  },
+];
+
 const Contact = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
@@ -373,7 +400,9 @@ const Contact = () => {
         title="Contact Texas Cemetery Brokers"
         description="Get in touch with Texas Cemetery Brokers. Request a free valuation, ask a buying question, or send us a general inquiry. We respond within 24 hours."
         path="/contact"
+        jsonLd={CONTACT_JSONLD}
       />
+
       <Navbar forceScrolled />
 
       {/* ── Hero ── */}

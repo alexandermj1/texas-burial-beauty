@@ -313,7 +313,7 @@ const BlogIndex = () => (
 
     {/* Hero — magazine-style with photo background */}
     <section className="relative pt-28 pb-14 overflow-hidden">
-      <img src={blogHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <img loading="lazy" decoding="async" src={blogHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/65 to-foreground/45" />
       <div className="relative container mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-4xl">
@@ -384,7 +384,7 @@ const BlogArticle = ({ post }: { post: BlogPost }) => {
 
     {/* Article Hero — photo with dark overlay */}
     <section className="relative pt-28 pb-12 overflow-hidden">
-      <img src={blogHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <img loading="lazy" decoding="async" src={blogHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-foreground/90 via-foreground/75 to-foreground/55" />
       <div className="relative container mx-auto px-6 max-w-3xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -401,7 +401,7 @@ const BlogArticle = ({ post }: { post: BlogPost }) => {
     {/* Feature image */}
     <div className="container mx-auto px-6 -mt-0">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="max-w-3xl mx-auto rounded-2xl overflow-hidden shadow-hover -mb-8 relative z-10">
-        <img src={post.image} alt={post.title} className="w-full h-64 md:h-80 object-cover" />
+        <img loading="lazy" decoding="async" src={post.image} alt={post.title} className="w-full h-64 md:h-80 object-cover" />
       </motion.div>
     </div>
 

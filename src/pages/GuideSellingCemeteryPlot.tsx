@@ -129,7 +129,7 @@ const GuideSellingCemeteryPlot = () => (
           { bottom: "18%", left: "3%", w: 200, rot:  12, op: 0.55, src: byName("pink-branch") },
         ];
         return scatter.map((s, i) => s.src ? (
-          <img
+          <img loading="lazy" decoding="async"
             key={i}
             src={s.src}
             alt=""

@@ -33,8 +33,10 @@
     <link rel="preconnect" href="https://mceguxfdoikjthsrbmzx.supabase.co" />
     <link rel="dns-prefetch" href="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev" />
 
-    <!-- Preload hero video (LCP candidate on homepage) -->
-    <link rel="preload" as="video" href="/videos/hero-trees.mp4" type="video/mp4" />
+    <!-- Note: rel=preload has no valid `as="video"` value, so preloading the
+         hero video here is ignored by browsers and only costs a console
+         warning. The <video> element handles its own priority. -->
+
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -64,7 +66,7 @@
       "url": "https://texascemeterybrokers.com/",
       "logo": "https://texascemeterybrokers.com/favicon.png",
       "description": "Cemetery property brokerage serving Texas families, operating in partnership with Bayer Cemetery Brokers (CEB 1512, licensed in California). Helping buyers and sellers transact cemetery plots, niches, mausoleums and crypts across Dallas, Houston, Austin, San Antonio, Fort Worth and El Paso.",
-      "telephone": "+1-310-804-9586",
+      "telephone": "+1-214-230-4740",
       "email": "info@texascemeterybrokers.com",
       "priceRange": "$$",
       "areaServed": [
@@ -94,7 +96,7 @@
       }],
       "contactPoint": [{
         "@type": "ContactPoint",
-        "telephone": "+1-310-804-9586",
+        "telephone": "+1-214-230-4740",
         "email": "info@texascemeterybrokers.com",
         "contactType": "customer service",
         "areaServed": "US-TX",
