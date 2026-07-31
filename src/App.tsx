@@ -35,6 +35,8 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Guides = lazy(() => import("./pages/Guides"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
+const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
+const CityPlotsPage = lazy(() => import("./pages/CityPlotsPage"));
 const ThankYou = lazy(() => import("./pages/ThankYou"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
