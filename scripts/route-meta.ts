@@ -37,9 +37,9 @@ export const STATIC_ROUTES: RouteMeta[] = [
   },
   {
     path: "/partners",
-    title: "Our Partners | Texas Cemetery Brokers",
+    title: "Bayer Cemetery Brokers — Our Texas Partnership",
     description:
-      "Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers (CEB 1512, California), bringing decades of cemetery resale experience to Texas families.",
+      "Bayer Cemetery Brokers is our partner brokerage: licensed in California (CEB 1512) with 30+ years of cemetery resale experience, now serving Texas families.",
   },
   {
     path: "/cemeteries",
@@ -61,9 +61,9 @@ export const STATIC_ROUTES: RouteMeta[] = [
   },
   {
     path: "/sell-cemetery-plot-texas",
-    title: "How to Sell a Cemetery Plot in Texas | Full Guide",
+    title: "How to Sell a Cemetery Plot in Texas (2026 Guide)",
     description:
-      "Step-by-step guide to selling a cemetery plot in Texas: valuation, transfer fees, paperwork, timelines and what your plot is really worth.",
+      "What your plot is worth today, the transfer steps Texas cemeteries require, and how to sell it without upfront fees. Free valuation in 24 hours.",
     type: "article",
   },
   {
