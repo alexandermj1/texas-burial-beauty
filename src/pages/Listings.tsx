@@ -73,7 +73,7 @@ const Listings = () => {
       {/* Hero banner */}
       <section className="relative pt-24 pb-12 overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/images/cemetery-default.jpg" alt="" className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src="/images/cemetery-default.jpg" alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-hero" />
         </div>
         <div className="relative container mx-auto px-6 pt-8 pb-4">

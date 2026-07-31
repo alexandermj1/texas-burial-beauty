@@ -274,7 +274,7 @@ const Properties = () => {
       <Navbar />
       {/* Compact photo hero with dark overlay for white text legibility */}
       <section className="relative pt-24 pb-5 overflow-hidden">
-        <img src={heroBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+        <img loading="lazy" decoding="async" src={heroBg} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/65 to-foreground/40" />
         <div className="relative container mx-auto px-6">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl">

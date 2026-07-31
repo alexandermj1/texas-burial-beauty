@@ -610,7 +610,7 @@ const CemeteryDirectory = () => {
             transition={{ duration: 0.6 }}
             className="mt-20 relative overflow-hidden rounded-[28px] border border-border/60"
           >
-            <img src={imgHillside} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img loading="lazy" decoding="async" src={imgHillside} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-foreground/95 via-foreground/85 to-foreground/60" />
 
             <div className="relative grid md:grid-cols-[1.4fr_1fr] gap-10 items-center p-10 md:p-14">

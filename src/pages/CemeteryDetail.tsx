@@ -471,7 +471,7 @@ const CemeteryDetail = () => {
               transition={{ duration: 0.6 }}
               className="relative h-[360px] rounded-3xl overflow-hidden shadow-xl"
             >
-              <img src={imgMountains} alt="" className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={imgMountains} alt="" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 text-background">
                 <p className="text-[10px] tracking-[0.2em] uppercase opacity-80 mb-1">Free or $99 listing</p>

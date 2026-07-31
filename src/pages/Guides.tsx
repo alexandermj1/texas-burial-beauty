@@ -209,9 +209,9 @@ const Guides = () => {
       />
 
       {/* Scattered page accents — three different species, well spaced, never overlapping */}
-      <img src={SCATTER[0]} alt="" aria-hidden className="hidden md:block absolute -top-10 -left-20 w-56 opacity-50 rotate-[14deg] pointer-events-none select-none" />
-      <img src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
-      <img src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
+      <img loading="lazy" decoding="async" src={SCATTER[0]} alt="" aria-hidden className="hidden md:block absolute -top-10 -left-20 w-56 opacity-50 rotate-[14deg] pointer-events-none select-none" />
+      <img loading="lazy" decoding="async" src={SCATTER[1]} alt="" aria-hidden className="hidden md:block absolute top-40 -right-12 w-60 opacity-55 -rotate-[12deg] pointer-events-none select-none" />
+      <img loading="lazy" decoding="async" src={SCATTER[2]} alt="" aria-hidden className="hidden lg:block absolute bottom-24 -left-16 w-64 opacity-45 -rotate-[8deg] pointer-events-none select-none" />
 
       <section className="relative flex-1 flex flex-col pt-[5.5rem] pb-2 overflow-hidden z-10 min-h-0">
         {/* Masthead */}
@@ -319,7 +319,7 @@ const Guides = () => {
                           }}
                         />
                         {/* Hero flower — bottom-right of panel; placement tuned per breakpoint */}
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={g.hero}
                           alt=""
                           aria-hidden
@@ -327,7 +327,7 @@ const Guides = () => {
                           style={{ filter: "drop-shadow(0 10px 20px hsl(28 30% 10% / 0.18))" }}
                         />
                         {/* Supporting leaf — opposite corner, well clear of the hero */}
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={g.accent}
                           alt=""
                           aria-hidden
