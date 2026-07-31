@@ -15,11 +15,11 @@ const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
 );
 
-const cities: { city: string; parks: string[] }[] = [
-  { city: "Dallas–Fort Worth", parks: ["Restland", "Hillcrest", "Sparkman/Hillcrest", "Laurel Land", "Greenwood"] },
-  { city: "Greater Houston", parks: ["Forest Park (Lawndale, Westheimer, East)", "Memorial Oaks", "Earthman", "Brookside", "Rosewood"] },
-  { city: "Austin & Central Texas", parks: ["Cook-Walden", "Capital Parks", "Austin Memorial Park", "College Station"] },
-  { city: "San Antonio", parks: ["Mission Burial Park", "Sunset Memorial", "San Jose Burial Park", "Roselawn"] },
+const cities: { city: string; parks: string[]; href?: string }[] = [
+  { city: "Dallas–Fort Worth", parks: ["Restland", "Hillcrest", "Sparkman/Hillcrest", "Laurel Land", "Greenwood"], href: "/cemetery-plots-for-sale-dallas" },
+  { city: "Greater Houston", parks: ["Forest Park (Lawndale, Westheimer, East)", "Memorial Oaks", "Earthman", "Brookside", "Rosewood"], href: "/cemetery-plots-for-sale-houston" },
+  { city: "Austin & Central Texas", parks: ["Cook-Walden", "Capital Parks", "Austin Memorial Park", "College Station"], href: "/cemetery-plots-for-sale-austin" },
+  { city: "San Antonio", parks: ["Mission Burial Park", "Sunset Memorial", "San Jose Burial Park", "Roselawn"], href: "/cemetery-plots-for-sale-san-antonio" },
   { city: "El Paso & West Texas", parks: ["Restlawn", "Evergreen", "Mount Carmel"] },
 ];
 
