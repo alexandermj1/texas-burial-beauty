@@ -33,8 +33,10 @@
     <link rel="preconnect" href="https://mceguxfdoikjthsrbmzx.supabase.co" />
     <link rel="dns-prefetch" href="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev" />
 
-    <!-- Preload hero video (LCP candidate on homepage) -->
-    <link rel="preload" as="video" href="/videos/hero-trees.mp4" type="video/mp4" />
+    <!-- Note: rel=preload has no valid `as="video"` value, so preloading the
+         hero video here is ignored by browsers and only costs a console
+         warning. The <video> element handles its own priority. -->
+
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

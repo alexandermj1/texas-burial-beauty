@@ -48,15 +48,30 @@ export const STATIC_ROUTES: RouteMeta[] = [
       "Browse cemeteries across Texas — Dallas, Houston, Austin, San Antonio, Fort Worth and El Paso. Search by city, region, or nearest location.",
   },
   {
-    path: "/team",
-    title: "Our Team | Texas Cemetery Brokers",
+    path: "/contact",
+    title: "Contact Texas Cemetery Brokers",
     description:
-      "Meet the Texas Cemetery Brokers team helping families buy and sell cemetery property across Texas.",
+      "Get in touch with Texas Cemetery Brokers. Request a free valuation, ask a buying question, or send a general inquiry — we respond within 24 hours.",
   },
   {
-    path: "/blog",
-    title: "Cemetery Property Insights | Texas Cemetery Brokers Blog",
+    path: "/guides",
+    title: "Cemetery Property Guides | Texas Cemetery Brokers",
     description:
-      "Guides, market insights and family resources for buying and selling cemetery property across Texas.",
+      "Guides and family resources for buying and selling cemetery plots, niches and crypts across Texas — pricing, transfers and paperwork explained.",
+  },
+  {
+    path: "/sell-cemetery-plot-texas",
+    title: "How to Sell a Cemetery Plot in Texas | Full Guide",
+    description:
+      "Step-by-step guide to selling a cemetery plot in Texas: valuation, transfer fees, paperwork, timelines and what your plot is really worth.",
+    type: "article",
+  },
+  {
+    path: "/cemetery-plots-for-sale-texas",
+    title: "Cemetery Plots for Sale in Texas | Buyer's Guide",
+    description:
+      "Guide to buying cemetery plots in Texas — typical prices by city, plot types, transfer process and how to save 30–50% versus cemetery retail.",
+    type: "article",
   },
 ];
+
