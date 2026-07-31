@@ -35,6 +35,9 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Guides = lazy(() => import("./pages/Guides"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
+const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
+const CityPlotsPage = lazy(() => import("./pages/CityPlotsPage"));
+import { CITY_PAGES } from "./pages/city-page-data";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
@@ -86,6 +89,10 @@ const App = () => (
                 <Route path="/guides" element={<Guides />} />
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
+                <Route path="/cemetery-plot-cost-texas" element={<GuideCemeteryPlotCost />} />
+                {CITY_PAGES.map((c) => (
+                  <Route key={c.slug} path={`/cemetery-plots-for-sale-${c.slug}`} element={<CityPlotsPage />} />
+                ))}
                 <Route path="/thank-you" element={<ThankYou />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/select-starter" element={<SelectStarter />} />

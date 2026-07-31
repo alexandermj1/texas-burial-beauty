@@ -99,8 +99,8 @@ const verification = [
 const GuideSellingCemeteryPlot = () => (
   <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
-      title="How to Sell a Cemetery Plot in Texas | Texas Cemetery Brokers"
-      description="Selling a cemetery plot in Texas? Learn what affects your plot's value, the legal steps, and how a broker sells it fast across Houston, Dallas & Austin."
+      title="How to Sell a Cemetery Plot in Texas (2026 Guide)"
+      description="What your plot is worth today, the transfer steps Texas cemeteries require, and how to sell it without upfront fees. Free valuation in 24 hours."
       path="/sell-cemetery-plot-texas"
       type="article"
       jsonLd={jsonLd}

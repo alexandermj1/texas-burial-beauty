@@ -15,11 +15,11 @@ const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
 );
 
-const cities: { city: string; parks: string[] }[] = [
-  { city: "Dallas–Fort Worth", parks: ["Restland", "Hillcrest", "Sparkman/Hillcrest", "Laurel Land", "Greenwood"] },
-  { city: "Greater Houston", parks: ["Forest Park (Lawndale, Westheimer, East)", "Memorial Oaks", "Earthman", "Brookside", "Rosewood"] },
-  { city: "Austin & Central Texas", parks: ["Cook-Walden", "Capital Parks", "Austin Memorial Park", "College Station"] },
-  { city: "San Antonio", parks: ["Mission Burial Park", "Sunset Memorial", "San Jose Burial Park", "Roselawn"] },
+const cities: { city: string; parks: string[]; href?: string }[] = [
+  { city: "Dallas–Fort Worth", parks: ["Restland", "Hillcrest", "Sparkman/Hillcrest", "Laurel Land", "Greenwood"], href: "/cemetery-plots-for-sale-dallas" },
+  { city: "Greater Houston", parks: ["Forest Park (Lawndale, Westheimer, East)", "Memorial Oaks", "Earthman", "Brookside", "Rosewood"], href: "/cemetery-plots-for-sale-houston" },
+  { city: "Austin & Central Texas", parks: ["Cook-Walden", "Capital Parks", "Austin Memorial Park", "College Station"], href: "/cemetery-plots-for-sale-austin" },
+  { city: "San Antonio", parks: ["Mission Burial Park", "Sunset Memorial", "San Jose Burial Park", "Roselawn"], href: "/cemetery-plots-for-sale-san-antonio" },
   { city: "El Paso & West Texas", parks: ["Restlawn", "Evergreen", "Mount Carmel"] },
 ];
 
@@ -342,14 +342,26 @@ const GuideBuyingCemeteryPlot = () => (
         <Section id="coverage" eyebrow="Statewide coverage" title="Where we help buyers across Texas">
           <p>We match buyers to verified resale plots statewide, with deep inventory in every major metro:</p>
           <div className="grid sm:grid-cols-2 gap-4 not-prose">
-            {cities.map((c) => (
-              <div key={c.city} className="p-5 rounded-2xl bg-card border border-border/60">
-                <p className="inline-flex items-center gap-2 font-display text-lg text-foreground mb-2">
-                  <MapPin className="w-4 h-4 text-primary" /> {c.city}
-                </p>
-                <p className="text-sm text-foreground/70 leading-relaxed">{c.parks.join(" · ")}</p>
-              </div>
-            ))}
+            {cities.map((c) => {
+              const Card = (
+                <>
+                  <p className="inline-flex items-center gap-2 font-display text-lg text-foreground mb-2">
+                    <MapPin className="w-4 h-4 text-primary" /> {c.city}
+                  </p>
+                  <p className="text-sm text-foreground/70 leading-relaxed">{c.parks.join(" · ")}</p>
+                </>
+              );
+              return c.href ? (
+                <Link key={c.city} to={c.href} className="p-5 rounded-2xl bg-card border border-border/60 hover:border-primary/40 hover:-translate-y-0.5 transition-all">
+                  {Card}
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary font-medium">
+                    Plots in {c.city} <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </Link>
+              ) : (
+                <div key={c.city} className="p-5 rounded-2xl bg-card border border-border/60">{Card}</div>
+              );
+            })}
           </div>
           <p className="mt-6">Wherever you're looking, we likely already have inventory or active sellers nearby. <Link to="/cemeteries" className="text-primary underline-offset-4 hover:underline font-medium">Browse every cemetery we serve →</Link></p>
         </Section>

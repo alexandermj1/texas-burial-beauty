@@ -138,8 +138,8 @@ const Partners = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
-        title="Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers"
-        description="Texas Cemetery Brokers operates in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) with 30+ years of cemetery resale experience. Trusted resale across Texas."
+        title="Bayer Cemetery Brokers — Our Texas Partnership"
+        description="Bayer Cemetery Brokers is our partner brokerage: licensed in California (CEB 1512) with 30+ years of cemetery resale experience, now serving Texas families."
         path="/partners"
         jsonLd={[
           {
