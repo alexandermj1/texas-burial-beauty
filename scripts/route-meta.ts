@@ -73,5 +73,39 @@ export const STATIC_ROUTES: RouteMeta[] = [
       "Guide to buying cemetery plots in Texas — typical prices by city, plot types, transfer process and how to save 30–50% versus cemetery retail.",
     type: "article",
   },
+  {
+    path: "/cemetery-plots-for-sale-houston",
+    title: "Cemetery Plots for Sale in Houston, TX | Below Retail",
+    description:
+      "Buy or sell cemetery plots in Houston, TX. Resale spaces at Forest Park, Memorial Oaks, Earthman and Brookside — typically 30–50% below cemetery retail.",
+    type: "article",
+  },
+  {
+    path: "/cemetery-plots-for-sale-dallas",
+    title: "Cemetery Plots for Sale in Dallas–Fort Worth, TX",
+    description:
+      "Buy or sell cemetery plots across Dallas–Fort Worth. Resale spaces at Restland, Sparkman/Hillcrest, Laurel Land and Greenwood — below cemetery retail.",
+    type: "article",
+  },
+  {
+    path: "/cemetery-plots-for-sale-san-antonio",
+    title: "Cemetery Plots for Sale in San Antonio, TX",
+    description:
+      "Buy or sell cemetery plots in San Antonio. Resale spaces at Mission Burial Park, Sunset Memorial, San Jose Burial Park and Roselawn — below retail.",
+    type: "article",
+  },
+  {
+    path: "/cemetery-plots-for-sale-austin",
+    title: "Cemetery Plots for Sale in Austin, TX | Central Texas",
+    description:
+      "Buy or sell cemetery plots in Austin and Central Texas. Resale spaces at Cook-Walden, Austin Memorial Park, Capital Parks and Oakwood — below retail.",
+    type: "article",
+  },
+  {
+    path: "/cemetery-plot-cost-texas",
+    title: "How Much Does a Cemetery Plot Cost in Texas? (2026)",
+    description:
+      "Texas cemetery plot prices by city, the fees cemeteries add on top, what resale spaces actually sell for, and how much cemetery brokers charge.",
+    type: "article",
+  },
 ];
-
