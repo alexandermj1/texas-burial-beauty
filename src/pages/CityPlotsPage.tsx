@@ -21,8 +21,8 @@ const Section: React.FC<{ id?: string; eyebrow?: string; title: React.ReactNode;
 );
 
 const CityPlotsPage = () => {
-  const { citySlug } = useParams<{ citySlug: string }>();
-  const data = getCityPage(citySlug ?? "");
+  const { pathname } = useLocation();
+  const data = getCityPage(pathname.replace(/^\/cemetery-plots-for-sale-/, "").replace(/\/$/, ""));
 
   if (!data) return <Navigate to="/cemetery-plots-for-sale-texas" replace />;
 
