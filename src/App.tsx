@@ -89,7 +89,9 @@ const App = () => (
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
                 <Route path="/cemetery-plot-cost-texas" element={<GuideCemeteryPlotCost />} />
-                <Route path="/cemetery-plots-for-sale-:citySlug" element={<CityPlotsPage />} />
+                {CITY_PAGES.map((c) => (
+                  <Route key={c.slug} path={`/cemetery-plots-for-sale-${c.slug}`} element={<CityPlotsPage />} />
+                ))}
                 <Route path="/thank-you" element={<ThankYou />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/select-starter" element={<SelectStarter />} />
