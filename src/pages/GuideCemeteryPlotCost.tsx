@@ -358,7 +358,7 @@ const GuideCemeteryPlotCost = () => (
             <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-3">Keep reading</p>
             <ul className="space-y-3 text-sm list-none pl-0">
               <li><Link to="/sell-cemetery-plot-texas" className="text-foreground/80 hover:text-primary transition-colors">Selling a cemetery plot in Texas</Link></li>
-              <li><Link to="/buying-cemetery-plot-texas" className="text-foreground/80 hover:text-primary transition-colors">Buying a cemetery plot in Texas</Link></li>
+              <li><Link to="/cemetery-plots-for-sale-texas" className="text-foreground/80 hover:text-primary transition-colors">Buying a cemetery plot in Texas</Link></li>
               <li><Link to="/property-types" className="text-foreground/80 hover:text-primary transition-colors">Cemetery property types compared</Link></li>
             </ul>
           </div>
