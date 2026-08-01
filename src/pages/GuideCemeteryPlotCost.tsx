@@ -123,7 +123,7 @@ const GuideCemeteryPlotCost = () => (
     <section className="relative pt-28 pb-16 md:pb-24 overflow-hidden bg-[hsl(38_35%_95%)]">
       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(40_45%_93%)] via-[hsl(38_35%_95%)] to-background" />
       <div className="absolute top-0 right-0 w-[38rem] h-[38rem] rounded-full bg-[hsl(16_50%_70%)]/15 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-      <div className="relative container mx-auto px-6 max-w-4xl">
+      <div className="relative container mx-auto px-6 lg:px-10 max-w-7xl">
         <Link
           to="/guides"
           className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.22em] uppercase text-foreground/50 hover:text-foreground mb-12 transition-colors"
@@ -142,21 +142,33 @@ const GuideCemeteryPlotCost = () => (
             How much does a cemetery plot
             <span className="block italic font-light text-primary">cost in Texas?</span>
           </h1>
-          <div className="grid md:grid-cols-12 gap-8 items-start">
-            <p className="md:col-span-8 text-lg md:text-xl text-foreground/75 leading-[1.7] font-light">
+          <div className="grid md:grid-cols-12 gap-8 md:gap-12 items-start">
+            <p className="md:col-span-7 text-lg md:text-2xl text-foreground/75 leading-[1.6] font-light">
               There is no single Texas price. A space in a small rural cemetery and a space in an established metro memorial
               park are different markets entirely. What follows is how cemeteries build their price, what they charge on top of
               the space itself, and why the same property sells for considerably less on the resale market.
             </p>
-            <div className="md:col-span-4 md:border-l md:border-border/70 md:pl-6 text-sm text-foreground/60 leading-relaxed">
-              <p className="uppercase tracking-[0.2em] text-[10px] text-foreground/45 mb-2">In this issue</p>
-              <ol className="space-y-1.5 list-none pl-0">
-                <li><a href="#by-city" className="hover:text-primary transition-colors">I. What moves the price</a></li>
-                <li><a href="#extras" className="hover:text-primary transition-colors">II. The rest of the bill</a></li>
-                <li><a href="#type" className="hover:text-primary transition-colors">III. By property type</a></li>
-                <li><a href="#resale" className="hover:text-primary transition-colors">IV. Why resale is cheaper</a></li>
-                <li><a href="#faq" className="hover:text-primary transition-colors">V. Questions</a></li>
-              </ol>
+            <div className="md:col-span-5 grid sm:grid-cols-2 gap-6 md:pl-10 md:border-l md:border-border/70">
+              <div className="text-sm text-foreground/60 leading-relaxed">
+                <p className="uppercase tracking-[0.2em] text-[10px] text-foreground/45 mb-2">In this issue</p>
+                <ol className="space-y-1.5 list-none pl-0">
+                  <li><a href="#by-city" className="hover:text-primary transition-colors">I. What moves the price</a></li>
+                  <li><a href="#extras" className="hover:text-primary transition-colors">II. The rest of the bill</a></li>
+                  <li><a href="#type" className="hover:text-primary transition-colors">III. By property type</a></li>
+                  <li><a href="#resale" className="hover:text-primary transition-colors">IV. Why resale is cheaper</a></li>
+                  <li><a href="#faq" className="hover:text-primary transition-colors">V. Questions</a></li>
+                </ol>
+              </div>
+              <div className="text-sm text-foreground/60 leading-relaxed">
+                <p className="uppercase tracking-[0.2em] text-[10px] text-foreground/45 mb-2">By city</p>
+                <ol className="space-y-1.5 list-none pl-0">
+                  <li><Link to="/cemetery-plots-for-sale-houston" className="hover:text-primary transition-colors">Houston</Link></li>
+                  <li><Link to="/cemetery-plots-for-sale-dallas" className="hover:text-primary transition-colors">Dallas–Fort Worth</Link></li>
+                  <li><Link to="/cemetery-plots-for-sale-san-antonio" className="hover:text-primary transition-colors">San Antonio</Link></li>
+                  <li><Link to="/cemetery-plots-for-sale-austin" className="hover:text-primary transition-colors">Austin</Link></li>
+                  <li><Link to="/cemeteries" className="hover:text-primary transition-colors">All Texas cemeteries</Link></li>
+                </ol>
+              </div>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-start gap-3 mt-10">
