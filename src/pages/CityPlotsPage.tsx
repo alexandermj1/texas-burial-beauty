@@ -243,6 +243,43 @@ const CityPlotsPage = () => {
           </p>
         </Section>
 
+        {/* Price drivers */}
+        <Section id="drivers" eyebrow="What moves the number" title={`What decides a plot's value in ${data.city}`}>
+          <p>
+            Two spaces in the same {data.city} cemetery can be worth very different amounts. These are the factors we weigh when we
+            value a property:
+          </p>
+          <ul>
+            <li><strong>The cemetery itself</strong> — established memorial parks inside the {data.metro} core price well above outlying and rural grounds.</li>
+            <li><strong>The section and garden</strong> — sold-out and historic gardens hold the most value because the cemetery cannot create new supply there.</li>
+            <li><strong>Property type</strong> — a cremation niche, a single ground space, a companion double-depth grave, a lawn crypt and a mausoleum crypt all sit at different points on the curve.</li>
+            <li><strong>What's included</strong> — some spaces transfer with a vault, an opening/closing credit or an existing marker foundation already paid for, which lifts the value.</li>
+            <li><strong>Whether they're adjacent</strong> — a pair or a set of four side by side is worth more per space than the same number scattered across a section.</li>
+          </ul>
+          <p>
+            The full statewide breakdown, including what the cemetery charges on top of the space, is in our{" "}
+            <Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline font-medium">Texas cemetery plot cost guide</Link>.
+          </p>
+        </Section>
+
+        {/* Timeline */}
+        <Section id="timeline" eyebrow="What to expect" title={`How a ${data.city} sale runs, step by step`}>
+          <div className="not-prose grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {[
+              { n: "01", t: "Valuation", d: `We price your space against current ${data.city} cemetery retail and recent resale activity. Free, no obligation.` },
+              { n: "02", t: "Listing", d: "Photographs, section detail and cemetery specifics go live, and we market directly to buyers already searching your cemetery." },
+              { n: "03", t: "Buyer & agreement", d: "We verify the buyer, agree the price in writing and prepare the cemetery's transfer paperwork." },
+              { n: "04", t: "Transfer & funds", d: "The cemetery records the new owner, funds are released, and you receive a copy of everything filed." },
+            ].map((s) => (
+              <div key={s.n} className="p-6 rounded-2xl bg-card border border-border/60">
+                <p className="font-display text-3xl text-primary/30 leading-none mb-3">{s.n}</p>
+                <h3 className="font-display text-lg text-foreground mb-2 leading-snug">{s.t}</h3>
+                <p className="text-sm text-foreground/70 leading-relaxed">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
         {/* FAQ */}
         <Section id="faq" eyebrow="Frequently asked" title={`${data.city} questions`}>
           <div className="space-y-4 not-prose">
