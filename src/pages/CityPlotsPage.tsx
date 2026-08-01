@@ -32,17 +32,18 @@ const CityPlotsPage = () => {
   const faqs = [
     {
       q: `How much does a cemetery plot cost in ${data.city}?`,
-      a: `Bought directly from the cemetery, a single space in ${data.city} typically runs ${data.retailRange}, before opening/closing, a marker and the marker foundation. On the resale market the same space usually trades at ${data.resaleRange}, because you are buying from a family rather than the cemetery counter.`,
+      a: `Bought directly from the cemetery, a single ground space in ${data.city} typically runs ${data.retailRange}, before opening/closing, a marker and the marker foundation. Mausoleum crypts, lawn crypts and feature locations go higher again. On the resale market a comparable space usually trades at ${data.resaleRange}, because you are buying from a family rather than the cemetery counter.`,
     },
     {
       q: `Can I sell a cemetery plot I own in ${data.city}?`,
-      a: `Yes. In Texas you own the right of interment and you are free to transfer it. We value the property against current ${data.city} retail pricing, list it, find the buyer, and handle the cemetery's transfer paperwork. There is no upfront appraisal fee.`,
+      a: `Yes. In Texas you own the right of interment and you are free to transfer it. We value the property against current ${data.city} retail pricing, list it, find the buyer, and handle the cemetery's transfer paperwork. There is no upfront appraisal fee, and owners in established or sold-out gardens are often holding more value than they expect.`,
     },
     {
       q: `What are the transfer fees in ${data.city}?`,
       a: data.notes.find((n) => n.toLowerCase().includes("transfer fee")) ??
-        `Each cemetery sets its own recording/transfer fee, usually a few hundred dollars per space. We confirm the exact figure with the ${data.city} cemetery in writing before closing so there are no surprises.`,
+        `Each cemetery sets its own recording/transfer fee. Across the ${data.metro} cemetery profiles we maintain, they range from a nominal amount up to roughly $1,995 per space. We confirm the exact figure with the ${data.city} cemetery in writing before closing so there are no surprises.`,
     },
+
     {
       q: `Do you have plots in sold-out sections in ${data.city}?`,
       a: `Often, yes. When a section sells out the cemetery office cannot sell new spaces there, but individual owners still can. Much of our ${data.metro} inventory sits in closed and sold-out gardens, including spaces next to existing family plots.`,
@@ -146,8 +147,10 @@ const CityPlotsPage = () => {
               </div>
               <div className="rounded-2xl bg-background/60 backdrop-blur border border-border/70 p-6 sm:col-span-2 lg:col-span-1">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/55 mb-1.5">Cemeteries covered</p>
-                <p className="font-display text-2xl md:text-3xl text-foreground">{data.cemeteries.length}+ in {data.metro}</p>
+                <p className="font-display text-2xl md:text-3xl text-foreground">{data.metroCemeteryCount}+ in {data.metro}</p>
+                <p className="text-xs text-foreground/55 mt-1.5">Part of 198 Texas cemetery profiles we maintain</p>
               </div>
+
             </div>
           </motion.div>
         </div>
@@ -183,14 +186,17 @@ const CityPlotsPage = () => {
           <p>
             A cemetery's counter price is not the market price. In {data.city} a single ground space bought new typically costs{" "}
             <strong>{data.retailRange}</strong>, while the same space on the resale market usually trades at{" "}
-            <strong>{data.resaleRange}</strong>. On top of the space itself, families should budget for opening and closing
-            (roughly $1,200–$2,500), a marker and its foundation, and the cemetery's transfer fee.
+            <strong>{data.resaleRange}</strong>. Those are ground-space figures — lawn crypts, mausoleum crypts, private
+            estates and feature locations sit well above the top of those ranges, in some parks by a considerable margin.
+            Buyers should also budget for opening and closing, a marker and its foundation, and the cemetery's transfer fee;
+            owners selling should know those extras are separate from what the property itself is worth.
           </p>
           <ul>
             {data.notes.map((n) => (
               <li key={n}>{n}</li>
             ))}
           </ul>
+
           <p>
             For a full state-wide breakdown, see our{" "}
             <Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline font-medium">
