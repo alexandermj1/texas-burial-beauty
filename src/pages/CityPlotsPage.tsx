@@ -4,7 +4,7 @@ import { ArrowRight, MapPin, Phone, Plus, ShieldCheck, Wallet, FileCheck2 } from
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import { getCityPage } from "./city-page-data";
+import { getCityPage, CITY_PAGES } from "./city-page-data";
 
 const SITE = "https://texascemeterybrokers.com";
 
@@ -102,7 +102,7 @@ const CityPlotsPage = () => {
           <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
         </svg>
 
-        <div className="relative container mx-auto px-6 max-w-5xl">
+        <div className="relative container mx-auto px-6 lg:px-10 max-w-7xl">
           <nav aria-label="Breadcrumb" className="mb-8 text-xs tracking-[0.16em] uppercase text-foreground/55">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
             <span className="mx-2">/</span>
@@ -111,43 +111,51 @@ const CityPlotsPage = () => {
             <span className="text-foreground/80">{data.city}</span>
           </nav>
 
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/30">
-              <MapPin className="w-3.5 h-3.5 text-accent" />
-              <p className="text-accent text-[11px] tracking-[0.24em] uppercase font-semibold">{data.metro}</p>
-            </div>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.0] mb-7 tracking-tight">
-              {data.h1Lead} <span className="italic text-primary">{data.city}</span>
-            </h1>
-            <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 max-w-2xl font-light">{data.intro}</p>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="grid lg:grid-cols-12 gap-10 xl:gap-16 items-end">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/30">
+                <MapPin className="w-3.5 h-3.5 text-accent" />
+                <p className="text-accent text-[11px] tracking-[0.24em] uppercase font-semibold">{data.metro}</p>
+              </div>
+              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.0] mb-7 tracking-tight">
+                {data.h1Lead} <span className="italic text-primary">{data.city}</span>
+              </h1>
+              <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 font-light">{data.intro}</p>
 
-            <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mb-9">
-              <div className="rounded-2xl bg-background/80 backdrop-blur border border-border p-5">
+              <div className="flex flex-col sm:flex-row items-start gap-3">
+                <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
+                  <Plus className="w-4 h-4" /> Find a plot in {data.city}
+                </Link>
+                <Link to="/sell" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
+                  Sell a plot in {data.city} <ArrowRight className="w-4 h-4" />
+                </Link>
+                <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
+                  <Phone className="w-4 h-4" /> (214) 230-4740
+                </a>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 grid sm:grid-cols-2 lg:grid-cols-1 gap-4">
+              <div className="rounded-2xl bg-background/80 backdrop-blur border border-border p-6">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/55 mb-1.5">Cemetery retail</p>
-                <p className="font-display text-2xl text-foreground">{data.retailRange}</p>
+                <p className="font-display text-2xl md:text-3xl text-foreground">{data.retailRange}</p>
               </div>
-              <div className="rounded-2xl bg-primary/10 border border-primary/25 p-5">
+              <div className="rounded-2xl bg-primary/10 border border-primary/25 p-6">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80 mb-1.5">Typical resale</p>
-                <p className="font-display text-2xl text-primary">{data.resaleRange}</p>
+                <p className="font-display text-2xl md:text-3xl text-primary">{data.resaleRange}</p>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start gap-3">
-              <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
-                <Plus className="w-4 h-4" /> Find a plot in {data.city}
-              </Link>
-              <Link to="/sell" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-                Sell a plot in {data.city} <ArrowRight className="w-4 h-4" />
-              </Link>
-              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-                <Phone className="w-4 h-4" /> (214) 230-4740
-              </a>
+              <div className="rounded-2xl bg-background/60 backdrop-blur border border-border/70 p-6 sm:col-span-2 lg:col-span-1">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/55 mb-1.5">Cemeteries covered</p>
+                <p className="font-display text-2xl md:text-3xl text-foreground">{data.cemeteries.length}+ in {data.metro}</p>
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      <article className="container mx-auto px-6 max-w-4xl pb-8">
+      <article className="container mx-auto px-6 lg:px-10 max-w-7xl pb-8">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-10 xl:gap-16 items-start">
+          <div className="min-w-0">
         {/* Cemeteries */}
         <Section id="cemeteries" eyebrow="Where we work" title={`Cemeteries we broker in ${data.metro}`}>
           <p>
@@ -235,6 +243,43 @@ const CityPlotsPage = () => {
           </p>
         </Section>
 
+        {/* Price drivers */}
+        <Section id="drivers" eyebrow="What moves the number" title={`What decides a plot's value in ${data.city}`}>
+          <p>
+            Two spaces in the same {data.city} cemetery can be worth very different amounts. These are the factors we weigh when we
+            value a property:
+          </p>
+          <ul>
+            <li><strong>The cemetery itself</strong> — established memorial parks inside the {data.metro} core price well above outlying and rural grounds.</li>
+            <li><strong>The section and garden</strong> — sold-out and historic gardens hold the most value because the cemetery cannot create new supply there.</li>
+            <li><strong>Property type</strong> — a cremation niche, a single ground space, a companion double-depth grave, a lawn crypt and a mausoleum crypt all sit at different points on the curve.</li>
+            <li><strong>What's included</strong> — some spaces transfer with a vault, an opening/closing credit or an existing marker foundation already paid for, which lifts the value.</li>
+            <li><strong>Whether they're adjacent</strong> — a pair or a set of four side by side is worth more per space than the same number scattered across a section.</li>
+          </ul>
+          <p>
+            The full statewide breakdown, including what the cemetery charges on top of the space, is in our{" "}
+            <Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline font-medium">Texas cemetery plot cost guide</Link>.
+          </p>
+        </Section>
+
+        {/* Timeline */}
+        <Section id="timeline" eyebrow="What to expect" title={`How a ${data.city} sale runs, step by step`}>
+          <div className="not-prose grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {[
+              { n: "01", t: "Valuation", d: `We price your space against current ${data.city} cemetery retail and recent resale activity. Free, no obligation.` },
+              { n: "02", t: "Listing", d: "Photographs, section detail and cemetery specifics go live, and we market directly to buyers already searching your cemetery." },
+              { n: "03", t: "Buyer & agreement", d: "We verify the buyer, agree the price in writing and prepare the cemetery's transfer paperwork." },
+              { n: "04", t: "Transfer & funds", d: "The cemetery records the new owner, funds are released, and you receive a copy of everything filed." },
+            ].map((s) => (
+              <div key={s.n} className="p-6 rounded-2xl bg-card border border-border/60">
+                <p className="font-display text-3xl text-primary/30 leading-none mb-3">{s.n}</p>
+                <h3 className="font-display text-lg text-foreground mb-2 leading-snug">{s.t}</h3>
+                <p className="text-sm text-foreground/70 leading-relaxed">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
         {/* FAQ */}
         <Section id="faq" eyebrow="Frequently asked" title={`${data.city} questions`}>
           <div className="space-y-4 not-prose">
@@ -251,6 +296,73 @@ const CityPlotsPage = () => {
             ))}
           </div>
         </Section>
+          </div>
+
+          {/* Sticky rail */}
+          <aside className="hidden lg:block lg:sticky lg:top-28 space-y-6">
+            <div className="rounded-3xl border border-border/70 bg-card p-6">
+              <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">{data.city} at a glance</p>
+              <dl className="space-y-4 text-sm">
+                <div>
+                  <dt className="text-foreground/55">Cemetery retail</dt>
+                  <dd className="font-display text-lg text-foreground leading-snug">{data.retailRange}</dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/55">Typical resale</dt>
+                  <dd className="font-display text-lg text-primary leading-snug">{data.resaleRange}</dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/55">Typical time to sale</dt>
+                  <dd className="font-display text-lg text-foreground leading-snug">30–90 days</dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/55">Valuation</dt>
+                  <dd className="font-display text-lg text-foreground leading-snug">Free, no obligation</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="rounded-3xl border border-border/70 bg-secondary/40 p-6">
+              <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">On this page</p>
+              <ol className="space-y-2 text-sm list-none pl-0 text-foreground/75">
+                <li><a href="#cemeteries" className="hover:text-primary transition-colors">Cemeteries we broker</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">What it costs</a></li>
+                <li><a href="#how" className="hover:text-primary transition-colors">Buying and selling</a></li>
+                <li><a href="#areas" className="hover:text-primary transition-colors">Areas served</a></li>
+                <li><a href="#drivers" className="hover:text-primary transition-colors">What decides value</a></li>
+                <li><a href="#timeline" className="hover:text-primary transition-colors">Step by step</a></li>
+                <li><a href="#faq" className="hover:text-primary transition-colors">Questions</a></li>
+              </ol>
+            </div>
+
+            <div className="rounded-3xl border border-border/70 bg-card p-6">
+              <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">Other Texas cities</p>
+              <ul className="space-y-2.5 text-sm list-none pl-0">
+                {CITY_PAGES.filter((c) => c.slug !== data.slug).map((c) => (
+                  <li key={c.slug}>
+                    <Link to={`/cemetery-plots-for-sale-${c.slug}`} className="group inline-flex items-center gap-2 text-foreground/80 hover:text-primary transition-colors">
+                      {c.city} <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  </li>
+                ))}
+                <li><Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline">Texas plot cost guide</Link></li>
+              </ul>
+            </div>
+
+            <div className="rounded-3xl bg-primary text-primary-foreground p-6">
+              <p className="font-display text-xl leading-snug mb-3">Talk to a {data.city} broker.</p>
+              <p className="text-primary-foreground/80 text-sm leading-relaxed mb-5">
+                Tell us the cemetery and we'll come back within 24 hours with real numbers.
+              </p>
+              <Link to="/contact" className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-accent-foreground rounded-full text-sm font-medium hover:-translate-y-0.5 transition-all">
+                Contact us <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a href="tel:+12142304740" className="mt-4 flex items-center gap-2 text-sm text-primary-foreground/85 hover:text-primary-foreground transition-colors">
+                <Phone className="w-4 h-4" /> (214) 230-4740
+              </a>
+            </div>
+          </aside>
+        </div>
 
         {/* CTA */}
         <section className="mt-10 mb-8">
