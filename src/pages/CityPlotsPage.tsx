@@ -296,6 +296,73 @@ const CityPlotsPage = () => {
             ))}
           </div>
         </Section>
+          </div>
+
+          {/* Sticky rail */}
+          <aside className="hidden lg:block lg:sticky lg:top-28 space-y-6">
+            <div className="rounded-3xl border border-border/70 bg-card p-6">
+              <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">{data.city} at a glance</p>
+              <dl className="space-y-4 text-sm">
+                <div>
+                  <dt className="text-foreground/55">Cemetery retail</dt>
+                  <dd className="font-display text-lg text-foreground leading-snug">{data.retailRange}</dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/55">Typical resale</dt>
+                  <dd className="font-display text-lg text-primary leading-snug">{data.resaleRange}</dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/55">Typical time to sale</dt>
+                  <dd className="font-display text-lg text-foreground leading-snug">30–90 days</dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/55">Valuation</dt>
+                  <dd className="font-display text-lg text-foreground leading-snug">Free, no obligation</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="rounded-3xl border border-border/70 bg-secondary/40 p-6">
+              <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">On this page</p>
+              <ol className="space-y-2 text-sm list-none pl-0 text-foreground/75">
+                <li><a href="#cemeteries" className="hover:text-primary transition-colors">Cemeteries we broker</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">What it costs</a></li>
+                <li><a href="#how" className="hover:text-primary transition-colors">Buying and selling</a></li>
+                <li><a href="#areas" className="hover:text-primary transition-colors">Areas served</a></li>
+                <li><a href="#drivers" className="hover:text-primary transition-colors">What decides value</a></li>
+                <li><a href="#timeline" className="hover:text-primary transition-colors">Step by step</a></li>
+                <li><a href="#faq" className="hover:text-primary transition-colors">Questions</a></li>
+              </ol>
+            </div>
+
+            <div className="rounded-3xl border border-border/70 bg-card p-6">
+              <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">Other Texas cities</p>
+              <ul className="space-y-2.5 text-sm list-none pl-0">
+                {CITY_PAGES.filter((c) => c.slug !== data.slug).map((c) => (
+                  <li key={c.slug}>
+                    <Link to={`/cemetery-plots-for-sale-${c.slug}`} className="group inline-flex items-center gap-2 text-foreground/80 hover:text-primary transition-colors">
+                      {c.city} <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  </li>
+                ))}
+                <li><Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline">Texas plot cost guide</Link></li>
+              </ul>
+            </div>
+
+            <div className="rounded-3xl bg-primary text-primary-foreground p-6">
+              <p className="font-display text-xl leading-snug mb-3">Talk to a {data.city} broker.</p>
+              <p className="text-primary-foreground/80 text-sm leading-relaxed mb-5">
+                Tell us the cemetery and we'll come back within 24 hours with real numbers.
+              </p>
+              <Link to="/contact" className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-accent-foreground rounded-full text-sm font-medium hover:-translate-y-0.5 transition-all">
+                Contact us <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a href="tel:+12142304740" className="mt-4 flex items-center gap-2 text-sm text-primary-foreground/85 hover:text-primary-foreground transition-colors">
+                <Phone className="w-4 h-4" /> (214) 230-4740
+              </a>
+            </div>
+          </aside>
+        </div>
 
         {/* CTA */}
         <section className="mt-10 mb-8">
