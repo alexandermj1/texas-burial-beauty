@@ -111,37 +111,43 @@ const CityPlotsPage = () => {
             <span className="text-foreground/80">{data.city}</span>
           </nav>
 
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/30">
-              <MapPin className="w-3.5 h-3.5 text-accent" />
-              <p className="text-accent text-[11px] tracking-[0.24em] uppercase font-semibold">{data.metro}</p>
-            </div>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.0] mb-7 tracking-tight">
-              {data.h1Lead} <span className="italic text-primary">{data.city}</span>
-            </h1>
-            <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 max-w-2xl font-light">{data.intro}</p>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="grid lg:grid-cols-12 gap-10 xl:gap-16 items-end">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/30">
+                <MapPin className="w-3.5 h-3.5 text-accent" />
+                <p className="text-accent text-[11px] tracking-[0.24em] uppercase font-semibold">{data.metro}</p>
+              </div>
+              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.0] mb-7 tracking-tight">
+                {data.h1Lead} <span className="italic text-primary">{data.city}</span>
+              </h1>
+              <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 font-light">{data.intro}</p>
 
-            <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mb-9">
-              <div className="rounded-2xl bg-background/80 backdrop-blur border border-border p-5">
+              <div className="flex flex-col sm:flex-row items-start gap-3">
+                <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
+                  <Plus className="w-4 h-4" /> Find a plot in {data.city}
+                </Link>
+                <Link to="/sell" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
+                  Sell a plot in {data.city} <ArrowRight className="w-4 h-4" />
+                </Link>
+                <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
+                  <Phone className="w-4 h-4" /> (214) 230-4740
+                </a>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 grid sm:grid-cols-2 lg:grid-cols-1 gap-4">
+              <div className="rounded-2xl bg-background/80 backdrop-blur border border-border p-6">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/55 mb-1.5">Cemetery retail</p>
-                <p className="font-display text-2xl text-foreground">{data.retailRange}</p>
+                <p className="font-display text-2xl md:text-3xl text-foreground">{data.retailRange}</p>
               </div>
-              <div className="rounded-2xl bg-primary/10 border border-primary/25 p-5">
+              <div className="rounded-2xl bg-primary/10 border border-primary/25 p-6">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80 mb-1.5">Typical resale</p>
-                <p className="font-display text-2xl text-primary">{data.resaleRange}</p>
+                <p className="font-display text-2xl md:text-3xl text-primary">{data.resaleRange}</p>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start gap-3">
-              <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
-                <Plus className="w-4 h-4" /> Find a plot in {data.city}
-              </Link>
-              <Link to="/sell" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-                Sell a plot in {data.city} <ArrowRight className="w-4 h-4" />
-              </Link>
-              <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-                <Phone className="w-4 h-4" /> (214) 230-4740
-              </a>
+              <div className="rounded-2xl bg-background/60 backdrop-blur border border-border/70 p-6 sm:col-span-2 lg:col-span-1">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/55 mb-1.5">Cemeteries covered</p>
+                <p className="font-display text-2xl md:text-3xl text-foreground">{data.cemeteries.length}+ in {data.metro}</p>
+              </div>
             </div>
           </motion.div>
         </div>
