@@ -4,7 +4,7 @@ import { ArrowRight, MapPin, Phone, Plus, ShieldCheck, Wallet, FileCheck2 } from
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import { getCityPage } from "./city-page-data";
+import { getCityPage, CITY_PAGES } from "./city-page-data";
 
 const SITE = "https://texascemeterybrokers.com";
 
@@ -102,7 +102,7 @@ const CityPlotsPage = () => {
           <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
         </svg>
 
-        <div className="relative container mx-auto px-6 max-w-5xl">
+        <div className="relative container mx-auto px-6 lg:px-10 max-w-7xl">
           <nav aria-label="Breadcrumb" className="mb-8 text-xs tracking-[0.16em] uppercase text-foreground/55">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
             <span className="mx-2">/</span>
