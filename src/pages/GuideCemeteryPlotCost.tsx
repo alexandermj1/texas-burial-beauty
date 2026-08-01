@@ -51,7 +51,7 @@ const extras = [
   { t: "Outer burial container / vault", d: "Most Texas memorial parks require one; some older municipal and church cemeteries do not. Prices vary widely by material and warranty.", n: "Usually required" },
   { t: "Marker or monument", d: "Bronze, granite, flat or upright — the range here is enormous, and cemeteries set rules on what is permitted in each section.", n: "Optional timing" },
   { t: "Marker foundation / setting", d: "A separate cemetery fee to pour the base and install the marker.", n: "With marker" },
-  { t: "Transfer / recording fee", d: "Paid to the cemetery when ownership changes hands. Across the Texas cemeteries in our directory these commonly land in the mid-hundreds to around a thousand dollars per space, with outliers in both directions.", n: "On resale" },
+  { t: "Transfer / recording fee", d: "Paid to the cemetery when ownership changes hands. Across the Texas cemetery fee schedules we hold, most sit around $595–$995 per space, with the DFW memorial parks clustering near $595 and larger Houston and Dallas parks running from roughly $1,295 up to about $1,995. Small rural and church grounds can be nominal.", n: "On resale" },
   { t: "Endowment / perpetual care", d: "Usually bundled into the original purchase, though some cemeteries add a care contribution on a resale transfer.", n: "Varies" },
 ];
 
