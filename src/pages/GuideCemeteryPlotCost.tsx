@@ -312,6 +312,71 @@ const GuideCemeteryPlotCost = () => (
           ))}
         </div>
       </Section>
+        </div>
+
+        {/* Sticky editorial rail */}
+        <aside className="hidden lg:block lg:sticky lg:top-28 space-y-6">
+          <div className="rounded-3xl border border-border/70 bg-card p-6">
+            <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">At a glance</p>
+            <dl className="space-y-4 text-sm">
+              <div>
+                <dt className="text-foreground/55">Biggest price driver</dt>
+                <dd className="font-display text-lg text-foreground leading-snug">The cemetery and section</dd>
+              </div>
+              <div>
+                <dt className="text-foreground/55">Resale vs. cemetery retail</dt>
+                <dd className="font-display text-lg text-primary leading-snug">Priced well below</dd>
+              </div>
+              <div>
+                <dt className="text-foreground/55">Transfer fee</dt>
+                <dd className="font-display text-lg text-foreground leading-snug">Set by each cemetery</dd>
+              </div>
+              <div>
+                <dt className="text-foreground/55">Valuation cost</dt>
+                <dd className="font-display text-lg text-foreground leading-snug">Free, no obligation</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="rounded-3xl border border-border/70 bg-secondary/40 p-6">
+            <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">City guides</p>
+            <ul className="space-y-2.5 text-sm list-none pl-0">
+              {cityPrices.filter((c) => c.href).map((c) => (
+                <li key={c.city}>
+                  <Link to={c.href!} className="group inline-flex items-center gap-2 text-foreground/80 hover:text-primary transition-colors">
+                    {c.city} <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link to="/cemeteries" className="text-primary underline-offset-4 hover:underline">Texas cemetery directory</Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="rounded-3xl border border-border/70 bg-card p-6">
+            <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-3">Keep reading</p>
+            <ul className="space-y-3 text-sm list-none pl-0">
+              <li><Link to="/sell-cemetery-plot-texas" className="text-foreground/80 hover:text-primary transition-colors">Selling a cemetery plot in Texas</Link></li>
+              <li><Link to="/buying-cemetery-plot-texas" className="text-foreground/80 hover:text-primary transition-colors">Buying a cemetery plot in Texas</Link></li>
+              <li><Link to="/property-types" className="text-foreground/80 hover:text-primary transition-colors">Cemetery property types compared</Link></li>
+            </ul>
+          </div>
+
+          <div className="rounded-3xl bg-primary text-primary-foreground p-6">
+            <p className="font-display text-xl leading-snug mb-3">Ask for the price in your cemetery.</p>
+            <p className="text-primary-foreground/80 text-sm leading-relaxed mb-5">
+              We reply within 24 hours with a current range and the cemetery's transfer fee in writing.
+            </p>
+            <Link to="/sell" className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-accent-foreground rounded-full text-sm font-medium hover:-translate-y-0.5 transition-all">
+              Free valuation <ArrowRight className="w-4 h-4" />
+            </Link>
+            <a href="tel:+12142304740" className="mt-4 flex items-center gap-2 text-sm text-primary-foreground/85 hover:text-primary-foreground transition-colors">
+              <Phone className="w-4 h-4" /> (214) 230-4740
+            </a>
+          </div>
+        </aside>
+      </div>
 
       <section className="mt-6 mb-10">
         <div className="relative overflow-hidden rounded-3xl p-10 md:p-16 bg-gradient-to-br from-primary to-primary/85 text-primary-foreground">
