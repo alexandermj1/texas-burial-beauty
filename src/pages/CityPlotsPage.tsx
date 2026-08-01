@@ -153,7 +153,9 @@ const CityPlotsPage = () => {
         </div>
       </section>
 
-      <article className="container mx-auto px-6 max-w-4xl pb-8">
+      <article className="container mx-auto px-6 lg:px-10 max-w-7xl pb-8">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-10 xl:gap-16 items-start">
+          <div className="min-w-0">
         {/* Cemeteries */}
         <Section id="cemeteries" eyebrow="Where we work" title={`Cemeteries we broker in ${data.metro}`}>
           <p>
