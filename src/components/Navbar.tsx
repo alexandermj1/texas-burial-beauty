@@ -40,6 +40,16 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     { to: "/contact", label: "Contact", desc: "Talk to our team", Icon: Mail },
   ];
 
+  // Local city landing pages — surfaced inside the existing "Cemeteries" item
+  // so the top bar stays uncrowded.
+  const cityLinks = [
+    { to: "/cemetery-plots-for-sale-dallas", label: "Dallas–Fort Worth" },
+    { to: "/cemetery-plots-for-sale-houston", label: "Houston" },
+    { to: "/cemetery-plots-for-sale-austin", label: "Austin" },
+    { to: "/cemetery-plots-for-sale-san-antonio", label: "San Antonio" },
+  ];
+
+
   return (
     <>
       <nav
