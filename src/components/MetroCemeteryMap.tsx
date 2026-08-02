@@ -2,11 +2,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ArrowRight, Search, Navigation, Maximize2, Loader2, Receipt, Layers } from "lucide-react";
+import {
+  MapPin,
+  ArrowRight,
+  Search,
+  Navigation,
+  Maximize2,
+  Loader2,
+  Receipt,
+  Flame,
+  CalendarClock,
+  Globe,
+  LocateFixed,
+} from "lucide-react";
 import { bayCemeteries, type CemeteryInfo } from "@/data/cemeteries";
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { loadGoogleMaps, brandMapStyles, pinIcon, hasMapsKey } from "@/lib/googleMaps";
-import { useCemeteryMeta, tierFor, TIER } from "@/hooks/useCemeteryMeta";
+import { useCemeteryMeta, bandInfo, showingLabel, SAME_DAY_REGIONS } from "@/hooks/useCemeteryMeta";
 
 interface Props {
   /** Region names as used in src/data/cemeteries.ts */
@@ -19,16 +31,25 @@ interface Props {
   searchable?: boolean;
 }
 
-const PRIMARY = "#4a6b4f";
 const ACCENT = "#c1704a";
 
-type Filter = "all" | "available" | "lowfee";
-type Sort = "name" | "fee" | "listings";
+type Filter = "all" | "sameday" | "lowfee";
+type Sort = "name" | "fee" | "demand" | "distance";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 const directionsUrl = (c: CemeteryInfo) =>
   `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${c.name}, ${c.address}`)}`;
+
+const milesBetween = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const R = 3958.8;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const la1 = (a.lat * Math.PI) / 180;
+  const la2 = (b.lat * Math.PI) / 180;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+};
 
 /**
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
@@ -41,6 +62,9 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
   const [sort, setSort] = useState<Sort>("name");
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(!hasMapsKey());
+  const [here, setHere] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
 
   const { metaFor } = useCemeteryMeta();
 
@@ -48,6 +72,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
   const mapRef = useRef<google.maps.Map | null>(null);
   const markers = useRef<Record<string, google.maps.Marker>>({});
   const infoRef = useRef<google.maps.InfoWindow | null>(null);
+  const meRef = useRef<google.maps.Marker | null>(null);
   const activeRef = useRef<string | null>(null);
 
   const set = useMemo(() => bayCemeteries.filter((c) => regions.includes(c.region)), [regions]);
@@ -57,23 +82,26 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
     let out = set.filter((c) => {
       if (q && !`${c.name} ${c.city}`.toLowerCase().includes(q)) return false;
       const m = metaFor(c.name);
-      if (filter === "available") return m.listings > 0;
+      if (filter === "sameday") return SAME_DAY_REGIONS.includes(c.region);
       if (filter === "lowfee") return m.transferFee != null && m.transferFee <= 500;
       return true;
     });
     out = [...out].sort((a, b) => {
       const ma = metaFor(a.name);
       const mb = metaFor(b.name);
+      if (sort === "distance" && here) {
+        return milesBetween(here, a) - milesBetween(here, b);
+      }
       if (sort === "fee") {
         const fa = ma.transferFee ?? Number.POSITIVE_INFINITY;
         const fb = mb.transferFee ?? Number.POSITIVE_INFINITY;
         if (fa !== fb) return fa - fb;
       }
-      if (sort === "listings" && ma.listings !== mb.listings) return mb.listings - ma.listings;
+      if (sort === "demand" && ma.band !== mb.band) return mb.band - ma.band;
       return a.name.localeCompare(b.name);
     });
     return out;
-  }, [set, query, filter, sort, metaFor]);
+  }, [set, query, filter, sort, metaFor, here]);
 
   // Boot the map once
   useEffect(() => {
@@ -101,7 +129,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
             position: { lat: c.lat, lng: c.lng },
             title: `${c.name} — ${c.city}, TX`,
             icon: {
-              url: pinIcon(PRIMARY),
+              url: pinIcon(bandInfo(0).pin),
               scaledSize: new google.maps.Size(30, 39),
               anchor: new google.maps.Point(15, 39),
             },
@@ -134,22 +162,24 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
     const marker = markers.current[c.name];
     if (!map || !info || !marker) return;
     const m = metaFor(c.name);
-    const tier = TIER[tierFor(m.listings)];
+    const tier = bandInfo(m.band);
     const facts = [
-      m.listings > 0 ? `${m.listings} plot${m.listings === 1 ? "" : "s"} listed` : "Plots by request",
+      showingLabel(c.region),
       m.transferFee != null ? `Transfer fee ${money(m.transferFee)}` : null,
+      here ? `${milesBetween(here, c).toFixed(1)} mi away` : null,
     ]
       .filter(Boolean)
       .join(" · ");
     info.setContent(
-      `<div style="font-family:inherit;max-width:240px;padding:2px 2px 4px">
+      `<div style="font-family:inherit;max-width:250px;padding:2px 2px 4px">
          <div style="display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:${tier.pin}">${tier.label}</div>
          <div style="font-size:14px;font-weight:600;color:#2c2a26;line-height:1.25;margin-top:3px">${c.name}</div>
          <div style="font-size:12px;color:#6b6154;margin-top:2px">${c.address}</div>
          <div style="font-size:12px;color:#2c2a26;margin-top:6px">${facts}</div>
-         <div style="margin-top:8px;display:flex;gap:10px;font-size:12px;font-weight:600">
-           <a href="${cemeteryPath(c.name)}" style="color:${PRIMARY};text-decoration:none">View cemetery</a>
+         <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:600">
+           <a href="${cemeteryPath(c.name)}" style="color:#4a6b4f;text-decoration:none">View cemetery</a>
            <a href="${directionsUrl(c)}" target="_blank" rel="noopener" style="color:${ACCENT};text-decoration:none">Directions</a>
+           ${m.website ? `<a href="${m.website}" target="_blank" rel="noopener nofollow" style="color:#6b6154;text-decoration:none">Official site</a>` : ""}
          </div>
        </div>`
     );
@@ -158,7 +188,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
 
   const iconFor = (name: string, on: boolean) => {
     const google = (window as any).google;
-    const color = on ? ACCENT : TIER[tierFor(metaFor(name).listings)].pin;
+    const color = on ? ACCENT : bandInfo(metaFor(name).band).pin;
     const size = on ? 40 : 30;
     return {
       url: pinIcon(color),
@@ -225,12 +255,60 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
     map.fitBounds(bounds, 64);
   };
 
+  const findNearMe = () => {
+    if (!navigator.geolocation) {
+      setLocError("Location isn’t available in this browser.");
+      return;
+    }
+    setLocating(true);
+    setLocError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setHere(p);
+        setSort("distance");
+        setLocating(false);
+        const map = mapRef.current;
+        const google = (window as any).google;
+        if (map && google?.maps) {
+          meRef.current?.setMap(null);
+          meRef.current = new google.maps.Marker({
+            map,
+            position: p,
+            title: "You are here",
+            zIndex: 1200,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 7,
+              fillColor: "#2c2a26",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 3,
+            },
+          });
+          const nearest = [...set].sort((a, b) => milesBetween(p, a) - milesBetween(p, b)).slice(0, 5);
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(p);
+          nearest.forEach((c) => bounds.extend({ lat: c.lat, lng: c.lng }));
+          map.fitBounds(bounds, 72);
+        }
+      },
+      () => {
+        setLocating(false);
+        setLocError("We couldn’t get your location — try searching by city instead.");
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+    );
+  };
+
   if (!set.length) return null;
 
   const chip = (on: boolean) =>
     `px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
       on ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground/70 border-border/70 hover:border-primary/50"
     }`;
+
+  const sameDayMetro = regions.some((r) => SAME_DAY_REGIONS.includes(r));
 
   return (
     <section id="map" className="scroll-mt-28 py-12 md:py-16">
@@ -241,6 +319,12 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
             Cemeteries we broker across <span className="italic text-primary">{metro}</span>
           </h2>
           {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
+          {sameDayMetro && (
+            <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
+              <CalendarClock className="w-4 h-4" />
+              Same-day in-person showings across {metro}
+            </p>
+          )}
         </div>
         <label className="relative w-full sm:w-72">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -254,13 +338,22 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
         </label>
       </div>
 
-      {/* Filters + legend */}
-      <div className="flex flex-wrap items-center gap-2 mb-6">
+      {/* Filters + tools */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <button
+          type="button"
+          onClick={findNearMe}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold border border-accent/40 bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
+        >
+          {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LocateFixed className="w-3.5 h-3.5" />}
+          Find cemeteries near me
+        </button>
+        <span className="mx-1 hidden sm:inline text-border">|</span>
         <button type="button" className={chip(filter === "all")} onClick={() => setFilter("all")}>
           All cemeteries
         </button>
-        <button type="button" className={chip(filter === "available")} onClick={() => setFilter("available")}>
-          Plots available now
+        <button type="button" className={chip(filter === "sameday")} onClick={() => setFilter("sameday")}>
+          Same-day showings
         </button>
         <button type="button" className={chip(filter === "lowfee")} onClick={() => setFilter("lowfee")}>
           Transfer fee ≤ $500
@@ -269,15 +362,21 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
         <button type="button" className={chip(sort === "name")} onClick={() => setSort("name")}>
           A–Z
         </button>
-        <button type="button" className={chip(sort === "listings")} onClick={() => setSort("listings")}>
-          Most plots
+        <button type="button" className={chip(sort === "demand")} onClick={() => setSort("demand")}>
+          Most in demand
         </button>
         <button type="button" className={chip(sort === "fee")} onClick={() => setSort("fee")}>
           Lowest fee
         </button>
+        {here && (
+          <button type="button" className={chip(sort === "distance")} onClick={() => setSort("distance")}>
+            Closest to me
+          </button>
+        )}
       </div>
+      {locError && <p className="text-xs text-muted-foreground mb-4">{locError}</p>}
 
-      <div className="grid lg:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
+      <div className="grid lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
         {/* Map canvas */}
         <motion.div
           initial={{ opacity: 0, scale: 0.985 }}
@@ -286,7 +385,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="relative rounded-3xl overflow-hidden border border-border/70 bg-card shadow-soft"
         >
-          <div ref={mapEl} className="w-full h-[26rem] sm:h-[32rem] lg:h-[42rem] bg-[hsl(38_35%_95%)]" />
+          <div ref={mapEl} className="w-full h-[32rem] sm:h-[40rem] lg:h-[52rem] bg-[hsl(38_35%_95%)]" />
 
           {!ready && !failed && (
             <div className="absolute inset-0 grid place-items-center bg-[hsl(38_35%_95%)] text-muted-foreground gap-2">
@@ -318,27 +417,30 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
             )}
           </div>
 
-          {/* Legend */}
+          {/* Legend — deliberately relative, no raw numbers */}
           <div className="pointer-events-none absolute left-4 bottom-4 rounded-2xl bg-background/92 backdrop-blur border border-border/60 shadow-sm px-4 py-3">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-2">Inventory</p>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-2">Buyer interest</p>
             <ul className="list-none p-0 m-0 space-y-1.5">
-              {(["high", "some", "none"] as const).map((t) => (
-                <li key={t} className="flex items-center gap-2 text-[11px] text-foreground/80">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: TIER[t].pin }} />
-                  {TIER[t].label}
+              {([5, 4, 3, 2, 1] as const).map((b) => (
+                <li key={b} className="flex items-center gap-2 text-[11px] text-foreground/80">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: bandInfo(b).pin }} />
+                  {bandInfo(b).label}
                 </li>
               ))}
             </ul>
+            <p className="text-[10px] text-muted-foreground mt-2 max-w-[11rem] leading-snug">
+              Graded relative to other Texas cemeteries we broker.
+            </p>
           </div>
         </motion.div>
 
         {/* Index list — also the crawlable version of the map */}
-        <div className="rounded-3xl border border-border/70 bg-background/60 p-2 sm:p-3 max-h-[42rem] overflow-y-auto no-scrollbar">
+        <div className="rounded-3xl border border-border/70 bg-background/60 p-2 sm:p-3 lg:max-h-[52rem] overflow-y-auto no-scrollbar">
           <ul className="list-none pl-0 m-0 space-y-2">
             {filtered.map((c) => {
               const on = active === c.name;
               const m = metaFor(c.name);
-              const t = TIER[tierFor(m.listings)];
+              const t = bandInfo(m.band);
               return (
                 <li key={c.name}>
                   <div
@@ -363,18 +465,36 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false }: Props) 
                       <div className="min-w-0 flex-1">
                         <Link to={cemeteryPath(c.name)} className="block">
                           <span className="block font-display text-[15px] leading-snug text-foreground">{c.name}</span>
-                          <span className="block text-xs text-foreground/55">{c.city}, Texas</span>
+                          <span className="block text-xs text-foreground/55">
+                            {c.city}, Texas
+                            {here && <> · {milesBetween(here, c).toFixed(1)} mi away</>}
+                          </span>
                         </Link>
                         <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
                           <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${t.chip}`}>
-                            <Layers className="w-3 h-3" />
-                            {m.listings > 0 ? `${m.listings} plot${m.listings === 1 ? "" : "s"}` : t.label}
+                            <Flame className="w-3 h-3" />
+                            {t.label}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-primary/25 bg-primary/8 text-primary">
+                            <CalendarClock className="w-3 h-3" />
+                            {showingLabel(c.region)}
                           </span>
                           {m.transferFee != null && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-muted/60 text-foreground/70">
                               <Receipt className="w-3 h-3" />
                               {money(m.transferFee)} transfer
                             </span>
+                          )}
+                          {m.website && (
+                            <a
+                              href={m.website}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-card text-foreground/65 hover:text-primary hover:border-primary/40 transition-colors"
+                            >
+                              <Globe className="w-3 h-3" />
+                              Official site
+                            </a>
                           )}
                         </div>
                       </div>
