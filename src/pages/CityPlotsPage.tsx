@@ -295,6 +295,62 @@ const CityPlotsPage = () => {
           </div>
         </Section>
 
+        {/* Property types locally */}
+        <Section id="types" eyebrow="What's available" title={`Types of cemetery property in ${data.city}`}>
+          <p>
+            Not every family needs a traditional ground space, and in {data.city} the resale market carries the full range.
+            What suits you depends on the service you want, whether cremation is part of the plan, and how many people the
+            property needs to hold.
+          </p>
+          <div className="not-prose grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-6">
+            {[
+              { t: "Single ground space", d: "One interment. In many Texas parks a cremated interment may also be placed in the same space — worth asking, because it can serve two people." },
+              { t: "Companion / double depth", d: "Two interments in one grave, one above the other. Priced above a single space but well below two, and the most common family purchase." },
+              { t: "Side-by-side pair", d: "Two adjacent spaces. Sets of two and four bought decades ago are the property we resell most often in the metro." },
+              { t: "Cremation niche", d: "A glass or granite-fronted niche in a columbarium wall or garden feature. Usually the most affordable memorial-park option." },
+              { t: "Lawn crypt", d: "A pre-installed concrete crypt, normally sold as a companion pair, so the outer container cost is already covered." },
+              { t: "Mausoleum crypt", d: "Indoor or garden mausoleum space, priced by tier — heart-level and eye-level positions carry the highest prices." },
+            ].map((p) => (
+              <div key={p.t} className="p-5 rounded-2xl bg-card border border-border/60 hover:border-primary/35 transition-colors">
+                <h3 className="font-display text-lg text-foreground leading-snug mb-2">{p.t}</h3>
+                <p className="text-sm text-foreground/70 leading-relaxed">{p.d}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6">
+            Full comparison on the{" "}
+            <Link to="/property-types" className="text-primary underline-offset-4 hover:underline font-medium">
+              cemetery property types
+            </Link>{" "}
+            page.
+          </p>
+        </Section>
+
+        {/* Veterans + practical notes */}
+        <Section id="veterans" eyebrow="Good to know" title={`Practical notes for ${data.city} families`}>
+          <div className="not-prose grid md:grid-cols-3 gap-4">
+            {[
+              {
+                t: "Veterans and spouses",
+                d: `National cemeteries serving ${data.metro} provide burial at no cost to eligible veterans and their spouses, and those spaces are never resold. If eligibility applies, that is almost always the right route — we will tell you so rather than sell you a space you don't need.`,
+              },
+              {
+                t: "Religious and parish grounds",
+                d: "Catholic, Jewish and parish-run cemeteries often set their own eligibility and transfer rules. We confirm whether a buyer qualifies with the cemetery in writing before any money changes hands.",
+              },
+              {
+                t: "Buying beside family",
+                d: `If a relative is already interred in a ${data.city} cemetery, tell us the section and garden. Adjacent spaces come up through families more often than through the cemetery office, and we can watch for them.`,
+              },
+            ].map((n) => (
+              <div key={n.t} className="p-6 rounded-3xl bg-secondary/40 border border-border/60">
+                <h3 className="font-display text-xl text-foreground leading-snug mb-2.5">{n.t}</h3>
+                <p className="text-sm text-foreground/75 leading-relaxed">{n.d}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
         {/* FAQ */}
         <Section id="faq" eyebrow="Frequently asked" title={`${data.city} questions`}>
           <div className="space-y-4 not-prose">
