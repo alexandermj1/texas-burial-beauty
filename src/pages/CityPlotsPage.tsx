@@ -397,12 +397,16 @@ const CityPlotsPage = () => {
               <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">On this page</p>
               <ol className="space-y-2 text-sm list-none pl-0 text-foreground/75">
                 <li><a href="#cemeteries" className="hover:text-primary transition-colors">Cemeteries we broker</a></li>
+                <li><a href="#map" className="hover:text-primary transition-colors">Coverage map</a></li>
                 <li><a href="#pricing" className="hover:text-primary transition-colors">What it costs</a></li>
                 <li><a href="#how" className="hover:text-primary transition-colors">Buying and selling</a></li>
                 <li><a href="#areas" className="hover:text-primary transition-colors">Areas served</a></li>
                 <li><a href="#drivers" className="hover:text-primary transition-colors">What decides value</a></li>
                 <li><a href="#timeline" className="hover:text-primary transition-colors">Step by step</a></li>
+                <li><a href="#types" className="hover:text-primary transition-colors">Property types</a></li>
+                <li><a href="#veterans" className="hover:text-primary transition-colors">Practical notes</a></li>
                 <li><a href="#faq" className="hover:text-primary transition-colors">Questions</a></li>
+
               </ol>
             </div>
 
