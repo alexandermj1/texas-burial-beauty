@@ -199,10 +199,25 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                       </span>
                       <ArrowRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
                     </Link>
+                    {link.to === "/cemeteries" && (
+                      <div className="mt-2 ml-3 pl-4 border-l border-border/60 flex flex-wrap gap-2">
+                        {cityLinks.map(c => (
+                          <Link
+                            key={c.to}
+                            to={c.to}
+                            onClick={() => setMenuOpen(false)}
+                            className="px-3 py-1.5 rounded-full border border-border/70 bg-card/50 text-xs text-foreground/75 active:scale-95 transition-all"
+                          >
+                            {c.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </li>
                 );
               })}
             </ul>
+
 
             <div className="mt-auto pt-6 border-t border-border/60 flex flex-col gap-3">
               <Link
