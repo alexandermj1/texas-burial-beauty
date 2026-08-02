@@ -152,17 +152,8 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
         zoom: 6,
         mapTypeControl: false,
         streetViewControl: false,
-        styles: [
-          { elementType: "geometry", stylers: [{ color: "#f5efe6" }] },
-          { elementType: "labels.text.stroke", stylers: [{ color: "#f5efe6" }] },
-          { elementType: "labels.text.fill", stylers: [{ color: "#5c4a3a" }] },
-          { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ color: "#8a9a5b" }] },
-          { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#e8e0cc" }] },
-          { featureType: "poi", stylers: [{ visibility: "off" }] },
-          { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-          { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e0d3b8" }] },
-          { featureType: "water", elementType: "geometry", stylers: [{ color: "#b8cfd8" }] },
-        ],
+        styles: brandMapStyles,
+
       });
       setMapReady(true);
     }).catch((e) => {
