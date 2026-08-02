@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer className="py-12 border-t border-border bg-card">
       <div className="container mx-auto px-6">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           <div>
             <div className="flex items-baseline gap-2 mb-3">
               <span className="font-display text-lg text-foreground">Texas Cemetery</span>
