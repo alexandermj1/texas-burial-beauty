@@ -125,7 +125,7 @@ const GuideCemeteryPlotCost = () => (
     <section className="relative pt-28 pb-16 md:pb-24 overflow-hidden bg-[hsl(38_35%_95%)]">
       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(40_45%_93%)] via-[hsl(38_35%_95%)] to-background" />
       <div className="absolute top-0 right-0 w-[38rem] h-[38rem] rounded-full bg-[hsl(16_50%_70%)]/15 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-      <div className="relative container mx-auto px-6 lg:px-10 max-w-7xl">
+      <div className="relative container mx-auto px-6 lg:px-10 max-w-[1560px]">
         <Link
           to="/guides"
           className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.22em] uppercase text-foreground/50 hover:text-foreground mb-12 transition-colors"
@@ -194,8 +194,8 @@ const GuideCemeteryPlotCost = () => (
       </div>
     </section>
 
-    <article className="container mx-auto px-6 lg:px-10 max-w-7xl pb-8">
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-10 xl:gap-16 items-start">
+    <article className="container mx-auto px-6 lg:px-10 max-w-[1560px] pb-8">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_20rem] gap-12 xl:gap-20 items-start">
         <div className="min-w-0">
       <Section id="by-city" num="I" eyebrow="City by city" title="What actually moves the price">
         <p>
