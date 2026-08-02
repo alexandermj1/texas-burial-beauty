@@ -4,6 +4,8 @@ import { ArrowRight, MapPin, Phone, Plus, ShieldCheck, Wallet, FileCheck2 } from
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
 import { getCityPage, CITY_PAGES } from "./city-page-data";
 
 const SITE = "https://texascemeterybrokers.com";
@@ -181,6 +183,13 @@ const CityPlotsPage = () => {
           </div>
         </Section>
 
+        <MetroCemeteryMap
+          regions={data.regions}
+          metro={data.metro}
+          blurb={`Every pin is a ${data.metro} cemetery we hold a profile for — pricing, section detail and the current transfer fee. Hover a pin or a name to see where it sits, then open the cemetery for detail.`}
+        />
+
+
         {/* Pricing */}
         <Section id="pricing" eyebrow="What it costs" title={`Cemetery plot prices in ${data.city}`}>
           <p>
@@ -286,6 +295,62 @@ const CityPlotsPage = () => {
           </div>
         </Section>
 
+        {/* Property types locally */}
+        <Section id="types" eyebrow="What's available" title={`Types of cemetery property in ${data.city}`}>
+          <p>
+            Not every family needs a traditional ground space, and in {data.city} the resale market carries the full range.
+            What suits you depends on the service you want, whether cremation is part of the plan, and how many people the
+            property needs to hold.
+          </p>
+          <div className="not-prose grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-6">
+            {[
+              { t: "Single ground space", d: "One interment. In many Texas parks a cremated interment may also be placed in the same space — worth asking, because it can serve two people." },
+              { t: "Companion / double depth", d: "Two interments in one grave, one above the other. Priced above a single space but well below two, and the most common family purchase." },
+              { t: "Side-by-side pair", d: "Two adjacent spaces. Sets of two and four bought decades ago are the property we resell most often in the metro." },
+              { t: "Cremation niche", d: "A glass or granite-fronted niche in a columbarium wall or garden feature. Usually the most affordable memorial-park option." },
+              { t: "Lawn crypt", d: "A pre-installed concrete crypt, normally sold as a companion pair, so the outer container cost is already covered." },
+              { t: "Mausoleum crypt", d: "Indoor or garden mausoleum space, priced by tier — heart-level and eye-level positions carry the highest prices." },
+            ].map((p) => (
+              <div key={p.t} className="p-5 rounded-2xl bg-card border border-border/60 hover:border-primary/35 transition-colors">
+                <h3 className="font-display text-lg text-foreground leading-snug mb-2">{p.t}</h3>
+                <p className="text-sm text-foreground/70 leading-relaxed">{p.d}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6">
+            Full comparison on the{" "}
+            <Link to="/property-types" className="text-primary underline-offset-4 hover:underline font-medium">
+              cemetery property types
+            </Link>{" "}
+            page.
+          </p>
+        </Section>
+
+        {/* Veterans + practical notes */}
+        <Section id="veterans" eyebrow="Good to know" title={`Practical notes for ${data.city} families`}>
+          <div className="not-prose grid md:grid-cols-3 gap-4">
+            {[
+              {
+                t: "Veterans and spouses",
+                d: `National cemeteries serving ${data.metro} provide burial at no cost to eligible veterans and their spouses, and those spaces are never resold. If eligibility applies, that is almost always the right route — we will tell you so rather than sell you a space you don't need.`,
+              },
+              {
+                t: "Religious and parish grounds",
+                d: "Catholic, Jewish and parish-run cemeteries often set their own eligibility and transfer rules. We confirm whether a buyer qualifies with the cemetery in writing before any money changes hands.",
+              },
+              {
+                t: "Buying beside family",
+                d: `If a relative is already interred in a ${data.city} cemetery, tell us the section and garden. Adjacent spaces come up through families more often than through the cemetery office, and we can watch for them.`,
+              },
+            ].map((n) => (
+              <div key={n.t} className="p-6 rounded-3xl bg-secondary/40 border border-border/60">
+                <h3 className="font-display text-xl text-foreground leading-snug mb-2.5">{n.t}</h3>
+                <p className="text-sm text-foreground/75 leading-relaxed">{n.d}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
         {/* FAQ */}
         <Section id="faq" eyebrow="Frequently asked" title={`${data.city} questions`}>
           <div className="space-y-4 not-prose">
@@ -332,12 +397,16 @@ const CityPlotsPage = () => {
               <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-4">On this page</p>
               <ol className="space-y-2 text-sm list-none pl-0 text-foreground/75">
                 <li><a href="#cemeteries" className="hover:text-primary transition-colors">Cemeteries we broker</a></li>
+                <li><a href="#map" className="hover:text-primary transition-colors">Coverage map</a></li>
                 <li><a href="#pricing" className="hover:text-primary transition-colors">What it costs</a></li>
                 <li><a href="#how" className="hover:text-primary transition-colors">Buying and selling</a></li>
                 <li><a href="#areas" className="hover:text-primary transition-colors">Areas served</a></li>
                 <li><a href="#drivers" className="hover:text-primary transition-colors">What decides value</a></li>
                 <li><a href="#timeline" className="hover:text-primary transition-colors">Step by step</a></li>
+                <li><a href="#types" className="hover:text-primary transition-colors">Property types</a></li>
+                <li><a href="#veterans" className="hover:text-primary transition-colors">Practical notes</a></li>
                 <li><a href="#faq" className="hover:text-primary transition-colors">Questions</a></li>
+
               </ol>
             </div>
 
@@ -369,6 +438,47 @@ const CityPlotsPage = () => {
             </div>
           </aside>
         </div>
+
+        {/* Other metros — full width, keeps every city page one click apart */}
+        <section aria-labelledby="other-metros" className="mt-4 mb-2">
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <h2 id="other-metros" className="font-display text-2xl md:text-3xl text-foreground tracking-tight">
+              Cemetery plots in other Texas metros
+            </h2>
+            <Link to="/cemeteries" className="text-sm text-primary hover:underline underline-offset-4 whitespace-nowrap">
+              Full directory
+            </Link>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {CITY_PAGES.filter((c) => c.slug !== data.slug).map((c) => (
+              <Link
+                key={c.slug}
+                to={`/cemetery-plots-for-sale-${c.slug}`}
+                className="group relative overflow-hidden p-6 rounded-3xl bg-card border border-border/60 hover:border-primary/40 hover:-translate-y-1 transition-all"
+              >
+                <span className="absolute -right-8 -bottom-8 w-28 h-28 rounded-full bg-primary/5 group-hover:bg-accent/10 transition-colors" />
+                <p className="relative text-[10px] uppercase tracking-[0.24em] text-muted-foreground mb-2">{c.metro}</p>
+                <p className="relative font-display text-xl text-foreground leading-snug mb-3">{c.city}</p>
+                <p className="relative text-sm text-foreground/60">{c.metroCemeteryCount}+ cemeteries covered</p>
+                <span className="relative mt-4 inline-flex items-center gap-2 text-sm text-primary">
+                  View plots <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
+            ))}
+            <Link
+              to="/cemetery-plots-for-sale-texas"
+              className="group p-6 rounded-3xl bg-secondary/50 border border-border/60 hover:border-accent/40 hover:-translate-y-1 transition-all sm:col-span-2 lg:col-span-1"
+            >
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground mb-2">Statewide</p>
+              <p className="font-display text-xl text-foreground leading-snug mb-3">All of Texas</p>
+              <p className="text-sm text-foreground/60">198 cemetery profiles statewide</p>
+              <span className="mt-4 inline-flex items-center gap-2 text-sm text-accent">
+                Buyer's guide <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+          </div>
+        </section>
+
 
         {/* CTA */}
         <section className="mt-10 mb-8">

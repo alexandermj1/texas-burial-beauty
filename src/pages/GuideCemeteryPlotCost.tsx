@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, Plus, Phone, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
 
 const PATH = "/cemetery-plot-cost-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -156,7 +158,10 @@ const GuideCemeteryPlotCost = () => (
                   <li><a href="#extras" className="hover:text-primary transition-colors">II. The rest of the bill</a></li>
                   <li><a href="#type" className="hover:text-primary transition-colors">III. By property type</a></li>
                   <li><a href="#resale" className="hover:text-primary transition-colors">IV. Why resale is cheaper</a></li>
-                  <li><a href="#faq" className="hover:text-primary transition-colors">V. Questions</a></li>
+                  <li><a href="#map" className="hover:text-primary transition-colors">Texas coverage map</a></li>
+                  <li><a href="#save" className="hover:text-primary transition-colors">V. Practical steps</a></li>
+                  <li><a href="#faq" className="hover:text-primary transition-colors">VI. Questions</a></li>
+
                 </ol>
               </div>
               <div className="text-sm text-foreground/60 leading-relaxed">
@@ -292,7 +297,46 @@ const GuideCemeteryPlotCost = () => (
         </p>
       </Section>
 
-      <Section id="faq" num="V" eyebrow="Frequently asked" title="Cemetery plot cost questions">
+      <div className="border-t border-border/60">
+        <MetroCemeteryMap
+          regions={["Dallas–Fort Worth", "Greater Houston", "Austin", "San Antonio", "Central Texas", "East Texas", "South Texas", "West & North Texas", "El Paso & West Texas"]}
+          metro="Texas"
+          searchable
+          blurb="Search any cemetery on the map to open its profile. Pricing, sections and the current transfer fee are recorded on each one."
+        />
+      </div>
+
+      <Section id="save" num="V" eyebrow="Practical steps" title="How families keep the total sensible">
+        <p>
+          Almost none of this is about haggling. Most of the saving comes from knowing which decisions carry a price tag and
+          making them deliberately rather than in the days after a death, when there is no time to compare anything.
+        </p>
+        <div className="not-prose grid sm:grid-cols-2 gap-4 mt-8">
+          {[
+            { t: "Buy before you need it", d: "Pre-need buyers can look at several cemeteries, compare sections and wait for the right resale space. At-need families rarely have that luxury, and price reflects it." },
+            { t: "Consider the neighbouring town", d: "A cemetery twenty minutes further out can be materially less than the flagship park inside the metro, with the same standard of care and grounds." },
+            { t: "Check what already transfers with the space", d: "A vault, an opening-and-closing credit or a paid marker foundation included in a resale purchase is real money that would otherwise be charged separately." },
+            { t: "Ask about the section, not just the cemetery", d: "Within one park, older and outlying sections can sit far below the feature gardens while offering the same perpetual care." },
+            { t: "Confirm the transfer fee in writing first", d: "It is the one cemetery charge people forget on a resale purchase. Get the figure from the cemetery before agreeing a price, not after." },
+            { t: "Check veteran eligibility first", d: "Eligible veterans and spouses are entitled to burial at a national cemetery at no cost. It is always worth confirming before buying anything." },
+          ].map((s) => (
+            <div key={s.t} className="p-6 rounded-2xl bg-card border border-border/60 hover:border-primary/35 transition-colors">
+              <h3 className="font-display text-xl text-foreground leading-snug mb-2">{s.t}</h3>
+              <p className="text-sm text-foreground/70 leading-relaxed">{s.d}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-8">
+          If you already own property and are wondering what it is worth today rather than what it cost, the{" "}
+          <Link to="/sell-cemetery-plot-texas" className="text-primary underline-offset-4 hover:underline font-medium">
+            selling guide
+          </Link>{" "}
+          walks through valuation and the transfer paperwork step by step.
+        </p>
+      </Section>
+
+      <Section id="faq" num="VI" eyebrow="Frequently asked" title="Cemetery plot cost questions">
+
         <div className="not-prose divide-y divide-border/60 border-t border-b border-border/60">
           {faqs.map((f, i) => (
             <details key={f.q} className="group py-6">
@@ -377,6 +421,40 @@ const GuideCemeteryPlotCost = () => (
           </div>
         </aside>
       </div>
+
+      {/* City hubs — full width so every local page is one click from the guide */}
+      <section aria-labelledby="city-hubs" className="mt-2 mb-4">
+        <div className="flex items-end justify-between gap-4 mb-6">
+          <h2 id="city-hubs" className="font-display text-2xl md:text-3xl text-foreground tracking-tight">
+            Plot prices in your city
+          </h2>
+          <Link to="/cemeteries" className="text-sm text-primary hover:underline underline-offset-4 whitespace-nowrap">
+            Full directory
+          </Link>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { city: "Dallas–Fort Worth", href: "/cemetery-plots-for-sale-dallas", note: "52+ cemeteries covered" },
+            { city: "Houston", href: "/cemetery-plots-for-sale-houston", note: "50+ cemeteries covered" },
+            { city: "Austin", href: "/cemetery-plots-for-sale-austin", note: "Tightest market in Texas" },
+            { city: "San Antonio", href: "/cemetery-plots-for-sale-san-antonio", note: "Historic family sections" },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              to={c.href}
+              className="group relative overflow-hidden p-6 rounded-3xl bg-card border border-border/60 hover:border-primary/40 hover:-translate-y-1 transition-all"
+            >
+              <span className="absolute -right-8 -bottom-8 w-28 h-28 rounded-full bg-primary/5 group-hover:bg-accent/10 transition-colors" />
+              <p className="relative font-display text-xl text-foreground leading-snug mb-2">{c.city}</p>
+              <p className="relative text-sm text-foreground/60">{c.note}</p>
+              <span className="relative mt-4 inline-flex items-center gap-2 text-sm text-primary">
+                View plots <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
 
       <section className="mt-6 mb-10">
         <div className="relative overflow-hidden rounded-3xl p-10 md:p-16 bg-gradient-to-br from-primary to-primary/85 text-primary-foreground">
