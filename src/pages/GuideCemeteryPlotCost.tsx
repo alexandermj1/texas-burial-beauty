@@ -125,7 +125,7 @@ const GuideCemeteryPlotCost = () => (
     <section className="relative pt-28 pb-16 md:pb-24 overflow-hidden bg-[hsl(38_35%_95%)]">
       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(40_45%_93%)] via-[hsl(38_35%_95%)] to-background" />
       <div className="absolute top-0 right-0 w-[38rem] h-[38rem] rounded-full bg-[hsl(16_50%_70%)]/15 blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-      <div className="relative container mx-auto px-6 lg:px-10 max-w-[1560px]">
+      <div className="relative container mx-auto px-6 lg:px-10 max-w-[1280px]">
         <Link
           to="/guides"
           className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.22em] uppercase text-foreground/50 hover:text-foreground mb-12 transition-colors"
