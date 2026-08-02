@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface CemeteryMeta {
   transferFee: number | null;
-  listings: number;
+  /** Relative demand tier, 1 (quietest) – 5 (busiest). 0 = not enough signal. */
+  band: number;
+  website: string | null;
 }
 
 const norm = (s: string | null | undefined) =>
@@ -14,35 +16,48 @@ const norm = (s: string | null | undefined) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const httpUrl = (u: string | null | undefined) => {
+  const s = (u || "").trim();
+  if (!s) return null;
+  return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+};
+
 /**
  * Public metadata used to enrich cemetery cards on the coverage maps:
- * transfer fee (from the cemetery registry) and live plot counts.
+ * transfer fee + website (cemetery registry) and a vague, relative
+ * demand band derived server-side from inquiry volume.
  */
 export const useCemeteryMeta = () => {
   const [fees, setFees] = useState<Record<string, number>>({});
-  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [sites, setSites] = useState<Record<string, string>>({});
+  const [bands, setBands] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const [cems, listings] = await Promise.all([
-        supabase.from("texas_cemeteries").select("name, transfer_fee").not("transfer_fee", "is", null),
-        supabase.from("listings").select("cemetery").eq("status", "active"),
+      const [cems, demand] = await Promise.all([
+        supabase.from("texas_cemeteries").select("name, transfer_fee, website"),
+        supabase.rpc("cemetery_demand_bands" as never),
       ]);
       if (!mounted) return;
       const f: Record<string, number> = {};
-      for (const row of (cems.data as { name: string; transfer_fee: number | null }[]) || []) {
+      const w: Record<string, string> = {};
+      for (const row of (cems.data as { name: string; transfer_fee: number | null; website: string | null }[]) || []) {
         const k = norm(row.name);
-        if (k && row.transfer_fee != null) f[k] = Number(row.transfer_fee);
+        if (!k) continue;
+        if (row.transfer_fee != null) f[k] = Number(row.transfer_fee);
+        const url = httpUrl(row.website);
+        if (url) w[k] = url;
       }
-      const c: Record<string, number> = {};
-      for (const row of (listings.data as { cemetery: string | null }[]) || []) {
-        const k = norm(row.cemetery);
-        if (k) c[k] = (c[k] || 0) + 1;
+      const b: Record<string, number> = {};
+      for (const row of (demand.data as { cemetery_key: string; band: number }[]) || []) {
+        const k = norm(row.cemetery_key);
+        if (k) b[k] = Math.max(b[k] || 0, Number(row.band) || 0);
       }
       setFees(f);
-      setCounts(c);
+      setSites(w);
+      setBands(b);
       setLoading(false);
     })();
     return () => {
@@ -55,19 +70,27 @@ export const useCemeteryMeta = () => {
       loading,
       metaFor: (name: string): CemeteryMeta => {
         const k = norm(name);
-        return { transferFee: fees[k] ?? null, listings: counts[k] ?? 0 };
+        return { transferFee: fees[k] ?? null, band: bands[k] ?? 0, website: sites[k] ?? null };
       },
     }),
-    [fees, counts, loading]
+    [fees, bands, sites, loading]
   );
 };
 
-/** Availability tier used for pin + card colour coding. */
-export const tierFor = (listings: number) =>
-  listings >= 3 ? "high" : listings >= 1 ? "some" : "none";
-
-export const TIER = {
-  high: { label: "High volume", pin: "#c1704a", chip: "bg-terracotta/15 text-terracotta border-terracotta/30" },
-  some: { label: "Plots available", pin: "#4a6b4f", chip: "bg-primary/12 text-primary border-primary/30" },
-  none: { label: "Broker access", pin: "#8b8378", chip: "bg-muted text-muted-foreground border-border" },
+/** Five-step, deliberately vague demand grading used for pin + card colour coding. */
+export const BANDS = {
+  5: { label: "Exceptional interest", pin: "#a8442f", chip: "border-[#a8442f]/35 bg-[#a8442f]/10 text-[#8c3826]" },
+  4: { label: "Very sought after", pin: "#c1704a", chip: "border-[#c1704a]/35 bg-[#c1704a]/10 text-[#a2583a]" },
+  3: { label: "Actively traded", pin: "#b79a4e", chip: "border-[#b79a4e]/40 bg-[#b79a4e]/12 text-[#8a7233]" },
+  2: { label: "Regular interest", pin: "#4a6b4f", chip: "border-primary/30 bg-primary/10 text-primary" },
+  1: { label: "Quieter market", pin: "#7d8f7f", chip: "border-[#7d8f7f]/35 bg-[#7d8f7f]/12 text-[#5c6b5e]" },
+  0: { label: "Broker access", pin: "#8b8378", chip: "border-border bg-muted/60 text-muted-foreground" },
 } as const;
+
+export const bandInfo = (band: number) => BANDS[(band in BANDS ? band : 0) as keyof typeof BANDS];
+
+/** Metros where we can arrange same-day walk-throughs. */
+export const SAME_DAY_REGIONS = ["Dallas–Fort Worth", "Greater Houston"];
+
+export const showingLabel = (region: string) =>
+  SAME_DAY_REGIONS.includes(region) ? "Same-day in-person showings" : "In-person showings available";
