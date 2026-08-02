@@ -158,7 +158,10 @@ const GuideCemeteryPlotCost = () => (
                   <li><a href="#extras" className="hover:text-primary transition-colors">II. The rest of the bill</a></li>
                   <li><a href="#type" className="hover:text-primary transition-colors">III. By property type</a></li>
                   <li><a href="#resale" className="hover:text-primary transition-colors">IV. Why resale is cheaper</a></li>
-                  <li><a href="#faq" className="hover:text-primary transition-colors">V. Questions</a></li>
+                  <li><a href="#map" className="hover:text-primary transition-colors">Texas coverage map</a></li>
+                  <li><a href="#save" className="hover:text-primary transition-colors">V. Practical steps</a></li>
+                  <li><a href="#faq" className="hover:text-primary transition-colors">VI. Questions</a></li>
+
                 </ol>
               </div>
               <div className="text-sm text-foreground/60 leading-relaxed">
