@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect, useEffect } from "react";
-import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen } from "lucide-react";
+import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
