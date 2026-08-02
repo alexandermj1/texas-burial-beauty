@@ -435,6 +435,47 @@ const CityPlotsPage = () => {
           </aside>
         </div>
 
+        {/* Other metros — full width, keeps every city page one click apart */}
+        <section aria-labelledby="other-metros" className="mt-4 mb-2">
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <h2 id="other-metros" className="font-display text-2xl md:text-3xl text-foreground tracking-tight">
+              Cemetery plots in other Texas metros
+            </h2>
+            <Link to="/cemeteries" className="text-sm text-primary hover:underline underline-offset-4 whitespace-nowrap">
+              Full directory
+            </Link>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {CITY_PAGES.filter((c) => c.slug !== data.slug).map((c) => (
+              <Link
+                key={c.slug}
+                to={`/cemetery-plots-for-sale-${c.slug}`}
+                className="group relative overflow-hidden p-6 rounded-3xl bg-card border border-border/60 hover:border-primary/40 hover:-translate-y-1 transition-all"
+              >
+                <span className="absolute -right-8 -bottom-8 w-28 h-28 rounded-full bg-primary/5 group-hover:bg-accent/10 transition-colors" />
+                <p className="relative text-[10px] uppercase tracking-[0.24em] text-muted-foreground mb-2">{c.metro}</p>
+                <p className="relative font-display text-xl text-foreground leading-snug mb-3">{c.city}</p>
+                <p className="relative text-sm text-foreground/60">{c.metroCemeteryCount}+ cemeteries covered</p>
+                <span className="relative mt-4 inline-flex items-center gap-2 text-sm text-primary">
+                  View plots <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
+            ))}
+            <Link
+              to="/cemetery-plots-for-sale-texas"
+              className="group p-6 rounded-3xl bg-secondary/50 border border-border/60 hover:border-accent/40 hover:-translate-y-1 transition-all sm:col-span-2 lg:col-span-1"
+            >
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground mb-2">Statewide</p>
+              <p className="font-display text-xl text-foreground leading-snug mb-3">All of Texas</p>
+              <p className="text-sm text-foreground/60">198 cemetery profiles statewide</p>
+              <span className="mt-4 inline-flex items-center gap-2 text-sm text-accent">
+                Buyer's guide <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+          </div>
+        </section>
+
+
         {/* CTA */}
         <section className="mt-10 mb-8">
           <div className="relative overflow-hidden rounded-3xl p-10 md:p-14 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
