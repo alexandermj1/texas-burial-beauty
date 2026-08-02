@@ -14,26 +14,8 @@ type Cemetery = {
 type Agent = { id: string; name: string; role: string | null; city: string | null; address: string | null; latitude: number | null; longitude: number | null; color: string | null; notes: string | null };
 type Selected = { kind: "cemetery" | "agent"; id: string; name: string; lat: number; lng: number };
 
-const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
-const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
+import { loadGoogleMaps, brandMapStyles } from "@/lib/googleMaps";
 
-let gmapsPromise: Promise<typeof google> | null = null;
-function loadGoogleMaps(): Promise<typeof google> {
-  if (typeof window !== "undefined" && (window as any).google?.maps) return Promise.resolve((window as any).google);
-  if (gmapsPromise) return gmapsPromise;
-  gmapsPromise = new Promise((resolve, reject) => {
-    if (!BROWSER_KEY) { reject(new Error("Google Maps browser key not configured")); return; }
-    (window as any).__initTxMap = () => resolve((window as any).google);
-    const s = document.createElement("script");
-    const params = new URLSearchParams({ key: BROWSER_KEY, loading: "async", callback: "__initTxMap", libraries: "geometry" });
-    if (TRACKING_ID) params.set("channel", TRACKING_ID);
-    s.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
-    s.async = true;
-    s.onerror = () => reject(new Error("Failed to load Google Maps"));
-    document.head.appendChild(s);
-  });
-  return gmapsPromise;
-}
 
 function fmtDuration(sec: number) {
   const h = Math.floor(sec / 3600);
