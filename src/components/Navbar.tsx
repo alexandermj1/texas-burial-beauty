@@ -68,19 +68,64 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            {links.map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`text-sm ${
-                  location.pathname === link.to
-                    ? scrolled ? "text-foreground font-medium" : "text-primary-foreground font-medium"
-                    : scrolled ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map(link => {
+              const isActive = location.pathname === link.to;
+              const cls = `text-sm ${
+                isActive
+                  ? scrolled ? "text-foreground font-medium" : "text-primary-foreground font-medium"
+                  : scrolled ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
+              }`;
+
+              if (link.to !== "/cemeteries") {
+                return (
+                  <Link key={link.to} to={link.to} className={cls}>
+                    {link.label}
+                  </Link>
+                );
+              }
+
+              return (
+                <div key={link.to} className="relative group py-2 -my-2">
+                  <Link to={link.to} className={`${cls} inline-flex items-center gap-1`}>
+                    {link.label}
+                    <ChevronDown className="w-3.5 h-3.5 opacity-60 group-hover:rotate-180 transition-transform duration-300" />
+                  </Link>
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-200 z-50">
+                    <div className="w-72 rounded-2xl border border-border bg-background/98 backdrop-blur-xl shadow-hover p-2">
+                      <Link
+                        to="/cemeteries"
+                        className="block rounded-xl px-3.5 py-2.5 hover:bg-muted/60 transition-colors"
+                      >
+                        <span className="block text-sm text-foreground font-medium">Texas cemetery directory</span>
+                        <span className="block text-xs text-muted-foreground">All cemeteries, searchable</span>
+                      </Link>
+                      <p className="px-3.5 pt-3 pb-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                        Plots by city
+                      </p>
+                      {cityLinks.map(c => (
+                        <Link
+                          key={c.to}
+                          to={c.to}
+                          className="group/i flex items-center justify-between rounded-xl px-3.5 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-colors"
+                        >
+                          {c.label}
+                          <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover/i:opacity-100 transition-opacity" />
+                        </Link>
+                      ))}
+                      <div className="mt-2 pt-2 border-t border-border/70">
+                        <Link
+                          to="/cemetery-plot-cost-texas"
+                          className="block rounded-xl px-3.5 py-2 text-sm text-primary hover:bg-primary/5 transition-colors"
+                        >
+                          What does a plot cost in Texas?
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
             <a
               href="tel:+12142304740"
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all ${
