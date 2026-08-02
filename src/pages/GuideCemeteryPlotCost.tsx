@@ -390,6 +390,40 @@ const GuideCemeteryPlotCost = () => (
         </aside>
       </div>
 
+      {/* City hubs — full width so every local page is one click from the guide */}
+      <section aria-labelledby="city-hubs" className="mt-2 mb-4">
+        <div className="flex items-end justify-between gap-4 mb-6">
+          <h2 id="city-hubs" className="font-display text-2xl md:text-3xl text-foreground tracking-tight">
+            Plot prices in your city
+          </h2>
+          <Link to="/cemeteries" className="text-sm text-primary hover:underline underline-offset-4 whitespace-nowrap">
+            Full directory
+          </Link>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { city: "Dallas–Fort Worth", href: "/cemetery-plots-for-sale-dallas", note: "52+ cemeteries covered" },
+            { city: "Houston", href: "/cemetery-plots-for-sale-houston", note: "50+ cemeteries covered" },
+            { city: "Austin", href: "/cemetery-plots-for-sale-austin", note: "Tightest market in Texas" },
+            { city: "San Antonio", href: "/cemetery-plots-for-sale-san-antonio", note: "Historic family sections" },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              to={c.href}
+              className="group relative overflow-hidden p-6 rounded-3xl bg-card border border-border/60 hover:border-primary/40 hover:-translate-y-1 transition-all"
+            >
+              <span className="absolute -right-8 -bottom-8 w-28 h-28 rounded-full bg-primary/5 group-hover:bg-accent/10 transition-colors" />
+              <p className="relative font-display text-xl text-foreground leading-snug mb-2">{c.city}</p>
+              <p className="relative text-sm text-foreground/60">{c.note}</p>
+              <span className="relative mt-4 inline-flex items-center gap-2 text-sm text-primary">
+                View plots <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+
       <section className="mt-6 mb-10">
         <div className="relative overflow-hidden rounded-3xl p-10 md:p-16 bg-gradient-to-br from-primary to-primary/85 text-primary-foreground">
           <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-accent/25 blur-3xl" />
