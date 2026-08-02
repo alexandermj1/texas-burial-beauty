@@ -105,7 +105,7 @@ const CityPlotsPage = () => {
           <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
         </svg>
 
-        <div className="relative container mx-auto px-6 lg:px-10 max-w-7xl">
+        <div className="relative container mx-auto px-6 lg:px-10 max-w-[1560px]">
           <nav aria-label="Breadcrumb" className="mb-8 text-xs tracking-[0.16em] uppercase text-foreground/55">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
             <span className="mx-2">/</span>
@@ -158,8 +158,8 @@ const CityPlotsPage = () => {
         </div>
       </section>
 
-      <article className="container mx-auto px-6 lg:px-10 max-w-7xl pb-8">
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem] gap-10 xl:gap-16 items-start">
+      <article className="container mx-auto px-6 lg:px-10 max-w-[1560px] pb-8">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_20rem] gap-12 xl:gap-20 items-start">
           <div className="min-w-0">
         {/* Cemeteries */}
         <Section id="cemeteries" eyebrow="Where we work" title={`Cemeteries we broker in ${data.metro}`}>
