@@ -38,11 +38,23 @@ const Footer = () => {
             </div>
           </div>
           <div>
+            <h4 className="font-display text-sm text-foreground mb-3">Plots by City</h4>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <Link to="/cemetery-plots-for-sale-dallas" className="block hover:text-foreground transition-colors">Dallas–Fort Worth</Link>
+              <Link to="/cemetery-plots-for-sale-houston" className="block hover:text-foreground transition-colors">Houston</Link>
+              <Link to="/cemetery-plots-for-sale-austin" className="block hover:text-foreground transition-colors">Austin</Link>
+              <Link to="/cemetery-plots-for-sale-san-antonio" className="block hover:text-foreground transition-colors">San Antonio</Link>
+              <Link to="/cemetery-plots-for-sale-texas" className="block hover:text-foreground transition-colors">All of Texas</Link>
+              <Link to="/cemetery-plot-cost-texas" className="block hover:text-foreground transition-colors">Plot cost guide</Link>
+            </div>
+          </div>
+          <div>
             <h4 className="font-display text-sm text-foreground mb-3">Service Areas</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Dallas · Fort Worth · Houston · Austin · San Antonio · El Paso · Statewide Texas
             </p>
           </div>
+
         </div>
         <div className="divider-earth mb-6" />
         <div className="flex items-center justify-between">
