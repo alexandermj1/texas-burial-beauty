@@ -18,6 +18,7 @@ export interface CityPageData {
   retailRange: string; // typical cemetery retail range
   resaleRange: string; // typical resale range
   metroCemeteryCount: number; // cemeteries we hold profiles for in this metro
+  regions: string[]; // region keys in src/data/cemeteries.ts used by the coverage map
   neighborhoods: string[];
   cemeteries: CityCemetery[];
   notes: string[]; // 2–3 local specifics
@@ -37,6 +38,7 @@ export const CITY_PAGES: CityPageData[] = [
     retailRange: "$4,500 – $20,000+ per space",
     resaleRange: "$2,500 – $12,000+ per space",
     metroCemeteryCount: 50,
+    regions: ["Greater Houston"],
     neighborhoods: [
       "Memorial & West Houston",
       "The Heights",
@@ -79,6 +81,7 @@ export const CITY_PAGES: CityPageData[] = [
     retailRange: "$4,000 – $20,000+ per space",
     resaleRange: "$2,000 – $12,000+ per space",
     metroCemeteryCount: 52,
+    regions: ["Dallas–Fort Worth"],
     neighborhoods: [
       "North Dallas & Richardson",
       "Plano, Frisco & McKinney",
@@ -120,6 +123,7 @@ export const CITY_PAGES: CityPageData[] = [
     retailRange: "$3,500 – $15,000+ per space",
     resaleRange: "$1,800 – $9,000+ per space",
     metroCemeteryCount: 20,
+    regions: ["San Antonio", "South Texas"],
     neighborhoods: [
       "Alamo Heights & North Central",
       "Stone Oak",
@@ -160,6 +164,7 @@ export const CITY_PAGES: CityPageData[] = [
     retailRange: "$5,000 – $22,000+ per space",
     resaleRange: "$3,000 – $13,000+ per space",
     metroCemeteryCount: 20,
+    regions: ["Austin", "Central Texas"],
     neighborhoods: [
       "Central Austin & Hyde Park",
       "North Austin & Pflugerville",
