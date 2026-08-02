@@ -4,6 +4,8 @@ import { ArrowRight, MapPin, Phone, Plus, ShieldCheck, Wallet, FileCheck2 } from
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
 import { getCityPage, CITY_PAGES } from "./city-page-data";
 
 const SITE = "https://texascemeterybrokers.com";
