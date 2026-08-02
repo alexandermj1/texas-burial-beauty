@@ -303,8 +303,37 @@ const GuideCemeteryPlotCost = () => (
         />
       </div>
 
+      <Section id="save" num="V" eyebrow="Practical steps" title="How families keep the total sensible">
+        <p>
+          Almost none of this is about haggling. Most of the saving comes from knowing which decisions carry a price tag and
+          making them deliberately rather than in the days after a death, when there is no time to compare anything.
+        </p>
+        <div className="not-prose grid sm:grid-cols-2 gap-4 mt-8">
+          {[
+            { t: "Buy before you need it", d: "Pre-need buyers can look at several cemeteries, compare sections and wait for the right resale space. At-need families rarely have that luxury, and price reflects it." },
+            { t: "Consider the neighbouring town", d: "A cemetery twenty minutes further out can be materially less than the flagship park inside the metro, with the same standard of care and grounds." },
+            { t: "Check what already transfers with the space", d: "A vault, an opening-and-closing credit or a paid marker foundation included in a resale purchase is real money that would otherwise be charged separately." },
+            { t: "Ask about the section, not just the cemetery", d: "Within one park, older and outlying sections can sit far below the feature gardens while offering the same perpetual care." },
+            { t: "Confirm the transfer fee in writing first", d: "It is the one cemetery charge people forget on a resale purchase. Get the figure from the cemetery before agreeing a price, not after." },
+            { t: "Check veteran eligibility first", d: "Eligible veterans and spouses are entitled to burial at a national cemetery at no cost. It is always worth confirming before buying anything." },
+          ].map((s) => (
+            <div key={s.t} className="p-6 rounded-2xl bg-card border border-border/60 hover:border-primary/35 transition-colors">
+              <h3 className="font-display text-xl text-foreground leading-snug mb-2">{s.t}</h3>
+              <p className="text-sm text-foreground/70 leading-relaxed">{s.d}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-8">
+          If you already own property and are wondering what it is worth today rather than what it cost, the{" "}
+          <Link to="/sell-cemetery-plot-texas" className="text-primary underline-offset-4 hover:underline font-medium">
+            selling guide
+          </Link>{" "}
+          walks through valuation and the transfer paperwork step by step.
+        </p>
+      </Section>
 
-      <Section id="faq" num="V" eyebrow="Frequently asked" title="Cemetery plot cost questions">
+      <Section id="faq" num="VI" eyebrow="Frequently asked" title="Cemetery plot cost questions">
+
         <div className="not-prose divide-y divide-border/60 border-t border-b border-border/60">
           {faqs.map((f, i) => (
             <details key={f.q} className="group py-6">
