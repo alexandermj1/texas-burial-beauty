@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, Plus, Phone, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
 
 const PATH = "/cemetery-plot-cost-texas";
 const SITE = "https://texascemeterybrokers.com";
