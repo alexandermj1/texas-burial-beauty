@@ -2302,6 +2302,13 @@ export type Database = {
     Functions: {
       canonical_cemetery: { Args: { name: string }; Returns: string }
       canonical_property_type: { Args: { pt: string }; Returns: string }
+      cemetery_demand_bands: {
+        Args: never
+        Returns: {
+          band: number
+          cemetery_key: string
+        }[]
+      }
       get_listings_with_internal: {
         Args: never
         Returns: {
