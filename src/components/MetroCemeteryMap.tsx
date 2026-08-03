@@ -185,7 +185,6 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   // Boot the map once
   useEffect(() => {
     if (!set.length || !mapEl.current || mapRef.current) return;
-    let cancelled = false;
     try {
         const map = L.map(mapEl.current, {
           center: [set[0].lat, set[0].lng],
@@ -222,7 +221,6 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
       setFailed(true);
     }
     return () => {
-      cancelled = true;
       mapRef.current?.remove();
       mapRef.current = null;
       markers.current = {};
