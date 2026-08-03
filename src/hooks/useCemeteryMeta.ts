@@ -101,8 +101,9 @@ export const useCemeteryMeta = () => {
         return {
           transferFee: fees[k] ?? looseFees[lk] ?? null,
           band: bands[lk] ?? 0,
-          // Curated, human-verified list wins; registry only fills gaps on an exact name match.
-          website: cemeteryWebsite(name) ?? sites[k] ?? null,
+          // Only the curated, verified list is trusted for outbound links.
+          website: cemeteryWebsite(name) ?? null,
+
         };
       },
     }),
