@@ -4,6 +4,19 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
+const TEXAS_REGIONS = [
+  "Dallas–Fort Worth",
+  "Greater Houston",
+  "Austin",
+  "San Antonio",
+  "Central Texas",
+  "East Texas",
+  "South Texas",
+  "West & North Texas",
+  "El Paso & West Texas",
+];
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { EMAIL, jsonLd, checks, valueFactors, faqs, resources } from "./guide-selling-data";
 
