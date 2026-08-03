@@ -401,13 +401,8 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const sameDayMetro = regions.some((r) => SAME_DAY_REGIONS.includes(r));
 
   return (
-    <section
-      id="map"
-      className={`scroll-mt-28 py-12 md:py-16 ${
-        fullBleed ? "relative left-1/2 right-1/2 -mx-[50vw] w-screen max-w-[100vw]" : ""
-      }`}
-    >
-      <div className={fullBleed ? "mx-auto w-full max-w-[1720px] px-5 sm:px-8 lg:px-12" : ""}>
+    <section id="map" className="scroll-mt-28 py-12 md:py-16 w-full">
+      <div className="mx-auto w-full max-w-[1440px]">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
           <div>
             <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
