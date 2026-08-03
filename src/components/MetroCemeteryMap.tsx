@@ -39,13 +39,15 @@ interface Props {
   hideTitle?: boolean;
   /** Compact padding and spacing for use in a tighter layout (e.g. home page). */
   compact?: boolean;
+  /** Render the metro/region switcher above the map (default true). */
+  metroTabs?: boolean;
 }
 
 const ACCENT = "#c1704a";
 const DEFAULT_ZOOM = 9;
 
-type Filter = "all" | "sameday" | "lowfee";
-type Sort = "name" | "fee" | "demand" | "distance";
+type Sort = "name" | "distance";
+
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
