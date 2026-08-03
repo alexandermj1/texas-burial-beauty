@@ -64,6 +64,19 @@ const hostOf = (url: string) => {
   }
 };
 
+/** On-brand headstone glyph used in place of generic arrows. */
+const Headstone = ({ color, className = "" }: { color: string; className?: string }) => (
+  <svg viewBox="0 0 24 30" className={className} aria-hidden="true">
+    <ellipse cx="12" cy="26.5" rx="9" ry="2.4" fill={color} opacity="0.16" />
+    <path d="M5 27V11a7 7 0 0 1 14 0v16z" fill={color} />
+    <g stroke="#fff" strokeOpacity="0.85" strokeWidth="1.4" strokeLinecap="round">
+      <path d="M8.5 17.5h7" />
+      <path d="M9.5 21h5" />
+    </g>
+  </svg>
+);
+
+
 /**
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
  * synced, crawlable index of colour-coded cemetery cards.
