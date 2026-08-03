@@ -531,6 +531,18 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
+      {/* Statewide interactive map */}
+      <section className="relative border-t border-border/60 bg-background">
+        <div className="mx-auto w-full max-w-[1560px] px-6 lg:px-10">
+          <MetroCemeteryMap
+            regions={TEXAS_REGIONS}
+            metro="Texas"
+            searchable
+            blurb="Every cemetery we actively broker, mapped statewide. Search by name or city, click a pin for details, or open directions."
+          />
+        </div>
+      </section>
+
       {/* Cards grid — warm cream wash that fades softly into the page */}
       <section className="relative pt-14 md:pt-20 pb-20 md:pb-28 overflow-hidden">
         {/* Dotted grid texture — warm tone to match botanical scatter */}
