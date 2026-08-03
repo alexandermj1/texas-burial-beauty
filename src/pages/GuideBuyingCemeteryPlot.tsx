@@ -4,6 +4,19 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
+const TEXAS_REGIONS = [
+  "Dallas–Fort Worth",
+  "Greater Houston",
+  "Austin",
+  "San Antonio",
+  "Central Texas",
+  "East Texas",
+  "South Texas",
+  "West & North Texas",
+  "El Paso & West Texas",
+];
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline font-medium">
@@ -435,6 +448,17 @@ const GuideBuyingCemeteryPlot = () => (
         </section>
       </div>
     </article>
+
+    <section className="border-t border-border/60 bg-background">
+      <div className="mx-auto w-full max-w-[1560px] px-6 lg:px-10">
+        <MetroCemeteryMap
+          regions={TEXAS_REGIONS}
+          metro="Texas"
+          searchable
+          blurb="Every cemetery we broker in Texas, mapped. Search by name or city, open a profile for sections and transfer fees, or get directions."
+        />
+      </div>
+    </section>
 
     <Footer />
   </div>

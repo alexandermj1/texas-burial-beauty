@@ -4,6 +4,19 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
+const TEXAS_REGIONS = [
+  "Dallas–Fort Worth",
+  "Greater Houston",
+  "Austin",
+  "San Antonio",
+  "Central Texas",
+  "East Texas",
+  "South Texas",
+  "West & North Texas",
+  "El Paso & West Texas",
+];
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { EMAIL, jsonLd, checks, valueFactors, faqs, resources } from "./guide-selling-data";
 
@@ -456,6 +469,18 @@ const GuideSellingCemeteryPlot = () => (
         </section>
       </div>
     </article>
+
+    <section className="border-t border-border/60 bg-background">
+      <div className="mx-auto w-full max-w-[1560px] px-6 lg:px-10">
+        <MetroCemeteryMap
+          regions={TEXAS_REGIONS}
+          metro="Texas"
+          searchable
+          blurb="Find your cemetery on the map to see its profile, sections and recorded transfer fee before you list."
+        />
+      </div>
+    </section>
+
 
     {/* FINAL CTA */}
     <section id="contact" className="pb-28">
