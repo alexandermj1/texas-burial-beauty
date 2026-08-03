@@ -526,7 +526,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="relative rounded-3xl overflow-hidden border border-border/70 bg-card shadow-soft"
           >
-            <div ref={mapEl} className="w-full h-[32rem] sm:h-[40rem] lg:h-[46rem] xl:h-[52rem] bg-[hsl(38_35%_95%)]" />
+            <div ref={mapEl} className="w-full h-[20rem] sm:h-[32rem] md:h-[40rem] lg:h-[46rem] xl:h-[52rem] bg-[hsl(38_35%_95%)]" />
 
             {!ready && !failed && (
               <div className="absolute inset-0 grid place-items-center bg-[hsl(38_35%_95%)] text-muted-foreground gap-2">
@@ -543,43 +543,64 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
             )}
 
             {/* Overlay chrome */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-              <span className="pointer-events-auto rounded-full bg-background/90 backdrop-blur px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-foreground/70 border border-border/60 shadow-sm">
-                {filtered.length} {filtered.length === 1 ? "cemetery" : "cemeteries"} · {metro}
+            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2.5 sm:p-4">
+              <span className="pointer-events-auto rounded-full bg-background/90 backdrop-blur px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.16em] sm:tracking-[0.22em] text-foreground/70 border border-border/60 shadow-sm">
+                {filtered.length} {filtered.length === 1 ? "cemetery" : "cemeteries"}
+                <span className="hidden sm:inline"> · {metro}</span>
               </span>
               {ready && (
                 <button
                   type="button"
                   onClick={resetView}
-                  className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-background/90 backdrop-blur px-4 py-2 text-xs font-medium text-foreground/80 border border-border/60 shadow-sm hover:text-primary transition-colors"
+                  aria-label="Reset view"
+                  className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-background/90 backdrop-blur px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs font-medium text-foreground/80 border border-border/60 shadow-sm hover:text-primary transition-colors"
                 >
-                  <Maximize2 className="w-3.5 h-3.5" /> Reset view
+                  <Maximize2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Reset view</span>
                 </button>
               )}
             </div>
 
-            {/* Legend — deliberately relative, no raw numbers */}
-            <div className="pointer-events-none absolute left-4 bottom-4 rounded-2xl bg-background/92 backdrop-blur border border-border/60 shadow-sm px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-2">Buyer interest</p>
-              <ul className="list-none p-0 m-0 space-y-1.5">
-                {([5, 4, 3, 2, 1] as const).map((b) => (
-                  <li key={b} className="flex items-center gap-2 text-[11px] text-foreground/80">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: bandInfo(b).pin }} />
-                    {bandInfo(b).label}
-                  </li>
-                ))}
-              </ul>
-              <p className="text-[10px] text-muted-foreground mt-2 max-w-[11rem] leading-snug">
-                Graded relative to other Texas cemeteries we broker.
-              </p>
+            {/* Legend — collapsed to a tap target on phones so it never blocks the map */}
+            <div className="absolute left-2.5 bottom-2.5 sm:left-4 sm:bottom-4 z-[2]">
+              <button
+                type="button"
+                onClick={() => setLegendOpen((o) => !o)}
+                aria-expanded={legendOpen}
+                className="sm:hidden inline-flex items-center gap-1.5 rounded-full bg-background/92 backdrop-blur border border-border/60 shadow-sm px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-foreground/70"
+              >
+                <span className="flex -space-x-1">
+                  {([5, 3, 1] as const).map((b) => (
+                    <span key={b} className="w-2 h-2 rounded-full ring-1 ring-background" style={{ background: bandInfo(b).pin }} />
+                  ))}
+                </span>
+                Key
+              </button>
+
+              <div
+                className={`${legendOpen ? "block" : "hidden"} sm:block pointer-events-none mt-2 sm:mt-0 rounded-2xl bg-background/92 backdrop-blur border border-border/60 shadow-sm px-3 py-2.5 sm:px-4 sm:py-3`}
+              >
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-2">Buyer interest</p>
+                <ul className="list-none p-0 m-0 space-y-1.5">
+                  {([5, 4, 3, 2, 1] as const).map((b) => (
+                    <li key={b} className="flex items-center gap-2 text-[11px] text-foreground/80">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: bandInfo(b).pin }} />
+                      {bandInfo(b).label}
+                    </li>
+                  ))}
+                </ul>
+                <p className="hidden sm:block text-[10px] text-muted-foreground mt-2 max-w-[11rem] leading-snug">
+                  Graded relative to other Texas cemeteries we broker.
+                </p>
+              </div>
             </div>
           </motion.div>
 
           {/* Index list — also the crawlable version of the map */}
           <div
             ref={listRef}
-            className="rounded-3xl border border-border/70 bg-gradient-to-b from-card/80 to-background/40 p-2 sm:p-3 lg:max-h-[46rem] xl:max-h-[52rem] overflow-y-auto no-scrollbar"
+            className="rounded-3xl border border-border/70 bg-gradient-to-b from-card/80 to-background/40 p-2 sm:p-3 max-h-[28rem] lg:max-h-[46rem] xl:max-h-[52rem] overflow-y-auto no-scrollbar"
           >
+
             <ul className="list-none pl-0 m-0 space-y-2.5">
               {filtered.map((c, i) => {
                 const on = active === c.name;
