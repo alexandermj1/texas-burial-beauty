@@ -615,17 +615,10 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                       />
 
                       <div className="relative px-4 py-4 pl-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: t.pin }} />
-                              <span
-                                className="text-[10px] uppercase tracking-[0.18em] font-semibold"
-                                style={{ color: t.pin }}
-                              >
-                                {t.label}
-                              </span>
-                            </div>
+                        <div className="flex items-start gap-3">
+                          <Headstone color={t.pin} className="w-7 h-9 shrink-0 mt-0.5" />
+
+                          <div className="min-w-0 flex-1">
                             <Link
                               to={cemeteryPath(c.name)}
                               onClick={(e) => e.stopPropagation()}
@@ -636,29 +629,31 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                             <p className="text-xs text-foreground/55 mt-1 flex items-center gap-1.5">
                               <MapPin className="w-3 h-3 shrink-0" />
                               {c.city}, Texas
+                              {miles != null && (
+                                <>
+                                  <span className="text-border">·</span>
+                                  <span className="font-medium text-primary">
+                                    {miles < 10 ? miles.toFixed(1) : Math.round(miles)} mi away
+                                  </span>
+                                </>
+                              )}
                             </p>
                           </div>
 
-                          {miles != null ? (
-                            <div className="shrink-0 text-right">
-                              <span className="block font-display text-xl leading-none text-primary">
-                                {miles < 10 ? miles.toFixed(1) : Math.round(miles)}
-                              </span>
-                              <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground mt-1">
-                                miles
-                              </span>
-                              {sort === "distance" && i === 0 && (
-                                <span className="mt-1.5 inline-block text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
-                                  Closest
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <ArrowUpRight className="w-4 h-4 shrink-0 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {sort === "distance" && miles != null && i === 0 && (
+                            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                              Closest
+                            </span>
                           )}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                          <span
+                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
+                            style={{ color: t.pin, background: `${t.pin}14`, border: `1px solid ${t.pin}40` }}
+                          >
+                            {t.label}
+                          </span>
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-primary/25 bg-primary/8 text-primary">
                             <CalendarClock className="w-3 h-3" />
                             {showingLabel(c.region)}
@@ -670,6 +665,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                             </span>
                           )}
                         </div>
+
 
                         {/* Actions */}
                         <div className="flex items-center gap-4 mt-3.5 pt-3 border-t border-border/50 text-[11px] font-semibold">
