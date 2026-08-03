@@ -91,7 +91,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                     <ChevronDown className="w-3.5 h-3.5 opacity-60 group-hover:rotate-180 transition-transform duration-300" />
                   </Link>
                   <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-200 z-50">
-                    <div className="w-72 rounded-2xl border border-border bg-background/98 backdrop-blur-xl shadow-hover p-2">
+                    <div className="w-72 rounded-2xl border border-border bg-popover text-popover-foreground backdrop-blur-xl shadow-hover p-2">
                       <Link
                         to="/cemeteries"
                         className="block rounded-xl px-3.5 py-2.5 hover:bg-muted/60 transition-colors"
