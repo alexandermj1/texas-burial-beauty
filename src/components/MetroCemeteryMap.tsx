@@ -391,7 +391,11 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const searchAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     const q = addressInput.trim();
-    if (!q) return;
+    if (!q) {
+      // Empty field → treat "Nearest" as "use my location".
+      findNearMe();
+      return;
+    }
     setLocating(true);
     setLocError(null);
     try {
