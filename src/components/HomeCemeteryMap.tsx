@@ -61,21 +61,21 @@ const HomeCemeteryMap = () => {
   const metro = METROS[active];
 
   return (
-    <section className="py-10 sm:py-12 bg-gradient-warm">
+    <section className="py-8 sm:py-10 bg-gradient-warm">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-4">
-          <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
+        <div className="text-center mb-3">
+          <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
             Coverage Map
           </span>
           <h2 className="font-display text-3xl leading-[1.05] tracking-tight text-foreground sm:text-4xl [text-wrap:balance]">
             <span className="italic font-light">Find a cemetery near you</span>
           </h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm font-light text-muted-foreground sm:text-base">
+          <p className="mx-auto mt-1.5 max-w-xl text-sm font-light text-muted-foreground sm:text-base">
             Choose a metro to see the cemeteries we broker there — transfer fees, showing availability and directions.
           </p>
         </div>
 
-        <div className="mb-3 flex flex-wrap justify-center gap-2">
+        <div className="mb-2 flex flex-wrap justify-center gap-2">
           {METROS.map((m, i) => (
             <button
               key={m.label}
@@ -103,7 +103,7 @@ const HomeCemeteryMap = () => {
         />
 
         {metro.href && (
-          <div className="mt-5 text-center">
+          <div className="mt-4 text-center">
             <Link
               to={metro.href}
               className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
