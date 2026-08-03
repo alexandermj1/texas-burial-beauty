@@ -1,7 +1,8 @@
-/// <reference types="google.maps" />
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import {
   MapPin,
   ChevronDown,
@@ -20,7 +21,6 @@ import {
 } from "lucide-react";
 import { bayCemeteries, type CemeteryInfo } from "@/data/cemeteries";
 import { cemeteryPath } from "@/lib/cemeterySlug";
-import { loadGoogleMaps, brandMapStyles, pinIcon, hasMapsKey } from "@/lib/googleMaps";
 import { useCemeteryMeta, bandInfo, showingLabel, SAME_DAY_REGIONS } from "@/hooks/useCemeteryMeta";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +38,7 @@ interface Props {
 }
 
 const ACCENT = "#c1704a";
+const DEFAULT_ZOOM = 9;
 
 type Filter = "all" | "sameday" | "lowfee";
 type Sort = "name" | "fee" | "demand" | "distance";
@@ -79,6 +80,18 @@ const Headstone = ({ color, className = "" }: { color: string; className?: strin
   </svg>
 );
 
+const markerIcon = (color: string, active = false) => {
+  const width = active ? 42 : 32;
+  const height = active ? 52 : 40;
+  return L.divIcon({
+    className: "cemetery-map-marker",
+    html: `<svg viewBox="0 0 34 44" width="${width}" height="${height}" aria-hidden="true"><path d="M17 43C17 43 32 27.2 32 16.5 32 8 25.3 1 17 1S2 8 2 16.5C2 27.2 17 43 17 43Z" fill="${color}" stroke="#fff" stroke-width="2.2"/><circle cx="17" cy="16.5" r="5.2" fill="#fff" opacity=".95"/></svg>`,
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height],
+    popupAnchor: [0, -height + 6],
+  });
+};
+
 
 /**
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
@@ -90,7 +103,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("name");
   const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(!hasMapsKey());
+  const [failed, setFailed] = useState(false);
   const [here, setHere] = useState<{ lat: number; lng: number } | null>(null);
   const [originLabel, setOriginLabel] = useState<string | null>(null);
   const [addressInput, setAddressInput] = useState("");
@@ -100,11 +113,10 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const { metaFor } = useCemeteryMeta();
 
   const mapEl = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const markers = useRef<Record<string, google.maps.Marker>>({});
-  const infoRef = useRef<google.maps.InfoWindow | null>(null);
-  const meRef = useRef<google.maps.Marker | null>(null);
-  const ringRef = useRef<google.maps.Circle | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markers = useRef<Record<string, L.Marker>>({});
+  const meRef = useRef<L.CircleMarker | null>(null);
+  const ringRef = useRef<L.Circle | null>(null);
   const activeRef = useRef<string | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Record<string, HTMLLIElement | null>>({});
@@ -142,9 +154,8 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const openInfo = useCallback(
     (c: CemeteryInfo) => {
       const map = mapRef.current;
-      const info = infoRef.current;
       const marker = markers.current[c.name];
-      if (!map || !info || !marker) return;
+      if (!map || !marker) return;
       const m = metaFor(c.name);
       const tier = bandInfo(m.band);
       const facts = [
@@ -154,7 +165,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
       ]
         .filter(Boolean)
         .join(" · ");
-      info.setContent(
+      marker.bindPopup(
         `<div style="font-family:inherit;max-width:252px;padding:2px 2px 4px">
          <div style="display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:${tier.pin}">${tier.label}</div>
          <div style="font-size:14px;font-weight:600;color:#2c2a26;line-height:1.25;margin-top:3px">${c.name}</div>
@@ -166,8 +177,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
            ${m.website ? `<a href="${m.website}" target="_blank" rel="noopener nofollow" style="color:#6b6154;text-decoration:none">Official site</a>` : ""}
          </div>
        </div>`
-      );
-      info.open({ map, anchor: marker });
+      ).openPopup();
     },
     [metaFor, here]
   );
@@ -176,82 +186,63 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   useEffect(() => {
     if (!set.length || !mapEl.current || mapRef.current) return;
     let cancelled = false;
-    loadGoogleMaps()
-      .then((google) => {
-        if (cancelled || !mapEl.current) return;
-        const map = new google.maps.Map(mapEl.current, {
-          center: { lat: set[0].lat, lng: set[0].lng },
-          zoom: 9,
-          styles: brandMapStyles,
-          disableDefaultUI: true,
+    try {
+        const map = L.map(mapEl.current, {
+          center: [set[0].lat, set[0].lng],
+          zoom: DEFAULT_ZOOM,
           zoomControl: true,
-          fullscreenControl: true,
-          gestureHandling: "cooperative",
-          clickableIcons: false,
+          scrollWheelZoom: false,
         });
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+        }).addTo(map);
         mapRef.current = map;
-        infoRef.current = new google.maps.InfoWindow({ disableAutoPan: false });
 
         set.forEach((c) => {
-          const marker = new google.maps.Marker({
-            map,
-            position: { lat: c.lat, lng: c.lng },
+          const marker = L.marker([c.lat, c.lng], {
             title: `${c.name} — ${c.city}, TX`,
-            icon: {
-              url: pinIcon(bandInfo(0).pin),
-              scaledSize: new google.maps.Size(30, 39),
-              anchor: new google.maps.Point(15, 39),
-            },
-            optimized: false,
-          });
-          marker.addListener("mouseover", () => {
+            icon: markerIcon(bandInfo(0).pin),
+            riseOnHover: true,
+          }).addTo(map);
+          marker.on("mouseover", () => {
             fromListRef.current = false;
             setActive(c.name);
           });
-          marker.addListener("click", () => {
+          marker.on("click", () => {
             fromListRef.current = false;
             setActive(c.name);
           });
           markers.current[c.name] = marker;
         });
 
-        const bounds = new google.maps.LatLngBounds();
-        set.forEach((c) => bounds.extend({ lat: c.lat, lng: c.lng }));
-        map.fitBounds(bounds, 64);
+        map.fitBounds(L.latLngBounds(set.map((c) => [c.lat, c.lng] as [number, number])), { padding: [64, 64] });
         setReady(true);
-      })
-      .catch(() => setFailed(true));
+    } catch {
+      setFailed(true);
+    }
     return () => {
       cancelled = true;
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markers.current = {};
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [set]);
 
-  const iconFor = (name: string, on: boolean) => {
-    const google = (window as any).google;
-    const color = on ? ACCENT : bandInfo(metaFor(name).band).pin;
-    const size = on ? 42 : 30;
-    return {
-      url: pinIcon(color),
-      scaledSize: new google.maps.Size(size, size * 1.3),
-      anchor: new google.maps.Point(size / 2, size * 1.3),
-    };
-  };
-
   // Recolour pins whenever meta loads or the active pin changes, open its bubble
   // and — when the highlight came from the map — reveal the matching card.
   useEffect(() => {
-    const google = (window as any).google;
-    if (!google?.maps) return;
+    if (!mapRef.current) return;
     Object.keys(markers.current).forEach((n) => {
       if (n !== active) {
-        markers.current[n].setIcon(iconFor(n, false));
-        markers.current[n].setZIndex(1);
+        markers.current[n].setIcon(markerIcon(bandInfo(metaFor(n).band).pin));
+        markers.current[n].setZIndexOffset(0);
       }
     });
     if (active && markers.current[active]) {
-      markers.current[active].setIcon(iconFor(active, true));
-      markers.current[active].setZIndex(999);
+      markers.current[active].setIcon(markerIcon(ACCENT, true));
+      markers.current[active].setZIndexOffset(999);
       const c = set.find((x) => x.name === active);
       if (c) openInfo(c);
       if (!fromListRef.current) {
@@ -264,7 +255,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
       }
 
     } else {
-      infoRef.current?.close();
+      mapRef.current.closePopup();
     }
     activeRef.current = active;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,19 +264,20 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   // Search/filters hide non-matching pins and refit the view
   useEffect(() => {
     const map = mapRef.current;
-    const google = (window as any).google;
-    if (!map || !google?.maps) return;
+    if (!map) return;
     const visible = new Set(filtered.map((c) => c.name));
-    set.forEach((c) => markers.current[c.name]?.setVisible(visible.has(c.name)));
+    set.forEach((c) => {
+      const marker = markers.current[c.name];
+      if (!marker) return;
+      if (visible.has(c.name)) marker.addTo(map);
+      else marker.removeFrom(map);
+    });
     if (!filtered.length) return;
     if (sort === "distance" && here) return; // keep the "near me" framing
-    const bounds = new google.maps.LatLngBounds();
-    filtered.forEach((c) => bounds.extend({ lat: c.lat, lng: c.lng }));
     if (filtered.length === 1) {
-      map.setCenter({ lat: filtered[0].lat, lng: filtered[0].lng });
-      map.setZoom(13);
+      map.setView([filtered[0].lat, filtered[0].lng], 13);
     } else {
-      map.fitBounds(bounds, 64);
+      map.fitBounds(L.latLngBounds(filtered.map((c) => [c.lat, c.lng] as [number, number])), { padding: [64, 64] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, set]);
@@ -295,19 +287,16 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
     fromListRef.current = true;
     setActive(c.name);
     if (!map) return;
-    map.panTo({ lat: c.lat, lng: c.lng });
-    if ((map.getZoom() ?? 9) < 12) map.setZoom(12);
+    map.panTo([c.lat, c.lng]);
+    if (map.getZoom() < 12) map.setZoom(12);
   };
 
   const resetView = () => {
     const map = mapRef.current;
-    const google = (window as any).google;
-    if (!map || !google?.maps) return;
-    infoRef.current?.close();
+    if (!map) return;
+    map.closePopup();
     setActive(null);
-    const bounds = new google.maps.LatLngBounds();
-    set.forEach((c) => bounds.extend({ lat: c.lat, lng: c.lng }));
-    map.fitBounds(bounds, 64);
+    map.fitBounds(L.latLngBounds(set.map((c) => [c.lat, c.lng] as [number, number])), { padding: [64, 64] });
   };
 
   /** Drop the "you are here" marker, frame the nearest cemeteries and sort by distance. */
@@ -317,39 +306,29 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
     setSort("distance");
     setLocError(null);
     const map = mapRef.current;
-    const google = (window as any).google;
-    if (!map || !google?.maps) return;
-    meRef.current?.setMap(null);
-    ringRef.current?.setMap(null);
-    meRef.current = new google.maps.Marker({
-      map,
-      position: p,
-      title: label,
-      zIndex: 1200,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 7,
-        fillColor: "#2c2a26",
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 3,
-      },
-    });
-    ringRef.current = new google.maps.Circle({
-      map,
-      center: p,
+    if (!map) return;
+    meRef.current?.remove();
+    ringRef.current?.remove();
+    meRef.current = L.circleMarker([p.lat, p.lng], {
+      radius: 7,
+      color: "#ffffff",
+      weight: 3,
+      fillColor: "#2c2a26",
+      fillOpacity: 1,
+    }).bindTooltip(label).addTo(map);
+    ringRef.current = L.circle([p.lat, p.lng], {
       radius: 1600,
-      strokeColor: "#2c2a26",
-      strokeOpacity: 0.25,
-      strokeWeight: 1,
+      color: "#2c2a26",
+      opacity: 0.25,
+      weight: 1,
       fillColor: "#2c2a26",
       fillOpacity: 0.06,
-    });
+    }).addTo(map);
     const nearest = [...set].sort((a, b) => milesBetween(p, a) - milesBetween(p, b)).slice(0, 5);
-    const bounds = new google.maps.LatLngBounds();
-    bounds.extend(p);
-    nearest.forEach((c) => bounds.extend({ lat: c.lat, lng: c.lng }));
-    map.fitBounds(bounds, 72);
+    map.fitBounds(
+      L.latLngBounds([[p.lat, p.lng], ...nearest.map((c) => [c.lat, c.lng] as [number, number])]),
+      { padding: [72, 72] }
+    );
     if (nearest[0]) {
       fromListRef.current = false;
       setActive(nearest[0].name);
@@ -357,8 +336,8 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   };
 
   const clearOrigin = () => {
-    meRef.current?.setMap(null);
-    ringRef.current?.setMap(null);
+    meRef.current?.remove();
+    ringRef.current?.remove();
     meRef.current = null;
     ringRef.current = null;
     setHere(null);
@@ -409,16 +388,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         applyOrigin({ lat: loc.lat, lng: loc.lng }, q);
         return;
       }
-      // Fallback: client-side geocoder (works where the browser key allows it).
-      const google = await loadGoogleMaps();
-      const geocoder = new google.maps.Geocoder();
-      const res = await geocoder.geocode({ address: q, componentRestrictions: { country: "US" } });
-      const best = res.results?.[0];
-      if (!best) throw new Error("no result");
-      applyOrigin(
-        { lat: best.geometry.location.lat(), lng: best.geometry.location.lng() },
-        best.formatted_address
-      );
+      throw new Error("no result");
     } catch {
       setLocError("We couldn’t find that address — try a ZIP code or “City, TX”.");
     } finally {
