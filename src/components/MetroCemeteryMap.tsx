@@ -5,7 +5,6 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   MapPin,
-  ChevronDown,
   ArrowUpRight,
 
   Search,
@@ -23,6 +22,7 @@ import { bayCemeteries, type CemeteryInfo } from "@/data/cemeteries";
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { useCemeteryMeta, bandInfo, showingLabel, SAME_DAY_REGIONS } from "@/hooks/useCemeteryMeta";
 import { supabase } from "@/integrations/supabase/client";
+import { METRO_OPTIONS, metroIndexForRegions } from "@/data/metroRegions";
 
 interface Props {
   /** Region names as used in src/data/cemeteries.ts */
@@ -542,7 +542,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
             <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2.5 sm:p-4">
               <span className="pointer-events-auto rounded-full bg-background/90 backdrop-blur px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.16em] sm:tracking-[0.22em] text-foreground/70 border border-border/60 shadow-sm">
                 {filtered.length} {filtered.length === 1 ? "cemetery" : "cemeteries"}
-                <span className="hidden sm:inline"> · {metro}</span>
+                <span className="hidden sm:inline"> · {effMetro}</span>
               </span>
               {ready && (
                 <button
