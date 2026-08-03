@@ -395,6 +395,17 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
     setLocating(true);
     setLocError(null);
     try {
+      // Server-side geocoding first — works on every domain, unlike the
+      // referrer-restricted browser key which isn't authorised for Geocoding.
+      const { data } = await supabase.functions.invoke("map-geocode", {
+        body: { target: "query", query: /^\d{5}$/.test(q) ? `${q}, USA` : `${q}, Texas, USA` },
+      });
+      const loc = (data as any)?.location;
+      if (loc && typeof loc.lat === "number") {
+        applyOrigin({ lat: loc.lat, lng: loc.lng }, q);
+        return;
+      }
+      // Fallback: client-side geocoder (works where the browser key allows it).
       const google = await loadGoogleMaps();
       const geocoder = new google.maps.Geocoder();
       const res = await geocoder.geocode({ address: q, componentRestrictions: { country: "US" } });
@@ -410,6 +421,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
       setLocating(false);
     }
   };
+
 
   if (!set.length) return null;
 
