@@ -186,6 +186,8 @@ const Index = () => {
         variant="wide"
       />
 
+      <HomeCemeteryMap />
+
       <WhyUsSection />
       <GuidesCarousel />
       <TestimonialsSection />
