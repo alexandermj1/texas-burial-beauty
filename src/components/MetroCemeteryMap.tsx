@@ -101,7 +101,7 @@ const markerIcon = (color: string, active = false) => {
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
  * synced, crawlable index of colour-coded cemetery cards.
  */
-const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true }: Props) => {
+const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false }: Props) => {
   const [active, setActive] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
