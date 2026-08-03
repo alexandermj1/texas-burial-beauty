@@ -411,21 +411,23 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const sameDayMetro = regions.some((r) => SAME_DAY_REGIONS.includes(r));
 
   return (
-    <section id="map" className="scroll-mt-28 py-12 md:py-16 w-full">
+    <section id="map" className={`scroll-mt-28 w-full ${compact ? "py-0" : "py-12 md:py-16"}`}>
       <div className="mx-auto w-full max-w-[1440px]">
-        <div className="mb-6">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
-          <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground leading-[1.05]">
-            Cemeteries we broker across <span className="italic text-primary">{metro}</span>
-          </h2>
-          {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
-          {sameDayMetro && (
-            <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
-              <CalendarClock className="w-4 h-4" />
-              Same-day in-person showings across {metro}
-            </p>
-          )}
-        </div>
+        {!hideTitle && (
+          <div className="mb-6">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
+            <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground leading-[1.05]">
+              Cemeteries we broker across <span className="italic text-primary">{metro}</span>
+            </h2>
+            {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
+            {sameDayMetro && (
+              <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
+                <CalendarClock className="w-4 h-4" />
+                Same-day in-person showings across {metro}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* One toolbar: find, locate, sort */}
         <div className="rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4">
