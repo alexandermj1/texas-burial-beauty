@@ -117,6 +117,18 @@
   z-index: 1 !important;
 }
 
+/* On phones the overlay count chip sits top-left, so push the zoom control
+   clear of it and shrink the attribution so it doesn't crowd the map. */
+@media (max-width: 639px) {
+  .leaflet-top.leaflet-left .leaflet-control-zoom {
+    margin-top: 3.25rem;
+  }
+  .leaflet-control-attribution {
+    font-size: 9px;
+  }
+}
+
+
 @layer utilities {
   .text-gradient-earth {
     background: linear-gradient(135deg, hsl(145 25% 36%), hsl(145 30% 28%));
