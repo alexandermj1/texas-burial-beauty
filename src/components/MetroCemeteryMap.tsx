@@ -113,6 +113,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const [addressInput, setAddressInput] = useState("");
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   const { metaFor } = useCemeteryMeta();
 
