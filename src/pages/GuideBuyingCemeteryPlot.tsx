@@ -4,6 +4,19 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+
+const TEXAS_REGIONS = [
+  "Dallas–Fort Worth",
+  "Greater Houston",
+  "Austin",
+  "San Antonio",
+  "Central Texas",
+  "East Texas",
+  "South Texas",
+  "West & North Texas",
+  "El Paso & West Texas",
+];
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline font-medium">
