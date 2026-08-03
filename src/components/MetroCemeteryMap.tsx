@@ -422,106 +422,105 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   return (
     <section id="map" className="scroll-mt-28 py-12 md:py-16 w-full">
       <div className="mx-auto w-full max-w-[1440px]">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
-            <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground leading-[1.05]">
-              Cemeteries we broker across <span className="italic text-primary">{metro}</span>
-            </h2>
-            {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
-            {sameDayMetro && (
-              <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
-                <CalendarClock className="w-4 h-4" />
-                Same-day in-person showings across {metro}
-              </p>
-            )}
-          </div>
-          <label className="relative w-full sm:w-72">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search cemetery or city…"
-              aria-label="Search cemeteries"
-              className="w-full pl-10 pr-4 py-2.5 rounded-full bg-card border border-border/70 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
-            />
-          </label>
+        <div className="mb-6">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
+          <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground leading-[1.05]">
+            Cemeteries we broker across <span className="italic text-primary">{metro}</span>
+          </h2>
+          {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
+          {sameDayMetro && (
+            <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
+              <CalendarClock className="w-4 h-4" />
+              Same-day in-person showings across {metro}
+            </p>
+          )}
         </div>
 
-        {/* Distance tools */}
-        <div className="rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-3">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-            <form onSubmit={searchAddress} className="flex-1 flex items-center gap-2">
-              <label className="relative flex-1">
-                <Route className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  value={addressInput}
-                  onChange={(e) => setAddressInput(e.target.value)}
-                  placeholder="Enter your address or ZIP to see the closest cemeteries…"
-                  aria-label="Your address"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={locating}
-                className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
-              >
-                {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                Find nearest
-              </button>
+        {/* One toolbar: find, locate, sort */}
+        <div className="rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <label className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by cemetery or city"
+                aria-label="Search cemeteries"
+                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+              />
+            </label>
+
+            <form onSubmit={searchAddress} className="relative flex items-center">
+              <Route className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                value={addressInput}
+                onChange={(e) => setAddressInput(e.target.value)}
+                placeholder="Your address or ZIP"
+                aria-label="Your address"
+                className="w-full pl-10 pr-[6.5rem] py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+              />
+              <div className="absolute right-1.5 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={findNearMe}
+                  title="Use my location"
+                  aria-label="Use my location"
+                  className="w-8 h-8 grid place-items-center rounded-full text-accent hover:bg-accent/10 transition-colors"
+                >
+                  <LocateFixed className="w-4 h-4" />
+                </button>
+                <button
+                  type="submit"
+                  disabled={locating}
+                  className="inline-flex items-center gap-1.5 px-3.5 h-8 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
+                >
+                  {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  Nearest
+                </button>
+              </div>
             </form>
-            <button
-              type="button"
-              onClick={findNearMe}
-              className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold border border-accent/40 bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground transition-colors"
-            >
-              <LocateFixed className="w-3.5 h-3.5" />
-              Use my location
-            </button>
+
+            <label className="relative lg:w-56">
+              <span className="sr-only">Sort cemeteries</span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as Sort)}
+                className="w-full appearance-none pl-4 pr-9 py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors cursor-pointer"
+              >
+                <option value="name">Sort: A–Z</option>
+                <option value="demand">Sort: Most in demand</option>
+                <option value="fee">Sort: Lowest transfer fee</option>
+                {here && <option value="distance">Sort: Closest to me</option>}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            </label>
           </div>
-          {originLabel && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-foreground/70">
-              <span className="inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5">
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button type="button" className={chip(filter === "all")} onClick={() => setFilter("all")}>
+              All
+            </button>
+            {sameDayMetro && (
+              <button type="button" className={chip(filter === "sameday")} onClick={() => setFilter("sameday")}>
+                Same-day showings
+              </button>
+            )}
+            <button type="button" className={chip(filter === "lowfee")} onClick={() => setFilter("lowfee")}>
+              Fee under $500
+            </button>
+            {originLabel && (
+              <span className="ml-auto inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5 text-xs text-foreground/70">
                 <span className="w-2 h-2 rounded-full bg-foreground" />
-                Measuring from <span className="font-medium text-foreground">{originLabel}</span>
-                <button type="button" onClick={clearOrigin} aria-label="Clear starting point" className="ml-1 hover:text-primary">
+                From <span className="font-medium text-foreground truncate max-w-[16rem]">{originLabel}</span>
+                <button type="button" onClick={clearOrigin} aria-label="Clear starting point" className="hover:text-primary">
                   <X className="w-3 h-3" />
                 </button>
               </span>
-              <span className="text-muted-foreground">Cards below are sorted by driving distance.</span>
-            </div>
-          )}
+            )}
+          </div>
           {locError && <p className="text-xs text-accent mt-3">{locError}</p>}
         </div>
 
-        {/* Filters + sorting */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <button type="button" className={chip(filter === "all")} onClick={() => setFilter("all")}>
-            All cemeteries
-          </button>
-          <button type="button" className={chip(filter === "sameday")} onClick={() => setFilter("sameday")}>
-            Same-day showings
-          </button>
-          <button type="button" className={chip(filter === "lowfee")} onClick={() => setFilter("lowfee")}>
-            Transfer fee ≤ $500
-          </button>
-          <span className="mx-1 hidden sm:inline text-border">|</span>
-          <button type="button" className={chip(sort === "name")} onClick={() => setSort("name")}>
-            A–Z
-          </button>
-          <button type="button" className={chip(sort === "demand")} onClick={() => setSort("demand")}>
-            Most in demand
-          </button>
-          <button type="button" className={chip(sort === "fee")} onClick={() => setSort("fee")}>
-            Lowest fee
-          </button>
-          {here && (
-            <button type="button" className={chip(sort === "distance")} onClick={() => setSort("distance")}>
-              Closest to me
-            </button>
-          )}
-        </div>
 
         <div className="grid lg:grid-cols-[minmax(0,2.15fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,2.6fr)_26rem] gap-5 xl:gap-7 items-start">
           {/* Map canvas */}
