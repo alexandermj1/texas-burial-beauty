@@ -194,8 +194,8 @@ const GuideCemeteryPlotCost = () => (
       </div>
     </section>
 
-    <article className="container mx-auto px-6 lg:px-10 max-w-[1280px] pb-8">
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_18rem] gap-10 xl:gap-14 items-start">
+    <article className="container mx-auto px-6 lg:px-10 max-w-[1120px] pb-8">
+      <div>
 
         <div className="min-w-0">
       <Section id="by-city" num="I" eyebrow="City by city" title="What actually moves the price">
