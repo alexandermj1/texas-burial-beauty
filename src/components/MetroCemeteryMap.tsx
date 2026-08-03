@@ -405,7 +405,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         : "bg-card text-foreground/70 border-border/70 hover:border-primary/50"
     }`;
 
-  const sameDayMetro = regions.some((r) => SAME_DAY_REGIONS.includes(r));
+  const sameDayMetro = effRegions.some((r) => SAME_DAY_REGIONS.includes(r));
 
   return (
     <section id="map" className={`scroll-mt-28 w-full ${compact ? "py-0" : "py-12 md:py-16"}`}>
@@ -414,21 +414,41 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
           <div className="mb-6">
             <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
             <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground leading-[1.05]">
-              Cemeteries we broker across <span className="italic text-primary">{metro}</span>
+              Cemeteries we broker across <span className="italic text-primary">{effMetro}</span>
             </h2>
             {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
             {sameDayMetro && (
               <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
                 <CalendarClock className="w-4 h-4" />
-                Same-day in-person showings across {metro}
+                Same-day in-person showings across {effMetro}
               </p>
             )}
           </div>
         )}
 
-        {/* One toolbar: find, locate, sort */}
+        {/* Region switcher */}
+        {metroTabs && (
+          <div className="mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
+            {METRO_OPTIONS.map((m, i) => (
+              <button
+                key={m.label}
+                type="button"
+                onClick={() => {
+                  setMetroIdx(i);
+                  setActive(null);
+                }}
+                aria-pressed={i === metroIdx}
+                className={`${chip(i === metroIdx)} shrink-0`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* One toolbar: search + address */}
         <div className="rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="grid gap-3 lg:grid-cols-2">
             <label className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -447,6 +467,11 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                 onChange={(e) => setAddressInput(e.target.value)}
                 placeholder="Your address or ZIP"
                 aria-label="Your address"
+                id="map-origin-address"
+                name="street-address"
+                type="text"
+                autoComplete="street-address"
+                inputMode="text"
                 className="w-full pl-10 pr-[6.5rem] py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
               <div className="absolute right-1.5 flex items-center gap-1">
@@ -469,45 +494,20 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                 </button>
               </div>
             </form>
-
-            <label className="relative lg:w-56">
-              <span className="sr-only">Sort cemeteries</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as Sort)}
-                className="w-full appearance-none pl-4 pr-9 py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors cursor-pointer"
-              >
-                <option value="name">Sort: A–Z</option>
-                <option value="demand">Sort: Most in demand</option>
-                <option value="fee">Sort: Lowest transfer fee</option>
-                {here && <option value="distance">Sort: Closest to me</option>}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            </label>
           </div>
 
-          <div className="mt-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex sm:flex-wrap items-center gap-2 overflow-x-auto no-scrollbar">
-            <button type="button" className={`${chip(filter === "all")} shrink-0`} onClick={() => setFilter("all")}>
-              All
-            </button>
-            {sameDayMetro && (
-              <button type="button" className={`${chip(filter === "sameday")} shrink-0`} onClick={() => setFilter("sameday")}>
-                Same-day showings
-              </button>
-            )}
-            <button type="button" className={`${chip(filter === "lowfee")} shrink-0`} onClick={() => setFilter("lowfee")}>
-              Fee under $500
-            </button>
-            {originLabel && (
-              <span className="shrink-0 sm:ml-auto inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5 text-xs text-foreground/70">
+          {originLabel && (
+            <div className="mt-3 flex">
+              <span className="inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5 text-xs text-foreground/70">
                 <span className="w-2 h-2 rounded-full bg-foreground" />
                 From <span className="font-medium text-foreground truncate max-w-[9rem] sm:max-w-[16rem]">{originLabel}</span>
                 <button type="button" onClick={clearOrigin} aria-label="Clear starting point" className="hover:text-primary">
                   <X className="w-3 h-3" />
                 </button>
               </span>
-            )}
-          </div>
+            </div>
+          )}
+
 
           {locError && <p className="text-xs text-accent mt-3">{locError}</p>}
         </div>
