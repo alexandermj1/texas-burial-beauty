@@ -6,19 +6,8 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 
-const TEXAS_REGIONS = [
-  "Dallas–Fort Worth",
-  "Greater Houston",
-  "Austin",
-  "San Antonio",
-  "Central Texas",
-  "East Texas",
-  "South Texas",
-  "West & North Texas",
-  "El Paso & West Texas",
-];
+
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
@@ -544,17 +533,6 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
-      {/* Statewide interactive map */}
-      <section className="relative border-t border-border/60 bg-background">
-        <div className="mx-auto w-full max-w-[1560px] px-6 lg:px-10">
-          <MetroCemeteryMap
-            regions={TEXAS_REGIONS}
-            metro="Texas"
-            searchable
-            blurb="Every cemetery we actively broker, mapped statewide. Search by name or city, click a pin for details, or open directions."
-          />
-        </div>
-      </section>
 
       {/* Cards grid — warm cream wash that fades softly into the page */}
       <section className="relative pt-14 md:pt-20 pb-20 md:pb-28 overflow-hidden">
