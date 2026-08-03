@@ -184,11 +184,8 @@ const CityPlotsPage = () => {
           </div>
         </Section>
 
-        <MetroCemeteryMap
-          regions={data.regions}
-          metro={data.metro}
-          blurb={`Every pin is a ${data.metro} cemetery we hold a profile for — pricing, section detail and the current transfer fee. Hover a pin or a name to see where it sits, then open the cemetery for detail.`}
-        />
+
+
 
 
         {/* Pricing */}
