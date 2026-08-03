@@ -470,6 +470,18 @@ const GuideSellingCemeteryPlot = () => (
       </div>
     </article>
 
+    <section className="border-t border-border/60 bg-background">
+      <div className="mx-auto w-full max-w-[1560px] px-6 lg:px-10">
+        <MetroCemeteryMap
+          regions={TEXAS_REGIONS}
+          metro="Texas"
+          searchable
+          blurb="Find your cemetery on the map to see its profile, sections and recorded transfer fee before you list."
+        />
+      </div>
+    </section>
+
+
     {/* FINAL CTA */}
     <section id="contact" className="pb-28">
       <div className="container mx-auto px-6 max-w-5xl">
