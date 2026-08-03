@@ -103,10 +103,14 @@ const markerIcon = (color: string, active = false) => {
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
  * synced, crawlable index of colour-coded cemetery cards.
  */
-const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false }: Props) => {
+const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true }: Props) => {
+  const [metroIdx, setMetroIdx] = useState(() => metroIndexForRegions(regions));
+  const activeMetro = METRO_OPTIONS[metroIdx];
+  const effRegions = metroTabs ? activeMetro.regions : regions;
+  const effMetro = metroTabs ? (activeMetro.label === "All Texas" ? "Texas" : activeMetro.label) : metro;
+
   const [active, setActive] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("name");
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -130,33 +134,23 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   /** Suppresses the auto-scroll when the highlight came from the list itself. */
   const fromListRef = useRef(false);
 
-  const set = useMemo(() => bayCemeteries.filter((c) => regions.includes(c.region)), [regions]);
+  const set = useMemo(
+    () => bayCemeteries.filter((c) => effRegions.includes(c.region)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [effRegions.join("|")]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let out = set.filter((c) => {
-      if (q && !`${c.name} ${c.city}`.toLowerCase().includes(q)) return false;
-      const m = metaFor(c.name);
-      if (filter === "sameday") return SAME_DAY_REGIONS.includes(c.region);
-      if (filter === "lowfee") return m.transferFee != null && m.transferFee <= 500;
-      return true;
-    });
-    out = [...out].sort((a, b) => {
-      const ma = metaFor(a.name);
-      const mb = metaFor(b.name);
+    const out = set.filter((c) => !q || `${c.name} ${c.city}`.toLowerCase().includes(q));
+    return [...out].sort((a, b) => {
       if (sort === "distance" && here) {
         return milesBetween(here, a) - milesBetween(here, b);
       }
-      if (sort === "fee") {
-        const fa = ma.transferFee ?? Number.POSITIVE_INFINITY;
-        const fb = mb.transferFee ?? Number.POSITIVE_INFINITY;
-        if (fa !== fb) return fa - fb;
-      }
-      if (sort === "demand" && ma.band !== mb.band) return mb.band - ma.band;
       return a.name.localeCompare(b.name);
     });
-    return out;
-  }, [set, query, filter, sort, metaFor, here]);
+  }, [set, query, sort, here]);
+
 
   const openInfo = useCallback(
     (c: CemeteryInfo) => {
