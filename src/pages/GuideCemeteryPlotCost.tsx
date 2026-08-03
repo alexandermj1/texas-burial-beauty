@@ -300,8 +300,8 @@ const GuideCemeteryPlotCost = () => (
 
       <div className="border-t border-border/60">
         <MetroCemeteryMap
-          regions={["Dallas–Fort Worth", "Greater Houston", "Austin", "San Antonio", "Central Texas", "East Texas", "South Texas", "West & North Texas", "El Paso & West Texas"]}
-          metro="Texas"
+          regions={["Dallas–Fort Worth"]}
+          metro="Dallas–Fort Worth"
           searchable
           blurb="Search any cemetery on the map to open its profile. Pricing, sections and the current transfer fee are recorded on each one."
         />

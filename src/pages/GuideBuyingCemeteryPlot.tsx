@@ -452,8 +452,8 @@ const GuideBuyingCemeteryPlot = () => (
     <section className="border-t border-border/60 bg-background">
       <div className="mx-auto w-full max-w-[1560px] px-6 lg:px-10">
         <MetroCemeteryMap
-          regions={TEXAS_REGIONS}
-          metro="Texas"
+          regions={["Dallas–Fort Worth"]}
+          metro="Dallas–Fort Worth"
           searchable
           blurb="Every cemetery we broker in Texas, mapped. Search by name or city, open a profile for sections and transfer fees, or get directions."
         />

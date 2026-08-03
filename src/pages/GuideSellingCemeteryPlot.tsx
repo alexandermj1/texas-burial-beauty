@@ -473,8 +473,8 @@ const GuideSellingCemeteryPlot = () => (
     <section className="border-t border-border/60 bg-background">
       <div className="mx-auto w-full max-w-[1560px] px-6 lg:px-10">
         <MetroCemeteryMap
-          regions={TEXAS_REGIONS}
-          metro="Texas"
+          regions={["Dallas–Fort Worth"]}
+          metro="Dallas–Fort Worth"
           searchable
           blurb="Find your cemetery on the map to see its profile, sections and recorded transfer fee before you list."
         />
