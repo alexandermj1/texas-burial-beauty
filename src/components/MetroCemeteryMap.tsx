@@ -22,6 +22,7 @@ import { bayCemeteries, type CemeteryInfo } from "@/data/cemeteries";
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { loadGoogleMaps, brandMapStyles, pinIcon, hasMapsKey } from "@/lib/googleMaps";
 import { useCemeteryMeta, bandInfo, showingLabel, SAME_DAY_REGIONS } from "@/hooks/useCemeteryMeta";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   /** Region names as used in src/data/cemeteries.ts */
