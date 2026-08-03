@@ -8,17 +8,6 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 
 
-const TEXAS_REGIONS = [
-  "Dallas–Fort Worth",
-  "Greater Houston",
-  "Austin",
-  "San Antonio",
-  "Central Texas",
-  "East Texas",
-  "South Texas",
-  "West & North Texas",
-  "El Paso & West Texas",
-];
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
