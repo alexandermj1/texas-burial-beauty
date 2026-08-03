@@ -490,28 +490,29 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
             </label>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button type="button" className={chip(filter === "all")} onClick={() => setFilter("all")}>
+          <div className="mt-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex sm:flex-wrap items-center gap-2 overflow-x-auto no-scrollbar">
+            <button type="button" className={`${chip(filter === "all")} shrink-0`} onClick={() => setFilter("all")}>
               All
             </button>
             {sameDayMetro && (
-              <button type="button" className={chip(filter === "sameday")} onClick={() => setFilter("sameday")}>
+              <button type="button" className={`${chip(filter === "sameday")} shrink-0`} onClick={() => setFilter("sameday")}>
                 Same-day showings
               </button>
             )}
-            <button type="button" className={chip(filter === "lowfee")} onClick={() => setFilter("lowfee")}>
+            <button type="button" className={`${chip(filter === "lowfee")} shrink-0`} onClick={() => setFilter("lowfee")}>
               Fee under $500
             </button>
             {originLabel && (
-              <span className="ml-auto inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5 text-xs text-foreground/70">
+              <span className="shrink-0 sm:ml-auto inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5 text-xs text-foreground/70">
                 <span className="w-2 h-2 rounded-full bg-foreground" />
-                From <span className="font-medium text-foreground truncate max-w-[16rem]">{originLabel}</span>
+                From <span className="font-medium text-foreground truncate max-w-[9rem] sm:max-w-[16rem]">{originLabel}</span>
                 <button type="button" onClick={clearOrigin} aria-label="Clear starting point" className="hover:text-primary">
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
           </div>
+
           {locError && <p className="text-xs text-accent mt-3">{locError}</p>}
         </div>
 
