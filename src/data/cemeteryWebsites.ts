@@ -107,3 +107,5 @@ const NORMALIZED: Record<string, string> = Object.fromEntries(
 
 export const getCuratedWebsite = (name?: string | null): string | undefined =>
   name ? NORMALIZED[normalize(name)] : undefined;
+
+export const cemeteryWebsite = getCuratedWebsite;
