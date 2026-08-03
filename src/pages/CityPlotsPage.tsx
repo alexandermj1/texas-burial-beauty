@@ -52,8 +52,9 @@ const CityPlotsPage = () => {
     },
     {
       q: `How long does a ${data.city} plot sale take?`,
-      a: `Listing to closed sale is commonly 30–90 days depending on the cemetery and section. Once a buyer is agreed, the cemetery transfer itself usually records within two to four weeks.`,
+      a: `Listing to closed sale typically takes 4–12 months depending on the cemetery, section, and buyer demand. Once a buyer is agreed, the cemetery transfer itself usually records within two to four weeks.`,
     },
+
   ];
 
   const jsonLd: Record<string, unknown>[] = [
