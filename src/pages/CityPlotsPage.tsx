@@ -158,7 +158,20 @@ const CityPlotsPage = () => {
         </div>
       </section>
 
+      {/* Full-width coverage map */}
+      <section className="border-b border-border/60 bg-background">
+        <div className="mx-auto w-full max-w-[1720px] px-5 sm:px-8 lg:px-12">
+          <MetroCemeteryMap
+            regions={data.regions}
+            metro={data.metro}
+            fullBleed={false}
+            blurb={`Every pin is a ${data.metro} cemetery we hold a profile for — pricing, section detail and the current transfer fee. Enter your address to see the closest cemeteries, or hover a pin to highlight it in the list.`}
+          />
+        </div>
+      </section>
+
       <article className="container mx-auto px-6 lg:px-10 max-w-[1280px] pb-8">
+
         <div className="grid lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_18rem] gap-10 xl:gap-14 items-start">
 
           <div className="min-w-0">
@@ -184,11 +197,8 @@ const CityPlotsPage = () => {
           </div>
         </Section>
 
-        <MetroCemeteryMap
-          regions={data.regions}
-          metro={data.metro}
-          blurb={`Every pin is a ${data.metro} cemetery we hold a profile for — pricing, section detail and the current transfer fee. Hover a pin or a name to see where it sits, then open the cemetery for detail.`}
-        />
+
+
 
 
         {/* Pricing */}
