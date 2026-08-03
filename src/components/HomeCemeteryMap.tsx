@@ -75,13 +75,13 @@ const HomeCemeteryMap = () => {
           </p>
         </div>
 
-        <div className="mb-2 flex flex-wrap justify-center gap-2">
+        <div className="mb-2 -mx-6 px-6 flex sm:flex-wrap justify-start sm:justify-center gap-2 overflow-x-auto no-scrollbar">
           {METROS.map((m, i) => (
             <button
               key={m.label}
               onClick={() => setActive(i)}
               aria-pressed={i === active}
-              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
                 i === active
                   ? "bg-primary text-primary-foreground shadow-soft"
                   : "border border-border bg-card text-muted-foreground hover:text-foreground"
@@ -91,6 +91,7 @@ const HomeCemeteryMap = () => {
             </button>
           ))}
         </div>
+
 
         <MetroCemeteryMap
           key={metro.label}
