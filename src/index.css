@@ -119,6 +119,9 @@
 
 /* On phones the overlay count chip sits top-left, so push the zoom control
    clear of it and shrink the attribution so it doesn't crowd the map. */
+.leaflet-top.leaflet-left .leaflet-control-zoom {
+  margin-top: 3.75rem;
+}
 @media (max-width: 639px) {
   .leaflet-top.leaflet-left .leaflet-control-zoom {
     margin-top: 3.25rem;

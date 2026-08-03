@@ -5,7 +5,6 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   MapPin,
-  ChevronDown,
   ArrowUpRight,
 
   Search,
@@ -23,6 +22,7 @@ import { bayCemeteries, type CemeteryInfo } from "@/data/cemeteries";
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { useCemeteryMeta, bandInfo, showingLabel, SAME_DAY_REGIONS } from "@/hooks/useCemeteryMeta";
 import { supabase } from "@/integrations/supabase/client";
+import { METRO_OPTIONS, metroIndexForRegions } from "@/data/metroRegions";
 
 interface Props {
   /** Region names as used in src/data/cemeteries.ts */
@@ -39,13 +39,15 @@ interface Props {
   hideTitle?: boolean;
   /** Compact padding and spacing for use in a tighter layout (e.g. home page). */
   compact?: boolean;
+  /** Render the metro/region switcher above the map (default true). */
+  metroTabs?: boolean;
 }
 
 const ACCENT = "#c1704a";
 const DEFAULT_ZOOM = 9;
 
-type Filter = "all" | "sameday" | "lowfee";
-type Sort = "name" | "fee" | "demand" | "distance";
+type Sort = "name" | "distance";
+
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
@@ -101,10 +103,14 @@ const markerIcon = (color: string, active = false) => {
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
  * synced, crawlable index of colour-coded cemetery cards.
  */
-const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false }: Props) => {
+const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true }: Props) => {
+  const [metroIdx, setMetroIdx] = useState(() => metroIndexForRegions(regions));
+  const activeMetro = METRO_OPTIONS[metroIdx];
+  const effRegions = metroTabs ? activeMetro.regions : regions;
+  const effMetro = metroTabs ? (activeMetro.label === "All Texas" ? "Texas" : activeMetro.label) : metro;
+
   const [active, setActive] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("name");
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -128,33 +134,23 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   /** Suppresses the auto-scroll when the highlight came from the list itself. */
   const fromListRef = useRef(false);
 
-  const set = useMemo(() => bayCemeteries.filter((c) => regions.includes(c.region)), [regions]);
+  const set = useMemo(
+    () => bayCemeteries.filter((c) => effRegions.includes(c.region)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [effRegions.join("|")]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let out = set.filter((c) => {
-      if (q && !`${c.name} ${c.city}`.toLowerCase().includes(q)) return false;
-      const m = metaFor(c.name);
-      if (filter === "sameday") return SAME_DAY_REGIONS.includes(c.region);
-      if (filter === "lowfee") return m.transferFee != null && m.transferFee <= 500;
-      return true;
-    });
-    out = [...out].sort((a, b) => {
-      const ma = metaFor(a.name);
-      const mb = metaFor(b.name);
+    const out = set.filter((c) => !q || `${c.name} ${c.city}`.toLowerCase().includes(q));
+    return [...out].sort((a, b) => {
       if (sort === "distance" && here) {
         return milesBetween(here, a) - milesBetween(here, b);
       }
-      if (sort === "fee") {
-        const fa = ma.transferFee ?? Number.POSITIVE_INFINITY;
-        const fb = mb.transferFee ?? Number.POSITIVE_INFINITY;
-        if (fa !== fb) return fa - fb;
-      }
-      if (sort === "demand" && ma.band !== mb.band) return mb.band - ma.band;
       return a.name.localeCompare(b.name);
     });
-    return out;
-  }, [set, query, filter, sort, metaFor, here]);
+  }, [set, query, sort, here]);
+
 
   const openInfo = useCallback(
     (c: CemeteryInfo) => {
@@ -409,7 +405,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         : "bg-card text-foreground/70 border-border/70 hover:border-primary/50"
     }`;
 
-  const sameDayMetro = regions.some((r) => SAME_DAY_REGIONS.includes(r));
+  const sameDayMetro = effRegions.some((r) => SAME_DAY_REGIONS.includes(r));
 
   return (
     <section id="map" className={`scroll-mt-28 w-full ${compact ? "py-0" : "py-12 md:py-16"}`}>
@@ -418,21 +414,41 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
           <div className="mb-6">
             <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
             <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground leading-[1.05]">
-              Cemeteries we broker across <span className="italic text-primary">{metro}</span>
+              Cemeteries we broker across <span className="italic text-primary">{effMetro}</span>
             </h2>
             {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
             {sameDayMetro && (
               <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
                 <CalendarClock className="w-4 h-4" />
-                Same-day in-person showings across {metro}
+                Same-day in-person showings across {effMetro}
               </p>
             )}
           </div>
         )}
 
-        {/* One toolbar: find, locate, sort */}
+        {/* Region switcher */}
+        {metroTabs && (
+          <div className="mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
+            {METRO_OPTIONS.map((m, i) => (
+              <button
+                key={m.label}
+                type="button"
+                onClick={() => {
+                  setMetroIdx(i);
+                  setActive(null);
+                }}
+                aria-pressed={i === metroIdx}
+                className={`${chip(i === metroIdx)} shrink-0`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* One toolbar: search + address */}
         <div className="rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="grid gap-3 lg:grid-cols-2">
             <label className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -451,6 +467,11 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                 onChange={(e) => setAddressInput(e.target.value)}
                 placeholder="Your address or ZIP"
                 aria-label="Your address"
+                id="map-origin-address"
+                name="street-address"
+                type="text"
+                autoComplete="street-address"
+                inputMode="text"
                 className="w-full pl-10 pr-[6.5rem] py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
               <div className="absolute right-1.5 flex items-center gap-1">
@@ -473,45 +494,20 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                 </button>
               </div>
             </form>
-
-            <label className="relative lg:w-56">
-              <span className="sr-only">Sort cemeteries</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as Sort)}
-                className="w-full appearance-none pl-4 pr-9 py-2.5 rounded-full bg-background border border-border/70 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors cursor-pointer"
-              >
-                <option value="name">Sort: A–Z</option>
-                <option value="demand">Sort: Most in demand</option>
-                <option value="fee">Sort: Lowest transfer fee</option>
-                {here && <option value="distance">Sort: Closest to me</option>}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            </label>
           </div>
 
-          <div className="mt-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex sm:flex-wrap items-center gap-2 overflow-x-auto no-scrollbar">
-            <button type="button" className={`${chip(filter === "all")} shrink-0`} onClick={() => setFilter("all")}>
-              All
-            </button>
-            {sameDayMetro && (
-              <button type="button" className={`${chip(filter === "sameday")} shrink-0`} onClick={() => setFilter("sameday")}>
-                Same-day showings
-              </button>
-            )}
-            <button type="button" className={`${chip(filter === "lowfee")} shrink-0`} onClick={() => setFilter("lowfee")}>
-              Fee under $500
-            </button>
-            {originLabel && (
-              <span className="shrink-0 sm:ml-auto inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5 text-xs text-foreground/70">
+          {originLabel && (
+            <div className="mt-3 flex">
+              <span className="inline-flex items-center gap-2 rounded-full bg-background border border-border/70 px-3 py-1.5 text-xs text-foreground/70">
                 <span className="w-2 h-2 rounded-full bg-foreground" />
                 From <span className="font-medium text-foreground truncate max-w-[9rem] sm:max-w-[16rem]">{originLabel}</span>
                 <button type="button" onClick={clearOrigin} aria-label="Clear starting point" className="hover:text-primary">
                   <X className="w-3 h-3" />
                 </button>
               </span>
-            )}
-          </div>
+            </div>
+          )}
+
 
           {locError && <p className="text-xs text-accent mt-3">{locError}</p>}
         </div>
@@ -546,7 +542,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
             <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2.5 sm:p-4">
               <span className="pointer-events-auto rounded-full bg-background/90 backdrop-blur px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.16em] sm:tracking-[0.22em] text-foreground/70 border border-border/60 shadow-sm">
                 {filtered.length} {filtered.length === 1 ? "cemetery" : "cemeteries"}
-                <span className="hidden sm:inline"> · {metro}</span>
+                <span className="hidden sm:inline"> · {effMetro}</span>
               </span>
               {ready && (
                 <button
