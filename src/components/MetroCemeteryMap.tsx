@@ -35,6 +35,10 @@ interface Props {
   searchable?: boolean;
   /** Break out of the parent container to full page width (default true) */
   fullBleed?: boolean;
+  /** Hide the large title block so the caller can provide its own header. */
+  hideTitle?: boolean;
+  /** Compact padding and spacing for use in a tighter layout (e.g. home page). */
+  compact?: boolean;
 }
 
 const ACCENT = "#c1704a";
