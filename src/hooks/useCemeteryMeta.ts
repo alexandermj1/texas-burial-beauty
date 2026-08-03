@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cemeteryWebsite } from "@/data/cemeteryWebsites";
 
 export interface CemeteryMeta {
   transferFee: number | null;
@@ -8,11 +9,18 @@ export interface CemeteryMeta {
   website: string | null;
 }
 
-const norm = (s: string | null | undefined) =>
+/** Full normalisation — keeps every distinguishing word, drops punctuation only. */
+const strict = (s: string | null | undefined) =>
   (s || "")
     .toLowerCase()
-    .replace(/\b(memorial park|memorial gardens|cemetery|memorial|park|gardens)\b/g, " ")
     .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** Loose normalisation — drops generic suffixes. Only used when unambiguous. */
+const loose = (s: string | null | undefined) =>
+  strict(s)
+    .replace(/\b(funeral home|memorial park|memorial gardens|burial park|cemeteries|cemetery|memorial|gardens|park)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -24,11 +32,12 @@ const httpUrl = (u: string | null | undefined) => {
 
 /**
  * Public metadata used to enrich cemetery cards on the coverage maps:
- * transfer fee + website (cemetery registry) and a vague, relative
- * demand band derived server-side from inquiry volume.
+ * transfer fee + website (curated list first, registry second) and a vague,
+ * relative demand band derived server-side from inquiry volume.
  */
 export const useCemeteryMeta = () => {
   const [fees, setFees] = useState<Record<string, number>>({});
+  const [looseFees, setLooseFees] = useState<Record<string, number>>({});
   const [sites, setSites] = useState<Record<string, string>>({});
   const [bands, setBands] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -41,21 +50,39 @@ export const useCemeteryMeta = () => {
         supabase.rpc("cemetery_demand_bands" as never),
       ]);
       if (!mounted) return;
+
+      const rows = (cems.data as { name: string; transfer_fee: number | null; website: string | null }[]) || [];
+
+      // Count loose keys so ambiguous ones (e.g. two "Greenwood"s) never cross-match.
+      const looseCount: Record<string, number> = {};
+      rows.forEach((r) => {
+        const lk = loose(r.name);
+        if (lk) looseCount[lk] = (looseCount[lk] || 0) + 1;
+      });
+
       const f: Record<string, number> = {};
+      const lf: Record<string, number> = {};
       const w: Record<string, string> = {};
-      for (const row of (cems.data as { name: string; transfer_fee: number | null; website: string | null }[]) || []) {
-        const k = norm(row.name);
+      for (const row of rows) {
+        const k = strict(row.name);
+        const lk = loose(row.name);
         if (!k) continue;
-        if (row.transfer_fee != null) f[k] = Number(row.transfer_fee);
+        if (row.transfer_fee != null) {
+          f[k] = Number(row.transfer_fee);
+          if (lk && looseCount[lk] === 1) lf[lk] = Number(row.transfer_fee);
+        }
         const url = httpUrl(row.website);
         if (url) w[k] = url;
       }
+
       const b: Record<string, number> = {};
       for (const row of (demand.data as { cemetery_key: string; band: number }[]) || []) {
-        const k = norm(row.cemetery_key);
+        const k = loose(row.cemetery_key);
         if (k) b[k] = Math.max(b[k] || 0, Number(row.band) || 0);
       }
+
       setFees(f);
+      setLooseFees(lf);
       setSites(w);
       setBands(b);
       setLoading(false);
@@ -69,11 +96,17 @@ export const useCemeteryMeta = () => {
     () => ({
       loading,
       metaFor: (name: string): CemeteryMeta => {
-        const k = norm(name);
-        return { transferFee: fees[k] ?? null, band: bands[k] ?? 0, website: sites[k] ?? null };
+        const k = strict(name);
+        const lk = loose(name);
+        return {
+          transferFee: fees[k] ?? looseFees[lk] ?? null,
+          band: bands[lk] ?? 0,
+          // Curated, human-verified list wins; registry only fills gaps on an exact name match.
+          website: cemeteryWebsite(name) ?? sites[k] ?? null,
+        };
       },
     }),
-    [fees, bands, sites, loading]
+    [fees, looseFees, bands, sites, loading]
   );
 };
 
