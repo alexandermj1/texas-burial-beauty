@@ -252,8 +252,14 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
       const c = set.find((x) => x.name === active);
       if (c) openInfo(c);
       if (!fromListRef.current) {
-        cardRefs.current[active]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        // Bring the matching card to the top of the list panel, not just into view.
+        const list = listRef.current;
+        const card = cardRefs.current[active];
+        if (list && card) {
+          list.scrollTo({ top: Math.max(0, card.offsetTop - list.offsetTop - 8), behavior: "smooth" });
+        }
       }
+
     } else {
       infoRef.current?.close();
     }
