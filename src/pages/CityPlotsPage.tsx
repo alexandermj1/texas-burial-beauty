@@ -114,11 +114,11 @@ const CityPlotsPage = () => {
               className="w-full h-full object-cover object-bottom mix-blend-multiply"
               loading="eager"
             />
-            {/* Soft cream veil at the top so the nav and copy stay legible */}
-            <div className="absolute inset-x-0 top-0 h-[46%] bg-gradient-to-b from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/80 to-transparent" />
-            <div className="absolute inset-y-0 left-0 w-16 md:w-32 bg-gradient-to-r from-[hsl(38_35%_95%)]/90 to-transparent" />
-            <div className="absolute inset-y-0 right-0 w-16 md:w-32 bg-gradient-to-l from-[hsl(38_35%_95%)]/90 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-32 md:h-44 bg-gradient-to-t from-background via-background/75 to-transparent" />
+            {/* Deep cream veil dissolves the top of the artwork into the page */}
+            <div className="absolute inset-x-0 top-0 h-[58%] bg-gradient-to-b from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/92 to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-20 md:w-40 bg-gradient-to-r from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/60 to-transparent" />
+            <div className="absolute inset-y-0 right-0 w-20 md:w-40 bg-gradient-to-l from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/60 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-background via-background/85 to-transparent" />
           </div>
 
           <div className="relative container mx-auto px-6 lg:px-10 max-w-[1280px] pt-24 md:pt-28 min-h-[86vh] md:min-h-[92vh] flex flex-col">
