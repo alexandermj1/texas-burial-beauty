@@ -71,8 +71,8 @@ const LA_INLINE_INITIALS: Array<{ pageIndex: number; y: number }> = [
   { pageIndex: 1, y: 353.3 }, // p2 — Authorized Minimum Price
   { pageIndex: 1, y: 239.3 }, // p2 — Sales at or above authorized minimum
   { pageIndex: 2, y: 201.0 }, // p3 — Buyer-Paid Broker Charges (Section 2.2)
-  { pageIndex: 4, y: 642.8 }, // p5 — Warranty of ownership
-  { pageIndex: 4, y: 573.0 }, // p5 — Warranty of plot condition
+  { pageIndex: 4, y: 566.2 }, // p5 — Warranty of ownership
+  { pageIndex: 4, y: 482.2 }, // p5 — Warranty of plot condition
 ];
 function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
   const WHITE = rgb(1, 1, 1);
@@ -382,7 +382,7 @@ Deno.serve(async (req) => {
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
       if (c.kind === 'listing_agreement' && pages.length >= 8) {
-        const p8 = pages[7];
+        const p8 = pages[8];
         // The template ships with a pre-printed broker signature + typed name in the
         // broker block. Cover those areas with opaque white before stamping our own,
         // so the counter-signature isn't drawn on top of the pre-filled artwork.
@@ -575,7 +575,7 @@ Deno.serve(async (req) => {
     // Coordinates measured directly from the template underline rects; stamp
     // sits ~3pt above the rule so the baseline sits on the line.
     if (c.kind === 'listing_agreement' && pages.length >= 8) {
-      const p8 = pages[7];
+      const p8 = pages[8];
       // Seller block underline rects (pdf-lib coords, measured from template):
       //   printed name y=282.0, signature y=252.8, date y=223.5, all x0=204.7 w=337.5.
       stampText(p8, signature_name, 210, 284.2, font, 11);
