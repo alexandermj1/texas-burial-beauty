@@ -549,7 +549,9 @@ const Admin = () => {
                       </button>
                     );
                   })}
+                  <div className="md:hidden w-full pt-1"><ChangePasswordDialog /></div>
                 </div>
+
               )}
             </>
           ) : (
