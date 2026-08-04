@@ -144,7 +144,7 @@ const CityPlotsPage = () => {
                 {data.h1Lead} <span className="italic text-primary">{data.city}</span>
               </h1>
               <p className="text-sm md:text-[15px] text-foreground/70 leading-relaxed font-light max-w-lg mx-auto mb-5">
-                {data.introShort ?? data.intro}
+                {data.intro}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
