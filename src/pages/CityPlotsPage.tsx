@@ -24,9 +24,13 @@ const Section: React.FC<{ id?: string; eyebrow?: string; title: React.ReactNode;
 
 const CityPlotsPage = () => {
   const { pathname } = useLocation();
+  const isCityRoute = pathname.startsWith("/cemetery-plots-for-sale-");
   const data = getCityPage(pathname.replace(/^\/cemetery-plots-for-sale-/, "").replace(/\/$/, ""));
 
-  if (!data) return <Navigate to="/cemetery-plots-for-sale-texas" replace />;
+  // During exit transitions this page can briefly render on another route —
+  // never redirect unless we're genuinely on a city route.
+  if (!data) return isCityRoute ? <Navigate to="/cemetery-plots-for-sale-texas" replace /> : null;
+
 
   const path = `/cemetery-plots-for-sale-${data.slug}`;
   const full = `${SITE}${path}`;
