@@ -245,6 +245,8 @@ const CityPlotsPage = () => {
           </motion.div>
         </div>
       </section>
+      )}
+
 
       {/* Coverage map */}
       <section className="border-b border-border/60 bg-background">
