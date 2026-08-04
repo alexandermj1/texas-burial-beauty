@@ -1775,10 +1775,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </div>
                   <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
                     {rows.map((r, i) => (
-                      <li key={i} className="grid grid-cols-[minmax(140px,180px)_1fr_auto] gap-3 px-3 py-1.5 text-sm">
+                      <li key={i} className="grid grid-cols-1 sm:grid-cols-[minmax(140px,180px)_1fr_auto] gap-1 sm:gap-3 px-3 py-1.5 text-sm">
                         <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
                         <span className="text-foreground break-words">{r.value}</span>
-                        <span className="text-[10px] text-muted-foreground/70 italic truncate max-w-[160px]" title={r.source}>{r.source}</span>
+                        <span className="text-[10px] text-muted-foreground/70 italic truncate sm:max-w-[160px]" title={r.source}>{r.source}</span>
                       </li>
                     ))}
                   </ul>
@@ -2277,8 +2277,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
+                       <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                        <p className={`text-sm truncate max-w-[60vw] sm:max-w-none ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
                         {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
                         {beingWorked && (
                           <span

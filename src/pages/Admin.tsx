@@ -463,19 +463,20 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-sand-light/60 via-background to-sage-light/40 dark:from-background dark:via-background dark:to-background">
       <Seo title="Admin Dashboard | Texas Cemetery Brokers" description="Internal admin." path="/admin" noindex />
-      <div className={`lg:hidden md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
+      <div className={`hidden md:block lg:hidden md:!translate-y-0 transition-transform duration-200 ${navHiddenMobile ? "-translate-y-full" : "translate-y-0"}`}>
         <Navbar forceScrolled />
       </div>
-      <section className={`flex-1 ${focused ? "pt-6 lg:pt-5 pb-10" : "pt-28 lg:pt-8 pb-16"}`}>
-        <div className="w-full px-4 lg:px-8">
+      <section className={`flex-1 ${focused ? "pt-3 md:pt-6 lg:pt-5 pb-10" : "pt-4 md:pt-28 lg:pt-8 pb-16"}`}>
+        <div className="w-full px-3 sm:px-4 lg:px-8">
+
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
             <>
-              <div className="mb-5 flex items-center gap-3 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 lg:px-4 py-2.5">
+              <div className="sticky top-0 z-40 mb-4 md:mb-5 flex flex-wrap items-center gap-2 md:gap-3 rounded-2xl bg-card/90 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-2.5 md:px-3 lg:px-4 py-2 md:py-2.5">
                 <button
                   data-tour="menu-button"
                   onClick={() => setMenuOpen(o => !o)}
-                  className="hidden md:inline-flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-full bg-background/60 border border-border/70 text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+                  className="inline-flex shrink-0 items-center gap-1.5 px-2.5 md:px-3 py-2 rounded-full bg-background/60 border border-border/70 text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
                   aria-label="Toggle menu"
                 >
                   {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -485,16 +486,16 @@ const Admin = () => {
                   <span className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-accent shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
                   <h1 className="font-display text-lg tracking-tight text-foreground">Admin</h1>
                 </div>
-                <div className="flex-1 flex justify-center">
+                <div className="order-last w-full md:order-none md:w-auto md:flex-1 flex justify-center">
                   <div data-tour="search-bar" className="relative w-full max-w-2xl lg:max-w-3xl group">
                     <div className="pointer-events-none absolute -inset-px rounded-full bg-gradient-to-r from-primary/20 via-transparent to-accent/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity" />
-                    <Search className="absolute left-4 lg:left-5 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Search className="absolute left-3.5 lg:left-5 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder={searchPlaceholder}
-                      className="relative w-full pl-11 lg:pl-14 pr-4 py-2.5 lg:py-3.5 rounded-full bg-background/80 backdrop-blur border border-border/70 text-sm lg:text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 shadow-sm transition-all"
+                      className="relative w-full pl-10 lg:pl-14 pr-4 py-2 lg:py-3.5 rounded-full bg-background/80 backdrop-blur border border-border/70 text-sm lg:text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 shadow-sm transition-all"
                     />
                   </div>
                 </div>
@@ -506,12 +507,12 @@ const Admin = () => {
                 </div>
                 <button
                   onClick={() => setTeamMsgOpen(true)}
-                  className="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
+                  className="inline-flex shrink-0 items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
                   title="Message a teammate"
                 >
                   <MessageSquare className="w-4 h-4" />
                 </button>
-                <div data-tour="notifications-bell" className="hidden md:block"><NotificationsBell /></div>
+                <div data-tour="notifications-bell" className="shrink-0"><NotificationsBell /></div>
                 <div className="hidden md:block"><ChangePasswordDialog variant="icon" /></div>
                 {(tab === "submissions" || tab === "inbox") && (
                   <button
@@ -524,12 +525,13 @@ const Admin = () => {
                     <RefreshCw className={`w-4 h-4 ${refreshingInbox ? "animate-spin" : ""}`} />
                   </button>
                 )}
-                <button onClick={handleSignOut} className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border/70 bg-background/60 rounded-full transition-colors">
-                  <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
+                <button onClick={handleSignOut} aria-label="Sign out" className="shrink-0 inline-flex items-center justify-center md:justify-start gap-1.5 w-9 h-9 md:w-auto md:h-auto md:px-3 md:py-2 text-xs text-muted-foreground hover:text-foreground border border-border/70 bg-background/60 rounded-full transition-colors">
+                  <LogOut className="w-3.5 h-3.5" /> <span className="hidden md:inline">Sign Out</span>
                 </button>
+
               </div>
               {menuOpen && (
-                <div data-tour="menu-panel" className="flex gap-1.5 mb-5 flex-wrap p-3 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5">
+                <div data-tour="menu-panel" className="flex gap-1.5 mb-4 md:mb-5 flex-wrap p-3 bg-card/95 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 max-h-[50vh] overflow-y-auto sticky top-[92px] md:static z-30">
                   {tabsConfig.map(({ key, label, Icon, count }) => {
                     const active = tab === key;
                     return (
@@ -547,17 +549,19 @@ const Admin = () => {
                       </button>
                     );
                   })}
+                  <div className="md:hidden w-full pt-1"><ChangePasswordDialog /></div>
                 </div>
+
               )}
             </>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
-                  <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 md:mb-8">
+                <div className="min-w-0">
+                  <h1 className="font-display text-2xl md:text-3xl text-foreground">Admin Dashboard</h1>
+                  <p className="text-muted-foreground text-xs md:text-sm mt-1 truncate">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setTeamMsgOpen(true)}
                     className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
@@ -567,19 +571,19 @@ const Admin = () => {
                   </button>
                   <NotificationsBell />
                   <ChangePasswordDialog variant="icon" />
-                  <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
-                    <LogOut className="w-4 h-4" /> Sign Out
+                  <button onClick={handleSignOut} aria-label="Sign out" className="inline-flex items-center justify-center sm:justify-start gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                    <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Sign Out</span>
                   </button>
                 </div>
               </div>
-              <div className="flex gap-1.5 mb-6 flex-wrap">
+              <div className="flex gap-1.5 mb-6 flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible -mx-3 px-3 md:mx-0 md:px-0 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {tabsConfig.map(({ key, label, Icon, count }) => {
                   const active = tab === key;
                   return (
                     <button
                       key={key}
                       onClick={() => setTab(key)}
-                      className={`px-6 py-3 text-sm rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
+                      className={`shrink-0 px-4 py-2.5 md:px-6 md:py-3 text-xs md:text-sm rounded-full font-medium transition-all inline-flex items-center gap-1.5 whitespace-nowrap ${
                         active ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"
                       }`}
                     >
@@ -589,6 +593,7 @@ const Admin = () => {
                   );
                 })}
               </div>
+
             </>
           )}
 
