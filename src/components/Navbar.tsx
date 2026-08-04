@@ -90,40 +90,63 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                     {link.label}
                     <ChevronDown className="w-3.5 h-3.5 opacity-60 group-hover:rotate-180 transition-transform duration-300" />
                   </Link>
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-200 z-50">
-                    <div className="w-72 rounded-2xl border border-border bg-popover text-popover-foreground backdrop-blur-xl shadow-hover p-2">
+
+                  {/* Premium mega-panel */}
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-300 ease-out z-50">
+                    {/* pointer */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-[10px] w-3 h-3 rotate-45 bg-popover border-l border-t border-border/70" />
+                    <div className="relative w-[30rem] rounded-[1.5rem] border border-border/70 bg-popover/95 backdrop-blur-xl shadow-hover overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sage/40 to-transparent" />
+
+                      {/* Featured */}
                       <Link
                         to="/cemeteries"
-                        className="block rounded-xl px-3.5 py-2.5 hover:bg-muted/60 transition-colors"
+                        className="group/f flex items-start gap-4 px-5 py-5 bg-gradient-sage hover:bg-sage-light transition-colors"
                       >
-                        <span className="block text-sm text-foreground font-medium">Texas cemetery directory</span>
-                        <span className="block text-xs text-muted-foreground">All cemeteries, searchable</span>
+                        <span className="shrink-0 w-11 h-11 rounded-2xl bg-sage text-primary-foreground flex items-center justify-center shadow-soft">
+                          <Trees className="w-5 h-5" strokeWidth={1.75} />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-1.5 font-display text-lg text-foreground leading-tight">
+                            Texas cemetery directory
+                            <ArrowRight className="w-4 h-4 text-sage -translate-x-1 opacity-0 group-hover/f:opacity-100 group-hover/f:translate-x-0 transition-all" />
+                          </span>
+                          <span className="block text-xs text-muted-foreground mt-1">
+                            All 95 cemeteries — fees, contacts and availability
+                          </span>
+                        </span>
                       </Link>
-                      <p className="px-3.5 pt-3 pb-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                        Plots by city
-                      </p>
-                      {cityLinks.map(c => (
-                        <Link
-                          key={c.to}
-                          to={c.to}
-                          className="group/i flex items-center justify-between rounded-xl px-3.5 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-colors"
-                        >
-                          {c.label}
-                          <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover/i:opacity-100 transition-opacity" />
-                        </Link>
-                      ))}
-                      <div className="mt-2 pt-2 border-t border-border/70">
-                        <Link
-                          to="/cemetery-plot-cost-texas"
-                          className="block rounded-xl px-3.5 py-2 text-sm text-primary hover:bg-primary/5 transition-colors"
-                        >
-                          What does a plot cost in Texas?
-                        </Link>
+
+                      <div className="p-3">
+                        <p className="px-2 pt-1 pb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                          Plots by metro
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {cityLinks.map(c => (
+                            <Link
+                              key={c.to}
+                              to={c.to}
+                              className="group/i flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/70 transition-colors"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-sage/40 group-hover/i:bg-terracotta transition-colors shrink-0" />
+                              <span className="truncate">{c.label}</span>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
+
+                      <Link
+                        to="/cemetery-plot-cost-texas"
+                        className="group/c flex items-center justify-between gap-2 px-5 py-3.5 border-t border-border/70 bg-card/40 text-sm text-foreground/85 hover:text-foreground hover:bg-card transition-colors"
+                      >
+                        <span className="italic font-display text-[15px]">What does a plot cost in Texas?</span>
+                        <ArrowRight className="w-4 h-4 text-sage group-hover/c:translate-x-0.5 transition-transform" />
+                      </Link>
                     </div>
                   </div>
                 </div>
               );
+
             })}
 
             <a
