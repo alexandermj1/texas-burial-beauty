@@ -346,7 +346,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
             )}
 
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap shrink-0">
             {contract && urls[contract.id] && (
               <Button size="sm" variant="ghost" onClick={() => window.open(urls[contract.id], "_blank")}>
                 <ExternalLink className="w-3.5 h-3.5 mr-1" />
