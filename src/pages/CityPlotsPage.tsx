@@ -166,7 +166,7 @@ const CityPlotsPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
-              className="relative grid sm:grid-cols-3 gap-4 mt-[26vh] md:mt-[34vh] pb-16"
+              className="relative grid sm:grid-cols-3 gap-4 mt-[20vh] md:mt-[26vh] pb-16"
             >
               <div className="rounded-2xl bg-background/85 backdrop-blur border border-border p-6">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/55 mb-1.5">Cemetery retail</p>
