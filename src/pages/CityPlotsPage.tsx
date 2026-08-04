@@ -7,6 +7,7 @@ import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 
 import { getCityPage, CITY_PAGES } from "./city-page-data";
+import dallasHeroArt from "@/assets/dallas-hero-illustration.png.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
 
