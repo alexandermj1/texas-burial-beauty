@@ -327,8 +327,8 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
     const pending = busy === kind || busy === contract?.id;
     return (
       <div className="border rounded-lg p-3 bg-background/60 space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
             <Icon className="w-4 h-4 text-muted-foreground" />
             <span className="font-medium text-sm">{KIND_LABEL[kind]}</span>
             {contract?.notarized_at ? (
