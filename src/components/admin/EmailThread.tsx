@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Mail, Sparkles, Reply, PenLine } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { isOutgoing } from "@/lib/emailReply";
+import { isOutgoing, classifyEmailKind, EMAIL_KIND_META, EMAIL_KIND_RING } from "@/lib/emailReply";
 import InlineEmailComposer from "./InlineEmailComposer";
 
 interface EmailRow {
@@ -153,6 +153,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const outgoing = isOutgoing(e.from_email);
             const sender = outgoing ? "You" : (e.from_name && e.from_name.trim()) || e.from_email;
             const body = (e.body_text && e.body_text.trim()) || e.snippet || "";
+            const kind = outgoing ? classifyEmailKind(e.subject, body) : null;
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
@@ -160,7 +161,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
               <li
                 key={e.id}
                 className={`rounded-lg border px-3 py-2 text-xs ${
-                  outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
+                  kind ? EMAIL_KIND_RING[kind] : outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -173,6 +174,17 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     <p className="font-medium text-foreground truncate">{sender}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    {kind && (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full border ${EMAIL_KIND_META[kind].className}`}
+                        title={`${EMAIL_KIND_META[kind].label} · ${new Date(e.received_at).toLocaleDateString()}`}
+                      >
+                        {EMAIL_KIND_META[kind].label}
+                        <span className="font-medium opacity-80">
+                          {new Date(e.received_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        </span>
+                      </span>
+                    )}
                     <span className="text-[10px] text-muted-foreground">
                       {formatDistanceToNow(new Date(e.received_at), { addSuffix: true })}
                     </span>
@@ -189,6 +201,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                   </div>
                 </div>
                 <p className="font-medium text-foreground/90 truncate">{e.subject || "(no subject)"}</p>
+
                 {body && (
                   <details className="mt-1 group">
                     <summary className="list-none cursor-pointer text-muted-foreground hover:text-foreground">

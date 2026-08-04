@@ -159,6 +159,29 @@ Deno.serve(async (req) => {
       .update({ sent_at: new Date().toISOString(), status: 'sent' })
       .eq('id', c.id);
 
+    // Log the send into the email thread so admins see a dated record of the
+    // listing agreement / POA alongside the rest of the conversation.
+    try {
+      await svc.from('email_messages').insert({
+        gmail_message_id: `contract-${c.id}-${Date.now()}`,
+        gmail_thread_id: null,
+        from_email: 'contracts@texascemeterybrokers.com',
+        from_name: 'Texas Cemetery Brokers',
+        to_email: to,
+        subject,
+        snippet: isPoa
+          ? 'Power of Attorney sent for signature / notarization.'
+          : 'Listing Agreement sent for signature.',
+        body_text: `${headline}\n\nSigning link: ${sign_url}`,
+        received_at: new Date().toISOString(),
+        matched_submission_id: c.submission_id ?? null,
+        is_read: true,
+      } as Record<string, unknown>);
+    } catch (logErr) {
+      console.warn('could not log contract email to thread', logErr);
+    }
+
+
     // Only now — after the signing link has actually been emailed — do we mark
     // the submission's Listing Agreement as issued. Merely generating a draft
     // must not flip this flag.
