@@ -556,12 +556,12 @@ const Admin = () => {
             </>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
-                  <p className="text-muted-foreground text-sm mt-1">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 md:mb-8">
+                <div className="min-w-0">
+                  <h1 className="font-display text-2xl md:text-3xl text-foreground">Admin Dashboard</h1>
+                  <p className="text-muted-foreground text-xs md:text-sm mt-1 truncate">Signed in as <span className="text-foreground font-medium">{cleanDisplayName(user.user_metadata?.full_name) || user.email}</span></p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setTeamMsgOpen(true)}
                     className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-muted-foreground hover:text-foreground"
@@ -571,19 +571,19 @@ const Admin = () => {
                   </button>
                   <NotificationsBell />
                   <ChangePasswordDialog variant="icon" />
-                  <button onClick={handleSignOut} className="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
-                    <LogOut className="w-4 h-4" /> Sign Out
+                  <button onClick={handleSignOut} aria-label="Sign out" className="inline-flex items-center justify-center sm:justify-start gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-full transition-colors">
+                    <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Sign Out</span>
                   </button>
                 </div>
               </div>
-              <div className="flex gap-1.5 mb-6 flex-wrap">
+              <div className="flex gap-1.5 mb-6 flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible -mx-3 px-3 md:mx-0 md:px-0 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {tabsConfig.map(({ key, label, Icon, count }) => {
                   const active = tab === key;
                   return (
                     <button
                       key={key}
                       onClick={() => setTab(key)}
-                      className={`px-6 py-3 text-sm rounded-full font-medium transition-all inline-flex items-center gap-1.5 ${
+                      className={`shrink-0 px-4 py-2.5 md:px-6 md:py-3 text-xs md:text-sm rounded-full font-medium transition-all inline-flex items-center gap-1.5 whitespace-nowrap ${
                         active ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border border-border"
                       }`}
                     >
@@ -593,6 +593,7 @@ const Admin = () => {
                   );
                 })}
               </div>
+
             </>
           )}
 
