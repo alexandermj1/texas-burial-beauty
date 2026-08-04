@@ -179,7 +179,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
             <a
               href="tel:+12142304740"
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                scrolled || menuOpen
+                solid
                   ? "bg-primary text-primary-foreground hover:opacity-90"
                   : "bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/30 hover:bg-primary-foreground/20 backdrop-blur-sm"
               }`}
