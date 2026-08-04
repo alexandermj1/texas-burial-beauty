@@ -140,14 +140,36 @@ const CityPlotsPage = () => {
                 <MapPin className="w-3 h-3 text-accent" />
                 <p className="text-accent text-[10px] tracking-[0.24em] uppercase font-semibold">{data.metro}</p>
               </div>
-              <h1 className="font-display text-3xl sm:text-4xl md:text-[3.25rem] text-foreground leading-[1.05] tracking-tight mb-3">
+              <h1 className="font-display text-3xl sm:text-4xl md:text-[3.25rem] text-foreground leading-[1.05] tracking-tight">
                 {data.h1Lead} <span className="italic text-primary">{data.city}</span>
               </h1>
-              <p className="text-sm md:text-[15px] text-foreground/70 leading-relaxed font-light max-w-lg mx-auto mb-5">
-                {data.intro}
-              </p>
+            </motion.div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+            {/* Actions + figures sit low, in the space the artwork fades out */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="mt-auto pb-14 md:pb-16"
+            >
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-14 text-center">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemetery retail</p>
+                  <p className="font-display text-xl md:text-2xl text-foreground">{data.retailRange}</p>
+                </div>
+                <span className="hidden sm:block h-8 w-px bg-foreground/15" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-primary/70 mb-1">Typical resale</p>
+                  <p className="font-display text-xl md:text-2xl text-primary">{data.resaleRange}</p>
+                </div>
+                <span className="hidden sm:block h-8 w-px bg-foreground/15" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemeteries covered</p>
+                  <p className="font-display text-xl md:text-2xl text-foreground">{data.metroCemeteryCount}+ in {data.metro}</p>
+                </div>
+              </div>
+
+              <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-2.5">
                 <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-2xl font-medium text-sm shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
                   <Plus className="w-4 h-4" /> Find a plot in {data.city}
                 </Link>
@@ -157,29 +179,6 @@ const CityPlotsPage = () => {
                 <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-medium text-sm text-foreground hover:bg-muted/50 transition-all">
                   <Phone className="w-4 h-4" /> (214) 230-4740
                 </a>
-              </div>
-            </motion.div>
-
-            {/* Centered figures resting at the base of the artwork */}
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="mt-auto pb-10 flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-14 text-center"
-            >
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemetery retail</p>
-                <p className="font-display text-xl md:text-2xl text-foreground">{data.retailRange}</p>
-              </div>
-              <span className="hidden sm:block h-8 w-px bg-foreground/15" />
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-primary/70 mb-1">Typical resale</p>
-                <p className="font-display text-xl md:text-2xl text-primary">{data.resaleRange}</p>
-              </div>
-              <span className="hidden sm:block h-8 w-px bg-foreground/15" />
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemeteries covered</p>
-                <p className="font-display text-xl md:text-2xl text-foreground">{data.metroCemeteryCount}+ in {data.metro}</p>
               </div>
             </motion.div>
           </div>
