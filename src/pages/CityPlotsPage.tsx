@@ -246,6 +246,16 @@ const CityPlotsPage = () => {
       </section>
       )}
 
+      {data.slug === "dallas" && (
+        <section className="bg-background">
+          <div className="container mx-auto px-6 lg:px-10 max-w-[820px] pt-4 pb-14 text-center">
+            <p className="font-display text-xl md:text-2xl text-foreground/85 leading-relaxed [text-wrap:balance]">
+              {data.intro}
+            </p>
+          </div>
+        </section>
+      )}
+
 
       {/* Coverage map */}
       <section className="border-b border-border/60 bg-background">
