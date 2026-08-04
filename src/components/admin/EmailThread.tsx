@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Mail, Sparkles, Reply, PenLine } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { isOutgoing, classifyEmailKind, EMAIL_KIND_META, EMAIL_KIND_RING } from "@/lib/emailReply";
+import { isOutgoing, classifyEmailKind, extractQuoteAmount, EMAIL_KIND_META, EMAIL_KIND_RING } from "@/lib/emailReply";
 import InlineEmailComposer from "./InlineEmailComposer";
 
 interface EmailRow {
@@ -19,6 +19,7 @@ interface EmailRow {
   ai_summary: string | null;
   snippet: string | null;
   body_text: string | null;
+  body_html: string | null;
   gmail_thread_id: string | null;
   gmail_message_id: string | null;
 }
@@ -72,7 +73,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
     }
     const { data } = await supabase
       .from("email_messages" as any)
-      .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text, gmail_thread_id, gmail_message_id")
+      .select("id, subject, from_email, from_name, to_email, received_at, ai_summary, snippet, body_text, body_html, gmail_thread_id, gmail_message_id")
       .or(orParts.join(","))
       .order("received_at", { ascending: true });
     const seen = new Set<string>();
@@ -150,10 +151,20 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
       ) : (
         <ul className="space-y-2">
           {emails.map((e) => {
+            const kindOf = (m: EmailRow) =>
+              isOutgoing(m.from_email)
+                ? classifyEmailKind(m.subject, `${m.body_html || ""} ${(m.body_text || "")} ${m.snippet || ""}`)
+                : null;
             const outgoing = isOutgoing(e.from_email);
             const sender = outgoing ? "You" : (e.from_name && e.from_name.trim()) || e.from_email;
             const body = (e.body_text && e.body_text.trim()) || e.snippet || "";
-            const kind = outgoing ? classifyEmailKind(e.subject, body) : null;
+            const kind = kindOf(e);
+            // Nth quote in the thread → later ones are revisions, showing the new figure.
+            const quoteIndex = kind === "quote" ? emails.filter((m) => kindOf(m) === "quote").findIndex((m) => m.id === e.id) : -1;
+            const quoteAmount = kind === "quote" ? extractQuoteAmount(`${e.body_html || ""} ${e.body_text || ""}`) : null;
+            const kindLabel = kind === "quote"
+              ? (quoteIndex > 0 ? `Quote revised${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}` : `Quote sent${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}`)
+              : kind ? EMAIL_KIND_META[kind].label : "";
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
@@ -177,9 +188,9 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     {kind && (
                       <span
                         className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full border ${EMAIL_KIND_META[kind].className}`}
-                        title={`${EMAIL_KIND_META[kind].label} · ${new Date(e.received_at).toLocaleDateString()}`}
+                        title={`${kindLabel} · ${new Date(e.received_at).toLocaleDateString()}`}
                       >
-                        {EMAIL_KIND_META[kind].label}
+                        {kindLabel}
                         <span className="font-medium opacity-80">
                           {new Date(e.received_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                         </span>

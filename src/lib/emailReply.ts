@@ -57,10 +57,26 @@ export const classifyEmailKind = (
   const hay = `${s} ${b}`;
   if (s.includes("power of attorney") || hay.includes("notary packet")) return "poa";
   if (s.includes("listing agreement") || hay.includes("sign your listing agreement")) return "listing_agreement";
+  // Quote emails ONLY when the generated quote block is present — a mention of
+  // pricing in a normal reply must not be tagged as a quote.
   if (
-    s.includes("valuation is complete") ||
-    s.includes("listing offer") ||
-    (hay.includes("guaranteed net") && hay.includes("plot"))
+    b.includes('data-listing-options="1"') ||
+    b.includes("data-listing-options=\u00221\u0022") ||
+    b.includes("sale authorization quote")
   ) return "quote";
   return null;
 };
+
+// Pull the guaranteed-net figure out of a generated quote email so the thread
+// can show what changed when a second quote is sent.
+export const extractQuoteAmount = (body?: string | null): number | null => {
+  if (!body) return null;
+  const matches = [...body.matchAll(/\$\s?([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{4,})/g)];
+  if (!matches.length) return null;
+  const nums = matches
+    .map((m) => Number(m[1].replace(/,/g, "")))
+    .filter((n) => Number.isFinite(n) && n >= 500);
+  if (!nums.length) return null;
+  return Math.max(...nums);
+};
+
