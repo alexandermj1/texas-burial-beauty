@@ -118,13 +118,16 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
 
                   {/* Full-bleed mega-panel flowing out of the bar */}
                   <div className="absolute left-0 right-0 top-full opacity-0 invisible -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-300 ease-out z-50">
-                    <div className="relative w-full border-y border-border/60 bg-popover/95 backdrop-blur-xl shadow-hover">
-                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sage/50 to-transparent" />
-                      <div className="container mx-auto px-6 py-8 grid grid-cols-12 gap-8">
+                    <div className="relative w-full border-y border-border bg-background shadow-hover">
+                      {/* Top gradient accent line */}
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sage via-terracotta/60 to-sage" />
+                      {/* Subtle warm texture */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-sage/3 via-transparent to-terracotta/3 pointer-events-none" />
+                      <div className="relative container mx-auto px-6 py-8 grid grid-cols-12 gap-8">
                         {/* Featured */}
                         <Link
                           to="/cemeteries"
-                          className="group/f col-span-12 lg:col-span-4 flex items-start gap-4 rounded-[1.5rem] bg-gradient-sage hover:bg-sage-light transition-colors p-5"
+                          className="group/f col-span-12 lg:col-span-4 flex items-start gap-4 rounded-[1.5rem] bg-gradient-sage hover:bg-sage-light transition-colors p-5 border border-sage/10"
                         >
                           <span className="shrink-0 w-11 h-11 rounded-2xl bg-sage text-primary-foreground flex items-center justify-center shadow-soft">
                             <Trees className="w-5 h-5" strokeWidth={1.75} />
@@ -161,7 +164,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                         <div className="col-span-12 lg:col-span-3 lg:border-l border-border/60 lg:pl-8 flex items-end">
                           <Link
                             to="/cemetery-plot-cost-texas"
-                            className="group/c w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 bg-card/50 hover:bg-card text-sm text-foreground/85 hover:text-foreground transition-colors"
+                            className="group/c w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 bg-card/80 hover:bg-card text-sm text-foreground/85 hover:text-foreground transition-colors border border-border/50"
                           >
                             <span className="italic font-display text-[15px]">What does a plot cost in Texas?</span>
                             <ArrowRight className="w-4 h-4 text-sage group-hover/c:translate-x-0.5 transition-transform" />
