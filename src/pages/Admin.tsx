@@ -531,7 +531,7 @@ const Admin = () => {
 
               </div>
               {menuOpen && (
-                <div data-tour="menu-panel" className="flex gap-1.5 mb-5 flex-wrap p-3 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5">
+                <div data-tour="menu-panel" className="flex gap-1.5 mb-4 md:mb-5 flex-wrap p-3 bg-card/95 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 max-h-[50vh] overflow-y-auto sticky top-[92px] md:static z-30">
                   {tabsConfig.map(({ key, label, Icon, count }) => {
                     const active = tab === key;
                     return (
