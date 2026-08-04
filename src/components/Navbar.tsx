@@ -8,6 +8,7 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
     forceScrolled || (typeof window !== "undefined" && window.scrollY > 40);
   const [scrolled, setScrolled] = useState(computeScrolled);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [megaOpen, setMegaOpen] = useState(false);
   const location = useLocation();
 
   useLayoutEffect(() => {
