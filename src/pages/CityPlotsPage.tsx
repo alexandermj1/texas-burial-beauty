@@ -114,11 +114,11 @@ const CityPlotsPage = () => {
               className="w-full h-full object-cover object-bottom mix-blend-multiply"
               loading="eager"
             />
-            {/* Soft cream veil at the top so the nav and copy stay legible */}
-            <div className="absolute inset-x-0 top-0 h-[46%] bg-gradient-to-b from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/80 to-transparent" />
-            <div className="absolute inset-y-0 left-0 w-16 md:w-32 bg-gradient-to-r from-[hsl(38_35%_95%)]/90 to-transparent" />
-            <div className="absolute inset-y-0 right-0 w-16 md:w-32 bg-gradient-to-l from-[hsl(38_35%_95%)]/90 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-32 md:h-44 bg-gradient-to-t from-background via-background/75 to-transparent" />
+            {/* Deep cream veil dissolves the top of the artwork into the page */}
+            <div className="absolute inset-x-0 top-0 h-[58%] bg-gradient-to-b from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/92 to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-20 md:w-40 bg-gradient-to-r from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/60 to-transparent" />
+            <div className="absolute inset-y-0 right-0 w-20 md:w-40 bg-gradient-to-l from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/60 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-background via-background/85 to-transparent" />
           </div>
 
           <div className="relative container mx-auto px-6 lg:px-10 max-w-[1280px] pt-24 md:pt-28 min-h-[86vh] md:min-h-[92vh] flex flex-col">
@@ -140,14 +140,36 @@ const CityPlotsPage = () => {
                 <MapPin className="w-3 h-3 text-accent" />
                 <p className="text-accent text-[10px] tracking-[0.24em] uppercase font-semibold">{data.metro}</p>
               </div>
-              <h1 className="font-display text-3xl sm:text-4xl md:text-[3.25rem] text-foreground leading-[1.05] tracking-tight mb-3">
+              <h1 className="font-display text-3xl sm:text-4xl md:text-[3.25rem] text-foreground leading-[1.05] tracking-tight">
                 {data.h1Lead} <span className="italic text-primary">{data.city}</span>
               </h1>
-              <p className="text-sm md:text-[15px] text-foreground/70 leading-relaxed font-light max-w-lg mx-auto mb-5">
-                {data.intro}
-              </p>
+            </motion.div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+            {/* Actions + figures sit low, in the space the artwork fades out */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="mt-auto pb-14 md:pb-16"
+            >
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-14 text-center">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemetery retail</p>
+                  <p className="font-display text-xl md:text-2xl text-foreground">{data.retailRange}</p>
+                </div>
+                <span className="hidden sm:block h-8 w-px bg-foreground/15" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-primary/70 mb-1">Typical resale</p>
+                  <p className="font-display text-xl md:text-2xl text-primary">{data.resaleRange}</p>
+                </div>
+                <span className="hidden sm:block h-8 w-px bg-foreground/15" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemeteries covered</p>
+                  <p className="font-display text-xl md:text-2xl text-foreground">{data.metroCemeteryCount}+ in {data.metro}</p>
+                </div>
+              </div>
+
+              <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-2.5">
                 <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-2xl font-medium text-sm shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
                   <Plus className="w-4 h-4" /> Find a plot in {data.city}
                 </Link>
@@ -157,29 +179,6 @@ const CityPlotsPage = () => {
                 <a href="tel:+12142304740" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-medium text-sm text-foreground hover:bg-muted/50 transition-all">
                   <Phone className="w-4 h-4" /> (214) 230-4740
                 </a>
-              </div>
-            </motion.div>
-
-            {/* Centered figures resting at the base of the artwork */}
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="mt-auto pb-10 flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-14 text-center"
-            >
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemetery retail</p>
-                <p className="font-display text-xl md:text-2xl text-foreground">{data.retailRange}</p>
-              </div>
-              <span className="hidden sm:block h-8 w-px bg-foreground/15" />
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-primary/70 mb-1">Typical resale</p>
-                <p className="font-display text-xl md:text-2xl text-primary">{data.resaleRange}</p>
-              </div>
-              <span className="hidden sm:block h-8 w-px bg-foreground/15" />
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">Cemeteries covered</p>
-                <p className="font-display text-xl md:text-2xl text-foreground">{data.metroCemeteryCount}+ in {data.metro}</p>
               </div>
             </motion.div>
           </div>
@@ -245,6 +244,16 @@ const CityPlotsPage = () => {
           </motion.div>
         </div>
       </section>
+      )}
+
+      {data.slug === "dallas" && (
+        <section className="bg-background">
+          <div className="container mx-auto px-6 lg:px-10 max-w-[820px] pt-4 pb-14 text-center">
+            <p className="font-display text-xl md:text-2xl text-foreground/85 leading-relaxed [text-wrap:balance]">
+              {data.intro}
+            </p>
+          </div>
+        </section>
       )}
 
 
