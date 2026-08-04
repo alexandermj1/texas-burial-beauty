@@ -411,12 +411,12 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
     <section id="map" className={`scroll-mt-28 w-full ${compact ? "py-0" : "py-12 md:py-16"}`}>
       <div className="mx-auto w-full max-w-[1440px]">
         {!hideTitle && (
-          <div className="mb-6">
+          <div className="mb-6 text-center">
             <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-3">Coverage map</p>
             <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground leading-[1.05]">
               Cemeteries we broker across <span className="italic text-primary">{effMetro}</span>
             </h2>
-            {blurb && <p className="text-foreground/70 mt-3 max-w-2xl leading-relaxed">{blurb}</p>}
+            {blurb && <p className="text-foreground/70 mt-3 max-w-2xl mx-auto leading-relaxed">{blurb}</p>}
             {sameDayMetro && (
               <p className="mt-3 inline-flex items-center gap-2 text-sm text-primary font-medium">
                 <CalendarClock className="w-4 h-4" />
