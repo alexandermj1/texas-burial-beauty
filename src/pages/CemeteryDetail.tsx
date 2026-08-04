@@ -1,4 +1,4 @@
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, useLocation, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -132,9 +132,12 @@ const sellingSteps = [
 
 const CemeteryDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { pathname } = useLocation();
   const cemetery = slug ? findCemeteryBySlug(slug) : undefined;
 
-  if (!cemetery) return <Navigate to="/cemeteries" replace />;
+  // Avoid hijacking navigation while this page is exiting a transition.
+  if (!cemetery) return pathname.startsWith("/cemeteries/") ? <Navigate to="/cemeteries" replace /> : null;
+
 
   const related = bayCemeteries
     .filter((c) => c.region === cemetery.region && c.name !== cemetery.name)
