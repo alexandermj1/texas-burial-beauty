@@ -3,6 +3,7 @@
 const OUR_ADDRESSES = [
   "info@texascemeterybrokers.com",
   "texascemeterybrokers@gmail.com",
+  "contracts@texascemeterybrokers.com",
 ];
 
 const extractAddress = (raw: string | null | undefined): string => {
