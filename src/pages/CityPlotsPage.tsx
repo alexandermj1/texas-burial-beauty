@@ -113,7 +113,7 @@ const CityPlotsPage = () => {
             <img
               src={dallasHeroArt.url}
               alt="Illustration of a Dallas, Texas cemetery with the downtown Dallas skyline behind it"
-              className="w-full h-[52vh] min-h-[300px] md:h-auto md:min-h-0 object-cover object-bottom opacity-[0.92] mix-blend-multiply"
+              className="w-full h-[42vh] min-h-[280px] md:h-[54vh] md:max-h-[560px] object-cover object-bottom opacity-[0.94] mix-blend-multiply"
               loading="eager"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/45 to-transparent" />
