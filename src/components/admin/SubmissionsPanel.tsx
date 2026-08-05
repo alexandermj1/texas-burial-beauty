@@ -24,6 +24,7 @@ import CustomerNotes from "./CustomerNotes";
 import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import CustomerFiles from "./CustomerFiles";
 import ContractsPanel from "./ContractsPanel";
+import OwnershipPaperworkPanel from "./OwnershipPaperworkPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
