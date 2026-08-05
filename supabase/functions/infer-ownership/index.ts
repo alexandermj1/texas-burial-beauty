@@ -60,11 +60,18 @@ Deno.serve(async (req) => {
     );
 
     const { data: sub } = await supabase.from("contact_submissions")
-      .select("id, name, email, phone, cemetery, property_type, spaces, section, lawn, space_numbers, plot_count, message, details, admin_notes, ownership_type, relationship_to_owner, deed_owner_names, deed_owners_status, purchase_info, prepaid_endowment_info, customer_kind, state, deed_on_file, death_cert_on_file, gov_id_on_file, authorization_notes")
+      .select("id, name, email, phone, cemetery, property_type, spaces, section, lawn, space_numbers, plot_count, message, details, admin_notes, ownership_type, relationship_to_owner, deed_owner_names, deed_owners_status, purchase_info, prepaid_endowment_info, customer_kind, quote_response, state, deed_on_file, death_cert_on_file, gov_id_on_file, authorization_notes")
       .eq("id", submission_id).maybeSingle();
     if (!sub) {
       return new Response(JSON.stringify({ error: "Submission not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // The reading costs money — only run it once the seller has accepted a quote.
+    if (sub.quote_response !== "accepted") {
+      return new Response(JSON.stringify({ error: "The AI reading only runs after the seller accepts a quote" }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
