@@ -92,15 +92,19 @@ const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 const TYPE_CODES: { test: RegExp; codes: string[] }[] = [
   { test: /(cemetery deed|interment right|certificate of ownership|ownership certificate|\bdeed\b)/, codes: ["D1"] },
   { test: /(driver.?s? licen|government id|state id|passport|identification card|photo id)/, codes: ["D2", "D2P"] },
-  { test: /death certificate/, codes: ["D10", "D11"] },
+  { test: /death certificate/, codes: ["D6", "D22"] },
   { test: /affidavit of heirship/, codes: ["D12"] },
-  { test: /(letters testamentary|letters of administration)/, codes: ["D13"] },
-  { test: /muniment of title/, codes: ["D14"] },
-  { test: /\bwill\b|last will/, codes: ["D15"] },
-  { test: /(power of attorney|poa)/, codes: ["D21"] },
-  { test: /marriage (certificate|licen)/, codes: ["D30"] },
-  { test: /divorce decree/, codes: ["D31"] },
-  { test: /trust/, codes: ["D40"] },
+  { test: /small estate affidavit/, codes: ["D13"] },
+  { test: /letters testamentary/, codes: ["D8"] },
+  { test: /(letters of administration|judgment determining heirship|determination of heirship)/, codes: ["D10"] },
+  { test: /muniment of title/, codes: ["D9"] },
+  { test: /(last will|\bwill\b|testament)/, codes: ["D7"] },
+  { test: /power of attorney/, codes: ["D21", "D15"] },
+  { test: /guardianship/, codes: ["D18"] },
+  { test: /(marriage (certificate|licen)|name.?change)/, codes: ["D5"] },
+  { test: /divorce decree/, codes: ["D4"] },
+  { test: /(trust agreement|certification of trust)/, codes: ["D16"] },
+
 ];
 
 const codesForFile = (f: AnyFile): string[] => {
