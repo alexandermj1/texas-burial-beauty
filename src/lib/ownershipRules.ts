@@ -570,12 +570,7 @@ export function computeRequirements(
   }
 
   // ── Always ──
-  add({
-    code: "D20",
-    label: rules.own_transfer_form ? "Cemetery's own transfer form and fee" : "Cemetery transfer packet and fee",
-    why: "We record the conveyance within 3 business days.",
-    statute: "§711.0381", fromCemetery: rules.own_transfer_form,
-  });
+
   add({
     code: "LA", label: "Exclusive Right-to-Sell Listing Agreement",
     why: "Signed electronically once the seller accepts the quote.",
