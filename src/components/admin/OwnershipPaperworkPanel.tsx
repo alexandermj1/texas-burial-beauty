@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2, Send,
+  Paperclip, Link2, Undo2, Send, FileText,
 } from "lucide-react";
 import ContractsPanel from "./ContractsPanel";
 import {
