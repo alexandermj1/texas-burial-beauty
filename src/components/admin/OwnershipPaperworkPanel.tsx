@@ -83,18 +83,52 @@ type AnyFile = {
 
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
-const fileSearchText = (f: AnyFile) =>
-  `${f.name} ${f.origin} ${f.extractedSummary ?? ""} ${JSON.stringify(f.extractedData ?? {})}`.toLowerCase();
+/**
+ * What a read document actually proves. Only the extractor's classification
+ * counts here — filenames and stray words inside a document (an ID number
+ * printed on a deed, the word "certificate" in a letter) are not evidence, and
+ * matching on them is what made the checklist claim we hold things we don't.
+ */
+const TYPE_CODES: { test: RegExp; codes: string[] }[] = [
+  { test: /(cemetery deed|interment right|certificate of ownership|ownership certificate|\bdeed\b)/, codes: ["D1"] },
+  { test: /(driver.?s? licen|government id|state id|passport|identification card|photo id)/, codes: ["D2", "D2P"] },
+  { test: /death certificate/, codes: ["D10", "D11"] },
+  { test: /affidavit of heirship/, codes: ["D12"] },
+  { test: /(letters testamentary|letters of administration)/, codes: ["D13"] },
+  { test: /muniment of title/, codes: ["D14"] },
+  { test: /\bwill\b|last will/, codes: ["D15"] },
+  { test: /(power of attorney|poa)/, codes: ["D21"] },
+  { test: /marriage (certificate|licen)/, codes: ["D30"] },
+  { test: /divorce decree/, codes: ["D31"] },
+  { test: /trust/, codes: ["D40"] },
+];
+
+const codesForFile = (f: AnyFile): string[] => {
+  const type = String(f.extractedData?.document_type ?? "").toLowerCase();
+  if (!type) return [];
+  const hit = TYPE_CODES.find((t) => t.test.test(type));
+  return hit ? hit.codes : [];
+};
+
+/** Does this file plainly name the person the requirement is about? */
+const fileNamesPerson = (f: AnyFile, person?: string | null) => {
+  if (!person?.trim()) return true;
+  const parts = person.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  if (!parts.length) return true;
+  const hay = `${JSON.stringify(f.extractedData ?? {})} ${f.extractedSummary ?? ""} ${f.name}`.toLowerCase();
+  return parts.every((p) => hay.includes(p));
+};
 
 const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
+  // A file the seller uploaded against this exact checklist item always counts.
   if (row && f.docId === row.id) return true;
-  const hay = fileSearchText(f);
-  const extractedType = String(f.extractedData?.document_type ?? "").toLowerCase();
-  if (r.code === "D1" && ["deed", "certificate of ownership", "cemetery deed"].some((t) => extractedType.includes(t))) return true;
-  if ((r.code === "D2" || r.code === "D2P") && ["driver license", "driver's license", "government id", "passport", "state id"].some((t) => extractedType.includes(t))) return true;
-  const terms = matchTerms(r.code, r.label);
-  return terms.some((t) => hay.includes(t));
+  const codes = codesForFile(f);
+  if (!codes.includes(r.code)) return false;
+  // Per-person items (photo ID, POA) must actually be that person's document.
+  if (["D2", "D2P", "D21"].includes(r.code)) return fileNamesPerson(f, r.personName);
+  return true;
 };
+
 
 
 export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
