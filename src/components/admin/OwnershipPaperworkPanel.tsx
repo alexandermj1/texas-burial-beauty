@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
-  ShieldCheck, FileSignature, Mail, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2,
+  ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
+  Paperclip, Link2, Undo2, Send,
 } from "lucide-react";
 import ContractsPanel from "./ContractsPanel";
 import {
@@ -93,6 +93,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [reading, setReading] = useState<Reading | null>(null);
   const [files, setFiles] = useState<AnyFile[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [sending, setSending] = useState(false);
+  const [poaPrompt, setPoaPrompt] = useState(false);
+  const [autoSynced, setAutoSynced] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -153,6 +156,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   useEffect(() => { void load(); }, [load]);
 
+  // The seller's page writes straight into submission_documents — listen so the
+  // checklist ticks itself the moment a file lands, with no manual refresh.
+  useEffect(() => {
+    const ch = supabase
+      .channel(`docs-${submissionId}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "submission_documents", filter: `submission_id=eq.${submissionId}` },
+        () => { void load(); })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [submissionId, load]);
+
   const path = questionPath(answers);
   const prog = progress(answers);
   const requirements = useMemo(() => computeRequirements(answers, rules), [answers, rules]);
@@ -206,6 +221,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   }, [rows, contractStates]);
 
   const stats = useMemo(() => summarise(requirements, stateByKey), [requirements, stateByKey]);
+
+  // Save the computed checklist the first time an admin opens the panel, so the
+  // seller's own page is never empty just because nobody pressed Sync.
+  useEffect(() => {
+    if (!open || loading || autoSynced) return;
+    if (!requirements.length || rows.some((r) => r.doc_code)) return;
+    setAutoSynced(true);
+    void syncChecklist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, loading, autoSynced, rows]);
 
   const persistAnswers = async (next: OwnershipAnswers) => {
     setAnswers(next);
@@ -363,21 +388,85 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     await navigator.clipboard.writeText(packetUrl);
     toast.success("Seller document link copied");
   };
-  const copyPacketEmail = async () => {
-    const outstanding = requirements.filter((r) => {
-      const s = stateByKey[reqKey(r)] ?? "needed";
-      return !["complete", "received", "notarized", "not_needed"].includes(s);
-    });
-    const list = outstanding.map((r) => `• ${r.label}${r.why ? ` — ${r.why}` : ""}`).join("\n");
-    await navigator.clipboard.writeText(
-      `Hi ${(sellerName ?? "").split(" ")[0] || "there"},\n\n`
-      + `Everything we need to finish your sale is now on one page — you can upload from your computer, or scan the QR code on any item and photograph the document with your phone:\n\n${packetUrl}\n\n`
-      + (list ? `Currently outstanding:\n${list}\n\n` : "")
-      + `Reply to this email if anything is unclear and a broker will walk you through it.\n\nTexas Cemetery Brokers`,
-    );
-    toast.success("Packet email copied — paste it into a reply");
+  /** Everything still owed by the seller, in the order the checklist shows it. */
+  const outstanding = useMemo(() => requirements.filter((r) => {
+    if (r.code === "REVIEW" || r.code === "NOTE" || r.code === "LA") return false;
+    const s = stateByKey[reqKey(r)] ?? (r.review ? "maybe" : "needed");
+    return !["complete", "received", "notarized", "not_needed"].includes(s);
+  }), [requirements, stateByKey]);
+
+  const poaRequired = requirements.some((r) => r.contractKind === "poa");
+  const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
+
+  /** Generate the POA so it can travel inside the same packet email. */
+  const preparePoa = async () => {
+    const person = requirements.find((r) => r.contractKind === "poa")?.personName;
+    setBusy("poa");
+    try {
+      const { error } = await supabase.functions.invoke("generate-contract", {
+        body: { submission_id: submissionId, kind: "poa", overrides: person ? { seller_name: person } : {} },
+      });
+      if (error) throw error;
+      toast.success("Power of Attorney prepared — it will be included in the email");
+      await load();
+      setPoaPrompt(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
   };
 
+  /** One email: the curated upload page, every outstanding item explained, and
+   *  the POA notary route folded in so the seller only ever gets one message. */
+  const sendPacketEmail = async (skipPoa = false) => {
+    if (!sellerEmail) return toast.error("This submission has no email address");
+    if (poaRequired && !poaContract && !skipPoa) { setPoaPrompt(true); return; }
+    setSending(true);
+    try {
+      // Make sure the seller's page actually lists these items.
+      if (!rows.some((r) => r.doc_code)) await syncChecklist();
+
+      let poaUrl: string | null = null;
+      let poaFor: string | null = null;
+      if (poaContract) {
+        const { data: c } = await supabase.from("contracts")
+          .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
+        if (c?.sign_token) {
+          poaUrl = `${window.location.origin}/sign/${c.sign_token}`;
+          poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
+        }
+      }
+
+      const items = outstanding.map((r) => {
+        const g = DOC_GUIDE[r.code];
+        return {
+          code: r.code,
+          label: r.label,
+          why: r.why,
+          what: g?.what,
+          how: g?.how,
+          person: r.personName ?? null,
+          needsNotary: !!r.needsNotary,
+          issuedByUs: !!r.issuedByUs,
+        };
+      });
+
+      const { error } = await supabase.functions.invoke("send-document-packet", {
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor },
+      });
+      if (error) throw error;
+      toast.success(`Document request emailed to ${sellerEmail}`, {
+        description: `${items.length} item${items.length === 1 ? "" : "s"}${poaUrl ? " + Power of Attorney" : ""}`,
+      });
+      setPoaPrompt(false);
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSending(false);
+    }
+  };
 
   const generateDoc = async (r: Requirement) => {
     if (!r.contractKind) return;
@@ -685,23 +774,70 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             )}
           </div>
 
+          {/* ── Listing agreement sits on its own, above the paperwork ── */}
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold">Listing agreement</span>
+            <ContractsPanel
+              submissionId={submissionId}
+              sellerName={sellerName}
+              sellerEmail={sellerEmail}
+              kinds={["listing_agreement"]}
+              hideHeader
+            />
+          </div>
+
           {/* ── Checklist ── */}
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-xs font-semibold">Documents required ({requirements.length})</span>
+              <span className="text-xs font-semibold">
+                Documents required ({requirements.length})
+                {outstanding.length > 0 && (
+                  <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
+                    · {outstanding.length} still outstanding
+                  </span>
+                )}
+              </span>
               <div className="flex items-center gap-1.5">
                 <Button size="sm" variant="ghost" onClick={copyPacketLink}>
                   <Link2 className="w-3.5 h-3.5 mr-1" />Copy seller link
-                </Button>
-                <Button size="sm" variant="ghost" onClick={copyPacketEmail}>
-                  <Mail className="w-3.5 h-3.5 mr-1" />Copy packet email
                 </Button>
                 <Button size="sm" variant="outline" onClick={syncChecklist} disabled={saving}>
                   {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
                   Sync checklist
                 </Button>
+                <Button
+                  size="sm"
+                  className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void sendPacketEmail()}
+                  disabled={sending || !sellerEmail}
+                  title={sellerEmail ? `Send one email with everything to ${sellerEmail}` : "No email on this submission"}
+                >
+                  {sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  Send document request
+                </Button>
               </div>
             </div>
+
+            {poaPrompt && (
+              <div className="rounded-md border border-purple-300 bg-purple-50 px-3 py-2.5 space-y-2">
+                <p className="text-[12px] text-purple-900">
+                  This file needs a <strong>Power of Attorney</strong> and none has been prepared yet.
+                  Prepare it first and it travels inside the same email — the seller gets one message with the
+                  documents, the POA and the notary instructions together.
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                    onClick={() => void preparePoa()} disabled={busy === "poa"}>
+                    {busy === "poa" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                    Prepare the POA now
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => void sendPacketEmail(true)} disabled={sending}>
+                    Send without it
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setPoaPrompt(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
 
             {rules && Object.keys(rules).length > 0 && (
               <p className="text-[11px] text-stone-600 bg-stone-100 rounded px-2 py-1.5">
@@ -723,22 +859,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             ))}
 
-            {requirements.length > 0 && !rows.some((r) => r.doc_code) && (
-              <p className="text-[11px] text-amber-700">
-                Click <span className="font-medium">Sync checklist</span> to save these items so you can track
-                and generate them.
-              </p>
-            )}
+            {/* The POA is paperwork, not a separate section — it lives with the rest. */}
+            <div className="pt-1">
+              <ContractsPanel
+                submissionId={submissionId}
+                sellerName={sellerName}
+                sellerEmail={sellerEmail}
+                kinds={["poa"]}
+                hideHeader
+              />
+            </div>
           </div>
 
-          {/* ── Agreements: listing agreement + POA live here now ── */}
-          <div className="border-t border-border/40 pt-3">
-            <ContractsPanel
-              submissionId={submissionId}
-              sellerName={sellerName}
-              sellerEmail={sellerEmail}
-            />
-          </div>
 
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             The list updates as the answers change. Statutory references are guidance, not legal advice —

@@ -53,9 +53,27 @@ Deno.serve(async (req) => {
         return state !== "not_needed";
       });
 
+      // The POA lives in `contracts`, not the checklist — surface it so the
+      // seller sees one page with every outstanding action on it.
+      const { data: poaRow } = await supabase
+        .from("contracts")
+        .select("sign_token, notarized_at, signed_at, kind, created_at")
+        .eq("submission_id", submissionId)
+        .eq("kind", "poa")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
       return json({
         seller_name: sub.name,
         cemetery: sub.cemetery,
+        poa: poaRow?.sign_token
+          ? {
+              sign_token: poaRow.sign_token,
+              notarized: !!poaRow.notarized_at,
+              signed: !!poaRow.signed_at,
+            }
+          : null,
         documents: visible.map((d) => ({
           id: d.id,
           code: d.doc_code,

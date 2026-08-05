@@ -37,6 +37,11 @@ type Props = {
   submissionId: string;
   sellerEmail?: string | null;
   sellerName?: string | null;
+  /** Which contract kinds this instance owns. Lets the ownership panel show the
+   *  Listing Agreement on its own, and fold the POA in with the documents. */
+  kinds?: Contract["kind"][];
+  /** Hide the little "Contracts" eyebrow when embedded inside another section. */
+  hideHeader?: boolean;
 };
 
 const KIND_LABEL: Record<Contract["kind"], string> = {
@@ -49,7 +54,8 @@ const KIND_ICON = {
   poa: Shield,
 };
 
-export default function ContractsPanel({ submissionId, sellerEmail, sellerName }: Props) {
+export default function ContractsPanel({ submissionId, sellerEmail, sellerName, kinds = ["listing_agreement", "poa"], hideHeader }: Props) {
+  const shows = (k: Contract["kind"]) => kinds.includes(k);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -492,8 +498,8 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
   const bothDone = !!la?.signed_at && !!(poa?.notarized_at);
 
   return (
-    <div className="border-t border-border/40 pt-4">
-      <div className="flex items-center justify-between mb-3">
+    <div className={hideHeader ? "" : "border-t border-border/40 pt-4"}>
+      <div className={`flex items-center justify-between mb-3 ${hideHeader ? "hidden" : ""}`}>
         <p className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
           <FileSignature className="w-3 h-3" /> Contracts
         </p>
@@ -509,10 +515,10 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName }
         </div>
       ) : (
         <div className="space-y-2">
-          <Row contract={la} kind="listing_agreement" />
-          {priorLa.length > 0 && <PriorVersions items={priorLa} urls={urls} />}
-          <Row contract={poa} kind="poa" />
-          {priorPoa.length > 0 && <PriorVersions items={priorPoa} urls={urls} />}
+          {shows("listing_agreement") && <Row contract={la} kind="listing_agreement" />}
+          {shows("listing_agreement") && priorLa.length > 0 && <PriorVersions items={priorLa} urls={urls} />}
+          {shows("poa") && <Row contract={poa} kind="poa" />}
+          {shows("poa") && priorPoa.length > 0 && <PriorVersions items={priorPoa} urls={urls} />}
 
           {editKind && (
             <div className="border-2 border-primary/40 rounded-lg p-4 bg-primary/5 space-y-3">
