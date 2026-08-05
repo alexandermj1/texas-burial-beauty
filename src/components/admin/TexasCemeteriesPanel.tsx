@@ -9,6 +9,8 @@ import { Building2, Plus, ChevronDown, ChevronRight, Save, X, GripVertical } fro
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
+import type { CemeteryDocRules } from "@/lib/ownershipRules";
+
 
 interface TexasCemetery {
   id: string;
