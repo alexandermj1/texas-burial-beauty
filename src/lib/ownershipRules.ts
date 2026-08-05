@@ -431,16 +431,35 @@ export function computeRequirements(
     });
     if (a.occupied === "yes") {
       add({
-        code: "REVIEW", label: "Reserved-rights review and waivers",
-        why: "Many cemeteries restrict resale of an occupied plot — the surviving spouse and children hold reserved rights.",
-        statute: "§711.039(e)", review: true,
+        code: "NOTE", label: "Occupied plot — confirm the remaining spaces with the cemetery",
+        why: "The surviving spouse and children hold reserved rights in the unused spaces, so the cemetery has to confirm what can actually be sold. No extra paperwork unless it objects.",
+        statute: "§711.039(e)",
       });
     }
     if (a.will === "yes") {
       add({ code: "D7", label: "The will", why: "Names who takes the plot." });
       if (a.probate === "letters") add({ code: "D8", label: "Letters Testamentary", why: "The executor's authority." });
       if (a.probate === "muniment") add({ code: "D9", label: "Muniment of title order", why: "Passes title with no administration." });
-      if (a.probate === "none") add({ code: "REVIEW", label: "The will must be probated first", why: "An unprobated will transfers nothing.", review: true });
+      if (a.probate === "none") {
+        add({
+          code: "REVIEW", label: "The will has not been probated",
+          why: "An unprobated will transfers nothing on its own. Either probate it, or establish the heirs by affidavit — most cemeteries accept the affidavit route for a plot.",
+          review: true,
+        });
+        // The paper files show the affidavit route used even where a will exists
+        // but was never probated — a plot is rarely worth opening an estate for.
+        add({
+          code: "D12",
+          label: rules.own_heirship_form
+            ? `Affidavit of heirship — ${rules.own_heirship_form_name ?? "cemetery's own form"}`
+            : "Affidavit of Heirship (in place of probate)",
+          why: "Sworn by the affiant and a second disinterested witness; attach the will as evidence of intent.",
+          statute: "Estates Code §203.001",
+          issuedByUs: !rules.own_heirship_form, needsNotary: true,
+          fromCemetery: rules.own_heirship_form,
+          contractKind: rules.own_heirship_form ? undefined : "affidavit_heirship",
+        });
+      }
     } else if (a.will === "no") {
       if (a.heirclass === "unsure") {
         add({ code: "REVIEW", label: "Establish the inheritance line", why: "We need to know which class of heirs inherits before choosing a route.", review: true });
@@ -463,17 +482,43 @@ export function computeRequirements(
       }
       if (a.heirship === "sea") add({ code: "D13", label: "Small estate affidavit", why: "Court-approved, estate under $75,000, signed by all heirs." });
       if (a.heirship === "none") add({ code: "REVIEW", label: "Heirship must be established first", why: "Pick a route before anyone signs.", review: true });
-      if (a.spouse === "yes") {
-        add({
-          code: "D3", label: "Surviving spouse's consent / joinder",
-          why: "They keep a reserved right of interment.", statute: "§711.039",
-          issuedByUs: true, needsNotary: true, contractKind: "spousal_consent",
-        });
-      }
+    }
+    // A surviving spouse keeps their right whether or not there was a will.
+    if (a.spouse === "yes") {
+      add({
+        code: "D3", label: "Surviving spouse's consent / joinder",
+        why: "They keep a reserved right of interment.", statute: "§711.039",
+        issuedByUs: true, needsNotary: true, contractKind: "spousal_consent",
+      });
+    }
+    // No surviving spouse: prove how the earlier marriage ended.
+    if (a.spouse === "no" && a.marital === "divorced") {
+      add({ code: "D4", label: "Final divorce decree", why: "Shows the former spouse's right of interment ended before the owner died.", statute: "§711.039" });
+    }
+    if (a.spouse === "no" && a.marital === "widowed") {
+      add({ code: "D6", label: "Late spouse's death certificate", why: "Clears the spouse's right of interment.", originalsOnly: rules.requires_originals });
     }
     if (a.chain === "multi") {
       add({ code: "D22", label: "Death certificate and inheritance proof for each estate", why: "Plus a short family chart showing how the plot travelled.", review: true });
     }
+  }
+
+  // ── Married when the plot was bought, but not married now ──
+  // The right of interment vests at purchase, so the marriage that existed then
+  // still matters even if it has since ended.
+  if (a.maritalAtPurchase === "yes") {
+    if (a.marital === "divorced") {
+      add({ code: "D4", label: "Final divorce decree (plot addressed or awarded)", why: "The spouse at purchase vested a right of interment — the decree has to show it was divided or waived.", statute: "§711.039" });
+      add({ code: "D3", label: "Former spouse's waiver of interment rights", why: "Needed when the decree is silent about the plot.", issuedByUs: true, needsNotary: true, contractKind: "spousal_consent", review: true });
+    }
+    if (a.marital === "widowed") {
+      add({ code: "D6", label: "Death certificate for the spouse who was married to the owner at purchase", why: "Ends the right that vested when the plot was bought.", originalsOnly: rules.requires_originals });
+    }
+    if (a.marital === "single") {
+      add({ code: "REVIEW", label: "Married at purchase but recorded as never married", why: "Reconcile the two before signing — one of the answers is wrong.", review: true });
+    }
+  } else if (a.maritalAtPurchase === "unsure") {
+    add({ code: "REVIEW", label: "Confirm the owner's marital status at the time of purchase", why: "A spouse from then can still hold a vested right of interment.", statute: "§711.039", review: true });
   }
 
   if (a.owner === "trust") {
