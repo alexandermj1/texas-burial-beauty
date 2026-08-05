@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
-  ShieldCheck, FileSignature, Mail, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2,
+  ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
+  Paperclip, Link2, Undo2, Send,
 } from "lucide-react";
 import ContractsPanel from "./ContractsPanel";
 import {
@@ -167,6 +167,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       .subscribe();
     return () => { void supabase.removeChannel(ch); };
   }, [submissionId, load]);
+
+  // Save the computed checklist the first time an admin opens the panel, so the
+  // seller's own page is never empty just because nobody pressed Sync.
+  useEffect(() => {
+    if (!open || loading || autoSynced) return;
+    if (!requirements.length || rows.some((r) => r.doc_code)) return;
+    setAutoSynced(true);
+    void syncChecklist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, loading, autoSynced, rows]);
 
   const path = questionPath(answers);
   const prog = progress(answers);
