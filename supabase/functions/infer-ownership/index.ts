@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     );
 
     const { data: sub } = await supabase.from("contact_submissions")
-      .select("id, name, email, phone, cemetery, property_type, spaces, section, lawn, space_numbers, plot_count, message, details, admin_notes, ownership_type, relationship_to_owner, deed_owner_names, deed_owners_status, purchase_info, prepaid_endowment_info, customer_kind, quote_response, state, deed_on_file, death_cert_on_file, gov_id_on_file, authorization_notes")
+      .select("id, name, email, phone, cemetery, property_type, spaces, section, lawn, space_numbers, plot_count, message, details, admin_notes, ownership_type, relationship_to_owner, deed_owner_names, deed_owners_status, purchase_info, prepaid_endowment_info, customer_kind, quote_response, state, deed_on_file, death_cert_on_file, gov_id_on_file, authorization_notes, customer_profile_id")
       .eq("id", submission_id).maybeSingle();
     if (!sub) {
       return new Response(JSON.stringify({ error: "Submission not found" }), {
