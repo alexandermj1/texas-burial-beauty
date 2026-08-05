@@ -764,23 +764,70 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             )}
           </div>
 
+          {/* ── Listing agreement sits on its own, above the paperwork ── */}
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold">Listing agreement</span>
+            <ContractsPanel
+              submissionId={submissionId}
+              sellerName={sellerName}
+              sellerEmail={sellerEmail}
+              kinds={["listing_agreement"]}
+              hideHeader
+            />
+          </div>
+
           {/* ── Checklist ── */}
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-xs font-semibold">Documents required ({requirements.length})</span>
+              <span className="text-xs font-semibold">
+                Documents required ({requirements.length})
+                {outstanding.length > 0 && (
+                  <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
+                    · {outstanding.length} still outstanding
+                  </span>
+                )}
+              </span>
               <div className="flex items-center gap-1.5">
                 <Button size="sm" variant="ghost" onClick={copyPacketLink}>
                   <Link2 className="w-3.5 h-3.5 mr-1" />Copy seller link
-                </Button>
-                <Button size="sm" variant="ghost" onClick={copyPacketEmail}>
-                  <Mail className="w-3.5 h-3.5 mr-1" />Copy packet email
                 </Button>
                 <Button size="sm" variant="outline" onClick={syncChecklist} disabled={saving}>
                   {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
                   Sync checklist
                 </Button>
+                <Button
+                  size="sm"
+                  className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void sendPacketEmail()}
+                  disabled={sending || !sellerEmail}
+                  title={sellerEmail ? `Send one email with everything to ${sellerEmail}` : "No email on this submission"}
+                >
+                  {sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  Send document request
+                </Button>
               </div>
             </div>
+
+            {poaPrompt && (
+              <div className="rounded-md border border-purple-300 bg-purple-50 px-3 py-2.5 space-y-2">
+                <p className="text-[12px] text-purple-900">
+                  This file needs a <strong>Power of Attorney</strong> and none has been prepared yet.
+                  Prepare it first and it travels inside the same email — the seller gets one message with the
+                  documents, the POA and the notary instructions together.
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                    onClick={() => void preparePoa()} disabled={busy === "poa"}>
+                    {busy === "poa" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                    Prepare the POA now
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => void sendPacketEmail(true)} disabled={sending}>
+                    Send without it
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setPoaPrompt(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
 
             {rules && Object.keys(rules).length > 0 && (
               <p className="text-[11px] text-stone-600 bg-stone-100 rounded px-2 py-1.5">
@@ -802,22 +849,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             ))}
 
-            {requirements.length > 0 && !rows.some((r) => r.doc_code) && (
-              <p className="text-[11px] text-amber-700">
-                Click <span className="font-medium">Sync checklist</span> to save these items so you can track
-                and generate them.
-              </p>
-            )}
+            {/* The POA is paperwork, not a separate section — it lives with the rest. */}
+            <div className="pt-1">
+              <ContractsPanel
+                submissionId={submissionId}
+                sellerName={sellerName}
+                sellerEmail={sellerEmail}
+                kinds={["poa"]}
+                hideHeader
+              />
+            </div>
           </div>
 
-          {/* ── Agreements: listing agreement + POA live here now ── */}
-          <div className="border-t border-border/40 pt-3">
-            <ContractsPanel
-              submissionId={submissionId}
-              sellerName={sellerName}
-              sellerEmail={sellerEmail}
-            />
-          </div>
 
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             The list updates as the answers change. Statutory references are guidance, not legal advice —
