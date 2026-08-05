@@ -9,6 +9,8 @@ import { cleanDisplayName } from "@/lib/displayName";
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Optionally pre-select a single recipient user ID when opening. */
+  prefillTo?: string | null;
 }
 
 interface Teammate {
@@ -19,7 +21,7 @@ interface Teammate {
 
 // Send a direct message (or team-wide broadcast) that lands in the recipient's
 // notification bell. Pick one or more teammates, or "Everyone".
-const BroadcastDialog = ({ open, onClose }: Props) => {
+const BroadcastDialog = ({ open, onClose, prefillTo }: Props) => {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -32,7 +34,6 @@ const BroadcastDialog = ({ open, onClose }: Props) => {
     if (!open) return;
     setTitle("");
     setBody("");
-    setSelected(new Set());
     setEveryone(false);
     (async () => {
       const { data } = await supabase.from("profiles").select("id, full_name, email");
@@ -45,8 +46,14 @@ const BroadcastDialog = ({ open, onClose }: Props) => {
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
       setTeam(list);
+      // Apply prefill after team loads so the chip is selected and valid.
+      if (prefillTo && list.some((t) => t.id === prefillTo)) {
+        setSelected(new Set([prefillTo]));
+      } else {
+        setSelected(new Set());
+      }
     })();
-  }, [open, user?.id]);
+  }, [open, user?.id, prefillTo]);
 
   const myName = cleanDisplayName(user?.user_metadata?.full_name) || user?.email?.split("@")[0] || "Someone";
 
@@ -72,6 +79,7 @@ const BroadcastDialog = ({ open, onClose }: Props) => {
     const { error } = await supabase.from("user_notifications" as any).insert(
       recipients.map((id) => ({
         user_id: id,
+        sender_id: user?.id,
         title: displayTitle,
         body: body.trim().slice(0, 500),
         link_url: null,

@@ -2186,6 +2186,7 @@ export type Database = {
           id: string
           link_url: string | null
           read_at: string | null
+          sender_id: string | null
           source_id: string | null
           source_type: string | null
           title: string
@@ -2197,6 +2198,7 @@ export type Database = {
           id?: string
           link_url?: string | null
           read_at?: string | null
+          sender_id?: string | null
           source_id?: string | null
           source_type?: string | null
           title: string
@@ -2208,6 +2210,7 @@ export type Database = {
           id?: string
           link_url?: string | null
           read_at?: string | null
+          sender_id?: string | null
           source_id?: string | null
           source_type?: string | null
           title?: string

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bell, ArrowRight, Check } from "lucide-react";
+import { Bell, ArrowRight, Check, Reply } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import BroadcastDialog from "./BroadcastDialog";
 
 interface Notif {
   id: string;
@@ -13,6 +14,8 @@ interface Notif {
   link_url: string | null;
   read_at: string | null;
   created_at: string;
+  sender_id: string | null;
+  source_type: string | null;
 }
 
 const formatWhen = (iso: string) => {
@@ -24,12 +27,16 @@ const formatWhen = (iso: string) => {
   return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 };
 
+const canReply = (n: Notif) =>
+  !!n.sender_id && (n.source_type === "direct_message" || n.source_type === "broadcast");
+
 const NotificationsBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState<Notif[]>([]);
   const [pendingAck, setPendingAck] = useState<Notif[]>([]);
+  const [replyTo, setReplyTo] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -88,6 +95,21 @@ const NotificationsBell = () => {
     }
   };
 
+  const startReply = (n: Notif) => {
+    if (!n.sender_id) return;
+    setReplyTo(n.sender_id);
+    setOpen(false);
+    if (currentAck?.id === n.id) acknowledgeCurrent();
+  };
+
+  const goToLink = (n: Notif) => {
+    setOpen(false);
+    if (n.link_url) {
+      navigate(n.link_url);
+      setTimeout(() => window.dispatchEvent(new PopStateEvent("popstate")), 0);
+    }
+  };
+
   return (
     <div className="relative">
 
@@ -116,24 +138,30 @@ const NotificationsBell = () => {
             ) : (
               <ul>
                 {notes.map(n => (
-                  <li key={n.id} className={`px-3 py-2.5 border-b border-border/50 hover:bg-muted/50 ${!n.read_at ? "bg-primary/5" : ""}`}>
-                    <a
-                      href={n.link_url || "#"}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setOpen(false);
-                        if (n.link_url) {
-                          // Use SPA navigation; if already on /admin, also dispatch a popstate so Admin re-reads params
-                          navigate(n.link_url);
-                          setTimeout(() => window.dispatchEvent(new PopStateEvent("popstate")), 0);
-                        }
-                      }}
-                      className="block"
-                    >
-                      <p className="text-xs font-medium text-foreground">{n.title}</p>
-                      {n.body && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
-                      <p className="text-[10px] text-muted-foreground mt-1">{formatWhen(n.created_at)}</p>
-                    </a>
+                  <li
+                    key={n.id}
+                    className={`px-3 py-2.5 border-b border-border/50 hover:bg-muted/50 ${!n.read_at ? "bg-primary/5" : ""}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div
+                        className={`min-w-0 flex-1 ${n.link_url ? "cursor-pointer" : ""}`}
+                        onClick={() => n.link_url && goToLink(n)}
+                      >
+                        <p className="text-xs font-medium text-foreground">{n.title}</p>
+                        {n.body && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                        <p className="text-[10px] text-muted-foreground mt-1">{formatWhen(n.created_at)}</p>
+                      </div>
+                      {canReply(n) && (
+                        <button
+                          type="button"
+                          onClick={() => startReply(n)}
+                          className="shrink-0 inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                          title="Reply to sender"
+                        >
+                          <Reply className="w-3 h-3" /> Reply
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -173,6 +201,15 @@ const NotificationsBell = () => {
               <p className="text-[11px] text-muted-foreground">{formatWhen(currentAck.created_at)}</p>
             </div>
             <div className="px-7 py-4 border-t border-border/60 bg-muted/30 flex items-center justify-end gap-2.5">
+              {canReply(currentAck) && (
+                <button
+                  onClick={() => startReply(currentAck)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-medium tracking-wide border border-border bg-background hover:bg-muted text-foreground transition-colors"
+                >
+                  <Reply className="w-3.5 h-3.5" />
+                  Reply
+                </button>
+              )}
               {currentAck.link_url && (
                 <button
                   onClick={() => acknowledgeCurrent({ follow: true })}
@@ -196,6 +233,11 @@ const NotificationsBell = () => {
         document.body
       )}
 
+      <BroadcastDialog
+        open={replyTo !== null}
+        onClose={() => setReplyTo(null)}
+        prefillTo={replyTo}
+      />
     </div>
   );
 
