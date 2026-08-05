@@ -1032,6 +1032,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const q = showAccepted ? quotedAccepted : quotedPending;
                     const retail = retailSaved > 0 ? retailSaved : q / 0.42;
                     const sales = Math.round((retail * 0.67) / 100) * 100;
+                    const spaceCount = Number((selected as any).spaces) || 0;
+                    const isMulti = spaceCount > 1;
+                    const propLabel = [
+                      spaceCount ? `${spaceCount} space${isMulti ? "s" : ""}` : null,
+                      (selected as any).property_type || null,
+                      (selected as any).cemetery || (selected as any).cemetery_name || null,
+                    ].filter(Boolean).join(" · ") || "Property not specified";
+                    const perSpace = isMulti ? Math.round(q / spaceCount) : 0;
 
                     const bandBase = "inline-flex items-center gap-3 px-3 py-1.5 rounded-lg border-2 shadow-sm flex-wrap";
                     const emerald = "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
