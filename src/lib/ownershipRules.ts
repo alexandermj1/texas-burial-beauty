@@ -237,10 +237,13 @@ export function questionPath(a: OwnershipAnswers): string[] {
     p.push("owners");
     if (a.owners === "multiple") p.push("co");
     p.push("marital");
+    if (a.marital && a.marital !== "married") p.push("maritalAtPurchase");
   } else if (a.owner === "deceased") {
     p.push("occupied", "will");
     if (a.will === "yes") p.push("probate", "beneficiaries");
-    if (a.will === "no") p.push("heirclass", "heirship", "spouse");
+    if (a.will === "no") p.push("heirclass", "heirship");
+    p.push("spouse");
+    if (a.spouse === "no") p.push("marital", "maritalAtPurchase");
     p.push("chain");
   } else if (a.owner === "trust") p.push("trustee");
   else if (a.owner === "org") p.push("orgStatus");
