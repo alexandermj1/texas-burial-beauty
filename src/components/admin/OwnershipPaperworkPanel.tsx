@@ -373,56 +373,127 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
 
-  const Chip = ({ r }: { r: Requirement }) => {
-    const s = stateByKey[reqKey(r)] ?? (r.review ? "maybe" : "needed");
-    const synced = rows.some((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+  /** Files that look like they satisfy this requirement. */
+  const filesFor = (r: Requirement): AnyFile[] => {
     const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-    const fromContract = !row?.manual_override && !!contractStates[reqKey(r)];
+    const terms = matchTerms(r.code);
+    const person = (r.personName ?? "").trim().toLowerCase();
+    return files.filter((f) => {
+      if (row && f.docId === row.id) return true;
+      const hay = `${f.name} ${f.origin}`.toLowerCase();
+      if (!terms.some((t) => hay.includes(t))) return false;
+      // Person-specific items only match a file naming that person, when named.
+      if (person && !hay.includes(person.split(" ")[0])) return terms.length > 0 && !f.docId ? true : true;
+      return true;
+    });
+  };
+
+  const Chip = ({ r }: { r: Requirement }) => {
+    const key = reqKey(r);
+    const s = stateByKey[key] ?? (r.review ? "maybe" : "needed");
+    const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    const fromContract = !row?.manual_override && !!contractStates[key];
+    const guide = DOC_GUIDE[r.code];
+    const attached = filesFor(r);
+    const isOpen = !!expanded[key];
+    const supplied = ["received", "notarized", "complete"].includes(s);
     return (
-      <div className={`flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between border rounded-md px-3 py-2 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {r.review && <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
-            <span className="text-sm font-medium">{r.label}</span>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{r.code}</span>
-            {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
-            {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
-            {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
-            {fromContract && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
-                <CheckCircle2 className="w-2.5 h-2.5" />On file
-              </span>
+      <div className={`border rounded-md px-3 py-2 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {r.review && <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+              <span className="text-sm font-medium">{r.label}</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{r.code}</span>
+              {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
+              {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
+              {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
+              {fromContract && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
+                  <CheckCircle2 className="w-2.5 h-2.5" />On file
+                </span>
+              )}
+              {attached.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 inline-flex items-center gap-0.5">
+                  <Paperclip className="w-2.5 h-2.5" />{attached.length}
+                </span>
+              )}
+              {r.fromCemetery && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-200 text-stone-700 inline-flex items-center gap-1">
+                  <Building2 className="w-2.5 h-2.5" />{cemName ?? "Cemetery"}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setExpanded((e) => ({ ...e, [key]: !e[key] }))}
+              className="text-[11px] text-muted-foreground mt-0.5 text-left hover:text-foreground inline-flex items-center gap-1"
+            >
+              {r.why}{r.statute ? ` · ${r.statute}` : ""}
+              <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {r.contractKind && (
+              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => generateDoc(r)}>
+                {busy === key
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <FileSignature className="w-3.5 h-3.5" />}
+              </Button>
             )}
-            {r.fromCemetery && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-200 text-stone-700 inline-flex items-center gap-1">
-                <Building2 className="w-2.5 h-2.5" />{cemName ?? "Cemetery"}
-              </span>
+            <Button
+              size="sm"
+              variant={supplied ? "default" : "outline"}
+              className="text-[11px] h-7"
+              onClick={() => void setRowState(r, supplied ? "needed" : "received")}
+              title={supplied ? "Mark as still needed" : "Mark as supplied"}
+            >
+              {supplied ? <Undo2 className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+            </Button>
+            <select
+              className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
+              value={s}
+              onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
+            >
+              {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {isOpen && (
+          <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+            {guide && (
+              <>
+                <p className="text-[11px] text-foreground/80 leading-relaxed">
+                  <span className="font-semibold">What it is: </span>{guide.what}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground/70">How they get it: </span>{guide.how}
+                </p>
+              </>
+            )}
+            {attached.length > 0 ? (
+              <div className="space-y-1">
+                {attached.map((f) => (
+                  <button
+                    key={f.path}
+                    onClick={() => void openFile(f)}
+                    className="flex items-center gap-1.5 text-[11px] text-teal-700 hover:underline"
+                  >
+                    <Paperclip className="w-3 h-3" />{f.name}
+                    <span className="text-muted-foreground">· {f.origin}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground italic">Nothing uploaded for this item yet.</p>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            {r.why}{r.statute ? ` · ${r.statute}` : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {r.contractKind && (
-            <Button size="sm" variant="outline" disabled={busy === reqKey(r) || !synced} onClick={() => generateDoc(r)}>
-              {busy === reqKey(r)
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : <FileSignature className="w-3.5 h-3.5" />}
-            </Button>
-          )}
-          <select
-            className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
-            value={s}
-            disabled={!synced}
-            onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
-          >
-            {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
-          </select>
-        </div>
+        )}
       </div>
     );
   };
+
 
   return (
     <div className="border-t border-border/40 pt-4">
