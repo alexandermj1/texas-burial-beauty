@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
   try {
     const { submission_id, kind, overrides = {} } = await req.json();
-    if (!submission_id || !['listing_agreement', 'poa'].includes(kind)) {
+    if (!submission_id || !KINDS.includes(kind)) {
       return new Response(JSON.stringify({ error: 'bad request' }), { status: 400, headers: corsHeaders });
     }
 
