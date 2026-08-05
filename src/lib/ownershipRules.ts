@@ -146,6 +146,15 @@ export const QUESTIONS: Record<string, Question> = {
       { value: "widowed", label: "Widowed" }, { value: "single", label: "Never married" },
     ],
   },
+  maritalAtPurchase: {
+    key: "maritalAtPurchase", eyebrow: "Spousal rights", question: "Was the owner married when the plot was bought?",
+    hint: "The right of interment vests at purchase, so a spouse from back then can still hold a claim even if the marriage has since ended.",
+    answers: [
+      { value: "no", label: "No, single at the time" },
+      { value: "yes", label: "Yes, married then" },
+      { value: "unsure", label: "Not sure" },
+    ],
+  },
   occupied: {
     key: "occupied", eyebrow: "The plot", question: "Is anyone buried in the plot?",
     hint: "An occupied plot gives the surviving spouse and children reserved rights.",
