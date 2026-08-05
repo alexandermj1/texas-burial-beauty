@@ -198,6 +198,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       return;
     }
     setInferring(true);
+    try {
       const { data, error } = await supabase.functions.invoke("infer-ownership", {
         body: { submission_id: submissionId },
       });
