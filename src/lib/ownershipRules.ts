@@ -621,3 +621,160 @@ export function summarise(reqs: Requirement[], states: Record<string, RequiredSt
 }
 
 export const reqKey = (r: Requirement) => `${r.code}::${r.personName ?? ""}`;
+
+/* ------------------------------------------------------------------ *
+ * Plain-English guide for each document code. Used by the expandable
+ * rows in the admin checklist and by the seller's document packet page,
+ * so both sides read exactly the same explanation.
+ * ------------------------------------------------------------------ */
+export type DocGuide = {
+  /** What the document actually is. */
+  what: string;
+  /** How the seller can get hold of it. */
+  how: string;
+  /** Filename keywords used to spot an uploaded file for this item. */
+  match?: string[];
+};
+
+export const DOC_GUIDE: Record<string, DocGuide> = {
+  D1: {
+    what: "The cemetery's certificate of ownership — often called the plot deed. It is the original paper the cemetery issued when the spaces were bought, showing the owner's name and the exact section, lot and space numbers.",
+    how: "Check the family papers, a safety deposit box or the funeral file. If it can't be found, the cemetery can confirm ownership from their records and we replace it with a lost-certificate affidavit.",
+    match: ["deed", "certificate", "title", "ownership", "cert"],
+  },
+  D2: {
+    what: "A clear photo or scan of a current government photo ID for every person who will sign — driver's licence, state ID or passport.",
+    how: "Photograph the front of the ID in good light with all four corners visible.",
+    match: ["id", "licence", "license", "passport", "dl", "drivers"],
+  },
+  D2P: {
+    what: "A current government photo ID for this specific signer. The cemetery matches every signature against the ID.",
+    how: "Photograph the front of the ID in good light with all four corners visible.",
+    match: ["id", "licence", "license", "passport", "dl", "drivers"],
+  },
+  D3: {
+    what: "A short notarized statement in which the spouse (or former spouse) gives up their right of interment in the plot, so the sale conveys cleanly.",
+    how: "We prepare and send it — it is signed in front of a notary and returned to us.",
+    match: ["consent", "waiver", "joinder", "spous"],
+  },
+  D4: {
+    what: "The final divorce decree, ideally the page that deals with the cemetery property.",
+    how: "The district clerk in the county where the divorce was granted can issue a certified copy, usually the same day.",
+    match: ["divorce", "decree"],
+  },
+  D5: {
+    what: "A marriage certificate, divorce decree or court name-change order that links the name on the deed to the name being used today.",
+    how: "County clerk where the event was recorded, or the court that granted the change.",
+    match: ["marriage", "name change", "namechange"],
+  },
+  D6: {
+    what: "A certified death certificate for the owner (or spouse) — the copy with the raised seal, not a funeral-home keepsake.",
+    how: "Texas Vital Statistics or the county clerk where the death occurred. Funeral homes can usually order extra certified copies.",
+    match: ["death", "certificate", "dc"],
+  },
+  D7: {
+    what: "The signed will that names who receives the estate, including the cemetery property.",
+    how: "The attorney who drafted it, the executor's file, or the county clerk if it was filed for probate.",
+    match: ["will", "testament"],
+  },
+  D8: {
+    what: "Letters Testamentary — the court's one-page order confirming the executor may act for the estate.",
+    how: "The probate clerk in the county where the will was probated.",
+    match: ["letters", "testamentary"],
+  },
+  D9: {
+    what: "The court order admitting the will as a muniment of title, which passes property with no full administration.",
+    how: "The probate clerk in the county where the order was signed.",
+    match: ["muniment"],
+  },
+  D10: {
+    what: "Letters of Administration or a Judgment Determining Heirship — the court's finding of who the legal heirs are.",
+    how: "The probate clerk in the county where the case was heard.",
+    match: ["administration", "heirship", "judgment"],
+  },
+  D12: {
+    what: "An Affidavit of Heirship for the cemetery property: a sworn statement of the family tree signed by the heirs and two disinterested witnesses who knew the family but inherit nothing.",
+    how: "We prepare it from your answers. Every signer signs in front of a notary — Proof.com works from a phone in about fifteen minutes.",
+    match: ["affidavit", "heirship"],
+  },
+  D13: {
+    what: "A court-approved small estate affidavit, available when the estate is under $75,000 and every heir signs.",
+    how: "Filed with, and returned by, the probate clerk.",
+    match: ["small estate", "sea"],
+  },
+  D15: {
+    what: "The existing power of attorney the seller already holds for the owner.",
+    how: "Scan every page including the notary block. Some cemeteries will not accept an outside POA, so we check it first.",
+    match: ["poa", "power of attorney", "attorney"],
+  },
+  D16: {
+    what: "The trust agreement, or a certification of trust, showing the trustee has the power to sell real property.",
+    how: "The attorney who drew up the trust, or the trustee's own file.",
+    match: ["trust"],
+  },
+  D17: {
+    what: "The document by which the successor trustee formally accepted the role.",
+    how: "Usually held with the trust papers or prepared by the trust's attorney.",
+    match: ["successor", "trustee"],
+  },
+  D18: {
+    what: "Guardianship letters, plus any court approval needed to sell the ward's property.",
+    how: "The probate court that granted the guardianship.",
+    match: ["guardian"],
+  },
+  D19: {
+    what: "A resolution from the organisation authorising the sale and naming who signs.",
+    how: "The board secretary or the organisation's attorney.",
+    match: ["resolution", "board"],
+  },
+  D19b: {
+    what: "A certificate of good standing showing the entity still legally exists and can convey property.",
+    how: "The Texas Secretary of State — available online in minutes.",
+    match: ["good standing", "certificate of existence"],
+  },
+  D21: {
+    what: "Our limited power of attorney. It lets Texas Cemetery Brokers sign the cemetery's transfer paperwork on your behalf so you never have to attend the office in person. It covers this plot only, nothing else.",
+    how: "We send it ready to sign. It must be notarized — Proof.com is an online notary that works from a phone, or any local notary can do it.",
+    match: ["poa", "power of attorney"],
+  },
+  D22: {
+    what: "For a plot that passed through more than one death: a death certificate and inheritance proof for each estate, with a short family chart showing the chain.",
+    how: "We work through this with you one step at a time.",
+    match: ["death", "chain"],
+  },
+  LA: {
+    what: "The Exclusive Right-to-Sell Listing Agreement — the contract that lets us market and sell the plot for the price agreed in your quote.",
+    how: "We email a link; it is signed electronically in a couple of minutes, no printing.",
+    match: ["listing", "agreement", "la"],
+  },
+  "C-HEIR": {
+    what: "The cemetery's own heirship or quitclaim form, used instead of the standard affidavit.",
+    how: "We request it from the cemetery office and send it on to you.",
+    match: ["heirship", "quitclaim"],
+  },
+  "C-CHILD": {
+    what: "A waiver signed by the deceased owner's surviving children giving up their reserved rights of interment.",
+    how: "We prepare the waiver and send it to each child to sign.",
+    match: ["waiver", "child"],
+  },
+  "C-EXTRA": {
+    what: "An extra item this particular cemetery insists on before it will record a transfer.",
+    how: "We confirm the exact form with the cemetery office.",
+  },
+  REVIEW: {
+    what: "Not a document — a point in the file that a person here needs to decide before anyone signs.",
+    how: "Resolve it internally, then remove or mark it not needed.",
+  },
+  NOTE: {
+    what: "A note for the file rather than a document to collect.",
+    how: "No action needed from the seller.",
+  },
+};
+
+/** Keywords that suggest an uploaded file satisfies a requirement. */
+export function matchTerms(code: string, label: string): string[] {
+  const guide = DOC_GUIDE[code];
+  const fromLabel = label.toLowerCase().replace(/[^a-z ]/g, " ").split(/\s+/)
+    .filter((w) => w.length > 4 && !["texas", "cemetery", "brokers", "every", "person", "signing"].includes(w));
+  return [...new Set([...(guide?.match ?? []), ...fromLabel])];
+}
