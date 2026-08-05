@@ -12,6 +12,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
+import { buildAffidavitPdf, buildSpousalConsentPdf } from '../_shared/affidavit-heirship.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -198,9 +199,15 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'missing_token' }), { status: 400, headers: corsHeaders });
       }
       const c = await loadContract(token);
-      if (!c || c.kind !== 'poa') {
+      const NOTARY_KINDS = ['poa', 'affidavit_heirship', 'spousal_consent'];
+      if (!c || !NOTARY_KINDS.includes(c.kind)) {
         return new Response(JSON.stringify({ error: 'invalid' }), { status: 404, headers: corsHeaders });
       }
+      const docName = c.kind === 'affidavit_heirship'
+        ? 'Affidavit of Heirship'
+        : c.kind === 'spousal_consent'
+          ? 'Spousal Consent and Waiver'
+          : 'Limited Special Power of Attorney';
 
       // Merge any newly supplied address fields into fill_data, then regenerate the PDF.
       const allowed = ['seller_name', 'address', 'city_state_zip', 'phone', 'email'] as const;
@@ -214,12 +221,31 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'address_required' }), { status: 400, headers: corsHeaders });
       }
 
-      const { data: tmpl } = await svc.storage.from('contracts').download('_templates/poa-template.pdf');
-      if (!tmpl) throw new Error('template missing');
-      const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
-      const filled = await buildFilledPdf(tmplBytes, 'poa', merged);
+      let filled: Uint8Array;
+      if (c.kind === 'affidavit_heirship') {
+        filled = await buildAffidavitPdf({
+          ...(c.fill_data?.affidavit ?? {}),
+          affiant_name: (merged.seller_name as string) ?? '',
+          affiant_address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),
+          decedent_name: (c.fill_data?.affidavit?.decedent_name as string) ?? (merged.co_owner_name as string) ?? '',
+          cemetery: merged.cemetery as string,
+          plot_description: merged.plot_description as string,
+        });
+      } else if (c.kind === 'spousal_consent') {
+        filled = await buildSpousalConsentPdf({
+          spouse_name: merged.seller_name as string,
+          owner_name: (merged.co_owner_name as string) ?? (merged.seller_name as string),
+          cemetery: merged.cemetery as string,
+          plot_description: merged.plot_description as string,
+        });
+      } else {
+        const { data: tmpl } = await svc.storage.from('contracts').download('_templates/poa-template.pdf');
+        if (!tmpl) throw new Error('template missing');
+        const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
+        filled = await buildFilledPdf(tmplBytes, 'poa', merged);
+      }
 
-      const newPath = `${c.submission_id}/poa-${Date.now()}.pdf`;
+      const newPath = `${c.submission_id}/${c.kind}-${Date.now()}.pdf`;
       const { error: upE } = await svc.storage.from('contracts')
         .upload(newPath, filled, { contentType: 'application/pdf', upsert: true });
       if (upE) throw upE;
@@ -247,7 +273,7 @@ Deno.serve(async (req) => {
           const firstName = (sub?.name ?? merged.seller_name as string ?? '').trim().split(/\s+/)[0] || 'there';
           const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
           const cemLine = sub?.cemetery ? ` for ${esc(sub.cemetery)}` : '';
-          const filename = `${(sub?.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-power-of-attorney.pdf`;
+          const filename = `${(sub?.name ?? 'seller').replace(/[^A-Za-z0-9_-]+/g, '_')}-${c.kind.replace(/_/g, '-')}.pdf`;
 
           const html = `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f5f1ea;font-family:Georgia,'Times New Roman',serif;color:#1f2a37;">
@@ -256,19 +282,17 @@ Deno.serve(async (req) => {
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(31,42,55,0.08);">
         <tr><td style="background:#1f2a37;color:#ffffff;padding:34px 40px;text-align:center;">
           <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
-          <div style="font-size:22px;margin-top:10px;font-family:Georgia,serif;">Your Power of Attorney is ready to notarize</div>
+          <div style="font-size:22px;margin-top:10px;font-family:Georgia,serif;">Your ${docName} is ready to notarize</div>
         </td></tr>
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.65;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
           <p style="margin:0 0 16px;">
-            Thank you for signing the <strong>Exclusive Right-to-Sell Listing Agreement</strong> — that's
-            the first big step, and we're excited to get to work for you. Attached to this email is your
-            fully prepared <strong>Limited Special Power of Attorney</strong>${cemLine}. This second
-            document authorises Texas Cemetery Brokers to sign the plot-transfer paperwork on your behalf
-            once the sale closes, so you don't need to be present at the cemetery office.
+            Attached to this email is your fully prepared <strong>${docName}</strong>${cemLine}. It is one of
+            the documents the cemetery requires before your interment rights can be transferred, and we have
+            filled in everything we already hold on file for you.
           </p>
           <p style="margin:0 0 20px;">
-            Because it authorises us to act on your behalf, Texas law requires the Power of Attorney to be
+            Because it is a sworn document, Texas law requires the ${docName} to be
             <strong>notarized</strong>. You have two easy options — pick whichever is more convenient:
           </p>
 
@@ -337,7 +361,7 @@ Deno.serve(async (req) => {
               from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
               to: [to],
               bcc: ['contracts@texascemeterybrokers.com'],
-              subject: `Your Power of Attorney${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — notary packet attached`,
+              subject: `Your ${docName}${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — notary packet attached`,
               html,
               attachments: [{ filename, content: b64 }],
             }),
