@@ -87,8 +87,45 @@ Deno.serve(async (req) => {
         .eq("submission_id", submission_id).limit(60),
     ]);
 
+    // Everything the seller has physically sent us, read by the extractor.
+    // Anything not yet read is read now (bounded) so the analyst never has to
+    // guess about a document that is sitting in the file.
+    type FileRow = {
+      id: string; file_name: string | null; document_type: string | null;
+      extracted_summary: string | null; extracted_data: Record<string, unknown> | null;
+      extraction_status: string | null;
+    };
+    let attachments: FileRow[] = [];
+    if (sub.customer_profile_id) {
+      const { data: cf } = await supabase.from("customer_files")
+        .select("id, file_name, document_type, extracted_summary, extracted_data, extraction_status")
+        .eq("customer_profile_id", sub.customer_profile_id)
+        .order("created_at", { ascending: true })
+        .limit(40);
+      attachments = (cf ?? []) as FileRow[];
+
+      const unread = attachments.filter((f) => f.extraction_status !== "done").slice(0, 6);
+      if (unread.length) {
+        const base = `${Deno.env.get("SUPABASE_URL")}/functions/v1/extract-attachment-info`;
+        const svc = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        await Promise.all(unread.map((f) =>
+          fetch(base, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${svc}` },
+            body: JSON.stringify({ file_id: f.id }),
+          }).catch(() => null)));
+        const { data: refreshed } = await supabase.from("customer_files")
+          .select("id, file_name, document_type, extracted_summary, extracted_data, extraction_status")
+          .eq("customer_profile_id", sub.customer_profile_id)
+          .order("created_at", { ascending: true })
+          .limit(40);
+        if (refreshed) attachments = refreshed as FileRow[];
+      }
+    }
+
     const clip = (s: unknown, n = 1400) =>
       typeof s === "string" && s.trim() ? s.replace(/\s+/g, " ").slice(0, n) : "";
+
 
     const file = [
       "SUBMISSION",
