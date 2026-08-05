@@ -1964,6 +1964,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   cemetery={selected.cemetery}
                   sellerEmail={selected.email}
                   sellerName={selected.name}
+                  quoteAccepted={(selected as any).quote_response === "accepted"}
                 />
 
                 {/* Contracts: Listing Agreement (in-app e-sign) + POA (BlueNotary notarization). */}

@@ -20,6 +20,8 @@ type Props = {
   cemetery?: string | null;
   sellerName?: string | null;
   sellerEmail?: string | null;
+  /** AI reading only runs once the seller has accepted a quote — it costs money. */
+  quoteAccepted?: boolean;
 };
 
 type ContractRow = {
@@ -64,7 +66,7 @@ const STATE_STYLE: Record<RequiredState, string> = {
   complete: "bg-emerald-600 text-white",
 };
 
-export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail }: Props) {
+export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -191,6 +193,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Ask the AI to read the file (form + notes + email chain) and propose answers. */
   const inferFromFile = async () => {
+    if (!quoteAccepted) {
+      toast.message("The AI reading only runs after the seller accepts a quote");
+      return;
+    }
     setInferring(true);
     try {
       const { data, error } = await supabase.functions.invoke("infer-ownership", {
@@ -414,7 +420,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-muted-foreground">{prog.answered}/{prog.total} answered</span>
-                <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={inferFromFile} disabled={inferring}>
+                <Button
+                  size="sm" variant="outline" className="h-7 text-[11px]"
+                  onClick={inferFromFile} disabled={inferring || !quoteAccepted}
+                  title={quoteAccepted ? "Read the intake form, notes and email chain" : "Available once the seller accepts a quote"}
+                >
                   {inferring
                     ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
                     : <Sparkles className="w-3.5 h-3.5 mr-1" />}
