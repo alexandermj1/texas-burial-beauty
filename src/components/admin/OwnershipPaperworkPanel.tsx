@@ -372,39 +372,73 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** The live checklist rows, keyed the same way the DB's unique item index is. */
+  const fetchLiveRows = async (): Promise<DocRow[]> => {
+    const { data } = await supabase.from("submission_documents")
+      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
+      .eq("submission_id", submissionId);
+    return (data ?? []) as DocRow[];
+  };
+  const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${person ?? ""}`;
+
   /** Write the computed checklist into submission_documents, preserving progress. */
   const syncChecklist = async () => {
     setSaving(true);
     try {
-      const existing = new Map(rows.filter((r) => r.doc_code).map((r) => [`${r.doc_code}::${r.person_name ?? ""}`, r]));
-      const payload = requirements.map((r, i) => {
-        const prev = existing.get(reqKey(r));
-        return {
-          id: prev?.id ?? crypto.randomUUID(),
+      // Read the live rows first: the unique index is on (submission, code,
+      // person), so inserting against a stale snapshot is what produced the
+      // duplicate-key error.
+      const live = await fetchLiveRows();
+      const existing = new Map(live.filter((r) => r.doc_code).map((r) => [keyOf(r.doc_code, r.person_name), r]));
+      const seen = new Set<string>();
+      const inserts: Record<string, unknown>[] = [];
+      const updates: { id: string; patch: Record<string, unknown> }[] = [];
+
+      requirements.forEach((r, i) => {
+        const key = reqKey(r);
+        if (seen.has(key)) return; // never write the same item twice in one pass
+        seen.add(key);
+        const prev = existing.get(key);
+        const base = {
           submission_id: submissionId,
           doc_code: r.code,
           person_name: r.personName ?? null,
           person_role: r.personRole ?? null,
           document_type: r.code,
           label: r.label,
-          status: prev?.status ?? "pending",
-          required_state: (prev?.required_state as string) ?? (r.review ? "maybe" : "needed"),
-          manual_override: prev?.manual_override ?? null,
           issued_by_us: !!r.issuedByUs,
           needs_notary: !!r.needsNotary,
           why: r.why,
           statute_ref: r.statute ?? null,
           sort_order: i,
         };
+        if (prev) {
+          updates.push({ id: prev.id, patch: base });
+        } else {
+          inserts.push({
+            ...base,
+            status: "pending",
+            required_state: r.review ? "maybe" : "needed",
+            manual_override: null,
+          });
+        }
       });
-      const { error } = await supabase.from("submission_documents")
-        .upsert(payload as never, { onConflict: "id" });
-      if (error) throw error;
+
+      if (inserts.length) {
+        const { error } = await supabase.from("submission_documents").insert(inserts as never);
+        if (error) throw error;
+      }
+      for (const u of updates) {
+        const { error } = await supabase.from("submission_documents")
+          .update(u.patch as never).eq("id", u.id);
+        if (error) throw error;
+      }
+
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
       const wanted = new Set(requirements.map(reqKey));
-      const stale = rows.filter((r) => {
-         const key = `${r.doc_code}::${r.person_name ?? ""}`;
+      const stale = live.filter((r) => {
+         const key = keyOf(r.doc_code, r.person_name);
          const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
          const supersededPlaceholder = !!r.person_name
            && /^(owner on the deed|each co-owner|each heir|executor|trustee|authorised officer|person acting under authority)$/i.test(r.person_name)
@@ -426,14 +460,24 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Set a requirement's state, creating its checklist row on the fly if needed. */
   const setRowState = async (r: Requirement, value: RequiredState) => {
-    const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
     const status = ["received", "notarized", "complete"].includes(value) ? "received" : "pending";
-    if (row) {
-      setRows((prev) => prev.map((x) => (x.id === row.id ? { ...x, manual_override: value, required_state: value } : x)));
-      const { error } = await supabase.from("submission_documents")
-        .update({ manual_override: value, required_state: value, status })
-        .eq("id", row.id);
+    const patch = { manual_override: value, required_state: value, status };
+    const local = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    if (local) {
+      setRows((prev) => prev.map((x) => (x.id === local.id ? { ...x, ...patch } : x)));
+      const { error } = await supabase.from("submission_documents").update(patch).eq("id", local.id);
       if (error) toast.error(error.message);
+      return;
+    }
+    // No local row — the DB may still hold one (another tab, the seller page).
+    const live = await fetchLiveRows();
+    const remote = live.find((x) => keyOf(x.doc_code, x.person_name) === reqKey(r));
+    if (remote) {
+      const { error } = await supabase.from("submission_documents").update(patch).eq("id", remote.id);
+      if (error) { toast.error(error.message); return; }
+      setRows((prev) => prev.some((p) => p.id === remote.id)
+        ? prev.map((p) => (p.id === remote.id ? { ...p, ...patch } : p))
+        : [...prev, { ...remote, ...patch }]);
       return;
     }
     const { data, error } = await supabase.from("submission_documents").insert({
@@ -443,9 +487,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       person_role: r.personRole ?? null,
       document_type: r.code,
       label: r.label,
-      status,
-      required_state: value,
-      manual_override: value,
+      ...patch,
       issued_by_us: !!r.issuedByUs,
       needs_notary: !!r.needsNotary,
       why: r.why,
@@ -454,6 +496,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     if (error) { toast.error(error.message); return; }
     if (data) setRows((prev) => [...prev, data as DocRow]);
   };
+
 
   /** The seller's curated upload page — one link with everything on it. */
   const packetUrl = `${PUBLIC_SITE_URL}/documents?s=${submissionId}`;
