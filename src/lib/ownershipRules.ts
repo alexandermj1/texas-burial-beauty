@@ -19,6 +19,8 @@ export type OwnershipAnswers = {
   owners?: "sole" | "multiple";
   co?: "all" | "deceased" | "blocked";
   marital?: "married" | "divorced" | "widowed" | "single";
+  /** Was the owner married at the time the plot was bought? Drives §711.039 waivers. */
+  maritalAtPurchase?: "yes" | "no" | "unsure";
   occupied?: "no" | "yes";
   will?: "yes" | "no";
   probate?: "letters" | "muniment" | "none";
