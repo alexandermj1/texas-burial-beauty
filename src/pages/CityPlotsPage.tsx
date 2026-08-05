@@ -131,9 +131,10 @@ const CityPlotsPage = () => {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link to="/contact#buy-inquiry" className="inline-flex items-center px-7 py-3.5 bg-primary text-primary-foreground rounded-full font-medium text-[15px] hover:opacity-90 transition-all">
+                <Link to="/buy" className="inline-flex items-center px-7 py-3.5 bg-primary text-primary-foreground rounded-full font-medium text-[15px] hover:opacity-90 transition-all">
                   Find a plot
                 </Link>
+
                 <Link to="/sell" className="inline-flex items-center px-7 py-3.5 rounded-full border border-accent/50 text-accent font-medium text-[15px] hover:bg-accent/5 transition-all">
                   Sell a plot
                 </Link>
@@ -156,7 +157,7 @@ const CityPlotsPage = () => {
               </dl>
             </motion.div>
 
-            <div className="relative h-full lg:-mt-24 xl:-mt-28 lg:self-stretch">
+            <div className="relative h-full lg:self-stretch">
               <img
                 src={houstonHeroArt.url}
                 alt="Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
