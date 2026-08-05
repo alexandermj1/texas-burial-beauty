@@ -120,8 +120,47 @@ Deno.serve(async (req) => {
       transfer_fee: transferFee ?? undefined,
     };
 
-    const templateBytes = await fetchTemplate(svc, kind);
-    const filled = await buildFilledPdf(templateBytes, kind, fill);
+    // Notary-only documents (Affidavit of Heirship, Spousal Consent) are typeset
+    // from scratch — there is no scanned template to overlay.
+    const ownership = (sub.ownership_answers ?? {}) as Record<string, unknown>;
+    const people = Array.isArray(ownership.people) ? ownership.people as Record<string, string>[] : [];
+    const spouseOnRoster = people.find((p) => p.role === 'spouse')?.name;
+    const affiant = overrides.seller_name ?? sub.name ?? '';
+
+    let filled: Uint8Array;
+    if (kind === 'affidavit_heirship') {
+      filled = await buildAffidavitPdf({
+        county: overrides.county ?? cemLocationCity ?? '',
+        affiant_name: affiant,
+        affiant_address: [overrides.address, overrides.city_state_zip].filter(Boolean).join(', '),
+        affiant_relationship: overrides.affiant_relationship ?? sub.relationship_to_owner ?? '',
+        affiant_is_heir: overrides.affiant_is_heir ?? true,
+        decedent_name: overrides.decedent_name ?? sub.deed_owner_names ?? '',
+        heirs: overrides.heirs ?? people
+          .filter((p) => p.role === 'heir' || p.role === 'co_owner')
+          .map((p) => ({ name: p.name, relationship: p.relationship ?? '', address: p.address ?? '' })),
+        surviving_spouse: overrides.surviving_spouse ?? spouseOnRoster ?? '',
+        cemetery: overrides.cemetery ?? sub.cemetery ?? '',
+        cemetery_city: cemLocationCity,
+        plot_description: overrides.plot_description ??
+          [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
+        spaces: sub.spaces ?? '',
+        include_spouse_page: overrides.include_spouse_page ?? ownership.spouse === 'yes',
+      });
+    } else if (kind === 'spousal_consent') {
+      filled = await buildSpousalConsentPdf({
+        county: overrides.county ?? cemLocationCity ?? '',
+        spouse_name: overrides.spouse_name ?? spouseOnRoster ?? overrides.seller_name ?? '',
+        owner_name: overrides.owner_name ?? sub.deed_owner_names ?? sub.name ?? '',
+        cemetery: overrides.cemetery ?? sub.cemetery ?? '',
+        cemetery_city: cemLocationCity,
+        plot_description: [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
+        spaces: sub.spaces ?? '',
+      });
+    } else {
+      const templateBytes = await fetchTemplate(svc, kind as 'listing_agreement' | 'poa');
+      filled = await buildFilledPdf(templateBytes, kind as 'listing_agreement' | 'poa', fill);
+    }
 
     const path = `${submission_id}/${kind}-${Date.now()}.pdf`;
     const { error: upErr } = await svc.storage
