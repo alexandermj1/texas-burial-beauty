@@ -193,8 +193,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Ask the AI to read the file (form + notes + email chain) and propose answers. */
   const inferFromFile = async () => {
+    if (!quoteAccepted) {
+      toast.message("The AI reading only runs after the seller accepts a quote");
+      return;
+    }
     setInferring(true);
-    try {
       const { data, error } = await supabase.functions.invoke("infer-ownership", {
         body: { submission_id: submissionId },
       });
