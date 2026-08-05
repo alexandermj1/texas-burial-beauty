@@ -38,8 +38,9 @@ How to read a seller's file (Texas interment property):
 - Mentions of a spouse currently living → marital = married. "my late husband/wife" → widowed.
 - "my dad is buried there", "one space is used" → occupied = yes.
 - No mention of a will for a deceased owner is NOT the same as "no will" — leave blank unless stated.
-- deed = yes only if they say they have the deed/certificate; deed = no if they say it is lost or they can't find it.
+- deed = yes if we hold an attached document that is a cemetery deed / certificate of ownership / interment rights certificate (see ATTACHED DOCUMENTS), or if they say they have it; deed = no if they say it is lost.
 - names = no only if there is an actual mismatch mentioned (maiden name, name change).
+- The ATTACHED DOCUMENTS section is evidence we physically hold. Read it as carefully as the emails: the names, cemetery, section/lot/space and document type printed on those documents are facts, and they override anything vague in the emails.
 Only answer what the file actually supports. Leave anything else out — a missing answer is far better than a guessed one.
 `.trim();
 
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
     );
 
     const { data: sub } = await supabase.from("contact_submissions")
-      .select("id, name, email, phone, cemetery, property_type, spaces, section, lawn, space_numbers, plot_count, message, details, admin_notes, ownership_type, relationship_to_owner, deed_owner_names, deed_owners_status, purchase_info, prepaid_endowment_info, customer_kind, quote_response, state, deed_on_file, death_cert_on_file, gov_id_on_file, authorization_notes")
+      .select("id, name, email, phone, cemetery, property_type, spaces, section, lawn, space_numbers, plot_count, message, details, admin_notes, ownership_type, relationship_to_owner, deed_owner_names, deed_owners_status, purchase_info, prepaid_endowment_info, customer_kind, quote_response, state, deed_on_file, death_cert_on_file, gov_id_on_file, authorization_notes, customer_profile_id")
       .eq("id", submission_id).maybeSingle();
     if (!sub) {
       return new Response(JSON.stringify({ error: "Submission not found" }), {
@@ -86,8 +87,45 @@ Deno.serve(async (req) => {
         .eq("submission_id", submission_id).limit(60),
     ]);
 
+    // Everything the seller has physically sent us, read by the extractor.
+    // Anything not yet read is read now (bounded) so the analyst never has to
+    // guess about a document that is sitting in the file.
+    type FileRow = {
+      id: string; file_name: string | null; document_type: string | null;
+      extracted_summary: string | null; extracted_data: Record<string, unknown> | null;
+      extraction_status: string | null;
+    };
+    let attachments: FileRow[] = [];
+    if (sub.customer_profile_id) {
+      const { data: cf } = await supabase.from("customer_files")
+        .select("id, file_name, document_type, extracted_summary, extracted_data, extraction_status")
+        .eq("customer_profile_id", sub.customer_profile_id)
+        .order("created_at", { ascending: true })
+        .limit(40);
+      attachments = (cf ?? []) as FileRow[];
+
+      const unread = attachments.filter((f) => f.extraction_status !== "done").slice(0, 6);
+      if (unread.length) {
+        const base = `${Deno.env.get("SUPABASE_URL")}/functions/v1/extract-attachment-info`;
+        const svc = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        await Promise.all(unread.map((f) =>
+          fetch(base, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${svc}` },
+            body: JSON.stringify({ file_id: f.id }),
+          }).catch(() => null)));
+        const { data: refreshed } = await supabase.from("customer_files")
+          .select("id, file_name, document_type, extracted_summary, extracted_data, extraction_status")
+          .eq("customer_profile_id", sub.customer_profile_id)
+          .order("created_at", { ascending: true })
+          .limit(40);
+        if (refreshed) attachments = refreshed as FileRow[];
+      }
+    }
+
     const clip = (s: unknown, n = 1400) =>
       typeof s === "string" && s.trim() ? s.replace(/\s+/g, " ").slice(0, n) : "";
+
 
     const file = [
       "SUBMISSION",
@@ -103,6 +141,22 @@ Deno.serve(async (req) => {
       clip(sub.details) ? `Details: ${clip(sub.details)}` : "",
       clip(sub.admin_notes) ? `Admin notes: ${clip(sub.admin_notes)}` : "",
       clip(sub.authorization_notes) ? `Authorization notes: ${clip(sub.authorization_notes)}` : "",
+      "",
+      "ATTACHED DOCUMENTS WE PHYSICALLY HOLD (read by the document extractor)",
+      ...(attachments.length
+        ? attachments.map((f) => {
+            const d = (f.extracted_data ?? {}) as Record<string, unknown>;
+            const type = String(d.document_type ?? f.document_type ?? "unclassified");
+            const facts = Object.entries(d)
+              .filter(([k, v]) => k !== "summary" && v != null && v !== "" &&
+                !(Array.isArray(v) && v.length === 0))
+              .map(([k, v]) => `${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`)
+              .join("; ");
+            return `- FILE "${f.file_name ?? "document"}" — type: ${type}${
+              f.extraction_status !== "done" ? " (not readable / not yet read)" : ""
+            }\n  summary: ${clip(f.extracted_summary, 600) || "n/a"}\n  extracted: ${clip(facts, 1200) || "n/a"}`;
+          })
+        : ["- (none on file)"]),
       "",
       "DOCUMENTS ALREADY LOGGED",
       ...((docs ?? []).map((d) => `- ${d.doc_code ?? ""} ${d.label} (${d.status})`)),

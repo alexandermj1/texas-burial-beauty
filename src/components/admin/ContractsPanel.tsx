@@ -618,11 +618,6 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
               )}
             </div>
           )}
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Listing Agreement is signed in-app via the copied signing link (legally valid e-signature).
-            The Power of Attorney must be notarized: click <span className="font-medium">Send to BlueNotary</span> to open a session
-            with the seller's contact info prefilled and the filled PDF opened alongside it — upload the PDF into BlueNotary and invite the seller. When the notarized copy comes back, upload it here to complete the file.
-          </p>
         </div>
       )}
 

@@ -12,7 +12,7 @@ import {
 import ContractsPanel from "./ContractsPanel";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
-  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE, matchTerms,
+  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
   type OwnershipAnswers, type RosterPerson, type PersonRole,
   type RequiredState, type Requirement, type CemeteryDocRules,
 } from "@/lib/ownershipRules";
@@ -83,18 +83,56 @@ type AnyFile = {
 
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
-const fileSearchText = (f: AnyFile) =>
-  `${f.name} ${f.origin} ${f.extractedSummary ?? ""} ${JSON.stringify(f.extractedData ?? {})}`.toLowerCase();
+/**
+ * What a read document actually proves. Only the extractor's classification
+ * counts here — filenames and stray words inside a document (an ID number
+ * printed on a deed, the word "certificate" in a letter) are not evidence, and
+ * matching on them is what made the checklist claim we hold things we don't.
+ */
+const TYPE_CODES: { test: RegExp; codes: string[] }[] = [
+  { test: /(cemetery deed|interment right|certificate of ownership|ownership certificate|\bdeed\b)/, codes: ["D1"] },
+  { test: /(driver.?s? licen|government id|state id|passport|identification card|photo id)/, codes: ["D2", "D2P"] },
+  { test: /death certificate/, codes: ["D6", "D22"] },
+  { test: /affidavit of heirship/, codes: ["D12"] },
+  { test: /small estate affidavit/, codes: ["D13"] },
+  { test: /letters testamentary/, codes: ["D8"] },
+  { test: /(letters of administration|judgment determining heirship|determination of heirship)/, codes: ["D10"] },
+  { test: /muniment of title/, codes: ["D9"] },
+  { test: /(last will|\bwill\b|testament)/, codes: ["D7"] },
+  { test: /power of attorney/, codes: ["D21", "D15"] },
+  { test: /guardianship/, codes: ["D18"] },
+  { test: /(marriage (certificate|licen)|name.?change)/, codes: ["D5"] },
+  { test: /divorce decree/, codes: ["D4"] },
+  { test: /(trust agreement|certification of trust)/, codes: ["D16"] },
+
+];
+
+const codesForFile = (f: AnyFile): string[] => {
+  const type = String(f.extractedData?.document_type ?? "").toLowerCase();
+  if (!type) return [];
+  const hit = TYPE_CODES.find((t) => t.test.test(type));
+  return hit ? hit.codes : [];
+};
+
+/** Does this file plainly name the person the requirement is about? */
+const fileNamesPerson = (f: AnyFile, person?: string | null) => {
+  if (!person?.trim()) return true;
+  const parts = person.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  if (!parts.length) return true;
+  const hay = `${JSON.stringify(f.extractedData ?? {})} ${f.extractedSummary ?? ""} ${f.name}`.toLowerCase();
+  return parts.every((p) => hay.includes(p));
+};
 
 const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
+  // A file the seller uploaded against this exact checklist item always counts.
   if (row && f.docId === row.id) return true;
-  const hay = fileSearchText(f);
-  const extractedType = String(f.extractedData?.document_type ?? "").toLowerCase();
-  if (r.code === "D1" && ["deed", "certificate of ownership", "cemetery deed"].some((t) => extractedType.includes(t))) return true;
-  if ((r.code === "D2" || r.code === "D2P") && ["driver license", "driver's license", "government id", "passport", "state id"].some((t) => extractedType.includes(t))) return true;
-  const terms = matchTerms(r.code, r.label);
-  return terms.some((t) => hay.includes(t));
+  const codes = codesForFile(f);
+  if (!codes.includes(r.code)) return false;
+  // Per-person items (photo ID, POA) must actually be that person's document.
+  if (["D2", "D2P", "D21"].includes(r.code)) return fileNamesPerson(f, r.personName);
+  return true;
 };
+
 
 
 export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
@@ -334,39 +372,73 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** The live checklist rows, keyed the same way the DB's unique item index is. */
+  const fetchLiveRows = async (): Promise<DocRow[]> => {
+    const { data } = await supabase.from("submission_documents")
+      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
+      .eq("submission_id", submissionId);
+    return (data ?? []) as DocRow[];
+  };
+  const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${person ?? ""}`;
+
   /** Write the computed checklist into submission_documents, preserving progress. */
   const syncChecklist = async () => {
     setSaving(true);
     try {
-      const existing = new Map(rows.filter((r) => r.doc_code).map((r) => [`${r.doc_code}::${r.person_name ?? ""}`, r]));
-      const payload = requirements.map((r, i) => {
-        const prev = existing.get(reqKey(r));
-        return {
-          id: prev?.id ?? crypto.randomUUID(),
+      // Read the live rows first: the unique index is on (submission, code,
+      // person), so inserting against a stale snapshot is what produced the
+      // duplicate-key error.
+      const live = await fetchLiveRows();
+      const existing = new Map(live.filter((r) => r.doc_code).map((r) => [keyOf(r.doc_code, r.person_name), r]));
+      const seen = new Set<string>();
+      const inserts: Record<string, unknown>[] = [];
+      const updates: { id: string; patch: Record<string, unknown> }[] = [];
+
+      requirements.forEach((r, i) => {
+        const key = reqKey(r);
+        if (seen.has(key)) return; // never write the same item twice in one pass
+        seen.add(key);
+        const prev = existing.get(key);
+        const base = {
           submission_id: submissionId,
           doc_code: r.code,
           person_name: r.personName ?? null,
           person_role: r.personRole ?? null,
           document_type: r.code,
           label: r.label,
-          status: prev?.status ?? "pending",
-          required_state: (prev?.required_state as string) ?? (r.review ? "maybe" : "needed"),
-          manual_override: prev?.manual_override ?? null,
           issued_by_us: !!r.issuedByUs,
           needs_notary: !!r.needsNotary,
           why: r.why,
           statute_ref: r.statute ?? null,
           sort_order: i,
         };
+        if (prev) {
+          updates.push({ id: prev.id, patch: base });
+        } else {
+          inserts.push({
+            ...base,
+            status: "pending",
+            required_state: r.review ? "maybe" : "needed",
+            manual_override: null,
+          });
+        }
       });
-      const { error } = await supabase.from("submission_documents")
-        .upsert(payload as never, { onConflict: "id" });
-      if (error) throw error;
+
+      if (inserts.length) {
+        const { error } = await supabase.from("submission_documents").insert(inserts as never);
+        if (error) throw error;
+      }
+      for (const u of updates) {
+        const { error } = await supabase.from("submission_documents")
+          .update(u.patch as never).eq("id", u.id);
+        if (error) throw error;
+      }
+
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
       const wanted = new Set(requirements.map(reqKey));
-      const stale = rows.filter((r) => {
-         const key = `${r.doc_code}::${r.person_name ?? ""}`;
+      const stale = live.filter((r) => {
+         const key = keyOf(r.doc_code, r.person_name);
          const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
          const supersededPlaceholder = !!r.person_name
            && /^(owner on the deed|each co-owner|each heir|executor|trustee|authorised officer|person acting under authority)$/i.test(r.person_name)
@@ -388,14 +460,24 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Set a requirement's state, creating its checklist row on the fly if needed. */
   const setRowState = async (r: Requirement, value: RequiredState) => {
-    const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
     const status = ["received", "notarized", "complete"].includes(value) ? "received" : "pending";
-    if (row) {
-      setRows((prev) => prev.map((x) => (x.id === row.id ? { ...x, manual_override: value, required_state: value } : x)));
-      const { error } = await supabase.from("submission_documents")
-        .update({ manual_override: value, required_state: value, status })
-        .eq("id", row.id);
+    const patch = { manual_override: value, required_state: value, status };
+    const local = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    if (local) {
+      setRows((prev) => prev.map((x) => (x.id === local.id ? { ...x, ...patch } : x)));
+      const { error } = await supabase.from("submission_documents").update(patch).eq("id", local.id);
       if (error) toast.error(error.message);
+      return;
+    }
+    // No local row — the DB may still hold one (another tab, the seller page).
+    const live = await fetchLiveRows();
+    const remote = live.find((x) => keyOf(x.doc_code, x.person_name) === reqKey(r));
+    if (remote) {
+      const { error } = await supabase.from("submission_documents").update(patch).eq("id", remote.id);
+      if (error) { toast.error(error.message); return; }
+      setRows((prev) => prev.some((p) => p.id === remote.id)
+        ? prev.map((p) => (p.id === remote.id ? { ...p, ...patch } : p))
+        : [...prev, { ...remote, ...patch }]);
       return;
     }
     const { data, error } = await supabase.from("submission_documents").insert({
@@ -405,9 +487,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       person_role: r.personRole ?? null,
       document_type: r.code,
       label: r.label,
-      status,
-      required_state: value,
-      manual_override: value,
+      ...patch,
       issued_by_us: !!r.issuedByUs,
       needs_notary: !!r.needsNotary,
       why: r.why,
@@ -416,6 +496,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     if (error) { toast.error(error.message); return; }
     if (data) setRows((prev) => [...prev, data as DocRow]);
   };
+
 
   /** The seller's curated upload page — one link with everything on it. */
   const packetUrl = `${PUBLIC_SITE_URL}/documents?s=${submissionId}`;
@@ -565,9 +646,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return files.filter((f) => fileMatchesRequirement(f, r, row));
   };
 
-  // Documents often arrive before the ownership interview. Once extraction or
-  // filenames prove a requirement is already supplied, reflect that fact without
-  // asking the seller for it again. Manual admin choices still win.
+  // Documents often arrive before the ownership interview. Auto-ticking only
+  // happens on hard evidence: a file the extractor has actually read and
+  // classified as that document (and, for per-person items, one that names the
+  // person). Manual admin choices always win.
   useEffect(() => {
     if (loading || !requirements.length || !files.length) return;
     const satisfied = requirements.filter((r) => {
@@ -575,8 +657,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
       const state = stateByKey[reqKey(r)];
       return !row?.manual_override && !["received", "notarized", "complete"].includes(state ?? "")
-        && files.some((f) => fileMatchesRequirement(f, r, row));
+        && files.some((f) => f.extractedData && fileMatchesRequirement(f, r, row));
     });
+
     if (!satisfied.length) return;
     void (async () => {
       for (const r of satisfied) await setRowState(r, "received");
