@@ -190,7 +190,7 @@ const CityPlotsPage = () => {
                 <span className="h-px w-12 bg-accent/40" />
               </div>
               <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground leading-[1.08] tracking-tight [text-wrap:balance]">
-                {data.h1Lead} in <span className="text-foreground">{data.city}</span>
+                {data.h1Lead} <span className="text-foreground">{data.city}</span>
               </h1>
               <p className="mt-7 text-base md:text-[17px] text-foreground/70 leading-relaxed font-light max-w-2xl mx-auto [text-wrap:balance]">
                 {data.intro}
