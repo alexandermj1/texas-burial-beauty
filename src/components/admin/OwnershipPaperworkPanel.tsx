@@ -507,7 +507,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     try {
-      const { error } = await supabase.functions.invoke("generate-contract", {
+      const { data, error } = await supabase.functions.invoke("generate-contract", {
         body: {
           submission_id: submissionId,
           kind: r.contractKind,
@@ -515,14 +515,44 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         },
       });
       if (error) throw error;
-      toast.success(`${r.label} generated — open the Contracts section to send it`);
+      const res = data as { pdf_url?: string | null; sign_token?: string | null };
+      // Open the filled PDF straight away so it can be checked line by line.
+      if (res?.pdf_url) window.open(res.pdf_url, "_blank", "noopener");
+      toast.success(`${r.label} prepared`, {
+        description: res?.pdf_url ? "Opened in a new tab so you can check it." : "Open the contract to review it.",
+      });
       await setRowState(r, "issued");
+      await load();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setBusy(null);
     }
   };
+
+  /** Re-open the already-prepared contract PDF for a requirement. */
+  const openContractPdf = async (r: Requirement) => {
+    const c = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
+    if (!c) return;
+    setBusy(`${reqKey(r)}-open`);
+    try {
+      const { data } = await supabase.from("contracts")
+        .select("filled_pdf_path, signed_pdf_path, notarized_pdf_path, sign_token").eq("id", c.id).maybeSingle();
+      const path = data?.notarized_pdf_path || data?.signed_pdf_path || data?.filled_pdf_path;
+      if (path) {
+        const { data: signed } = await supabase.storage.from("contracts").createSignedUrl(path, 3600);
+        if (signed?.signedUrl) { window.open(signed.signedUrl, "_blank", "noopener"); return; }
+      }
+      if (data?.sign_token) {
+        window.open(`${PUBLIC_SITE_URL}/sign/${data.sign_token}`, "_blank", "noopener");
+        return;
+      }
+      toast.error("No prepared PDF found yet — press Prepare first.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
   const general = documentRequirements.filter((r) => !r.personName);
