@@ -484,6 +484,9 @@ export type Database = {
           multi_owner_perm_signed_at: string | null
           name: string | null
           needs_quote: boolean
+          ownership_answers: Json
+          ownership_reviewed_at: string | null
+          ownership_roster: Json
           ownership_type: string | null
           payment_link_sent_at: string | null
           payment_received_at: string | null
@@ -594,6 +597,9 @@ export type Database = {
           multi_owner_perm_signed_at?: string | null
           name?: string | null
           needs_quote?: boolean
+          ownership_answers?: Json
+          ownership_reviewed_at?: string | null
+          ownership_roster?: Json
           ownership_type?: string | null
           payment_link_sent_at?: string | null
           payment_received_at?: string | null
@@ -704,6 +710,9 @@ export type Database = {
           multi_owner_perm_signed_at?: string | null
           name?: string | null
           needs_quote?: boolean
+          ownership_answers?: Json
+          ownership_reviewed_at?: string | null
+          ownership_roster?: Json
           ownership_type?: string | null
           payment_link_sent_at?: string | null
           payment_received_at?: string | null
@@ -2027,42 +2036,72 @@ export type Database = {
       submission_documents: {
         Row: {
           created_at: string
+          doc_code: string | null
           document_type: string
           file_url: string | null
           id: string
+          issued_by_us: boolean
           label: string
+          manual_override: string | null
+          needs_notary: boolean
           notes: string | null
+          person_name: string | null
+          person_role: string | null
           received_at: string | null
           requested_at: string | null
+          required_state: string
+          sort_order: number
           status: string
+          statute_ref: string | null
           submission_id: string
           updated_at: string
+          why: string | null
         }
         Insert: {
           created_at?: string
+          doc_code?: string | null
           document_type: string
           file_url?: string | null
           id?: string
+          issued_by_us?: boolean
           label: string
+          manual_override?: string | null
+          needs_notary?: boolean
           notes?: string | null
+          person_name?: string | null
+          person_role?: string | null
           received_at?: string | null
           requested_at?: string | null
+          required_state?: string
+          sort_order?: number
           status?: string
+          statute_ref?: string | null
           submission_id: string
           updated_at?: string
+          why?: string | null
         }
         Update: {
           created_at?: string
+          doc_code?: string | null
           document_type?: string
           file_url?: string | null
           id?: string
+          issued_by_us?: boolean
           label?: string
+          manual_override?: string | null
+          needs_notary?: boolean
           notes?: string | null
+          person_name?: string | null
+          person_role?: string | null
           received_at?: string | null
           requested_at?: string | null
+          required_state?: string
+          sort_order?: number
           status?: string
+          statute_ref?: string | null
           submission_id?: string
           updated_at?: string
+          why?: string | null
         }
         Relationships: [
           {
@@ -2111,6 +2150,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          doc_rules: Json
           endowment_notes: string | null
           geocoded_at: string | null
           id: string
@@ -2137,6 +2177,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          doc_rules?: Json
           endowment_notes?: string | null
           geocoded_at?: string | null
           id?: string
@@ -2163,6 +2204,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          doc_rules?: Json
           endowment_notes?: string | null
           geocoded_at?: string | null
           id?: string
@@ -2351,7 +2393,11 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "agent" | "staff"
-      contract_kind: "listing_agreement" | "poa"
+      contract_kind:
+        | "listing_agreement"
+        | "poa"
+        | "affidavit_heirship"
+        | "spousal_consent"
       contract_status:
         | "draft"
         | "sent"
@@ -2496,7 +2542,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "agent", "staff"],
-      contract_kind: ["listing_agreement", "poa"],
+      contract_kind: [
+        "listing_agreement",
+        "poa",
+        "affidavit_heirship",
+        "spousal_consent",
+      ],
       contract_status: [
         "draft",
         "sent",

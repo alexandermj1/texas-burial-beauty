@@ -11,7 +11,7 @@ const FN_URL = `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1/sign-contr
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWd1eGZkb2lranRoc3JibXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTI4MDYsImV4cCI6MjA5MjM2ODgwNn0.YDuw7oQqllDnunSA0Fv4eENslzol1Lni7n6kfSRa9T0";
 
 type ContractInfo = {
-  kind: "listing_agreement" | "poa";
+  kind: "listing_agreement" | "poa" | "affidavit_heirship" | "spousal_consent";
   status: string;
   fill_data: Record<string, unknown>;
   pdf_url: string;
@@ -302,9 +302,14 @@ export default function SignContract() {
     );
   }
 
+  const isNotaryDoc = info.kind === "poa" || info.kind === "affidavit_heirship" || info.kind === "spousal_consent";
   const title = info.kind === "poa"
     ? "Limited Special Power of Attorney"
-    : "Exclusive Right-to-Sell Agreement";
+    : info.kind === "affidavit_heirship"
+      ? "Affidavit of Heirship"
+      : info.kind === "spousal_consent"
+        ? "Spousal Consent and Waiver"
+        : "Exclusive Right-to-Sell Agreement";
 
   return (
     <div className="min-h-screen bg-[#f5f1ea]">
@@ -314,7 +319,7 @@ export default function SignContract() {
           <p className="text-[10px] uppercase tracking-[0.35em] text-[#d9c7a3]">Texas Cemetery Brokers</p>
           <h1 className="mt-3 text-3xl md:text-4xl font-serif">{title}</h1>
           <p className="mt-3 text-sm text-white/70 max-w-xl">
-            A private, secure signing session for {info.kind === "poa" ? "your notary-ready Power of Attorney" : "your listing agreement"}.
+            A private, secure signing session for {isNotaryDoc ? `your notary-ready ${title}` : "your listing agreement"}.
             Fill in the details on the left, review the live contract, then sign at the bottom.
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-[11px] text-white/70">
@@ -436,11 +441,11 @@ export default function SignContract() {
         {done ? (
           <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
             <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
-            {info.kind === "poa" ? (
+            {isNotaryDoc ? (
               <>
                 <h2 className="text-2xl font-serif text-emerald-900">Your notary packet is on its way.</h2>
                 <p className="text-sm text-emerald-800 mt-3 max-w-md mx-auto">
-                  We've emailed you the finished Power of Attorney PDF along with a one-click link to notarize
+                  We've emailed you the finished {title} PDF along with a one-click link to notarize
                   it online, plus instructions if you'd rather use a local notary in person.
                 </p>
               </>
@@ -453,15 +458,14 @@ export default function SignContract() {
               </>
             )}
           </Card>
-        ) : info.kind === "poa" ? (
+        ) : isNotaryDoc ? (
           <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-6">
             <div className="flex items-baseline gap-3">
               <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Step 3</span>
               <h2 className="text-xl font-serif">Get your notary packet</h2>
             </div>
             <p className="text-sm text-muted-foreground max-w-2xl">
-              Because a Power of Attorney authorises us to sign transfer paperwork on your behalf, Texas law
-              requires it to be <strong>notarized</strong>. Once you click below, we'll email you the finished
+              Because the {title} is a sworn document, Texas law requires it to be <strong>notarized</strong>. Once you click below, we'll email you the finished
               PDF along with two easy ways to get it notarized:
             </p>
             <div className="grid md:grid-cols-2 gap-4">
