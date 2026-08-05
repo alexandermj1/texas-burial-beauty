@@ -35,6 +35,8 @@ type Packet = { seller_name: string | null; cemetery: string | null; documents: 
 const DONE = ["received", "notarized", "complete"];
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
+type Uploaded = { name: string; path: string; url: string; isImage: boolean };
+
 const DocRow = ({
   doc, submissionId, onDone,
 }: { doc: PacketDoc; submissionId: string; onDone: () => void }) => {
@@ -43,6 +45,7 @@ const DocRow = ({
   const [qr, setQr] = useState("");
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(doc.uploaded || DONE.includes(doc.state));
+  const [uploads, setUploads] = useState<Uploaded[]>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const guide = DOC_GUIDE[doc.code ?? ""];
 
@@ -56,42 +59,70 @@ const DocRow = ({
       .then(setQr).catch(() => setQr(""));
   }, [phone, mobileUrl]);
 
+  /** Everything this seller has already sent for this item, with previews. */
+  const refreshUploads = useCallback(async () => {
+    const { data } = await supabase.storage
+      .from("portal-uploads")
+      .list(submissionId, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+    const mine = (data ?? []).filter((f) => f.name.startsWith(`${doc.id}-`));
+    if (!mine.length) { setUploads([]); return []; }
+    const paths = mine.map((f) => `${submissionId}/${f.name}`);
+    const { data: signed } = await supabase.storage.from("portal-uploads").createSignedUrls(paths, 3600);
+    const next: Uploaded[] = mine.map((f, i) => ({
+      name: f.name,
+      path: paths[i],
+      url: signed?.[i]?.signedUrl ?? "",
+      isImage: /\.(jpe?g|png|heic|webp|gif)$/i.test(f.name),
+    }));
+    setUploads(next);
+    return next;
+  }, [submissionId, doc.id]);
+
+  useEffect(() => { void refreshUploads(); }, [refreshUploads]);
+
   const record = useCallback(async (path: string, name: string, size?: number, type?: string) => {
     await supabase.functions.invoke("seller-packet", {
       body: { action: "record", submission_id: submissionId, doc_id: doc.id, path, name, size, type },
     });
     setDone(true);
-    setPhone(false);
+    await refreshUploads();
     onDone();
-  }, [doc.id, submissionId, onDone]);
+  }, [doc.id, submissionId, onDone, refreshUploads]);
 
-  // While the QR panel is open, watch the bucket for the phone's upload.
+  // Watch the bucket for anything the phone sends across, so the photo shows up
+  // here the moment it is taken — and keeps showing every extra photo.
   useEffect(() => {
     if (!phone) return;
+    let seen = uploads.length;
     const check = async () => {
-      const { data } = await supabase.storage
-        .from("portal-uploads")
-        .list(submissionId, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
-      const hit = (data ?? []).find((f) => f.name.startsWith(`${doc.id}-`));
-      if (hit) await record(`${submissionId}/${hit.name}`, hit.name, (hit.metadata as { size?: number })?.size);
+      const next = await refreshUploads();
+      if (next.length > seen) {
+        seen = next.length;
+        const newest = next[0];
+        await record(newest.path, newest.name);
+      }
     };
     const t = window.setInterval(check, 2500);
     void check();
     return () => window.clearInterval(t);
-  }, [phone, submissionId, doc.id, record]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone, refreshUploads, record]);
 
-  const handleFile = async (f: File) => {
+  const handleFiles = async (list: FileList) => {
     setUploading(true);
     try {
-      const ext = (f.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = `${submissionId}/${doc.id}-${Date.now()}.${ext || "bin"}`;
-      const { error } = await supabase.storage
-        .from("portal-uploads")
-        .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type });
-      if (error) throw error;
-      await record(path, f.name, f.size, f.type);
+      for (const f of Array.from(list)) {
+        const ext = (f.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const path = `${submissionId}/${doc.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext || "bin"}`;
+        const { error } = await supabase.storage
+          .from("portal-uploads")
+          .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type });
+        if (error) throw error;
+        await record(path, f.name, f.size, f.type);
+      }
     } finally {
       setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -128,15 +159,21 @@ const DocRow = ({
             </div>
           )}
         </div>
-        {!done && !doc.issued_by_us && (
+        {!doc.issued_by_us && (
           <div className="flex items-center gap-2 shrink-0">
-            <input ref={inputRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); }} />
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => { const fs = e.target.files; if (fs?.length) void handleFiles(fs); }}
+            />
             <button
               onClick={() => inputRef.current?.click()}
               disabled={uploading}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              className={`inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full disabled:opacity-60 ${done ? "border border-border hover:border-primary/40" : "bg-primary text-primary-foreground hover:opacity-90"}`}
             >
-              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
+              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} {done ? "Add another" : "Upload"}
             </button>
             <button
               onClick={() => setPhone((v) => !v)}
@@ -148,18 +185,47 @@ const DocRow = ({
         )}
       </div>
 
+      {uploads.length > 0 && (
+        <div className="border-t border-border/60 px-5 py-4 bg-primary/[0.03]">
+          <p className="text-[11px] text-muted-foreground mb-3">
+            {uploads.length} {uploads.length === 1 ? "file" : "files"} received — tap to view full size.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {uploads.map((u) => (
+              <a
+                key={u.path}
+                href={u.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group block w-24 h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
+                title={u.name}
+              >
+                {u.isImage ? (
+                  <img src={u.url} alt={doc.label} className="w-full h-full object-cover group-hover:opacity-90" />
+                ) : (
+                  <span className="w-full h-full flex flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground px-2 text-center">
+                    <FileText className="w-5 h-5 text-primary" /> View file
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {phone && (
         <div className="border-t border-border/60 px-5 py-6 text-center bg-muted/20">
-          <p className="text-sm text-foreground mb-3">Scan with your phone camera, then take a photo of the document.</p>
+          <p className="text-sm text-foreground mb-3">Scan with your phone camera, then take a photo of the document. You can take as many photos as you need.</p>
           {qr ? <img src={qr} alt="QR code to upload from your phone" className="w-40 h-40 mx-auto" /> : <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />}
           <p className="text-[11px] text-muted-foreground mt-3 inline-flex items-center gap-1.5">
-            <Loader2 className="w-3 h-3 animate-spin" /> Waiting for the photo — this page updates itself.
+            <Loader2 className="w-3 h-3 animate-spin" /> Photos appear here automatically as you take them.
           </p>
         </div>
       )}
     </div>
   );
 };
+
 
 const SellerDocuments = () => {
   const [params] = useSearchParams();
