@@ -323,6 +323,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const Chip = ({ r }: { r: Requirement }) => {
     const s = stateByKey[reqKey(r)] ?? (r.review ? "maybe" : "needed");
     const synced = rows.some((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    const fromContract = !row?.manual_override && !!contractStates[reqKey(r)];
     return (
       <div className={`flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between border rounded-md px-3 py-2 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
         <div className="min-w-0">
@@ -333,6 +335,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
             {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
             {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
+            {fromContract && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
+                <CheckCircle2 className="w-2.5 h-2.5" />On file
+              </span>
+            )}
             {r.fromCemetery && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-200 text-stone-700 inline-flex items-center gap-1">
                 <Building2 className="w-2.5 h-2.5" />{cemName ?? "Cemetery"}
@@ -405,14 +412,52 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               <span className="text-xs font-semibold flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Who has the right to sell
               </span>
-              <span className="text-[11px] text-muted-foreground">{prog.answered}/{prog.total} answered</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground">{prog.answered}/{prog.total} answered</span>
+                <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={inferFromFile} disabled={inferring}>
+                  {inferring
+                    ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    : <Sparkles className="w-3.5 h-3.5 mr-1" />}
+                  Read the file
+                </Button>
+              </div>
             </div>
+
+            {reading && (
+              <div className="rounded-md border border-violet-200 bg-violet-50/60 px-2.5 py-2 space-y-1">
+                <p className="text-[11px] font-medium text-violet-900 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Read from the intake form, notes and {reading.sources?.emails ?? 0} email{reading.sources?.emails === 1 ? "" : "s"}
+                </p>
+                {reading.reasons.map((r) => (
+                  <p key={r.key} className="text-[11px] text-violet-900/80">
+                    <span className="font-medium">{QUESTIONS[r.key]?.eyebrow ?? r.key}:</span> {r.reason}
+                    <span className="ml-1 opacity-60">({r.confidence} confidence)</span>
+                  </p>
+                ))}
+                {(reading.open_questions ?? []).length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-[11px] font-medium text-violet-900">Still to ask the seller</p>
+                    {reading.open_questions!.map((q) => (
+                      <p key={q} className="text-[11px] text-violet-900/80">• {q}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {path.map((key) => {
               const q = QUESTIONS[key];
               const value = (answers as Record<string, unknown>)[key] as string | undefined;
               return (
                 <div key={key} className="space-y-1">
-                  <p className="text-xs font-medium">{q.question}</p>
+                  <p className="text-xs font-medium flex items-center gap-1.5">
+                    {q.question}
+                    {(answers.aiSuggested ?? []).includes(key) && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-100 text-violet-800 inline-flex items-center gap-0.5">
+                        <Sparkles className="w-2.5 h-2.5" />AI — confirm
+                      </span>
+                    )}
+                  </p>
                   {q.hint && <p className="text-[11px] text-muted-foreground">{q.hint}</p>}
                   <div className="flex flex-wrap gap-1.5 pt-0.5">
                     {q.answers.map((opt) => (

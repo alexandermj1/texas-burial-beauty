@@ -33,6 +33,8 @@ export type OwnershipAnswers = {
   names?: "yes" | "no";
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
+  /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
+  aiSuggested?: string[];
 };
 
 export type PersonRole =
