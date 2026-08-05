@@ -45,23 +45,27 @@ Deno.serve(async (req) => {
 
     const firstName = (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` for ${escapeHtml(sub.cemetery)}` : '';
-    const isPoa = c.kind === 'poa';
+    const NOTARY_KINDS = ['poa', 'affidavit_heirship', 'spousal_consent'];
+    const isPoa = NOTARY_KINDS.includes(c.kind);
+    const docName = c.kind === 'affidavit_heirship'
+      ? 'Affidavit of Heirship'
+      : c.kind === 'spousal_consent'
+        ? 'Spousal Consent and Waiver'
+        : 'Limited Special Power of Attorney';
 
     const headline = isPoa
-      ? 'Your Power of Attorney is ready to prepare'
+      ? `Your ${docName} is ready to prepare`
       : 'Your listing agreement is ready to sign';
     const ctaLabel = isPoa
       ? 'Confirm your address &amp; get your notary packet →'
       : 'Review &amp; sign your agreement →';
     const introHtml = isPoa
       ? `<p style="margin:0 0 16px;">
-            Your <strong>Limited Special Power of Attorney</strong>${cemLine} has been prepared by
-            Texas Cemetery Brokers. This document allows us to complete the plot transfer paperwork on
-            your behalf once your property is sold.
+            Your <strong>${docName}</strong>${cemLine} has been prepared by Texas Cemetery Brokers as
+            part of the paperwork the cemetery needs before your property can be transferred.
           </p>
           <p style="margin:0 0 24px;">
-            Because the Power of Attorney authorises us to sign transfer paperwork for you, it must be
-            <strong>notarized</strong>. Please click below to confirm your mailing address — we'll then
+            Because this document is sworn, it must be <strong>notarized</strong>. Please click below to confirm your mailing address — we'll then
             email you the finished PDF along with a link to have it notarized online in about 15 minutes
             (or you can bring it to any local notary in person).
           </p>`
@@ -76,7 +80,7 @@ Deno.serve(async (req) => {
     const stepsHtml = isPoa
       ? `<ol style="padding-left:20px;margin:0 0 16px;font-size:13px;color:#4a5568;line-height:1.7;">
               <li>Click the button above and confirm your mailing address on the secure page.</li>
-              <li>We'll email you the finished Power of Attorney PDF, plus a one-click link to notarize it online.</li>
+              <li>We'll email you the finished ${docName} PDF, plus a one-click link to notarize it online.</li>
               <li>Or print the PDF and bring it to any local notary — a bank, UPS Store, or courthouse all work.</li>
               <li>Once notarized, forward the signed PDF back to us and we'll file it with the cemetery.</li>
             </ol>`
@@ -135,7 +139,7 @@ Deno.serve(async (req) => {
 </body></html>`;
 
     const subject = isPoa
-      ? `Your Power of Attorney${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — confirm address to receive notary packet`
+      ? `Your ${docName}${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — confirm address to receive notary packet`
       : `Your Listing Agreement${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — ready to sign`;
 
     const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
@@ -170,7 +174,7 @@ Deno.serve(async (req) => {
         to_email: to,
         subject,
         snippet: isPoa
-          ? 'Power of Attorney sent for signature / notarization.'
+          ? `${docName} sent for signature / notarization.`
           : 'Listing Agreement sent for signature.',
         body_text: `${headline}\n\nSigning link: ${sign_url}`,
         received_at: new Date().toISOString(),
