@@ -142,6 +142,22 @@ Deno.serve(async (req) => {
       clip(sub.admin_notes) ? `Admin notes: ${clip(sub.admin_notes)}` : "",
       clip(sub.authorization_notes) ? `Authorization notes: ${clip(sub.authorization_notes)}` : "",
       "",
+      "ATTACHED DOCUMENTS WE PHYSICALLY HOLD (read by the document extractor)",
+      ...(attachments.length
+        ? attachments.map((f) => {
+            const d = (f.extracted_data ?? {}) as Record<string, unknown>;
+            const type = String(d.document_type ?? f.document_type ?? "unclassified");
+            const facts = Object.entries(d)
+              .filter(([k, v]) => k !== "summary" && v != null && v !== "" &&
+                !(Array.isArray(v) && v.length === 0))
+              .map(([k, v]) => `${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`)
+              .join("; ");
+            return `- FILE "${f.file_name ?? "document"}" — type: ${type}${
+              f.extraction_status !== "done" ? " (not readable / not yet read)" : ""
+            }\n  summary: ${clip(f.extracted_summary, 600) || "n/a"}\n  extracted: ${clip(facts, 1200) || "n/a"}`;
+          })
+        : ["- (none on file)"]),
+      "",
       "DOCUMENTS ALREADY LOGGED",
       ...((docs ?? []).map((d) => `- ${d.doc_code ?? ""} ${d.label} (${d.status})`)),
       "",
