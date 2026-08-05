@@ -224,10 +224,10 @@ Deno.serve(async (req) => {
       let filled: Uint8Array;
       if (c.kind === 'affidavit_heirship') {
         filled = await buildAffidavitPdf({
-          ...(c.fill_data?.affidavit ?? {}),
+          ...(((c.fill_data as Record<string, unknown>)?.affidavit as Record<string, unknown>) ?? {}),
           affiant_name: (merged.seller_name as string) ?? '',
           affiant_address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),
-          decedent_name: (c.fill_data?.affidavit?.decedent_name as string) ?? (merged.co_owner_name as string) ?? '',
+          decedent_name: ((((c.fill_data as Record<string, unknown>)?.affidavit as Record<string, string>) ?? {}).decedent_name) ?? (merged.co_owner_name as string) ?? '',
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
         });
