@@ -1957,12 +1957,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   );
                 })()}
 
+                {/* Ownership proof + the exact paperwork this seller needs. */}
+                <OwnershipPaperworkPanel
+                  submissionId={selected.id}
+                  cemetery={selected.cemetery}
+                  sellerEmail={selected.email}
+                  sellerName={selected.name}
+                />
+
                 {/* Contracts: Listing Agreement (in-app e-sign) + POA (BlueNotary notarization). */}
                 <ContractsPanel
                   submissionId={selected.id}
                   sellerEmail={selected.email}
                   sellerName={selected.name}
                 />
+
 
                 {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
                 {(selected as any).customer_profile_id ? (
