@@ -84,16 +84,6 @@ Deno.serve(async (req) => {
       if (error) throw error;
 
       if (sub.customer_profile_id) {
-        await supabase.from("customer_files").insert({
-          customer_profile_id: sub.customer_profile_id,
-          uploaded_by_name: sub.name ?? "Seller (document packet)",
-          file_name: name,
-          file_path: path,
-          file_size: Number(body?.size ?? 0) || null,
-          mime_type: body?.type ?? null,
-          document_type: "Seller document packet",
-          notes: `Uploaded from the seller's document packet page`,
-        });
         await supabase.from("customer_activity_log").insert({
           customer_profile_id: sub.customer_profile_id,
           submission_id: submissionId,
