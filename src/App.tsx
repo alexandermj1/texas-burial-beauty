@@ -100,6 +100,8 @@ const App = () => (
                 <Route path="/select-starter" element={<SelectStarter />} />
                 <Route path="/seller-portal" element={<SellerPortal />} />
                 <Route path="/seller-portal/upload/mobile" element={<SellerPortalMobileUpload />} />
+                <Route path="/documents" element={<SellerDocuments />} />
+
 
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
