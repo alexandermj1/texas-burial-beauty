@@ -420,7 +420,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-muted-foreground">{prog.answered}/{prog.total} answered</span>
-                <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={inferFromFile} disabled={inferring}>
+                <Button
+                  size="sm" variant="outline" className="h-7 text-[11px]"
+                  onClick={inferFromFile} disabled={inferring || !quoteAccepted}
+                  title={quoteAccepted ? "Read the intake form, notes and email chain" : "Available once the seller accepts a quote"}
+                >
                   {inferring
                     ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
                     : <Sparkles className="w-3.5 h-3.5 mr-1" />}
