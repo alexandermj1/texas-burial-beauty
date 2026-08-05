@@ -168,16 +168,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return () => { void supabase.removeChannel(ch); };
   }, [submissionId, load]);
 
-  // Save the computed checklist the first time an admin opens the panel, so the
-  // seller's own page is never empty just because nobody pressed Sync.
-  useEffect(() => {
-    if (!open || loading || autoSynced) return;
-    if (!requirements.length || rows.some((r) => r.doc_code)) return;
-    setAutoSynced(true);
-    void syncChecklist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, loading, autoSynced, rows]);
-
   const path = questionPath(answers);
   const prog = progress(answers);
   const requirements = useMemo(() => computeRequirements(answers, rules), [answers, rules]);
@@ -231,6 +221,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   }, [rows, contractStates]);
 
   const stats = useMemo(() => summarise(requirements, stateByKey), [requirements, stateByKey]);
+
+  // Save the computed checklist the first time an admin opens the panel, so the
+  // seller's own page is never empty just because nobody pressed Sync.
+  useEffect(() => {
+    if (!open || loading || autoSynced) return;
+    if (!requirements.length || rows.some((r) => r.doc_code)) return;
+    setAutoSynced(true);
+    void syncChecklist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, loading, autoSynced, rows]);
 
   const persistAnswers = async (next: OwnershipAnswers) => {
     setAnswers(next);
