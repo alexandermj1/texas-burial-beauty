@@ -9,6 +9,8 @@ import { Building2, Plus, ChevronDown, ChevronRight, Save, X, GripVertical } fro
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
+import type { CemeteryDocRules } from "@/lib/ownershipRules";
+
 
 interface TexasCemetery {
   id: string;
@@ -26,8 +28,10 @@ interface TexasCemetery {
   description: string | null;
   website: string | null;
   notes: string | null;
+  doc_rules: CemeteryDocRules | null;
   auto_created: boolean;
 }
+
 
 interface Props {
   texasSubmissions: Submission[];
@@ -528,7 +532,58 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                           <Ta label="Description" rows={3} value={(edits[profile.id]?.description as any) ?? profile.description ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], description: v } }))} />
                           <Ta label="Typical prices" rows={3} value={(edits[profile.id]?.typical_prices as any) ?? profile.typical_prices ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], typical_prices: v } }))} />
                           <Ta label="Internal notes" rows={3} value={(edits[profile.id]?.notes as any) ?? profile.notes ?? ""} onChange={v => setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], notes: v } }))} className="sm:col-span-2" />
+
+                          {/* Paperwork rules — feed the ownership requirements engine */}
+                          {(() => {
+                            const dr: CemeteryDocRules = ((edits[profile.id] as any)?.doc_rules ?? profile.doc_rules ?? {}) as CemeteryDocRules;
+                            const setDr = (patch: Partial<CemeteryDocRules>) =>
+                              setEdits(e => ({ ...e, [profile.id]: { ...e[profile.id], doc_rules: { ...dr, ...patch } as any } }));
+                            const flags: { key: keyof CemeteryDocRules; label: string }[] = [
+                              { key: "requires_originals", label: "Requires original documents" },
+                              { key: "own_heirship_form", label: "Has its own heirship / kinship form" },
+                              { key: "own_transfer_form", label: "Has its own transfer packet" },
+                              { key: "accepts_outside_poa", label: "Accepts an outside power of attorney" },
+                              { key: "allows_remote_signing", label: "Allows remote / virtual signing" },
+                              { key: "in_person_lost_deed", label: "Lost-deed affidavit must be done in person" },
+                              { key: "child_waiver_required", label: "Child waiver required" },
+                            ];
+                            return (
+                              <div className="sm:col-span-2 rounded-lg border border-border/60 p-3 space-y-3">
+                                <div className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground">
+                                  Paperwork rules
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                  {flags.map(f => (
+                                    <label key={f.key} className="flex items-center gap-2 text-xs text-foreground/90 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        className="accent-primary"
+                                        checked={Boolean(dr[f.key])}
+                                        onChange={ev => setDr({ [f.key]: ev.target.checked } as Partial<CemeteryDocRules>)}
+                                      />
+                                      {f.label}
+                                    </label>
+                                  ))}
+                                </div>
+                                {dr.own_heirship_form && (
+                                  <Inp
+                                    label="Name of their heirship form"
+                                    value={dr.own_heirship_form_name ?? ""}
+                                    onChange={v => setDr({ own_heirship_form_name: v })}
+                                  />
+                                )}
+                                <Ta
+                                  label="Paperwork notes (process, who to send to, quirks)"
+                                  rows={3}
+                                  value={dr.notes ?? ""}
+                                  onChange={v => setDr({ notes: v })}
+                                />
+                              </div>
+                            );
+                          })()}
+
                           <div className="sm:col-span-2 flex justify-end">
+
                             <button
                               onClick={() => save(profile.id)}
                               disabled={!edits[profile.id]}
