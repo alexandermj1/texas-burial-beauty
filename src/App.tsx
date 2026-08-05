@@ -46,6 +46,8 @@ const SignContract = lazy(() => import("./pages/SignContract"));
 const SelectStarter = lazy(() => import("./pages/SelectStarter"));
 const SellerPortal = lazy(() => import("./pages/SellerPortal"));
 const SellerPortalMobileUpload = lazy(() => import("./pages/SellerPortalMobileUpload"));
+const SellerDocuments = lazy(() => import("./pages/SellerDocuments"));
+
 
 
 const queryClient = new QueryClient();
