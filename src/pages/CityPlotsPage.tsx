@@ -9,6 +9,7 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import { getCityPage, CITY_PAGES } from "./city-page-data";
 import dallasHeroArt from "@/assets/dallas-hero-illustration.png.asset.json";
 import houstonHeroArt from "@/assets/houston-hero-illustration.png.asset.json";
+import austinHeroArt from "@/assets/austin-hero-illustration.png.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
 
@@ -105,7 +106,7 @@ const CityPlotsPage = () => {
       <Navbar forceScrolled />
 
       {/* HERO */}
-      {data.slug === "houston" ? (
+      {data.slug === "houston" || data.slug === "austin" ? (
         <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-24 md:pt-28">
           <div className="grid lg:grid-cols-2 items-center gap-10 lg:gap-0">
             <motion.div
@@ -159,9 +160,13 @@ const CityPlotsPage = () => {
 
             <div className="relative h-full lg:self-stretch">
               <img
-                src={houstonHeroArt.url}
-                alt="Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
-                title="Cemetery plots for sale in Houston, Texas"
+                src={data.slug === "austin" ? austinHeroArt.url : houstonHeroArt.url}
+                alt={
+                  data.slug === "austin"
+                    ? "Watercolor illustration of an Austin, Texas cemetery entrance sign with mausoleum, headstones and the downtown Austin skyline behind it"
+                    : "Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
+                }
+                title={`Cemetery plots for sale in ${data.city}, Texas`}
                 width={1744}
                 height={902}
                 className="w-full h-full object-cover mix-blend-multiply"
