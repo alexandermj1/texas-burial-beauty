@@ -326,14 +326,58 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** Set a requirement's state, creating its checklist row on the fly if needed. */
   const setRowState = async (r: Requirement, value: RequiredState) => {
     const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-    if (!row) { toast.error("Sync the checklist first"); return; }
-    setRows((prev) => prev.map((x) => (x.id === row.id ? { ...x, manual_override: value, required_state: value } : x)));
-    await supabase.from("submission_documents")
-      .update({ manual_override: value, required_state: value, status: value === "complete" ? "received" : "pending" })
-      .eq("id", row.id);
+    const status = ["received", "notarized", "complete"].includes(value) ? "received" : "pending";
+    if (row) {
+      setRows((prev) => prev.map((x) => (x.id === row.id ? { ...x, manual_override: value, required_state: value } : x)));
+      const { error } = await supabase.from("submission_documents")
+        .update({ manual_override: value, required_state: value, status })
+        .eq("id", row.id);
+      if (error) toast.error(error.message);
+      return;
+    }
+    const { data, error } = await supabase.from("submission_documents").insert({
+      submission_id: submissionId,
+      doc_code: r.code,
+      person_name: r.personName ?? null,
+      person_role: r.personRole ?? null,
+      document_type: r.code,
+      label: r.label,
+      status,
+      required_state: value,
+      manual_override: value,
+      issued_by_us: !!r.issuedByUs,
+      needs_notary: !!r.needsNotary,
+      why: r.why,
+      statute_ref: r.statute ?? null,
+    } as never).select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url").maybeSingle();
+    if (error) { toast.error(error.message); return; }
+    if (data) setRows((prev) => [...prev, data as DocRow]);
   };
+
+  /** The seller's curated upload page — one link with everything on it. */
+  const packetUrl = `${window.location.origin}/documents?s=${submissionId}`;
+  const copyPacketLink = async () => {
+    await navigator.clipboard.writeText(packetUrl);
+    toast.success("Seller document link copied");
+  };
+  const copyPacketEmail = async () => {
+    const outstanding = requirements.filter((r) => {
+      const s = stateByKey[reqKey(r)] ?? "needed";
+      return !["complete", "received", "notarized", "not_needed"].includes(s);
+    });
+    const list = outstanding.map((r) => `• ${r.label}${r.why ? ` — ${r.why}` : ""}`).join("\n");
+    await navigator.clipboard.writeText(
+      `Hi ${(sellerName ?? "").split(" ")[0] || "there"},\n\n`
+      + `Everything we need to finish your sale is now on one page — you can upload from your computer, or scan the QR code on any item and photograph the document with your phone:\n\n${packetUrl}\n\n`
+      + (list ? `Currently outstanding:\n${list}\n\n` : "")
+      + `Reply to this email if anything is unclear and a broker will walk you through it.\n\nTexas Cemetery Brokers`,
+    );
+    toast.success("Packet email copied — paste it into a reply");
+  };
+
 
   const generateDoc = async (r: Requirement) => {
     if (!r.contractKind) return;
