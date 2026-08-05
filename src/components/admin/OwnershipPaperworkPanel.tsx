@@ -12,7 +12,7 @@ import {
 import ContractsPanel from "./ContractsPanel";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
-  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE, matchTerms,
+  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
   type OwnershipAnswers, type RosterPerson, type PersonRole,
   type RequiredState, type Requirement, type CemeteryDocRules,
 } from "@/lib/ownershipRules";
