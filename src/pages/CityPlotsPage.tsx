@@ -124,7 +124,7 @@ const CityPlotsPage = () => {
 
               <p className="text-accent text-[11px] tracking-[0.28em] uppercase font-semibold mb-5">{data.metro}</p>
               <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground leading-[1.06] tracking-tight [text-wrap:balance]">
-                {data.h1Lead} in {data.city}
+                {data.h1Lead} {data.city}
               </h1>
               <p className="mt-7 text-base md:text-[17px] text-foreground/70 leading-relaxed font-light max-w-xl">
                 {data.intro}
@@ -161,8 +161,8 @@ const CityPlotsPage = () => {
                 src={houstonHeroArt.url}
                 alt="Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
                 title="Cemetery plots for sale in Houston, Texas"
-                width={1740}
-                height={906}
+                width={1744}
+                height={902}
                 className="w-full h-full object-cover mix-blend-multiply"
                 loading="eager"
                 fetchPriority="high"
