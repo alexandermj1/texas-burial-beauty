@@ -376,7 +376,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Files that look like they satisfy this requirement. */
   const filesFor = (r: Requirement): AnyFile[] => {
     const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-    const terms = matchTerms(r.code);
+    const terms = matchTerms(r.code, r.label);
     const person = (r.personName ?? "").trim().toLowerCase();
     return files.filter((f) => {
       if (row && f.docId === row.id) return true;
