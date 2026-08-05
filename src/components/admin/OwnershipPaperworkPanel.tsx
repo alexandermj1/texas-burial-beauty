@@ -81,12 +81,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [inferring, setInferring] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
+  const [files, setFiles] = useState<AnyFile[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
-        .select("ownership_answers, name, email").eq("id", submissionId).maybeSingle(),
+        .select("ownership_answers, name, email, customer_profile_id, seller_attachments").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
         .eq("submission_id", submissionId),
@@ -98,6 +100,30 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setAnswers(a && typeof a === "object" ? a : {});
     setRows((docs ?? []) as DocRow[]);
     setContracts((cons ?? []) as ContractRow[]);
+
+    // Everything the seller has actually sent us, from all three places files land.
+    const collected: AnyFile[] = [];
+    const sellerFiles = (sub as { seller_attachments?: { path?: string; name?: string }[] } | null)?.seller_attachments;
+    for (const f of Array.isArray(sellerFiles) ? sellerFiles : []) {
+      if (f?.path) collected.push({ name: f.name ?? f.path, path: f.path, bucket: "customer-files", origin: "Intake form" });
+    }
+    const profileId = (sub as { customer_profile_id?: string } | null)?.customer_profile_id;
+    if (profileId) {
+      const { data: cf } = await supabase.from("customer_files")
+        .select("file_name, file_path, document_type").eq("customer_profile_id", profileId);
+      for (const f of cf ?? []) {
+        if (!collected.some((c) => c.path === f.file_path)) {
+          collected.push({ name: f.file_name, path: f.file_path, bucket: "customer-files", origin: f.document_type ?? "Uploaded" });
+        }
+      }
+    }
+    for (const d of docs ?? []) {
+      if (d.file_url && !collected.some((c) => c.path === d.file_url)) {
+        collected.push({ name: d.file_url.split("/").pop() ?? d.file_url, path: d.file_url, bucket: "portal-uploads", origin: "Document packet", docId: d.id });
+      }
+    }
+    setFiles(collected);
+
     if (cemetery) {
       const { data: cem } = await supabase.from("texas_cemeteries")
         .select("name, doc_rules").ilike("name", cemetery).maybeSingle();
@@ -106,6 +132,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
     setLoading(false);
   }, [submissionId, cemetery]);
+
+  /** Open any collected file in a new tab via a short-lived signed URL. */
+  const openFile = async (f: AnyFile) => {
+    const { data, error } = await supabase.storage.from(f.bucket).createSignedUrl(f.path, 60 * 10);
+    if (error || !data) return toast.error("Couldn't open that file");
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+
 
   useEffect(() => { void load(); }, [load]);
 
