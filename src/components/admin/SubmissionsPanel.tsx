@@ -1032,6 +1032,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const q = showAccepted ? quotedAccepted : quotedPending;
                     const retail = retailSaved > 0 ? retailSaved : q / 0.42;
                     const sales = Math.round((retail * 0.67) / 100) * 100;
+                    const spaceCount = Number((selected as any).spaces) || 0;
+                    const isMulti = spaceCount > 1;
+                    const propLabel = [
+                      spaceCount ? `${spaceCount} space${isMulti ? "s" : ""}` : null,
+                      (selected as any).property_type || null,
+                      (selected as any).cemetery || (selected as any).cemetery_name || null,
+                    ].filter(Boolean).join(" · ") || "Property not specified";
+                    const perSpace = isMulti ? Math.round(q / spaceCount) : 0;
 
                     const bandBase = "inline-flex items-center gap-3 px-3 py-1.5 rounded-lg border-2 shadow-sm flex-wrap";
                     const emerald = "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
@@ -1043,7 +1051,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         {showAccepted && (
                           <div className={`${bandBase} ${emerald}`}>
                             <div className="flex flex-col leading-tight">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Sales price{isMulti ? ` (${spaceCount} spaces total)` : ""}
+                              </span>
                               <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
@@ -1051,15 +1061,28 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted / accepted</span>
-                              <span className="text-sm font-semibold tabular-nums">{fmt(q)}</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Quoted / accepted{isMulti ? " · all spaces" : ""}
+                              </span>
+                              <span className="text-sm font-semibold tabular-nums">
+                                {fmt(q)}
+                                {isMulti && <span className="ml-1 text-[10px] font-medium opacity-70">({fmt(perSpace)} ea)</span>}
+                              </span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3 max-w-[240px]">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                {isMulti ? "Properties accepted" : "Property accepted"}
+                              </span>
+                              <span className="text-sm font-semibold truncate" title={propLabel}>{propLabel}</span>
                             </div>
                           </div>
                         )}
                         {showPending && (
                           <div className={`${bandBase} ${purple}`}>
                             <div className="flex flex-col leading-tight">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Sales price{isMulti ? ` (${spaceCount} spaces total)` : ""}
+                              </span>
                               <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
@@ -1067,8 +1090,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted (pending)</span>
-                              <span className="text-sm font-semibold tabular-nums">{fmt(q)}</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Quoted (pending){isMulti ? " · all spaces" : ""}
+                              </span>
+                              <span className="text-sm font-semibold tabular-nums">
+                                {fmt(q)}
+                                {isMulti && <span className="ml-1 text-[10px] font-medium opacity-70">({fmt(perSpace)} ea)</span>}
+                              </span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3 max-w-[240px]">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                {isMulti ? "Properties quoted" : "Property quoted"}
+                              </span>
+                              <span className="text-sm font-semibold truncate" title={propLabel}>{propLabel}</span>
                             </div>
                           </div>
                         )}
@@ -2334,24 +2368,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         {(s as any).quote_sent_at && (() => {
                           const accepted = (s as any).quote_response === "accepted";
                           const quoted = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
+                          const rowSpaces = Number((s as any).spaces) || 0;
+                          const rowMulti = rowSpaces > 1;
+                          const rowProp = [
+                            rowSpaces ? `${rowSpaces} space${rowMulti ? "s" : ""}` : null,
+                            (s as any).property_type || null,
+                            (s as any).cemetery || (s as any).cemetery_name || null,
+                          ].filter(Boolean).join(" · ") || "property not specified";
                           if (accepted && quoted > 0) {
                             const sales = Math.round((quoted / 0.42) * 0.68);
                             return (
                               <span
                                 className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm tabular-nums"
-                                title={`Sales price · quoted $${quoted.toLocaleString()} → retail $${Math.round(quoted/0.42).toLocaleString()} → sales $${sales.toLocaleString()}`}
+                                title={`Sales price for ${rowProp} · quoted $${quoted.toLocaleString()} → retail $${Math.round(quoted/0.42).toLocaleString()} → sales $${sales.toLocaleString()}`}
                               >
                                 <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
                                 ${sales.toLocaleString()}
+                                {rowMulti && <span className="font-semibold opacity-80">×{rowSpaces}</span>}
                               </span>
                             );
                           }
                           return (
                             <span
-                              className="inline-flex items-center justify-center w-5 h-5 rounded-full border shadow-sm bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800"
-                              title={`Quote sent · ${formatDate((s as any).quote_sent_at)}`}
+                              className={`inline-flex items-center justify-center ${rowMulti ? "gap-0.5 px-1.5 h-5" : "w-5 h-5"} rounded-full border shadow-sm bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800`}
+                              title={`Quote sent for ${rowProp} · ${formatDate((s as any).quote_sent_at)}`}
                             >
                               <DollarSign className="w-3 h-3" strokeWidth={2.5} />
+                              {rowMulti && <span className="text-[10px] font-bold">×{rowSpaces}</span>}
                             </span>
                           );
                         })()}
