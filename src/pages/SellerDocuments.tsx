@@ -33,6 +33,7 @@ type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string
 type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; listing_agreement?: ListingAgreement };
 
 const DONE = ["received", "notarized", "complete"];
+const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
 const DocRow = ({
   doc, submissionId, onDone,
@@ -46,7 +47,7 @@ const DocRow = ({
   const guide = DOC_GUIDE[doc.code ?? ""];
 
   const mobileUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/seller-portal/upload/mobile?session=${submissionId}&doc=${encodeURIComponent(doc.id)}&label=${encodeURIComponent(doc.label)}`
+    ? `${PUBLIC_SITE_URL}/seller-portal/upload/mobile?session=${submissionId}&doc=${encodeURIComponent(doc.id)}&label=${encodeURIComponent(doc.label)}`
     : "";
 
   useEffect(() => {

@@ -365,7 +365,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
       const wanted = new Set(requirements.map(reqKey));
-       const stale = rows.filter((r) => {
+      const stale = rows.filter((r) => {
          const key = `${r.doc_code}::${r.person_name ?? ""}`;
          const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
          const supersededPlaceholder = !!r.person_name
