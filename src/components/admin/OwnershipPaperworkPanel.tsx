@@ -703,8 +703,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold">Documents required ({requirements.length})</span>
               <div className="flex items-center gap-1.5">
-                <Button size="sm" variant="ghost" onClick={emailOutstanding}>
-                  <Mail className="w-3.5 h-3.5 mr-1" />Copy outstanding-items email
+                <Button size="sm" variant="ghost" onClick={copyPacketLink}>
+                  <Link2 className="w-3.5 h-3.5 mr-1" />Copy seller link
+                </Button>
+                <Button size="sm" variant="ghost" onClick={copyPacketEmail}>
+                  <Mail className="w-3.5 h-3.5 mr-1" />Copy packet email
                 </Button>
                 <Button size="sm" variant="outline" onClick={syncChecklist} disabled={saving}>
                   {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
@@ -739,6 +742,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 and generate them.
               </p>
             )}
+          </div>
+
+          {/* ── Agreements: listing agreement + POA live here now ── */}
+          <div className="border-t border-border/40 pt-3">
+            <ContractsPanel
+              submissionId={submissionId}
+              sellerName={sellerName}
+              sellerEmail={sellerEmail}
+            />
           </div>
 
           <p className="text-[11px] text-muted-foreground leading-relaxed">
