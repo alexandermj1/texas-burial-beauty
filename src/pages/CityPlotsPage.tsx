@@ -178,8 +178,8 @@ const CityPlotsPage = () => {
             </div>
           </div>
 
-          {/* Blend the whole hero into the page below */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background" />
+          {/* Blend the hero into the page below */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-background" />
         </section>
       ) : data.slug === "dallas" ? (
         <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-28 md:pt-32">
