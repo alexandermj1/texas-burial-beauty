@@ -36,6 +36,7 @@ type ContractRow = {
   notarized_at: string | null;
   completed_at: string | null;
   countersigned_at: string | null;
+  sign_token: string | null;
 };
 
 type Reading = {
@@ -76,6 +77,23 @@ type AnyFile = {
   bucket: "customer-files" | "portal-uploads";
   origin: string;
   docId?: string;
+  extractedData?: Record<string, unknown> | null;
+  extractedSummary?: string | null;
+};
+
+const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
+
+const fileSearchText = (f: AnyFile) =>
+  `${f.name} ${f.origin} ${f.extractedSummary ?? ""} ${JSON.stringify(f.extractedData ?? {})}`.toLowerCase();
+
+const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
+  if (row && f.docId === row.id) return true;
+  const hay = fileSearchText(f);
+  const extractedType = String(f.extractedData?.document_type ?? "").toLowerCase();
+  if (r.code === "D1" && ["deed", "certificate of ownership", "cemetery deed"].some((t) => extractedType.includes(t))) return true;
+  if ((r.code === "D2" || r.code === "D2P") && ["driver license", "driver's license", "government id", "passport", "state id"].some((t) => extractedType.includes(t))) return true;
+  const terms = matchTerms(r.code, r.label);
+  return terms.some((t) => hay.includes(t));
 };
 
 
@@ -106,7 +124,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
         .eq("submission_id", submissionId),
       supabase.from("contracts")
-        .select("id, kind, status, signature_name, signed_at, notarized_at, completed_at, countersigned_at")
+        .select("id, kind, status, signature_name, signed_at, notarized_at, completed_at, countersigned_at, sign_token")
         .eq("submission_id", submissionId),
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
@@ -123,10 +141,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const profileId = (sub as { customer_profile_id?: string } | null)?.customer_profile_id;
     if (profileId) {
       const { data: cf } = await supabase.from("customer_files")
-        .select("file_name, file_path, document_type").eq("customer_profile_id", profileId);
+        .select("file_name, file_path, document_type, extracted_data, extracted_summary").eq("customer_profile_id", profileId);
       for (const f of cf ?? []) {
         if (!collected.some((c) => c.path === f.file_path)) {
-          collected.push({ name: f.file_name, path: f.file_path, bucket: "customer-files", origin: f.document_type ?? "Uploaded" });
+          collected.push({
+            name: f.file_name,
+            path: f.file_path,
+            bucket: "customer-files",
+            origin: f.document_type ?? "Uploaded",
+            extractedData: (f.extracted_data as Record<string, unknown> | null) ?? null,
+            extractedSummary: f.extracted_summary ?? null,
+          });
         }
       }
     }
@@ -181,7 +206,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const contractStates = useMemo(() => {
     const m: Record<string, RequiredState> = {};
     const stateOf = (c: ContractRow): RequiredState | null => {
-      if (c.status === "void" || c.status === "draft") return null;
+      if (c.status === "void") return null;
+      if (c.status === "draft" && c.sign_token) return "issued";
+      if (c.status === "draft") return null;
       if (c.completed_at || c.countersigned_at || c.status === "completed") return "complete";
       if (c.notarized_at || c.status === "notarized") return "notarized";
       if (c.signed_at || c.status === "signed") return "received";
@@ -200,12 +227,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const code = codeFor[c.kind];
       if (!st || !code) continue;
       // POAs are per-person; everything else is a single submission-level item.
-      const key = code === "D21" ? `D21::${c.signature_name ?? ""}` : `${code}::`;
+      const poaPeople = requirements.filter((r) => r.code === "D21").map((r) => r.personName).filter(Boolean);
+      const poaPerson = c.signature_name || (poaPeople.length === 1 ? poaPeople[0] : "");
+      const key = code === "D21" ? `D21::${poaPerson ?? ""}` : `${code}::`;
       const prev = m[key];
       if (!prev || rank.indexOf(st) > rank.indexOf(prev)) m[key] = st;
     }
     return m;
-  }, [contracts]);
+  }, [contracts, requirements]);
 
   const stateByKey = useMemo(() => {
     const m: Record<string, RequiredState> = { ...contractStates };
@@ -336,9 +365,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
       const wanted = new Set(requirements.map(reqKey));
-      const stale = rows.filter((r) =>
-        r.doc_code && !wanted.has(`${r.doc_code}::${r.person_name ?? ""}`)
-        && !r.file_url && !r.manual_override && (r.status === "pending" || !r.status));
+       const stale = rows.filter((r) => {
+         const key = `${r.doc_code}::${r.person_name ?? ""}`;
+         const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
+         const supersededPlaceholder = !!r.person_name
+           && /^(owner on the deed|each co-owner|each heir|executor|trustee|authorised officer|person acting under authority)$/i.test(r.person_name)
+           && requirements.some((x) => x.code === r.doc_code && x.personName && x.personName !== r.person_name);
+         return !!r.doc_code && !wanted.has(key) && !r.file_url
+           && (supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
+       });
       if (stale.length) {
         await supabase.from("submission_documents").delete().in("id", stale.map((s) => s.id));
       }
@@ -383,7 +418,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
   /** The seller's curated upload page — one link with everything on it. */
-  const packetUrl = `${window.location.origin}/documents?s=${submissionId}`;
+  const packetUrl = `${PUBLIC_SITE_URL}/documents?s=${submissionId}`;
   const copyPacketLink = async () => {
     await navigator.clipboard.writeText(packetUrl);
     toast.success("Seller document link copied");
@@ -433,7 +468,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         const { data: c } = await supabase.from("contracts")
           .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
         if (c?.sign_token) {
-          poaUrl = `${window.location.origin}/sign/${c.sign_token}`;
+          poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
           poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
         }
       }
@@ -496,17 +531,29 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Files that look like they satisfy this requirement. */
   const filesFor = (r: Requirement): AnyFile[] => {
     const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-    const terms = matchTerms(r.code, r.label);
-    const person = (r.personName ?? "").trim().toLowerCase();
-    return files.filter((f) => {
-      if (row && f.docId === row.id) return true;
-      const hay = `${f.name} ${f.origin}`.toLowerCase();
-      if (!terms.some((t) => hay.includes(t))) return false;
-      // Person-specific items only match a file naming that person, when named.
-      if (person && !hay.includes(person.split(" ")[0])) return terms.length > 0 && !f.docId ? true : true;
-      return true;
-    });
+    return files.filter((f) => fileMatchesRequirement(f, r, row));
   };
+
+  // Documents often arrive before the ownership interview. Once extraction or
+  // filenames prove a requirement is already supplied, reflect that fact without
+  // asking the seller for it again. Manual admin choices still win.
+  useEffect(() => {
+    if (loading || !requirements.length || !files.length) return;
+    const satisfied = requirements.filter((r) => {
+      if (["LA", "D21", "REVIEW", "NOTE"].includes(r.code)) return false;
+      const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+      const state = stateByKey[reqKey(r)];
+      return !row?.manual_override && !["received", "notarized", "complete"].includes(state ?? "")
+        && files.some((f) => fileMatchesRequirement(f, r, row));
+    });
+    if (!satisfied.length) return;
+    void (async () => {
+      for (const r of satisfied) await setRowState(r, "received");
+      await load();
+    })();
+    // setRowState and load are stable for the lifetime of this render path.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, requirements, files, rows, stateByKey]);
 
   const Chip = ({ r }: { r: Requirement }) => {
     const key = reqKey(r);
@@ -555,10 +602,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {r.contractKind && (
-              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => generateDoc(r)}>
+              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => generateDoc(r)}
+                title={`Prepare ${r.label}`} className="text-[11px] h-7">
                 {busy === key
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  : <FileSignature className="w-3.5 h-3.5" />}
+                  : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                Prepare
               </Button>
             )}
             <Button

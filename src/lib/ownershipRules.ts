@@ -389,8 +389,6 @@ export function computeRequirements(
     });
   }
 
-  add({ code: "D2", label: "Photo ID for every person signing", why: "One for each name on the signing list." });
-
   // ── Living owner ──
   if (a.owner === "living") {
     if (a.agentType === "poa") {
@@ -578,8 +576,11 @@ export function computeRequirements(
   });
 
   // ── Per-person items ──
-  const roster = signingRoster(a);
-  for (const p of roster) {
+  const namedRoster = (a.people ?? []).filter((p) => p.name.trim() && p.role !== "decedent" && !p.deceased);
+  if (namedRoster.length === 0) {
+    add({ code: "D2", label: "Photo ID for every person signing", why: "One clear government photo ID for each person who will sign." });
+  }
+  for (const p of namedRoster) {
     if (p.role === "witness") continue;
     add({
       code: "D21", label: `Limited power of attorney to Texas Cemetery Brokers — ${p.name}`,
@@ -594,10 +595,11 @@ export function computeRequirements(
     });
   }
 
-  // De-duplicate identical code+person pairs, keeping the richer entry.
+  // De-duplicate by checklist identity. Labels can change as names become known,
+  // but that must not create a second request for the same document.
   const seen = new Map<string, Requirement>();
   for (const r of out) {
-    const key = `${r.code}::${r.personName ?? ""}::${r.label}`;
+    const key = `${r.code}::${r.personName ?? ""}`;
     const prev = seen.get(key);
     if (!prev) seen.set(key, r);
     else seen.set(key, { ...prev, ...r });

@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
 
       const visible = (docs ?? []).filter((d) => {
         const code = d.doc_code ?? "";
-        if (code === "REVIEW" || code === "NOTE") return false;
+        if (code === "REVIEW" || code === "NOTE" || code === "LA") return false;
         const state = d.manual_override ?? d.required_state;
         return state !== "not_needed";
       });
@@ -64,9 +64,31 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
+      const { data: listingRow } = await supabase
+        .from("contracts")
+        .select("signed_at, completed_at, countersigned_at, status, created_at")
+        .eq("submission_id", submissionId)
+        .eq("kind", "listing_agreement")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // A prepared POA has its own action card below. Do not repeat it as an
+      // upload request, and collapse any legacy duplicate rows by code/person.
+      const deduped = visible.filter((d) => !(d.doc_code === "D21" && poaRow?.sign_token))
+        .filter((d, index, all) => index === all.findIndex((x) =>
+          x.doc_code === d.doc_code && (x.person_name ?? "") === (d.person_name ?? "")));
+
       return json({
         seller_name: sub.name,
         cemetery: sub.cemetery,
+        listing_agreement: listingRow
+          ? {
+              signed: !!listingRow.signed_at || listingRow.status === "signed" || listingRow.status === "completed",
+              completed: !!listingRow.completed_at || !!listingRow.countersigned_at || listingRow.status === "completed",
+              signed_at: listingRow.signed_at,
+            }
+          : null,
         poa: poaRow?.sign_token
           ? {
               sign_token: poaRow.sign_token,
@@ -74,7 +96,7 @@ Deno.serve(async (req) => {
               signed: !!poaRow.signed_at,
             }
           : null,
-        documents: visible.map((d) => ({
+        documents: deduped.map((d) => ({
           id: d.id,
           code: d.doc_code,
           label: d.label,
