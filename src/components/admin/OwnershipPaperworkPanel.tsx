@@ -524,7 +524,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  const general = requirements.filter((r) => !r.personName);
+  const documentRequirements = requirements.filter((r) => r.code !== "LA");
+  const general = documentRequirements.filter((r) => !r.personName);
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
 
@@ -839,7 +840,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold">
-                Documents required ({requirements.length})
+                Documents required ({documentRequirements.length})
                 {outstanding.length > 0 && (
                   <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
                     · {outstanding.length} still outstanding
