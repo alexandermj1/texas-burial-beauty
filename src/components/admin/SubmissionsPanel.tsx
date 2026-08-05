@@ -2375,10 +2375,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           const quoted = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
                           const rowSpaces = Number((s as any).spaces) || 0;
                           const rowMulti = rowSpaces > 1;
+                          const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
+                          const rowPlotId = (s as any).space_numbers || null;
                           const rowProp = [
-                            rowSpaces ? `${rowSpaces} space${rowMulti ? "s" : ""}` : null,
                             (s as any).property_type || null,
-                            (s as any).cemetery || (s as any).cemetery_name || null,
+                            rowSpaces ? `${rowSpaces} space${rowMulti ? "s" : ""}` : null,
+                            rowPlotLocation,
+                            rowPlotId,
                           ].filter(Boolean).join(" · ") || "property not specified";
                           if (accepted && quoted > 0) {
                             const sales = Math.round((quoted / 0.42) * 0.68);
