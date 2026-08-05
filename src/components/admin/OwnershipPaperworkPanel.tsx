@@ -7,13 +7,16 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Mail, Building2, CheckCircle2, ChevronDown, Sparkles,
+  Paperclip, Link2, Undo2,
 } from "lucide-react";
+import ContractsPanel from "./ContractsPanel";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
-  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER,
+  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE, matchTerms,
   type OwnershipAnswers, type RosterPerson, type PersonRole,
   type RequiredState, type Requirement, type CemeteryDocRules,
 } from "@/lib/ownershipRules";
+
 
 type Props = {
   submissionId: string;
