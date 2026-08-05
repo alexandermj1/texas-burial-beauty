@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
-  ShieldCheck, FileSignature, Mail, Building2, CheckCircle2, ChevronDown,
+  ShieldCheck, FileSignature, Mail, Building2, CheckCircle2, ChevronDown, Sparkles,
 } from "lucide-react";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
@@ -20,6 +20,25 @@ type Props = {
   cemetery?: string | null;
   sellerName?: string | null;
   sellerEmail?: string | null;
+};
+
+type ContractRow = {
+  id: string;
+  kind: string;
+  status: string;
+  signature_name: string | null;
+  signed_at: string | null;
+  notarized_at: string | null;
+  completed_at: string | null;
+  countersigned_at: string | null;
+};
+
+type Reading = {
+  answers: Record<string, string>;
+  reasons: { key: string; reason: string; confidence: string }[];
+  people?: { name: string; role: PersonRole; relationship?: string; email?: string; deceased?: boolean }[];
+  open_questions?: string[];
+  sources?: { emails: number; notes: number };
 };
 
 type DocRow = {
@@ -54,19 +73,26 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [cemName, setCemName] = useState<string | null>(null);
   const [rows, setRows] = useState<DocRow[]>([]);
   const [open, setOpen] = useState(false);
+  const [contracts, setContracts] = useState<ContractRow[]>([]);
+  const [inferring, setInferring] = useState(false);
+  const [reading, setReading] = useState<Reading | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: sub }, { data: docs }] = await Promise.all([
+    const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
         .select("ownership_answers, name, email").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
         .eq("submission_id", submissionId),
+      supabase.from("contracts")
+        .select("id, kind, status, signature_name, signed_at, notarized_at, completed_at, countersigned_at")
+        .eq("submission_id", submissionId),
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
     setRows((docs ?? []) as DocRow[]);
+    setContracts((cons ?? []) as ContractRow[]);
     if (cemetery) {
       const { data: cem } = await supabase.from("texas_cemeteries")
         .select("name, doc_rules").ilike("name", cemetery).maybeSingle();
@@ -83,15 +109,52 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const requirements = useMemo(() => computeRequirements(answers, rules), [answers, rules]);
   const roster = useMemo(() => signingRoster(answers), [answers]);
 
-  const stateByKey = useMemo(() => {
+  /**
+   * What the signed-contract record already proves. A contract we have on file
+   * beats whatever the checklist row says, unless an admin has manually
+   * overridden that row.
+   */
+  const contractStates = useMemo(() => {
     const m: Record<string, RequiredState> = {};
-    for (const r of rows) {
-      if (!r.doc_code) continue;
-      m[`${r.doc_code}::${r.person_name ?? ""}`] =
-        (r.manual_override as RequiredState) ?? (r.required_state as RequiredState) ?? "needed";
+    const stateOf = (c: ContractRow): RequiredState | null => {
+      if (c.status === "void" || c.status === "draft") return null;
+      if (c.completed_at || c.countersigned_at || c.status === "completed") return "complete";
+      if (c.notarized_at || c.status === "notarized") return "notarized";
+      if (c.signed_at || c.status === "signed") return "received";
+      if (c.status === "sent" || c.status === "viewed") return "issued";
+      return null;
+    };
+    const codeFor: Record<string, string> = {
+      listing_agreement: "LA",
+      poa: "D21",
+      affidavit_heirship: "D12",
+      spousal_consent: "D3",
+    };
+    const rank: RequiredState[] = ["issued", "received", "notarized", "complete"];
+    for (const c of contracts) {
+      const st = stateOf(c);
+      const code = codeFor[c.kind];
+      if (!st || !code) continue;
+      // POAs are per-person; everything else is a single submission-level item.
+      const key = code === "D21" ? `D21::${c.signature_name ?? ""}` : `${code}::`;
+      const prev = m[key];
+      if (!prev || rank.indexOf(st) > rank.indexOf(prev)) m[key] = st;
     }
     return m;
-  }, [rows]);
+  }, [contracts]);
+
+  const stateByKey = useMemo(() => {
+    const m: Record<string, RequiredState> = { ...contractStates };
+    for (const r of rows) {
+      if (!r.doc_code) continue;
+      const key = `${r.doc_code}::${r.person_name ?? ""}`;
+      if (r.manual_override) { m[key] = r.manual_override as RequiredState; continue; }
+      const fromContract = contractStates[key];
+      if (fromContract) { m[key] = fromContract; continue; }
+      m[key] = (r.required_state as RequiredState) ?? "needed";
+    }
+    return m;
+  }, [rows, contractStates]);
 
   const stats = useMemo(() => summarise(requirements, stateByKey), [requirements, stateByKey]);
 
@@ -103,7 +166,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
   const setAnswer = (key: string, value: string) => {
-    const next = { ...answers, [key]: value } as OwnershipAnswers;
+    const next = {
+      ...answers,
+      [key]: value,
+      aiSuggested: (answers.aiSuggested ?? []).filter((k) => k !== key),
+    } as OwnershipAnswers;
     void persistAnswers(next);
   };
 
@@ -120,6 +187,44 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const commitPeople = () => void persistAnswers({ ...answers, people: answers.people ?? [] });
   const removePerson = (id: string) => {
     void persistAnswers({ ...answers, people: (answers.people ?? []).filter((p) => p.id !== id) });
+  };
+
+  /** Ask the AI to read the file (form + notes + email chain) and propose answers. */
+  const inferFromFile = async () => {
+    setInferring(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("infer-ownership", {
+        body: { submission_id: submissionId },
+      });
+      if (error) throw error;
+      const r = data as Reading;
+      if (!r?.answers || !Object.keys(r.answers).length) {
+        setReading(r ?? null);
+        toast.message("Nothing in the file was clear enough to answer with");
+        return;
+      }
+      setReading(r);
+      const suggested = Object.keys(r.answers);
+      const people = (r.people ?? [])
+        .filter((p) => p.name?.trim())
+        .map((p) => ({ id: crypto.randomUUID(), ...p }));
+      const existing = answers.people ?? [];
+      const merged = [
+        ...existing,
+        ...people.filter((p) => !existing.some((e) => e.name.trim().toLowerCase() === p.name.trim().toLowerCase())),
+      ];
+      await persistAnswers({
+        ...answers,
+        ...r.answers,
+        people: merged,
+        aiSuggested: [...new Set([...(answers.aiSuggested ?? []), ...suggested])],
+      } as OwnershipAnswers);
+      toast.success(`Read the file and filled ${suggested.length} answer${suggested.length === 1 ? "" : "s"} — check each one`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setInferring(false);
+    }
   };
 
   /** Write the computed checklist into submission_documents, preserving progress. */
