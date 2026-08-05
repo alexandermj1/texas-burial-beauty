@@ -156,7 +156,7 @@ const CityPlotsPage = () => {
               </dl>
             </motion.div>
 
-            <div className="relative h-full">
+            <div className="relative h-full lg:-mt-24 xl:-mt-28 lg:self-stretch">
               <img
                 src={houstonHeroArt.url}
                 alt="Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
@@ -167,13 +167,19 @@ const CityPlotsPage = () => {
                 loading="eager"
                 fetchPriority="high"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-20 md:w-32 bg-gradient-to-r from-[hsl(38_35%_95%)] to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[hsl(38_35%_95%)] to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 rounded-sm border border-foreground/10 bg-background/70 backdrop-blur-sm px-5 py-3 text-center text-[11px] tracking-[0.18em] uppercase text-foreground/70">
+              {/* Dissolve the artwork into the cream field on every edge */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-32 md:h-44 bg-gradient-to-b from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/70 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-28 md:w-48 bg-gradient-to-r from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/60 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-28 bg-gradient-to-l from-[hsl(38_35%_95%)] to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 md:h-40 bg-gradient-to-t from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/70 to-transparent" />
+              <p className="absolute bottom-5 left-0 right-0 px-6 text-center text-[11px] tracking-[0.2em] uppercase text-foreground/55">
                 {data.metroCemeteryCount}+ cemeteries covered · Same-day showings
-              </div>
+              </p>
             </div>
           </div>
+
+          {/* Blend the hero into the page below */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-background" />
         </section>
       ) : data.slug === "dallas" ? (
         <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-28 md:pt-32">
