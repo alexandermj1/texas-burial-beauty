@@ -69,6 +69,16 @@ const STATE_STYLE: Record<RequiredState, string> = {
   complete: "bg-emerald-600 text-white",
 };
 
+/** A file the seller has sent us, wherever it landed. */
+type AnyFile = {
+  name: string;
+  path: string;
+  bucket: "customer-files" | "portal-uploads";
+  origin: string;
+  docId?: string;
+};
+
+
 export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
