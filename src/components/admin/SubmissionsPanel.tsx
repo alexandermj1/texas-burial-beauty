@@ -1051,7 +1051,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         {showAccepted && (
                           <div className={`${bandBase} ${emerald}`}>
                             <div className="flex flex-col leading-tight">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Sales price{isMulti ? ` (${spaceCount} spaces total)` : ""}
+                              </span>
                               <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
@@ -1059,15 +1061,28 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted / accepted</span>
-                              <span className="text-sm font-semibold tabular-nums">{fmt(q)}</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Quoted / accepted{isMulti ? " · all spaces" : ""}
+                              </span>
+                              <span className="text-sm font-semibold tabular-nums">
+                                {fmt(q)}
+                                {isMulti && <span className="ml-1 text-[10px] font-medium opacity-70">({fmt(perSpace)} ea)</span>}
+                              </span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3 max-w-[240px]">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                {isMulti ? "Properties accepted" : "Property accepted"}
+                              </span>
+                              <span className="text-sm font-semibold truncate" title={propLabel}>{propLabel}</span>
                             </div>
                           </div>
                         )}
                         {showPending && (
                           <div className={`${bandBase} ${purple}`}>
                             <div className="flex flex-col leading-tight">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Sales price</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Sales price{isMulti ? ` (${spaceCount} spaces total)` : ""}
+                              </span>
                               <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
@@ -1075,8 +1090,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Quoted (pending)</span>
-                              <span className="text-sm font-semibold tabular-nums">{fmt(q)}</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                Quoted (pending){isMulti ? " · all spaces" : ""}
+                              </span>
+                              <span className="text-sm font-semibold tabular-nums">
+                                {fmt(q)}
+                                {isMulti && <span className="ml-1 text-[10px] font-medium opacity-70">({fmt(perSpace)} ea)</span>}
+                              </span>
+                            </div>
+                            <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3 max-w-[240px]">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">
+                                {isMulti ? "Properties quoted" : "Property quoted"}
+                              </span>
+                              <span className="text-sm font-semibold truncate" title={propLabel}>{propLabel}</span>
                             </div>
                           </div>
                         )}
