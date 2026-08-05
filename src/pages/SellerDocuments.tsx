@@ -218,6 +218,23 @@ const SellerDocuments = () => {
           </div>
         )}
 
+        {packet?.poa && !packet.poa.notarized && (
+          <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/[0.05] p-5">
+            <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1">Also to do</div>
+            <p className="font-display text-xl text-foreground leading-snug">Your Limited Power of Attorney</p>
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+              This lets us handle the cemetery's transfer paperwork for you. Confirm your address, then sign it
+              with an online notary in about fifteen minutes — or print it and use any bank or UPS Store notary.
+            </p>
+            <a
+              href={`/sign/${packet.poa.sign_token}`}
+              className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+            >
+              <Stamp className="w-3.5 h-3.5" /> {packet.poa.signed ? "Finish notarizing" : "Prepare & notarize"}
+            </a>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-10">
             <Loader2 className="w-4 h-4 animate-spin" /> Opening your file…
