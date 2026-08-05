@@ -28,10 +28,12 @@ type PacketDoc = {
 };
 
 type Poa = { sign_token: string; notarized: boolean; signed: boolean } | null;
+type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
 
-type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa };
+type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; listing_agreement?: ListingAgreement };
 
 const DONE = ["received", "notarized", "complete"];
+const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
 const DocRow = ({
   doc, submissionId, onDone,
@@ -45,7 +47,7 @@ const DocRow = ({
   const guide = DOC_GUIDE[doc.code ?? ""];
 
   const mobileUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/seller-portal/upload/mobile?session=${submissionId}&doc=${encodeURIComponent(doc.id)}&label=${encodeURIComponent(doc.label)}`
+    ? `${PUBLIC_SITE_URL}/seller-portal/upload/mobile?session=${submissionId}&doc=${encodeURIComponent(doc.id)}&label=${encodeURIComponent(doc.label)}`
     : "";
 
   useEffect(() => {
@@ -197,6 +199,9 @@ const SellerDocuments = () => {
       />
       <div className="relative max-w-3xl mx-auto px-5 py-16">
         <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-3">Texas Cemetery Brokers</div>
+        {packet?.seller_name && (
+          <p className="text-xs font-medium text-foreground mb-2">Private document page for {packet.seller_name}</p>
+        )}
         <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] text-foreground mb-4">
           {packet?.seller_name ? `${packet.seller_name.split(" ")[0]}, here's` : "Here's"} everything we need to{" "}
           <em className="italic text-primary">complete your sale</em>.
@@ -214,6 +219,18 @@ const SellerDocuments = () => {
             </div>
             <div className="h-1 rounded-full bg-muted overflow-hidden">
               <div className="h-full bg-primary transition-all" style={{ width: `${(done / total) * 100}%` }} />
+            </div>
+          </div>
+        )}
+
+        {packet?.listing_agreement?.signed && (
+          <div className="mb-3 rounded-2xl border border-primary/30 bg-primary/[0.05] p-5 flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="font-display text-lg text-foreground">Listing Agreement signed</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                We already have your signed Listing Agreement on file{packet.listing_agreement.signed_at ? ` from ${new Date(packet.listing_agreement.signed_at).toLocaleDateString()}` : ""}. You do not need to sign it again.
+              </p>
             </div>
           </div>
         )}
