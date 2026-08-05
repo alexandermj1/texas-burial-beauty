@@ -66,7 +66,7 @@ const STATE_STYLE: Record<RequiredState, string> = {
   complete: "bg-emerald-600 text-white",
 };
 
-export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail }: Props) {
+export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
