@@ -251,6 +251,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       await supabase.from("user_notifications" as any).insert(
         targets.map(t => ({
           user_id: t.id,
+          sender_id: user?.id,
           title: t.isReplyAuthor
             ? `${myName} replied to your note`
             : t.isEveryone

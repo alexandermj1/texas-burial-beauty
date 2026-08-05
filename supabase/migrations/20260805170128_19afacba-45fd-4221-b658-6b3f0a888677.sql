@@ -1,0 +1,1 @@
+DELETE FROM public.user_notifications WHERE title = 'Test reply message' AND body = 'This is a test message to verify the reply button appears in the messaging system.';
