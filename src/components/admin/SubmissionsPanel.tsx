@@ -73,6 +73,8 @@ export interface Submission {
   property_type: string | null;
   spaces: string | null;
   section: string | null;
+  lawn: string | null;
+  space_numbers: string | null;
   message: string | null;
   details: string | null;
   timeline: string | null;
@@ -1034,10 +1036,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const sales = Math.round((retail * 0.67) / 100) * 100;
                     const spaceCount = Number((selected as any).spaces) || 0;
                     const isMulti = spaceCount > 1;
+                    const plotLocation = [(selected as any).section || null, (selected as any).lawn || null].filter(Boolean).join(" · ") || null;
+                    const plotIdentifier = (selected as any).space_numbers || null;
                     const propLabel = [
-                      spaceCount ? `${spaceCount} space${isMulti ? "s" : ""}` : null,
                       (selected as any).property_type || null,
-                      (selected as any).cemetery || (selected as any).cemetery_name || null,
+                      spaceCount ? `${spaceCount} space${isMulti ? "s" : ""}` : null,
+                      plotLocation,
+                      plotIdentifier,
                     ].filter(Boolean).join(" · ") || "Property not specified";
                     const perSpace = isMulti ? Math.round(q / spaceCount) : 0;
 
@@ -2370,10 +2375,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           const quoted = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
                           const rowSpaces = Number((s as any).spaces) || 0;
                           const rowMulti = rowSpaces > 1;
+                          const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
+                          const rowPlotId = (s as any).space_numbers || null;
                           const rowProp = [
-                            rowSpaces ? `${rowSpaces} space${rowMulti ? "s" : ""}` : null,
                             (s as any).property_type || null,
-                            (s as any).cemetery || (s as any).cemetery_name || null,
+                            rowSpaces ? `${rowSpaces} space${rowMulti ? "s" : ""}` : null,
+                            rowPlotLocation,
+                            rowPlotId,
                           ].filter(Boolean).join(" · ") || "property not specified";
                           if (accepted && quoted > 0) {
                             const sales = Math.round((quoted / 0.42) * 0.68);
