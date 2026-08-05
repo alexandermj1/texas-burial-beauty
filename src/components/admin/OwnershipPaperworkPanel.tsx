@@ -634,13 +634,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           <div className="flex items-center gap-1.5 shrink-0">
             {r.contractKind && (
               <Button size="sm" variant="outline" disabled={busy === key} onClick={() => generateDoc(r)}
-                title={`Prepare ${r.label}`} className="text-[11px] h-7">
+                title={`Prepare ${r.label} — fills it in and opens the PDF so you can check it`} className="text-[11px] h-7">
                 {busy === key
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                Prepare
+                {contracts.some((c) => c.kind === r.contractKind && c.status !== "void") ? "Re-prepare" : "Prepare"}
               </Button>
             )}
+            {r.contractKind && contracts.some((c) => c.kind === r.contractKind && c.status !== "void") && (
+              <Button size="sm" variant="ghost" disabled={busy === `${key}-open`} onClick={() => void openContractPdf(r)}
+                title="Open the prepared PDF to check every field" className="text-[11px] h-7">
+                {busy === `${key}-open`
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <FileText className="w-3.5 h-3.5 mr-1" />}
+                Review
+              </Button>
+            )}
+
             <Button
               size="sm"
               variant={supplied ? "default" : "outline"}
