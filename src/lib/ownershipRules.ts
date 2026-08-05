@@ -411,6 +411,21 @@ export function computeRequirements(
     if (a.co === "blocked") {
       add({ code: "REVIEW", label: "Co-owner refuses or can't be found", why: "A plot can't be conveyed without every co-owner. Decide the route before quoting.", review: true });
     }
+    // The owner is alive but someone else is running the sale — very common where
+    // a child sells a living parent's plot. Nothing passes by inheritance yet.
+    if (a.rel && a.rel !== "self" && a.signer !== "agent") {
+      add({
+        code: "REVIEW",
+        label: "The owner is living — they must sign, or give a power of attorney",
+        why: "A relative has no authority over a living owner's plot. Either the owner signs everything themselves, or they sign a power of attorney first.",
+        statute: "§751.031", review: true,
+      });
+      add({
+        code: "D21", label: "Limited power of attorney from the living owner",
+        why: "Only if the owner would rather the family member handled the sale.",
+        issuedByUs: true, needsNotary: true, contractKind: "poa",
+      });
+    }
     if (a.marital === "married") {
       add({
         code: "D3", label: "Spouse's written consent / joinder",
