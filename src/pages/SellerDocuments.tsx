@@ -27,7 +27,9 @@ type PacketDoc = {
   uploaded: boolean;
 };
 
-type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[] };
+type Poa = { sign_token: string; notarized: boolean; signed: boolean } | null;
+
+type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa };
 
 const DONE = ["received", "notarized", "complete"];
 
