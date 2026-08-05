@@ -73,6 +73,8 @@ export interface Submission {
   property_type: string | null;
   spaces: string | null;
   section: string | null;
+  lawn: string | null;
+  space_numbers: string | null;
   message: string | null;
   details: string | null;
   timeline: string | null;
