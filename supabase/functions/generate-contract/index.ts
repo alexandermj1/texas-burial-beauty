@@ -4,6 +4,10 @@
 // tamper-check reference page.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
+import { buildAffidavitPdf, buildSpousalConsentPdf } from '../_shared/affidavit-heirship.ts';
+
+const KINDS = ['listing_agreement', 'poa', 'affidavit_heirship', 'spousal_consent'] as const;
+type Kind = typeof KINDS[number];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
