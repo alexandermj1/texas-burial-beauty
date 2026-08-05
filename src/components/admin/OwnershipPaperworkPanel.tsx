@@ -7,13 +7,16 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Mail, Building2, CheckCircle2, ChevronDown, Sparkles,
+  Paperclip, Link2, Undo2,
 } from "lucide-react";
+import ContractsPanel from "./ContractsPanel";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
-  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER,
+  summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE, matchTerms,
   type OwnershipAnswers, type RosterPerson, type PersonRole,
   type RequiredState, type Requirement, type CemeteryDocRules,
 } from "@/lib/ownershipRules";
+
 
 type Props = {
   submissionId: string;
@@ -66,6 +69,16 @@ const STATE_STYLE: Record<RequiredState, string> = {
   complete: "bg-emerald-600 text-white",
 };
 
+/** A file the seller has sent us, wherever it landed. */
+type AnyFile = {
+  name: string;
+  path: string;
+  bucket: "customer-files" | "portal-uploads";
+  origin: string;
+  docId?: string;
+};
+
+
 export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -78,12 +91,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [inferring, setInferring] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
+  const [files, setFiles] = useState<AnyFile[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
-        .select("ownership_answers, name, email").eq("id", submissionId).maybeSingle(),
+        .select("ownership_answers, name, email, customer_profile_id, seller_attachments").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
         .eq("submission_id", submissionId),
@@ -95,6 +110,30 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setAnswers(a && typeof a === "object" ? a : {});
     setRows((docs ?? []) as DocRow[]);
     setContracts((cons ?? []) as ContractRow[]);
+
+    // Everything the seller has actually sent us, from all three places files land.
+    const collected: AnyFile[] = [];
+    const sellerFiles = (sub as { seller_attachments?: { path?: string; name?: string }[] } | null)?.seller_attachments;
+    for (const f of Array.isArray(sellerFiles) ? sellerFiles : []) {
+      if (f?.path) collected.push({ name: f.name ?? f.path, path: f.path, bucket: "customer-files", origin: "Intake form" });
+    }
+    const profileId = (sub as { customer_profile_id?: string } | null)?.customer_profile_id;
+    if (profileId) {
+      const { data: cf } = await supabase.from("customer_files")
+        .select("file_name, file_path, document_type").eq("customer_profile_id", profileId);
+      for (const f of cf ?? []) {
+        if (!collected.some((c) => c.path === f.file_path)) {
+          collected.push({ name: f.file_name, path: f.file_path, bucket: "customer-files", origin: f.document_type ?? "Uploaded" });
+        }
+      }
+    }
+    for (const d of docs ?? []) {
+      if (d.file_url && !collected.some((c) => c.path === d.file_url)) {
+        collected.push({ name: d.file_url.split("/").pop() ?? d.file_url, path: d.file_url, bucket: "portal-uploads", origin: "Document packet", docId: d.id });
+      }
+    }
+    setFiles(collected);
+
     if (cemetery) {
       const { data: cem } = await supabase.from("texas_cemeteries")
         .select("name, doc_rules").ilike("name", cemetery).maybeSingle();
@@ -103,6 +142,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
     setLoading(false);
   }, [submissionId, cemetery]);
+
+  /** Open any collected file in a new tab via a short-lived signed URL. */
+  const openFile = async (f: AnyFile) => {
+    const { data, error } = await supabase.storage.from(f.bucket).createSignedUrl(f.path, 60 * 10);
+    if (error || !data) return toast.error("Couldn't open that file");
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+
 
   useEffect(() => { void load(); }, [load]);
 
@@ -279,14 +326,58 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** Set a requirement's state, creating its checklist row on the fly if needed. */
   const setRowState = async (r: Requirement, value: RequiredState) => {
     const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-    if (!row) { toast.error("Sync the checklist first"); return; }
-    setRows((prev) => prev.map((x) => (x.id === row.id ? { ...x, manual_override: value, required_state: value } : x)));
-    await supabase.from("submission_documents")
-      .update({ manual_override: value, required_state: value, status: value === "complete" ? "received" : "pending" })
-      .eq("id", row.id);
+    const status = ["received", "notarized", "complete"].includes(value) ? "received" : "pending";
+    if (row) {
+      setRows((prev) => prev.map((x) => (x.id === row.id ? { ...x, manual_override: value, required_state: value } : x)));
+      const { error } = await supabase.from("submission_documents")
+        .update({ manual_override: value, required_state: value, status })
+        .eq("id", row.id);
+      if (error) toast.error(error.message);
+      return;
+    }
+    const { data, error } = await supabase.from("submission_documents").insert({
+      submission_id: submissionId,
+      doc_code: r.code,
+      person_name: r.personName ?? null,
+      person_role: r.personRole ?? null,
+      document_type: r.code,
+      label: r.label,
+      status,
+      required_state: value,
+      manual_override: value,
+      issued_by_us: !!r.issuedByUs,
+      needs_notary: !!r.needsNotary,
+      why: r.why,
+      statute_ref: r.statute ?? null,
+    } as never).select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url").maybeSingle();
+    if (error) { toast.error(error.message); return; }
+    if (data) setRows((prev) => [...prev, data as DocRow]);
   };
+
+  /** The seller's curated upload page — one link with everything on it. */
+  const packetUrl = `${window.location.origin}/documents?s=${submissionId}`;
+  const copyPacketLink = async () => {
+    await navigator.clipboard.writeText(packetUrl);
+    toast.success("Seller document link copied");
+  };
+  const copyPacketEmail = async () => {
+    const outstanding = requirements.filter((r) => {
+      const s = stateByKey[reqKey(r)] ?? "needed";
+      return !["complete", "received", "notarized", "not_needed"].includes(s);
+    });
+    const list = outstanding.map((r) => `• ${r.label}${r.why ? ` — ${r.why}` : ""}`).join("\n");
+    await navigator.clipboard.writeText(
+      `Hi ${(sellerName ?? "").split(" ")[0] || "there"},\n\n`
+      + `Everything we need to finish your sale is now on one page — you can upload from your computer, or scan the QR code on any item and photograph the document with your phone:\n\n${packetUrl}\n\n`
+      + (list ? `Currently outstanding:\n${list}\n\n` : "")
+      + `Reply to this email if anything is unclear and a broker will walk you through it.\n\nTexas Cemetery Brokers`,
+    );
+    toast.success("Packet email copied — paste it into a reply");
+  };
+
 
   const generateDoc = async (r: Requirement) => {
     if (!r.contractKind) return;
@@ -309,73 +400,131 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  const emailOutstanding = async () => {
-    const outstanding = requirements.filter((r) => {
-      const s = stateByKey[reqKey(r)] ?? "needed";
-      return s !== "complete" && s !== "received" && s !== "notarized" && s !== "not_needed" && !r.issuedByUs;
-    });
-    if (!outstanding.length) return toast.message("Nothing outstanding to request");
-    const body = outstanding.map((r) => `• ${r.label}${r.why ? ` — ${r.why}` : ""}`).join("\n");
-    await navigator.clipboard.writeText(
-      `Hi ${(sellerName ?? "").split(" ")[0] || "there"},\n\nTo move your sale forward we still need the following:\n\n${body}\n\nYou can reply to this email with photos or scans of anything on the list.\n\nTexas Cemetery Brokers`,
-    );
-    toast.success("Outstanding-items email copied — paste it into a reply");
-  };
-
   const general = requirements.filter((r) => !r.personName);
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
 
-  const Chip = ({ r }: { r: Requirement }) => {
-    const s = stateByKey[reqKey(r)] ?? (r.review ? "maybe" : "needed");
-    const synced = rows.some((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+  /** Files that look like they satisfy this requirement. */
+  const filesFor = (r: Requirement): AnyFile[] => {
     const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-    const fromContract = !row?.manual_override && !!contractStates[reqKey(r)];
+    const terms = matchTerms(r.code, r.label);
+    const person = (r.personName ?? "").trim().toLowerCase();
+    return files.filter((f) => {
+      if (row && f.docId === row.id) return true;
+      const hay = `${f.name} ${f.origin}`.toLowerCase();
+      if (!terms.some((t) => hay.includes(t))) return false;
+      // Person-specific items only match a file naming that person, when named.
+      if (person && !hay.includes(person.split(" ")[0])) return terms.length > 0 && !f.docId ? true : true;
+      return true;
+    });
+  };
+
+  const Chip = ({ r }: { r: Requirement }) => {
+    const key = reqKey(r);
+    const s = stateByKey[key] ?? (r.review ? "maybe" : "needed");
+    const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    const fromContract = !row?.manual_override && !!contractStates[key];
+    const guide = DOC_GUIDE[r.code];
+    const attached = filesFor(r);
+    const isOpen = !!expanded[key];
+    const supplied = ["received", "notarized", "complete"].includes(s);
     return (
-      <div className={`flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between border rounded-md px-3 py-2 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {r.review && <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
-            <span className="text-sm font-medium">{r.label}</span>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{r.code}</span>
-            {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
-            {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
-            {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
-            {fromContract && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
-                <CheckCircle2 className="w-2.5 h-2.5" />On file
-              </span>
+      <div className={`border rounded-md px-3 py-2 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {r.review && <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+              <span className="text-sm font-medium">{r.label}</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{r.code}</span>
+              {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
+              {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
+              {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
+              {fromContract && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
+                  <CheckCircle2 className="w-2.5 h-2.5" />On file
+                </span>
+              )}
+              {attached.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 inline-flex items-center gap-0.5">
+                  <Paperclip className="w-2.5 h-2.5" />{attached.length}
+                </span>
+              )}
+              {r.fromCemetery && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-200 text-stone-700 inline-flex items-center gap-1">
+                  <Building2 className="w-2.5 h-2.5" />{cemName ?? "Cemetery"}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setExpanded((e) => ({ ...e, [key]: !e[key] }))}
+              className="text-[11px] text-muted-foreground mt-0.5 text-left hover:text-foreground inline-flex items-center gap-1"
+            >
+              {r.why}{r.statute ? ` · ${r.statute}` : ""}
+              <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {r.contractKind && (
+              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => generateDoc(r)}>
+                {busy === key
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <FileSignature className="w-3.5 h-3.5" />}
+              </Button>
             )}
-            {r.fromCemetery && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-200 text-stone-700 inline-flex items-center gap-1">
-                <Building2 className="w-2.5 h-2.5" />{cemName ?? "Cemetery"}
-              </span>
+            <Button
+              size="sm"
+              variant={supplied ? "default" : "outline"}
+              className="text-[11px] h-7"
+              onClick={() => void setRowState(r, supplied ? "needed" : "received")}
+              title={supplied ? "Mark as still needed" : "Mark as supplied"}
+            >
+              {supplied ? <Undo2 className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+            </Button>
+            <select
+              className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
+              value={s}
+              onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
+            >
+              {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {isOpen && (
+          <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+            {guide && (
+              <>
+                <p className="text-[11px] text-foreground/80 leading-relaxed">
+                  <span className="font-semibold">What it is: </span>{guide.what}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground/70">How they get it: </span>{guide.how}
+                </p>
+              </>
+            )}
+            {attached.length > 0 ? (
+              <div className="space-y-1">
+                {attached.map((f) => (
+                  <button
+                    key={f.path}
+                    onClick={() => void openFile(f)}
+                    className="flex items-center gap-1.5 text-[11px] text-teal-700 hover:underline"
+                  >
+                    <Paperclip className="w-3 h-3" />{f.name}
+                    <span className="text-muted-foreground">· {f.origin}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground italic">Nothing uploaded for this item yet.</p>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            {r.why}{r.statute ? ` · ${r.statute}` : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {r.contractKind && (
-            <Button size="sm" variant="outline" disabled={busy === reqKey(r) || !synced} onClick={() => generateDoc(r)}>
-              {busy === reqKey(r)
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : <FileSignature className="w-3.5 h-3.5" />}
-            </Button>
-          )}
-          <select
-            className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
-            value={s}
-            disabled={!synced}
-            onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
-          >
-            {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
-          </select>
-        </div>
+        )}
       </div>
     );
   };
+
 
   return (
     <div className="border-t border-border/40 pt-4">
@@ -541,8 +690,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold">Documents required ({requirements.length})</span>
               <div className="flex items-center gap-1.5">
-                <Button size="sm" variant="ghost" onClick={emailOutstanding}>
-                  <Mail className="w-3.5 h-3.5 mr-1" />Copy outstanding-items email
+                <Button size="sm" variant="ghost" onClick={copyPacketLink}>
+                  <Link2 className="w-3.5 h-3.5 mr-1" />Copy seller link
+                </Button>
+                <Button size="sm" variant="ghost" onClick={copyPacketEmail}>
+                  <Mail className="w-3.5 h-3.5 mr-1" />Copy packet email
                 </Button>
                 <Button size="sm" variant="outline" onClick={syncChecklist} disabled={saving}>
                   {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
@@ -577,6 +729,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 and generate them.
               </p>
             )}
+          </div>
+
+          {/* ── Agreements: listing agreement + POA live here now ── */}
+          <div className="border-t border-border/40 pt-3">
+            <ContractsPanel
+              submissionId={submissionId}
+              sellerName={sellerName}
+              sellerEmail={sellerEmail}
+            />
           </div>
 
           <p className="text-[11px] text-muted-foreground leading-relaxed">
