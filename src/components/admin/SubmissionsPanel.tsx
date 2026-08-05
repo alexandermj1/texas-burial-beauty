@@ -1967,12 +1967,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   quoteAccepted={(selected as any).quote_response === "accepted"}
                 />
 
-                {/* Contracts: Listing Agreement (in-app e-sign) + POA (BlueNotary notarization). */}
-                <ContractsPanel
-                  submissionId={selected.id}
-                  sellerEmail={selected.email}
-                  sellerName={selected.name}
-                />
+                {/* Contracts live inside the paperwork panel above — no separate section. */}
+
 
 
                 {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
