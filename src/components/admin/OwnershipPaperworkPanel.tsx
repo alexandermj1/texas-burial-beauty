@@ -20,6 +20,8 @@ type Props = {
   cemetery?: string | null;
   sellerName?: string | null;
   sellerEmail?: string | null;
+  /** AI reading only runs once the seller has accepted a quote — it costs money. */
+  quoteAccepted?: boolean;
 };
 
 type ContractRow = {
