@@ -38,8 +38,9 @@ How to read a seller's file (Texas interment property):
 - Mentions of a spouse currently living → marital = married. "my late husband/wife" → widowed.
 - "my dad is buried there", "one space is used" → occupied = yes.
 - No mention of a will for a deceased owner is NOT the same as "no will" — leave blank unless stated.
-- deed = yes only if they say they have the deed/certificate; deed = no if they say it is lost or they can't find it.
+- deed = yes if we hold an attached document that is a cemetery deed / certificate of ownership / interment rights certificate (see ATTACHED DOCUMENTS), or if they say they have it; deed = no if they say it is lost.
 - names = no only if there is an actual mismatch mentioned (maiden name, name change).
+- The ATTACHED DOCUMENTS section is evidence we physically hold. Read it as carefully as the emails: the names, cemetery, section/lot/space and document type printed on those documents are facts, and they override anything vague in the emails.
 Only answer what the file actually supports. Leave anything else out — a missing answer is far better than a guessed one.
 `.trim();
 
