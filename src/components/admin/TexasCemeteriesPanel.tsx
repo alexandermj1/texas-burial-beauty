@@ -26,8 +26,10 @@ interface TexasCemetery {
   description: string | null;
   website: string | null;
   notes: string | null;
+  doc_rules: CemeteryDocRules | null;
   auto_created: boolean;
 }
+
 
 interface Props {
   texasSubmissions: Submission[];
