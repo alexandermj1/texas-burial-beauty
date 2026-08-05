@@ -400,19 +400,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  const emailOutstanding = async () => {
-    const outstanding = requirements.filter((r) => {
-      const s = stateByKey[reqKey(r)] ?? "needed";
-      return s !== "complete" && s !== "received" && s !== "notarized" && s !== "not_needed" && !r.issuedByUs;
-    });
-    if (!outstanding.length) return toast.message("Nothing outstanding to request");
-    const body = outstanding.map((r) => `• ${r.label}${r.why ? ` — ${r.why}` : ""}`).join("\n");
-    await navigator.clipboard.writeText(
-      `Hi ${(sellerName ?? "").split(" ")[0] || "there"},\n\nTo move your sale forward we still need the following:\n\n${body}\n\nYou can reply to this email with photos or scans of anything on the list.\n\nTexas Cemetery Brokers`,
-    );
-    toast.success("Outstanding-items email copied — paste it into a reply");
-  };
-
   const general = requirements.filter((r) => !r.personName);
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
