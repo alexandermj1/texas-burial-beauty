@@ -104,7 +104,77 @@ const CityPlotsPage = () => {
       <Navbar forceScrolled />
 
       {/* HERO */}
-      {data.slug === "dallas" ? (
+      {data.slug === "houston" ? (
+        <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-24 md:pt-28">
+          <div className="grid lg:grid-cols-2 items-center gap-10 lg:gap-0">
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="px-6 lg:pl-[max(2.5rem,calc((100vw-1280px)/2+2.5rem))] lg:pr-12 pb-4"
+            >
+              <nav aria-label="Breadcrumb" className="mb-7 text-[11px] tracking-[0.18em] uppercase text-foreground/50">
+                <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+                <span className="mx-2">/</span>
+                <Link to="/cemetery-plots-for-sale-texas" className="hover:text-foreground transition-colors">Texas Plots</Link>
+                <span className="mx-2">/</span>
+                <span className="text-foreground/80">{data.metro}</span>
+              </nav>
+
+              <p className="text-accent text-[11px] tracking-[0.28em] uppercase font-semibold mb-5">{data.metro}</p>
+              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground leading-[1.06] tracking-tight [text-wrap:balance]">
+                {data.h1Lead} in {data.city}
+              </h1>
+              <p className="mt-7 text-base md:text-[17px] text-foreground/70 leading-relaxed font-light max-w-xl">
+                {data.intro}
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link to="/contact#buy-inquiry" className="inline-flex items-center px-7 py-3.5 bg-primary text-primary-foreground rounded-full font-medium text-[15px] hover:opacity-90 transition-all">
+                  Find a plot
+                </Link>
+                <Link to="/sell" className="inline-flex items-center px-7 py-3.5 rounded-full border border-accent/50 text-accent font-medium text-[15px] hover:bg-accent/5 transition-all">
+                  Sell a plot
+                </Link>
+                <a href="tel:+12142304740" className="ml-1 text-sm tracking-[0.12em] text-foreground/65 hover:text-foreground transition-colors">
+                  (214) 230-4740
+                </a>
+              </div>
+
+              <dl className="mt-10 max-w-xl border-t border-foreground/10">
+                {[
+                  ["Cemetery retail", data.retailRange],
+                  ["Typical resale", data.resaleRange],
+                  ["Cemeteries covered", `${data.metroCemeteryCount}+ in ${data.metro}`],
+                ].map(([label, value]) => (
+                  <div key={label as string} className="flex items-baseline gap-6 border-b border-foreground/10 py-4">
+                    <dt className="w-44 shrink-0 text-[10px] uppercase tracking-[0.22em] text-foreground/45">{label}</dt>
+                    <dd className="font-display text-xl md:text-2xl text-foreground">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </motion.div>
+
+            <div className="relative h-full">
+              <img
+                src={houstonHeroArt.url}
+                alt="Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
+                title="Cemetery plots for sale in Houston, Texas"
+                width={1740}
+                height={906}
+                className="w-full h-full object-cover mix-blend-multiply"
+                loading="eager"
+                fetchPriority="high"
+              />
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-20 md:w-32 bg-gradient-to-r from-[hsl(38_35%_95%)] to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[hsl(38_35%_95%)] to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 rounded-sm border border-foreground/10 bg-background/70 backdrop-blur-sm px-5 py-3 text-center text-[11px] tracking-[0.18em] uppercase text-foreground/70">
+                {data.metroCemeteryCount}+ cemeteries covered · Same-day showings
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : data.slug === "dallas" ? (
         <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-28 md:pt-32">
           <div className="relative container mx-auto px-6 lg:px-10 max-w-[1280px]">
             <motion.div
