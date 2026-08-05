@@ -646,9 +646,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return files.filter((f) => fileMatchesRequirement(f, r, row));
   };
 
-  // Documents often arrive before the ownership interview. Once extraction or
-  // filenames prove a requirement is already supplied, reflect that fact without
-  // asking the seller for it again. Manual admin choices still win.
+  // Documents often arrive before the ownership interview. Auto-ticking only
+  // happens on hard evidence: a file the extractor has actually read and
+  // classified as that document (and, for per-person items, one that names the
+  // person). Manual admin choices always win.
   useEffect(() => {
     if (loading || !requirements.length || !files.length) return;
     const satisfied = requirements.filter((r) => {
@@ -656,8 +657,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
       const state = stateByKey[reqKey(r)];
       return !row?.manual_override && !["received", "notarized", "complete"].includes(state ?? "")
-        && files.some((f) => fileMatchesRequirement(f, r, row));
+        && files.some((f) => f.extractedData && fileMatchesRequirement(f, r, row));
     });
+
     if (!satisfied.length) return;
     void (async () => {
       for (const r of satisfied) await setRowState(r, "received");
