@@ -11,7 +11,7 @@ const FN_URL = `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1/sign-contr
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWd1eGZkb2lranRoc3JibXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTI4MDYsImV4cCI6MjA5MjM2ODgwNn0.YDuw7oQqllDnunSA0Fv4eENslzol1Lni7n6kfSRa9T0";
 
 type ContractInfo = {
-  kind: "listing_agreement" | "poa";
+  kind: "listing_agreement" | "poa" | "affidavit_heirship" | "spousal_consent";
   status: string;
   fill_data: Record<string, unknown>;
   pdf_url: string;
