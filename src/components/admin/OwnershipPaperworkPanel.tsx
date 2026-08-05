@@ -313,7 +313,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const payload = requirements.map((r, i) => {
         const prev = existing.get(reqKey(r));
         return {
-          id: prev?.id,
+          id: prev?.id ?? crypto.randomUUID(),
           submission_id: submissionId,
           doc_code: r.code,
           person_name: r.personName ?? null,
