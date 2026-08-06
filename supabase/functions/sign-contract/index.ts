@@ -184,10 +184,18 @@ Deno.serve(async (req) => {
       let filled: Uint8Array;
       if (joint.length > 1) {
         filled = await buildJointPoaPdf({
-          principals: joint.slice(0, 2).map((n) => ({ name: n })),
+          county: merged.county_state as string,
+          county_state: merged.county_state as string,
+          principals: joint.slice(0, 2).map((n) => ({
+            name: n,
+            address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),
+          })),
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
+          phone: merged.phone as string,
+          email: merged.email as string,
         });
+
       } else {
         const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
         const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${tmplFile}`);
