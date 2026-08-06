@@ -1267,27 +1267,43 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
 
               {poaRequired && (
-                <div className={`rounded-md border px-3 py-2.5 space-y-2 ${poaContract ? "border-emerald-300 bg-emerald-50" : "border-purple-300 bg-purple-50"}`}>
-                  <p className="text-[12px]">
-                    {poaContract
-                      ? "The Power of Attorney is prepared and will be included in this email with the notary instructions."
-                      : "This file needs a Power of Attorney and none has been prepared yet. Prepare it now and it travels inside the same email."}
+                <div className="rounded-md border border-purple-300 bg-purple-50/60 px-3 py-2.5 space-y-2.5">
+                  <p className="text-xs font-semibold flex items-center gap-1.5">
+                    <FileSignature className="w-3.5 h-3.5" /> Check every Power of Attorney before it goes
                   </p>
-                  <div className="flex items-center gap-1.5">
-                    <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
-                      onClick={() => void preparePoa()} disabled={busy === "poa"}>
-                      {busy === "poa" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                      {poaContract ? "Re-prepare & check" : "Prepare the POA now"}
-                    </Button>
-                    {poaContract && (
-                      <Button size="sm" variant="outline"
-                        onClick={() => void openContractPdf(requirements.find((r) => r.contractKind === "poa") ?? requirements[0])}>
-                        <FileText className="w-3.5 h-3.5 mr-1" />Check the PDF
-                      </Button>
-                    )}
-                  </div>
+                  {poaRequirements.map((r) => {
+                    const prepared = preparedPoaFor(r);
+                    const bad = jointMismatch(r);
+                    return (
+                      <div key={reqKey(r)} className={`rounded border px-2.5 py-2 bg-white ${bad ? "border-rose-300" : prepared ? "border-emerald-300" : "border-purple-200"}`}>
+                        <p className="text-[12px]">
+                          {r.jointNames?.length ? `Joint POA — ${r.jointNames.join(" & ")}` : r.label}
+                        </p>
+                        <p className={`text-[11px] mt-0.5 ${bad ? "text-rose-700" : "text-muted-foreground"}`}>
+                          {bad
+                            ? `The prepared copy is made out to ${prepared?.signature_name ?? "one person"} only — re-prepare it so both principals appear.`
+                            : prepared
+                              ? `Prepared for ${prepared.signature_name ?? "the signer"}. Open it and read every line — this exact PDF travels with the email.`
+                              : "Not prepared yet. Prepare it now and it travels inside the same email."}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                            onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>
+                            {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                            {prepared ? "Re-prepare & check" : "Prepare it now"}
+                          </Button>
+                          {prepared && (
+                            <Button size="sm" variant="outline" onClick={() => void openContractPdf(r)}>
+                              <FileText className="w-3.5 h-3.5 mr-1" />Review the POA
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+
 
               <div className="rounded-md border p-3">
                 <p className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
