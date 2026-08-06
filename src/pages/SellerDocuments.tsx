@@ -36,15 +36,16 @@ type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string
 
 type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; listing_agreement?: ListingAgreement };
 
+const DONE = ["received", "notarized", "complete"];
+const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
+
 type Uploaded = { name: string; path: string; url: string; isImage: boolean };
 
 const PoaUpload = ({
   submissionId,
-  poa,
   onDone,
 }: {
   submissionId: string;
-  poa: NonNullable<PacketDoc> extends never ? never : any;
   onDone: () => void;
 }) => {
   const [uploading, setUploading] = useState(false);
