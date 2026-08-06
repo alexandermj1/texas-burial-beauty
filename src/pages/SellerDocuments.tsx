@@ -536,6 +536,7 @@ const SellerDocuments = () => {
             >
               <Stamp className="w-3.5 h-3.5" /> {packet.poa.signed ? "Finish notarizing" : "Prepare & notarize"}
             </a>
+            <PoaUpload submissionId={submissionId} onDone={load} />
           </div>
         )}
 
