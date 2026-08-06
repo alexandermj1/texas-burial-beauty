@@ -661,6 +661,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
 
+  /** Do we physically hold a certificate of ownership / plot deed already? */
+  const deedOnFile = files.some((f) => codesForFile(f).includes("D1"));
+
+
   /** Files that look like they satisfy this requirement. */
   const filesFor = (r: Requirement): AnyFile[] => {
     const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
