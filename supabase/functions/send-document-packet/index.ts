@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
     const packetUrl: string = body?.packet_url;
     const poaUrl: string | null = body?.poa_url ?? null;
     const poaFor: string | null = body?.poa_for ?? null;
+    const previewOnly: boolean = body?.preview === true;
     if (!submissionId || !packetUrl) {
       return new Response(JSON.stringify({ error: 'missing submission_id or packet_url' }), { status: 400, headers: corsHeaders });
     }
@@ -142,6 +143,14 @@ Deno.serve(async (req) => {
     </td></tr>
   </table>
 </body></html>`;
+
+    // Preview mode: hand the exact email back so the admin can read it before
+    // anything is sent. Nothing is emailed and nothing is written.
+    if (previewOnly) {
+      return new Response(JSON.stringify({ ok: true, preview: true, to, subject, html }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
       method: 'POST',
