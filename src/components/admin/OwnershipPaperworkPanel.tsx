@@ -299,12 +299,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, loading, autoSynced, rows]);
 
+  /** Is this roster entry plainly the person who sent us the submission? */
+  const isTheSeller = (name?: string) => {
+    const a = (name ?? "").trim().toLowerCase();
+    const b = (sellerName ?? "").trim().toLowerCase();
+    if (!a || !b) return false;
+    if (a === b) return true;
+    const pa = a.split(/\s+/).filter((w) => w.length > 2);
+    const pb = b.split(/\s+/).filter((w) => w.length > 2);
+    if (!pa.length || !pb.length) return false;
+    // Same first and last name, ignoring middle names / initials.
+    return pa[0] === pb[0] && pa[pa.length - 1] === pb[pb.length - 1];
+  };
+
+  /** The submission already carries the seller's email — never make it be typed again. */
+  const withKnownEmails = (people?: RosterPerson[]) =>
+    (people ?? []).map((p) =>
+      !p.email?.trim() && sellerEmail && isTheSeller(p.name) ? { ...p, email: sellerEmail } : p,
+    );
+
   const persistAnswers = async (next: OwnershipAnswers) => {
-    setAnswers(next);
+    const withEmails = { ...next, people: withKnownEmails(next.people) } as OwnershipAnswers;
+    setAnswers(withEmails);
     await supabase.from("contact_submissions")
-      .update({ ownership_answers: next as never, ownership_roster: (next.people ?? []) as never })
+      .update({ ownership_answers: withEmails as never, ownership_roster: (withEmails.people ?? []) as never })
       .eq("id", submissionId);
   };
+
 
   const setAnswer = (key: string, value: string) => {
     const next = {
