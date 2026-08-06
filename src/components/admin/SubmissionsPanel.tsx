@@ -609,6 +609,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       if (quotedFilter && !(s as any).quote_sent_at) return false;
       if (acceptedFilter && (s as any).quote_response !== "accepted") return false;
+      if (docsOutFilter && (!(s as any).documents_requested_at || (s as any).documents_completed_at)) return false;
+      if (completeFilter && !(s as any).documents_completed_at) return false;
+
 
       if (eFilter === "new" && !isNew(s)) return false;
       if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
