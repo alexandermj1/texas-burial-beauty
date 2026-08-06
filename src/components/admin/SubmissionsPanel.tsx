@@ -1079,7 +1079,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail{isMulti ? " / plot" : ""}</span>
                               <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
