@@ -830,6 +830,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
               {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
               {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
+              {mailFor(r) && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 inline-flex items-center gap-0.5">
+                  <Mail className="w-2.5 h-2.5" />Original by post
+                </span>
+              )}
+
               {fromContract && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
                   <CheckCircle2 className="w-2.5 h-2.5" />On file
