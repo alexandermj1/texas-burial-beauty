@@ -2258,6 +2258,43 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </button>
               );
             })()}
+            {(() => {
+              const docsOutCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).documents_requested_at && !(s as any).documents_completed_at).length;
+              const isActive = docsOutFilter;
+              return (
+                <button
+                  onClick={() => setDocsOutFilter(!isActive)}
+                  title={isActive ? `Showing only sellers with an open document request (${docsOutCount}) — click to clear` : `Show only sellers with an open document request (${docsOutCount})`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                      : "bg-card text-sky-700 dark:text-sky-300 border-border hover:bg-sky-50 dark:hover:bg-sky-950/30"
+                  }`}
+                >
+                  <FileText className="w-3 h-3" strokeWidth={2.5} />
+                  Docs out ({docsOutCount})
+                </button>
+              );
+            })()}
+            {(() => {
+              const completeCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).documents_completed_at).length;
+              const isActive = completeFilter;
+              return (
+                <button
+                  onClick={() => setCompleteFilter(!isActive)}
+                  title={isActive ? `Showing only complete listings (${completeCount}) — click to clear` : `Show only listings with every document received (${completeCount})`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? "bg-emerald-700 text-white border-emerald-700 shadow-sm"
+                      : "bg-card text-emerald-800 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  }`}
+                >
+                  <CheckCircle className="w-3 h-3" strokeWidth={2.5} />
+                  Complete ({completeCount})
+                </button>
+              );
+            })()}
+
           </div>
         )}
         {regionFilter === "texas" && cemeteryLabel && (
