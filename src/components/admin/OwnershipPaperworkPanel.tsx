@@ -299,12 +299,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, loading, autoSynced, rows]);
 
+  /** Is this roster entry plainly the person who sent us the submission? */
+  const isTheSeller = (name?: string) => {
+    const a = (name ?? "").trim().toLowerCase();
+    const b = (sellerName ?? "").trim().toLowerCase();
+    if (!a || !b) return false;
+    if (a === b) return true;
+    const pa = a.split(/\s+/).filter((w) => w.length > 2);
+    const pb = b.split(/\s+/).filter((w) => w.length > 2);
+    if (!pa.length || !pb.length) return false;
+    // Same first and last name, ignoring middle names / initials.
+    return pa[0] === pb[0] && pa[pa.length - 1] === pb[pb.length - 1];
+  };
+
+  /** The submission already carries the seller's email — never make it be typed again. */
+  const withKnownEmails = (people?: RosterPerson[]) =>
+    (people ?? []).map((p) =>
+      !p.email?.trim() && sellerEmail && isTheSeller(p.name) ? { ...p, email: sellerEmail } : p,
+    );
+
   const persistAnswers = async (next: OwnershipAnswers) => {
-    setAnswers(next);
+    const withEmails = { ...next, people: withKnownEmails(next.people) } as OwnershipAnswers;
+    setAnswers(withEmails);
     await supabase.from("contact_submissions")
-      .update({ ownership_answers: next as never, ownership_roster: (next.people ?? []) as never })
+      .update({ ownership_answers: withEmails as never, ownership_roster: (withEmails.people ?? []) as never })
       .eq("id", submissionId);
   };
+
 
   const setAnswer = (key: string, value: string) => {
     const next = {
@@ -639,6 +660,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const general = documentRequirements.filter((r) => !r.personName);
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
+
+  /** Do we physically hold a certificate of ownership / plot deed already? */
+  const deedOnFile = files.some((f) => codesForFile(f).includes("D1"));
+
 
   /** Files that look like they satisfy this requirement. */
   const filesFor = (r: Requirement): AnyFile[] => {
@@ -1019,9 +1044,28 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </p>
             )}
 
+            {answers.deed === "no" && deedOnFile && (
+              <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2.5 space-y-2">
+                <p className="text-[12px] text-emerald-900">
+                  A certificate of ownership for this plot is already on file, so the
+                  lost-certificate affidavit below isn't needed.
+                </p>
+                <Button size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                  onClick={() => setAnswer("deed", "yes")}>
+                  We have the deed — drop the affidavit
+                </Button>
+              </div>
+            )}
+
+            {general.length > 0 && (
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                About the property · not tied to one person
+              </p>
+            )}
             <div className="space-y-1.5">
               {general.map((r) => <Chip key={reqKey(r) + r.label} r={r} />)}
             </div>
+
 
             {byPerson.map(({ person, items }) => (
               <div key={person.id} className="space-y-1.5 pt-1">
