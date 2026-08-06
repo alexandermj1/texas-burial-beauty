@@ -70,11 +70,18 @@ Deno.serve(async (req) => {
             ${esc(it.label)}
             ${it.needsNotary ? '<span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6d28d9;margin-left:8px;">Notary</span>' : ''}
             ${it.issuedByUs ? '<span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1d4ed8;margin-left:8px;">We send this to you</span>' : ''}
+            ${it.mailTo ? '<span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b91c1c;margin-left:8px;">Original by post</span>' : ''}
           </div>
           ${it.what ? `<div style="font-size:13px;color:#4a5568;line-height:1.6;margin-top:4px;">${esc(it.what)}</div>` : ''}
           ${it.how ? `<div style="font-size:13px;color:#6b7280;line-height:1.6;margin-top:4px;"><em>How to get it:</em> ${esc(it.how)}</div>` : ''}
+          ${it.mailTo ? `<div style="margin-top:8px;padding:10px 12px;background:#fdf2f2;border-radius:8px;font-size:13px;color:#7f1d1d;line-height:1.6;">
+            The cemetery requires an <strong>original copy</strong> of this document — a photograph or scan will not be accepted.
+            Please post the original to us; we store all originals safely on your file and return them to you if the sale does not complete.
+            <div style="margin-top:6px;color:#1f2a37;white-space:pre-line;">${esc(it.mailTo)}</div>
+          </div>` : ''}
         </td>
       </tr>`).join('');
+
 
     const poaHtml = poaUrl ? `
       <div style="margin:28px 0 0;padding:20px 22px;background:#f7f3ec;border-radius:10px;">
