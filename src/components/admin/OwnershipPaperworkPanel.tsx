@@ -379,8 +379,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       });
       if (error) throw error;
       const r = data as Reading;
+      const keep = {
+        answers: r?.answers,
+        reasons: r?.reasons ?? [],
+        open_questions: r?.open_questions ?? [],
+        sources: r?.sources,
+        at: new Date().toISOString(),
+      } as OwnershipAnswers["aiReading"];
       if (!r?.answers || !Object.keys(r.answers).length) {
         setReading(r ?? null);
+        if (r) await persistAnswers({ ...answers, aiReading: keep } as OwnershipAnswers);
         toast.message("Nothing in the file was clear enough to answer with");
         return;
       }
@@ -398,8 +406,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         ...answers,
         ...r.answers,
         people: merged,
+        aiReading: keep,
         aiSuggested: [...new Set([...(answers.aiSuggested ?? []), ...suggested])],
       } as OwnershipAnswers);
+
       toast.success(`Read the file and filled ${suggested.length} answer${suggested.length === 1 ? "" : "s"} — check each one`);
     } catch (e) {
       toast.error((e as Error).message);
