@@ -332,6 +332,23 @@ export const isDeceasedPerson = (p: RosterPerson, a: OwnershipAnswers): boolean 
   (a.owner === "deceased" && (p.role === "owner" || p.role === "co_owner"));
 
 /**
+ * A single power of attorney may be signed by two principals — each signature
+ * separately acknowledged before the notary — so a married couple who own the
+ * plot together can sign one document rather than one each. We only offer it
+ * where both signers are living and are the owner and their spouse/co-owner.
+ */
+export function canIssueJointPoa(a: OwnershipAnswers): boolean {
+  const signers = (a.people ?? []).filter(
+    (p) => p.name.trim() && p.role !== "witness" && !isDeceasedPerson(p, a),
+  );
+  if (signers.length !== 2) return false;
+  const roles = signers.map((p) => p.role).sort().join("+");
+  return roles === "owner+spouse" || roles === "co_owner+owner" || roles === "co_owner+co_owner";
+}
+
+
+
+/**
  * Everyone whose signature or ID we need, derived from the answers plus the
  * named people the admin has entered.
  */
