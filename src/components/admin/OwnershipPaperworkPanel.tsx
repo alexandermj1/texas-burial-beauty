@@ -173,7 +173,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Switching a document to "post us the original" and setting the address. */
   const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
   /** Inline editor for a contract (POA / Listing Agreement) before it is generated. */
-  const [docEdit, setDocEdit] = useState<null | { r: Requirement; loading: boolean; fields: DocFields }>(null);
+  const [docEdit, setDocEdit] = useState<null | {
+    r: Requirement;
+    loading: boolean;
+    fields: DocFields;
+    /** Every spelling of the seller's name we can find, and where it came from. */
+    nameHints?: { name: string; source: string }[];
+  }>(null);
 
 
 
@@ -572,21 +578,29 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const poaRequired = requirements.some((r) => r.contractKind === "poa");
   const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
 
-  /** The items and POA link that make up the request, shared by preview and send. */
+  /** The items and POA links that make up the request, shared by preview and send. */
   const buildPacketPayload = async () => {
-    let poaUrl: string | null = null;
-    let poaFor: string | null = null;
-    // Use the POA prepared for the POA the checklist actually calls for (joint
-    // couples included), not simply the first one on the file.
-    const chosen = poaRequirements.length ? preparedPoaFor(poaRequirements[0]) : poaContract;
-    if (chosen) {
+    // Every POA the checklist calls for, each with the prepared signing link, so
+    // they travel inside the same document request rather than a separate email.
+    const poas: { name: string | null; url: string }[] = [];
+    const sources = poaRequirements.length
+      ? poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }))
+      : (poaContract ? [{ r: null as Requirement | null, c: poaContract }] : []);
+    for (const { r, c: chosen } of sources) {
+      if (!chosen) continue;
       const { data: c } = await supabase.from("contracts")
-        .select("sign_token, signature_name").eq("id", chosen.id).maybeSingle();
-      if (c?.sign_token) {
-        poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
-        poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
-      }
+        .select("sign_token, signature_name, fill_data").eq("id", chosen.id).maybeSingle();
+      if (!c?.sign_token) continue;
+      const url = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
+      if (poas.some((p) => p.url === url)) continue;
+      const name = (c as { signature_name?: string | null }).signature_name
+        ?? ((c as { fill_data?: Record<string, unknown> | null }).fill_data?.seller_name as string | undefined)
+        ?? (r?.jointNames?.length ? r.jointNames.join(" & ") : null)
+        ?? r?.personName ?? null;
+      poas.push({ name: name ?? null, url });
     }
+    const poaUrl = poas[0]?.url ?? null;
+    const poaFor = poas[0]?.name ?? null;
     const items = outstanding.map((r) => {
       const g = DOC_GUIDE[r.code];
       return {
@@ -602,7 +616,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       };
     });
-    return { items, poaUrl, poaFor };
+    return { items, poas, poaUrl, poaFor };
   };
 
   /** Step 2 of the review: fetch the exact email without sending anything. */
@@ -610,9 +624,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setReview({ step: 2, loading: true });
     try {
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor, preview: true },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, preview: true },
       });
       if (error) throw error;
       const res = data as { html?: string; subject?: string };
@@ -631,14 +645,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     try {
       // Make sure the seller's page actually lists these items.
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor },
       });
       if (error) throw error;
       toast.success(`Document request emailed to ${sellerEmail}`, {
-        description: `${items.length} item${items.length === 1 ? "" : "s"}${poaUrl ? " + Power of Attorney" : ""}`,
+        description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}`,
       });
       setPoaPrompt(false);
       setReview(null);
@@ -649,6 +663,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setSending(false);
     }
   };
+
 
   /**
    * "Prepare" now opens an inline editor first (same idea as the Listing Agreement
@@ -667,7 +682,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setDocEdit({ r, loading: true, fields: blank });
     try {
       const { data: sub } = await supabase.from("contact_submissions")
-        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier")
+        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier, deed_owner_names, customer_profile_id, ownership_roster")
         .eq("id", submissionId).maybeSingle();
       const s = (sub ?? {}) as Record<string, unknown>;
       const str = (v: unknown) => (v == null ? "" : String(v));
@@ -675,9 +690,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const prior = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void")
         .map((c) => (c.fill_data ?? {}) as Record<string, unknown>)
         .find((f) => !r.personName || String(f.seller_name ?? "").toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()));
+      const nameHints = await collectNameSpellings(s);
       setDocEdit((cur) => cur && cur.r === r ? {
         ...cur,
         loading: false,
+        nameHints,
         fields: {
           seller_name: r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "",
           joint_second: r.jointNames?.[1] ?? "",
@@ -699,6 +716,74 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setDocEdit((cur) => (cur ? { ...cur, loading: false } : cur));
     }
   };
+
+  /**
+   * The legal name has to be spelled exactly as it appears on the deed / ID, so
+   * before a POA is prepared we sweep every place a spelling can hide: the
+   * submission itself, the deed owner names, the ownership roster, whatever the
+   * AI pulled out of the uploaded documents, and how the seller signs their emails.
+   */
+  const collectNameSpellings = async (s: Record<string, unknown>) => {
+    const out: { name: string; source: string }[] = [];
+    const seen = new Set<string>();
+    const push = (raw: unknown, source: string) => {
+      const v = String(raw ?? "").replace(/\s+/g, " ").trim();
+      if (!v || v.length < 3 || v.length > 80) return;
+      if (!/[a-z]/i.test(v)) return;
+      const key = v.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push({ name: v, source });
+    };
+
+    push(s.name, "Submission");
+    for (const n of String(s.deed_owner_names ?? "").split(/[,;\n]|\band\b|&/)) push(n, "Deed owner names");
+    for (const p of (Array.isArray(s.ownership_roster) ? s.ownership_roster : []) as Record<string, unknown>[]) {
+      push(p?.name, "Owner roster");
+    }
+
+    const profileId = s.customer_profile_id as string | undefined;
+    const [{ data: cfiles }, { data: mails }] = await Promise.all([
+      profileId
+        ? supabase.from("customer_files")
+            .select("file_name, document_type, extracted_data").eq("customer_profile_id", profileId).limit(40)
+        : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+      supabase.from("email_messages")
+        .select("from_name, from_email, body_text").eq("matched_submission_id", submissionId)
+        .order("received_at", { ascending: false }).limit(25),
+    ]);
+
+    // Names the extraction step read off the uploaded deeds / IDs / certificates.
+    const walk = (v: unknown, label: string, depth = 0) => {
+      if (depth > 4 || v == null) return;
+      if (Array.isArray(v)) { for (const x of v) walk(x, label, depth + 1); return; }
+      if (typeof v === "object") {
+        for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+          if (/name/i.test(k) && (typeof val === "string" || Array.isArray(val))) walk(val, label, depth + 1);
+          else if (typeof val === "object") walk(val, label, depth + 1);
+        }
+        return;
+      }
+      if (typeof v === "string") push(v, label);
+    };
+    for (const f of (cfiles ?? []) as Record<string, unknown>[]) {
+      walk(f.extracted_data, `Uploaded: ${String(f.document_type || f.file_name || "document")}`);
+    }
+
+    // How the seller writes their own name in email — display name and sign-off.
+    for (const m of (mails ?? []) as Record<string, unknown>[]) {
+      const from = String(m.from_email ?? "").toLowerCase();
+      if (sellerEmail && from && from !== sellerEmail.toLowerCase()) continue;
+      push(m.from_name, "Email display name");
+      const body = String(m.body_text ?? "");
+      const tail = body.trim().split(/\n/).slice(-6).join("\n");
+      const sig = tail.match(/(?:regards|thanks|thank you|sincerely|best)[,!.]?\s*\n+\s*([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,3})/i);
+      if (sig?.[1]) push(sig[1], "Email sign-off");
+    }
+    return out;
+  };
+
+
 
   const generateDoc = async (r: Requirement, overrideFields?: DocFields) => {
     if (!r.contractKind) return;
@@ -1474,26 +1559,61 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                     onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, joint_second: e.target.value } })} />
                 </div>
               )}
+
+              {/* Spelling matters on a notarised instrument — every version of the
+                  name we hold is offered here, with where it came from. */}
+              {!!docEdit.nameHints?.length && (
+                <div className="md:col-span-2 rounded-md border border-amber-200 bg-amber-50/70 px-2.5 py-2">
+                  <p className="text-[11px] font-medium text-amber-900 mb-1.5">
+                    How the name is spelled elsewhere — tap to use it exactly
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {docEdit.nameHints.map((h) => {
+                      const active = h.name.toLowerCase() === docEdit.fields.seller_name.trim().toLowerCase();
+                      return (
+                        <button
+                          key={h.source + h.name}
+                          type="button"
+                          onClick={() => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, seller_name: h.name } })}
+                          className={`text-[11px] rounded-full border px-2 py-1 transition-colors ${active
+                            ? "border-emerald-400 bg-emerald-100 text-emerald-900"
+                            : "border-amber-300 bg-white text-amber-900 hover:bg-amber-100"}`}
+                          title={h.source}
+                        >
+                          {h.name} <span className="opacity-60">· {h.source}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="md:col-span-2">
                 <Label className="text-xs">Mailing address</Label>
                 <Input value={docEdit.fields.address} placeholder="Street address"
                   onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
               </div>
-              <div>
+              <div className={docEdit.r.contractKind === "poa" ? "md:col-span-2" : ""}>
                 <Label className="text-xs">City, State, ZIP</Label>
                 <Input value={docEdit.fields.city_state_zip}
                   onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
               </div>
-              <div>
-                <Label className="text-xs">Phone</Label>
-                <Input value={docEdit.fields.phone}
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, phone: e.target.value } })} />
-              </div>
-              <div className="md:col-span-2">
-                <Label className="text-xs">Email</Label>
-                <Input type="email" value={docEdit.fields.email}
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, email: e.target.value } })} />
-              </div>
+              {/* Phone and email only ever print on the Listing Agreement. */}
+              {docEdit.r.contractKind !== "poa" && (
+                <>
+                  <div>
+                    <Label className="text-xs">Phone</Label>
+                    <Input value={docEdit.fields.phone}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, phone: e.target.value } })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label className="text-xs">Email</Label>
+                    <Input type="email" value={docEdit.fields.email}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, email: e.target.value } })} />
+                  </div>
+                </>
+              )}
+
               <div>
                 <Label className="text-xs">Cemetery</Label>
                 <Input value={docEdit.fields.cemetery}
@@ -1608,7 +1728,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {poaRequired && (
                 <div className="rounded-md border border-purple-300 bg-purple-50/60 px-3 py-2.5 space-y-2.5">
                   <p className="text-xs font-semibold flex items-center gap-1.5">
-                    <FileSignature className="w-3.5 h-3.5" /> Check every Power of Attorney before it goes
+                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — checked here, sent in this same email
                   </p>
                   {poaRequirements.map((r) => {
                     const prepared = preparedPoaFor(r);

@@ -48,8 +48,12 @@ Deno.serve(async (req) => {
     const submissionId: string = body?.submission_id;
     const items: Item[] = Array.isArray(body?.items) ? body.items : [];
     const packetUrl: string = body?.packet_url;
+    // Every prepared Power of Attorney travels inside this same request — one
+    // email for the seller, never a separate POA message.
+    const poasIn: { name?: string | null; url: string }[] = Array.isArray(body?.poas) ? body.poas : [];
     const poaUrl: string | null = body?.poa_url ?? null;
     const poaFor: string | null = body?.poa_for ?? null;
+    const poas = poasIn.length ? poasIn : (poaUrl ? [{ name: poaFor, url: poaUrl }] : []);
     const previewOnly: boolean = body?.preview === true;
     if (!submissionId || !packetUrl) {
       return new Response(JSON.stringify({ error: 'missing submission_id or packet_url' }), { status: 400, headers: corsHeaders });
@@ -82,26 +86,39 @@ Deno.serve(async (req) => {
         </td>
       </tr>`).join('');
 
+    // The POA sits in the same "what we still need" list as every other document,
+    // with its own signing link, so nothing has to be sent in a second email.
+    const poaRowHtml = poas.map((p) => `
+      <tr>
+        <td style="padding:14px 0;border-bottom:1px solid #eee7dc;">
+          <div style="font-size:15px;color:#1f2a37;font-family:Georgia,serif;">
+            Limited Power of Attorney${p.name ? ` — ${esc(p.name)}` : ''}
+            <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6d28d9;margin-left:8px;">Notary</span>
+            <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1d4ed8;margin-left:8px;">Prepared for you</span>
+          </div>
+          <div style="font-size:13px;color:#4a5568;line-height:1.6;margin-top:4px;">
+            Already filled in and ready — open it, confirm your mailing address, then sign it before a notary.
+          </div>
+          <a href="${esc(p.url)}" style="display:inline-block;margin-top:8px;padding:9px 18px;background:#1f2a37;color:#ffffff;text-decoration:none;border-radius:8px;font-family:Georgia,serif;font-size:13px;">
+            Open your Power of Attorney →
+          </a>
+        </td>
+      </tr>`).join('');
 
-    const poaHtml = poaUrl ? `
+    const poaHtml = poas.length ? `
       <div style="margin:28px 0 0;padding:20px 22px;background:#f7f3ec;border-radius:10px;">
-        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;">Also enclosed</div>
-        <div style="font-size:17px;font-family:Georgia,serif;color:#1f2a37;margin:6px 0 10px;">
-          Your Limited Power of Attorney${poaFor ? ` — ${esc(poaFor)}` : ''}
-        </div>
-        <p style="margin:0 0 12px;font-size:13px;color:#4a5568;line-height:1.7;">
-          This lets us handle the cemetery's transfer paperwork on your behalf, so you don't have to
+        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;">About the Power of Attorney${poas.length > 1 ? 's' : ''} above</div>
+        <p style="margin:8px 0 12px;font-size:13px;color:#4a5568;line-height:1.7;">
+          ${poas.length > 1 ? 'These let' : 'This lets'} us handle the cemetery's transfer paperwork on your behalf, so you don't have to
           post forms back and forth. Because it is a sworn document it must be notarized.
         </p>
-        <ol style="padding-left:18px;margin:0 0 14px;font-size:13px;color:#4a5568;line-height:1.8;">
-          <li>Open the link below and confirm your mailing address — the document fills in as you type.</li>
+        <ol style="padding-left:18px;margin:0;font-size:13px;color:#4a5568;line-height:1.8;">
+          <li>Open the link above and confirm your mailing address — the document fills in as you type.</li>
           <li>Sign it online with a remote notary (about 15 minutes, from your phone), or print it and take it to any bank, UPS Store or courthouse notary.</li>
           <li>Upload the notarized copy on the same page and you're finished.</li>
         </ol>
-        <a href="${esc(poaUrl)}" style="display:inline-block;padding:11px 22px;background:#1f2a37;color:#ffffff;text-decoration:none;border-radius:8px;font-family:Georgia,serif;font-size:14px;">
-          Prepare &amp; notarize your Power of Attorney →
-        </a>
       </div>` : '';
+
 
     const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
 
@@ -141,8 +158,10 @@ Deno.serve(async (req) => {
             regardless of how you sold it, privately or through a broker. The only item unique to selling through us is
             the Limited Power of Attorney, which lets us handle the cemetery paperwork on your behalf.
           </p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemHtml}</table>` : `
-          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemHtml}${poaRowHtml}</table>` : (poaRowHtml ? `
+          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:8px;">What we still need</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${poaRowHtml}</table>` : `
+          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`)}
           ${poaHtml}
           <p style="margin:26px 0 0;font-size:13px;color:#4a5568;">
             Or copy this link into your browser:<br/>
@@ -209,8 +228,8 @@ Deno.serve(async (req) => {
         from_name: 'Texas Cemetery Brokers',
         to_email: to,
         subject,
-        snippet: `Document packet requested — ${items.length} item${items.length === 1 ? '' : 's'}${poaUrl ? ' + Power of Attorney' : ''}.`,
-        body_text: `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poaUrl ? `\n\nPOA: ${poaUrl}` : ''}`,
+        snippet: `Document packet requested — ${items.length} item${items.length === 1 ? '' : 's'}${poas.length ? ` + ${poas.length} Power of Attorney` : ''}.`,
+        body_text: `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPOA${p.name ? ` (${p.name})` : ''}: ${p.url}`).join('')}`,
         received_at: now,
         matched_submission_id: submissionId,
         is_read: true,
