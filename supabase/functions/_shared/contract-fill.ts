@@ -221,7 +221,23 @@ function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: 
   page.drawText('DATA REFERENCE SHEET', { x: width - 50 - font.widthOfTextAtSize('DATA REFERENCE SHEET', 8), y: 40, size: 8, font: bold, color: MUTED });
 }
 
+/**
+ * Public wrapper so composed documents (e.g. the joint POA, which is typeset
+ * from scratch rather than stamped onto a scanned template) can append the
+ * exact same audit/data-reference sheet the single-signer contracts carry.
+ */
+export async function appendDataReferenceSheet(
+  pdf: PDFDocument,
+  kind: 'listing_agreement' | 'poa',
+  data: FillData,
+): Promise<void> {
+  const serif = await pdf.embedFont(StandardFonts.TimesRoman);
+  const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
+  appendInfoSheet(pdf, serif, serifBold, serif, serifBold, kind, data);
+}
+
 export async function buildFilledPdf(
+
   templateBytes: Uint8Array,
   kind: 'listing_agreement' | 'poa',
   data: FillData,

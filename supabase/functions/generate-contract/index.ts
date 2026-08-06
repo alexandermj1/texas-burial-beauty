@@ -167,13 +167,20 @@ Deno.serve(async (req) => {
       fill.seller_name = jointNames.join(' & ');
       filled = await buildJointPoaPdf({
         county: overrides.county ?? overrides.county_state ?? cemLocationCity ?? '',
-        principals: jointNames.map((n) => ({ name: n, address: overrides.address ?? '' })),
+        county_state: fill.county_state,
+        principals: jointNames.map((n) => ({
+          name: n,
+          address: [overrides.address, overrides.city_state_zip].filter(Boolean).join(', '),
+        })),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: overrides.plot_description ??
           [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
         spaces: overrides.plot_description ? '' : (sub.spaces ?? ''),
+        phone: fill.phone,
+        email: fill.email,
       });
+
     } else {
       const templateBytes = await fetchTemplate(svc, kind as 'listing_agreement' | 'poa');
       filled = await buildFilledPdf(templateBytes, kind as 'listing_agreement' | 'poa', fill);
