@@ -2398,15 +2398,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             rowPlotLocation,
                             rowPlotId,
                           ].filter(Boolean).join(" · ") || "property not specified";
-                          if (accepted && quoted > 0) {
-                            const sales = Math.round((quoted / 0.42) * 0.68);
+                          if (accepted) {
+                            if (quoted > 0) {
+                              const sales = Math.round((quoted / 0.42) * 0.68);
+                              return (
+                                <span
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm tabular-nums"
+                                  title={`Sales price for ${rowProp} · quoted $${quoted.toLocaleString()} → retail $${Math.round(quoted/0.42).toLocaleString()} → sales $${sales.toLocaleString()}`}
+                                >
+                                  <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
+                                  ${sales.toLocaleString()}
+                                  {rowMulti && <span className="font-semibold opacity-80">×{rowSpaces}</span>}
+                                </span>
+                              );
+                            }
                             return (
                               <span
-                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm tabular-nums"
-                                title={`Sales price for ${rowProp} · quoted $${quoted.toLocaleString()} → retail $${Math.round(quoted/0.42).toLocaleString()} → sales $${sales.toLocaleString()}`}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm"
+                                title={`Quote accepted for ${rowProp} · ${formatDate((s as any).quote_responded_at || (s as any).quote_sent_at)}`}
                               >
                                 <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
-                                ${sales.toLocaleString()}
+                                Accepted
                                 {rowMulti && <span className="font-semibold opacity-80">×{rowSpaces}</span>}
                               </span>
                             );
