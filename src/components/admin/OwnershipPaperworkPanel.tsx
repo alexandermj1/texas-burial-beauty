@@ -578,21 +578,28 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const poaRequired = requirements.some((r) => r.contractKind === "poa");
   const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
 
-  /** The items and POA link that make up the request, shared by preview and send. */
+  /** The items and POA links that make up the request, shared by preview and send. */
   const buildPacketPayload = async () => {
-    let poaUrl: string | null = null;
-    let poaFor: string | null = null;
-    // Use the POA prepared for the POA the checklist actually calls for (joint
-    // couples included), not simply the first one on the file.
-    const chosen = poaRequirements.length ? preparedPoaFor(poaRequirements[0]) : poaContract;
-    if (chosen) {
+    // Every POA the checklist calls for, each with the prepared signing link, so
+    // they travel inside the same document request rather than a separate email.
+    const poas: { name: string | null; url: string }[] = [];
+    const sources = poaRequirements.length
+      ? poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }))
+      : (poaContract ? [{ r: null as Requirement | null, c: poaContract }] : []);
+    for (const { r, c: chosen } of sources) {
+      if (!chosen) continue;
       const { data: c } = await supabase.from("contracts")
-        .select("sign_token, signature_name").eq("id", chosen.id).maybeSingle();
-      if (c?.sign_token) {
-        poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
-        poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
-      }
+        .select("sign_token, signature_name, fill_data").eq("id", chosen.id).maybeSingle();
+      if (!c?.sign_token) continue;
+      const url = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
+      if (poas.some((p) => p.url === url)) continue;
+      const name = (c as { signature_name?: string | null }).signature_name
+        ?? ((c as { fill_data?: Record<string, unknown> | null }).fill_data?.seller_name as string | undefined)
+        ?? r?.jointNames?.join(" & ') ".slice(0, 3)) ?? r?.personName ?? null;
+      poas.push({ name: name ?? null, url });
     }
+    const poaUrl = poas[0]?.url ?? null;
+    const poaFor = poas[0]?.name ?? null;
     const items = outstanding.map((r) => {
       const g = DOC_GUIDE[r.code];
       return {
@@ -608,7 +615,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       };
     });
-    return { items, poaUrl, poaFor };
+    return { items, poas, poaUrl, poaFor };
   };
 
   /** Step 2 of the review: fetch the exact email without sending anything. */
@@ -616,9 +623,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setReview({ step: 2, loading: true });
     try {
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor, preview: true },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, preview: true },
       });
       if (error) throw error;
       const res = data as { html?: string; subject?: string };
@@ -637,14 +644,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     try {
       // Make sure the seller's page actually lists these items.
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor },
       });
       if (error) throw error;
       toast.success(`Document request emailed to ${sellerEmail}`, {
-        description: `${items.length} item${items.length === 1 ? "" : "s"}${poaUrl ? " + Power of Attorney" : ""}`,
+        description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}`,
       });
       setPoaPrompt(false);
       setReview(null);
@@ -655,6 +662,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setSending(false);
     }
   };
+
 
   /**
    * "Prepare" now opens an inline editor first (same idea as the Listing Agreement
