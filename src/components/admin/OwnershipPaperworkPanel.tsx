@@ -944,7 +944,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {r.contractKind && (
-              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => generateDoc(r)}
+              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => void openDocEditor(r)}
                 title={`Prepare ${r.label} — fills it in and opens the PDF so you can check it`} className="text-[11px] h-7">
                 {busy === key
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1443,6 +1443,112 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
+      {/* ── Inline field editor before a contract is generated ── */}
+      <Dialog open={!!docEdit} onOpenChange={(o) => !o && setDocEdit(null)}>
+        <DialogContent className="max-w-2xl z-[95] max-h-[88vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <FileSignature className="w-4 h-4" /> Fill in the {docEdit?.r.label ?? "document"}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {docEdit?.r.jointNames?.length
+                ? "Joint document — both principals appear on the same instrument and each gets their own notary block."
+                : "Check every blank before it is generated. Nothing is sent to the seller yet."}
+            </DialogDescription>
+          </DialogHeader>
+          {docEdit?.loading || !docEdit ? (
+            <div className="py-10 grid place-items-center text-muted-foreground text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className={docEdit.r.jointNames?.length ? "" : "md:col-span-2"}>
+                <Label className="text-xs">{docEdit.r.jointNames?.length ? "First principal" : "Full legal name"}</Label>
+                <Input value={docEdit.fields.seller_name}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, seller_name: e.target.value } })} />
+              </div>
+              {!!docEdit.r.jointNames?.length && (
+                <div>
+                  <Label className="text-xs">Second principal</Label>
+                  <Input value={docEdit.fields.joint_second}
+                    onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, joint_second: e.target.value } })} />
+                </div>
+              )}
+              <div className="md:col-span-2">
+                <Label className="text-xs">Mailing address</Label>
+                <Input value={docEdit.fields.address} placeholder="Street address"
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">City, State, ZIP</Label>
+                <Input value={docEdit.fields.city_state_zip}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">Phone</Label>
+                <Input value={docEdit.fields.phone}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, phone: e.target.value } })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={docEdit.fields.email}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, email: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">Cemetery</Label>
+                <Input value={docEdit.fields.cemetery}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, cemetery: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">County / State (venue)</Label>
+                <Input value={docEdit.fields.county_state} placeholder="e.g. Harris County, TX"
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, county_state: e.target.value } })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-xs">Plot description (section / lot / spaces)</Label>
+                <Input value={docEdit.fields.plot_description}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, plot_description: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">Plot count</Label>
+                <Input type="number" value={docEdit.fields.plot_count}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, plot_count: e.target.value } })} />
+              </div>
+              {docEdit.r.contractKind === "listing_agreement" && (
+                <>
+                  <div>
+                    <Label className="text-xs">Listing option</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={docEdit.fields.listing_option}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, listing_option: e.target.value } })}
+                    >
+                      <option value="Starter">Starter</option>
+                      <option value="Pro">Pro</option>
+                      <option value="Featured">Featured</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label className="text-xs">Authorized minimum total ($)</Label>
+                    <Input type="number" value={docEdit.fields.authorized_min_total}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, authorized_min_total: e.target.value } })} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setDocEdit(null)}>Cancel</Button>
+            <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+              disabled={!docEdit || docEdit.loading || !!busy}
+              onClick={() => docEdit && void generateDoc(docEdit.r, docEdit.fields)}>
+              {busy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+              Generate &amp; preview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Inline PDF check ── */}
 
       <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
@@ -1521,7 +1627,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                         </p>
                         <div className="flex items-center gap-1.5 mt-2">
                           <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
-                            onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>
+                            onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
                             {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
                             {prepared ? "Re-prepare & check" : "Prepare it now"}
                           </Button>
