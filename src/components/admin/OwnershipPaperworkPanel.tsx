@@ -1160,6 +1160,122 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </p>
         </div>
       ))}
+
+      {/* ── Inline PDF check ── */}
+      <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <FileText className="w-4 h-4" /> {pdfPreview?.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Check every filled line before this goes out. Nothing has been sent to the seller.
+            </DialogDescription>
+          </DialogHeader>
+          {pdfPreview && (
+            <iframe src={pdfPreview.url} title={pdfPreview.title} className="w-full h-[70vh] rounded-md border bg-white" />
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => window.open(pdfPreview?.url, "_blank", "noopener")}>
+              Open in new tab
+            </Button>
+            <Button size="sm" onClick={() => setPdfPreview(null)}>Looks right</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Send document request: review → preview → confirm ── */}
+      <Dialog open={!!review} onOpenChange={(o) => !o && setReview(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Mail className="w-4 h-4" /> {review?.step === 1 ? "Check the request" : "This is exactly what they'll get"}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {review?.step === 1
+                ? `Nothing is sent until you press Send at the end. Recipient: ${sellerEmail || "—"}.`
+                : review?.subject}
+            </DialogDescription>
+          </DialogHeader>
+
+          {review?.step === 1 && (
+            <div className="space-y-3 max-h-[65vh] overflow-y-auto">
+              <div className="rounded-md border p-3 space-y-1.5">
+                <p className="text-xs font-semibold">{outstanding.length} item{outstanding.length === 1 ? "" : "s"} will be asked for</p>
+                {outstanding.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground">Nothing outstanding — the email will simply confirm we're up to date.</p>
+                ) : outstanding.map((r) => (
+                  <div key={reqKey(r) + r.label} className="text-[12px] flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                    <span>
+                      {r.label}
+                      {r.personName ? <span className="text-muted-foreground"> · {r.personName}</span> : null}
+                      {r.needsNotary ? <span className="text-purple-700"> · notary</span> : null}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {poaRequired && (
+                <div className={`rounded-md border px-3 py-2.5 space-y-2 ${poaContract ? "border-emerald-300 bg-emerald-50" : "border-purple-300 bg-purple-50"}`}>
+                  <p className="text-[12px]">
+                    {poaContract
+                      ? "The Power of Attorney is prepared and will be included in this email with the notary instructions."
+                      : "This file needs a Power of Attorney and none has been prepared yet. Prepare it now and it travels inside the same email."}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                      onClick={() => void preparePoa()} disabled={busy === "poa"}>
+                      {busy === "poa" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                      {poaContract ? "Re-prepare & check" : "Prepare the POA now"}
+                    </Button>
+                    {poaContract && (
+                      <Button size="sm" variant="outline"
+                        onClick={() => void openContractPdf(requirements.find((r) => r.contractKind === "poa") ?? requirements[0])}>
+                        <FileText className="w-3.5 h-3.5 mr-1" />Check the PDF
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-md border p-3">
+                <p className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
+                  <Monitor className="w-3.5 h-3.5" /> The page the seller lands on
+                </p>
+                <iframe src={packetUrl} title="Seller document page" className="w-full h-[300px] rounded border bg-white" />
+              </div>
+            </div>
+          )}
+
+          {review?.step === 2 && (
+            review.loading
+              ? <div className="h-[60vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              : <iframe srcDoc={review.html ?? ""} title="Email preview" className="w-full h-[60vh] rounded-md border bg-white" />
+          )}
+
+          <DialogFooter>
+            {review?.step === 1 ? (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => setReview(null)}>Cancel</Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void loadEmailPreview()}>
+                  Preview the email →
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => setReview({ step: 1 })}>← Back</Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void sendPacketEmail()} disabled={sending || review?.loading}>
+                  {sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  Send to {sellerEmail}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
