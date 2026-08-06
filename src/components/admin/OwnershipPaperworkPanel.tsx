@@ -7,15 +7,18 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2, Send, FileText,
+  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ContractsPanel from "./ContractsPanel";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
+  canIssueJointPoa, isDeceasedPerson,
   type OwnershipAnswers, type RosterPerson, type PersonRole,
   type RequiredState, type Requirement, type CemeteryDocRules,
 } from "@/lib/ownershipRules";
+
 
 
 type Props = {
@@ -152,6 +155,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [sending, setSending] = useState(false);
   const [poaPrompt, setPoaPrompt] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
+  /** A prepared PDF shown inline so it can be checked without leaving the page. */
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string } | null>(null);
+  /** The send-document-request review flow. */
+  const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -537,14 +545,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Generate the POA so it can travel inside the same packet email. */
   const preparePoa = async () => {
-    const person = requirements.find((r) => r.contractKind === "poa")?.personName;
+    const req = requirements.find((r) => r.contractKind === "poa");
     setBusy("poa");
     try {
-      const { error } = await supabase.functions.invoke("generate-contract", {
-        body: { submission_id: submissionId, kind: "poa", overrides: person ? { seller_name: person } : {} },
+      const { data, error } = await supabase.functions.invoke("generate-contract", {
+        body: {
+          submission_id: submissionId, kind: "poa",
+          overrides: {
+            ...(req?.personName ? { seller_name: req.personName } : {}),
+            ...(req?.jointNames ? { joint_names: req.jointNames } : {}),
+          },
+        },
       });
       if (error) throw error;
-      toast.success("Power of Attorney prepared — it will be included in the email");
+      const res = data as { pdf_url?: string | null };
+      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: req?.label ?? "Power of Attorney" });
+      toast.success("Power of Attorney prepared — check it below, then send");
       await load();
       setPoaPrompt(false);
     } catch (e) {
@@ -554,40 +570,61 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** The items and POA link that make up the request, shared by preview and send. */
+  const buildPacketPayload = async () => {
+    let poaUrl: string | null = null;
+    let poaFor: string | null = null;
+    if (poaContract) {
+      const { data: c } = await supabase.from("contracts")
+        .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
+      if (c?.sign_token) {
+        poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
+        poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
+      }
+    }
+    const items = outstanding.map((r) => {
+      const g = DOC_GUIDE[r.code];
+      return {
+        code: r.code,
+        label: r.label,
+        why: r.why,
+        what: g?.what,
+        how: g?.how,
+        person: r.personName ?? null,
+        needsNotary: !!r.needsNotary,
+        issuedByUs: !!r.issuedByUs,
+      };
+    });
+    return { items, poaUrl, poaFor };
+  };
+
+  /** Step 2 of the review: fetch the exact email without sending anything. */
+  const loadEmailPreview = async () => {
+    setReview({ step: 2, loading: true });
+    try {
+      if (!rows.some((r) => r.doc_code)) await syncChecklist();
+      const { items, poaUrl, poaFor } = await buildPacketPayload();
+      const { data, error } = await supabase.functions.invoke("send-document-packet", {
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor, preview: true },
+      });
+      if (error) throw error;
+      const res = data as { html?: string; subject?: string };
+      setReview({ step: 2, html: res?.html, subject: res?.subject });
+    } catch (e) {
+      toast.error((e as Error).message);
+      setReview({ step: 1 });
+    }
+  };
+
   /** One email: the curated upload page, every outstanding item explained, and
    *  the POA notary route folded in so the seller only ever gets one message. */
-  const sendPacketEmail = async (skipPoa = false) => {
+  const sendPacketEmail = async () => {
     if (!sellerEmail) return toast.error("This submission has no email address");
-    if (poaRequired && !poaContract && !skipPoa) { setPoaPrompt(true); return; }
     setSending(true);
     try {
       // Make sure the seller's page actually lists these items.
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-
-      let poaUrl: string | null = null;
-      let poaFor: string | null = null;
-      if (poaContract) {
-        const { data: c } = await supabase.from("contracts")
-          .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
-        if (c?.sign_token) {
-          poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
-          poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
-        }
-      }
-
-      const items = outstanding.map((r) => {
-        const g = DOC_GUIDE[r.code];
-        return {
-          code: r.code,
-          label: r.label,
-          why: r.why,
-          what: g?.what,
-          how: g?.how,
-          person: r.personName ?? null,
-          needsNotary: !!r.needsNotary,
-          issuedByUs: !!r.issuedByUs,
-        };
-      });
+      const { items, poaUrl, poaFor } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
         body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor },
@@ -597,6 +634,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         description: `${items.length} item${items.length === 1 ? "" : "s"}${poaUrl ? " + Power of Attorney" : ""}`,
       });
       setPoaPrompt(false);
+      setReview(null);
       await load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -613,15 +651,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: {
           submission_id: submissionId,
           kind: r.contractKind,
-          overrides: r.personName ? { seller_name: r.personName } : {},
+          overrides: {
+            ...(r.personName ? { seller_name: r.personName } : {}),
+            ...(r.jointNames ? { joint_names: r.jointNames } : {}),
+          },
         },
       });
       if (error) throw error;
       const res = data as { pdf_url?: string | null; sign_token?: string | null };
-      // Open the filled PDF straight away so it can be checked line by line.
-      if (res?.pdf_url) window.open(res.pdf_url, "_blank", "noopener");
+      // Show the filled PDF inline so it can be checked line by line.
+      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
       toast.success(`${r.label} prepared`, {
-        description: res?.pdf_url ? "Opened in a new tab so you can check it." : "Open the contract to review it.",
+        description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
       });
       await setRowState(r, "issued");
       await load();
@@ -632,7 +673,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  /** Re-open the already-prepared contract PDF for a requirement. */
+  /** Re-open the already-prepared contract PDF for a requirement, inline. */
   const openContractPdf = async (r: Requirement) => {
     const c = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
     if (!c) return;
@@ -643,10 +684,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const path = data?.notarized_pdf_path || data?.signed_pdf_path || data?.filled_pdf_path;
       if (path) {
         const { data: signed } = await supabase.storage.from("contracts").createSignedUrl(path, 3600);
-        if (signed?.signedUrl) { window.open(signed.signedUrl, "_blank", "noopener"); return; }
+        if (signed?.signedUrl) { setPdfPreview({ url: signed.signedUrl, title: r.label }); return; }
       }
       if (data?.sign_token) {
-        window.open(`${PUBLIC_SITE_URL}/sign/${data.sign_token}`, "_blank", "noopener");
+        setPdfPreview({ url: `${PUBLIC_SITE_URL}/sign/${data.sign_token}`, title: r.label });
         return;
       }
       toast.error("No prepared PDF found yet — press Prepare first.");
@@ -654,6 +695,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setBusy(null);
     }
   };
+
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
@@ -944,33 +986,71 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </p>
             ) : (
               <div className="space-y-1.5">
-                {(answers.people ?? []).map((p) => (
-                  <div key={p.id} className="grid grid-cols-1 sm:grid-cols-[1fr_170px_1fr_auto] gap-1.5 items-center">
-                    <Input
-                      className="h-8 text-xs" placeholder="Full legal name" value={p.name}
-                      onChange={(e) => updatePerson(p.id, { name: e.target.value })}
-                      onBlur={commitPeople}
-                    />
-                    <select
-                      className="h-8 text-xs rounded-md border border-input bg-background px-2"
-                      value={p.role}
-                      onChange={(e) => { updatePerson(p.id, { role: e.target.value as PersonRole }); setTimeout(commitPeople, 0); }}
-                    >
-                      {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                    <Input
-                      className="h-8 text-xs" placeholder="Email (optional)" value={p.email ?? ""}
-                      onChange={(e) => updatePerson(p.id, { email: e.target.value })}
-                      onBlur={commitPeople}
-                    />
-                    <Button size="sm" variant="ghost" onClick={() => removePerson(p.id)}>
-                      <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                    </Button>
-                  </div>
-                ))}
+                {(answers.people ?? []).map((p) => {
+                  const dead = isDeceasedPerson(p, answers);
+                  return (
+                    <div key={p.id} className="grid grid-cols-1 sm:grid-cols-[1fr_170px_1fr_auto_auto] gap-1.5 items-center">
+                      <Input
+                        className="h-8 text-xs" placeholder="Full legal name" value={p.name}
+                        onChange={(e) => updatePerson(p.id, { name: e.target.value })}
+                        onBlur={commitPeople}
+                      />
+                      <select
+                        className="h-8 text-xs rounded-md border border-input bg-background px-2"
+                        value={p.role}
+                        onChange={(e) => { updatePerson(p.id, { role: e.target.value as PersonRole }); setTimeout(commitPeople, 0); }}
+                      >
+                        {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      </select>
+                      <Input
+                        className="h-8 text-xs" placeholder="Email (optional)" value={p.email ?? ""}
+                        onChange={(e) => updatePerson(p.id, { email: e.target.value })}
+                        onBlur={commitPeople}
+                      />
+                      <label className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={dead}
+                          onChange={(e) => {
+                            const on = e.target.checked;
+                            void persistAnswers({
+                              ...answers,
+                              people: (answers.people ?? []).map((x) =>
+                                x.id === p.id ? { ...x, deceased: on, role: on ? "decedent" as PersonRole : x.role } : x),
+                            });
+                          }}
+                        />
+                        Deceased
+                      </label>
+                      <Button size="sm" variant="ghost" onClick={() => removePerson(p.id)}>
+                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             )}
+
+            {/* A married couple can execute a single instrument, each signature
+                acknowledged separately — one POA instead of two. */}
+            {canIssueJointPoa(answers) && (
+              <label className="flex items-start gap-2 rounded-md border border-purple-200 bg-purple-50/70 px-2.5 py-2 text-[11px] text-purple-900">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={answers.jointPoa === "yes"}
+                  onChange={(e) => setAnswer("jointPoa", e.target.checked ? "yes" : "no")}
+                />
+                <span>
+                  <strong>Issue one joint Power of Attorney</strong> for{" "}
+                  {roster.filter((p) => p.role !== "witness").map((p) => p.name).join(" & ")} to sign together.
+                  Texas allows two principals on one instrument; each signature is acknowledged separately
+                  before the notary, so they only pay and attend once.
+                </span>
+              </label>
+            )}
           </div>
+
 
           {/* ── Listing agreement sits on its own, above the paperwork ── */}
           <div className="space-y-1.5">
@@ -1006,9 +1086,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 <Button
                   size="sm"
                   className="bg-[#1f2a37] hover:bg-[#111827] text-white"
-                  onClick={() => void sendPacketEmail()}
+                  onClick={() => setReview({ step: 1 })}
                   disabled={sending || !sellerEmail}
-                  title={sellerEmail ? `Send one email with everything to ${sellerEmail}` : "No email on this submission"}
+                  title={sellerEmail ? `Review, then send everything to ${sellerEmail}` : "No email on this submission"}
                 >
                   {sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
                   Send document request
@@ -1016,26 +1096,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             </div>
 
-            {poaPrompt && (
-              <div className="rounded-md border border-purple-300 bg-purple-50 px-3 py-2.5 space-y-2">
-                <p className="text-[12px] text-purple-900">
-                  This file needs a <strong>Power of Attorney</strong> and none has been prepared yet.
-                  Prepare it first and it travels inside the same email — the seller gets one message with the
-                  documents, the POA and the notary instructions together.
-                </p>
-                <div className="flex items-center gap-1.5">
-                  <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
-                    onClick={() => void preparePoa()} disabled={busy === "poa"}>
-                    {busy === "poa" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                    Prepare the POA now
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => void sendPacketEmail(true)} disabled={sending}>
-                    Send without it
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setPoaPrompt(false)}>Cancel</Button>
-                </div>
-              </div>
-            )}
+
 
             {rules && Object.keys(rules).length > 0 && (
               <p className="text-[11px] text-stone-600 bg-stone-100 rounded px-2 py-1.5">
@@ -1099,6 +1160,122 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </p>
         </div>
       ))}
+
+      {/* ── Inline PDF check ── */}
+      <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <FileText className="w-4 h-4" /> {pdfPreview?.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Check every filled line before this goes out. Nothing has been sent to the seller.
+            </DialogDescription>
+          </DialogHeader>
+          {pdfPreview && (
+            <iframe src={pdfPreview.url} title={pdfPreview.title} className="w-full h-[70vh] rounded-md border bg-white" />
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => window.open(pdfPreview?.url, "_blank", "noopener")}>
+              Open in new tab
+            </Button>
+            <Button size="sm" onClick={() => setPdfPreview(null)}>Looks right</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Send document request: review → preview → confirm ── */}
+      <Dialog open={!!review} onOpenChange={(o) => !o && setReview(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Mail className="w-4 h-4" /> {review?.step === 1 ? "Check the request" : "This is exactly what they'll get"}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {review?.step === 1
+                ? `Nothing is sent until you press Send at the end. Recipient: ${sellerEmail || "—"}.`
+                : review?.subject}
+            </DialogDescription>
+          </DialogHeader>
+
+          {review?.step === 1 && (
+            <div className="space-y-3 max-h-[65vh] overflow-y-auto">
+              <div className="rounded-md border p-3 space-y-1.5">
+                <p className="text-xs font-semibold">{outstanding.length} item{outstanding.length === 1 ? "" : "s"} will be asked for</p>
+                {outstanding.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground">Nothing outstanding — the email will simply confirm we're up to date.</p>
+                ) : outstanding.map((r) => (
+                  <div key={reqKey(r) + r.label} className="text-[12px] flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                    <span>
+                      {r.label}
+                      {r.personName ? <span className="text-muted-foreground"> · {r.personName}</span> : null}
+                      {r.needsNotary ? <span className="text-purple-700"> · notary</span> : null}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {poaRequired && (
+                <div className={`rounded-md border px-3 py-2.5 space-y-2 ${poaContract ? "border-emerald-300 bg-emerald-50" : "border-purple-300 bg-purple-50"}`}>
+                  <p className="text-[12px]">
+                    {poaContract
+                      ? "The Power of Attorney is prepared and will be included in this email with the notary instructions."
+                      : "This file needs a Power of Attorney and none has been prepared yet. Prepare it now and it travels inside the same email."}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                      onClick={() => void preparePoa()} disabled={busy === "poa"}>
+                      {busy === "poa" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                      {poaContract ? "Re-prepare & check" : "Prepare the POA now"}
+                    </Button>
+                    {poaContract && (
+                      <Button size="sm" variant="outline"
+                        onClick={() => void openContractPdf(requirements.find((r) => r.contractKind === "poa") ?? requirements[0])}>
+                        <FileText className="w-3.5 h-3.5 mr-1" />Check the PDF
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-md border p-3">
+                <p className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
+                  <Monitor className="w-3.5 h-3.5" /> The page the seller lands on
+                </p>
+                <iframe src={packetUrl} title="Seller document page" className="w-full h-[300px] rounded border bg-white" />
+              </div>
+            </div>
+          )}
+
+          {review?.step === 2 && (
+            review.loading
+              ? <div className="h-[60vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              : <iframe srcDoc={review.html ?? ""} title="Email preview" className="w-full h-[60vh] rounded-md border bg-white" />
+          )}
+
+          <DialogFooter>
+            {review?.step === 1 ? (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => setReview(null)}>Cancel</Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void loadEmailPreview()}>
+                  Preview the email →
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => setReview({ step: 1 })}>← Back</Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void sendPacketEmail()} disabled={sending || review?.loading}>
+                  {sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  Send to {sellerEmail}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

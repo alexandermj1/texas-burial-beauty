@@ -33,6 +33,9 @@ export type OwnershipAnswers = {
   orgStatus?: "active" | "inactive";
   deed?: "yes" | "no";
   names?: "yes" | "no";
+  /** Married couple signing a single joint power of attorney rather than one each. */
+  jointPoa?: "yes" | "no";
+
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
@@ -314,9 +317,36 @@ export type Requirement = {
   originalsOnly?: boolean;
   personName?: string;
   personRole?: PersonRole;
+  /** Both names when one document is signed by two people (a joint POA). */
+  jointNames?: string[];
   /** The contract kind we can generate for this item, if any. */
   contractKind?: "listing_agreement" | "poa" | "affidavit_heirship" | "spousal_consent";
 };
+
+/**
+ * Is this person dead, either because they were marked so or because the
+ * answers say the person on the deed has died? A decedent never signs.
+ */
+export const isDeceasedPerson = (p: RosterPerson, a: OwnershipAnswers): boolean =>
+  p.role === "decedent" || !!p.deceased ||
+  (a.owner === "deceased" && (p.role === "owner" || p.role === "co_owner"));
+
+/**
+ * A single power of attorney may be signed by two principals — each signature
+ * separately acknowledged before the notary — so a married couple who own the
+ * plot together can sign one document rather than one each. We only offer it
+ * where both signers are living and are the owner and their spouse/co-owner.
+ */
+export function canIssueJointPoa(a: OwnershipAnswers): boolean {
+  const signers = (a.people ?? []).filter(
+    (p) => p.name.trim() && p.role !== "witness" && !isDeceasedPerson(p, a),
+  );
+  if (signers.length !== 2) return false;
+  const roles = signers.map((p) => p.role).sort().join("+");
+  return roles === "owner+spouse" || roles === "co_owner+owner" || roles === "co_owner+co_owner";
+}
+
+
 
 /**
  * Everyone whose signature or ID we need, derived from the answers plus the
@@ -324,7 +354,8 @@ export type Requirement = {
  */
 export function signingRoster(a: OwnershipAnswers): RosterPerson[] {
   const named = (a.people ?? []).filter((p) => p.name.trim());
-  if (named.length) return named.filter((p) => p.role !== "decedent" && !p.deceased);
+  if (named.length) return named.filter((p) => !isDeceasedPerson(p, a));
+
   // No names entered yet — describe the roles we know we'll need.
   const placeholder = (role: PersonRole, name: string): RosterPerson =>
     ({ id: `ph-${role}-${name}`, name, role });
@@ -576,24 +607,41 @@ export function computeRequirements(
   });
 
   // ── Per-person items ──
-  const namedRoster = (a.people ?? []).filter((p) => p.name.trim() && p.role !== "decedent" && !p.deceased);
+  const namedRoster = (a.people ?? []).filter((p) => p.name.trim() && !isDeceasedPerson(p, a));
   if (namedRoster.length === 0) {
     add({ code: "D2", label: "Photo ID for every person signing", why: "One clear government photo ID for each person who will sign." });
   }
-  for (const p of namedRoster) {
-    if (p.role === "witness") continue;
+  const signers = namedRoster.filter((p) => p.role !== "witness");
+  const joint = canIssueJointPoa(a) && a.jointPoa === "yes" ? signers : null;
+
+  if (joint) {
+    // Texas law lets two principals execute one instrument, each signature
+    // separately acknowledged, so a married couple can sign a single POA.
     add({
-      code: "D21", label: `Limited power of attorney to Texas Cemetery Brokers — ${p.name}`,
-      why: "Lets us sign the transfer paperwork at the cemetery on their behalf.",
+      code: "D21", label: `Joint limited power of attorney — ${joint.map((p) => p.name).join(" & ")}`,
+      why: "One document both spouses sign, each acknowledged before the notary, instead of a separate POA each.",
+      statute: "§751.031",
       issuedByUs: true, needsNotary: true, contractKind: "poa",
-      personName: p.name, personRole: p.role,
+      personName: joint[0].name, personRole: joint[0].role,
+      jointNames: joint.map((p) => p.name),
     });
+  }
+  for (const p of signers) {
+    if (!joint) {
+      add({
+        code: "D21", label: `Limited power of attorney to Texas Cemetery Brokers — ${p.name}`,
+        why: "Lets us sign the transfer paperwork at the cemetery on their behalf.",
+        issuedByUs: true, needsNotary: true, contractKind: "poa",
+        personName: p.name, personRole: p.role,
+      });
+    }
     add({
       code: "D2P", label: `Photo ID — ${p.name}`,
       why: "The cemetery matches every signature to a government ID.",
       personName: p.name, personRole: p.role,
     });
   }
+
 
   // De-duplicate by checklist identity. Labels can change as names become known,
   // but that must not create a second request for the same document.
