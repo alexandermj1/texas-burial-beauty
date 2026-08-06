@@ -27,7 +27,10 @@ type Item = {
   person?: string | null;
   needsNotary?: boolean;
   issuedByUs?: boolean;
+  /** When set, the cemetery requires the original — post it to this address. */
+  mailTo?: string | null;
 };
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
