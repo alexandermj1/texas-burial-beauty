@@ -138,6 +138,7 @@ Deno.serve(async (req) => {
         fill_data: c.fill_data,
         pdf_url: signed?.signedUrl,
         already_signed: !!c.signed_at,
+        submission_id: c.submission_id,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

@@ -181,6 +181,72 @@ Deno.serve(async (req) => {
       return json({ ok: true, all_done: allDone });
     }
 
+    if (action === "record_poa") {
+      const path = String(body?.path ?? "");
+      const name = String(body?.name ?? "notarized POA");
+      if (!path) return json({ error: "missing file" }, 400);
+
+      // The current POA contract row for this submission.
+      const { data: poaRow } = await supabase
+        .from("contracts")
+        .select("id, signed_pdf_path, filled_pdf_path, kind")
+        .eq("submission_id", submissionId)
+        .eq("kind", "poa")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!poaRow) return json({ error: "no prepared POA found" }, 404);
+
+      // Copy the uploaded file from portal-uploads to the contracts bucket for
+      // permanent storage alongside the other contract documents.
+      const filePath = path.startsWith("portal-uploads/") ? path.slice("portal-uploads/".length) : path;
+      const { data: fileData, error: dlErr } = await supabase.storage
+        .from("portal-uploads")
+        .download(filePath);
+      if (dlErr || !fileData) throw new Error(`download failed: ${dlErr?.message ?? "not found"}`);
+      const bytes = new Uint8Array(await fileData.arrayBuffer());
+      const safeName = name.replace(/[^a-zA-Z0-9._-]+/g, "_") || "notarized-poa.pdf";
+      const newPath = `${submissionId}/poa-notarized-${Date.now()}-${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("contracts")
+        .upload(newPath, bytes, { contentType: fileData.type || "application/pdf", upsert: true });
+      if (upErr) throw new Error(`upload failed: ${upErr.message}`);
+
+      const now = new Date().toISOString();
+      await supabase.from("contracts").update({
+        notarized_pdf_path: newPath,
+        notarized_at: now,
+        signed_at: poaRow.signed_at ?? now,
+        status: "notarized",
+      }).eq("id", poaRow.id);
+
+      if (sub.customer_profile_id) {
+        await supabase.from("customer_activity_log").insert({
+          customer_profile_id: sub.customer_profile_id,
+          submission_id: submissionId,
+          actor_name: sub.name ?? "Seller",
+          action_type: "poa_notarized",
+          action_summary: `Seller uploaded the notarized Power of Attorney (${safeName})`,
+        });
+      }
+
+      // Notify staff that the POA has been returned.
+      const { data: staff } = await supabase
+        .from("user_roles").select("user_id").in("role", ["admin", "staff", "agent"]);
+      const recipients = [...new Set((staff ?? []).map((r: { user_id: string }) => r.user_id))];
+      if (recipients.length) {
+        await supabase.from("user_notifications").insert(recipients.map((uid) => ({
+          user_id: uid,
+          title: `${sub.name ?? "Seller"} uploaded the notarized POA`,
+          body: `The notarized Power of Attorney is back and stored with the contract.`,
+          link_url: `/admin?submission=${submissionId}`,
+          source_type: "poa_notarized",
+          source_id: submissionId,
+        })));
+      }
+
+      return json({ ok: true, path: newPath });
+    }
 
     return json({ error: "unknown action" }, 400);
   } catch (err) {

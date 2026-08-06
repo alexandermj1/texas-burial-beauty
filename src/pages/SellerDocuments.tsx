@@ -41,6 +41,191 @@ const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
 type Uploaded = { name: string; path: string; url: string; isImage: boolean };
 
+const PoaUpload = ({
+  submissionId,
+  onDone,
+}: {
+  submissionId: string;
+  onDone: () => void;
+}) => {
+  const [uploading, setUploading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const [phone, setPhone] = useState(false);
+  const [qr, setQr] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [uploads, setUploads] = useState<Uploaded[]>([]);
+
+  const docKey = "poa-notarized";
+  const mobileUrl = typeof window !== "undefined"
+    ? `${PUBLIC_SITE_URL}/seller-portal/upload/mobile?session=${submissionId}&doc=${encodeURIComponent(docKey)}&label=${encodeURIComponent("notarized POA")}`
+    : "";
+
+  useEffect(() => {
+    if (!phone || !mobileUrl) return;
+    QRCode.toDataURL(mobileUrl, { margin: 1, width: 240, color: { dark: "#3f5d47", light: "#00000000" } })
+      .then(setQr).catch(() => setQr(""));
+  }, [phone, mobileUrl]);
+
+  const refreshUploads = useCallback(async () => {
+    const { data } = await supabase.storage
+      .from("portal-uploads")
+      .list(submissionId, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+    const mine = (data ?? []).filter((f) => f.name.startsWith(`${docKey}-`));
+    if (!mine.length) { setUploads([]); return []; }
+    const paths = mine.map((f) => `${submissionId}/${f.name}`);
+    const { data: signed } = await supabase.storage.from("portal-uploads").createSignedUrls(paths, 3600);
+    const next: Uploaded[] = mine.map((f, i) => ({
+      name: f.name,
+      path: paths[i],
+      url: signed?.[i]?.signedUrl ?? "",
+      isImage: /\.(jpe?g|png|heic|webp|gif)$/i.test(f.name),
+    }));
+    setUploads(next);
+    return next;
+  }, [submissionId]);
+
+  useEffect(() => { void refreshUploads(); }, [refreshUploads]);
+
+  const record = useCallback(async (path: string, name: string) => {
+    const { error: err } = await supabase.functions.invoke("seller-packet", {
+      body: { action: "record_poa", submission_id: submissionId, path, name },
+    });
+    if (err) throw err;
+    setDone(true);
+    onDone();
+  }, [submissionId, onDone]);
+
+  useEffect(() => {
+    if (!phone) return;
+    let seen = uploads.length;
+    const check = async () => {
+      const next = await refreshUploads();
+      if (next.length > seen) {
+        seen = next.length;
+        const newest = next[0];
+        await record(newest.path, newest.name);
+      }
+    };
+    const t = window.setInterval(check, 2500);
+    void check();
+    return () => window.clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone, refreshUploads, record]);
+
+  const handleFiles = async (list: FileList) => {
+    setUploading(true);
+    setError("");
+    try {
+      for (const f of Array.from(list)) {
+        const ext = (f.name.split(".").pop() || "pdf").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const path = `${submissionId}/${docKey}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext || "pdf"}`;
+        const { error } = await supabase.storage
+          .from("portal-uploads")
+          .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type });
+        if (error) throw error;
+        await record(path, f.name);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="mt-4 rounded-2xl border border-border/70 bg-card/70 p-5">
+      <div className="flex items-start gap-4">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
+          {done ? <CheckCircle2 className="w-5 h-5" /> : <Stamp className="w-5 h-5" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-display text-lg text-foreground leading-snug">Upload the notarized POA</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            Once a notary has signed and stamped it, send the document back here. A photo or PDF of every page is fine.
+          </p>
+          {done ? (
+            <div className="mt-3 rounded-xl border border-primary/30 bg-primary/[0.05] px-4 py-3">
+              <p className="text-xs text-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> We have the notarized copy — thank you.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4 flex items-center gap-2 flex-wrap">
+              <input
+                ref={inputRef}
+                type="file"
+                multiple
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => { const fs = e.target.files; if (fs?.length) void handleFiles(fs); }}
+              />
+              <button
+                onClick={() => inputRef.current?.click()}
+                disabled={uploading}
+                className={`inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full disabled:opacity-60 ${uploading ? "bg-primary/20 text-primary" : "bg-primary text-primary-foreground hover:opacity-90"}`}
+              >
+                {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                {uploading ? "Uploading…" : "Upload from this computer"}
+              </button>
+              <button
+                onClick={() => setPhone((v) => !v)}
+                className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40"
+              >
+                {phone ? <X className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />} Phone
+              </button>
+            </div>
+          )}
+          {error && (
+            <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 text-xs text-destructive px-4 py-3">
+              {error}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {uploads.length > 0 && !done && (
+        <div className="mt-4 border-t border-border/60 px-1 pt-4">
+          <p className="text-[11px] text-muted-foreground mb-3">
+            {uploads.length} {uploads.length === 1 ? "file" : "files"} received — tap to view.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {uploads.map((u) => (
+              <a
+                key={u.path}
+                href={u.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group block w-24 h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
+                title={u.name}
+              >
+                {u.isImage ? (
+                  <img src={u.url} alt="Notarized POA" className="w-full h-full object-cover group-hover:opacity-90" />
+                ) : (
+                  <span className="w-full h-full flex flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground px-2 text-center">
+                    <FileText className="w-5 h-5 text-primary" /> View file
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {phone && !done && (
+        <div className="border-t border-border/60 mt-4 pt-5 text-center bg-muted/20 rounded-xl px-5 py-6">
+          <p className="text-sm text-foreground mb-3">Scan with your phone camera, then photograph the notarized POA.</p>
+          {qr ? <img src={qr} alt="QR code to upload from your phone" className="w-40 h-40 mx-auto" /> : <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />}
+          <p className="text-[11px] text-muted-foreground mt-3 inline-flex items-center gap-1.5">
+            <Loader2 className="w-3 h-3 animate-spin" /> Photos appear here automatically as you take them.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const DocRow = ({
   doc, submissionId, onDone,
 }: { doc: PacketDoc; submissionId: string; onDone: () => void }) => {
@@ -351,6 +536,7 @@ const SellerDocuments = () => {
             >
               <Stamp className="w-3.5 h-3.5" /> {packet.poa.signed ? "Finish notarizing" : "Prepare & notarize"}
             </a>
+            <PoaUpload submissionId={submissionId} onDone={load} />
           </div>
         )}
 
