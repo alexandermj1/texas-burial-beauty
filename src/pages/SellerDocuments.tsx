@@ -346,10 +346,21 @@ const SellerDocuments = () => {
           </div>
         )}
 
-        <p className="mt-12 text-[11px] text-muted-foreground leading-relaxed">
-          Your documents are stored privately and used only to transfer this plot. Questions? Reply to the email that
-          brought you here and a broker will answer personally.
+        <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
+          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Questions about any document?</div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            A broker will walk you through any item on this page — there is never a charge for asking.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <a href="tel:+12142304740" className="text-foreground hover:text-primary">(214) 230-4740</a>
+            <a href="mailto:info@texascemeterybrokers.com" className="text-foreground hover:text-primary">info@texascemeterybrokers.com</a>
+          </div>
+        </div>
+
+        <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed">
+          Your documents are stored privately and used only to transfer this plot.
         </p>
+
       </div>
     </div>
   );
