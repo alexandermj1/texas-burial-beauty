@@ -254,6 +254,12 @@ Deno.serve(async (req) => {
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
         });
+      } else if (jointNamesOf(merged).length > 1) {
+        filled = await buildJointPoaPdf({
+          principals: jointNamesOf(merged).slice(0, 2).map((n) => ({ name: n })),
+          cemetery: merged.cemetery as string,
+          plot_description: merged.plot_description as string,
+        });
       } else {
         const { data: tmpl } = await svc.storage.from('contracts').download('_templates/poa-template.pdf');
         if (!tmpl) throw new Error('template missing');
