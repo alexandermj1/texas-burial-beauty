@@ -179,8 +179,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
+    // The AI reading is stored on the file, so its explanation survives a reload.
+    if (a?.aiReading) setReading(a.aiReading as Reading);
     setRows((docs ?? []) as DocRow[]);
     setContracts((cons ?? []) as ContractRow[]);
+
 
     // Everything the seller has actually sent us, from all three places files land.
     const collected: AnyFile[] = [];
