@@ -1685,7 +1685,30 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 <Label className="text-xs">Plot description (section / lot / spaces)</Label>
                 <Input value={docEdit.fields.plot_description}
                   onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, plot_description: e.target.value } })} />
+                {/* The deed controls — offer its exact wording. */}
+                {!!docEdit.plotHints?.length && (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] text-muted-foreground">From the deed:</span>
+                    {docEdit.plotHints.map((p) => {
+                      const active = p.text.toLowerCase() === docEdit.fields.plot_description.trim().toLowerCase();
+                      return (
+                        <button
+                          key={p.source + p.text}
+                          type="button"
+                          title={p.source}
+                          onClick={() => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, plot_description: p.text } })}
+                          className={`text-[11px] rounded-full border px-2 py-1 transition-colors ${active
+                            ? "border-emerald-400 bg-emerald-100 text-emerald-900"
+                            : "border-border bg-muted/40 hover:bg-muted"}`}
+                        >
+                          {p.text} <span className="opacity-60">· {p.source}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+
               <div>
                 <Label className="text-xs">Plot count</Label>
                 <Input type="number" value={docEdit.fields.plot_count}
