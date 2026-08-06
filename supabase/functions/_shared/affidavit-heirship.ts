@@ -111,16 +111,26 @@ function inline(value: string | undefined, fallbackWidth = 28): string {
   return v || '_'.repeat(fallbackWidth);
 }
 
-function notaryBlock(ctx: Ctx, signerLabel: string, signerName: string, county: string) {
+/**
+ * Signature + notary block. Affidavits are *sworn to* (jurat); a power of
+ * attorney is *acknowledged* (Tex. Civ. Prac. & Rem. Code §121.005), so pass
+ * `acknowledgment` for POA signers to get the correct certificate wording and
+ * a dated signature line.
+ */
+function notaryBlock(ctx: Ctx, signerLabel: string, signerName: string, county: string, acknowledgment = false) {
   space(ctx, 16);
   ctx.page.drawLine({
     start: { x: M, y: ctx.y }, end: { x: M + 290, y: ctx.y }, thickness: 0.8, color: RULE,
   });
   ctx.y -= 12;
   para(ctx, `${signerLabel} — signature`, { size: 9, font: ctx.italic, gap: 8 });
-  para(ctx, `Printed name: ${inline(signerName, 40)}`, { gap: 14 });
+  para(ctx, `Printed name: ${inline(signerName, 40)}`, { gap: acknowledgment ? 6 : 14 });
+  if (acknowledgment) para(ctx, 'Date signed: ______________________', { gap: 14 });
   venue(ctx, county);
-  para(ctx, `SWORN TO and SUBSCRIBED before me by ${inline(signerName, 40)} on this the ______ day of ______________________, 20____.`, { gap: 22 });
+  para(ctx, acknowledgment
+    ? `This instrument was ACKNOWLEDGED before me on this the ______ day of ______________________, 20____, by ${inline(signerName, 40)}.`
+    : `SWORN TO and SUBSCRIBED before me by ${inline(signerName, 40)} on this the ______ day of ______________________, 20____.`,
+    { gap: 22 });
   ctx.page.drawLine({
     start: { x: M, y: ctx.y }, end: { x: M + 290, y: ctx.y }, thickness: 0.8, color: RULE,
   });
@@ -128,6 +138,21 @@ function notaryBlock(ctx: Ctx, signerLabel: string, signerName: string, county: 
   para(ctx, 'Notary Public, State of Texas', { size: 9.5, gap: 4 });
   para(ctx, 'My commission expires: ______________________ (Seal)', { size: 9.5, gap: 10 });
 }
+
+/** Masthead + footer chrome so composed documents match the branded templates. */
+function brandPages(doc: PDFDocument, bold: PDFFont, body: PDFFont) {
+  const pages = doc.getPages();
+  pages.forEach((p, i) => {
+    const { width } = p.getSize();
+    p.drawText('TEXAS CEMETERY BROKERS', { x: M, y: PAGE_H - 42, size: 8, font: bold, color: RULE });
+    p.drawLine({ start: { x: M, y: PAGE_H - 52 }, end: { x: width - M, y: PAGE_H - 52 }, thickness: 0.5, color: RULE });
+    p.drawLine({ start: { x: M, y: 52 }, end: { x: width - M, y: 52 }, thickness: 0.4, color: RULE });
+    p.drawText('TEXASCEMETERYBROKERS.COM', { x: M, y: 38, size: 7.5, font: bold, color: RULE });
+    const label = `Page ${i + 1} of ${pages.length}`;
+    p.drawText(label, { x: width - M - body.widthOfTextAtSize(label, 7.5), y: 38, size: 7.5, font: body, color: RULE });
+  });
+}
+
 
 function heirTable(ctx: Ctx, heirs: Heir[]) {
   const cols = [150, 190, 90, 70];
