@@ -836,7 +836,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     if (!parts.size) return out;
     const matched = out.filter((h) =>
       h.name.toLowerCase().split(/\s+/).some((w) => parts.has(w)));
-    return matched.length ? matched : out.filter((h) => signers.length === 0);
+    return matched.length ? matched : out;
   };
 
 
