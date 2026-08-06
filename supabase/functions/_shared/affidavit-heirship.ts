@@ -4,6 +4,7 @@
 // variable-length heir table and an optional spouse page, so it is composed
 // rather than stamped.
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'npm:pdf-lib@1.17.1';
+import { appendDataReferenceSheet } from './contract-fill.ts';
 
 export interface Heir {
   name: string;
