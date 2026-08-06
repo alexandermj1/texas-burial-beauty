@@ -1126,7 +1126,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 )}
               </span>
               <div className="flex items-center gap-1.5">
+                <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
+                  <Plus className="w-3.5 h-3.5 mr-1" />Add a document
+                </Button>
                 <Button size="sm" variant="ghost" onClick={copyPacketLink}>
+
                   <Link2 className="w-3.5 h-3.5 mr-1" />Copy seller link
                 </Button>
                 <Button size="sm" variant="outline" onClick={syncChecklist} disabled={saving}>
