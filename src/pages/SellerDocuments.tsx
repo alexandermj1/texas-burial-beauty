@@ -150,6 +150,12 @@ const DocRow = ({
                 We send this to you
               </span>
             )}
+            {doc.mail_to && (
+              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-accent/20 text-foreground inline-flex items-center gap-1">
+                <Mail className="w-3 h-3" />Original by post
+              </span>
+            )}
+
             {guide && (
               <button onClick={() => setExpanded((v) => !v)} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline">
                 What is this? <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
