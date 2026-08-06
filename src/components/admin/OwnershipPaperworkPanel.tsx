@@ -595,7 +595,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (poas.some((p) => p.url === url)) continue;
       const name = (c as { signature_name?: string | null }).signature_name
         ?? ((c as { fill_data?: Record<string, unknown> | null }).fill_data?.seller_name as string | undefined)
-        ?? r?.jointNames?.join(" & ') ".slice(0, 3)) ?? r?.personName ?? null;
+        ?? (r?.jointNames?.length ? r.jointNames.join(" & ") : null)
+        ?? r?.personName ?? null;
       poas.push({ name: name ?? null, url });
     }
     const poaUrl = poas[0]?.url ?? null;
