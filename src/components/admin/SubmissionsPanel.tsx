@@ -655,7 +655,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const m = new Map<string, Array<{ id: string; created_at: string; message?: string | null }>>();
     for (const s of submissions) {
       const key = (s.email || "").trim().toLowerCase();
-      if (!key) continue;
+      if (!key || UNMERGED_IDS.has(s.id)) continue;
+
       const arr = m.get(key) || [];
       arr.push({ id: s.id, created_at: s.created_at, message: (s as any).message });
       m.set(key, arr);
