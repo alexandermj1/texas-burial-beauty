@@ -653,13 +653,19 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
+  const contractNameOf = (c: ContractRow) =>
+    (c.signature_name
+      || ((c.fill_data as Record<string, unknown> | null)?.seller_name as string | undefined)
+      || "").toLowerCase();
+
   /** Re-open the already-prepared contract PDF for a requirement, inline. */
   const openContractPdf = async (r: Requirement) => {
     const matches = contracts.filter((x) => x.kind === r.contractKind && x.status !== "void");
     // Several POAs can exist (one per signer) — prefer the one made for this person.
     const wanted = (r.jointNames?.join(" & ") ?? r.personName ?? "").toLowerCase();
-    const c = matches.find((x) => (x.signature_name ?? "").toLowerCase() === wanted)
-      ?? matches.find((x) => wanted && (x.signature_name ?? "").toLowerCase().includes(wanted.split(" ")[0]))
+    const c = matches.find((x) => contractNameOf(x) === wanted)
+      ?? matches.find((x) => wanted && contractNameOf(x).includes(wanted.split(" ")[0]))
       ?? matches[0];
     if (!c) return;
     setBusy(`${reqKey(r)}-open`);
@@ -686,17 +692,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const preparedPoaFor = (r: Requirement) => {
     const wanted = (r.jointNames?.join(" & ") ?? r.personName ?? "").toLowerCase();
     const list = contracts.filter((x) => x.kind === "poa" && x.status !== "void");
-    return list.find((x) => (x.signature_name ?? "").toLowerCase() === wanted)
-      ?? (wanted ? list.find((x) => (x.signature_name ?? "").toLowerCase().includes(wanted.split(" ")[0])) : list[0]);
+    return list.find((x) => contractNameOf(x) === wanted)
+      ?? (wanted ? list.find((x) => contractNameOf(x).includes(wanted.split(" ")[0])) : list[0]);
   };
   /** A joint POA was asked for but the prepared copy only names one person. */
   const jointMismatch = (r: Requirement) => {
     if (!r.jointNames || r.jointNames.length < 2) return false;
     const c = preparedPoaFor(r);
     if (!c) return false;
-    const name = (c.signature_name ?? "").toLowerCase();
+    const name = contractNameOf(c);
     return !r.jointNames.every((n) => name.includes(n.trim().toLowerCase().split(" ")[0]));
   };
+
 
   /** Add a one-off document to this file's checklist. */
   const addExtraDoc = async () => {
