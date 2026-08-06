@@ -1325,9 +1325,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                         </p>
                         <p className={`text-[11px] mt-0.5 ${bad ? "text-rose-700" : "text-muted-foreground"}`}>
                           {bad
-                            ? `The prepared copy is made out to ${prepared?.signature_name ?? "one person"} only — re-prepare it so both principals appear.`
+                            ? `The prepared copy is made out to ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — re-prepare it so both principals appear.`
                             : prepared
-                              ? `Prepared for ${prepared.signature_name ?? "the signer"}. Open it and read every line — this exact PDF travels with the email.`
+                              ? `Prepared for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"}. Open it and read every line — this exact PDF travels with the email.`
                               : "Not prepared yet. Prepare it now and it travels inside the same email."}
                         </p>
                         <div className="flex items-center gap-1.5 mt-2">
