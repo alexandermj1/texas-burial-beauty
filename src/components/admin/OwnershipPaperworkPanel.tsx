@@ -1728,7 +1728,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {poaRequired && (
                 <div className="rounded-md border border-purple-300 bg-purple-50/60 px-3 py-2.5 space-y-2.5">
                   <p className="text-xs font-semibold flex items-center gap-1.5">
-                    <FileSignature className="w-3.5 h-3.5" /> Check every Power of Attorney before it goes
+                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — checked here, sent in this same email
                   </p>
                   {poaRequirements.map((r) => {
                     const prepared = preparedPoaFor(r);
