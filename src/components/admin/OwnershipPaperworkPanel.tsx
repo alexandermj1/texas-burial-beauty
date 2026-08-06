@@ -35,6 +35,7 @@ type ContractRow = {
   kind: string;
   status: string;
   signature_name: string | null;
+  fill_data?: Record<string, unknown> | null;
   signed_at: string | null;
   notarized_at: string | null;
   completed_at: string | null;
@@ -173,7 +174,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
         .eq("submission_id", submissionId),
       supabase.from("contracts")
-        .select("id, kind, status, signature_name, signed_at, notarized_at, completed_at, countersigned_at, sign_token")
+        .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token")
         .eq("submission_id", submissionId),
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
