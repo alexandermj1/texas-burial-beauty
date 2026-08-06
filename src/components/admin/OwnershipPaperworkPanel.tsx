@@ -1040,9 +1040,28 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </p>
             )}
 
+            {answers.deed === "no" && deedOnFile && (
+              <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2.5 space-y-2">
+                <p className="text-[12px] text-emerald-900">
+                  A certificate of ownership for this plot is already on file, so the
+                  lost-certificate affidavit below isn't needed.
+                </p>
+                <Button size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                  onClick={() => setAnswer("deed", "yes")}>
+                  We have the deed — drop the affidavit
+                </Button>
+              </div>
+            )}
+
+            {general.length > 0 && (
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                About the property · not tied to one person
+              </p>
+            )}
             <div className="space-y-1.5">
               {general.map((r) => <Chip key={reqKey(r) + r.label} r={r} />)}
             </div>
+
 
             {byPerson.map(({ person, items }) => (
               <div key={person.id} className="space-y-1.5 pt-1">
