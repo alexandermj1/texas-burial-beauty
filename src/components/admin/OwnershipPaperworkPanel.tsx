@@ -881,9 +881,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </Button>
             )}
 
+            {!r.issuedByUs && r.code !== "REVIEW" && r.code !== "NOTE" && (
+              <Button
+                size="sm"
+                variant={mailFor(r) ? "default" : "ghost"}
+                className="text-[11px] h-7"
+                onClick={() => (mailFor(r) ? void clearMailOriginal(r) : openMailDialog(r))}
+                title={mailFor(r)
+                  ? "Posted original required — click to go back to a photo upload"
+                  : "Ask the seller to post us the original instead of photographing it"}
+              >
+                <Mail className="w-3.5 h-3.5" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant={supplied ? "default" : "outline"}
+
               className="text-[11px] h-7"
               onClick={() => void setRowState(r, supplied ? "needed" : "received")}
               title={supplied ? "Mark as still needed" : "Mark as supplied"}
