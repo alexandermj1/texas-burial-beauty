@@ -675,7 +675,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Re-open the already-prepared contract PDF for a requirement, inline. */
   const openContractPdf = async (r: Requirement) => {
-    const c = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
+    const matches = contracts.filter((x) => x.kind === r.contractKind && x.status !== "void");
+    // Several POAs can exist (one per signer) — prefer the one made for this person.
+    const wanted = (r.jointNames?.join(" & ") ?? r.personName ?? "").toLowerCase();
+    const c = matches.find((x) => (x.signature_name ?? "").toLowerCase() === wanted)
+      ?? matches.find((x) => wanted && (x.signature_name ?? "").toLowerCase().includes(wanted.split(" ")[0]))
+      ?? matches[0];
     if (!c) return;
     setBusy(`${reqKey(r)}-open`);
     try {
@@ -695,6 +700,48 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setBusy(null);
     }
   };
+
+  /** Every POA the checklist calls for, and whether a prepared copy matches it. */
+  const poaRequirements = requirements.filter((r) => r.contractKind === "poa");
+  const preparedPoaFor = (r: Requirement) => {
+    const wanted = (r.jointNames?.join(" & ") ?? r.personName ?? "").toLowerCase();
+    const list = contracts.filter((x) => x.kind === "poa" && x.status !== "void");
+    return list.find((x) => (x.signature_name ?? "").toLowerCase() === wanted)
+      ?? (wanted ? list.find((x) => (x.signature_name ?? "").toLowerCase().includes(wanted.split(" ")[0])) : list[0]);
+  };
+  /** A joint POA was asked for but the prepared copy only names one person. */
+  const jointMismatch = (r: Requirement) => {
+    if (!r.jointNames || r.jointNames.length < 2) return false;
+    const c = preparedPoaFor(r);
+    if (!c) return false;
+    const name = (c.signature_name ?? "").toLowerCase();
+    return !r.jointNames.every((n) => name.includes(n.trim().toLowerCase().split(" ")[0]));
+  };
+
+  /** Add a one-off document to this file's checklist. */
+  const addExtraDoc = async () => {
+    const label = newDoc.label.trim();
+    if (!label) return toast.error("Give the document a name");
+    const extraDocs = [...(answers.extraDocs ?? []), {
+      id: crypto.randomUUID().slice(0, 8),
+      label,
+      why: newDoc.why.trim() || undefined,
+      person: newDoc.person.trim() || undefined,
+      needsNotary: newDoc.needsNotary,
+    }];
+    await persistAnswers({ ...answers, extraDocs });
+    setNewDoc({ label: "", why: "", person: "", needsNotary: false });
+    setAddDocOpen(false);
+    toast.success(`"${label}" added — press Sync checklist to publish it to the seller's page`);
+  };
+
+  const removeExtraDoc = async (id: string) => {
+    await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
+    await supabase.from("submission_documents").delete()
+      .eq("submission_id", submissionId).eq("doc_code", `X-${id}`);
+    await load();
+  };
+
 
 
 
