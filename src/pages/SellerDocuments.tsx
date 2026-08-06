@@ -277,6 +277,16 @@ const SellerDocuments = () => {
           item and photograph it with your camera{packet?.cemetery ? ` — everything below is what ${packet.cemetery} requires` : ""}.
         </p>
 
+        <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 px-5 py-4">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Our team has already worked directly with {packet?.cemetery ?? "the cemetery"} to confirm this list. It is
+            the <span className="text-foreground">complete set of documents</span> you need in order to sell your
+            property — these would be required no matter how you sold it, privately or through a broker. The only item
+            unique to selling through us is the Limited Power of Attorney, which lets us do the running around for you.
+          </p>
+        </div>
+
+
         {total > 0 && (
           <div className="mt-8 mb-10">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
@@ -336,10 +346,21 @@ const SellerDocuments = () => {
           </div>
         )}
 
-        <p className="mt-12 text-[11px] text-muted-foreground leading-relaxed">
-          Your documents are stored privately and used only to transfer this plot. Questions? Reply to the email that
-          brought you here and a broker will answer personally.
+        <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
+          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Questions about any document?</div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            A broker will walk you through any item on this page — there is never a charge for asking.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <a href="tel:+12142304740" className="text-foreground hover:text-primary">(214) 230-4740</a>
+            <a href="mailto:info@texascemeterybrokers.com" className="text-foreground hover:text-primary">info@texascemeterybrokers.com</a>
+          </div>
+        </div>
+
+        <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed">
+          Your documents are stored privately and used only to transfer this plot.
         </p>
+
       </div>
     </div>
   );

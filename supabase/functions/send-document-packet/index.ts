@@ -124,7 +124,13 @@ Deno.serve(async (req) => {
             </td></tr>
           </table>
           ${items.length ? `
-          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:4px;">What we still need</div>
+          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:8px;">What we still need</div>
+          <p style="margin:0 0 14px;font-size:13px;color:#4a5568;line-height:1.7;">
+            Our team has worked directly with the cemetery${sub?.cemetery ? ` (${esc(sub.cemetery)})` : ''} to confirm this list.
+            It is the <strong>complete set of documents</strong> required to sell your property — these would be needed
+            regardless of how you sold it, privately or through a broker. The only item unique to selling through us is
+            the Limited Power of Attorney, which lets us handle the cemetery paperwork on your behalf.
+          </p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemHtml}</table>` : `
           <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`}
           ${poaHtml}
@@ -132,13 +138,25 @@ Deno.serve(async (req) => {
             Or copy this link into your browser:<br/>
             <span style="color:#1f2a37;word-break:break-all;">${esc(packetUrl)}</span>
           </p>
-          <p style="margin:20px 0 0;font-size:13px;color:#4a5568;">
-            If anything is unclear, simply reply to this email and a broker will walk you through it personally.
-          </p>
+          <div style="margin:24px 0 0;padding:18px 20px;background:#f7f3ec;border-radius:10px;">
+            <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;">Questions about any document?</div>
+            <p style="margin:8px 0 0;font-size:13px;color:#4a5568;line-height:1.7;">
+              Call us on <a href="tel:+12142304740" style="color:#1f2a37;text-decoration:none;"><strong>(214) 230-4740</strong></a>,
+              email <a href="mailto:info@texascemeterybrokers.com" style="color:#1f2a37;">info@texascemeterybrokers.com</a>,
+              or simply reply to this message — a broker will walk you through it personally.
+            </p>
+          </div>
         </td></tr>
-        <tr><td style="background:#f5f1ea;padding:20px 40px;text-align:center;font-size:11px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;">
-          Texas Cemetery Brokers · texascemeterybrokers.com
+        <tr><td style="background:#1f2a37;padding:22px 40px;text-align:center;">
+          <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
+          <div style="font-size:12px;color:#a9b4c2;margin-top:8px;">
+            The Modern Way to Sell Cemetery Property in Texas
+          </div>
+          <div style="font-size:12px;color:#a9b4c2;margin-top:8px;">
+            (214) 230-4740 · info@texascemeterybrokers.com · texascemeterybrokers.com
+          </div>
         </td></tr>
+
       </table>
     </td></tr>
   </table>

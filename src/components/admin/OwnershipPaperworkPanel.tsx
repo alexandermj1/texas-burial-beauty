@@ -1163,7 +1163,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       {/* ── Inline PDF check ── */}
       <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl z-[90]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <FileText className="w-4 h-4" /> {pdfPreview?.title}
