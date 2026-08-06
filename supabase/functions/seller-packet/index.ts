@@ -34,10 +34,17 @@ Deno.serve(async (req) => {
 
     const { data: sub } = await supabase
       .from("contact_submissions")
-      .select("id, name, email, cemetery, customer_profile_id, deleted_at")
+      .select("id, name, email, cemetery, customer_profile_id, deleted_at, ownership_answers")
       .eq("id", submissionId)
       .maybeSingle();
     if (!sub || sub.deleted_at) return json({ error: "This link is no longer active." }, 404);
+
+    // Documents the cemetery only accepts as originals: the seller posts them
+    // to us instead of photographing them. Keyed "CODE::personName".
+    const mailOriginals: Record<string, { address?: string }> =
+      ((sub as Record<string, unknown>).ownership_answers as Record<string, unknown> | null)
+        ?.mailOriginals as Record<string, { address?: string }> ?? {};
+
 
     if (action === "get") {
       const { data: docs } = await supabase
@@ -104,9 +111,11 @@ Deno.serve(async (req) => {
           why: d.why,
           needs_notary: d.needs_notary,
           issued_by_us: d.issued_by_us,
+          mail_to: mailOriginals[`${d.doc_code ?? ""}::${d.person_name ?? ""}`]?.address ?? null,
           state: d.manual_override ?? d.required_state,
           uploaded: !!d.file_url,
         })),
+
       });
     }
 

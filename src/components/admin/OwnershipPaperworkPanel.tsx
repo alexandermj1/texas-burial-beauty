@@ -163,6 +163,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
   const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
+  /** Switching a document to "post us the original" and setting the address. */
+  const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
+
 
 
   const load = useCallback(async () => {
@@ -179,8 +182,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
+    // The AI reading is stored on the file, so its explanation survives a reload.
+    if (a?.aiReading) setReading(a.aiReading as Reading);
     setRows((docs ?? []) as DocRow[]);
     setContracts((cons ?? []) as ContractRow[]);
+
 
     // Everything the seller has actually sent us, from all three places files land.
     const collected: AnyFile[] = [];
@@ -376,8 +382,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       });
       if (error) throw error;
       const r = data as Reading;
+      const keep = {
+        answers: r?.answers,
+        reasons: r?.reasons ?? [],
+        open_questions: r?.open_questions ?? [],
+        sources: r?.sources,
+        at: new Date().toISOString(),
+      } as OwnershipAnswers["aiReading"];
       if (!r?.answers || !Object.keys(r.answers).length) {
         setReading(r ?? null);
+        if (r) await persistAnswers({ ...answers, aiReading: keep } as OwnershipAnswers);
         toast.message("Nothing in the file was clear enough to answer with");
         return;
       }
@@ -395,8 +409,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         ...answers,
         ...r.answers,
         people: merged,
+        aiReading: keep,
         aiSuggested: [...new Set([...(answers.aiSuggested ?? []), ...suggested])],
       } as OwnershipAnswers);
+
       toast.success(`Read the file and filled ${suggested.length} answer${suggested.length === 1 ? "" : "s"} — check each one`);
     } catch (e) {
       toast.error((e as Error).message);
@@ -573,6 +589,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         person: r.personName ?? null,
         needsNotary: !!r.needsNotary,
         issuedByUs: !!r.issuedByUs,
+        mailTo: (answers.mailOriginals ?? {})[reqKey(r)]?.address ?? null,
+
       };
     });
     return { items, poaUrl, poaFor };
@@ -729,7 +747,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     await load();
   };
 
-
+  // ── Originals by post ──────────────────────────────────────────────────────
+  // Some cemeteries will only accept the original paper (death certificates in
+  // particular). For those items the seller is asked to post the document to us
+  // rather than photograph it, and we hold the original on file.
+  const mailOriginals = answers.mailOriginals ?? {};
+  const mailFor = (r: Requirement) => mailOriginals[reqKey(r)];
+  const openMailDialog = (r: Requirement) =>
+    setMailDoc({ r, address: mailFor(r)?.address ?? answers.originalsAddress ?? "" });
+  const saveMailOriginal = async () => {
+    if (!mailDoc) return;
+    const address = mailDoc.address.trim();
+    if (!address) return toast.error("Enter the address the original should be posted to");
+    await persistAnswers({
+      ...answers,
+      originalsAddress: address,
+      mailOriginals: { ...mailOriginals, [reqKey(mailDoc.r)]: { address } },
+    } as OwnershipAnswers);
+    setMailDoc(null);
+    toast.success("This document will be requested as an original by post");
+  };
+  const clearMailOriginal = async (r: Requirement) => {
+    const next = { ...mailOriginals };
+    delete next[reqKey(r)];
+    await persistAnswers({ ...answers, mailOriginals: next } as OwnershipAnswers);
+  };
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
@@ -790,6 +832,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
               {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
               {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
+              {mailFor(r) && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 inline-flex items-center gap-0.5">
+                  <Mail className="w-2.5 h-2.5" />Original by post
+                </span>
+              )}
+
               {fromContract && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
                   <CheckCircle2 className="w-2.5 h-2.5" />On file
@@ -835,9 +883,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </Button>
             )}
 
+            {!r.issuedByUs && r.code !== "REVIEW" && r.code !== "NOTE" && (
+              <Button
+                size="sm"
+                variant={mailFor(r) ? "default" : "ghost"}
+                className="text-[11px] h-7"
+                onClick={() => (mailFor(r) ? void clearMailOriginal(r) : openMailDialog(r))}
+                title={mailFor(r)
+                  ? "Posted original required — click to go back to a photo upload"
+                  : "Ask the seller to post us the original instead of photographing it"}
+              >
+                <Mail className="w-3.5 h-3.5" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant={supplied ? "default" : "outline"}
+
               className="text-[11px] h-7"
               onClick={() => void setRowState(r, supplied ? "needed" : "received")}
               title={supplied ? "Mark as still needed" : "Mark as supplied"}
@@ -881,6 +943,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             ) : (
               <p className="text-[11px] text-muted-foreground italic">Nothing uploaded for this item yet.</p>
+            )}
+            {mailFor(r) && (
+              <div className="rounded-md border border-rose-200 bg-rose-50/60 px-2.5 py-2">
+                <p className="text-[11px] font-medium text-rose-900 flex items-center gap-1">
+                  <Mail className="w-3 h-3" />The cemetery requires the original — the seller posts it to us
+                </p>
+                <p className="text-[11px] text-rose-900/80 whitespace-pre-line mt-0.5">{mailFor(r)!.address}</p>
+                <button type="button" onClick={() => openMailDialog(r)} className="text-[11px] underline text-rose-900/70 mt-1">
+                  Change the address
+                </button>
+              </div>
+
             )}
           </div>
         )}
@@ -1253,6 +1327,42 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Ask for the original by post ── */}
+      <Dialog open={!!mailDoc} onOpenChange={(o) => !o && setMailDoc(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Mail className="w-4 h-4" /> Ask for the original by post
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {mailDoc?.r.label} — the seller will be told the cemetery requires an original copy, that we store all
+              originals, and where to post it. No photo upload is offered for this item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs">Postal address for the original</Label>
+            <textarea
+              rows={4}
+              className="w-full text-sm rounded-md border border-border bg-background px-3 py-2"
+              placeholder={"Texas Cemetery Brokers\n123 Example Street, Suite 100\nDallas, TX 75201"}
+              value={mailDoc?.address ?? ""}
+              onChange={(e) => setMailDoc(mailDoc ? { ...mailDoc, address: e.target.value } : null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              This address is remembered for this file, so the next original you request is pre-filled.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setMailDoc(null)}>Cancel</Button>
+            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void saveMailOriginal()}>
+              Request the original
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
       {/* ── Inline PDF check ── */}
 

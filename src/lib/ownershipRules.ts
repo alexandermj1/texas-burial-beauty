@@ -42,6 +42,22 @@ export type OwnershipAnswers = {
   extraDocs?: { id: string; label: string; why?: string; person?: string; needsNotary?: boolean }[];
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
   aiSuggested?: string[];
+  /**
+   * Documents this cemetery will only accept as originals: the seller posts the
+   * paper to us instead of photographing it. Keyed by "CODE::personName".
+   */
+  mailOriginals?: Record<string, { address: string }>;
+  /** Default postal address used when an item is switched to originals-by-mail. */
+  originalsAddress?: string;
+  /** The last AI reading, kept so its explanation survives a reload. */
+  aiReading?: {
+    answers?: Record<string, string>;
+    reasons?: { key: string; reason: string; confidence: string }[];
+    open_questions?: string[];
+    sources?: { emails: number; notes: number };
+    at?: string;
+  };
+
 };
 
 export type PersonRole =

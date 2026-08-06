@@ -3,8 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import QRCode from "qrcode";
 import {
   CheckCircle2, Loader2, Upload, Smartphone, FileText, ShieldCheck,
-  ChevronDown, Stamp, X,
+  ChevronDown, Stamp, X, Mail,
 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
@@ -23,9 +24,12 @@ type PacketDoc = {
   why: string | null;
   needs_notary: boolean | null;
   issued_by_us: boolean | null;
+  /** When set, the cemetery only accepts the original — post it to this address. */
+  mail_to?: string | null;
   state: string;
   uploaded: boolean;
 };
+
 
 type Poa = { sign_token: string; notarized: boolean; signed: boolean } | null;
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
@@ -146,6 +150,12 @@ const DocRow = ({
                 We send this to you
               </span>
             )}
+            {doc.mail_to && (
+              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-accent/20 text-foreground inline-flex items-center gap-1">
+                <Mail className="w-3 h-3" />Original by post
+              </span>
+            )}
+
             {guide && (
               <button onClick={() => setExpanded((v) => !v)} className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline">
                 What is this? <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
@@ -158,8 +168,24 @@ const DocRow = ({
               <p className="text-xs text-muted-foreground leading-relaxed"><span className="font-medium text-foreground/70">How to get it: </span>{guide.how}</p>
             </div>
           )}
+          {doc.mail_to && (
+            <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
+              <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" />The cemetery requires the original of this document
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                A photo or scan will not be accepted for this one. Please post the original document to us — we store
+                all originals safely with your file and return them to you if the sale does not complete.
+              </p>
+              <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{doc.mail_to}</p>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                We'll mark this item complete here as soon as it reaches us.
+              </p>
+            </div>
+          )}
         </div>
-        {!doc.issued_by_us && (
+        {!doc.issued_by_us && !doc.mail_to && (
+
           <div className="flex items-center gap-2 shrink-0">
             <input
               ref={inputRef}
