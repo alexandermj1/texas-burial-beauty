@@ -38,6 +38,8 @@ export type OwnershipAnswers = {
 
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
+  /** Extra documents an admin has added by hand for this file only. */
+  extraDocs?: { id: string; label: string; why?: string; person?: string; needsNotary?: boolean }[];
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
   aiSuggested?: string[];
 };
@@ -641,6 +643,20 @@ export function computeRequirements(
       personName: p.name, personRole: p.role,
     });
   }
+
+  // ── Documents added by hand for this file only ──
+  for (const x of a.extraDocs ?? []) {
+    if (!x?.label?.trim()) continue;
+    add({
+      code: `X-${x.id}`,
+      label: x.label.trim(),
+      why: x.why?.trim() || "Added for this file by the broker.",
+      needsNotary: !!x.needsNotary,
+      ...(x.person?.trim() ? { personName: x.person.trim() } : {}),
+    });
+  }
+
+
 
 
   // De-duplicate by checklist identity. Labels can change as names become known,

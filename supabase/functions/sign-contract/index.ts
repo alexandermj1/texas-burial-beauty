@@ -12,7 +12,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
-import { buildAffidavitPdf, buildSpousalConsentPdf } from '../_shared/affidavit-heirship.ts';
+import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
+
+/** Two principals on one POA — kept on fill_data so every rebuild stays joint. */
+const jointNamesOf = (fd: unknown): string[] => {
+  const raw = (fd as Record<string, unknown> | null)?.joint_names;
+  return Array.isArray(raw) ? (raw as string[]).filter((n) => typeof n === 'string' && n.trim()) : [];
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -174,11 +180,21 @@ Deno.serve(async (req) => {
         else if (typeof v === 'number') (merged as Record<string, unknown>)[k] = v;
       }
 
-      const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
-      const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${tmplFile}`);
-      if (!tmpl) throw new Error('template missing');
-      const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
-      const filled = await buildFilledPdf(tmplBytes, c.kind as 'listing_agreement' | 'poa', merged);
+      const joint = c.kind === 'poa' ? jointNamesOf(merged) : [];
+      let filled: Uint8Array;
+      if (joint.length > 1) {
+        filled = await buildJointPoaPdf({
+          principals: joint.slice(0, 2).map((n) => ({ name: n })),
+          cemetery: merged.cemetery as string,
+          plot_description: merged.plot_description as string,
+        });
+      } else {
+        const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
+        const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${tmplFile}`);
+        if (!tmpl) throw new Error('template missing');
+        const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
+        filled = await buildFilledPdf(tmplBytes, c.kind as 'listing_agreement' | 'poa', merged);
+      }
 
       const newPath = `${c.submission_id}/${c.kind}-${Date.now()}.pdf`;
       const { error: upE } = await svc.storage.from('contracts')
@@ -235,6 +251,12 @@ Deno.serve(async (req) => {
         filled = await buildSpousalConsentPdf({
           spouse_name: merged.seller_name as string,
           owner_name: (merged.co_owner_name as string) ?? (merged.seller_name as string),
+          cemetery: merged.cemetery as string,
+          plot_description: merged.plot_description as string,
+        });
+      } else if (jointNamesOf(merged).length > 1) {
+        filled = await buildJointPoaPdf({
+          principals: jointNamesOf(merged).slice(0, 2).map((n) => ({ name: n })),
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
         });

@@ -35,6 +35,7 @@ type ContractRow = {
   kind: string;
   status: string;
   signature_name: string | null;
+  fill_data?: Record<string, unknown> | null;
   signed_at: string | null;
   notarized_at: string | null;
   completed_at: string | null;
@@ -159,6 +160,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string } | null>(null);
   /** The send-document-request review flow. */
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
+  /** Adding a one-off document to this file's checklist. */
+  const [addDocOpen, setAddDocOpen] = useState(false);
+  const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
 
 
   const load = useCallback(async () => {
@@ -170,7 +174,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
         .eq("submission_id", submissionId),
       supabase.from("contracts")
-        .select("id, kind, status, signature_name, signed_at, notarized_at, completed_at, countersigned_at, sign_token")
+        .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token")
         .eq("submission_id", submissionId),
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
@@ -543,40 +547,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const poaRequired = requirements.some((r) => r.contractKind === "poa");
   const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
 
-  /** Generate the POA so it can travel inside the same packet email. */
-  const preparePoa = async () => {
-    const req = requirements.find((r) => r.contractKind === "poa");
-    setBusy("poa");
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-contract", {
-        body: {
-          submission_id: submissionId, kind: "poa",
-          overrides: {
-            ...(req?.personName ? { seller_name: req.personName } : {}),
-            ...(req?.jointNames ? { joint_names: req.jointNames } : {}),
-          },
-        },
-      });
-      if (error) throw error;
-      const res = data as { pdf_url?: string | null };
-      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: req?.label ?? "Power of Attorney" });
-      toast.success("Power of Attorney prepared — check it below, then send");
-      await load();
-      setPoaPrompt(false);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  };
-
   /** The items and POA link that make up the request, shared by preview and send. */
   const buildPacketPayload = async () => {
     let poaUrl: string | null = null;
     let poaFor: string | null = null;
-    if (poaContract) {
+    // Use the POA prepared for the POA the checklist actually calls for (joint
+    // couples included), not simply the first one on the file.
+    const chosen = poaRequirements.length ? preparedPoaFor(poaRequirements[0]) : poaContract;
+    if (chosen) {
       const { data: c } = await supabase.from("contracts")
-        .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
+        .select("sign_token, signature_name").eq("id", chosen.id).maybeSingle();
       if (c?.sign_token) {
         poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
         poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
@@ -673,9 +653,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
+  const contractNameOf = (c: ContractRow) =>
+    (c.signature_name
+      || ((c.fill_data as Record<string, unknown> | null)?.seller_name as string | undefined)
+      || "").toLowerCase();
+
   /** Re-open the already-prepared contract PDF for a requirement, inline. */
   const openContractPdf = async (r: Requirement) => {
-    const c = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
+    const matches = contracts.filter((x) => x.kind === r.contractKind && x.status !== "void");
+    // Several POAs can exist (one per signer) — prefer the one made for this person.
+    const wanted = (r.jointNames?.join(" & ") ?? r.personName ?? "").toLowerCase();
+    const c = matches.find((x) => contractNameOf(x) === wanted)
+      ?? matches.find((x) => wanted && contractNameOf(x).includes(wanted.split(" ")[0]))
+      ?? matches[0];
     if (!c) return;
     setBusy(`${reqKey(r)}-open`);
     try {
@@ -695,6 +686,49 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setBusy(null);
     }
   };
+
+  /** Every POA the checklist calls for, and whether a prepared copy matches it. */
+  const poaRequirements = requirements.filter((r) => r.contractKind === "poa");
+  const preparedPoaFor = (r: Requirement) => {
+    const wanted = (r.jointNames?.join(" & ") ?? r.personName ?? "").toLowerCase();
+    const list = contracts.filter((x) => x.kind === "poa" && x.status !== "void");
+    return list.find((x) => contractNameOf(x) === wanted)
+      ?? (wanted ? list.find((x) => contractNameOf(x).includes(wanted.split(" ")[0])) : list[0]);
+  };
+  /** A joint POA was asked for but the prepared copy only names one person. */
+  const jointMismatch = (r: Requirement) => {
+    if (!r.jointNames || r.jointNames.length < 2) return false;
+    const c = preparedPoaFor(r);
+    if (!c) return false;
+    const name = contractNameOf(c);
+    return !r.jointNames.every((n) => name.includes(n.trim().toLowerCase().split(" ")[0]));
+  };
+
+
+  /** Add a one-off document to this file's checklist. */
+  const addExtraDoc = async () => {
+    const label = newDoc.label.trim();
+    if (!label) return toast.error("Give the document a name");
+    const extraDocs = [...(answers.extraDocs ?? []), {
+      id: crypto.randomUUID().slice(0, 8),
+      label,
+      why: newDoc.why.trim() || undefined,
+      person: newDoc.person.trim() || undefined,
+      needsNotary: newDoc.needsNotary,
+    }];
+    await persistAnswers({ ...answers, extraDocs });
+    setNewDoc({ label: "", why: "", person: "", needsNotary: false });
+    setAddDocOpen(false);
+    toast.success(`"${label}" added — press Sync checklist to publish it to the seller's page`);
+  };
+
+  const removeExtraDoc = async (id: string) => {
+    await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
+    await supabase.from("submission_documents").delete()
+      .eq("submission_id", submissionId).eq("doc_code", `X-${id}`);
+    await load();
+  };
+
 
 
 
@@ -1076,7 +1110,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 )}
               </span>
               <div className="flex items-center gap-1.5">
+                <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
+                  <Plus className="w-3.5 h-3.5 mr-1" />Add a document
+                </Button>
                 <Button size="sm" variant="ghost" onClick={copyPacketLink}>
+
                   <Link2 className="w-3.5 h-3.5 mr-1" />Copy seller link
                 </Button>
                 <Button size="sm" variant="outline" onClick={syncChecklist} disabled={saving}>
@@ -1161,7 +1199,63 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         </div>
       ))}
 
+      {/* ── Add a one-off document ── */}
+      <Dialog open={addDocOpen} onOpenChange={setAddDocOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Plus className="w-4 h-4" /> Add a document to this request
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              It joins the checklist, the seller's upload page and the next document request email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">What is it called?</Label>
+              <Input className="mt-1" value={newDoc.label} placeholder="e.g. Divorce decree"
+                onChange={(e) => setNewDoc({ ...newDoc, label: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">Why we need it (shown to the seller)</Label>
+              <Input className="mt-1" value={newDoc.why} placeholder="e.g. The cemetery needs proof the plot was awarded to you"
+                onChange={(e) => setNewDoc({ ...newDoc, why: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">For one person only (optional)</Label>
+              <Input className="mt-1" value={newDoc.person} placeholder="Leave blank if it's about the property"
+                onChange={(e) => setNewDoc({ ...newDoc, person: e.target.value })} />
+            </div>
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={newDoc.needsNotary}
+                onChange={(e) => setNewDoc({ ...newDoc, needsNotary: e.target.checked })} />
+              This one has to be notarized
+            </label>
+            {(answers.extraDocs ?? []).length > 0 && (
+              <div className="pt-1 space-y-1">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Already added by hand</p>
+                {(answers.extraDocs ?? []).map((d) => (
+                  <div key={d.id} className="flex items-center justify-between gap-2 text-[12px] border rounded px-2 py-1">
+                    <span>{d.label}{d.person ? <span className="text-muted-foreground"> · {d.person}</span> : null}</span>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => void removeExtraDoc(d.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setAddDocOpen(false)}>Cancel</Button>
+            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void addExtraDoc()}>
+              Add it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Inline PDF check ── */}
+
       <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
         <DialogContent className="max-w-4xl z-[90]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -1217,27 +1311,43 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
 
               {poaRequired && (
-                <div className={`rounded-md border px-3 py-2.5 space-y-2 ${poaContract ? "border-emerald-300 bg-emerald-50" : "border-purple-300 bg-purple-50"}`}>
-                  <p className="text-[12px]">
-                    {poaContract
-                      ? "The Power of Attorney is prepared and will be included in this email with the notary instructions."
-                      : "This file needs a Power of Attorney and none has been prepared yet. Prepare it now and it travels inside the same email."}
+                <div className="rounded-md border border-purple-300 bg-purple-50/60 px-3 py-2.5 space-y-2.5">
+                  <p className="text-xs font-semibold flex items-center gap-1.5">
+                    <FileSignature className="w-3.5 h-3.5" /> Check every Power of Attorney before it goes
                   </p>
-                  <div className="flex items-center gap-1.5">
-                    <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
-                      onClick={() => void preparePoa()} disabled={busy === "poa"}>
-                      {busy === "poa" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                      {poaContract ? "Re-prepare & check" : "Prepare the POA now"}
-                    </Button>
-                    {poaContract && (
-                      <Button size="sm" variant="outline"
-                        onClick={() => void openContractPdf(requirements.find((r) => r.contractKind === "poa") ?? requirements[0])}>
-                        <FileText className="w-3.5 h-3.5 mr-1" />Check the PDF
-                      </Button>
-                    )}
-                  </div>
+                  {poaRequirements.map((r) => {
+                    const prepared = preparedPoaFor(r);
+                    const bad = jointMismatch(r);
+                    return (
+                      <div key={reqKey(r)} className={`rounded border px-2.5 py-2 bg-white ${bad ? "border-rose-300" : prepared ? "border-emerald-300" : "border-purple-200"}`}>
+                        <p className="text-[12px]">
+                          {r.jointNames?.length ? `Joint POA — ${r.jointNames.join(" & ")}` : r.label}
+                        </p>
+                        <p className={`text-[11px] mt-0.5 ${bad ? "text-rose-700" : "text-muted-foreground"}`}>
+                          {bad
+                            ? `The prepared copy is made out to ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — re-prepare it so both principals appear.`
+                            : prepared
+                              ? `Prepared for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"}. Open it and read every line — this exact PDF travels with the email.`
+                              : "Not prepared yet. Prepare it now and it travels inside the same email."}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                            onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>
+                            {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                            {prepared ? "Re-prepare & check" : "Prepare it now"}
+                          </Button>
+                          {prepared && (
+                            <Button size="sm" variant="outline" onClick={() => void openContractPdf(r)}>
+                              <FileText className="w-3.5 h-3.5 mr-1" />Review the POA
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+
 
               <div className="rounded-md border p-3">
                 <p className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
