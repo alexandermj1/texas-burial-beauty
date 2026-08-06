@@ -166,12 +166,13 @@ Deno.serve(async (req) => {
       (fill as Record<string, unknown>).joint_names = jointNames;
       fill.seller_name = jointNames.join(' & ');
       filled = await buildJointPoaPdf({
-        county: overrides.county ?? cemLocationCity ?? '',
-        principals: jointNames.map((n) => ({ name: n })),
+        county: overrides.county ?? overrides.county_state ?? cemLocationCity ?? '',
+        principals: jointNames.map((n) => ({ name: n, address: overrides.address ?? '' })),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
-        plot_description: [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
-        spaces: sub.spaces ?? '',
+        plot_description: overrides.plot_description ??
+          [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
+        spaces: overrides.plot_description ? '' : (sub.spaces ?? ''),
       });
     } else {
       const templateBytes = await fetchTemplate(svc, kind as 'listing_agreement' | 'poa');

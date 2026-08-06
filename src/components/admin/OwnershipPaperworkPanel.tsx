@@ -21,6 +21,13 @@ import {
 
 
 
+type DocFields = {
+  seller_name: string; joint_second: string; address: string; city_state_zip: string;
+  phone: string; email: string; cemetery: string; county_state: string;
+  plot_description: string; plot_count: string;
+  listing_option: string; authorized_min_total: string;
+};
+
 type Props = {
   submissionId: string;
   cemetery?: string | null;
@@ -165,6 +172,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
   /** Switching a document to "post us the original" and setting the address. */
   const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
+  /** Inline editor for a contract (POA / Listing Agreement) before it is generated. */
+  const [docEdit, setDocEdit] = useState<null | { r: Requirement; loading: boolean; fields: DocFields }>(null);
 
 
 
@@ -641,22 +650,91 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  const generateDoc = async (r: Requirement) => {
+  /**
+   * "Prepare" now opens an inline editor first (same idea as the Listing Agreement
+   * panel): the admin checks/fills every blank, then generates the PDF.
+   */
+  const openDocEditor = async (r: Requirement) => {
+    if (!r.contractKind) return;
+    const blank = {
+      seller_name: r.jointNames?.[0] ?? r.personName ?? sellerName ?? "",
+      joint_second: r.jointNames?.[1] ?? "",
+      address: "", city_state_zip: "", phone: "", email: sellerEmail ?? "",
+      cemetery: cemName ?? cemetery ?? "", county_state: "",
+      plot_description: "", plot_count: "",
+      listing_option: "Starter", authorized_min_total: "",
+    };
+    setDocEdit({ r, loading: true, fields: blank });
+    try {
+      const { data: sub } = await supabase.from("contact_submissions")
+        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier")
+        .eq("id", submissionId).maybeSingle();
+      const s = (sub ?? {}) as Record<string, unknown>;
+      const str = (v: unknown) => (v == null ? "" : String(v));
+      // A previously prepared copy is the best starting point — keep the admin's earlier edits.
+      const prior = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void")
+        .map((c) => (c.fill_data ?? {}) as Record<string, unknown>)
+        .find((f) => !r.personName || String(f.seller_name ?? "").toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()));
+      setDocEdit((cur) => cur && cur.r === r ? {
+        ...cur,
+        loading: false,
+        fields: {
+          seller_name: r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "",
+          joint_second: r.jointNames?.[1] ?? "",
+          address: str(prior?.address),
+          city_state_zip: str(prior?.city_state_zip),
+          phone: str(prior?.phone) || str(s.phone),
+          email: str(prior?.email) || str(s.email),
+          cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
+          county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
+          plot_description: str(prior?.plot_description) ||
+            [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
+              .filter(Boolean).join(" · "),
+          plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
+          listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
+          authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),
+        },
+      } : cur);
+    } catch {
+      setDocEdit((cur) => (cur ? { ...cur, loading: false } : cur));
+    }
+  };
+
+  const generateDoc = async (r: Requirement, overrideFields?: DocFields) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     try {
-      const { data, error } = await supabase.functions.invoke("generate-contract", {
-        body: {
-          submission_id: submissionId,
-          kind: r.contractKind,
-          overrides: {
+      const f = overrideFields;
+      const jointNames = f
+        ? [f.seller_name, f.joint_second].filter((n) => n && n.trim())
+        : r.jointNames;
+      const overrides: Record<string, unknown> = f
+        ? {
+            seller_name: f.seller_name,
+            address: f.address, city_state_zip: f.city_state_zip,
+            phone: f.phone, email: f.email,
+            cemetery: f.cemetery, county_state: f.county_state,
+            county: f.county_state,
+            plot_description: f.plot_description,
+            ...(f.plot_count ? { plot_count: Number(f.plot_count) } : {}),
+            ...(r.contractKind === "listing_agreement"
+              ? {
+                  listing_option: f.listing_option,
+                  ...(f.authorized_min_total ? { authorized_min_total: Number(f.authorized_min_total) } : {}),
+                }
+              : {}),
+            ...(jointNames && jointNames.length > 1 ? { joint_names: jointNames } : {}),
+          }
+        : {
             ...(r.personName ? { seller_name: r.personName } : {}),
             ...(r.jointNames ? { joint_names: r.jointNames } : {}),
-          },
-        },
+          };
+      const { data, error } = await supabase.functions.invoke("generate-contract", {
+        body: { submission_id: submissionId, kind: r.contractKind, overrides },
       });
       if (error) throw error;
       const res = data as { pdf_url?: string | null; sign_token?: string | null };
+      setDocEdit(null);
       // Show the filled PDF inline so it can be checked line by line.
       if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
       toast.success(`${r.label} prepared`, {
@@ -670,6 +748,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setBusy(null);
     }
   };
+
 
   /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
   const contractNameOf = (c: ContractRow) =>
@@ -865,7 +944,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {r.contractKind && (
-              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => generateDoc(r)}
+              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => void openDocEditor(r)}
                 title={`Prepare ${r.label} — fills it in and opens the PDF so you can check it`} className="text-[11px] h-7">
                 {busy === key
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1364,6 +1443,112 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
+      {/* ── Inline field editor before a contract is generated ── */}
+      <Dialog open={!!docEdit} onOpenChange={(o) => !o && setDocEdit(null)}>
+        <DialogContent className="max-w-2xl z-[95] max-h-[88vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <FileSignature className="w-4 h-4" /> Fill in the {docEdit?.r.label ?? "document"}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {docEdit?.r.jointNames?.length
+                ? "Joint document — both principals appear on the same instrument and each gets their own notary block."
+                : "Check every blank before it is generated. Nothing is sent to the seller yet."}
+            </DialogDescription>
+          </DialogHeader>
+          {docEdit?.loading || !docEdit ? (
+            <div className="py-10 grid place-items-center text-muted-foreground text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className={docEdit.r.jointNames?.length ? "" : "md:col-span-2"}>
+                <Label className="text-xs">{docEdit.r.jointNames?.length ? "First principal" : "Full legal name"}</Label>
+                <Input value={docEdit.fields.seller_name}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, seller_name: e.target.value } })} />
+              </div>
+              {!!docEdit.r.jointNames?.length && (
+                <div>
+                  <Label className="text-xs">Second principal</Label>
+                  <Input value={docEdit.fields.joint_second}
+                    onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, joint_second: e.target.value } })} />
+                </div>
+              )}
+              <div className="md:col-span-2">
+                <Label className="text-xs">Mailing address</Label>
+                <Input value={docEdit.fields.address} placeholder="Street address"
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">City, State, ZIP</Label>
+                <Input value={docEdit.fields.city_state_zip}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">Phone</Label>
+                <Input value={docEdit.fields.phone}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, phone: e.target.value } })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={docEdit.fields.email}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, email: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">Cemetery</Label>
+                <Input value={docEdit.fields.cemetery}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, cemetery: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">County / State (venue)</Label>
+                <Input value={docEdit.fields.county_state} placeholder="e.g. Harris County, TX"
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, county_state: e.target.value } })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-xs">Plot description (section / lot / spaces)</Label>
+                <Input value={docEdit.fields.plot_description}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, plot_description: e.target.value } })} />
+              </div>
+              <div>
+                <Label className="text-xs">Plot count</Label>
+                <Input type="number" value={docEdit.fields.plot_count}
+                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, plot_count: e.target.value } })} />
+              </div>
+              {docEdit.r.contractKind === "listing_agreement" && (
+                <>
+                  <div>
+                    <Label className="text-xs">Listing option</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={docEdit.fields.listing_option}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, listing_option: e.target.value } })}
+                    >
+                      <option value="Starter">Starter</option>
+                      <option value="Pro">Pro</option>
+                      <option value="Featured">Featured</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label className="text-xs">Authorized minimum total ($)</Label>
+                    <Input type="number" value={docEdit.fields.authorized_min_total}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, authorized_min_total: e.target.value } })} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setDocEdit(null)}>Cancel</Button>
+            <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+              disabled={!docEdit || docEdit.loading || !!busy}
+              onClick={() => docEdit && void generateDoc(docEdit.r, docEdit.fields)}>
+              {busy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+              Generate &amp; preview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Inline PDF check ── */}
 
       <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
@@ -1442,7 +1627,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                         </p>
                         <div className="flex items-center gap-1.5 mt-2">
                           <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
-                            onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>
+                            onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
                             {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
                             {prepared ? "Re-prepare & check" : "Prepare it now"}
                           </Button>
