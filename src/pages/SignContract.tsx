@@ -537,15 +537,56 @@ export default function SignContract() {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-[#f7f3ec] p-6 text-center">
-                <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b]">Send the notarized copy to</div>
-                <p className="text-sm text-[#1f2a37] mt-2">
-                  <a href="mailto:contracts@texascemeterybrokers.com" className="underline">contracts@texascemeterybrokers.com</a>
-                </p>
-                <p className="text-xs text-muted-foreground mt-3">
-                  Any questions at all — call <a href="tel:+12142304740" className="underline text-[#1f2a37]">(214) 230-4740</a> or
-                  email <a href="mailto:info@texascemeterybrokers.com" className="underline text-[#1f2a37]">info@texascemeterybrokers.com</a> and
-                  a broker will walk you through it personally.
+              <div className="rounded-xl border border-[#1f2a37]/20 bg-[#f7f3ec] p-6">
+                <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-3 text-center">When you have the notarized copy</div>
+                {notaryUploaded ? (
+                  <div className="text-center">
+                    <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-[#1f2a37]">Your notarized {title} is back with us.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Our team has been notified and will review it shortly.</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-[1fr_1px_1fr] gap-6 items-stretch">
+                    <div className="text-center">
+                      <div className="w-10 h-10 rounded-full bg-[#1f2a37] text-white flex items-center justify-center mx-auto mb-3">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <p className="font-serif text-[#1f2a37] mb-1">Upload it here</p>
+                      <p className="text-xs text-muted-foreground mb-4">Fastest — a photo or PDF of every page is fine.</p>
+                      <input
+                        ref={notaryInputRef}
+                        type="file"
+                        accept="image/*,application/pdf"
+                        className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadNotarizedCopy(f); }}
+                      />
+                      <Button
+                        onClick={() => notaryInputRef.current?.click()}
+                        disabled={notaryUploading}
+                        className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                      >
+                        {notaryUploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        {notaryUploading ? "Uploading…" : "Upload notarized copy"}
+                      </Button>
+                    </div>
+                    <div className="hidden md:block w-px bg-[#1f2a37]/10" />
+                    <div className="text-center">
+                      <div className="w-10 h-10 rounded-full bg-[#1f2a37]/10 text-[#1f2a37] flex items-center justify-center mx-auto mb-3">
+                        <Smartphone className="w-5 h-5" />
+                      </div>
+                      <p className="font-serif text-[#1f2a37] mb-1">Send it from your phone</p>
+                      <p className="text-xs text-muted-foreground mb-4">Open your document page on your phone and photograph it.</p>
+                      <Button asChild variant="outline" className="border-[#1f2a37]/30">
+                        <a href={`/documents?s=${submissionId}`} target="_blank" rel="noreferrer">
+                          Open phone upload page →
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-5 text-center">
+                  Any questions — call <a href="tel:+12142304740" className="underline text-[#1f2a37]">(214) 230-4740</a> or
+                  email <a href="mailto:info@texascemeterybrokers.com" className="underline text-[#1f2a37]">info@texascemeterybrokers.com</a>.
                 </p>
               </div>
             </Card>
