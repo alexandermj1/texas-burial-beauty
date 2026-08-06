@@ -1045,12 +1045,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (!showAccepted && !showPending && !paid) return null;
 
                     const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+                    // quote_amount and cemetery_retail are stored PER PLOT.
                     const retailSaved = Number((selected as any).cemetery_retail) || 0;
-                    const q = showAccepted ? quotedAccepted : quotedPending;
-                    const retail = retailSaved > 0 ? retailSaved : q / 0.42;
-                    const sales = Math.round((retail * 0.67) / 100) * 100;
-                    const spaceCount = Number((selected as any).spaces) || 0;
+                    const perSpace = showAccepted ? quotedAccepted : quotedPending;
+                    const retail = retailSaved > 0 ? retailSaved : perSpace / 0.42;
+                    const salesPerSpace = Math.round((retail * 0.67) / 100) * 100;
+                    const spaceCount = Math.max(1, Number((selected as any).spaces) || 1);
                     const isMulti = spaceCount > 1;
+                    const q = perSpace * spaceCount;
+                    const sales = salesPerSpace * spaceCount;
                     const plotLocation = [(selected as any).section || null, (selected as any).lawn || null].filter(Boolean).join(" · ") || null;
                     const plotIdentifier = (selected as any).space_numbers || null;
                     const propLabel = [
@@ -1059,7 +1062,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       plotLocation,
                       plotIdentifier,
                     ].filter(Boolean).join(" · ") || "Property not specified";
-                    const perSpace = isMulti ? Math.round(q / spaceCount) : 0;
 
                     const bandBase = "inline-flex items-center gap-3 px-3 py-1.5 rounded-lg border-2 shadow-sm flex-wrap";
                     const emerald = "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
@@ -1077,7 +1079,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail{isMulti ? " / plot" : ""}</span>
                               <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-emerald-500/30 pl-3">
@@ -1106,7 +1108,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               <span className="font-display text-lg font-bold tabular-nums">{fmt(sales)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail</span>
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Retail{isMulti ? " / plot" : ""}</span>
                               <span className="text-sm font-semibold tabular-nums">{fmt(retail)}</span>
                             </div>
                             <div className="flex flex-col leading-tight border-l border-purple-500/30 pl-3">
@@ -2432,9 +2434,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                         {(s as any).quote_sent_at && (() => {
                           const accepted = (s as any).quote_response === "accepted";
-                          const quoted = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
-                          const rowSpaces = Number((s as any).spaces) || 0;
+                          // quote_amount / cemetery_retail are stored PER PLOT.
+                          const quotedPer = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
+                          const rowSpaces = Math.max(1, Number((s as any).spaces) || 1);
                           const rowMulti = rowSpaces > 1;
+                          const rowRetailPer = Number((s as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
+                          const quoted = quotedPer * rowSpaces;
                           const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
                           const rowPlotId = (s as any).space_numbers || null;
                           const rowProp = [
@@ -2444,12 +2449,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             rowPlotId,
                           ].filter(Boolean).join(" · ") || "property not specified";
                           if (accepted) {
-                            if (quoted > 0) {
-                              const sales = Math.round((quoted / 0.42) * 0.68);
+                            if (quotedPer > 0) {
+                              const salesPer = Math.round((rowRetailPer * 0.67) / 100) * 100;
+                              const sales = salesPer * rowSpaces;
                               return (
                                 <span
                                   className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm tabular-nums"
-                                  title={`Sales price for ${rowProp} · quoted $${quoted.toLocaleString()} → retail $${Math.round(quoted/0.42).toLocaleString()} → sales $${sales.toLocaleString()}`}
+                                  title={`Sales price for ${rowProp} · quoted $${quotedPer.toLocaleString()}/plot ($${quoted.toLocaleString()} total) → retail $${Math.round(rowRetailPer).toLocaleString()}/plot → sales $${salesPer.toLocaleString()}/plot ($${sales.toLocaleString()} total)`}
                                 >
                                   <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
                                   ${sales.toLocaleString()}
