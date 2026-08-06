@@ -986,33 +986,71 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </p>
             ) : (
               <div className="space-y-1.5">
-                {(answers.people ?? []).map((p) => (
-                  <div key={p.id} className="grid grid-cols-1 sm:grid-cols-[1fr_170px_1fr_auto] gap-1.5 items-center">
-                    <Input
-                      className="h-8 text-xs" placeholder="Full legal name" value={p.name}
-                      onChange={(e) => updatePerson(p.id, { name: e.target.value })}
-                      onBlur={commitPeople}
-                    />
-                    <select
-                      className="h-8 text-xs rounded-md border border-input bg-background px-2"
-                      value={p.role}
-                      onChange={(e) => { updatePerson(p.id, { role: e.target.value as PersonRole }); setTimeout(commitPeople, 0); }}
-                    >
-                      {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                    <Input
-                      className="h-8 text-xs" placeholder="Email (optional)" value={p.email ?? ""}
-                      onChange={(e) => updatePerson(p.id, { email: e.target.value })}
-                      onBlur={commitPeople}
-                    />
-                    <Button size="sm" variant="ghost" onClick={() => removePerson(p.id)}>
-                      <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                    </Button>
-                  </div>
-                ))}
+                {(answers.people ?? []).map((p) => {
+                  const dead = isDeceasedPerson(p, answers);
+                  return (
+                    <div key={p.id} className="grid grid-cols-1 sm:grid-cols-[1fr_170px_1fr_auto_auto] gap-1.5 items-center">
+                      <Input
+                        className="h-8 text-xs" placeholder="Full legal name" value={p.name}
+                        onChange={(e) => updatePerson(p.id, { name: e.target.value })}
+                        onBlur={commitPeople}
+                      />
+                      <select
+                        className="h-8 text-xs rounded-md border border-input bg-background px-2"
+                        value={p.role}
+                        onChange={(e) => { updatePerson(p.id, { role: e.target.value as PersonRole }); setTimeout(commitPeople, 0); }}
+                      >
+                        {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      </select>
+                      <Input
+                        className="h-8 text-xs" placeholder="Email (optional)" value={p.email ?? ""}
+                        onChange={(e) => updatePerson(p.id, { email: e.target.value })}
+                        onBlur={commitPeople}
+                      />
+                      <label className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={dead}
+                          onChange={(e) => {
+                            const on = e.target.checked;
+                            void persistAnswers({
+                              ...answers,
+                              people: (answers.people ?? []).map((x) =>
+                                x.id === p.id ? { ...x, deceased: on, role: on ? "decedent" as PersonRole : x.role } : x),
+                            });
+                          }}
+                        />
+                        Deceased
+                      </label>
+                      <Button size="sm" variant="ghost" onClick={() => removePerson(p.id)}>
+                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             )}
+
+            {/* A married couple can execute a single instrument, each signature
+                acknowledged separately — one POA instead of two. */}
+            {canIssueJointPoa(answers) && (
+              <label className="flex items-start gap-2 rounded-md border border-purple-200 bg-purple-50/70 px-2.5 py-2 text-[11px] text-purple-900">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={answers.jointPoa === "yes"}
+                  onChange={(e) => setAnswer("jointPoa", e.target.checked ? "yes" : "no")}
+                />
+                <span>
+                  <strong>Issue one joint Power of Attorney</strong> for{" "}
+                  {roster.filter((p) => p.role !== "witness").map((p) => p.name).join(" & ")} to sign together.
+                  Texas allows two principals on one instrument; each signature is acknowledged separately
+                  before the notary, so they only pay and attend once.
+                </span>
+              </label>
+            )}
           </div>
+
 
           {/* ── Listing agreement sits on its own, above the paperwork ── */}
           <div className="space-y-1.5">
