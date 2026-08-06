@@ -2435,6 +2435,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           );
                         })()}
+                        {(s as any).documents_completed_at ? (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white border border-emerald-700 shadow-sm"
+                            title={`All requested documents received · ${formatDate((s as any).documents_completed_at)}`}
+                          >
+                            <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                            Complete
+                          </span>
+                        ) : (s as any).documents_requested_at ? (
+                          <span
+                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800 shadow-sm"
+                            title={`Document request sent ${formatDate((s as any).documents_requested_at)}`}
+                          >
+                            <FileText className="w-2.5 h-2.5" strokeWidth={2.5} />
+                            Docs out
+                          </span>
+                        ) : null}
+
                         {paidMap[s.id] && (() => {
                           const p = paidMap[s.id];
                           const tierLabel = (p.tier || "").toLowerCase();
