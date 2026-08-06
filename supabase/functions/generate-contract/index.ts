@@ -157,11 +157,17 @@ Deno.serve(async (req) => {
         plot_description: [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
         spaces: sub.spaces ?? '',
       });
-    } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.length > 1) {
+    } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.filter(Boolean).length > 1) {
       // A married couple signing one instrument instead of one POA each.
+      const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2);
+      // Remember this on the contract so every later regeneration (the seller's
+      // sign page, the notary packet) rebuilds the JOINT document, not the
+      // single-signer template.
+      (fill as Record<string, unknown>).joint_names = jointNames;
+      fill.seller_name = jointNames.join(' & ');
       filled = await buildJointPoaPdf({
         county: overrides.county ?? cemLocationCity ?? '',
-        principals: (overrides.joint_names as string[]).slice(0, 2).map((n) => ({ name: n })),
+        principals: jointNames.map((n) => ({ name: n })),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
