@@ -639,11 +639,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const deduped: Submission[] = [];
     for (const s of ordered) {
       const key = (s.email || "").trim().toLowerCase();
-      if (!key) { deduped.push(s); continue; }
+      // Rows explicitly un-merged by staff always stand on their own.
+      if (!key || UNMERGED_IDS.has(s.id)) { deduped.push(s); continue; }
       if (seenEmails.has(key)) continue;
       seenEmails.add(key);
       deduped.push(s);
     }
+
     return deduped;
   }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
 
