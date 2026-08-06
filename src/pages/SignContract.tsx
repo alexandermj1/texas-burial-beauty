@@ -273,9 +273,10 @@ export default function SignContract() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not send packet");
+      if (!res.ok) throw new Error(data.error ?? "Could not complete document");
+      if (data.pdf_url) setFinalPdfUrl(data.pdf_url as string);
       setDone(true);
-      toast.success("Notary packet emailed to you — check your inbox.");
+      toast.success("Your document is ready — next steps are on this page.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
