@@ -345,9 +345,18 @@ export type Requirement = {
  * Is this person dead, either because they were marked so or because the
  * answers say the person on the deed has died? A decedent never signs.
  */
-export const isDeceasedPerson = (p: RosterPerson, a: OwnershipAnswers): boolean =>
-  p.role === "decedent" || !!p.deceased ||
-  (a.owner === "deceased" && (p.role === "owner" || p.role === "co_owner"));
+export const isDeceasedPerson = (p: RosterPerson, a: OwnershipAnswers): boolean => {
+  // Explicit wins: the roster is the source of truth about who is alive.
+  if (p.role === "decedent" || p.deceased === true) return true;
+  if (p.deceased === false) return false;
+  // "The owner has died" only tells us *an* owner died. When the roster already
+  // names that person, every other owner on it is a living co-owner (typically
+  // the surviving spouse) and must still sign / give a power of attorney.
+  const someoneNamedDead = (a.people ?? []).some((x) => x.role === "decedent" || x.deceased === true);
+  if (someoneNamedDead) return false;
+  return a.owner === "deceased" && (p.role === "owner" || p.role === "co_owner");
+};
+
 
 /**
  * A single power of attorney may be signed by two principals — each signature
