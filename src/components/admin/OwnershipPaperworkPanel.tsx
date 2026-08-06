@@ -21,6 +21,13 @@ import {
 
 
 
+type DocFields = {
+  seller_name: string; joint_second: string; address: string; city_state_zip: string;
+  phone: string; email: string; cemetery: string; county_state: string;
+  plot_description: string; plot_count: string;
+  listing_option: string; authorized_min_total: string;
+};
+
 type Props = {
   submissionId: string;
   cemetery?: string | null;
@@ -166,16 +173,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Switching a document to "post us the original" and setting the address. */
   const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
   /** Inline editor for a contract (POA / Listing Agreement) before it is generated. */
-  const [docEdit, setDocEdit] = useState<null | {
-    r: Requirement;
-    loading: boolean;
-    fields: {
-      seller_name: string; joint_second: string; address: string; city_state_zip: string;
-      phone: string; email: string; cemetery: string; county_state: string;
-      plot_description: string; plot_count: string;
-      listing_option: string; authorized_min_total: string;
-    };
-  }>(null);
+  const [docEdit, setDocEdit] = useState<null | { r: Requirement; loading: boolean; fields: DocFields }>(null);
 
 
 
@@ -702,7 +700,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  const generateDoc = async (r: Requirement, overrideFields?: typeof docEdit extends null ? never : NonNullable<typeof docEdit>["fields"]) => {
+  const generateDoc = async (r: Requirement, overrideFields?: DocFields) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     try {
