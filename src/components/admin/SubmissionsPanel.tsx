@@ -2484,7 +2484,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             title={`All requested documents received · ${formatDate((s as any).documents_completed_at)}`}
                           >
                             <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
-                            Complete
+                            Complete {formatDate((s as any).documents_completed_at)}
                           </span>
                         ) : (s as any).documents_requested_at ? (
                           <span
@@ -2492,9 +2492,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             title={`Document request sent ${formatDate((s as any).documents_requested_at)}`}
                           >
                             <FileText className="w-2.5 h-2.5" strokeWidth={2.5} />
-                            Docs out
+                            Docs sent {formatDate((s as any).documents_requested_at)}
                           </span>
                         ) : null}
+
 
                         {paidMap[s.id] && (() => {
                           const p = paidMap[s.id];
