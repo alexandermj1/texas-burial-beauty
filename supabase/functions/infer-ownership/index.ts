@@ -40,6 +40,9 @@ How to read a seller's file (Texas interment property):
 - No mention of a will for a deceased owner is NOT the same as "no will" — leave blank unless stated.
 - deed = yes if we hold an attached document that is a cemetery deed / certificate of ownership / interment rights certificate (see ATTACHED DOCUMENTS), or if they say they have it; deed = no if they say it is lost.
 - names = no only if there is an actual mismatch mentioned (maiden name, name change).
+- occupied: if the number of spaces being sold equals the number of spaces they own (e.g. they own two and are selling two), the plot is empty → occupied = no. Only say "yes" if the file actually mentions a burial, interment or a used space.
+- People: anyone who has died — including the person printed on the deed when owner = deceased — must be returned with role "decedent" and deceased = true. Never list a dead person as an owner, co-owner or signer: a decedent cannot sign anything.
+- open_questions must only contain things the file genuinely leaves unresolved. Never ask us to confirm something you have just answered, something already stated in the file, or something the arithmetic above settles (such as whether anyone is buried when every space is being sold).
 - The ATTACHED DOCUMENTS section is evidence we physically hold. Read it as carefully as the emails: the names, cemetery, section/lot/space and document type printed on those documents are facts, and they override anything vague in the emails.
 Only answer what the file actually supports. Leave anything else out — a missing answer is far better than a guessed one.
 `.trim();
@@ -267,8 +270,24 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       answers: clean,
       reasons: (parsed.reasons ?? []).filter((r: { key: string }) => clean[r.key]),
-      people: parsed.people ?? [],
-      open_questions: parsed.open_questions ?? [],
+      people: (parsed.people ?? []).map((p: Record<string, unknown>) =>
+        p.deceased || p.role === "decedent"
+          ? { ...p, role: "decedent", deceased: true }
+          : p),
+      // Never hand back an open question about something we have just answered.
+      open_questions: (parsed.open_questions ?? []).filter((q: string) => {
+        const t = String(q).toLowerCase();
+        const answered = (key: string, words: string[]) =>
+          !!clean[key] && words.some((w) => t.includes(w));
+        return !(
+          answered("occupied", ["buried", "burial", "interred", "interment", "occupied", "empty"]) ||
+          answered("owner", ["alive", "living", "deceased", "passed away", "still alive"]) ||
+          answered("co", ["co-owner", "co owner", "both owners", "all owners", "both sellers"]) ||
+          answered("marital", ["marital", "married", "spouse", "widow", "divorc"]) ||
+          answered("deed", ["deed", "certificate of ownership"]) ||
+          answered("will", ["a will", "the will"])
+        );
+      }),
       sources: { emails: emails?.length ?? 0, notes: notes?.length ?? 0 },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
