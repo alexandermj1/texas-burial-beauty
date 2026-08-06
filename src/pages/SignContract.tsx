@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, FileText, ShieldCheck, PenLine, Lock } from "lucide-react";
+import { Loader2, CheckCircle2, FileText, ShieldCheck, PenLine, Lock, Upload, Smartphone, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const FN_URL = `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1/sign-contract`;
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWd1eGZkb2lranRoc3JibXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTI4MDYsImV4cCI6MjA5MjM2ODgwNn0.YDuw7oQqllDnunSA0Fv4eENslzol1Lni7n6kfSRa9T0";
@@ -16,6 +17,7 @@ type ContractInfo = {
   fill_data: Record<string, unknown>;
   pdf_url: string;
   already_signed: boolean;
+  submission_id?: string;
 };
 
 function SignaturePad({
