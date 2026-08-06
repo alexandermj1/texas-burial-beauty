@@ -12,7 +12,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
-import { buildAffidavitPdf, buildSpousalConsentPdf } from '../_shared/affidavit-heirship.ts';
+import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
+
+/** Two principals on one POA — kept on fill_data so every rebuild stays joint. */
+const jointNamesOf = (fd: unknown): string[] => {
+  const raw = (fd as Record<string, unknown> | null)?.joint_names;
+  return Array.isArray(raw) ? (raw as string[]).filter((n) => typeof n === 'string' && n.trim()) : [];
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
