@@ -589,6 +589,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         person: r.personName ?? null,
         needsNotary: !!r.needsNotary,
         issuedByUs: !!r.issuedByUs,
+        mailTo: (answers.mailOriginals ?? {})[reqKey(r)]?.address ?? null,
+
       };
     });
     return { items, poaUrl, poaFor };
