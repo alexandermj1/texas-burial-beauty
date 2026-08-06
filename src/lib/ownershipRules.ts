@@ -590,24 +590,41 @@ export function computeRequirements(
   });
 
   // ── Per-person items ──
-  const namedRoster = (a.people ?? []).filter((p) => p.name.trim() && p.role !== "decedent" && !p.deceased);
+  const namedRoster = (a.people ?? []).filter((p) => p.name.trim() && !isDeceasedPerson(p, a));
   if (namedRoster.length === 0) {
     add({ code: "D2", label: "Photo ID for every person signing", why: "One clear government photo ID for each person who will sign." });
   }
-  for (const p of namedRoster) {
-    if (p.role === "witness") continue;
+  const signers = namedRoster.filter((p) => p.role !== "witness");
+  const joint = canIssueJointPoa(a) && a.jointPoa === "yes" ? signers : null;
+
+  if (joint) {
+    // Texas law lets two principals execute one instrument, each signature
+    // separately acknowledged, so a married couple can sign a single POA.
     add({
-      code: "D21", label: `Limited power of attorney to Texas Cemetery Brokers — ${p.name}`,
-      why: "Lets us sign the transfer paperwork at the cemetery on their behalf.",
+      code: "D21", label: `Joint limited power of attorney — ${joint.map((p) => p.name).join(" & ")}`,
+      why: "One document both spouses sign, each acknowledged before the notary, instead of a separate POA each.",
+      statute: "§751.031",
       issuedByUs: true, needsNotary: true, contractKind: "poa",
-      personName: p.name, personRole: p.role,
+      personName: joint[0].name, personRole: joint[0].role,
+      jointNames: joint.map((p) => p.name),
     });
+  }
+  for (const p of signers) {
+    if (!joint) {
+      add({
+        code: "D21", label: `Limited power of attorney to Texas Cemetery Brokers — ${p.name}`,
+        why: "Lets us sign the transfer paperwork at the cemetery on their behalf.",
+        issuedByUs: true, needsNotary: true, contractKind: "poa",
+        personName: p.name, personRole: p.role,
+      });
+    }
     add({
       code: "D2P", label: `Photo ID — ${p.name}`,
       why: "The cemetery matches every signature to a government ID.",
       personName: p.name, personRole: p.role,
     });
   }
+
 
   // De-duplicate by checklist identity. Labels can change as names become known,
   // but that must not create a second request for the same document.
