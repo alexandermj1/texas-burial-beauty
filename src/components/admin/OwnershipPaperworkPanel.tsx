@@ -173,7 +173,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Switching a document to "post us the original" and setting the address. */
   const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
   /** Inline editor for a contract (POA / Listing Agreement) before it is generated. */
-  const [docEdit, setDocEdit] = useState<null | { r: Requirement; loading: boolean; fields: DocFields }>(null);
+  const [docEdit, setDocEdit] = useState<null | {
+    r: Requirement;
+    loading: boolean;
+    fields: DocFields;
+    /** Every spelling of the seller's name we can find, and where it came from. */
+    nameHints?: { name: string; source: string }[];
+  }>(null);
 
 
 
