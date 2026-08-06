@@ -369,6 +369,11 @@ export async function buildJointPoaPdf(d: {
   venue(ctx, county);
   notaryBlock(ctx, 'Second Principal', names[1] ?? '', county, true);
 
+  // Brand the instrument pages first — the data-reference sheet below carries
+  // its own masthead/footer (identical to the single-signer POA), so it must
+  // not be double-stamped.
+  brandPages(doc, ctx.bold, ctx.body);
+
   // Same audit / data-reference sheet the single-signer POA carries, so both
   // documents review and file identically.
   await appendDataReferenceSheet(doc, 'poa', {
@@ -383,7 +388,7 @@ export async function buildJointPoaPdf(d: {
     plot_description: d.plot_description,
   });
 
-  brandPages(doc, ctx.bold, ctx.body);
   return await doc.save();
+
 }
 
