@@ -220,23 +220,25 @@ Deno.serve(async (req) => {
     await svc.from('contact_submissions')
       .update({ documents_requested_at: now }).eq('id', submissionId);
 
-    try {
-      await svc.from('email_messages').insert({
-        gmail_message_id: `packet-${submissionId}-${Date.now()}`,
-        gmail_thread_id: null,
-        from_email: 'contracts@texascemeterybrokers.com',
-        from_name: 'Texas Cemetery Brokers',
-        to_email: to,
-        subject,
-        snippet: `Document packet requested — ${items.length} item${items.length === 1 ? '' : 's'}${poas.length ? ` + ${poas.length} Power of Attorney` : ''}.`,
-        body_text: `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPOA${p.name ? ` (${p.name})` : ''}: ${p.url}`).join('')}`,
-        received_at: now,
-        matched_submission_id: submissionId,
-        is_read: true,
-      } as Record<string, unknown>);
-    } catch (e) {
-      console.warn('could not log packet email', e);
-    }
+    // Log it into the CRM thread so the admin can see the packet went out.
+    // (This email is sent through Resend, not Gmail, so it never appears in the
+    // synced Gmail mailbox — this row is the record of it.)
+    const { error: logErr } = await svc.from('email_messages').insert({
+      gmail_message_id: `packet-${submissionId}-${Date.now()}`,
+      gmail_thread_id: `packet-${submissionId}`,
+      from_email: 'contracts@texascemeterybrokers.com',
+      from_name: 'Texas Cemetery Brokers',
+      to_email: to,
+      subject,
+      snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${poas.length ? ` + ${poas.length} Power of Attorney` : ''}.`,
+      body_text: `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPOA${p.name ? ` (${p.name})` : ''}: ${p.url}`).join('')}`,
+      body_html: html,
+      received_at: now,
+      matched_submission_id: submissionId,
+      is_read: true,
+    } as Record<string, unknown>);
+    if (logErr) console.error('could not log packet email', logErr);
+
 
     return new Response(JSON.stringify({ ok: true, to, items: items.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
