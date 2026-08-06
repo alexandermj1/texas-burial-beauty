@@ -113,6 +113,8 @@ export default function SignContract() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  /** Finished notary-ready PDF, returned when the document is completed. */
+  const [finalPdfUrl, setFinalPdfUrl] = useState<string | null>(null);
 
   const [fields, setFields] = useState<SellerFields>({
     seller_name: "", address: "", city_state_zip: "",
@@ -271,9 +273,10 @@ export default function SignContract() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not send packet");
+      if (!res.ok) throw new Error(data.error ?? "Could not complete document");
+      if (data.pdf_url) setFinalPdfUrl(data.pdf_url as string);
       setDone(true);
-      toast.success("Notary packet emailed to you — check your inbox.");
+      toast.success("Your document is ready — next steps are on this page.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -439,34 +442,98 @@ export default function SignContract() {
         </Card>
 
         {done ? (
-          <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
-            <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
-            {isNotaryDoc ? (
-              <>
-                <h2 className="text-2xl font-serif text-emerald-900">Your notary packet is on its way.</h2>
-                <p className="text-sm text-emerald-800 mt-3 max-w-md mx-auto">
-                  We've emailed you the finished {title} PDF along with a one-click link to notarize
-                  it online, plus instructions if you'd rather use a local notary in person.
+          isNotaryDoc ? (
+            <Card className="p-8 md:p-10 bg-white border-emerald-300 shadow-sm space-y-7">
+              <div className="text-center">
+                <CheckCircle2 className="h-11 w-11 text-emerald-600 mx-auto mb-3" />
+                <h2 className="text-2xl font-serif text-[#1f2a37]">Your {title} is complete and filled in.</h2>
+                <p className="text-sm text-muted-foreground mt-3 max-w-xl mx-auto">
+                  Everything you need is right here — download it, then choose one of the two ways below to have it
+                  notarized. We've also emailed a copy with these same instructions
+                  {fields.email ? <> to <strong>{fields.email}</strong></> : null}, so nothing is lost.
                 </p>
-              </>
-            ) : (
-              <>
-                <h2 className="text-2xl font-serif text-emerald-900">Thank you — your signature is recorded.</h2>
-                <p className="text-sm text-emerald-800 mt-3 max-w-md mx-auto">
-                  A copy has been emailed to you. Texas Cemetery Brokers will countersign and send you the fully executed document shortly.
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-[#1f2a37] hover:bg-[#111827] text-white px-8 h-12"
+                  disabled={!finalPdfUrl}
+                >
+                  <a href={finalPdfUrl ?? pdfUrl} target="_blank" rel="noreferrer" download>
+                    Download your {title} (PDF)
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="h-12 border-[#1f2a37]/30">
+                  <a href={finalPdfUrl ?? pdfUrl} target="_blank" rel="noreferrer">Open in a new tab</a>
+                </Button>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-border p-6 bg-[#fbf8f2] flex flex-col">
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-1">Option 1 — fastest</div>
+                  <div className="font-serif text-lg mb-2">Notarize online in about 15 minutes</div>
+                  <ol className="text-xs text-muted-foreground leading-relaxed space-y-1.5 list-decimal pl-4 flex-1">
+                    <li>Download the PDF above.</li>
+                    <li>Open the notary link below and upload that PDF.</li>
+                    <li>Meet a commissioned notary over video from your phone with a photo ID (about $25).</li>
+                    <li>Email the notarized copy back to us, or reply to our email with it attached.</li>
+                  </ol>
+                  <Button asChild className="mt-4 bg-[#1f2a37] hover:bg-[#111827] text-white">
+                    <a href="https://app.proof.com/signup/upload" target="_blank" rel="noreferrer">
+                      Start online notarization →
+                    </a>
+                  </Button>
+                </div>
+                <div className="rounded-xl border border-border p-6 flex flex-col">
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-1">Option 2 — in person</div>
+                  <div className="font-serif text-lg mb-2">Any local notary works</div>
+                  <ol className="text-xs text-muted-foreground leading-relaxed space-y-1.5 list-decimal pl-4 flex-1">
+                    <li>Print the downloaded PDF — do not sign it yet.</li>
+                    <li>Take it, with your photo ID, to your bank, a UPS Store, AAA branch, courthouse or public library.</li>
+                    <li>Sign it in front of the notary.</li>
+                    <li>Photograph or scan every page and email it to us.</li>
+                  </ol>
+                  <Button asChild variant="outline" className="mt-4 border-[#1f2a37]/30">
+                    <a href="https://www.google.com/maps/search/notary+public+near+me" target="_blank" rel="noreferrer">
+                      Find a notary near me →
+                    </a>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[#f7f3ec] p-6 text-center">
+                <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b]">Send the notarized copy to</div>
+                <p className="text-sm text-[#1f2a37] mt-2">
+                  <a href="mailto:contracts@texascemeterybrokers.com" className="underline">contracts@texascemeterybrokers.com</a>
                 </p>
-              </>
-            )}
-          </Card>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Any questions at all — call <a href="tel:+12142304740" className="underline text-[#1f2a37]">(214) 230-4740</a> or
+                  email <a href="mailto:info@texascemeterybrokers.com" className="underline text-[#1f2a37]">info@texascemeterybrokers.com</a> and
+                  a broker will walk you through it personally.
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
+              <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
+              <h2 className="text-2xl font-serif text-emerald-900">Thank you — your signature is recorded.</h2>
+              <p className="text-sm text-emerald-800 mt-3 max-w-md mx-auto">
+                A copy has been emailed to you. Texas Cemetery Brokers will countersign and send you the fully executed document shortly.
+              </p>
+            </Card>
+          )
         ) : isNotaryDoc ? (
           <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-6">
             <div className="flex items-baseline gap-3">
               <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Step 3</span>
-              <h2 className="text-xl font-serif">Get your notary packet</h2>
+              <h2 className="text-xl font-serif">Finish your document</h2>
             </div>
             <p className="text-sm text-muted-foreground max-w-2xl">
-              Because the {title} is a sworn document, Texas law requires it to be <strong>notarized</strong>. Once you click below, we'll email you the finished
-              PDF along with two easy ways to get it notarized:
+              Because the {title} is a sworn document, Texas law requires it to be <strong>notarized</strong>. Click below and
+              we'll finish the document with your details — you'll then be able to download it and follow the notary steps
+              right here on this page. We'll email you a copy as well, just in case.
             </p>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-xl border border-border p-5 bg-[#fbf8f2]">
@@ -474,7 +541,7 @@ export default function SignContract() {
                 <div className="font-serif text-base mb-1">Notarize online in ~15 min</div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Meet a commissioned notary over video from your phone. You'll need a photo ID and about $25.
-                  We'll include a direct link in the email.
+                  The direct link appears on the next screen.
                 </p>
               </div>
               <div className="rounded-xl border border-border p-5">
@@ -488,7 +555,8 @@ export default function SignContract() {
             </div>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
               <p className="text-[11px] text-muted-foreground max-w-sm">
-                The PDF will be emailed to <strong>{fields.email || "your address on file"}</strong> the moment you click.
+                Your finished PDF appears here to download straight away, and is emailed
+                to <strong>{fields.email || "your address on file"}</strong> as a backup.
               </p>
               <Button
                 onClick={submitPoa}
@@ -497,7 +565,7 @@ export default function SignContract() {
                 className="bg-[#1f2a37] hover:bg-[#111827] text-white px-8 h-12"
               >
                 {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Email me my notary packet
+                Finish &amp; get my document
               </Button>
             </div>
           </Card>
