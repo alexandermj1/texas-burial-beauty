@@ -692,11 +692,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const prior = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void")
         .map((c) => (c.fill_data ?? {}) as Record<string, unknown>)
         .find((f) => !r.personName || String(f.seller_name ?? "").toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()));
-      const nameHints = await collectNameSpellings(s);
+      const nameHints = await collectNameSpellings(s, r);
+      const plotHints = await collectDeedPlots(s);
       setDocEdit((cur) => cur && cur.r === r ? {
         ...cur,
         loading: false,
         nameHints,
+        plotHints,
         fields: {
           seller_name: r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "",
           joint_second: r.jointNames?.[1] ?? "",
@@ -706,7 +708,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           email: str(prior?.email) || str(s.email),
           cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
           county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
-          plot_description: str(prior?.plot_description) ||
+          // The deed is the controlling description — use it verbatim when we hold one.
+          plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
             [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
               .filter(Boolean).join(" · "),
           plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
@@ -720,18 +723,62 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
   /**
-   * The legal name has to be spelled exactly as it appears on the deed / ID, so
-   * before a POA is prepared we sweep every place a spelling can hide: the
-   * submission itself, the deed owner names, the ownership roster, whatever the
-   * AI pulled out of the uploaded documents, and how the seller signs their emails.
+   * The plot has to be described on the POA exactly as it is written on the
+   * cemetery's deed / certificate of ownership, so we rebuild it from what the
+   * extractor read off those documents rather than from our own intake fields.
    */
-  const collectNameSpellings = async (s: Record<string, unknown>) => {
+  const collectDeedPlots = async (s: Record<string, unknown>) => {
+    const profileId = s.customer_profile_id as string | undefined;
+    if (!profileId) return [];
+    const { data: cfiles } = await supabase.from("customer_files")
+      .select("file_name, document_type, extracted_data")
+      .eq("customer_profile_id", profileId).limit(40);
+    const out: { text: string; source: string }[] = [];
+    const seen = new Set<string>();
+    for (const f of (cfiles ?? []) as Record<string, unknown>[]) {
+      const d = (f.extracted_data ?? {}) as Record<string, unknown>;
+      const type = String(d.document_type ?? f.document_type ?? "");
+      if (!/deed|certificate|interment|ownership|contract/i.test(`${type} ${String(f.file_name ?? "")}`)) continue;
+      const val = (k: string) => {
+        const v = d[k];
+        return v == null ? "" : String(v).replace(/\s+/g, " ").trim();
+      };
+      // Keep the deed's own wording and ordering: Section, Block, Lot, Space(s).
+      const parts = [
+        val("section") && `Section ${val("section")}`,
+        val("block") && `Block ${val("block")}`,
+        val("lot") && `Lot ${val("lot")}`,
+        val("space") && `Space${/[,&]|\band\b|-/.test(val("space")) ? "s" : ""} ${val("space")}`,
+        val("plot_type"),
+      ].filter(Boolean) as string[];
+      if (!parts.length) continue;
+      const text = parts.join(", ");
+      const key = text.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ text, source: type || String(f.file_name ?? "Document") });
+    }
+    return out;
+  };
+
+  /** Words that mean a name belongs to an official, not to a person who signs. */
+  const NON_SIGNER = /\b(president|vice|director|manager|superintendent|secretary|treasurer|notary|clerk|witness|counselor|counsellor|advisor|adviser|representative of|funeral|mortuary|cemetery|memorial park|association|company|corporation|corp|inc\.?|llc|l\.l\.c\.|trust company|bank|attorney at law|escrow|title co)\b/i;
+
+  /**
+   * The legal name has to be spelled exactly as it appears on the deed / ID, so
+   * before a POA is prepared we sweep every place a spelling can hide — but we
+   * only keep names belonging to the people who actually have to sign this
+   * document. Cemetery officials, funeral directors and other third parties
+   * named on the paperwork are discarded.
+   */
+  const collectNameSpellings = async (s: Record<string, unknown>, r: Requirement) => {
     const out: { name: string; source: string }[] = [];
     const seen = new Set<string>();
     const push = (raw: unknown, source: string) => {
       const v = String(raw ?? "").replace(/\s+/g, " ").trim();
       if (!v || v.length < 3 || v.length > 80) return;
       if (!/[a-z]/i.test(v)) return;
+      if (NON_SIGNER.test(v)) return;
       const key = v.toLowerCase();
       if (seen.has(key)) return;
       seen.add(key);
@@ -755,21 +802,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .order("received_at", { ascending: false }).limit(25),
     ]);
 
-    // Names the extraction step read off the uploaded deeds / IDs / certificates.
-    const walk = (v: unknown, label: string, depth = 0) => {
-      if (depth > 4 || v == null) return;
-      if (Array.isArray(v)) { for (const x of v) walk(x, label, depth + 1); return; }
-      if (typeof v === "object") {
-        for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
-          if (/name/i.test(k) && (typeof val === "string" || Array.isArray(val))) walk(val, label, depth + 1);
-          else if (typeof val === "object") walk(val, label, depth + 1);
-        }
-        return;
-      }
-      if (typeof v === "string") push(v, label);
-    };
+    // Only owner/signer roles off the uploaded deeds and IDs — never "parties",
+    // which is where witnesses and cemetery staff end up.
+    const SIGNER_KEYS = ["owners", "previous_owners", "purchaser", "principal", "seller", "owner", "purchaser_name", "grantee", "name_on_id", "full_name"];
     for (const f of (cfiles ?? []) as Record<string, unknown>[]) {
-      walk(f.extracted_data, `Uploaded: ${String(f.document_type || f.file_name || "document")}`);
+      const d = (f.extracted_data ?? {}) as Record<string, unknown>;
+      const label = `Uploaded: ${String(d.document_type || f.document_type || f.file_name || "document")}`;
+      for (const k of SIGNER_KEYS) {
+        const v = d[k];
+        if (typeof v === "string") push(v, label);
+        else if (Array.isArray(v)) for (const x of v) if (typeof x === "string") push(x, label);
+      }
     }
 
     // How the seller writes their own name in email — display name and sign-off.
@@ -782,8 +825,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const sig = tail.match(/(?:regards|thanks|thank you|sincerely|best)[,!.]?\s*\n+\s*([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,3})/i);
       if (sig?.[1]) push(sig[1], "Email sign-off");
     }
-    return out;
+
+    // Finally, keep only spellings that plausibly belong to a signer on this
+    // document: the named principal(s), or anyone sharing a name part with them.
+    const signers = [r.personName, ...(r.jointNames ?? []), String(s.name ?? "")]
+      .filter(Boolean).map((n) => String(n).toLowerCase());
+    const parts = new Set(
+      signers.flatMap((n) => n.split(/\s+/).filter((w) => w.length > 2)),
+    );
+    if (!parts.size) return out;
+    const matched = out.filter((h) =>
+      h.name.toLowerCase().split(/\s+/).some((w) => parts.has(w)));
+    return matched.length ? matched : out.filter((h) => signers.length === 0);
   };
+
 
 
 
