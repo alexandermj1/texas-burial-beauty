@@ -644,6 +644,20 @@ export function computeRequirements(
     });
   }
 
+  // ── Documents added by hand for this file only ──
+  for (const x of a.extraDocs ?? []) {
+    if (!x?.label?.trim()) continue;
+    add({
+      code: `X-${x.id}`,
+      label: x.label.trim(),
+      why: x.why?.trim() || "Added for this file by the broker.",
+      needsNotary: !!x.needsNotary,
+      ...(x.person?.trim() ? { personName: x.person.trim() } : {}),
+    });
+  }
+
+
+
 
   // De-duplicate by checklist identity. Labels can change as names become known,
   // but that must not create a second request for the same document.
