@@ -38,6 +38,8 @@ export type OwnershipAnswers = {
 
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
+  /** Extra documents an admin has added by hand for this file only. */
+  extraDocs?: { id: string; label: string; why?: string; person?: string; needsNotary?: boolean }[];
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
   aiSuggested?: string[];
 };
