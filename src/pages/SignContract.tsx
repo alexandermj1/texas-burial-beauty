@@ -138,6 +138,37 @@ export default function SignContract() {
   const [busy, setBusy] = useState(false);
   const [sectionInitials, setSectionInitials] = useState<boolean[]>([false, false, false, false, false]);
 
+  const [submissionId, setSubmissionId] = useState<string>("");
+  const [notaryUploading, setNotaryUploading] = useState(false);
+  const [notaryUploaded, setNotaryUploaded] = useState(false);
+  const notaryInputRef = useRef<HTMLInputElement | null>(null);
+
+  const uploadNotarizedCopy = async (f: File) => {
+    if (!submissionId) return;
+    setNotaryUploading(true);
+    try {
+      const ext = (f.name.split(".").pop() || "pdf").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${submissionId}/poa-notarized-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext || "pdf"}`;
+      const { error } = await supabase.storage
+        .from("portal-uploads")
+        .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type });
+      if (error) throw error;
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
+        body: JSON.stringify({ action: "record_poa", path, name: f.name, submission_id: submissionId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not save");
+      setNotaryUploaded(true);
+      toast.success("Notarized copy uploaded — our team has been notified.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setNotaryUploading(false);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
