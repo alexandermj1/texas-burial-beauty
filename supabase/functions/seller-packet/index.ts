@@ -141,8 +141,46 @@ Deno.serve(async (req) => {
           action_summary: `Seller uploaded ${name} via the document packet`,
         });
       }
-      return json({ ok: true });
+
+      // Is anything still outstanding? If not, the listing's paperwork is complete.
+      const { data: remaining } = await supabase
+        .from("submission_documents")
+        .select("id, status, manual_override, required_state")
+        .eq("submission_id", submissionId);
+      const outstanding = (remaining ?? []).filter((d: Record<string, string | null>) => {
+        const state = d.manual_override ?? d.required_state;
+        return d.status !== "received" && state !== "received" && state !== "not_required" && state !== "waived";
+      });
+      const allDone = (remaining ?? []).length > 0 && outstanding.length === 0;
+      if (allDone) {
+        await supabase.from("contact_submissions")
+          .update({ documents_completed_at: new Date().toISOString() })
+          .eq("id", submissionId)
+          .is("documents_completed_at", null);
+      }
+
+      // Notify every admin / staff member in the CRM so nothing sits unseen.
+      const { data: staff } = await supabase
+        .from("user_roles").select("user_id").in("role", ["admin", "staff", "agent"]);
+      const recipients = [...new Set((staff ?? []).map((r: { user_id: string }) => r.user_id))];
+      if (recipients.length) {
+        await supabase.from("user_notifications").insert(recipients.map((uid) => ({
+          user_id: uid,
+          title: allDone
+            ? `${sub.name ?? "Seller"} completed all documents`
+            : `${sub.name ?? "Seller"} uploaded a document`,
+          body: allDone
+            ? `Every requested document is now on file — the listing paperwork is complete.`
+            : `${name}${outstanding.length ? ` · ${outstanding.length} item${outstanding.length === 1 ? "" : "s"} still outstanding` : ""}`,
+          link_url: `/admin?submission=${submissionId}`,
+          source_type: "document_upload",
+          source_id: submissionId,
+        })));
+      }
+
+      return json({ ok: true, all_done: allDone });
     }
+
 
     return json({ error: "unknown action" }, 400);
   } catch (err) {
