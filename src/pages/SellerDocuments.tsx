@@ -277,6 +277,16 @@ const SellerDocuments = () => {
           item and photograph it with your camera{packet?.cemetery ? ` — everything below is what ${packet.cemetery} requires` : ""}.
         </p>
 
+        <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 px-5 py-4">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Our team has already worked directly with {packet?.cemetery ?? "the cemetery"} to confirm this list. It is
+            the <span className="text-foreground">complete set of documents</span> you need in order to sell your
+            property — these would be required no matter how you sold it, privately or through a broker. The only item
+            unique to selling through us is the Limited Power of Attorney, which lets us do the running around for you.
+          </p>
+        </div>
+
+
         {total > 0 && (
           <div className="mt-8 mb-10">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
