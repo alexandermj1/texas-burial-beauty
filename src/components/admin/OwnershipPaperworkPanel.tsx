@@ -179,6 +179,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     fields: DocFields;
     /** Every spelling of the seller's name we can find, and where it came from. */
     nameHints?: { name: string; source: string }[];
+    /** Plot descriptions exactly as printed on the deed / certificate. */
+    plotHints?: { text: string; source: string }[];
   }>(null);
 
 
