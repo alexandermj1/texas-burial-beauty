@@ -1045,12 +1045,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (!showAccepted && !showPending && !paid) return null;
 
                     const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+                    // quote_amount and cemetery_retail are stored PER PLOT.
                     const retailSaved = Number((selected as any).cemetery_retail) || 0;
-                    const q = showAccepted ? quotedAccepted : quotedPending;
-                    const retail = retailSaved > 0 ? retailSaved : q / 0.42;
-                    const sales = Math.round((retail * 0.67) / 100) * 100;
-                    const spaceCount = Number((selected as any).spaces) || 0;
+                    const perSpace = showAccepted ? quotedAccepted : quotedPending;
+                    const retail = retailSaved > 0 ? retailSaved : perSpace / 0.42;
+                    const salesPerSpace = Math.round((retail * 0.67) / 100) * 100;
+                    const spaceCount = Math.max(1, Number((selected as any).spaces) || 1);
                     const isMulti = spaceCount > 1;
+                    const q = perSpace * spaceCount;
+                    const sales = salesPerSpace * spaceCount;
                     const plotLocation = [(selected as any).section || null, (selected as any).lawn || null].filter(Boolean).join(" · ") || null;
                     const plotIdentifier = (selected as any).space_numbers || null;
                     const propLabel = [
@@ -1059,7 +1062,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       plotLocation,
                       plotIdentifier,
                     ].filter(Boolean).join(" · ") || "Property not specified";
-                    const perSpace = isMulti ? Math.round(q / spaceCount) : 0;
 
                     const bandBase = "inline-flex items-center gap-3 px-3 py-1.5 rounded-lg border-2 shadow-sm flex-wrap";
                     const emerald = "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
