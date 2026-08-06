@@ -317,9 +317,19 @@ export type Requirement = {
   originalsOnly?: boolean;
   personName?: string;
   personRole?: PersonRole;
+  /** Both names when one document is signed by two people (a joint POA). */
+  jointNames?: string[];
   /** The contract kind we can generate for this item, if any. */
   contractKind?: "listing_agreement" | "poa" | "affidavit_heirship" | "spousal_consent";
 };
+
+/**
+ * Is this person dead, either because they were marked so or because the
+ * answers say the person on the deed has died? A decedent never signs.
+ */
+export const isDeceasedPerson = (p: RosterPerson, a: OwnershipAnswers): boolean =>
+  p.role === "decedent" || !!p.deceased ||
+  (a.owner === "deceased" && (p.role === "owner" || p.role === "co_owner"));
 
 /**
  * Everyone whose signature or ID we need, derived from the answers plus the
@@ -327,7 +337,8 @@ export type Requirement = {
  */
 export function signingRoster(a: OwnershipAnswers): RosterPerson[] {
   const named = (a.people ?? []).filter((p) => p.name.trim());
-  if (named.length) return named.filter((p) => p.role !== "decedent" && !p.deceased);
+  if (named.length) return named.filter((p) => !isDeceasedPerson(p, a));
+
   // No names entered yet — describe the roles we know we'll need.
   const placeholder = (role: PersonRole, name: string): RosterPerson =>
     ({ id: `ph-${role}-${name}`, name, role });
