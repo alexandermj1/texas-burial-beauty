@@ -546,40 +546,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const poaRequired = requirements.some((r) => r.contractKind === "poa");
   const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
 
-  /** Generate the POA so it can travel inside the same packet email. */
-  const preparePoa = async () => {
-    const req = requirements.find((r) => r.contractKind === "poa");
-    setBusy("poa");
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-contract", {
-        body: {
-          submission_id: submissionId, kind: "poa",
-          overrides: {
-            ...(req?.personName ? { seller_name: req.personName } : {}),
-            ...(req?.jointNames ? { joint_names: req.jointNames } : {}),
-          },
-        },
-      });
-      if (error) throw error;
-      const res = data as { pdf_url?: string | null };
-      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: req?.label ?? "Power of Attorney" });
-      toast.success("Power of Attorney prepared — check it below, then send");
-      await load();
-      setPoaPrompt(false);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  };
-
   /** The items and POA link that make up the request, shared by preview and send. */
   const buildPacketPayload = async () => {
     let poaUrl: string | null = null;
     let poaFor: string | null = null;
-    if (poaContract) {
+    // Use the POA prepared for the POA the checklist actually calls for (joint
+    // couples included), not simply the first one on the file.
+    const chosen = poaRequirements.length ? preparedPoaFor(poaRequirements[0]) : poaContract;
+    if (chosen) {
       const { data: c } = await supabase.from("contracts")
-        .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
+        .select("sign_token, signature_name").eq("id", chosen.id).maybeSingle();
       if (c?.sign_token) {
         poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
         poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
