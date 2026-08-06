@@ -113,6 +113,8 @@ export default function SignContract() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  /** Finished notary-ready PDF, returned when the document is completed. */
+  const [finalPdfUrl, setFinalPdfUrl] = useState<string | null>(null);
 
   const [fields, setFields] = useState<SellerFields>({
     seller_name: "", address: "", city_state_zip: "",
