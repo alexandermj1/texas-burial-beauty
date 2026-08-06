@@ -1328,6 +1328,42 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         </DialogContent>
       </Dialog>
 
+      {/* ── Ask for the original by post ── */}
+      <Dialog open={!!mailDoc} onOpenChange={(o) => !o && setMailDoc(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Mail className="w-4 h-4" /> Ask for the original by post
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {mailDoc?.r.label} — the seller will be told the cemetery requires an original copy, that we store all
+              originals, and where to post it. No photo upload is offered for this item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs">Postal address for the original</Label>
+            <textarea
+              rows={4}
+              className="w-full text-sm rounded-md border border-border bg-background px-3 py-2"
+              placeholder={"Texas Cemetery Brokers\n123 Example Street, Suite 100\nDallas, TX 75201"}
+              value={mailDoc?.address ?? ""}
+              onChange={(e) => setMailDoc(mailDoc ? { ...mailDoc, address: e.target.value } : null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              This address is remembered for this file, so the next original you request is pre-filled.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setMailDoc(null)}>Cancel</Button>
+            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void saveMailOriginal()}>
+              Request the original
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
       {/* ── Inline PDF check ── */}
 
       <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
