@@ -451,6 +451,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           details: string | null
+          documents_completed_at: string | null
           documents_requested_at: string | null
           docusign_envelope_url: string | null
           docusign_sent_at: string | null
@@ -564,6 +565,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           details?: string | null
+          documents_completed_at?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
           docusign_sent_at?: string | null
@@ -677,6 +679,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           details?: string | null
+          documents_completed_at?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
           docusign_sent_at?: string | null
@@ -1113,7 +1116,7 @@ export type Database = {
           from_email: string
           from_name: string | null
           gmail_message_id: string
-          gmail_thread_id: string
+          gmail_thread_id: string | null
           id: string
           is_read: boolean
           match_confidence: string | null
@@ -1137,7 +1140,7 @@ export type Database = {
           from_email: string
           from_name?: string | null
           gmail_message_id: string
-          gmail_thread_id: string
+          gmail_thread_id?: string | null
           id?: string
           is_read?: boolean
           match_confidence?: string | null
@@ -1161,7 +1164,7 @@ export type Database = {
           from_email?: string
           from_name?: string | null
           gmail_message_id?: string
-          gmail_thread_id?: string
+          gmail_thread_id?: string | null
           id?: string
           is_read?: boolean
           match_confidence?: string | null
