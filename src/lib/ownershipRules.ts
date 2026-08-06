@@ -33,6 +33,9 @@ export type OwnershipAnswers = {
   orgStatus?: "active" | "inactive";
   deed?: "yes" | "no";
   names?: "yes" | "no";
+  /** Married couple signing a single joint power of attorney rather than one each. */
+  jointPoa?: "yes" | "no";
+
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
