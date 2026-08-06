@@ -673,7 +673,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setDocEdit({ r, loading: true, fields: blank });
     try {
       const { data: sub } = await supabase.from("contact_submissions")
-        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier")
+        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier, deed_owner_names, customer_profile_id, ownership_roster")
         .eq("id", submissionId).maybeSingle();
       const s = (sub ?? {}) as Record<string, unknown>;
       const str = (v: unknown) => (v == null ? "" : String(v));
@@ -681,9 +681,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const prior = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void")
         .map((c) => (c.fill_data ?? {}) as Record<string, unknown>)
         .find((f) => !r.personName || String(f.seller_name ?? "").toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()));
+      const nameHints = await collectNameSpellings(s);
       setDocEdit((cur) => cur && cur.r === r ? {
         ...cur,
         loading: false,
+        nameHints,
         fields: {
           seller_name: r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "",
           joint_second: r.jointNames?.[1] ?? "",
@@ -705,6 +707,74 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setDocEdit((cur) => (cur ? { ...cur, loading: false } : cur));
     }
   };
+
+  /**
+   * The legal name has to be spelled exactly as it appears on the deed / ID, so
+   * before a POA is prepared we sweep every place a spelling can hide: the
+   * submission itself, the deed owner names, the ownership roster, whatever the
+   * AI pulled out of the uploaded documents, and how the seller signs their emails.
+   */
+  const collectNameSpellings = async (s: Record<string, unknown>) => {
+    const out: { name: string; source: string }[] = [];
+    const seen = new Set<string>();
+    const push = (raw: unknown, source: string) => {
+      const v = String(raw ?? "").replace(/\s+/g, " ").trim();
+      if (!v || v.length < 3 || v.length > 80) return;
+      if (!/[a-z]/i.test(v)) return;
+      const key = v.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push({ name: v, source });
+    };
+
+    push(s.name, "Submission");
+    for (const n of String(s.deed_owner_names ?? "").split(/[,;\n]|\band\b|&/)) push(n, "Deed owner names");
+    for (const p of (Array.isArray(s.ownership_roster) ? s.ownership_roster : []) as Record<string, unknown>[]) {
+      push(p?.name, "Owner roster");
+    }
+
+    const profileId = s.customer_profile_id as string | undefined;
+    const [{ data: cfiles }, { data: mails }] = await Promise.all([
+      profileId
+        ? supabase.from("customer_files")
+            .select("file_name, document_type, extracted_data").eq("customer_profile_id", profileId).limit(40)
+        : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+      supabase.from("email_messages")
+        .select("from_name, from_email, body_text").eq("matched_submission_id", submissionId)
+        .order("received_at", { ascending: false }).limit(25),
+    ]);
+
+    // Names the extraction step read off the uploaded deeds / IDs / certificates.
+    const walk = (v: unknown, label: string, depth = 0) => {
+      if (depth > 4 || v == null) return;
+      if (Array.isArray(v)) { for (const x of v) walk(x, label, depth + 1); return; }
+      if (typeof v === "object") {
+        for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+          if (/name/i.test(k) && (typeof val === "string" || Array.isArray(val))) walk(val, label, depth + 1);
+          else if (typeof val === "object") walk(val, label, depth + 1);
+        }
+        return;
+      }
+      if (typeof v === "string") push(v, label);
+    };
+    for (const f of (cfiles ?? []) as Record<string, unknown>[]) {
+      walk(f.extracted_data, `Uploaded: ${String(f.document_type || f.file_name || "document")}`);
+    }
+
+    // How the seller writes their own name in email — display name and sign-off.
+    for (const m of (mails ?? []) as Record<string, unknown>[]) {
+      const from = String(m.from_email ?? "").toLowerCase();
+      if (sellerEmail && from && from !== sellerEmail.toLowerCase()) continue;
+      push(m.from_name, "Email display name");
+      const body = String(m.body_text ?? "");
+      const tail = body.trim().split(/\n/).slice(-6).join("\n");
+      const sig = tail.match(/(?:regards|thanks|thank you|sincerely|best)[,!.]?\s*\n+\s*([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,3})/i);
+      if (sig?.[1]) push(sig[1], "Email sign-off");
+    }
+    return out;
+  };
+
+
 
   const generateDoc = async (r: Requirement, overrideFields?: DocFields) => {
     if (!r.contractKind) return;
