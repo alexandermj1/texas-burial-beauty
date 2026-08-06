@@ -158,8 +158,10 @@ Deno.serve(async (req) => {
             regardless of how you sold it, privately or through a broker. The only item unique to selling through us is
             the Limited Power of Attorney, which lets us handle the cemetery paperwork on your behalf.
           </p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemHtml}</table>` : `
-          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemHtml}${poaRowHtml}</table>` : (poaRowHtml ? `
+          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:8px;">What we still need</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${poaRowHtml}</table>` : `
+          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`)}
           ${poaHtml}
           <p style="margin:26px 0 0;font-size:13px;color:#4a5568;">
             Or copy this link into your browser:<br/>
@@ -226,8 +228,8 @@ Deno.serve(async (req) => {
         from_name: 'Texas Cemetery Brokers',
         to_email: to,
         subject,
-        snippet: `Document packet requested — ${items.length} item${items.length === 1 ? '' : 's'}${poaUrl ? ' + Power of Attorney' : ''}.`,
-        body_text: `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poaUrl ? `\n\nPOA: ${poaUrl}` : ''}`,
+        snippet: `Document packet requested — ${items.length} item${items.length === 1 ? '' : 's'}${poas.length ? ` + ${poas.length} Power of Attorney` : ''}.`,
+        body_text: `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPOA${p.name ? ` (${p.name})` : ''}: ${p.url}`).join('')}`,
         received_at: now,
         matched_submission_id: submissionId,
         is_read: true,
