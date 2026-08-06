@@ -163,6 +163,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
   const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
+  /** Switching a document to "post us the original" and setting the address. */
+  const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
+
 
 
   const load = useCallback(async () => {
