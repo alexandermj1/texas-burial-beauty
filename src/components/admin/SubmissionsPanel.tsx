@@ -39,7 +39,15 @@ import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
+// Submissions staff have explicitly un-merged: they always show as their own row
+// even when another submission shares the same email address.
+const UNMERGED_IDS = new Set<string>([
+  "08db6a5d-e419-4bbc-8c6f-91b74fe1f791", // James Lunday — earlier Forest Park East inquiry (2 spaces)
+  "d927a840-e805-4902-8874-6fa26a7fdcc1", // James Lunday — later inquiry (1 space)
+]);
+
 const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+
 const TX_CEMETERY_NAMES = new Set(bayCemeteries.map(c => _canon(c.name)));
 const TX_CITIES = new Set(bayCemeteries.map(c => _canon(c.city)));
 
