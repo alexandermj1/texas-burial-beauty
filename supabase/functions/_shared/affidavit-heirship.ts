@@ -271,3 +271,56 @@ export async function buildSpousalConsentPdf(d: {
 
   return await doc.save();
 }
+
+/**
+ * Joint Limited Power of Attorney — one instrument signed by two principals
+ * (typically a married couple who hold the interment rights together). Texas
+ * law does not require a separate document per principal: each principal's
+ * signature is simply acknowledged separately, so two notary blocks follow.
+ */
+export async function buildJointPoaPdf(d: {
+  county?: string;
+  principals: { name: string; address?: string }[];
+  cemetery?: string;
+  cemetery_city?: string;
+  plot_description?: string;
+  spaces?: string;
+}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const ctx: Ctx = {
+    doc,
+    page: doc.addPage([PAGE_W, PAGE_H]),
+    y: PAGE_H - M,
+    body: await doc.embedFont(StandardFonts.TimesRoman),
+    bold: await doc.embedFont(StandardFonts.TimesRomanBold),
+    italic: await doc.embedFont(StandardFonts.TimesRomanItalic),
+  };
+  const county = (d.county ?? '').trim();
+  const plot = [d.plot_description, d.spaces && `Spaces ${d.spaces}`].filter(Boolean).join(' · ');
+  const names = d.principals.map((p) => p.name).filter(Boolean);
+
+  heading(ctx, 'JOINT LIMITED POWER OF ATTORNEY', 14);
+  para(ctx, 'Interment Rights — Texas Cemetery Brokers', { size: 10, font: ctx.italic, gap: 12 });
+  venue(ctx, county);
+
+  para(ctx, `KNOW ALL PERSONS BY THESE PRESENTS, that the undersigned, ${inline(names[0], 32)} and ${inline(names[1], 32)} (together, "Principals"), each acting individually and jointly, hereby appoint Texas Cemetery Brokers LLC, and its authorised officers, as their true and lawful attorney-in-fact ("Agent") for the limited purposes set out below.`);
+
+  para(ctx, `1.  Property. The Principals own the interment rights at ${inline(d.cemetery, 32)}${d.cemetery_city ? `, ${d.cemetery_city}, Texas` : ''}, described as ${inline(plot, 40)} (the "Property").`);
+
+  para(ctx, '2.  Powers granted. The Agent may, on behalf of either or both Principals: (a) obtain from the cemetery any records, deeds, certificates of ownership and transfer forms relating to the Property; (b) complete, sign and deliver the cemetery\'s transfer, assignment and release documents; (c) pay and receive the cemetery\'s transfer fees on the Principals\' behalf; and (d) do anything else reasonably necessary to complete the sale and transfer of the Property.');
+
+  para(ctx, '3.  Limits. This power is limited to the Property described above. It does not authorise the Agent to sell the Property below the price the Principals have approved in writing, to receive sale proceeds other than through the closing statement provided to the Principals, or to act on any other property, account or interest of the Principals.');
+
+  para(ctx, '4.  Durability and revocation. This power of attorney is not affected by a Principal\'s subsequent disability or incapacity. Either Principal may revoke it as to that Principal by written notice delivered to the Agent and to the cemetery; revocation by one Principal does not invalidate the authority granted by the other.');
+
+  para(ctx, '5.  Reliance. The cemetery, any title company and any purchaser may rely on this instrument, and on a photocopy or electronic copy of it, until they receive actual written notice of revocation.', { gap: 18 });
+
+  para(ctx, 'Each Principal signs below and appears separately before the notary.', { size: 10, font: ctx.italic, gap: 12 });
+
+  notaryBlock(ctx, 'First Principal', names[0] ?? '', county);
+  newPage(ctx);
+  heading(ctx, 'ACKNOWLEDGMENT OF SECOND PRINCIPAL', 12);
+  notaryBlock(ctx, 'Second Principal', names[1] ?? '', county);
+
+  return await doc.save();
+}
