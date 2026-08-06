@@ -942,6 +942,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             ) : (
               <p className="text-[11px] text-muted-foreground italic">Nothing uploaded for this item yet.</p>
             )}
+            {mailFor(r) && (
+              <div className="rounded-md border border-rose-200 bg-rose-50/60 px-2.5 py-2">
+                <p className="text-[11px] font-medium text-rose-900 flex items-center gap-1">
+                  <Mail className="w-3 h-3" />The cemetery requires the original — the seller posts it to us
+                </p>
+                <p className="text-[11px] text-rose-900/80 whitespace-pre-line mt-0.5">{mailFor(r)!.address}</p>
+                <button type="button" onClick={() => openMailDialog(r)} className="text-[11px] underline text-rose-900/70 mt-1">
+                  Change the address
+                </button>
+              </div>
+
+            )}
           </div>
         )}
       </div>
