@@ -111,9 +111,11 @@ Deno.serve(async (req) => {
           why: d.why,
           needs_notary: d.needs_notary,
           issued_by_us: d.issued_by_us,
+          mail_to: mailOriginals[`${d.doc_code ?? ""}::${d.person_name ?? ""}`]?.address ?? null,
           state: d.manual_override ?? d.required_state,
           uploaded: !!d.file_url,
         })),
+
       });
     }
 
