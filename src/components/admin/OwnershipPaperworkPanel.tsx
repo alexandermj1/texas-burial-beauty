@@ -1559,26 +1559,61 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                     onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, joint_second: e.target.value } })} />
                 </div>
               )}
+
+              {/* Spelling matters on a notarised instrument — every version of the
+                  name we hold is offered here, with where it came from. */}
+              {!!docEdit.nameHints?.length && (
+                <div className="md:col-span-2 rounded-md border border-amber-200 bg-amber-50/70 px-2.5 py-2">
+                  <p className="text-[11px] font-medium text-amber-900 mb-1.5">
+                    How the name is spelled elsewhere — tap to use it exactly
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {docEdit.nameHints.map((h) => {
+                      const active = h.name.toLowerCase() === docEdit.fields.seller_name.trim().toLowerCase();
+                      return (
+                        <button
+                          key={h.source + h.name}
+                          type="button"
+                          onClick={() => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, seller_name: h.name } })}
+                          className={`text-[11px] rounded-full border px-2 py-1 transition-colors ${active
+                            ? "border-emerald-400 bg-emerald-100 text-emerald-900"
+                            : "border-amber-300 bg-white text-amber-900 hover:bg-amber-100"}`}
+                          title={h.source}
+                        >
+                          {h.name} <span className="opacity-60">· {h.source}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="md:col-span-2">
                 <Label className="text-xs">Mailing address</Label>
                 <Input value={docEdit.fields.address} placeholder="Street address"
                   onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
               </div>
-              <div>
+              <div className={docEdit.r.contractKind === "poa" ? "md:col-span-2" : ""}>
                 <Label className="text-xs">City, State, ZIP</Label>
                 <Input value={docEdit.fields.city_state_zip}
                   onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
               </div>
-              <div>
-                <Label className="text-xs">Phone</Label>
-                <Input value={docEdit.fields.phone}
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, phone: e.target.value } })} />
-              </div>
-              <div className="md:col-span-2">
-                <Label className="text-xs">Email</Label>
-                <Input type="email" value={docEdit.fields.email}
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, email: e.target.value } })} />
-              </div>
+              {/* Phone and email only ever print on the Listing Agreement. */}
+              {docEdit.r.contractKind !== "poa" && (
+                <>
+                  <div>
+                    <Label className="text-xs">Phone</Label>
+                    <Input value={docEdit.fields.phone}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, phone: e.target.value } })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label className="text-xs">Email</Label>
+                    <Input type="email" value={docEdit.fields.email}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, email: e.target.value } })} />
+                  </div>
+                </>
+              )}
+
               <div>
                 <Label className="text-xs">Cemetery</Label>
                 <Input value={docEdit.fields.cemetery}
