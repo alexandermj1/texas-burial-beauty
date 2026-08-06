@@ -652,22 +652,91 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  const generateDoc = async (r: Requirement) => {
+  /**
+   * "Prepare" now opens an inline editor first (same idea as the Listing Agreement
+   * panel): the admin checks/fills every blank, then generates the PDF.
+   */
+  const openDocEditor = async (r: Requirement) => {
+    if (!r.contractKind) return;
+    const blank = {
+      seller_name: r.jointNames?.[0] ?? r.personName ?? sellerName ?? "",
+      joint_second: r.jointNames?.[1] ?? "",
+      address: "", city_state_zip: "", phone: "", email: sellerEmail ?? "",
+      cemetery: cemName ?? cemetery ?? "", county_state: "",
+      plot_description: "", plot_count: "",
+      listing_option: "Starter", authorized_min_total: "",
+    };
+    setDocEdit({ r, loading: true, fields: blank });
+    try {
+      const { data: sub } = await supabase.from("contact_submissions")
+        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier")
+        .eq("id", submissionId).maybeSingle();
+      const s = (sub ?? {}) as Record<string, unknown>;
+      const str = (v: unknown) => (v == null ? "" : String(v));
+      // A previously prepared copy is the best starting point — keep the admin's earlier edits.
+      const prior = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void")
+        .map((c) => (c.fill_data ?? {}) as Record<string, unknown>)
+        .find((f) => !r.personName || String(f.seller_name ?? "").toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()));
+      setDocEdit((cur) => cur && cur.r === r ? {
+        ...cur,
+        loading: false,
+        fields: {
+          seller_name: r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "",
+          joint_second: r.jointNames?.[1] ?? "",
+          address: str(prior?.address),
+          city_state_zip: str(prior?.city_state_zip),
+          phone: str(prior?.phone) || str(s.phone),
+          email: str(prior?.email) || str(s.email),
+          cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
+          county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
+          plot_description: str(prior?.plot_description) ||
+            [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
+              .filter(Boolean).join(" · "),
+          plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
+          listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
+          authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),
+        },
+      } : cur);
+    } catch {
+      setDocEdit((cur) => (cur ? { ...cur, loading: false } : cur));
+    }
+  };
+
+  const generateDoc = async (r: Requirement, overrideFields?: typeof docEdit extends null ? never : NonNullable<typeof docEdit>["fields"]) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     try {
-      const { data, error } = await supabase.functions.invoke("generate-contract", {
-        body: {
-          submission_id: submissionId,
-          kind: r.contractKind,
-          overrides: {
+      const f = overrideFields;
+      const jointNames = f
+        ? [f.seller_name, f.joint_second].filter((n) => n && n.trim())
+        : r.jointNames;
+      const overrides: Record<string, unknown> = f
+        ? {
+            seller_name: f.seller_name,
+            address: f.address, city_state_zip: f.city_state_zip,
+            phone: f.phone, email: f.email,
+            cemetery: f.cemetery, county_state: f.county_state,
+            county: f.county_state,
+            plot_description: f.plot_description,
+            ...(f.plot_count ? { plot_count: Number(f.plot_count) } : {}),
+            ...(r.contractKind === "listing_agreement"
+              ? {
+                  listing_option: f.listing_option,
+                  ...(f.authorized_min_total ? { authorized_min_total: Number(f.authorized_min_total) } : {}),
+                }
+              : {}),
+            ...(jointNames && jointNames.length > 1 ? { joint_names: jointNames } : {}),
+          }
+        : {
             ...(r.personName ? { seller_name: r.personName } : {}),
             ...(r.jointNames ? { joint_names: r.jointNames } : {}),
-          },
-        },
+          };
+      const { data, error } = await supabase.functions.invoke("generate-contract", {
+        body: { submission_id: submissionId, kind: r.contractKind, overrides },
       });
       if (error) throw error;
       const res = data as { pdf_url?: string | null; sign_token?: string | null };
+      setDocEdit(null);
       // Show the filled PDF inline so it can be checked line by line.
       if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
       toast.success(`${r.label} prepared`, {
@@ -681,6 +750,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setBusy(null);
     }
   };
+
 
   /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
   const contractNameOf = (c: ContractRow) =>
