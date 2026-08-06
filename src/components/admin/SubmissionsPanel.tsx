@@ -39,7 +39,15 @@ import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
+// Submissions staff have explicitly un-merged: they always show as their own row
+// even when another submission shares the same email address.
+const UNMERGED_IDS = new Set<string>([
+  "08db6a5d-e419-4bbc-8c6f-91b74fe1f791", // James Lunday — earlier Forest Park East inquiry (2 spaces)
+  "d927a840-e805-4902-8874-6fa26a7fdcc1", // James Lunday — later inquiry (1 space)
+]);
+
 const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+
 const TX_CEMETERY_NAMES = new Set(bayCemeteries.map(c => _canon(c.name)));
 const TX_CITIES = new Set(bayCemeteries.map(c => _canon(c.city)));
 
@@ -639,11 +647,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const deduped: Submission[] = [];
     for (const s of ordered) {
       const key = (s.email || "").trim().toLowerCase();
-      if (!key) { deduped.push(s); continue; }
+      // Rows explicitly un-merged by staff always stand on their own.
+      if (!key || UNMERGED_IDS.has(s.id)) { deduped.push(s); continue; }
       if (seenEmails.has(key)) continue;
       seenEmails.add(key);
       deduped.push(s);
     }
+
     return deduped;
   }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
 
@@ -653,7 +663,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const m = new Map<string, Array<{ id: string; created_at: string; message?: string | null }>>();
     for (const s of submissions) {
       const key = (s.email || "").trim().toLowerCase();
-      if (!key) continue;
+      if (!key || UNMERGED_IDS.has(s.id)) continue;
+
       const arr = m.get(key) || [];
       arr.push({ id: s.id, created_at: s.created_at, message: (s as any).message });
       m.set(key, arr);
