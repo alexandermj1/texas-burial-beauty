@@ -1215,7 +1215,63 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         </div>
       ))}
 
+      {/* ── Add a one-off document ── */}
+      <Dialog open={addDocOpen} onOpenChange={setAddDocOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Plus className="w-4 h-4" /> Add a document to this request
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              It joins the checklist, the seller's upload page and the next document request email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">What is it called?</Label>
+              <Input className="mt-1" value={newDoc.label} placeholder="e.g. Divorce decree"
+                onChange={(e) => setNewDoc({ ...newDoc, label: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">Why we need it (shown to the seller)</Label>
+              <Input className="mt-1" value={newDoc.why} placeholder="e.g. The cemetery needs proof the plot was awarded to you"
+                onChange={(e) => setNewDoc({ ...newDoc, why: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">For one person only (optional)</Label>
+              <Input className="mt-1" value={newDoc.person} placeholder="Leave blank if it's about the property"
+                onChange={(e) => setNewDoc({ ...newDoc, person: e.target.value })} />
+            </div>
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={newDoc.needsNotary}
+                onChange={(e) => setNewDoc({ ...newDoc, needsNotary: e.target.checked })} />
+              This one has to be notarized
+            </label>
+            {(answers.extraDocs ?? []).length > 0 && (
+              <div className="pt-1 space-y-1">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Already added by hand</p>
+                {(answers.extraDocs ?? []).map((d) => (
+                  <div key={d.id} className="flex items-center justify-between gap-2 text-[12px] border rounded px-2 py-1">
+                    <span>{d.label}{d.person ? <span className="text-muted-foreground"> · {d.person}</span> : null}</span>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => void removeExtraDoc(d.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setAddDocOpen(false)}>Cancel</Button>
+            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void addExtraDoc()}>
+              Add it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Inline PDF check ── */}
+
       <Dialog open={!!pdfPreview} onOpenChange={(o) => !o && setPdfPreview(null)}>
         <DialogContent className="max-w-4xl z-[90]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
