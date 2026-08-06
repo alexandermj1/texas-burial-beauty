@@ -168,8 +168,24 @@ const DocRow = ({
               <p className="text-xs text-muted-foreground leading-relaxed"><span className="font-medium text-foreground/70">How to get it: </span>{guide.how}</p>
             </div>
           )}
+          {doc.mail_to && (
+            <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
+              <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" />The cemetery requires the original of this document
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                A photo or scan will not be accepted for this one. Please post the original document to us — we store
+                all originals safely with your file and return them to you if the sale does not complete.
+              </p>
+              <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{doc.mail_to}</p>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                We'll mark this item complete here as soon as it reaches us.
+              </p>
+            </div>
+          )}
         </div>
-        {!doc.issued_by_us && (
+        {!doc.issued_by_us && !doc.mail_to && (
+
           <div className="flex items-center gap-2 shrink-0">
             <input
               ref={inputRef}
