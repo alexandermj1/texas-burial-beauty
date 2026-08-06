@@ -4,7 +4,7 @@
 // tamper-check reference page.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
-import { buildAffidavitPdf, buildSpousalConsentPdf } from '../_shared/affidavit-heirship.ts';
+import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
 
 const KINDS = ['listing_agreement', 'poa', 'affidavit_heirship', 'spousal_consent'] as const;
 type Kind = typeof KINDS[number];
@@ -152,6 +152,16 @@ Deno.serve(async (req) => {
         county: overrides.county ?? cemLocationCity ?? '',
         spouse_name: overrides.spouse_name ?? spouseOnRoster ?? overrides.seller_name ?? '',
         owner_name: overrides.owner_name ?? sub.deed_owner_names ?? sub.name ?? '',
+        cemetery: overrides.cemetery ?? sub.cemetery ?? '',
+        cemetery_city: cemLocationCity,
+        plot_description: [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
+        spaces: sub.spaces ?? '',
+      });
+    } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.length > 1) {
+      // A married couple signing one instrument instead of one POA each.
+      filled = await buildJointPoaPdf({
+        county: overrides.county ?? cemLocationCity ?? '',
+        principals: (overrides.joint_names as string[]).slice(0, 2).map((n) => ({ name: n })),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
