@@ -264,10 +264,18 @@ Deno.serve(async (req) => {
         });
       } else if (jointNamesOf(merged).length > 1) {
         filled = await buildJointPoaPdf({
-          principals: jointNamesOf(merged).slice(0, 2).map((n) => ({ name: n })),
+          county: merged.county_state as string,
+          county_state: merged.county_state as string,
+          principals: jointNamesOf(merged).slice(0, 2).map((n) => ({
+            name: n,
+            address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),
+          })),
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
+          phone: merged.phone as string,
+          email: merged.email as string,
         });
+
       } else {
         const { data: tmpl } = await svc.storage.from('contracts').download('_templates/poa-template.pdf');
         if (!tmpl) throw new Error('template missing');
