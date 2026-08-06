@@ -742,7 +742,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     await load();
   };
 
-
+  // ── Originals by post ──────────────────────────────────────────────────────
+  // Some cemeteries will only accept the original paper (death certificates in
+  // particular). For those items the seller is asked to post the document to us
+  // rather than photograph it, and we hold the original on file.
+  const mailOriginals = answers.mailOriginals ?? {};
+  const mailFor = (r: Requirement) => mailOriginals[reqKey(r)];
+  const openMailDialog = (r: Requirement) =>
+    setMailDoc({ r, address: mailFor(r)?.address ?? answers.originalsAddress ?? "" });
+  const saveMailOriginal = async () => {
+    if (!mailDoc) return;
+    const address = mailDoc.address.trim();
+    if (!address) return toast.error("Enter the address the original should be posted to");
+    await persistAnswers({
+      ...answers,
+      originalsAddress: address,
+      mailOriginals: { ...mailOriginals, [reqKey(mailDoc.r)]: { address } },
+    } as OwnershipAnswers);
+    setMailDoc(null);
+    toast.success("This document will be requested as an original by post");
+  };
+  const clearMailOriginal = async (r: Requirement) => {
+    const next = { ...mailOriginals };
+    delete next[reqKey(r)];
+    await persistAnswers({ ...answers, mailOriginals: next } as OwnershipAnswers);
+  };
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
