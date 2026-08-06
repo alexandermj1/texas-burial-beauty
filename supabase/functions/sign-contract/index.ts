@@ -180,11 +180,21 @@ Deno.serve(async (req) => {
         else if (typeof v === 'number') (merged as Record<string, unknown>)[k] = v;
       }
 
-      const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
-      const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${tmplFile}`);
-      if (!tmpl) throw new Error('template missing');
-      const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
-      const filled = await buildFilledPdf(tmplBytes, c.kind as 'listing_agreement' | 'poa', merged);
+      const joint = c.kind === 'poa' ? jointNamesOf(merged) : [];
+      let filled: Uint8Array;
+      if (joint.length > 1) {
+        filled = await buildJointPoaPdf({
+          principals: joint.slice(0, 2).map((n) => ({ name: n })),
+          cemetery: merged.cemetery as string,
+          plot_description: merged.plot_description as string,
+        });
+      } else {
+        const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
+        const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${tmplFile}`);
+        if (!tmpl) throw new Error('template missing');
+        const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
+        filled = await buildFilledPdf(tmplBytes, c.kind as 'listing_agreement' | 'poa', merged);
+      }
 
       const newPath = `${c.submission_id}/${c.kind}-${Date.now()}.pdf`;
       const { error: upE } = await svc.storage.from('contracts')
