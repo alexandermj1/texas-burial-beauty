@@ -140,15 +140,16 @@ function notaryBlock(ctx: Ctx, signerLabel: string, signerName: string, county: 
 }
 
 /** Masthead + footer chrome so composed documents match the branded templates. */
-function brandPages(doc: PDFDocument, bold: PDFFont, body: PDFFont) {
+function brandPages(doc: PDFDocument, bold: PDFFont, body: PDFFont, totalPages?: number) {
   const pages = doc.getPages();
+  const total = totalPages ?? pages.length;
   pages.forEach((p, i) => {
     const { width } = p.getSize();
     p.drawText('TEXAS CEMETERY BROKERS', { x: M, y: PAGE_H - 42, size: 8, font: bold, color: RULE });
     p.drawLine({ start: { x: M, y: PAGE_H - 52 }, end: { x: width - M, y: PAGE_H - 52 }, thickness: 0.5, color: RULE });
     p.drawLine({ start: { x: M, y: 52 }, end: { x: width - M, y: 52 }, thickness: 0.4, color: RULE });
     p.drawText('TEXASCEMETERYBROKERS.COM', { x: M, y: 38, size: 7.5, font: bold, color: RULE });
-    const label = `Page ${i + 1} of ${pages.length}`;
+    const label = `Page ${i + 1} of ${total}`;
     p.drawText(label, { x: width - M - body.widthOfTextAtSize(label, 7.5), y: 38, size: 7.5, font: body, color: RULE });
   });
 }
