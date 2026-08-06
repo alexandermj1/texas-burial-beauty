@@ -3,8 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import QRCode from "qrcode";
 import {
   CheckCircle2, Loader2, Upload, Smartphone, FileText, ShieldCheck,
-  ChevronDown, Stamp, X,
+  ChevronDown, Stamp, X, Mail,
 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
