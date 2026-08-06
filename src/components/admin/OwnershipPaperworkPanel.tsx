@@ -545,14 +545,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Generate the POA so it can travel inside the same packet email. */
   const preparePoa = async () => {
-    const person = requirements.find((r) => r.contractKind === "poa")?.personName;
+    const req = requirements.find((r) => r.contractKind === "poa");
     setBusy("poa");
     try {
-      const { error } = await supabase.functions.invoke("generate-contract", {
-        body: { submission_id: submissionId, kind: "poa", overrides: person ? { seller_name: person } : {} },
+      const { data, error } = await supabase.functions.invoke("generate-contract", {
+        body: {
+          submission_id: submissionId, kind: "poa",
+          overrides: {
+            ...(req?.personName ? { seller_name: req.personName } : {}),
+            ...(req?.jointNames ? { joint_names: req.jointNames } : {}),
+          },
+        },
       });
       if (error) throw error;
-      toast.success("Power of Attorney prepared — it will be included in the email");
+      const res = data as { pdf_url?: string | null };
+      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: req?.label ?? "Power of Attorney" });
+      toast.success("Power of Attorney prepared — check it below, then send");
       await load();
       setPoaPrompt(false);
     } catch (e) {
@@ -562,40 +570,61 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /** The items and POA link that make up the request, shared by preview and send. */
+  const buildPacketPayload = async () => {
+    let poaUrl: string | null = null;
+    let poaFor: string | null = null;
+    if (poaContract) {
+      const { data: c } = await supabase.from("contracts")
+        .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
+      if (c?.sign_token) {
+        poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
+        poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
+      }
+    }
+    const items = outstanding.map((r) => {
+      const g = DOC_GUIDE[r.code];
+      return {
+        code: r.code,
+        label: r.label,
+        why: r.why,
+        what: g?.what,
+        how: g?.how,
+        person: r.personName ?? null,
+        needsNotary: !!r.needsNotary,
+        issuedByUs: !!r.issuedByUs,
+      };
+    });
+    return { items, poaUrl, poaFor };
+  };
+
+  /** Step 2 of the review: fetch the exact email without sending anything. */
+  const loadEmailPreview = async () => {
+    setReview({ step: 2, loading: true });
+    try {
+      if (!rows.some((r) => r.doc_code)) await syncChecklist();
+      const { items, poaUrl, poaFor } = await buildPacketPayload();
+      const { data, error } = await supabase.functions.invoke("send-document-packet", {
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor, preview: true },
+      });
+      if (error) throw error;
+      const res = data as { html?: string; subject?: string };
+      setReview({ step: 2, html: res?.html, subject: res?.subject });
+    } catch (e) {
+      toast.error((e as Error).message);
+      setReview({ step: 1 });
+    }
+  };
+
   /** One email: the curated upload page, every outstanding item explained, and
    *  the POA notary route folded in so the seller only ever gets one message. */
-  const sendPacketEmail = async (skipPoa = false) => {
+  const sendPacketEmail = async () => {
     if (!sellerEmail) return toast.error("This submission has no email address");
-    if (poaRequired && !poaContract && !skipPoa) { setPoaPrompt(true); return; }
     setSending(true);
     try {
       // Make sure the seller's page actually lists these items.
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-
-      let poaUrl: string | null = null;
-      let poaFor: string | null = null;
-      if (poaContract) {
-        const { data: c } = await supabase.from("contracts")
-          .select("sign_token, signature_name").eq("id", poaContract.id).maybeSingle();
-        if (c?.sign_token) {
-          poaUrl = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
-          poaFor = (c as { signature_name?: string | null }).signature_name ?? null;
-        }
-      }
-
-      const items = outstanding.map((r) => {
-        const g = DOC_GUIDE[r.code];
-        return {
-          code: r.code,
-          label: r.label,
-          why: r.why,
-          what: g?.what,
-          how: g?.how,
-          person: r.personName ?? null,
-          needsNotary: !!r.needsNotary,
-          issuedByUs: !!r.issuedByUs,
-        };
-      });
+      const { items, poaUrl, poaFor } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
         body: { submission_id: submissionId, items, packet_url: packetUrl, poa_url: poaUrl, poa_for: poaFor },
@@ -605,6 +634,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         description: `${items.length} item${items.length === 1 ? "" : "s"}${poaUrl ? " + Power of Attorney" : ""}`,
       });
       setPoaPrompt(false);
+      setReview(null);
       await load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -621,15 +651,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: {
           submission_id: submissionId,
           kind: r.contractKind,
-          overrides: r.personName ? { seller_name: r.personName } : {},
+          overrides: {
+            ...(r.personName ? { seller_name: r.personName } : {}),
+            ...(r.jointNames ? { joint_names: r.jointNames } : {}),
+          },
         },
       });
       if (error) throw error;
       const res = data as { pdf_url?: string | null; sign_token?: string | null };
-      // Open the filled PDF straight away so it can be checked line by line.
-      if (res?.pdf_url) window.open(res.pdf_url, "_blank", "noopener");
+      // Show the filled PDF inline so it can be checked line by line.
+      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
       toast.success(`${r.label} prepared`, {
-        description: res?.pdf_url ? "Opened in a new tab so you can check it." : "Open the contract to review it.",
+        description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
       });
       await setRowState(r, "issued");
       await load();
@@ -640,7 +673,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  /** Re-open the already-prepared contract PDF for a requirement. */
+  /** Re-open the already-prepared contract PDF for a requirement, inline. */
   const openContractPdf = async (r: Requirement) => {
     const c = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
     if (!c) return;
@@ -651,10 +684,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const path = data?.notarized_pdf_path || data?.signed_pdf_path || data?.filled_pdf_path;
       if (path) {
         const { data: signed } = await supabase.storage.from("contracts").createSignedUrl(path, 3600);
-        if (signed?.signedUrl) { window.open(signed.signedUrl, "_blank", "noopener"); return; }
+        if (signed?.signedUrl) { setPdfPreview({ url: signed.signedUrl, title: r.label }); return; }
       }
       if (data?.sign_token) {
-        window.open(`${PUBLIC_SITE_URL}/sign/${data.sign_token}`, "_blank", "noopener");
+        setPdfPreview({ url: `${PUBLIC_SITE_URL}/sign/${data.sign_token}`, title: r.label });
         return;
       }
       toast.error("No prepared PDF found yet — press Prepare first.");
@@ -662,6 +695,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setBusy(null);
     }
   };
+
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
