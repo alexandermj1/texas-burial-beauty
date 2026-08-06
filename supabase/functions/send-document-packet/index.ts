@@ -11,8 +11,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const RESEND_KEY = Deno.env.get('RESEND_API_KEY')!;
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!;
 
 const esc = (s: string) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -199,45 +197,57 @@ Deno.serve(async (req) => {
       });
     }
 
-    const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+    // Send through the info@ Gmail mailbox (same path as the quote email) so the
+    // message lands in Gmail's Sent folder and can be verified there.
+    const plain = `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPower of Attorney${p.name ? ` (${p.name})` : ''}: ${p.url}`).join('')}`;
+    const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'X-Connection-Api-Key': RESEND_KEY,
+        Authorization: req.headers.get('Authorization') ?? '',
+        apikey: Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       },
       body: JSON.stringify({
-        from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
-        to: [to],
-        bcc: ['contracts@texascemeterybrokers.com'],
+        action: 'send',
+        to,
         subject,
-        html,
+        body: plain,
+        htmlBody: html,
       }),
     });
-    if (!res.ok) throw new Error(`Resend error: ${res.status} ${await res.text()}`);
+    const gmailText = await gmailRes.text();
+    let gmailJson: Record<string, unknown> = {};
+    try { gmailJson = JSON.parse(gmailText); } catch { /* non-JSON */ }
+    if (!gmailRes.ok || gmailJson.error) {
+      throw new Error(`Gmail send failed: ${gmailJson.error ? JSON.stringify(gmailJson.error) : `${gmailRes.status} ${gmailText}`}`);
+    }
 
     const now = new Date().toISOString();
     await svc.from('contact_submissions')
       .update({ documents_requested_at: now }).eq('id', submissionId);
 
-    // Log it into the CRM thread so the admin can see the packet went out.
-    // (This email is sent through Resend, not Gmail, so it never appears in the
-    // synced Gmail mailbox — this row is the record of it.)
-    const { error: logErr } = await svc.from('email_messages').insert({
-      gmail_message_id: `packet-${submissionId}-${Date.now()}`,
-      gmail_thread_id: `packet-${submissionId}`,
-      from_email: 'contracts@texascemeterybrokers.com',
+    // gmail-action already logged a bare row for the sent message; enrich it so
+    // the packet shows up on this submission's thread with the full HTML body.
+    const sentId = typeof gmailJson.id === 'string' ? gmailJson.id : null;
+    const logRow = {
+      gmail_message_id: sentId || `packet-${submissionId}-${Date.now()}`,
+      gmail_thread_id: (typeof gmailJson.threadId === 'string' ? gmailJson.threadId : null) || `packet-${submissionId}`,
+      from_email: (typeof gmailJson.from === 'string' ? gmailJson.from : 'info@texascemeterybrokers.com'),
       from_name: 'Texas Cemetery Brokers',
       to_email: to,
       subject,
       snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${poas.length ? ` + ${poas.length} Power of Attorney` : ''}.`,
-      body_text: `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPOA${p.name ? ` (${p.name})` : ''}: ${p.url}`).join('')}`,
+      body_text: plain,
       body_html: html,
       received_at: now,
       matched_submission_id: submissionId,
       is_read: true,
-    } as Record<string, unknown>);
+    };
+    const { error: logErr } = await svc
+      .from('email_messages')
+      .upsert(logRow as Record<string, unknown>, { onConflict: 'gmail_message_id' });
     if (logErr) console.error('could not log packet email', logErr);
+
 
 
     return new Response(JSON.stringify({ ok: true, to, items: items.length }), {
