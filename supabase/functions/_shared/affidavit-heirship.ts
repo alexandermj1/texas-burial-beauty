@@ -331,7 +331,8 @@ export async function buildJointPoaPdf(d: {
     italic: await doc.embedFont(StandardFonts.TimesRomanItalic),
   };
   const county = (d.county ?? d.county_state ?? '').replace(/,\s*TX$/i, '').trim();
-  const plot = [d.plot_description, d.spaces && `Spaces ${d.spaces}`].filter(Boolean).join(' · ');
+  const hasSpaces = /space/i.test(d.plot_description ?? '');
+  const plot = [d.plot_description, !hasSpaces && d.spaces && `Spaces ${d.spaces}`].filter(Boolean).join(' · ');
   const names = d.principals.map((p) => p.name).filter(Boolean);
   const addr = d.principals.map((p) => p.address ?? '').filter(Boolean);
 
@@ -373,7 +374,7 @@ export async function buildJointPoaPdf(d: {
   // Brand the instrument pages first — the data-reference sheet below carries
   // its own masthead/footer (identical to the single-signer POA), so it must
   // not be double-stamped.
-  brandPages(doc, ctx.bold, ctx.body);
+  brandPages(doc, ctx.bold, ctx.body, doc.getPages().length + 1);
 
   // Same audit / data-reference sheet the single-signer POA carries, so both
   // documents review and file identically.
