@@ -24,9 +24,12 @@ type PacketDoc = {
   why: string | null;
   needs_notary: boolean | null;
   issued_by_us: boolean | null;
+  /** When set, the cemetery only accepts the original — post it to this address. */
+  mail_to?: string | null;
   state: string;
   uploaded: boolean;
 };
+
 
 type Poa = { sign_token: string; notarized: boolean; signed: boolean } | null;
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
