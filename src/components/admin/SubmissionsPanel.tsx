@@ -2342,11 +2342,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           const renderRow = (s: Submission, i: number) => {
             const isActive = selected?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
-            const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
-            // A stale "Quote sent" override should never hide an accepted quote.
-            const displayStage = bayer === "quote_issued" && (s as any).quote_response === "accepted" ? "quote_accepted" : bayer;
-            // Hide the "Inquiry" badge — it's the default stage for every new seller, so it's noise.
-            const stageMeta = displayStage && displayStage !== "initial_inquiry" ? BAYER_STAGE_META[displayStage] : null;
+
             const rowViewers = viewersFor(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
             const fresh = isNew(s);
@@ -2545,14 +2541,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <span className="text-[10px] text-muted-foreground">{formatDate(s.created_at).split(",")[0]}</span>
                       </div>
                     </div>
-                    {stageMeta && (
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
-                          <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
-                          {stageMeta.short}
-                        </span>
-                      </div>
-                    )}
+                    {/* Legacy Bayer stage chips (orange "Quote sent", "Morgued") removed —
+                        status is now shown by the dollar-sign / docs / paid tags above. */}
+
                     <p className="text-xs text-muted-foreground truncate">
                       <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
                       {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
