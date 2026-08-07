@@ -80,7 +80,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
             <div className="flex items-center justify-center gap-3 mb-5 flex-wrap">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-[10px] tracking-[0.3em] uppercase font-bold px-3 py-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                Limited time · until July 31
+                Limited time · until August 31
               </span>
               <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
                 Listing fees, reduced
