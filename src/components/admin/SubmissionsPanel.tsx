@@ -2545,14 +2545,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <span className="text-[10px] text-muted-foreground">{formatDate(s.created_at).split(",")[0]}</span>
                       </div>
                     </div>
-                    {stageMeta && (
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${stageMeta.cls}`}>
-                          <span className={`w-1 h-1 rounded-full ${stageMeta.dot}`} />
-                          {stageMeta.short}
-                        </span>
-                      </div>
-                    )}
+                    {/* Legacy Bayer stage chips (orange "Quote sent", "Morgued") removed —
+                        status is now shown by the dollar-sign / docs / paid tags above. */}
+
                     <p className="text-xs text-muted-foreground truncate">
                       <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
                       {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
