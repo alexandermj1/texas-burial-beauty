@@ -2342,11 +2342,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           const renderRow = (s: Submission, i: number) => {
             const isActive = selected?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
-            const bayer = sKind === "seller" ? deriveBayerStage(s as any) : null;
-            // A stale "Quote sent" override should never hide an accepted quote.
-            const displayStage = bayer === "quote_issued" && (s as any).quote_response === "accepted" ? "quote_accepted" : bayer;
-            // Hide the "Inquiry" badge — it's the default stage for every new seller, so it's noise.
-            const stageMeta = displayStage && displayStage !== "initial_inquiry" ? BAYER_STAGE_META[displayStage] : null;
+
             const rowViewers = viewersFor(s.id);
             const otherViewers = rowViewers.filter(v => v.user_id !== myId);
             const fresh = isNew(s);
