@@ -63,6 +63,29 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [composeNew, setComposeNew] = useState(false);
+  // When the listing agreement for this submission is signed, the LA email tag
+  // flips to a green "Listing agreement signed" chip.
+  const [laSignedAt, setLaSignedAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("contracts" as any)
+        .select("signed_at")
+        .eq("submission_id", submissionId)
+        .eq("kind", "listing_agreement")
+        .not("signed_at", "is", null)
+        .order("signed_at", { ascending: false })
+        .limit(1);
+      if (!cancelled) setLaSignedAt(((data as any[]) || [])[0]?.signed_at ?? null);
+    };
+    load();
+    const ch = supabase.channel(`contracts_la:${submissionId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, [submissionId]);
 
   const refresh = async () => {
     const addr = (customerEmail || "").trim().toLowerCase();
