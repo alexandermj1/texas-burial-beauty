@@ -732,6 +732,7 @@ export default function ActivityMonitorPanel() {
             { label: "Events", value: filtered.length, Icon: Activity, color: "text-emerald-300" },
             { label: "Notes", value: stats.get("note") || 0, Icon: StickyNote, color: "text-amber-300" },
             { label: "AI replies", value: (stats.get("ai_sent") || 0) + (stats.get("ai_draft") || 0), Icon: Sparkles, color: "text-fuchsia-300" },
+            { label: "Emails", value: (stats.get("email_sent") || 0) + (stats.get("email_received") || 0), Icon: Mail, color: "text-cyan-300" },
             { label: "Uploads", value: stats.get("file_upload") || 0, Icon: Upload, color: "text-sky-300" },
             { label: "Views", value: stats.get("view") || 0, Icon: Eye, color: "text-slate-300" },
             { label: "Payments", value: stats.get("payment") || 0, Icon: DollarSign, color: "text-lime-300" },
