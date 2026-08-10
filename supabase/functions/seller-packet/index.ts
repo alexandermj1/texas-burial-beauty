@@ -132,9 +132,21 @@ Deno.serve(async (req) => {
         .eq("submission_id", submissionId)
         .maybeSingle();
 
+      // Keep every file the seller sends for this item (front/back of an ID,
+      // multi-page deeds) rather than overwriting the previous one.
+      const { data: existingDoc } = await supabase
+        .from("submission_documents")
+        .select("file_urls")
+        .eq("id", docId)
+        .maybeSingle();
+      const priorPaths: string[] = Array.isArray((existingDoc as Record<string, unknown> | null)?.file_urls)
+        ? ((existingDoc as { file_urls: string[] }).file_urls)
+        : [];
+      const allPaths = priorPaths.includes(path) ? priorPaths : [...priorPaths, path];
+
       const { error } = await supabase
         .from("submission_documents")
-        .update({ file_url: path, status: "received", required_state: "received" })
+        .update({ file_url: path, file_urls: allPaths, status: "received", required_state: "received" })
         .eq("id", docId)
         .eq("submission_id", submissionId);
       if (error) throw error;

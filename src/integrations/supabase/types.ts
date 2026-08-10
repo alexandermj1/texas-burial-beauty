@@ -2042,6 +2042,7 @@ export type Database = {
           doc_code: string | null
           document_type: string
           file_url: string | null
+          file_urls: string[]
           id: string
           issued_by_us: boolean
           label: string
@@ -2065,6 +2066,7 @@ export type Database = {
           doc_code?: string | null
           document_type: string
           file_url?: string | null
+          file_urls?: string[]
           id?: string
           issued_by_us?: boolean
           label: string
@@ -2088,6 +2090,7 @@ export type Database = {
           doc_code?: string | null
           document_type?: string
           file_url?: string | null
+          file_urls?: string[]
           id?: string
           issued_by_us?: boolean
           label?: string

@@ -68,6 +68,7 @@ type DocRow = {
   manual_override: string | null;
   notes: string | null;
   file_url: string | null;
+  file_urls?: string[] | null;
 };
 
 const STATE_STYLE: Record<RequiredState, string> = {
@@ -159,6 +160,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [inferring, setInferring] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
   const [files, setFiles] = useState<AnyFile[]>([]);
+  /** Signed preview URLs for image uploads, keyed by storage path. */
+  const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [sending, setSending] = useState(false);
   const [poaPrompt, setPoaPrompt] = useState(false);
@@ -191,7 +194,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       supabase.from("contact_submissions")
         .select("ownership_answers, name, email, customer_profile_id, seller_attachments").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
-        .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
+        .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
         .eq("submission_id", submissionId),
       supabase.from("contracts")
         .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token")
@@ -229,11 +232,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       }
     }
     for (const d of docs ?? []) {
-      if (d.file_url && !collected.some((c) => c.path === d.file_url)) {
-        collected.push({ name: d.file_url.split("/").pop() ?? d.file_url, path: d.file_url, bucket: "portal-uploads", origin: "Document packet", docId: d.id });
+      // Sellers often send more than one image per item (front and back of an
+      // ID, several deed pages) — show every one of them, not just the last.
+      const docPaths = [
+        ...(Array.isArray((d as DocRow).file_urls) ? ((d as DocRow).file_urls as string[]) : []),
+        ...(d.file_url ? [d.file_url] : []),
+      ];
+      for (const pth of docPaths) {
+        if (!pth || collected.some((c) => c.path === pth)) continue;
+        collected.push({
+          name: pth.split("/").pop() ?? pth,
+          path: pth,
+          bucket: "portal-uploads",
+          origin: (d as DocRow).label ?? "Document packet",
+          docId: d.id,
+        });
       }
     }
     setFiles(collected);
+
+    // Signed preview URLs so image uploads can be seen as thumbnails inline.
+    const imgs = collected.filter((f) => /\.(jpe?g|png|gif|webp|heic)$/i.test(f.path));
+    const previews: Record<string, string> = {};
+    await Promise.all(imgs.map(async (f) => {
+      const { data } = await supabase.storage.from(f.bucket).createSignedUrl(f.path, 60 * 30);
+      if (data?.signedUrl) previews[f.path] = data.signedUrl;
+    }));
+    setThumbs(previews);
 
     if (cemetery) {
       const { data: cem } = await supabase.from("texas_cemeteries")
@@ -441,7 +466,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** The live checklist rows, keyed the same way the DB's unique item index is. */
   const fetchLiveRows = async (): Promise<DocRow[]> => {
     const { data } = await supabase.from("submission_documents")
-      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url")
+      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
       .eq("submission_id", submissionId);
     return (data ?? []) as DocRow[];
   };
@@ -558,7 +583,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       needs_notary: !!r.needsNotary,
       why: r.why,
       statute_ref: r.statute ?? null,
-    } as never).select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url").maybeSingle();
+    } as never).select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls").maybeSingle();
     if (error) { toast.error(error.message); return; }
     if (data) setRows((prev) => [...prev, data as DocRow]);
   };
@@ -1150,15 +1175,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </>
             )}
             {attached.length > 0 ? (
-              <div className="space-y-1">
+              <div className="flex flex-wrap gap-2">
                 {attached.map((f) => (
                   <button
                     key={f.path}
                     onClick={() => void openFile(f)}
-                    className="flex items-center gap-1.5 text-[11px] text-teal-700 hover:underline"
+                    className="group w-[104px] text-left rounded-lg border border-border/60 bg-background overflow-hidden hover:border-teal-400 hover:shadow-sm transition"
+                    title={f.name}
                   >
-                    <Paperclip className="w-3 h-3" />{f.name}
-                    <span className="text-muted-foreground">· {f.origin}</span>
+                    <div className="h-[72px] bg-muted/50 flex items-center justify-center overflow-hidden">
+                      {thumbs[f.path] ? (
+                        <img src={thumbs[f.path]} alt={f.name} loading="lazy" className="w-full h-full object-cover" />
+                      ) : (
+                        <Paperclip className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="px-1.5 py-1">
+                      <span className="block text-[9px] font-semibold uppercase tracking-wide text-teal-700 truncate">{f.origin}</span>
+                      <span className="block text-[10px] text-muted-foreground truncate">{f.name}</span>
+                    </div>
                   </button>
                 ))}
               </div>

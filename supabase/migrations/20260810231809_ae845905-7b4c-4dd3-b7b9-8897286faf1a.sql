@@ -1,0 +1,2 @@
+ALTER TABLE public.submission_documents ADD COLUMN IF NOT EXISTS file_urls text[] NOT NULL DEFAULT '{}';
+UPDATE public.submission_documents SET file_urls = ARRAY[file_url] WHERE file_url IS NOT NULL AND cardinality(file_urls) = 0;
