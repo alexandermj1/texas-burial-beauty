@@ -38,6 +38,7 @@ type EventKind =
   | "ai_draft"
   | "ai_sent"
   | "email_sent"
+  | "email_received"
   | "quote_sent"
   | "handled"
   | "payment"
@@ -121,6 +122,13 @@ const KIND_META: Record<
     color: "text-cyan-300",
     ring: "ring-cyan-400/30",
     dot: "bg-cyan-400",
+  },
+  email_received: {
+    label: "Email received",
+    Icon: Mail,
+    color: "text-emerald-200",
+    ring: "ring-emerald-400/20",
+    dot: "bg-emerald-300",
   },
   quote_sent: {
     label: "Quote sent",
@@ -224,7 +232,7 @@ export default function ActivityMonitorPanel() {
     const range = RANGE_OPTIONS.find((r) => r.key === rangeKey) || RANGE_OPTIONS[1];
     const since = new Date(Date.now() - range.hours * 3600 * 1000).toISOString();
 
-    const [logs, notes, aiEdits, views, subs, payments, contracts] = await Promise.all([
+    const [logs, notes, aiEdits, views, subs, payments, contracts, emails] = await Promise.all([
       supabase
         .from("customer_activity_log" as any)
         .select("*")
@@ -269,6 +277,12 @@ export default function ActivityMonitorPanel() {
         .or(`sent_at.gte.${since},signed_at.gte.${since},countersigned_at.gte.${since}`)
         .order("updated_at", { ascending: false })
         .limit(300),
+      supabase
+        .from("email_messages" as any)
+        .select("id, subject, from_email, from_name, to_email, snippet, body_text, received_at, matched_submission_id, gmail_message_id")
+        .gte("received_at", since)
+        .order("received_at", { ascending: false })
+        .limit(500),
     ]) as any;
 
     // Build submission id -> display name map so every event row shows WHO it
@@ -292,6 +306,7 @@ export default function ActivityMonitorPanel() {
     collectIds(views.data as any[], "submission_id");
     collectIds(payments.data as any[], "submission_id");
     collectIds(contracts?.data as any[], "submission_id");
+    collectIds(emails?.data as any[], "matched_submission_id");
     if (missingIds.size > 0) {
       const { data: extra } = await supabase
         .from("contact_submissions" as any)
@@ -306,7 +321,18 @@ export default function ActivityMonitorPanel() {
 
     const feed: FeedEvent[] = [];
 
+    // Outbound sends are logged with the staff member who pressed Send; use
+    // that to attribute the matching email_messages row in the feed.
+    const emailActorByMsgId = new Map<string, string>();
     for (const row of (logs.data as any[]) || []) {
+      if (row.action_type === "email_sent") {
+        const mid = row.details?.gmail_message_id;
+        if (mid) emailActorByMsgId.set(mid, cleanDisplayName(row.actor_name) || "Admin");
+      }
+    }
+
+    for (const row of (logs.data as any[]) || []) {
+      if (row.action_type === "email_sent") continue;
       const isDelete = row.action_type === "file_deleted";
       const isStage = row.action_type === "stage_changed";
       const kind: EventKind = isDelete
@@ -324,6 +350,28 @@ export default function ActivityMonitorPanel() {
         summary: row.action_summary || KIND_META[kind].label,
         detail: row.details ? JSON.stringify(row.details, null, 2) : undefined,
         submissionId: row.submission_id,
+      });
+    }
+
+    const OUR_MAILBOXES = [
+      "info@texascemeterybrokers.com",
+      "texascemeterybrokers@gmail.com",
+      "contracts@texascemeterybrokers.com",
+    ];
+    for (const m of (emails?.data as any[]) || []) {
+      const from = String(m.from_email || "").toLowerCase();
+      const outgoing = OUR_MAILBOXES.some((o) => from.includes(o));
+      const who = outgoing
+        ? emailActorByMsgId.get(m.gmail_message_id) || "Team"
+        : (m.from_name && cleanDisplayName(m.from_name)) || m.from_email || "Customer";
+      feed.push({
+        id: `email-${m.id}`,
+        kind: outgoing ? "email_sent" : "email_received",
+        actorName: who,
+        timestamp: m.received_at,
+        summary: `${outgoing ? `To ${m.to_email || "customer"}` : `From ${m.from_email}`} — ${m.subject || "(no subject)"}`,
+        detail: (m.body_text || m.snippet || "").slice(0, 4000),
+        submissionId: m.matched_submission_id,
       });
     }
 
@@ -684,6 +732,7 @@ export default function ActivityMonitorPanel() {
             { label: "Events", value: filtered.length, Icon: Activity, color: "text-emerald-300" },
             { label: "Notes", value: stats.get("note") || 0, Icon: StickyNote, color: "text-amber-300" },
             { label: "AI replies", value: (stats.get("ai_sent") || 0) + (stats.get("ai_draft") || 0), Icon: Sparkles, color: "text-fuchsia-300" },
+            { label: "Emails", value: (stats.get("email_sent") || 0) + (stats.get("email_received") || 0), Icon: Mail, color: "text-cyan-300" },
             { label: "Uploads", value: stats.get("file_upload") || 0, Icon: Upload, color: "text-sky-300" },
             { label: "Views", value: stats.get("view") || 0, Icon: Eye, color: "text-slate-300" },
             { label: "Payments", value: stats.get("payment") || 0, Icon: DollarSign, color: "text-lime-300" },

@@ -417,6 +417,8 @@ const InlineEmailComposer = ({
         htmlBody: brandedHtml,
         threadId: threadId || undefined,
         inReplyToGmailId: inReplyToGmailId || undefined,
+        submissionId: submissionId ?? sellerContext?.id ?? buyerContext?.id ?? undefined,
+        actorName: adminName || undefined,
       },
     });
     setSending(false);

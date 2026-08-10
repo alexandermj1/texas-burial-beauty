@@ -26,6 +26,8 @@ const SendSchema = z.object({
   htmlBody: z.string().max(400000).optional(),
   threadId: z.string().max(200).optional(),
   inReplyToGmailId: z.string().max(200).optional(),
+  submissionId: z.string().uuid().optional(),
+  actorName: z.string().max(120).optional(),
 });
 
 const ModifySchema = z.object({
@@ -279,8 +281,30 @@ Deno.serve(async (req) => {
           body_text: input.body,
           received_at: new Date().toISOString(),
           is_read: true,
+          matched_submission_id: input.submissionId || null,
         });
       } catch { /* ignore — sync will reconcile */ }
+
+      // Track every outbound email in the activity monitor with the staff
+      // member who sent it (previously only AI-drafted replies were logged).
+      try {
+        await admin.from("customer_activity_log").insert({
+          submission_id: input.submissionId || null,
+          actor_user_id: user.id,
+          actor_name: input.actorName || user.email || "Admin",
+          action_type: "email_sent",
+          action_summary: `Sent email to ${input.to} — ${input.subject || "(no subject)"}`,
+          details: {
+            to: input.to,
+            cc: input.cc || null,
+            subject: input.subject || null,
+            gmail_message_id: sent.id || null,
+            gmail_thread_id: sent.threadId || threadId || null,
+            from: sentFrom,
+            preview: input.body.slice(0, 600),
+          },
+        });
+      } catch (e) { console.error("activity log (email_sent) failed", e); }
 
       return json({ ok: true, id: sent.id, threadId: sent.threadId, from: sentFrom, fallbackUsed: sentFrom !== TARGET_MAILBOX });
     }
