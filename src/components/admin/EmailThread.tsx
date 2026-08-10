@@ -218,7 +218,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                   <div className="flex items-center gap-2 shrink-0">
                     {kind && (
                       <span
-                        className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full border ${EMAIL_KIND_META[kind].className}`}
+                        className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full border ${kindClass}`}
                         title={`${kindLabel} · ${new Date(e.received_at).toLocaleDateString()}`}
                       >
                         {kindLabel}
