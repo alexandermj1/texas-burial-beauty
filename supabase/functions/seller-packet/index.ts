@@ -125,6 +125,13 @@ Deno.serve(async (req) => {
       const name = String(body?.name ?? "upload");
       if (!UUID.test(docId) || !path) return json({ error: "missing file" }, 400);
 
+      const { data: docRow } = await supabase
+        .from("submission_documents")
+        .select("label, doc_code, person_name")
+        .eq("id", docId)
+        .eq("submission_id", submissionId)
+        .maybeSingle();
+
       const { error } = await supabase
         .from("submission_documents")
         .update({ file_url: path, status: "received", required_state: "received" })
@@ -132,7 +139,34 @@ Deno.serve(async (req) => {
         .eq("submission_id", submissionId);
       if (error) throw error;
 
+      // Mirror the upload into the customer's file library so it shows up in the
+      // "Files & documents" tab on the submission, not just the checklist row.
       if (sub.customer_profile_id) {
+        try {
+          const rel = path.startsWith("portal-uploads/") ? path.slice("portal-uploads/".length) : path;
+          const { data: blob } = await supabase.storage.from("portal-uploads").download(rel);
+          if (blob) {
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            const safeName = name.replace(/[^\w.\-]+/g, "_");
+            const destPath = `${sub.customer_profile_id}/${Date.now()}-${safeName}`;
+            const { error: upErr } = await supabase.storage
+              .from("customer-files")
+              .upload(destPath, bytes, { contentType: blob.type || body?.type || "application/octet-stream", upsert: true });
+            if (!upErr) {
+              await supabase.from("customer_files").insert({
+                customer_profile_id: sub.customer_profile_id,
+                file_name: name,
+                file_path: destPath,
+                file_size: bytes.byteLength,
+                mime_type: blob.type || body?.type || null,
+                document_type: docRow?.label ?? null,
+                notes: `Uploaded by the seller via the document packet${docRow?.person_name ? ` (${docRow.person_name})` : ""}`,
+                uploaded_by_name: sub.name ?? "Seller",
+              });
+            }
+          }
+        } catch (_e) { /* mirroring is best-effort; the checklist row still has the file */ }
+
         await supabase.from("customer_activity_log").insert({
           customer_profile_id: sub.customer_profile_id,
           submission_id: submissionId,
@@ -141,6 +175,7 @@ Deno.serve(async (req) => {
           action_summary: `Seller uploaded ${name} via the document packet`,
         });
       }
+
 
       // Is anything still outstanding? If not, the listing's paperwork is complete.
       const { data: remaining } = await supabase
