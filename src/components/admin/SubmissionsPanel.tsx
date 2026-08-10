@@ -256,6 +256,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [trashOpen, setTrashOpen] = useState(false);
   // Map of submission_id -> latest PAID listing transaction (tier + amount + when + description).
   const [paidMap, setPaidMap] = useState<Record<string, { tier: string; amountCents: number; paidAt: string; description: string }>>({});
+  // Map of submission_id -> listing agreement signing state (for the "LA signed" tag).
+  const [laMap, setLaMap] = useState<Record<string, { signedAt: string | null; countersignedAt: string | null; sentAt: string | null }>>({});
+
+  // Listing agreement contracts: show a green "LA signed" tag once the seller signs.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("contracts" as any)
+        .select("submission_id, kind, status, sent_at, signed_at, countersigned_at")
+        .eq("kind", "listing_agreement")
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+      const map: Record<string, { signedAt: string | null; countersignedAt: string | null; sentAt: string | null }> = {};
+      for (const row of data as any[]) {
+        if (!row?.submission_id) continue;
+        const prev = map[row.submission_id];
+        if (prev && (prev.signedAt || !row.signed_at)) continue;
+        map[row.submission_id] = {
+          signedAt: row.signed_at || null,
+          countersignedAt: row.countersigned_at || null,
+          sentAt: row.sent_at || null,
+        };
+      }
+      setLaMap(map);
+    };
+    load();
+    const ch = supabase
+      .channel("contracts_la_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, []);
 
 
 
