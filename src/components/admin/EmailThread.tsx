@@ -185,9 +185,17 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             // Nth quote in the thread → later ones are revisions, showing the new figure.
             const quoteIndex = kind === "quote" ? emails.filter((m) => kindOf(m) === "quote").findIndex((m) => m.id === e.id) : -1;
             const quoteAmount = kind === "quote" ? extractQuoteAmount(`${e.body_html || ""} ${e.body_text || ""}`) : null;
+            const laSigned = kind === "listing_agreement" && !!laSignedAt;
             const kindLabel = kind === "quote"
               ? (quoteIndex > 0 ? `Quote revised${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}` : `Quote sent${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}`)
+              : laSigned ? "Listing agreement signed"
               : kind ? EMAIL_KIND_META[kind].label : "";
+            const kindClass = laSigned
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+              : kind ? EMAIL_KIND_META[kind].className : "";
+            const ringClass = laSigned
+              ? "bg-emerald-500/5 border-emerald-500/40 ring-1 ring-emerald-500/20"
+              : kind ? EMAIL_KIND_RING[kind] : "";
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
