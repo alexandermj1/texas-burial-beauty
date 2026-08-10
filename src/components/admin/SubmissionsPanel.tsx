@@ -256,6 +256,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [trashOpen, setTrashOpen] = useState(false);
   // Map of submission_id -> latest PAID listing transaction (tier + amount + when + description).
   const [paidMap, setPaidMap] = useState<Record<string, { tier: string; amountCents: number; paidAt: string; description: string }>>({});
+  // Map of submission_id -> listing agreement signing state (for the "LA signed" tag).
+  const [laMap, setLaMap] = useState<Record<string, { signedAt: string | null; countersignedAt: string | null; sentAt: string | null }>>({});
+
+  // Listing agreement contracts: show a green "LA signed" tag once the seller signs.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("contracts" as any)
+        .select("submission_id, kind, status, sent_at, signed_at, countersigned_at")
+        .eq("kind", "listing_agreement")
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+      const map: Record<string, { signedAt: string | null; countersignedAt: string | null; sentAt: string | null }> = {};
+      for (const row of data as any[]) {
+        if (!row?.submission_id) continue;
+        const prev = map[row.submission_id];
+        if (prev && (prev.signedAt || !row.signed_at)) continue;
+        map[row.submission_id] = {
+          signedAt: row.signed_at || null,
+          countersignedAt: row.countersigned_at || null,
+          sentAt: row.sent_at || null,
+        };
+      }
+      setLaMap(map);
+    };
+    load();
+    const ch = supabase
+      .channel("contracts_la_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, []);
 
 
 
@@ -2477,6 +2510,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Docs sent {formatDate((s as any).documents_requested_at)}
                           </span>
                         ) : null}
+
+                        {laMap[s.id] && (laMap[s.id].signedAt || laMap[s.id].sentAt) && (() => {
+                          const la = laMap[s.id];
+                          if (la.signedAt) {
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm"
+                                title={`Listing agreement signed ${formatDate(la.signedAt)}${la.countersignedAt ? ` · countersigned ${formatDate(la.countersignedAt)}` : ""}`}
+                              >
+                                <FileSignature className="w-2.5 h-2.5" strokeWidth={3} />
+                                LA signed {formatDate(la.signedAt)}
+                              </span>
+                            );
+                          }
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-sm"
+                              title={`Listing agreement sent ${formatDate(la.sentAt!)}`}
+                            >
+                              <FileSignature className="w-2.5 h-2.5" strokeWidth={2.5} />
+                              LA sent {formatDate(la.sentAt!)}
+                            </span>
+                          );
+                        })()}
 
 
                         {paidMap[s.id] && (() => {

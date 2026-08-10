@@ -63,6 +63,29 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [composeNew, setComposeNew] = useState(false);
+  // When the listing agreement for this submission is signed, the LA email tag
+  // flips to a green "Listing agreement signed" chip.
+  const [laSignedAt, setLaSignedAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("contracts" as any)
+        .select("signed_at")
+        .eq("submission_id", submissionId)
+        .eq("kind", "listing_agreement")
+        .not("signed_at", "is", null)
+        .order("signed_at", { ascending: false })
+        .limit(1);
+      if (!cancelled) setLaSignedAt(((data as any[]) || [])[0]?.signed_at ?? null);
+    };
+    load();
+    const ch = supabase.channel(`contracts_la:${submissionId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, [submissionId]);
 
   const refresh = async () => {
     const addr = (customerEmail || "").trim().toLowerCase();
@@ -162,9 +185,17 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             // Nth quote in the thread → later ones are revisions, showing the new figure.
             const quoteIndex = kind === "quote" ? emails.filter((m) => kindOf(m) === "quote").findIndex((m) => m.id === e.id) : -1;
             const quoteAmount = kind === "quote" ? extractQuoteAmount(`${e.body_html || ""} ${e.body_text || ""}`) : null;
+            const laSigned = kind === "listing_agreement" && !!laSignedAt;
             const kindLabel = kind === "quote"
               ? (quoteIndex > 0 ? `Quote revised${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}` : `Quote sent${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}`)
+              : laSigned ? "Listing agreement signed"
               : kind ? EMAIL_KIND_META[kind].label : "";
+            const kindClass = laSigned
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+              : kind ? EMAIL_KIND_META[kind].className : "";
+            const ringClass = laSigned
+              ? "bg-emerald-500/5 border-emerald-500/40 ring-1 ring-emerald-500/20"
+              : kind ? EMAIL_KIND_RING[kind] : "";
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
@@ -172,7 +203,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
               <li
                 key={e.id}
                 className={`rounded-lg border px-3 py-2 text-xs ${
-                  kind ? EMAIL_KIND_RING[kind] : outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
+                  kind ? ringClass : outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -187,7 +218,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                   <div className="flex items-center gap-2 shrink-0">
                     {kind && (
                       <span
-                        className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full border ${EMAIL_KIND_META[kind].className}`}
+                        className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full border ${kindClass}`}
                         title={`${kindLabel} · ${new Date(e.received_at).toLocaleDateString()}`}
                       >
                         {kindLabel}
