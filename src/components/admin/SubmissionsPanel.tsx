@@ -1161,31 +1161,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     return (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         {!isAccepted && (
-                          <button
-                            onClick={async () => {
-                              const existing = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
-                              let amt = existing;
-                              if (!amt) {
-                                const entered = window.prompt("Accepted quote amount (USD) — total price the seller accepted:");
-                                const n = Number((entered || "").replace(/[^0-9.]/g, ""));
-                                if (!n) return;
-                                amt = n;
-                              }
-                              const patch: any = {
-                                quote_response: "accepted",
-                                quote_responded_at: new Date().toISOString(),
-                                accepted_quote_amount: amt,
-                              };
-                              if (!(selected as any).quote_amount) patch.quote_amount = amt;
-                              if (!(selected as any).quote_sent_at) patch.quote_sent_at = new Date().toISOString();
-                              await onUpdate(selected.id, patch);
-                              toast({ title: "Marked accepted", description: `Sales price tag is now green.` });
-                            }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-600 text-white hover:opacity-90 transition-opacity"
-                          >
-                            <CheckCircle className="w-3 h-3" /> Mark quote accepted
-                          </button>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border text-muted-foreground">
+                            Acceptance is recorded automatically — seller pays for a tier or selects Starter from their email
+                          </span>
                         )}
+
                         {isAccepted && (
                           <button
                             onClick={async () => {
