@@ -203,7 +203,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
               <li
                 key={e.id}
                 className={`rounded-lg border px-3 py-2 text-xs ${
-                  kind ? EMAIL_KIND_RING[kind] : outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
+                  kind ? ringClass : outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
