@@ -340,7 +340,7 @@ type TextSlot = {
   eyebrow: string;
   title: string;
   hint: string;
-  field: "nameMismatch" | "blockedNotes" | "occupiedBy";
+  field: "nameMismatch" | "blockedNotes" | "occupiedBy" | "poaDetails";
   placeholder: string;
 };
 
