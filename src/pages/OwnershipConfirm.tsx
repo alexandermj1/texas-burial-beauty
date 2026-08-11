@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2, Loader2, Pencil, Sparkles, Users, Plus, Trash2,
-  ShieldCheck, ArrowRight, Send, HeartCrack,
+  ShieldCheck, ArrowRight, Send, HeartCrack, Cloud,
 } from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import {
