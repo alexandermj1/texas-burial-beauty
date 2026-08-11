@@ -628,7 +628,7 @@ const OwnershipConfirm = () => {
                       qKey={key}
                       index={i + 1}
                       answers={answers}
-                      context={key === "rel" ? deedNamesLabel : undefined}
+                      context={key === "rel" || key === "owner" ? deedNamesLabel : undefined}
                       believed={believedKeys.has(key)}
                       confirmed={confirmedKeys.includes(key)}
                       onAnswer={setAnswer}
