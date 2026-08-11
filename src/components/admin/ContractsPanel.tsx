@@ -260,7 +260,40 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
 
 
 
+  /** Manually mark a contract as signed when the seller returned a paper/scanned
+   *  copy instead of using the e-sign page. Optionally attach the scan. */
+  const markSignedManually = async (c: Contract, file?: File | null) => {
+    setBusy(c.id);
+    try {
+      const now = new Date().toISOString();
+      let signedPath = c.signed_pdf_path;
+      if (file) {
+        const path = `${submissionId}/${c.kind}-signed-manual-${Date.now()}.pdf`;
+        const { error: upErr } = await supabase.storage.from("contracts")
+          .upload(path, file, { contentType: file.type || "application/pdf", upsert: true });
+        if (upErr) throw upErr;
+        signedPath = path;
+      }
+      const { error } = await supabase.from("contracts").update({
+        signed_at: now,
+        status: "signed",
+        ...(signedPath ? { signed_pdf_path: signedPath } : {}),
+      }).eq("id", c.id);
+      if (error) throw error;
+      if (c.kind === "listing_agreement") {
+        await supabase.from("contact_submissions").update({ la_signed_at: now }).eq("id", submissionId);
+      }
+      toast.success(`${KIND_LABEL[c.kind]} marked as signed`);
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const uploadNotarized = async (c: Contract, file: File) => {
+
     setBusy(c.id);
     try {
       const path = `${submissionId}/poa-notarized-${Date.now()}.pdf`;
