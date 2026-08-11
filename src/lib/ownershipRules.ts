@@ -231,6 +231,24 @@ export const QUESTIONS: Record<string, Question> = {
       { value: "unsure", label: "I don't know" },
     ],
   },
+  deceasedAny: {
+    key: "deceasedAny", eyebrow: "Stage 1 · The deed", question: "Are any of the individuals named on the deed deceased?",
+    hint: "If so we'll ask you which of them, on the next step.",
+    answers: [
+      { value: "no", label: "No — everyone named on the deed is living" },
+      { value: "yes", label: "Yes — one or more of them has died" },
+    ],
+  },
+  poaHolder: {
+    key: "poaHolder", eyebrow: "Stage 1 · Power of attorney", question: "Does anyone hold a power of attorney for a living individual named on the deed?",
+    hint: "This is an existing power of attorney — not the one we prepare for the sale.",
+    answers: [
+      { value: "no", label: "No — each living owner signs for themselves" },
+      { value: "yes", label: "Yes — someone holds a power of attorney" },
+    ],
+  },
+
+
 
   will: {
     key: "will", eyebrow: "Stage 2 · A will", question: "Did any deceased person named on the deed leave a will that specifically identified the cemetery plot or spaces?",
