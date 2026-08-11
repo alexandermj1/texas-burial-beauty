@@ -412,6 +412,12 @@ const SLOTS: Record<string, PeopleSlot | TextSlot> = {
     hint: "There is almost always a lawful way forward — knowing the situation lets a broker choose it.",
     placeholder: "e.g. My brother David Carter hasn't spoken to the family in years and we have no address for him.",
   },
+  _poaDetails: {
+    kind: "text", eyebrow: "Stage 1 · Power of attorney", field: "poaDetails",
+    title: "Please provide the details of that power of attorney",
+    hint: "Who holds it, which owner it covers, when it was signed, and whether it is a general or a medical power of attorney.",
+    placeholder: "e.g. My sister Karen Wells holds a durable power of attorney for our mother Ruth Wells, signed in 2019.",
+  },
   _occupiedBy: {
     kind: "text", eyebrow: "The spaces", field: "occupiedBy",
     title: "Who is buried in the space, and which space is it?",
@@ -1094,7 +1100,7 @@ const OwnershipConfirm = () => {
       people: [...(a.people ?? []).filter((p) => p.role !== role), ...next],
     }));
   };
-  const setText = (field: "nameMismatch" | "blockedNotes" | "occupiedBy", v: string) => {
+  const setText = (field: "nameMismatch" | "blockedNotes" | "occupiedBy" | "poaDetails", v: string) => {
     dirty.current = true;
     setAnswers((a) => ({ ...a, [field]: v } as OwnershipAnswers));
   };
