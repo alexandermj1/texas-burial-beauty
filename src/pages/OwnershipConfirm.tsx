@@ -1286,7 +1286,7 @@ const OwnershipConfirm = () => {
                   className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  {saving ? "Sending…" : "Send this to my broker"}
+                  {saving ? "Sending…" : "Confirm my details"}
                 </button>
                 <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
                   <ArrowRight className="w-3 h-3" /> You can leave anything you're unsure of blank.
