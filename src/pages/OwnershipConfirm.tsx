@@ -207,11 +207,10 @@ const NamesCard = ({
         <div className="flex-1 min-w-0">
           <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The deed</div>
           <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
-            Whose name is printed on the deed?
+            Who is named on the most current deed?
           </p>
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-            Exactly as it appears on the cemetery's certificate of ownership. A deed often carries more than one
-            name — please list everyone on it.
+            List every person exactly as printed, whether they are living or deceased, then mark anyone who has passed away.
           </p>
 
           {!showEditor && (
@@ -269,7 +268,7 @@ const NamesCard = ({
                       p.deceased ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/40"
                     }`}
                   >
-                    Has passed away
+                    {p.deceased ? "Deceased" : "Mark as deceased"}
                   </button>
                   {people.length > 1 && (
                     <button
@@ -346,8 +345,8 @@ const SLOTS: Record<string, PeopleSlot | TextSlot> = {
   },
   _agent: {
     kind: "people", eyebrow: "Signing on their behalf", role: "agent",
-    title: "Who will be signing for the owner?",
-    hint: "The person named in the power of attorney or guardianship papers.",
+    title: "Please provide the POA or guardian details",
+    hint: "Name the living deed holder, the person acting for them, and explain the authority in the relationship field.",
     addLabel: "Add another agent",
   },
   _coowners: {
@@ -383,9 +382,9 @@ const SLOTS: Record<string, PeopleSlot | TextSlot> = {
   },
   _heirs: {
     kind: "people", eyebrow: "Who inherits", role: "heir",
-    title: "Who are the people who inherit the plot?",
-    hint: "Everyone with a claim has to sign or waive, so please name them all — including anyone who has since died.",
-    addLabel: "Add another heir",
+    title: "Who are the descendants of each deceased deed holder?",
+    hint: "List all surviving biological or legally adopted children, including from earlier marriages. Do not include step-children. If a child has died, list that child's surviving children.",
+    addLabel: "Add another descendant",
   },
   _trustee: {
     kind: "people", eyebrow: "The trust", role: "trustee",
@@ -622,7 +621,7 @@ const IdentityCard = ({
   onPatch: (id: string, patch: Partial<RosterPerson>) => void;
   onDone: () => void;
 }) => {
-  const ready = signers.every((p) => (p.address ?? "").trim().length > 5);
+  const ready = signers.every((p) => (p.legalName ?? "").trim().length > 2 && (p.address ?? "").trim().length > 5);
   return (
     <CardShell
       index={index}
@@ -630,10 +629,10 @@ const IdentityCard = ({
       eyebrow="For the paperwork"
       title={
         signers.length === 1 && isSelf
-          ? "Last thing — your name and address exactly as they appear on your ID"
-          : "Last thing — each signer's name and address exactly as on their ID"
+          ? "Your full legal name and address"
+          : "The legal names and addresses we need for the paperwork"
       }
-      hint="Every power of attorney is notarised, so the name and address on it must match the driver's licence or passport the notary sees. We type these straight onto your documents so you never have to."
+      hint="Please give the full legal name and current home address for every living owner, spouse, descendant, or representative listed here. For anyone signing a power of attorney, these details must match their government ID."
     >
       <div className="mt-4 space-y-3">
         {signers.map((p) => (
@@ -698,6 +697,10 @@ const phraseFor = (
             },
           }
         : { title: `Will ${who} be signing the paperwork personally?` };
+    case "occupied":
+      return { title: "Have any of the spaces identified on the deed ever been used?" };
+    case "outsideSpouse":
+      return { title: "Does anyone named on the deed — living or deceased — have a current legal spouse who is not named on the deed?" };
     case "co":
       return { title: isSelf ? "Is everyone else on the deed willing to sign the sale?" : "Is everyone on the deed willing to sign the sale?" };
     case "marital":
@@ -908,7 +911,8 @@ const OwnershipConfirm = () => {
         n.split(" ").slice(-1)[0] === seller.split(" ").slice(-1)[0]);
     });
 
-    const nextDerived = [...new Set([...(answers.derived ?? []), "owners", ...(sellerOnDeed ? ["rel"] : [])])];
+    const nextDerived = [...new Set([...(answers.derived ?? []), "owners"])]
+      .filter((key) => key !== "rel");
     const relOk = !sellerOnDeed || answers.rel === "self";
     if (answers.owners === owners && relOk &&
         nextDerived.length === (answers.derived ?? []).length) return;
@@ -918,6 +922,7 @@ const OwnershipConfirm = () => {
       owners,
       ...(sellerOnDeed ? { rel: "self" as const } : {}),
       derived: nextDerived,
+      ...(sellerOnDeed && !a.rel ? { aiSuggested: [...new Set([...(a.aiSuggested ?? []), "rel"])] } : {}),
     }));
   }, [deedPeople, answers.owners, answers.rel, answers.derived, packet?.seller_name]);
 
@@ -929,7 +934,6 @@ const OwnershipConfirm = () => {
   const followUps = useCallback((k: string, a: OwnershipAnswers): string[] => {
     const derived = a.derived ?? [];
     switch (k) {
-      case "owner": return a.owner === "deceased" ? ["_decedent"] : [];
       case "signer": return a.signer === "agent" ? ["_agent"] : [];
       // Co-owners we read off the deed are already named — don't ask twice.
       case "owners": return a.owners === "multiple" && !derived.includes("owners") ? ["_coowners"] : [];
@@ -942,22 +946,25 @@ const OwnershipConfirm = () => {
           : a.marital === "divorced" ? ["_exspouse"]
           : a.marital === "widowed" ? ["_latespouse"] : [];
       }
+      case "occupied": return a.occupied === "yes" ? ["_occupiedBy"] : [];
+      case "outsideSpouse": return a.outsideSpouse === "yes" ? ["_spouse"] : [];
       case "spouse": return a.spouse === "yes" ? ["_spouse"] : [];
       case "probate": return a.probate === "letters" ? ["_executor"] : [];
       case "beneficiaries": return ["_heirs"];
       case "heirclass": return a.heirclass && a.heirclass !== "unsure" ? ["_heirs"] : [];
+      case "descendants": return a.descendants === "yes" ? ["_heirs"] : [];
       case "trustee": return ["_trustee"];
       case "chain": return a.chain === "multi" ? ["_chaindeaths"] : [];
       default: return [];
     }
   }, []);
 
-  /** Everyone still living whose signature — and therefore ID — we will need. */
+  /** Every living person whose legal name/address is needed for documents. */
   const signers = useMemo(
     () => (answers.people ?? []).filter(
       (p) => p.name.trim() && !p.deceased &&
         (p.role === "owner" || p.role === "co_owner" || p.role === "spouse" ||
-         p.role === "agent" || p.role === "executor" || p.role === "trustee"),
+         p.role === "agent" || p.role === "executor" || p.role === "trustee" || p.role === "heir"),
     ),
     [answers.people],
   );
@@ -970,7 +977,7 @@ const OwnershipConfirm = () => {
       for (const f of followUps(k, answers)) if (!out.includes(f)) out.push(f);
     }
     // Two or more living people have to sign, so ask how they'd like to do it.
-    if (signers.length >= 2) out.push("jointPoa");
+    if (signers.length === 2 && answers.outsideSpouse === "yes") out.push("jointPoa");
     // Last of all, the ID details that go on the notarised documents.
     if (signers.length) out.push(IDS_KEY);
     return out;
@@ -1292,7 +1299,7 @@ const OwnershipConfirm = () => {
             )}
 
 
-            {allSettled && people.some((p) => p.name.trim()) && (
+            {allSettled && people.some((p) => p.name.trim()) && deedPeople.some((p) => p.deceased || p.role === "decedent") && (
               <div className="mt-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <FamilyTree people={people} onRemove={removePerson} />
               </div>

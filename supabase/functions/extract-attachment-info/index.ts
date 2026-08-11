@@ -35,7 +35,7 @@ document contains information that doesn't fit the suggested keys.
   "document_type": string,            // e.g. "Deed", "Power of Attorney", "Death certificate", "Driver license", "Statement", "Contract", "Letter", "Other"
   "summary": string,                   // 1-3 sentence plain-English summary of what this document is, who it concerns, and the key facts
   "purchaser_address": string,         // ALWAYS include if present anywhere on the document
-  "owners": string[],
+  "owners": string[],                    // ONLY exact current owner/purchaser/grantee names printed in the ownership grant section
   "previous_owners": string[],
   "purchaser": string,
   "seller": string,
@@ -63,10 +63,12 @@ document contains information that doesn't fit the suggested keys.
   "addresses": string[],               // every other address that appears
   "phone_numbers": string[],
   "emails": string[],
-  "parties": string[],                 // anyone else named (witnesses, agents, funeral home, etc.)
+  "parties": string[],                 // anyone else named (witnesses, agents, cemetery staff, funeral home, etc.); never mix these into owners
   "notes": string,                     // anything else important you noticed
   "additional_fields": object          // any other useful facts in the document that don't fit above
-}`;
+}
+
+For cemetery deeds/certificates, inspect the ownership or purchaser/grantee section closely. Preserve every owner's full printed name, middle initial, and suffix. Do not put cemetery representatives, sales counselors, witnesses, notaries, beneficiaries, interred people, or prior owners in "owners". If the image is unclear, omit the uncertain name instead of guessing.`;
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
