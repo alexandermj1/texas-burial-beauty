@@ -1993,7 +1993,38 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Ask the seller to confirm the ownership answers ── */}
+      <Dialog open={!!ask} onOpenChange={(o) => !o && setAsk(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Send className="w-4 h-4" /> Ask the seller these questions
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              They get their own page: {ask?.known?.length ?? 0} answer{(ask?.known?.length ?? 0) === 1 ? "" : "s"} to
+              confirm, {ask?.missing?.length ?? 0} still to answer, plus the family tree.
+            </DialogDescription>
+          </DialogHeader>
+          {ask?.loading
+            ? <div className="h-[55vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+            : <iframe srcDoc={ask?.html ?? ""} title="Questionnaire email preview" className="w-full h-[55vh] rounded-md border bg-white" />}
+          <DialogFooter>
+            <Button variant="outline" size="sm"
+              onClick={() => { void navigator.clipboard.writeText(`${PUBLIC_SITE_URL}/confirm?s=${submissionId}`); toast.success("Link copied"); }}>
+              <Link2 className="w-3.5 h-3.5 mr-1" /> Copy link
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setAsk(null)}>Cancel</Button>
+            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+              onClick={() => void sendAsk()} disabled={ask?.sending || ask?.loading}>
+              {ask?.sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+              Send to {sellerEmail}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
