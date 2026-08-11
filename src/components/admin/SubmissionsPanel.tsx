@@ -2344,8 +2344,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const isActive = selected?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
 
-            const rowViewers = viewersFor(s.id);
-            const otherViewers = rowViewers.filter(v => v.user_id !== myId);
+            // Historical viewers are no longer surfaced — only live presence below.
             const fresh = isNew(s);
             const workers = workersFor(s.id);
             const beingWorked = workers.length > 0;
@@ -2553,9 +2552,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         status is now shown by the dollar-sign / docs / paid tags above. */}
 
                     <p className="text-xs text-muted-foreground truncate">
-                      <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
-                      {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
-                      {s.cemetery ? ` · ${s.cemetery}` : ""}
+                      {sourceLabel(s.source, s.inquiry_channel) && (
+                        <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
+                      )}
+                      {s.property_type ? `${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
+                      {s.cemetery ? `${s.property_type ? " · " : ""}${s.cemetery}` : ""}
                       {s.cemetery && countFor(s.cemetery) > 0 ? (
                         <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
                       ) : null}
@@ -2683,8 +2684,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                 <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                               </div>
                               <p className="text-xs text-muted-foreground truncate">
-                                <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
-                                {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
+                                {sourceLabel(s.source, s.inquiry_channel) && (
+                                  <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
+                                )}
+                                {s.property_type ? `${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
                               </p>
                               {!isExpanded && (
                                 <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
@@ -2879,9 +2882,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{d.name || "Anonymous"}</p>
                       <p className="text-[11px] text-muted-foreground truncate">
-                        {sourceLabel(d.source, (d as any).inquiry_channel)}
-                        {d.cemetery ? ` · ${d.cemetery}` : ""}
-                        {d.email ? ` · ${d.email}` : ""}
+                        {d.cemetery || ""}
+                        {d.email ? `${d.cemetery ? " · " : ""}${d.email}` : ""}
                       </p>
                       <p className="text-[10px] text-muted-foreground/80 mt-0.5">
                         Deleted {d.deleted_at ? new Date(d.deleted_at).toLocaleString() : "—"}
