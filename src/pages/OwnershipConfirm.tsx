@@ -317,7 +317,36 @@ const OwnershipConfirm = () => {
     } else {
       const p = data as Packet;
       setPacket(p);
-      setAnswers(p.answers ?? {});
+
+      /**
+       * Lead with what we already hold. Names from the file become the deed
+       * roster, and anything the seller told us about their relationship is
+       * mapped onto our own choices — both flagged "believed" so they are
+       * asked to confirm rather than to type it all again.
+       */
+      const a: OwnershipAnswers = { ...(p.answers ?? {}) };
+      const believed = new Set(a.aiSuggested ?? []);
+      const existingDeed = (a.people ?? []).filter((x) => x.role === "owner" || x.role === "co_owner" || x.role === "decedent");
+      if (existingDeed.length === 0) {
+        const seeded = splitNames(p.deed_owner_names).map((name, i) => ({
+          id: crypto.randomUUID(),
+          name,
+          role: (i === 0 ? "owner" : "co_owner") as PersonRole,
+        }));
+        if (seeded.length) {
+          a.people = [...seeded, ...(a.people ?? [])];
+          believed.add(NAMES_KEY);
+        }
+      } else if (!a.sellerConfirmedAt) {
+        believed.add(NAMES_KEY);
+      }
+      if (!a.rel) {
+        const guess = guessRel(p.relationship_to_owner);
+        if (guess) { a.rel = guess as OwnershipAnswers["rel"]; believed.add("rel"); }
+      }
+      a.aiSuggested = [...believed];
+
+      setAnswers(a);
       setNotes(String((p.answers as Record<string, unknown>)?.sellerNotes ?? ""));
       if ((p.answers as Record<string, unknown>)?.sellerConfirmedAt) setSent(true);
     }
@@ -331,26 +360,34 @@ const OwnershipConfirm = () => {
 
   /** Answers we filled in ourselves and have not had confirmed yet. */
   const believedKeys = useMemo(() => new Set(answers.aiSuggested ?? []), [answers.aiSuggested]);
-  const path = useMemo(() => questionPath(answers), [answers]);
-  const answered = path.filter((k) => !!(answers as Record<string, unknown>)[k]).length;
-  const pct = path.length ? Math.round((answered / path.length) * 100) : 0;
+  /** The deed-holder card always leads, then the branching questionnaire. */
+  const path = useMemo(() => [NAMES_KEY, ...questionPath(answers)], [answers]);
 
   /**
    * A question is settled once it has an answer the seller owns — either they
    * picked it, or they confirmed the one we had guessed. We only ever show one
    * unsettled question at a time so the page never looks like a form.
    */
+  const deedPeople = useMemo(
+    () => (answers.people ?? []).filter((p) => p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
+    [answers.people],
+  );
   const isSettled = useCallback(
     (k: string) => {
-      const v = (answers as Record<string, unknown>)[k];
+      const v = k === NAMES_KEY
+        ? deedPeople.some((p) => p.name.trim())
+        : !!(answers as Record<string, unknown>)[k];
       return !!v && (confirmedKeys.includes(k) || !believedKeys.has(k));
     },
-    [answers, confirmedKeys, believedKeys],
+    [answers, confirmedKeys, believedKeys, deedPeople],
   );
+  const answered = path.filter((k) => isSettled(k)).length;
+  const pct = path.length ? Math.round((answered / path.length) * 100) : 0;
   const nextIndex = path.findIndex((k) => !isSettled(k));
   const allSettled = nextIndex === -1;
   const visible = allSettled ? path : path.slice(0, nextIndex + 1);
   const remaining = path.length - (allSettled ? path.length : nextIndex);
+
 
   /** Scroll the newly revealed question into view, but never on first paint. */
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
