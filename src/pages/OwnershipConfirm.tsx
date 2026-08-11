@@ -106,10 +106,19 @@ const QuestionCard = ({
         <div className="flex-1 min-w-0">
           <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">{q.eyebrow}</div>
           <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
-            {context && qKey === "rel" ? `What is your relationship to ${context}?` : q.question}
+            {context && qKey === "rel"
+              ? `What is your relationship to ${context}?`
+              : context && qKey === "owner"
+                ? `Which of these describes ${context}?`
+                : q.question}
           </p>
 
-          {q.hint && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{q.hint}</p>}
+          {q.hint && (
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+              {context && qKey === "owner" ? "This decides whose signature the cemetery will accept." : q.hint}
+            </p>
+          )}
+
 
           {!showChoices && value && (
             <div className="mt-4">
