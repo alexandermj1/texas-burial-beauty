@@ -69,15 +69,18 @@ Deno.serve(async (req) => {
 
     if (action === "save") {
       const incoming = (body?.answers ?? {}) as Answers;
+      const isFinished = body?.finished === true;
       // The seller's page owns the questionnaire keys and the roster; anything
       // else already on the record (AI reading, mail-original addresses) stays.
+      // Autosaved drafts must not mark the questionnaire as confirmed.
       const merged: Answers = {
         ...answers,
         ...incoming,
-        aiSuggested: [],
-        sellerConfirmedAt: new Date().toISOString(),
+        aiSuggested: isFinished ? [] : (answers.aiSuggested ?? []),
+        ...(isFinished ? { sellerConfirmedAt: new Date().toISOString() } : {}),
       };
       const people = Array.isArray(incoming.people) ? incoming.people : (answers.people ?? []);
+
 
       const { error } = await svc.from("contact_submissions")
         .update({ ownership_answers: merged as never, ownership_roster: people as never })
