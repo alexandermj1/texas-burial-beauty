@@ -34,7 +34,6 @@ type Packet = {
 };
 
 /** The roles a seller can sensibly pick for a family member. */
-const PUBLIC_ROLES: PersonRole[] = ["owner", "co_owner", "spouse", "heir", "executor", "trustee", "agent", "decedent"];
 
 /** The synthetic first card: the names printed on the deed. */
 const NAMES_KEY = "_deedNames";
