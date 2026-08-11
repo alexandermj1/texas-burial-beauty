@@ -47,6 +47,7 @@ const SelectStarter = lazy(() => import("./pages/SelectStarter"));
 const SellerPortal = lazy(() => import("./pages/SellerPortal"));
 const SellerPortalMobileUpload = lazy(() => import("./pages/SellerPortalMobileUpload"));
 const SellerDocuments = lazy(() => import("./pages/SellerDocuments"));
+const OwnershipConfirm = lazy(() => import("./pages/OwnershipConfirm"));
 
 
 
@@ -101,6 +102,7 @@ const App = () => (
                 <Route path="/seller-portal" element={<SellerPortal />} />
                 <Route path="/seller-portal/upload/mobile" element={<SellerPortalMobileUpload />} />
                 <Route path="/documents" element={<SellerDocuments />} />
+                <Route path="/confirm" element={<OwnershipConfirm />} />
 
 
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />

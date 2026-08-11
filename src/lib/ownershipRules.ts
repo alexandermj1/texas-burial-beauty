@@ -42,6 +42,12 @@ export type OwnershipAnswers = {
   extraDocs?: { id: string; label: string; why?: string; person?: string; needsNotary?: boolean }[];
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
   aiSuggested?: string[];
+  /** When we emailed the seller their own copy of this questionnaire. */
+  questionsSentAt?: string;
+  /** When the seller submitted their confirmation. */
+  sellerConfirmedAt?: string;
+  /** Anything the seller wanted us to know, in their own words. */
+  sellerNotes?: string;
   /**
    * Documents this cemetery will only accept as originals: the seller posts the
    * paper to us instead of photographing it. Keyed by "CODE::personName".

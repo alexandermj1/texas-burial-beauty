@@ -170,6 +170,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string } | null>(null);
   /** The send-document-request review flow. */
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
+  /** The "ask the seller these questions" email review flow. */
+  const [ask, setAsk] = useState<null | {
+    loading?: boolean; sending?: boolean; html?: string; subject?: string;
+    known?: { label: string; value: string }[]; missing?: string[];
+  }>(null);
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
   const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
@@ -462,6 +467,54 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setInferring(false);
     }
   };
+
+  /**
+   * Send the seller their own copy of this questionnaire: what we believe,
+   * ready to confirm, plus whatever the AI could not work out.
+   */
+  const loadAskPreview = async () => {
+    setAsk({ loading: true });
+    try {
+      const known = questionPath(answers)
+        .filter((k) => !!(answers as Record<string, unknown>)[k])
+        .map((k) => ({
+          label: QUESTIONS[k]?.question ?? k,
+          value: QUESTIONS[k]?.answers.find((a) => a.value === (answers as Record<string, string>)[k])?.label ?? "",
+        }));
+      const missing = questionPath(answers)
+        .filter((k) => !(answers as Record<string, unknown>)[k])
+        .map((k) => QUESTIONS[k]?.question ?? k);
+      const { data, error } = await supabase.functions.invoke("ownership-questions", {
+        body: { action: "preview", submission_id: submissionId, known, missing },
+      });
+      if (error) throw error;
+      const r = data as { html?: string; subject?: string; error?: string };
+      if (r?.error) throw new Error(r.error);
+      setAsk({ html: r.html, subject: r.subject, known, missing });
+    } catch (e) {
+      setAsk(null);
+      toast.error((e as Error).message);
+    }
+  };
+
+  const sendAsk = async () => {
+    if (!ask) return;
+    setAsk({ ...ask, sending: true });
+    try {
+      const { data, error } = await supabase.functions.invoke("ownership-questions", {
+        body: { action: "send", submission_id: submissionId, known: ask.known, missing: ask.missing },
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error?: string }).error);
+      toast.success("Sent — the seller can now confirm or correct every answer");
+      setAsk(null);
+    } catch (e) {
+      setAsk({ ...ask, sending: false });
+      toast.error((e as Error).message);
+    }
+  };
+
+
 
   /** The live checklist rows, keyed the same way the DB's unique item index is. */
   const fetchLiveRows = async (): Promise<DocRow[]> => {
@@ -1272,8 +1325,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                     : <Sparkles className="w-3.5 h-3.5 mr-1" />}
                   Read the file
                 </Button>
+                <Button
+                  size="sm" variant="outline" className="h-7 text-[11px]"
+                  onClick={() => void loadAskPreview()}
+                  title="Email the seller their own page to confirm what we believe and answer the rest"
+                >
+                  <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
+                </Button>
               </div>
             </div>
+
+            {answers.sellerConfirmedAt && (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50/70 px-2.5 py-2">
+                <p className="text-[11px] text-emerald-900 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Seller confirmed these answers on {new Date(answers.sellerConfirmedAt).toLocaleString()}
+                </p>
+                {answers.sellerNotes && (
+                  <p className="text-[11px] text-emerald-900/80 mt-1 whitespace-pre-line">“{answers.sellerNotes}”</p>
+                )}
+              </div>
+            )}
+            {!answers.sellerConfirmedAt && answers.questionsSentAt && (
+              <p className="text-[11px] text-muted-foreground">
+                Questionnaire sent to the seller {new Date(answers.questionsSentAt).toLocaleString()} — waiting on their reply.
+              </p>
+            )}
+
 
             {reading && (
               <div className="rounded-md border border-violet-200 bg-violet-50/60 px-2.5 py-2 space-y-1">
@@ -1915,7 +1993,38 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Ask the seller to confirm the ownership answers ── */}
+      <Dialog open={!!ask} onOpenChange={(o) => !o && setAsk(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Send className="w-4 h-4" /> Ask the seller these questions
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              They get their own page: {ask?.known?.length ?? 0} answer{(ask?.known?.length ?? 0) === 1 ? "" : "s"} to
+              confirm, {ask?.missing?.length ?? 0} still to answer, plus the family tree.
+            </DialogDescription>
+          </DialogHeader>
+          {ask?.loading
+            ? <div className="h-[55vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+            : <iframe srcDoc={ask?.html ?? ""} title="Questionnaire email preview" className="w-full h-[55vh] rounded-md border bg-white" />}
+          <DialogFooter>
+            <Button variant="outline" size="sm"
+              onClick={() => { void navigator.clipboard.writeText(`${PUBLIC_SITE_URL}/confirm?s=${submissionId}`); toast.success("Link copied"); }}>
+              <Link2 className="w-3.5 h-3.5 mr-1" /> Copy link
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setAsk(null)}>Cancel</Button>
+            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+              onClick={() => void sendAsk()} disabled={ask?.sending || ask?.loading}>
+              {ask?.sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+              Send to {sellerEmail}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
