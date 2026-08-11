@@ -98,8 +98,13 @@ export type RosterPerson = {
   phone?: string;
   /** True for a person in the chain of title who has died. */
   deceased?: boolean;
+  /** Government name exactly as printed on their photo ID. */
+  legalName?: string;
+  /** Home address as printed on their ID — we prefill the POA with it. */
+  address?: string;
   notes?: string;
 };
+
 
 export const ROLE_LABEL: Record<PersonRole, string> = {
   owner: "Owner on the deed",
