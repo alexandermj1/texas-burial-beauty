@@ -463,6 +463,54 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  /**
+   * Send the seller their own copy of this questionnaire: what we believe,
+   * ready to confirm, plus whatever the AI could not work out.
+   */
+  const loadAskPreview = async () => {
+    setAsk({ loading: true });
+    try {
+      const known = questionPath(answers)
+        .filter((k) => !!(answers as Record<string, unknown>)[k])
+        .map((k) => ({
+          label: QUESTIONS[k]?.question ?? k,
+          value: QUESTIONS[k]?.answers.find((a) => a.value === (answers as Record<string, string>)[k])?.label ?? "",
+        }));
+      const missing = questionPath(answers)
+        .filter((k) => !(answers as Record<string, unknown>)[k])
+        .map((k) => QUESTIONS[k]?.question ?? k);
+      const { data, error } = await supabase.functions.invoke("ownership-questions", {
+        body: { action: "preview", submission_id: submissionId, known, missing },
+      });
+      if (error) throw error;
+      const r = data as { html?: string; subject?: string; error?: string };
+      if (r?.error) throw new Error(r.error);
+      setAsk({ html: r.html, subject: r.subject, known, missing });
+    } catch (e) {
+      setAsk(null);
+      toast.error((e as Error).message);
+    }
+  };
+
+  const sendAsk = async () => {
+    if (!ask) return;
+    setAsk({ ...ask, sending: true });
+    try {
+      const { data, error } = await supabase.functions.invoke("ownership-questions", {
+        body: { action: "send", submission_id: submissionId, known: ask.known, missing: ask.missing },
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error?: string }).error);
+      toast.success("Sent — the seller can now confirm or correct every answer");
+      setAsk(null);
+    } catch (e) {
+      setAsk({ ...ask, sending: false });
+      toast.error((e as Error).message);
+    }
+  };
+
+
+
   /** The live checklist rows, keyed the same way the DB's unique item index is. */
   const fetchLiveRows = async (): Promise<DocRow[]> => {
     const { data } = await supabase.from("submission_documents")
