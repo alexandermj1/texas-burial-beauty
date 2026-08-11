@@ -170,6 +170,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string } | null>(null);
   /** The send-document-request review flow. */
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
+  /** The "ask the seller these questions" email review flow. */
+  const [ask, setAsk] = useState<null | {
+    loading?: boolean; sending?: boolean; html?: string; subject?: string;
+    known?: { label: string; value: string }[]; missing?: string[];
+  }>(null);
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
   const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
