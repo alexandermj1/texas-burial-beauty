@@ -280,7 +280,13 @@ export const QUESTIONS: Record<string, Question> = {
 };
 
 
-/** The ordered list of questions to ask, given what has been answered so far. */
+/**
+ * The ordered list of questions to ask, given what has been answered so far.
+ *
+ * Anything we can work out ourselves — who is on the deed, how many of them
+ * there are, whether one of them has died — is listed in `derived` and never
+ * put to the seller again.
+ */
 export function questionPath(a: OwnershipAnswers): string[] {
   const p: string[] = ["owner", "rel"];
   if (a.owner === "living") {
@@ -299,9 +305,11 @@ export function questionPath(a: OwnershipAnswers): string[] {
     p.push("chain");
   } else if (a.owner === "trust") p.push("trustee");
   else if (a.owner === "org") p.push("orgStatus");
-  p.push("deed", "names");
-  return p;
+  p.push("deed");
+  const skip = new Set(a.derived ?? []);
+  return p.filter((k) => !skip.has(k));
 }
+
 
 export function isComplete(a: OwnershipAnswers): boolean {
   return questionPath(a).every((k) => !!(a as Record<string, unknown>)[k]);
