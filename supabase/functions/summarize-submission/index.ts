@@ -9,12 +9,12 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const SYSTEM = `You summarise the current status of a cemetery-plot seller/buyer enquiry for an internal CRM list.
 Reply in EXACTLY this format, nothing else:
-HEADLINE: <max 7 words — what they want, or the single next action for our team. Punchy, no full stop.>
-SUMMARY: <1-2 short sentences, max 180 characters, plain English, where things stand.>
+HEADLINE: <2-5 words, lowercase-ish label of what they want or what we must do, e.g. "asked about documents", "needs help with quote", "wants higher quote", "wants call back". No full stop.>
+SUMMARY: <ONE short sentence, max 110 characters, plain English, where things stand.>
 Be factual — only use the supplied data. Never invent prices, dates, or promises. No markdown, no bullets.`;
 
 // Bump the version when the prompt/format changes so cached summaries regenerate.
-const PROMPT_VERSION = "v2";
+const PROMPT_VERSION = "v3";
 
 function fingerprint(s: any, lastMsgAt: string | null): string {
   return [

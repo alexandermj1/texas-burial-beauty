@@ -2596,33 +2596,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       const [headline, body] = raw.includes("||")
                         ? [raw.split("||")[0].trim(), raw.split("||").slice(1).join("||").trim()]
                         : ["", raw];
-                      const expanded = !!expandedSummaries[s.id];
                       const label = sourceLabel(s.source, s.inquiry_channel);
                       return (
                         <>
-                          {headline && (
-                            <p className="text-xs font-semibold text-foreground mt-0.5 flex items-start gap-1.5">
+                          {headline && needsReply && (
+                            <p className="text-xs font-bold text-[hsl(var(--status-reply))] mt-0.5 flex items-start gap-1.5">
                               {label && <span className="text-primary/80 font-medium shrink-0">{label} ·</span>}
                               <span className="min-w-0">{headline}</span>
                             </p>
                           )}
                           {body && (
-                            <p className={`text-xs text-muted-foreground mt-0.5 ${expanded ? "" : "line-clamp-2"}`}>
-                              {!headline && label && <span className="text-primary/80">{label} · </span>}
+                            <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                              {(!headline || !needsReply) && label && <span className="text-primary/80">{label} · </span>}
                               {body}
-                              {body.length > 110 && (
-                                <span
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedSummaries(prev => ({ ...prev, [s.id]: !prev[s.id] }));
-                                  }}
-                                  className="ml-1 text-[10px] font-medium text-primary hover:underline"
-                                >
-                                  {expanded ? "less" : "more"}
-                                </span>
-                              )}
                             </p>
                           )}
                           {!raw && (
