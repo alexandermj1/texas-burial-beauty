@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2, Loader2, Pencil, Sparkles, Users, Plus, Trash2,
-  ShieldCheck, ArrowRight, Send, HeartCrack, Cloud,
+  ShieldCheck, ArrowRight, Send, HeartCrack, Cloud, UserRound,
 } from "lucide-react";
 
 
