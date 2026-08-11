@@ -474,6 +474,36 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
           </div>
         )}
 
+        {contract && kind === "listing_agreement" && !contract.signed_at && (
+          <div className="flex flex-wrap items-center gap-2 border-t pt-2">
+            <span className="text-[11px] text-muted-foreground">Returned on paper?</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => markSignedManually(contract)}
+              disabled={busy === contract.id}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />Mark signed manually
+            </Button>
+            <label className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border cursor-pointer hover:bg-muted/50">
+              <Upload className="w-3.5 h-3.5" />
+              Upload signed copy
+              <input
+                type="file"
+                accept="application/pdf,image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) markSignedManually(contract, f);
+                }}
+              />
+            </label>
+          </div>
+        )}
+
+
+
 
         {contract && kind === "poa" && (
           <div className="space-y-2">
