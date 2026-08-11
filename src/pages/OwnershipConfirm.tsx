@@ -33,7 +33,6 @@ type Packet = {
   answers: OwnershipAnswers;
 };
 
-/** The roles a seller can sensibly pick for a family member. */
 
 /** The synthetic first card: the names printed on the deed. */
 const NAMES_KEY = "_deedNames";
@@ -884,6 +883,7 @@ const OwnershipConfirm = () => {
       const payload = {
         ...answers,
         people: (answers.people ?? []).filter((p) => p.name.trim()),
+        confirmedKeys,
         sellerNotes: notes.trim() || undefined,
       };
       const { data, error: err } = await supabase.functions.invoke("ownership-questions", {
