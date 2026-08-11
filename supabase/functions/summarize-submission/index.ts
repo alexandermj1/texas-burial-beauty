@@ -115,8 +115,10 @@ Deno.serve(async (req) => {
       }
 
       const data = await resp.json();
-      const text = String(data?.choices?.[0]?.message?.content ?? "").trim();
-      if (!text) continue;
+      const raw = String(data?.choices?.[0]?.message?.content ?? "").trim();
+      if (!raw) continue;
+      const text = pack(raw);
+
 
       summaries[s.id] = text;
       await svc.from("contact_submissions")
