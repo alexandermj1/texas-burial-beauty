@@ -212,12 +212,14 @@ export const QUESTIONS: Record<string, Question> = {
   },
 
   will: {
-    key: "will", eyebrow: "Establishing authority", question: "Did the owner leave a will?",
+    key: "will", eyebrow: "Establishing authority", question: "Did they leave a will that specifically mentions the plot?",
+    hint: "A will that names the cemetery property is the cleanest way to show who inherits it.",
     answers: [
-      { value: "yes", label: "Yes, there's a will" },
-      { value: "no", label: "No will", detail: "Texas law decides who inherits" },
+      { value: "yes", label: "Yes — there is a will" },
+      { value: "no", label: "No — there is no will", detail: "Texas law decides who inherits" },
     ],
   },
+
   probate: {
     key: "probate", eyebrow: "Probate", question: "How has the will been handled?",
     hint: "A will on its own transfers nothing until a court acts.",
