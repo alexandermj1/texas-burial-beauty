@@ -905,19 +905,13 @@ const OwnershipConfirm = () => {
   );
 
   /**
-   * Anything the deed roster already tells us is settled silently — asking a
-   * couple who wrote two names down "how many owners are there?" is the kind
-   * of question that makes people abandon the page.
+   * The seller writing their own name on the deed already answers Stage 1's
+   * relationship question, so we offer "self" for them to confirm rather than
+   * making them choose it.
    */
   useEffect(() => {
     const named = deedPeople.filter((p) => p.name.trim());
-    if (!named.length) return;
-    const owners = named.length > 1 ? "multiple" : "sole";
-    const owner = named.some((p) => p.deceased || p.role === "decedent") ? "deceased" : "living";
-
-    // The seller writing their own name on the deed answers the relationship
-    // question for us — asking a husband and wife "who are you to them?" reads
-    // as though we haven't been listening.
+    if (!named.length || answers.rel) return;
     const norm = (v: string) => v.toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
     const seller = norm(packet?.seller_name ?? "");
     const sellerOnDeed = !!seller && named.some((p) => {
@@ -925,52 +919,26 @@ const OwnershipConfirm = () => {
       return n === seller || (n.split(" ")[0] === seller.split(" ")[0] &&
         n.split(" ").slice(-1)[0] === seller.split(" ").slice(-1)[0]);
     });
-
-    const nextDerived = [...new Set([...(answers.derived ?? []), "owners", "owner"])]
-      .filter((key) => key !== "rel");
-    const relOk = !sellerOnDeed || answers.rel === "self";
-    if (answers.owners === owners && answers.owner === owner && relOk &&
-        nextDerived.length === (answers.derived ?? []).length) return;
-
+    if (!sellerOnDeed) return;
     setAnswers((a) => ({
       ...a,
-      owners,
-      owner,
-      ...(sellerOnDeed ? { rel: "self" as const } : {}),
-      derived: nextDerived,
-      ...(sellerOnDeed && !a.rel ? { aiSuggested: [...new Set([...(a.aiSuggested ?? []), "rel"])] } : {}),
+      rel: "self" as const,
+      aiSuggested: [...new Set([...(a.aiSuggested ?? []), "rel"])],
     }));
-  }, [deedPeople, answers.owners, answers.owner, answers.rel, answers.derived, packet?.seller_name]);
+  }, [deedPeople, answers.rel, packet?.seller_name]);
 
   /**
-   * Every answer that implies people pulls those people in immediately, so the
-   * names we need for the documents are gathered in context rather than in one
-   * daunting list at the end.
+   * The Stage 1 / Stage 2 checklist asks for names in four places: the deceased
+   * deed holders, the power of attorney details, who is buried in a used space,
+   * and the outside spouses and descendants. Nothing else is asked.
    */
   const followUps = useCallback((k: string, a: OwnershipAnswers): string[] => {
-    const derived = a.derived ?? [];
     switch (k) {
-      case "signer": return a.signer === "agent" ? ["_agent"] : [];
-      // Co-owners we read off the deed are already named — don't ask twice.
-      case "owners": return a.owners === "multiple" && !derived.includes("owners") ? ["_coowners"] : [];
-      case "co": return a.co === "blocked" ? ["_blocked"] : [];
-      case "marital": {
-        // A spouse already on the deed — or already named in the roster — is
-        // known: asking for their name again reads as though we weren't listening.
-        const spouseKnown = (a.people ?? []).some((p) => p.role === "spouse" && p.name.trim());
-        return a.marital === "married" && !spouseKnown ? ["_spouse"]
-          : a.marital === "divorced" ? ["_exspouse"]
-          : a.marital === "widowed" ? ["_latespouse"] : [];
-      }
+      case "deceasedAny": return a.deceasedAny === "yes" ? ["_decedent"] : [];
+      case "poaHolder": return a.poaHolder === "yes" ? ["_poaDetails"] : [];
       case "occupied": return a.occupied === "yes" ? ["_occupiedBy"] : [];
       case "outsideSpouse": return a.outsideSpouse === "yes" ? ["_spouse"] : [];
-      case "spouse": return a.spouse === "yes" ? ["_spouse"] : [];
-      case "probate": return a.probate === "letters" ? ["_executor"] : [];
-      case "beneficiaries": return ["_heirs"];
-      case "heirclass": return a.heirclass && a.heirclass !== "unsure" ? ["_heirs"] : [];
       case "descendants": return a.descendants === "yes" ? ["_heirs"] : [];
-      case "trustee": return ["_trustee"];
-      case "chain": return a.chain === "multi" ? ["_chaindeaths"] : [];
       default: return [];
     }
   }, []);
@@ -978,9 +946,7 @@ const OwnershipConfirm = () => {
   /** Every living person whose legal name/address is needed for documents. */
   const signers = useMemo(
     () => (answers.people ?? []).filter(
-      (p) => p.name.trim() && !p.deceased &&
-        (p.role === "owner" || p.role === "co_owner" || p.role === "spouse" ||
-         p.role === "agent" || p.role === "executor" || p.role === "trustee" || p.role === "heir"),
+      (p) => p.name.trim() && !p.deceased && p.role !== "decedent" && p.role !== "witness",
     ),
     [answers.people],
   );
@@ -992,12 +958,11 @@ const OwnershipConfirm = () => {
       out.push(k);
       for (const f of followUps(k, answers)) if (!out.includes(f)) out.push(f);
     }
-    // Two or more living people have to sign, so ask how they'd like to do it.
-    if (signers.length === 2 && answers.outsideSpouse === "yes") out.push("jointPoa");
-    // Last of all, the ID details that go on the notarised documents.
+    // Last of all, the legal names and home addresses for everyone who signs.
     if (signers.length) out.push(IDS_KEY);
     return out;
   }, [answers, followUps, signers]);
+
 
 
   /**
