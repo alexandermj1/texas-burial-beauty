@@ -164,22 +164,38 @@ Deno.serve(async (req) => {
       // Seller-editable fields on the sign page. Anything the admin already
       // filled into fill_data is locked and cannot be overwritten by the seller
       // — they can only supply the fields we don't already have.
+      // IMPORTANT: once the seller has supplied a value themselves it stays
+      // editable, otherwise the first debounced autosave (a half-typed address)
+      // would lock in and every later keystroke would be discarded.
       const SELLER_EDITABLE = new Set([
         'seller_name', 'address', 'city_state_zip', 'phone', 'email',
         'plot_description', 'listing_option',
       ]);
+      // Never locked — the seller always owns these two.
+      const ALWAYS_SELLER = new Set(['address', 'city_state_zip']);
       const existing = (c.fill_data ?? {}) as Record<string, unknown>;
+      const sellerSupplied = new Set<string>(
+        Array.isArray(existing._seller_supplied) ? (existing._seller_supplied as string[]) : [],
+      );
       const merged: FillData = { ...existing } as FillData;
       for (const k of Object.keys(fields)) {
         if (!SELLER_EDITABLE.has(k)) continue;
         const preFilled = typeof existing[k] === 'string'
           ? (existing[k] as string).trim() !== ''
           : existing[k] != null;
-        if (preFilled) continue; // locked — keep the admin value
+        const sellerOwns = ALWAYS_SELLER.has(k) || sellerSupplied.has(k);
+        if (preFilled && !sellerOwns) continue; // locked — keep the admin value
         const v = (fields as Record<string, unknown>)[k];
-        if (typeof v === 'string' && v.trim()) (merged as Record<string, unknown>)[k] = v.trim();
-        else if (typeof v === 'number') (merged as Record<string, unknown>)[k] = v;
+        if (typeof v === 'string' && v.trim()) {
+          (merged as Record<string, unknown>)[k] = v.trim();
+          sellerSupplied.add(k);
+        } else if (typeof v === 'number') {
+          (merged as Record<string, unknown>)[k] = v;
+          sellerSupplied.add(k);
+        }
       }
+      (merged as Record<string, unknown>)._seller_supplied = [...sellerSupplied];
+
 
       const joint = c.kind === 'poa' ? jointNamesOf(merged) : [];
       let filled: Uint8Array;
