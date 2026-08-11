@@ -461,7 +461,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           });
         }
       }
+      const nextLastInteraction: Record<string, string> = {};
+      for (const [sid, info] of latestPerSub.entries()) nextLastInteraction[sid] = info.received_at;
+      setLastInteractionMap(nextLastInteraction);
       const nextAwaiting: Record<string, string> = {};
+
       const nextFollowup: Record<string, { since: string; phrase: string }> = {};
       const now = Date.now();
       const subById = new Map(texasSubs.map(s => [s.id, s as any]));
