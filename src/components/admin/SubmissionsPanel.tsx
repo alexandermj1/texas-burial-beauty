@@ -125,15 +125,10 @@ interface Props {
 }
 
 
+/** Only buyer inquiries get a source label in the list — seller/contact sources are the norm. */
 const sourceLabel = (s: string | null, channel?: string | null) => {
-  if (channel === "email_inbound") return "Inbound email";
-  switch (s) {
-    case "contact": return "Contact form";
-    case "seller_quote": return "Seller quote";
-    case "buy_property_wizard": return "Buyer wizard";
-    case "manual_phone": return "Manually added";
-    default: return s || "Unknown";
-  }
+  if (s === "buy_property_wizard") return "Buyer";
+  return "";
 };
 
 
@@ -827,6 +822,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
+  const [aiFactsOpen, setAiFactsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1193,12 +1189,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const isDeclined = (selected as any).quote_response === "declined";
                     return (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        {!isAccepted && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border text-muted-foreground">
-                            Acceptance is recorded automatically — seller pays for a tier or selects Starter from their email
-                          </span>
-                        )}
-
                         {isAccepted && (
                           <button
                             onClick={async () => {
@@ -1208,17 +1198,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10"
                           >
                             Undo accepted
-                          </button>
-                        )}
-                        {!isAccepted && !isDeclined && (
-                          <button
-                            onClick={async () => {
-                              await onUpdate(selected.id, { quote_response: "declined", quote_responded_at: new Date().toISOString() } as any);
-                              toast({ title: "Marked declined" });
-                            }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border text-muted-foreground hover:bg-muted/50"
-                          >
-                            Mark declined
                           </button>
                         )}
                         {isDeclined && (
@@ -1823,7 +1802,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* AI-extracted facts from uploaded documents (AI-only). */}
+            {/* AI-extracted facts from uploaded documents (AI-only) — collapsed by default. */}
             {(() => {
               type Row = { label: string; value: string; source: string };
               const rows: Row[] = [];
@@ -1839,18 +1818,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               if (rows.length === 0) return null;
               return (
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setAiFactsOpen(o => !o)}
+                    className="flex w-full items-center gap-1.5 text-[10px] uppercase tracking-wide text-primary font-semibold"
+                  >
                     <Sparkles className="w-3 h-3" /> AI-extracted from uploaded documents
-                  </div>
-                  <ul className="divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
-                    {rows.map((r, i) => (
-                      <li key={i} className="grid grid-cols-1 sm:grid-cols-[minmax(140px,180px)_1fr_auto] gap-1 sm:gap-3 px-3 py-1.5 text-sm">
-                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
-                        <span className="text-foreground break-words">{r.value}</span>
-                        <span className="text-[10px] text-muted-foreground/70 italic truncate sm:max-w-[160px]" title={r.source}>{r.source}</span>
-                      </li>
-                    ))}
-                  </ul>
+                    <span className="ml-auto normal-case text-[10px] text-muted-foreground">
+                      {aiFactsOpen ? "Hide" : `Show ${rows.length}`}
+                    </span>
+                  </button>
+                  {aiFactsOpen && (
+                    <ul className="mt-2 divide-y divide-border/40 rounded-md border border-border/40 bg-background/60">
+                      {rows.map((r, i) => (
+                        <li key={i} className="grid grid-cols-1 sm:grid-cols-[minmax(140px,180px)_1fr_auto] gap-1 sm:gap-3 px-3 py-1.5 text-sm">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate" title={r.label}>{r.label}</span>
+                          <span className="text-foreground break-words">{r.value}</span>
+                          <span className="text-[10px] text-muted-foreground/70 italic truncate sm:max-w-[160px]" title={r.source}>{r.source}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               );
             })()}
@@ -2356,8 +2344,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const isActive = selected?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
 
-            const rowViewers = viewersFor(s.id);
-            const otherViewers = rowViewers.filter(v => v.user_id !== myId);
+            // Historical viewers are no longer surfaced — only live presence below.
             const fresh = isNew(s);
             const workers = workersFor(s.id);
             const beingWorked = workers.length > 0;
@@ -2557,24 +2544,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {otherViewers.length > 0 && (
-                          <div className="flex -space-x-1" title={`Also viewed by: ${otherViewers.map(v => v.user_name || "teammate").join(", ")}`}>
-                            {otherViewers.slice(0, 3).map(v => (
-                              <span
-                                key={v.user_id}
-                                className="w-4 h-4 rounded-full ring-1 ring-card flex items-center justify-center text-[8px] font-bold text-white"
-                                style={{ background: colorFor(v.user_id) }}
-                              >
-                                {(v.user_name || "?").charAt(0).toUpperCase()}
-                              </span>
-                            ))}
-                            {otherViewers.length > 3 && (
-                              <span className="w-4 h-4 rounded-full ring-1 ring-card bg-muted text-muted-foreground flex items-center justify-center text-[8px] font-medium">
-                                +{otherViewers.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                        {/* Historical "viewed by" avatars removed — only live presence (workers) is shown. */}
                         <span className="text-[10px] text-muted-foreground">{formatDate(s.created_at).split(",")[0]}</span>
                       </div>
                     </div>
@@ -2582,9 +2552,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         status is now shown by the dollar-sign / docs / paid tags above. */}
 
                     <p className="text-xs text-muted-foreground truncate">
-                      <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
-                      {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
-                      {s.cemetery ? ` · ${s.cemetery}` : ""}
+                      {sourceLabel(s.source, s.inquiry_channel) && (
+                        <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
+                      )}
+                      {s.property_type ? `${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
+                      {s.cemetery ? `${s.property_type ? " · " : ""}${s.cemetery}` : ""}
                       {s.cemetery && countFor(s.cemetery) > 0 ? (
                         <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
                       ) : null}
@@ -2712,8 +2684,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                 <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(s.created_at).split(",")[0]}</span>
                               </div>
                               <p className="text-xs text-muted-foreground truncate">
-                                <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)}</span>
-                                {s.property_type ? ` · ${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
+                                {sourceLabel(s.source, s.inquiry_channel) && (
+                                  <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
+                                )}
+                                {s.property_type ? `${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
                               </p>
                               {!isExpanded && (
                                 <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
@@ -2908,9 +2882,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{d.name || "Anonymous"}</p>
                       <p className="text-[11px] text-muted-foreground truncate">
-                        {sourceLabel(d.source, (d as any).inquiry_channel)}
-                        {d.cemetery ? ` · ${d.cemetery}` : ""}
-                        {d.email ? ` · ${d.email}` : ""}
+                        {d.cemetery || ""}
+                        {d.email ? `${d.cemetery ? " · " : ""}${d.email}` : ""}
                       </p>
                       <p className="text-[10px] text-muted-foreground/80 mt-0.5">
                         Deleted {d.deleted_at ? new Date(d.deleted_at).toLocaleString() : "—"}
