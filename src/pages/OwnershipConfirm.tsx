@@ -1041,6 +1041,16 @@ const OwnershipConfirm = () => {
     setAnswers((a) => ({ ...a, people: (a.people ?? []).filter((p) => p.id !== id) }));
   };
 
+  /** Update one person in place — used by the ID name & address card. */
+  const patchPerson = (id: string, patch: Partial<RosterPerson>) => {
+    dirty.current = true;
+    setAnswers((a) => ({
+      ...a,
+      people: (a.people ?? []).map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    }));
+  };
+
+
 
 
   const submit = async () => {
