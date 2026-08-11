@@ -133,79 +133,84 @@ export type Question = {
 
 export const QUESTIONS: Record<string, Question> = {
   owner: {
-    key: "owner", eyebrow: "Ownership", question: "Who is named on the deed?",
-    hint: "Go by the name printed on the cemetery's certificate of ownership.",
+    key: "owner", eyebrow: "Ownership", question: "Are any of the people named on the deed no longer living?",
+    hint: "Go by the names printed on the cemetery's certificate of ownership.",
     answers: [
-      { value: "living", label: "A living person (or people)", detail: "They're alive and selling" },
-      { value: "deceased", label: "Someone who has died", detail: "The plot passes by inheritance" },
-      { value: "trust", label: "A trust", detail: "Titled in a living or family trust" },
-      { value: "org", label: "An organization", detail: "A church, lodge or company" },
+      { value: "living", label: "No — everyone on the deed is living", detail: "They can sign the sale themselves" },
+      { value: "deceased", label: "Yes — someone on the deed has died", detail: "That share passes by inheritance" },
+      { value: "trust", label: "The deed is held by a trust", detail: "A living or family trust owns it" },
+      { value: "org", label: "The deed is held by an organization", detail: "A church, lodge or company" },
     ],
   },
   rel: {
-    key: "rel", eyebrow: "The seller", question: "What is the seller's relationship to that person?",
-    hint: "This tells us whether they can sign themselves, or whether we need someone else.",
+    key: "rel", eyebrow: "The seller", question: "What is your relationship to the people named on the deed?",
+    hint: "This tells us who has to sign, and what we need to prove it.",
     answers: [
-      { value: "self", label: "Self — that's me on the deed" },
+      { value: "self", label: "Self — I am named on the deed" },
       { value: "spouse", label: "Husband or wife" },
       { value: "child", label: "Son or daughter" },
-      { value: "grandchild", label: "Grandchild" },
+      { value: "grandchild", label: "Grandson or granddaughter" },
       { value: "sibling", label: "Brother or sister" },
       { value: "nibling", label: "Niece or nephew" },
-      { value: "inlaw", label: "Married to one of their relatives", detail: "For example, the wife of their son" },
-      { value: "rep", label: "Executor, trustee or agent" },
+      { value: "inlaw", label: "In-law", detail: "For example, a daughter-in-law or son-in-law" },
+      { value: "rep", label: "Executor, trustee or attorney-in-fact" },
       { value: "other", label: "Something else", detail: "Cousin, friend, or more distant" },
     ],
   },
   signer: {
-    key: "signer", eyebrow: "Living owner", question: "Is the owner signing for themselves?",
+    key: "signer", eyebrow: "Power of attorney", question: "Does anyone hold a power of attorney for a living person named on the deed?",
+    hint: "If someone signs on an owner's behalf, we need the document that gives them that authority.",
     answers: [
-      { value: "self", label: "Yes, they'll sign personally" },
-      { value: "agent", label: "Someone signs for them", detail: "Under a power of attorney or as guardian" },
+      { value: "self", label: "No — each living owner will sign for themselves" },
+      { value: "agent", label: "Yes — someone else signs on their behalf", detail: "Under a power of attorney or as guardian" },
     ],
   },
   agentType: {
-    key: "agentType", eyebrow: "Acting on behalf", question: "What gives that person authority?",
+    key: "agentType", eyebrow: "Acting on behalf", question: "What gives that person their authority?",
     answers: [
       { value: "poa", label: "A power of attorney" },
-      { value: "guardian", label: "Court-appointed guardian", detail: "The owner is a ward or a minor" },
+      { value: "guardian", label: "A court-appointed guardianship", detail: "The owner is a ward or a minor" },
     ],
   },
   owners: {
-    key: "owners", eyebrow: "Living owner", question: "How many people are named on the deed?",
+    key: "owners", eyebrow: "The deed", question: "How many people are named on the deed?",
     answers: [{ value: "sole", label: "Just one" }, { value: "multiple", label: "Two or more" }],
   },
   co: {
-    key: "co", eyebrow: "Co-owners", question: "Is everyone on the deed willing to sign the sale?",
-    hint: "A plot sold as one unit can't be split without the cemetery's consent, so everyone still living has to sign.",
+    key: "co", eyebrow: "Co-owners", question: "Is everyone named on the deed willing to sign the sale?",
+    hint: "A plot is sold as one unit, so every living owner has to agree.",
     answers: [
-      { value: "all", label: "Yes, everyone is on board" },
-      { value: "blocked", label: "Someone refuses or can't be found" },
+      { value: "all", label: "Yes — everyone agrees" },
+      { value: "blocked", label: "No — someone refuses or can't be found" },
     ],
   },
 
   marital: {
-    key: "marital", eyebrow: "Spousal rights", question: "What is the owner's marital status?",
-    hint: "A spouse holds a vested right of interment, so this affects whose signature we need.",
+    key: "marital", eyebrow: "Spousal rights", question: "Does anyone named on the deed have a legal spouse who is not named on it?",
+    hint: "A spouse holds a vested right of interment, so their signature is usually needed even when they aren't on the deed.",
     answers: [
-      { value: "married", label: "Married" }, { value: "divorced", label: "Divorced" },
-      { value: "widowed", label: "Widowed" }, { value: "single", label: "Never married" },
+      { value: "married", label: "Yes — married, and not divorced" },
+      { value: "divorced", label: "No — divorced" },
+      { value: "widowed", label: "No — the spouse has died" },
+      { value: "single", label: "No — never married" },
+      { value: "unsure", label: "I don't know" },
     ],
   },
   maritalAtPurchase: {
-    key: "maritalAtPurchase", eyebrow: "Spousal rights", question: "Was the owner married when the plot was bought?",
+    key: "maritalAtPurchase", eyebrow: "Spousal rights", question: "Was the owner married at the time the plot was bought?",
     hint: "The right of interment vests at purchase, so a spouse from back then can still hold a claim even if the marriage has since ended.",
     answers: [
-      { value: "no", label: "No, single at the time" },
-      { value: "yes", label: "Yes, married then" },
-      { value: "unsure", label: "Not sure" },
+      { value: "no", label: "No — single at the time" },
+      { value: "yes", label: "Yes — married at the time" },
+      { value: "unsure", label: "I don't know" },
     ],
   },
   occupied: {
-    key: "occupied", eyebrow: "The plot", question: "Is anyone buried in the plot?",
-    hint: "An occupied plot gives the surviving spouse and children reserved rights.",
-    answers: [{ value: "no", label: "No, it's empty" }, { value: "yes", label: "Yes, partly or fully used" }],
+    key: "occupied", eyebrow: "The spaces", question: "Have any of the spaces on the deed ever been used?",
+    hint: "Anyone already buried there gives their spouse and children reserved rights, so we have to account for it.",
+    answers: [{ value: "no", label: "No — all the spaces are empty" }, { value: "yes", label: "Yes — one or more has been used" }],
   },
+
   will: {
     key: "will", eyebrow: "Establishing authority", question: "Did the owner leave a will?",
     answers: [
