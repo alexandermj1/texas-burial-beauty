@@ -33,8 +33,6 @@ type Packet = {
   answers: OwnershipAnswers;
 };
 
-/** The roles a seller can sensibly pick for a family member. */
-const PUBLIC_ROLES: PersonRole[] = ["owner", "co_owner", "spouse", "heir", "executor", "trustee", "agent", "decedent"];
 
 /** The synthetic first card: the names printed on the deed. */
 const NAMES_KEY = "_deedNames";
@@ -310,8 +308,382 @@ const NamesCard = ({
 };
 
 
+// ── Follow-up prompts ────────────────────────────────────────────────────────
+//
+// An answer on its own rarely lets us draw a document: "married" only matters
+// once we know the spouse's name, "one refuses" only matters once we know who.
+// Each answer therefore pulls in the people (or the explanation) it implies,
+// right there in the flow rather than in a form at the end.
+
+type PeopleSlot = {
+  kind: "people";
+  eyebrow: string;
+  title: string;
+  hint: string;
+  role: PersonRole;
+  /** Seeded onto anyone added from this card. */
+  relationship?: string;
+  deceased?: boolean;
+  addLabel: string;
+  /** They may honestly have nobody to name. */
+  allowNone?: boolean;
+  noneLabel?: string;
+};
+
+type TextSlot = {
+  kind: "text";
+  eyebrow: string;
+  title: string;
+  hint: string;
+  field: "nameMismatch" | "blockedNotes";
+  placeholder: string;
+};
+
+const SLOTS: Record<string, PeopleSlot | TextSlot> = {
+  _decedent: {
+    kind: "people", eyebrow: "The owner who died", role: "decedent", deceased: true,
+    title: "Who is the person on the deed who has passed away?",
+    hint: "We need their name exactly as the cemetery holds it — every inheritance document is drawn in that name.",
+    addLabel: "Add another owner who has died",
+  },
+  _agent: {
+    kind: "people", eyebrow: "Signing on their behalf", role: "agent",
+    title: "Who will be signing for the owner?",
+    hint: "The person named in the power of attorney or guardianship papers.",
+    addLabel: "Add another agent",
+  },
+  _coowners: {
+    kind: "people", eyebrow: "The other owners", role: "co_owner",
+    title: "Who else owns the plot with you?",
+    hint: "A plot sold as one unit needs every owner's signature, so we'll need to reach each of them.",
+    addLabel: "Add another owner",
+  },
+  _spouse: {
+    kind: "people", eyebrow: "Your spouse", role: "spouse", relationship: "spouse",
+    title: "What is the spouse's full name?",
+    hint: "A husband or wife holds a vested right of interment, so the cemetery will want their signature too.",
+    addLabel: "Add spouse",
+  },
+  _exspouse: {
+    kind: "people", eyebrow: "The former spouse", role: "spouse", relationship: "former spouse",
+    title: "Who was the owner married to at the time?",
+    hint: "A divorce doesn't always end a right of interment — naming them lets us check the decree and clear it properly.",
+    addLabel: "Add former spouse",
+    allowNone: true, noneLabel: "I don't know their name",
+  },
+  _latespouse: {
+    kind: "people", eyebrow: "The late spouse", role: "spouse", deceased: true, relationship: "late spouse",
+    title: "What was your late spouse's full name?",
+    hint: "We may need their death certificate to clear their name from the deed.",
+    addLabel: "Add spouse",
+  },
+  _executor: {
+    kind: "people", eyebrow: "The estate", role: "executor",
+    title: "Who was appointed executor or administrator?",
+    hint: "Their signature carries the estate — the letters from the court will be in this name.",
+    addLabel: "Add another representative",
+  },
+  _heirs: {
+    kind: "people", eyebrow: "Who inherits", role: "heir",
+    title: "Who are the people who inherit the plot?",
+    hint: "Everyone with a claim has to sign or waive, so please name them all — including anyone who has since died.",
+    addLabel: "Add another heir",
+  },
+  _trustee: {
+    kind: "people", eyebrow: "The trust", role: "trustee",
+    title: "Who is the trustee signing for the trust?",
+    hint: "As named in the trust agreement or certification of trust.",
+    addLabel: "Add another trustee",
+  },
+  _chaindeaths: {
+    kind: "people", eyebrow: "Chain of title", role: "decedent", deceased: true,
+    title: "Who else in the family has since died?",
+    hint: "Each death adds a link we have to prove, so we need every name in the chain.",
+    addLabel: "Add another person who has died",
+  },
+  _blocked: {
+    kind: "text", eyebrow: "The owner who won't sign", field: "blockedNotes",
+    title: "Tell us who that is and what's happened",
+    hint: "There is almost always a lawful way forward — knowing the situation lets a broker choose it.",
+    placeholder: "e.g. My brother David Carter hasn't spoken to the family in years and we have no address for him.",
+  },
+  _nameMismatch: {
+    kind: "text", eyebrow: "The names", field: "nameMismatch",
+    title: "Which name differs, and what is it now?",
+    hint: "For example: the deed says Mary Ellen Doe, her driver's licence says Mary E. Carter after she married.",
+    placeholder: "The deed says … but the ID says …",
+  },
+};
+
+const initials = (name: string) =>
+  name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+
+/** Shared shell so every card in the flow looks and moves the same way. */
+const CardShell = ({
+  index, settled, eyebrow, title, hint, children,
+}: {
+  index: number; settled: boolean; eyebrow: string; title: string; hint?: string; children: React.ReactNode;
+}) => (
+  <div
+    className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+      settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
+    }`}
+  >
+    <div className="flex items-start gap-4">
+      <div
+        className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] transition-colors ${
+          settled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {settled ? <CheckCircle2 className="w-4 h-4" /> : index}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">{eyebrow}</div>
+        <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">{title}</p>
+        {hint && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{hint}</p>}
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
+/** Ask for the people an answer implies — name first, then how to reach them. */
+const PeopleSlotCard = ({
+  slot, index, people, settled, suggestions = [], onChange, onDone,
+}: {
+  slot: PeopleSlot;
+  index: number;
+  people: RosterPerson[];
+  settled: boolean;
+  /** Names already on the file, offered as one tap rather than retyping. */
+  suggestions?: string[];
+  onChange: (people: RosterPerson[]) => void;
+  onDone: (none?: boolean) => void;
+}) => {
+  const rows = people.length
+    ? people
+    : [{ id: "seed", name: "", role: slot.role, relationship: slot.relationship, deceased: slot.deceased }];
+  const named = rows.filter((p) => p.name.trim());
+  const clean = (list: RosterPerson[]) => list.map((x) => (x.id === "seed" ? { ...x, id: crypto.randomUUID() } : x));
+  const patch = (id: string, p: Partial<RosterPerson>) =>
+    onChange(clean(rows.map((x) => (x.id === id ? { ...x, ...p } : x))));
+  const offer = suggestions.filter((s) => !rows.some((r) => r.name.trim().toLowerCase() === s.toLowerCase()));
+  const addNamed = (name: string) => {
+    const blank = rows.find((r) => !r.name.trim());
+    if (blank) return patch(blank.id, { name });
+    onChange(clean([...rows, { id: crypto.randomUUID(), name, role: slot.role, relationship: slot.relationship, deceased: slot.deceased }]));
+  };
+
+  return (
+    <CardShell index={index} settled={settled} eyebrow={slot.eyebrow} title={slot.title} hint={slot.hint}>
+      {offer.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-muted-foreground">From your file:</span>
+          {offer.map((s) => (
+            <button
+              key={s}
+              onClick={() => addNamed(s)}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/[0.06] text-foreground hover:bg-primary/10"
+            >
+              <Plus className="w-3 h-3 text-primary" /> {s}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="mt-4 space-y-3">
+
+        {rows.map((p) => (
+          <div key={p.id} className="rounded-xl border border-border/70 bg-background p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-medium shrink-0">
+                {initials(p.name) || <UserRound className="w-4 h-4" />}
+              </div>
+              <input
+                value={p.name}
+                onChange={(e) => patch(p.id, { name: e.target.value })}
+                placeholder="Full name"
+                className="flex-1 min-w-0 rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              {rows.length > 1 && (
+                <button
+                  onClick={() => onChange(rows.filter((x) => x.id !== p.id))}
+                  className="p-2 rounded-full border border-border text-muted-foreground hover:text-destructive shrink-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {p.name.trim() && (
+              <div className="mt-3 grid sm:grid-cols-2 gap-2 animate-in fade-in duration-300">
+                <input
+                  value={p.email ?? ""}
+                  onChange={(e) => patch(p.id, { email: e.target.value })}
+                  placeholder="Email (so we can send what they sign)"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  value={p.phone ?? ""}
+                  onChange={(e) => patch(p.id, { phone: e.target.value })}
+                  placeholder="Phone (optional)"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  value={p.relationship ?? ""}
+                  onChange={(e) => patch(p.id, { relationship: e.target.value })}
+                  placeholder="Their relationship — daughter, brother…"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer px-1">
+                  <input
+                    type="checkbox"
+                    checked={!!p.deceased}
+                    onChange={(e) => patch(p.id, { deceased: e.target.checked, role: e.target.checked ? "decedent" : slot.role })}
+                    className="accent-[hsl(var(--primary))]"
+                  />
+                  <HeartCrack className="w-3.5 h-3.5" /> This person has passed away
+                </label>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => onChange([
+            ...rows.filter((x) => x.id !== "seed" || x.name.trim()),
+            { id: crypto.randomUUID(), name: "", role: slot.role, relationship: slot.relationship, deceased: slot.deceased },
+          ])}
+          className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
+        >
+          <Plus className="w-3.5 h-3.5" /> {slot.addLabel}
+        </button>
+        {named.length > 0 && (
+          <button
+            onClick={() => onDone()}
+            className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" /> That's everyone
+          </button>
+        )}
+        {slot.allowNone && named.length === 0 && (
+          <button
+            onClick={() => onDone(true)}
+            className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-muted-foreground"
+          >
+            {slot.noneLabel ?? "I don't know"}
+          </button>
+        )}
+      </div>
+    </CardShell>
+  );
+};
+
+/** A short written answer where a choice can't carry the detail. */
+const TextSlotCard = ({
+  slot, index, value, settled, onChange, onDone,
+}: {
+  slot: TextSlot; index: number; value: string; settled: boolean;
+  onChange: (v: string) => void; onDone: () => void;
+}) => (
+  <CardShell index={index} settled={settled} eyebrow={slot.eyebrow} title={slot.title} hint={slot.hint}>
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={3}
+      maxLength={1200}
+      placeholder={slot.placeholder}
+      className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary resize-y"
+    />
+    <button
+      onClick={onDone}
+      disabled={!value.trim()}
+      className="mt-3 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+    >
+      <CheckCircle2 className="w-3.5 h-3.5" /> Save this
+    </button>
+  </CardShell>
+);
+
+/**
+ * The family, drawn rather than listed. Everyone gathered so far is grouped by
+ * the part they play, so the seller can see at a glance that we have the right
+ * people — and spot anyone missing.
+ */
+const FamilyTree = ({ people, onRemove }: { people: RosterPerson[]; onRemove: (id: string) => void }) => {
+  const groups: { label: string; roles: PersonRole[] }[] = [
+    { label: "On the deed", roles: ["owner", "co_owner", "decedent"] },
+    { label: "Spouse", roles: ["spouse"] },
+    { label: "Inherits", roles: ["heir"] },
+    { label: "Acting for them", roles: ["executor", "trustee", "agent"] },
+  ];
+  // One card per person: someone named on the deed who has since died is the
+  // same human as the decedent we asked about, so we keep the later entry.
+  const named = Array.from(
+    people
+      .filter((p) => p.name.trim())
+      .reduce((m, p) => m.set(p.name.trim().toLowerCase(), p), new Map<string, RosterPerson>())
+      .values(),
+  );
+
+  if (!named.length) return null;
+
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card/60 p-6 sm:p-7">
+      <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
+      <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
+        <Users className="w-5 h-5 text-primary" /> Everyone connected to this plot
+      </p>
+
+      <div className="mt-6 space-y-6">
+        {groups.map((g) => {
+          const members = named.filter((p) => g.roles.includes(p.role));
+          if (!members.length) return null;
+          return (
+            <div key={g.label} className="relative pl-5">
+              <span className="absolute left-0 top-2 bottom-2 w-px bg-primary/25" />
+              <span className="absolute -left-[3px] top-2 w-[7px] h-[7px] rounded-full bg-primary" />
+              <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-2">{g.label}</div>
+              <div className="flex flex-wrap gap-2">
+                {members.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`group inline-flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition ${
+                      p.deceased || p.role === "decedent"
+                        ? "border-border bg-muted/40"
+                        : "border-primary/25 bg-primary/[0.06]"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-full bg-background border border-border/70 flex items-center justify-center text-[10px] text-primary">
+                      {initials(p.name) || <UserRound className="w-3.5 h-3.5" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm text-foreground leading-tight">{p.name}</span>
+                      <span className="block text-[10px] text-muted-foreground leading-tight">
+                        {p.relationship || ROLE_LABEL[p.role]}
+                        {(p.deceased || p.role === "decedent") && " · has passed away"}
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => onRemove(p.id)}
+                      className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
+                      aria-label={`Remove ${p.name}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const OwnershipConfirm = () => {
+
   const [params] = useSearchParams();
   const submissionId = params.get("s") ?? "";
   const [packet, setPacket] = useState<Packet | null>(null);
@@ -363,8 +735,10 @@ const OwnershipConfirm = () => {
       a.aiSuggested = [...believed];
 
       setAnswers(a);
+      setConfirmedKeys(Array.isArray(a.confirmedKeys) ? a.confirmedKeys : []);
       setNotes(String((p.answers as Record<string, unknown>)?.sellerNotes ?? ""));
       if ((p.answers as Record<string, unknown>)?.sellerConfirmedAt) setSent(true);
+
     }
     setLoading(false);
   }, [submissionId]);
@@ -376,20 +750,62 @@ const OwnershipConfirm = () => {
 
   /** Answers we filled in ourselves and have not had confirmed yet. */
   const believedKeys = useMemo(() => new Set(answers.aiSuggested ?? []), [answers.aiSuggested]);
-  /** The deed-holder card always leads, then the branching questionnaire. */
-  const path = useMemo(() => [NAMES_KEY, ...questionPath(answers)], [answers]);
 
-  /**
-   * A question is settled once it has an answer the seller owns — either they
-   * picked it, or they confirmed the one we had guessed. We only ever show one
-   * unsettled question at a time so the page never looks like a form.
-   */
   const deedPeople = useMemo(
     () => (answers.people ?? []).filter((p) => p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
     [answers.people],
   );
+
+  /**
+   * Every answer that implies people pulls those people in immediately, so the
+   * names we need for the documents are gathered in context rather than in one
+   * daunting list at the end.
+   */
+  const followUps = useCallback((k: string, a: OwnershipAnswers): string[] => {
+    switch (k) {
+      case "owner": return a.owner === "deceased" ? ["_decedent"] : [];
+      case "signer": return a.signer === "agent" ? ["_agent"] : [];
+      case "owners": return a.owners === "multiple" ? ["_coowners"] : [];
+      case "co": return a.co === "blocked" ? ["_blocked"] : [];
+      case "marital":
+        return a.marital === "married" ? ["_spouse"]
+          : a.marital === "divorced" ? ["_exspouse"]
+          : a.marital === "widowed" ? ["_latespouse"] : [];
+      case "spouse": return a.spouse === "yes" ? ["_spouse"] : [];
+      case "probate": return a.probate === "letters" ? ["_executor"] : [];
+      case "beneficiaries": return ["_heirs"];
+      case "heirclass": return a.heirclass && a.heirclass !== "unsure" ? ["_heirs"] : [];
+      case "trustee": return ["_trustee"];
+      case "chain": return a.chain === "multi" ? ["_chaindeaths"] : [];
+      case "names": return a.names === "no" ? ["_nameMismatch"] : [];
+      default: return [];
+    }
+  }, []);
+
+  /** The deed-holder card leads, then each question with whatever it implies. */
+  const path = useMemo(() => {
+    const out: string[] = [NAMES_KEY];
+    for (const k of questionPath(answers)) {
+      out.push(k);
+      for (const f of followUps(k, answers)) if (!out.includes(f)) out.push(f);
+    }
+    // Two or more living people have to sign, so ask how they'd like to do it.
+    const livingSigners = (answers.people ?? []).filter(
+      (p) => p.name.trim() && !p.deceased && p.role !== "decedent" && p.role !== "heir" && p.role !== "witness",
+    );
+    if (livingSigners.length >= 2) out.push("jointPoa");
+    return out;
+  }, [answers, followUps]);
+
+  /**
+   * A step is settled once it has an answer the seller owns — they picked it,
+   * confirmed the one we had guessed, or finished naming people. We only ever
+   * show one unsettled step at a time so the page never looks like a form.
+   */
   const isSettled = useCallback(
     (k: string) => {
+      const slot = SLOTS[k];
+      if (slot) return confirmedKeys.includes(k);
       const v = k === NAMES_KEY
         ? deedPeople.some((p) => p.name.trim())
         : !!(answers as Record<string, unknown>)[k];
@@ -403,6 +819,7 @@ const OwnershipConfirm = () => {
   const allSettled = nextIndex === -1;
   const visible = allSettled ? path : path.slice(0, nextIndex + 1);
   const remaining = path.length - (allSettled ? path.length : nextIndex);
+
 
 
   /** Scroll the newly revealed question into view, but never on first paint. */
@@ -430,7 +847,7 @@ const OwnershipConfirm = () => {
         body: {
           action: "save",
           submission_id: submissionId,
-          answers: { ...answers, people: (answers.people ?? []).filter((p) => p.name.trim()), sellerNotes: notes.trim() || undefined },
+          answers: { ...answers, confirmedKeys, people: (answers.people ?? []).filter((p) => p.name.trim()), sellerNotes: notes.trim() || undefined },
           finished: false,
         },
       });
@@ -438,7 +855,7 @@ const OwnershipConfirm = () => {
       setDraftSavedAt(new Date());
     }, 1200);
     return () => clearTimeout(t);
-  }, [answers, notes, loading, sent, submissionId]);
+  }, [answers, confirmedKeys, notes, loading, sent, submissionId]);
 
   const setAnswer = (key: string, value: string) => {
     dirty.current = true;
@@ -469,23 +886,25 @@ const OwnershipConfirm = () => {
 
   const people = answers.people ?? [];
 
-  const showFamily = answers.owner === "deceased" || answers.owners === "multiple" || people.length > 0;
-
-  const addPerson = () => {
+  /** People gathered by a particular follow-up card, kept in role order. */
+  const slotPeople = (role: PersonRole) => people.filter((p) => p.role === role);
+  const setSlotPeople = (role: PersonRole, next: RosterPerson[]) => {
     dirty.current = true;
     setAnswers((a) => ({
       ...a,
-      people: [...(a.people ?? []), { id: crypto.randomUUID(), name: "", role: "heir" as PersonRole }],
+      people: [...(a.people ?? []).filter((p) => p.role !== role), ...next],
     }));
   };
-  const updatePerson = (id: string, patch: Partial<RosterPerson>) => {
+  const setText = (field: "nameMismatch" | "blockedNotes", v: string) => {
     dirty.current = true;
-    setAnswers((a) => ({ ...a, people: (a.people ?? []).map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
+    setAnswers((a) => ({ ...a, [field]: v } as OwnershipAnswers));
   };
+
   const removePerson = (id: string) => {
     dirty.current = true;
     setAnswers((a) => ({ ...a, people: (a.people ?? []).filter((p) => p.id !== id) }));
   };
+
 
 
   const submit = async () => {
@@ -494,6 +913,7 @@ const OwnershipConfirm = () => {
       const payload = {
         ...answers,
         people: (answers.people ?? []).filter((p) => p.name.trim()),
+        confirmedKeys,
         sellerNotes: notes.trim() || undefined,
       };
       const { data, error: err } = await supabase.functions.invoke("ownership-questions", {
@@ -623,6 +1043,30 @@ const OwnershipConfirm = () => {
                       onChange={setDeedPeople}
                       onConfirm={() => confirmKey(NAMES_KEY)}
                     />
+                  ) : SLOTS[key]?.kind === "people" ? (
+                    <PeopleSlotCard
+                      slot={SLOTS[key] as PeopleSlot}
+                      index={i + 1}
+                      settled={confirmedKeys.includes(key)}
+                      people={slotPeople((SLOTS[key] as PeopleSlot).role)}
+                      suggestions={
+                        key === "_decedent" || key === "_chaindeaths"
+                          ? deedPeople.map((p) => p.name.trim()).filter(Boolean)
+                          : []
+                      }
+
+                      onChange={(next) => setSlotPeople((SLOTS[key] as PeopleSlot).role, next)}
+                      onDone={() => confirmKey(key)}
+                    />
+                  ) : SLOTS[key]?.kind === "text" ? (
+                    <TextSlotCard
+                      slot={SLOTS[key] as TextSlot}
+                      index={i + 1}
+                      settled={confirmedKeys.includes(key)}
+                      value={(answers as Record<string, unknown>)[(SLOTS[key] as TextSlot).field] as string ?? ""}
+                      onChange={(v) => setText((SLOTS[key] as TextSlot).field, v)}
+                      onDone={() => confirmKey(key)}
+                    />
                   ) : (
                     <QuestionCard
                       qKey={key}
@@ -635,6 +1079,7 @@ const OwnershipConfirm = () => {
                       onConfirm={confirmKey}
                     />
                   )}
+
                 </div>
               ))}
             </div>
@@ -648,92 +1093,12 @@ const OwnershipConfirm = () => {
             )}
 
 
-            {allSettled && showFamily && (
-              <div className="mt-10 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
-
-                <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
-                <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" /> Who is in the picture?
-                </p>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                  List everyone connected to the plot — the person named on the deed, their spouse, and any children or
-                  other relatives who would inherit. Tick “has passed away” for anyone in the chain who has died; we
-                  need them named even so. Nobody is contacted without speaking to you first.
-                </p>
-
-                <div className="mt-5 space-y-3">
-                  {people.map((p) => (
-                    <div key={p.id} className="rounded-xl border border-border/70 bg-background p-4">
-                      <div className="grid sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Full name</label>
-                          <input
-                            value={p.name}
-                            onChange={(e) => updatePerson(p.id, { name: e.target.value })}
-                            placeholder="e.g. Mary Ellen Carter"
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Their part in this</label>
-                          <select
-                            value={p.role}
-                            onChange={(e) => updatePerson(p.id, { role: e.target.value as PersonRole })}
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          >
-                            {PUBLIC_ROLES.map((r) => (
-                              <option key={r} value={r}>{ROLE_LABEL[r]}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Relationship (optional)</label>
-                          <input
-                            value={p.relationship ?? ""}
-                            onChange={(e) => updatePerson(p.id, { relationship: e.target.value })}
-                            placeholder="daughter, brother, surviving spouse…"
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Email (optional)</label>
-                          <input
-                            value={p.email ?? ""}
-                            onChange={(e) => updatePerson(p.id, { email: e.target.value })}
-                            placeholder="So we can send them anything they must sign"
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          />
-                        </div>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={!!p.deceased}
-                            onChange={(e) => updatePerson(p.id, { deceased: e.target.checked })}
-                            className="accent-[hsl(var(--primary))]"
-                          />
-                          <HeartCrack className="w-3.5 h-3.5" /> This person has passed away
-                        </label>
-                        <button
-                          onClick={() => removePerson(p.id)}
-                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={addPerson}
-                  className="mt-4 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add {people.length ? "another person" : "the first person"}
-                </button>
+            {allSettled && people.some((p) => p.name.trim()) && (
+              <div className="mt-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <FamilyTree people={people} onRemove={removePerson} />
               </div>
             )}
+
 
             {allSettled && (
               <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">

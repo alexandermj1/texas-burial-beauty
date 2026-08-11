@@ -35,6 +35,14 @@ export type OwnershipAnswers = {
   names?: "yes" | "no";
   /** Married couple signing a single joint power of attorney rather than one each. */
   jointPoa?: "yes" | "no";
+  /** What differs between the names on the deed, the ID and any court papers. */
+  nameMismatch?: string;
+  /** Why a co-owner can't or won't sign, in the seller's words. */
+  blockedNotes?: string;
+  /** Steps the seller has personally settled, so a reload doesn't re-ask them. */
+  confirmedKeys?: string[];
+
+
 
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
@@ -253,7 +261,16 @@ export const QUESTIONS: Record<string, Question> = {
     hint: "Marriage, divorce or a legal name change can create a mismatch.",
     answers: [{ value: "yes", label: "Yes, they match" }, { value: "no", label: "No, something differs" }],
   },
+  jointPoa: {
+    key: "jointPoa", eyebrow: "Signing", question: "Would you rather sign one power of attorney together, or one each?",
+    hint: "A married couple can sign a single document — each signature is acknowledged separately in front of the notary. Separate documents suit people who will sign at different times or places.",
+    answers: [
+      { value: "yes", label: "One document, signed together", detail: "Simplest when you're in the same place" },
+      { value: "no", label: "A separate one for each of us", detail: "Sign at different times or places" },
+    ],
+  },
 };
+
 
 /** The ordered list of questions to ask, given what has been answered so far. */
 export function questionPath(a: OwnershipAnswers): string[] {
