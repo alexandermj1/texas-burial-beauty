@@ -472,42 +472,47 @@ const OwnershipConfirm = () => {
               </div>
             )}
 
-            <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7">
-              <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">Anything else</div>
-              <p className="font-display text-2xl leading-snug text-foreground">
-                Is there something about this plot we should know?
-              </p>
-              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                A disagreement in the family, a name that changed, paperwork you can't find — tell us here and a broker
-                will handle it. Nothing you write causes a delay; not telling us usually does.
-              </p>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-                maxLength={2000}
-                placeholder="Optional — in your own words"
-                className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary resize-y"
-              />
-            </div>
+            {allSettled && (
+              <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">Anything else</div>
+                <p className="font-display text-2xl leading-snug text-foreground">
+                  Is there something about this plot we should know?
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  A disagreement in the family, a name that changed, paperwork you can't find — tell us here and a broker
+                  will handle it. Nothing you write causes a delay; not telling us usually does.
+                </p>
+                <textarea
+                  value={notes}
+                  onChange={(e) => { dirty.current = true; setNotes(e.target.value); }}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="Optional — in your own words"
+                  className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary resize-y"
+                />
+              </div>
+            )}
 
             {error && (
               <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
             )}
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => void submit()}
-                disabled={saving}
-                className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {saving ? "Sending…" : "Send this to my broker"}
-              </button>
-              <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
-                <ArrowRight className="w-3 h-3" /> You can leave anything you're unsure of blank.
-              </span>
-            </div>
+            {allSettled && (
+              <div className="mt-8 flex flex-wrap items-center gap-3 animate-in fade-in duration-500">
+                <button
+                  onClick={() => void submit()}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {saving ? "Sending…" : "Send this to my broker"}
+                </button>
+                <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+                  <ArrowRight className="w-3 h-3" /> You can leave anything you're unsure of blank.
+                </span>
+              </div>
+            )}
+
 
             <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
               <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Rather talk it through?</div>
