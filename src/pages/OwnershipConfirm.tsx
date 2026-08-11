@@ -155,6 +155,146 @@ const QuestionCard = ({
   );
 };
 
+/**
+ * The deed-holder card. We lead with the names we already hold and ask only for
+ * a nod — but a deed can carry several names, so the editor is a live list.
+ */
+const NamesCard = ({
+  people, believed, confirmed, index, onChange, onConfirm,
+}: {
+  people: RosterPerson[];
+  believed: boolean;
+  confirmed: boolean;
+  index: number;
+  onChange: (people: RosterPerson[]) => void;
+  onConfirm: () => void;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const named = people.filter((p) => p.name.trim());
+  const showEditor = editing || named.length === 0;
+  const settled = named.length > 0 && (confirmed || !believed);
+
+  const patch = (id: string, p: Partial<RosterPerson>) =>
+    onChange(people.map((x) => (x.id === id ? { ...x, ...p } : x)));
+
+  return (
+    <div
+      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+        settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] transition-colors ${
+            settled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {settled ? <CheckCircle2 className="w-4 h-4" /> : index}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The deed</div>
+          <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
+            Whose name is printed on the deed?
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Exactly as it appears on the cemetery's certificate of ownership. A deed often carries more than one
+            name — please list everyone on it.
+          </p>
+
+          {!showEditor && (
+            <div className="mt-4">
+              <div className="rounded-xl border border-border/70 bg-background px-4 py-3">
+                <p className="text-[11px] text-muted-foreground">
+                  {believed && !confirmed ? "From our records we believe" : "Your answer"}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {named.map((p) => (
+                    <span
+                      key={p.id}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/[0.06] px-3 py-1 text-sm text-foreground"
+                    >
+                      <UserRound className="w-3.5 h-3.5 text-primary" />
+                      {p.name}
+                      {p.deceased && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">deceased</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {believed && !confirmed && (
+                  <button
+                    onClick={onConfirm}
+                    className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> That's correct
+                  </button>
+                )}
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> {believed && !confirmed ? "No — change this" : "Change"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showEditor && (
+            <div className="mt-4 space-y-2">
+              {people.map((p) => (
+                <div key={p.id} className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={p.name}
+                    autoFocus={!p.name}
+                    onChange={(e) => patch(p.id, { name: e.target.value })}
+                    placeholder="Full name as printed on the deed"
+                    className="flex-1 min-w-[220px] rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
+                  />
+                  <button
+                    onClick={() => patch(p.id, { deceased: !p.deceased, role: !p.deceased ? "decedent" : "owner" })}
+                    className={`text-[11px] px-3 py-2 rounded-full border transition ${
+                      p.deceased ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    Has passed away
+                  </button>
+                  {people.length > 1 && (
+                    <button
+                      onClick={() => onChange(people.filter((x) => x.id !== p.id))}
+                      className="p-2 rounded-full border border-border text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  onClick={() => onChange([...people, { id: crypto.randomUUID(), name: "", role: "co_owner" as PersonRole }])}
+                  className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Another name on the deed
+                </button>
+                {named.length > 0 && (
+                  <button
+                    onClick={() => { setEditing(false); onConfirm(); }}
+                    className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> That's everyone
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
 const OwnershipConfirm = () => {
   const [params] = useSearchParams();
   const submissionId = params.get("s") ?? "";
