@@ -899,6 +899,7 @@ const OwnershipConfirm = () => {
     const named = deedPeople.filter((p) => p.name.trim());
     if (!named.length) return;
     const owners = named.length > 1 ? "multiple" : "sole";
+    const owner = named.some((p) => p.deceased || p.role === "decedent") ? "deceased" : "living";
 
     // The seller writing their own name on the deed answers the relationship
     // question for us — asking a husband and wife "who are you to them?" reads
@@ -911,20 +912,21 @@ const OwnershipConfirm = () => {
         n.split(" ").slice(-1)[0] === seller.split(" ").slice(-1)[0]);
     });
 
-    const nextDerived = [...new Set([...(answers.derived ?? []), "owners"])]
+    const nextDerived = [...new Set([...(answers.derived ?? []), "owners", "owner"])]
       .filter((key) => key !== "rel");
     const relOk = !sellerOnDeed || answers.rel === "self";
-    if (answers.owners === owners && relOk &&
+    if (answers.owners === owners && answers.owner === owner && relOk &&
         nextDerived.length === (answers.derived ?? []).length) return;
 
     setAnswers((a) => ({
       ...a,
       owners,
+      owner,
       ...(sellerOnDeed ? { rel: "self" as const } : {}),
       derived: nextDerived,
       ...(sellerOnDeed && !a.rel ? { aiSuggested: [...new Set([...(a.aiSuggested ?? []), "rel"])] } : {}),
     }));
-  }, [deedPeople, answers.owners, answers.rel, answers.derived, packet?.seller_name]);
+  }, [deedPeople, answers.owners, answers.owner, answers.rel, answers.derived, packet?.seller_name]);
 
   /**
    * Every answer that implies people pulls those people in immediately, so the
@@ -1299,7 +1301,7 @@ const OwnershipConfirm = () => {
             )}
 
 
-            {allSettled && people.some((p) => p.name.trim()) && deedPeople.some((p) => p.deceased || p.role === "decedent") && (
+            {allSettled && answers.descendants === "yes" && people.some((p) => p.name.trim()) && (
               <div className="mt-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <FamilyTree people={people} onRemove={removePerson} />
               </div>
