@@ -212,6 +212,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Map of submission_id -> latest incoming email received_at (ISO) when the latest
   // message in the thread is from the customer (i.e. we haven't replied yet).
   const [awaitingMap, setAwaitingMap] = useState<Record<string, string>>({});
+  // Timestamp of the most recent interaction (latest email either direction).
+  const [lastInteractionMap, setLastInteractionMap] = useState<Record<string, string>>({});
+  // AI "where is this up to" summaries, keyed by submission id.
+  const [summaryMap, setSummaryMap] = useState<Record<string, string>>({});
+
   // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
   // when WE promised to follow up and haven't sent anything since (older than threshold).
   const [followupMap, setFollowupMap] = useState<Record<string, { since: string; phrase: string }>>({});
