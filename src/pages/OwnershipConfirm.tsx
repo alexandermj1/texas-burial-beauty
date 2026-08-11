@@ -938,8 +938,10 @@ const OwnershipConfirm = () => {
    */
   const isSettled = useCallback(
     (k: string) => {
+      if (k === IDS_KEY) return confirmedKeys.includes(k);
       const slot = SLOTS[k];
       if (slot) return confirmedKeys.includes(k);
+
       const v = k === NAMES_KEY
         ? deedPeople.some((p) => p.name.trim())
         : !!(answers as Record<string, unknown>)[k];
