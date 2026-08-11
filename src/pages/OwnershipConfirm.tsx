@@ -441,7 +441,25 @@ const OwnershipConfirm = () => {
   };
 
 
+  /** Replace just the deed-holder slice of the roster, keeping everyone else. */
+  const setDeedPeople = (next: RosterPerson[]) => {
+    dirty.current = true;
+    setAnswers((a) => {
+      const others = (a.people ?? []).filter(
+        (p) => p.role !== "owner" && p.role !== "co_owner" && p.role !== "decedent",
+      );
+      return { ...a, people: [...next, ...others] };
+    });
+  };
+  const deedNamesLabel = useMemo(() => {
+    const names = deedPeople.map((p) => p.name.trim()).filter(Boolean);
+    if (!names.length) return "";
+    if (names.length === 1) return names[0];
+    return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  }, [deedPeople]);
+
   const people = answers.people ?? [];
+
   const showFamily = answers.owner === "deceased" || answers.owners === "multiple" || people.length > 0;
 
   const addPerson = () => {
