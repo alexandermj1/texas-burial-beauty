@@ -2381,13 +2381,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const fresh = isNew(s);
             const workers = workersFor(s.id);
             const beingWorked = workers.length > 0;
+            const needsReply = !!awaitingMap[s.id];
             const bgCls = isActive
               ? "bg-primary/15 border-l-4 border-l-primary"
-              : beingWorked
-                ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
-                : fresh
-                  ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
-                  : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
+              : needsReply
+                // "Needs reply" is shown as a red row highlight instead of a tag.
+                ? "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70 border-l-4 border-l-[hsl(var(--status-reply))]"
+                : beingWorked
+                  ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
+                  : fresh
+                    ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
+                    : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
+
             return (
               <div key={s.id}>
                 <motion.button
