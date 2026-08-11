@@ -702,7 +702,7 @@ const phraseFor = (
       return deedNames
         ? {
             title: `What is your relationship to ${deedNames}?`,
-            labels: { self: `Self — I am ${deedNames.split(" and ")[0] ? "named on the deed" : "named on the deed"}` },
+            labels: { self: "Self — I am named on the deed" },
           }
         : {};
     case "deceasedAny":
@@ -1260,7 +1260,7 @@ const OwnershipConfirm = () => {
             )}
 
 
-            {allSettled && answers.descendants === "yes" && people.some((p) => p.name.trim()) && (
+            {allSettled && people.filter((p) => p.name.trim()).length > 1 && (
               <div className="mt-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <FamilyTree people={people} onRemove={removePerson} />
               </div>
