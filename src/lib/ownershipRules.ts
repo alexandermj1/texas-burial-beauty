@@ -173,14 +173,14 @@ export const QUESTIONS: Record<string, Question> = {
     answers: [{ value: "sole", label: "Just one" }, { value: "multiple", label: "Two or more" }],
   },
   co: {
-    key: "co", eyebrow: "Co-owners", question: "Are all co-owners alive and willing to sell?",
-    hint: "A plot sold as one unit can't be split without the cemetery's consent, so everyone has to sign.",
+    key: "co", eyebrow: "Co-owners", question: "Is everyone on the deed willing to sign the sale?",
+    hint: "A plot sold as one unit can't be split without the cemetery's consent, so everyone still living has to sign.",
     answers: [
-      { value: "all", label: "Yes, all on board" },
-      { value: "deceased", label: "One or more has died" },
-      { value: "blocked", label: "One refuses or can't be found" },
+      { value: "all", label: "Yes, everyone is on board" },
+      { value: "blocked", label: "Someone refuses or can't be found" },
     ],
   },
+
   marital: {
     key: "marital", eyebrow: "Spousal rights", question: "What is the owner's marital status?",
     hint: "A spouse holds a vested right of interment, so this affects whose signature we need.",
