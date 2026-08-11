@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2, Loader2, Pencil, Sparkles, Users, Plus, Trash2,
-  ShieldCheck, ArrowRight, Send, HeartCrack, Cloud,
+  ShieldCheck, ArrowRight, Send, HeartCrack, Cloud, UserRound,
 } from "lucide-react";
 
 
@@ -23,16 +23,50 @@ import fern from "@/assets/flowers/fern.png.asset.json";
  * family tree when the plot is being inherited).
  */
 
-type Packet = { seller_name: string | null; cemetery: string | null; answers: OwnershipAnswers };
+type Packet = {
+  seller_name: string | null;
+  cemetery: string | null;
+  lawn?: string | null;
+  space_numbers?: string | null;
+  deed_owner_names?: string | null;
+  relationship_to_owner?: string | null;
+  answers: OwnershipAnswers;
+};
 
 /** The roles a seller can sensibly pick for a family member. */
 const PUBLIC_ROLES: PersonRole[] = ["owner", "co_owner", "spouse", "heir", "executor", "trustee", "agent", "decedent"];
 
+/** The synthetic first card: the names printed on the deed. */
+const NAMES_KEY = "_deedNames";
+
+/** Split "John Smith & Mary Smith" / "John and Mary Smith" into separate names. */
+const splitNames = (raw?: string | null): string[] =>
+  String(raw ?? "")
+    .split(/\s*(?:,|\/|&| and )\s*/i)
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 1 && !/^(unknown|n\/?a|none)$/i.test(s));
+
+/** Read the relationship the seller already told us into one of our choices. */
+const guessRel = (raw?: string | null): string | undefined => {
+  const s = String(raw ?? "").toLowerCase();
+  if (!s.trim()) return undefined;
+  if (/\b(self|me|myself|i am|owner)\b/.test(s)) return "self";
+  if (/\b(husband|wife|spouse)\b/.test(s)) return "spouse";
+  if (/\b(son|daughter|child)\b/.test(s)) return "child";
+  if (/\bgrand(son|daughter|child)\b/.test(s)) return "grandchild";
+  if (/\b(brother|sister|sibling)\b/.test(s)) return "sibling";
+  if (/\b(niece|nephew)\b/.test(s)) return "nibling";
+  if (/\b(in-?law)\b/.test(s)) return "inlaw";
+  if (/\b(executor|trustee|attorney|agent|representative)\b/.test(s)) return "rep";
+  return undefined;
+};
+
 const labelFor = (key: string, value?: string) =>
   QUESTIONS[key]?.answers.find((a) => a.value === value)?.label ?? "";
 
+
 const QuestionCard = ({
-  qKey, answers, believed, confirmed, onAnswer, onConfirm, index,
+  qKey, answers, believed, confirmed, onAnswer, onConfirm, index, context,
 }: {
   qKey: string;
   answers: OwnershipAnswers;
@@ -41,6 +75,8 @@ const QuestionCard = ({
   onAnswer: (key: string, value: string) => void;
   onConfirm: (key: string) => void;
   index: number;
+  /** Names already gathered, so a question can say who it is talking about. */
+  context?: string;
 }) => {
   const q = QUESTIONS[qKey];
   const value = (answers as Record<string, unknown>)[qKey] as string | undefined;
@@ -52,13 +88,15 @@ const QuestionCard = ({
 
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-7 transition-colors ${
-        settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70"
+      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+        settled
+          ? "border-primary/30 bg-primary/[0.04]"
+          : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
       }`}
     >
       <div className="flex items-start gap-4">
         <div
-          className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] ${
+          className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] transition-colors ${
             settled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           }`}
         >
@@ -67,8 +105,20 @@ const QuestionCard = ({
 
         <div className="flex-1 min-w-0">
           <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">{q.eyebrow}</div>
-          <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">{q.question}</p>
-          {q.hint && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{q.hint}</p>}
+          <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
+            {context && qKey === "rel"
+              ? `What is your relationship to ${context}?`
+              : context && qKey === "owner"
+                ? `Which of these describes ${context}?`
+                : q.question}
+          </p>
+
+          {q.hint && (
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+              {context && qKey === "owner" ? "This decides whose signature the cemetery will accept." : q.hint}
+            </p>
+          )}
+
 
           {!showChoices && value && (
             <div className="mt-4">
@@ -121,6 +171,146 @@ const QuestionCard = ({
   );
 };
 
+/**
+ * The deed-holder card. We lead with the names we already hold and ask only for
+ * a nod — but a deed can carry several names, so the editor is a live list.
+ */
+const NamesCard = ({
+  people, believed, confirmed, index, onChange, onConfirm,
+}: {
+  people: RosterPerson[];
+  believed: boolean;
+  confirmed: boolean;
+  index: number;
+  onChange: (people: RosterPerson[]) => void;
+  onConfirm: () => void;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const named = people.filter((p) => p.name.trim());
+  const showEditor = editing || named.length === 0;
+  const settled = named.length > 0 && (confirmed || !believed);
+
+  const patch = (id: string, p: Partial<RosterPerson>) =>
+    onChange(people.map((x) => (x.id === id ? { ...x, ...p } : x)));
+
+  return (
+    <div
+      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+        settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] transition-colors ${
+            settled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {settled ? <CheckCircle2 className="w-4 h-4" /> : index}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The deed</div>
+          <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
+            Whose name is printed on the deed?
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Exactly as it appears on the cemetery's certificate of ownership. A deed often carries more than one
+            name — please list everyone on it.
+          </p>
+
+          {!showEditor && (
+            <div className="mt-4">
+              <div className="rounded-xl border border-border/70 bg-background px-4 py-3">
+                <p className="text-[11px] text-muted-foreground">
+                  {believed && !confirmed ? "From our records we believe" : "Your answer"}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {named.map((p) => (
+                    <span
+                      key={p.id}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/[0.06] px-3 py-1 text-sm text-foreground"
+                    >
+                      <UserRound className="w-3.5 h-3.5 text-primary" />
+                      {p.name}
+                      {p.deceased && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">deceased</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {believed && !confirmed && (
+                  <button
+                    onClick={onConfirm}
+                    className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> That's correct
+                  </button>
+                )}
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> {believed && !confirmed ? "No — change this" : "Change"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showEditor && (
+            <div className="mt-4 space-y-2">
+              {people.map((p) => (
+                <div key={p.id} className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={p.name}
+                    autoFocus={!p.name}
+                    onChange={(e) => patch(p.id, { name: e.target.value })}
+                    placeholder="Full name as printed on the deed"
+                    className="flex-1 min-w-[220px] rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
+                  />
+                  <button
+                    onClick={() => patch(p.id, { deceased: !p.deceased, role: !p.deceased ? "decedent" : "owner" })}
+                    className={`text-[11px] px-3 py-2 rounded-full border transition ${
+                      p.deceased ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    Has passed away
+                  </button>
+                  {people.length > 1 && (
+                    <button
+                      onClick={() => onChange(people.filter((x) => x.id !== p.id))}
+                      className="p-2 rounded-full border border-border text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  onClick={() => onChange([...people, { id: crypto.randomUUID(), name: "", role: "co_owner" as PersonRole }])}
+                  className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Another name on the deed
+                </button>
+                {named.length > 0 && (
+                  <button
+                    onClick={() => { setEditing(false); onConfirm(); }}
+                    className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> That's everyone
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
 const OwnershipConfirm = () => {
   const [params] = useSearchParams();
   const submissionId = params.get("s") ?? "";
@@ -143,7 +333,36 @@ const OwnershipConfirm = () => {
     } else {
       const p = data as Packet;
       setPacket(p);
-      setAnswers(p.answers ?? {});
+
+      /**
+       * Lead with what we already hold. Names from the file become the deed
+       * roster, and anything the seller told us about their relationship is
+       * mapped onto our own choices — both flagged "believed" so they are
+       * asked to confirm rather than to type it all again.
+       */
+      const a: OwnershipAnswers = { ...(p.answers ?? {}) };
+      const believed = new Set(a.aiSuggested ?? []);
+      const existingDeed = (a.people ?? []).filter((x) => x.role === "owner" || x.role === "co_owner" || x.role === "decedent");
+      if (existingDeed.length === 0) {
+        const seeded = splitNames(p.deed_owner_names).map((name, i) => ({
+          id: crypto.randomUUID(),
+          name,
+          role: (i === 0 ? "owner" : "co_owner") as PersonRole,
+        }));
+        if (seeded.length) {
+          a.people = [...seeded, ...(a.people ?? [])];
+          believed.add(NAMES_KEY);
+        }
+      } else if (!a.sellerConfirmedAt) {
+        believed.add(NAMES_KEY);
+      }
+      if (!a.rel) {
+        const guess = guessRel(p.relationship_to_owner);
+        if (guess) { a.rel = guess as OwnershipAnswers["rel"]; believed.add("rel"); }
+      }
+      a.aiSuggested = [...believed];
+
+      setAnswers(a);
       setNotes(String((p.answers as Record<string, unknown>)?.sellerNotes ?? ""));
       if ((p.answers as Record<string, unknown>)?.sellerConfirmedAt) setSent(true);
     }
@@ -157,26 +376,34 @@ const OwnershipConfirm = () => {
 
   /** Answers we filled in ourselves and have not had confirmed yet. */
   const believedKeys = useMemo(() => new Set(answers.aiSuggested ?? []), [answers.aiSuggested]);
-  const path = useMemo(() => questionPath(answers), [answers]);
-  const answered = path.filter((k) => !!(answers as Record<string, unknown>)[k]).length;
-  const pct = path.length ? Math.round((answered / path.length) * 100) : 0;
+  /** The deed-holder card always leads, then the branching questionnaire. */
+  const path = useMemo(() => [NAMES_KEY, ...questionPath(answers)], [answers]);
 
   /**
    * A question is settled once it has an answer the seller owns — either they
    * picked it, or they confirmed the one we had guessed. We only ever show one
    * unsettled question at a time so the page never looks like a form.
    */
+  const deedPeople = useMemo(
+    () => (answers.people ?? []).filter((p) => p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
+    [answers.people],
+  );
   const isSettled = useCallback(
     (k: string) => {
-      const v = (answers as Record<string, unknown>)[k];
+      const v = k === NAMES_KEY
+        ? deedPeople.some((p) => p.name.trim())
+        : !!(answers as Record<string, unknown>)[k];
       return !!v && (confirmedKeys.includes(k) || !believedKeys.has(k));
     },
-    [answers, confirmedKeys, believedKeys],
+    [answers, confirmedKeys, believedKeys, deedPeople],
   );
+  const answered = path.filter((k) => isSettled(k)).length;
+  const pct = path.length ? Math.round((answered / path.length) * 100) : 0;
   const nextIndex = path.findIndex((k) => !isSettled(k));
   const allSettled = nextIndex === -1;
   const visible = allSettled ? path : path.slice(0, nextIndex + 1);
   const remaining = path.length - (allSettled ? path.length : nextIndex);
+
 
   /** Scroll the newly revealed question into view, but never on first paint. */
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -223,7 +450,25 @@ const OwnershipConfirm = () => {
   };
 
 
+  /** Replace just the deed-holder slice of the roster, keeping everyone else. */
+  const setDeedPeople = (next: RosterPerson[]) => {
+    dirty.current = true;
+    setAnswers((a) => {
+      const others = (a.people ?? []).filter(
+        (p) => p.role !== "owner" && p.role !== "co_owner" && p.role !== "decedent",
+      );
+      return { ...a, people: [...next, ...others] };
+    });
+  };
+  const deedNamesLabel = useMemo(() => {
+    const names = deedPeople.map((p) => p.name.trim()).filter(Boolean);
+    if (!names.length) return "";
+    if (names.length === 1) return names[0];
+    return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  }, [deedPeople]);
+
   const people = answers.people ?? [];
+
   const showFamily = answers.owner === "deceased" || answers.owners === "multiple" || people.length > 0;
 
   const addPerson = () => {
@@ -276,6 +521,11 @@ const OwnershipConfirm = () => {
         className="absolute bottom-0 -left-28 w-80 h-80 opacity-[0.12] pointer-events-none"
         style={{ backgroundImage: `url(${fern.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
       />
+      {/* Soft light behind the page so each card lifts off the paper. */}
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[46rem] h-[46rem] rounded-full bg-primary/[0.07] blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] rounded-full bg-accent/[0.10] blur-3xl pointer-events-none" />
+
+
 
       <div className="relative max-w-3xl mx-auto px-5 py-16">
         <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-3">Texas Cemetery Brokers</div>
@@ -362,20 +612,33 @@ const OwnershipConfirm = () => {
                 <div
                   key={key}
                   ref={(el) => { cardRefs.current[key] = el; }}
-                  className="animate-in fade-in slide-in-from-bottom-2 duration-500"
+                  className="animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out"
                 >
-                  <QuestionCard
-                    qKey={key}
-                    index={i + 1}
-                    answers={answers}
-                    believed={believedKeys.has(key)}
-                    confirmed={confirmedKeys.includes(key)}
-                    onAnswer={setAnswer}
-                    onConfirm={confirmKey}
-                  />
+                  {key === NAMES_KEY ? (
+                    <NamesCard
+                      index={i + 1}
+                      people={deedPeople.length ? deedPeople : [{ id: "seed", name: "", role: "owner" as PersonRole }]}
+                      believed={believedKeys.has(NAMES_KEY)}
+                      confirmed={confirmedKeys.includes(NAMES_KEY)}
+                      onChange={setDeedPeople}
+                      onConfirm={() => confirmKey(NAMES_KEY)}
+                    />
+                  ) : (
+                    <QuestionCard
+                      qKey={key}
+                      index={i + 1}
+                      answers={answers}
+                      context={key === "rel" || key === "owner" ? deedNamesLabel : undefined}
+                      believed={believedKeys.has(key)}
+                      confirmed={confirmedKeys.includes(key)}
+                      onAnswer={setAnswer}
+                      onConfirm={confirmKey}
+                    />
+                  )}
                 </div>
               ))}
             </div>
+
 
             {!allSettled && (
               <p className="mt-6 text-xs text-muted-foreground inline-flex items-center gap-1.5">

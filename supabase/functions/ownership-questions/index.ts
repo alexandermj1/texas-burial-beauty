@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
 
     const { data: sub } = await svc
       .from("contact_submissions")
-      .select("id, name, email, cemetery, customer_profile_id, deleted_at, ownership_answers, ownership_roster")
+      .select("id, name, email, cemetery, lawn, space_numbers, deed_owner_names, relationship_to_owner, customer_profile_id, deleted_at, ownership_answers, ownership_roster")
       .eq("id", submissionId)
       .maybeSingle();
     if (!sub || sub.deleted_at) return json({ error: "This link is no longer active." }, 404);
@@ -58,21 +58,29 @@ Deno.serve(async (req) => {
       return json({
         seller_name: sub.name,
         cemetery: sub.cemetery,
+        lawn: sub.lawn,
+        space_numbers: sub.space_numbers,
+        deed_owner_names: sub.deed_owner_names,
+        relationship_to_owner: sub.relationship_to_owner,
         answers,
       });
     }
 
+
     if (action === "save") {
       const incoming = (body?.answers ?? {}) as Answers;
+      const isFinished = body?.finished === true;
       // The seller's page owns the questionnaire keys and the roster; anything
       // else already on the record (AI reading, mail-original addresses) stays.
+      // Autosaved drafts must not mark the questionnaire as confirmed.
       const merged: Answers = {
         ...answers,
         ...incoming,
-        aiSuggested: [],
-        sellerConfirmedAt: new Date().toISOString(),
+        aiSuggested: isFinished ? [] : (answers.aiSuggested ?? []),
+        ...(isFinished ? { sellerConfirmedAt: new Date().toISOString() } : {}),
       };
       const people = Array.isArray(incoming.people) ? incoming.people : (answers.people ?? []);
+
 
       const { error } = await svc.from("contact_submissions")
         .update({ ownership_answers: merged as never, ownership_roster: people as never })
