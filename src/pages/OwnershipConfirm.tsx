@@ -863,15 +863,34 @@ const OwnershipConfirm = () => {
   );
 
   /**
+   * Anything the deed roster already tells us is settled silently — asking a
+   * couple who wrote two names down "how many owners are there?" is the kind
+   * of question that makes people abandon the page.
+   */
+  useEffect(() => {
+    const named = deedPeople.filter((p) => p.name.trim());
+    if (!named.length) return;
+    const owners = named.length > 1 ? "multiple" : "sole";
+    if (answers.owners === owners && (answers.derived ?? []).includes("owners")) return;
+    setAnswers((a) => ({
+      ...a,
+      owners,
+      derived: [...new Set([...(a.derived ?? []), "owners"])],
+    }));
+  }, [deedPeople, answers.owners, answers.derived]);
+
+  /**
    * Every answer that implies people pulls those people in immediately, so the
    * names we need for the documents are gathered in context rather than in one
    * daunting list at the end.
    */
   const followUps = useCallback((k: string, a: OwnershipAnswers): string[] => {
+    const derived = a.derived ?? [];
     switch (k) {
       case "owner": return a.owner === "deceased" ? ["_decedent"] : [];
       case "signer": return a.signer === "agent" ? ["_agent"] : [];
-      case "owners": return a.owners === "multiple" ? ["_coowners"] : [];
+      // Co-owners we read off the deed are already named — don't ask twice.
+      case "owners": return a.owners === "multiple" && !derived.includes("owners") ? ["_coowners"] : [];
       case "co": return a.co === "blocked" ? ["_blocked"] : [];
       case "marital":
         return a.marital === "married" ? ["_spouse"]
@@ -883,10 +902,19 @@ const OwnershipConfirm = () => {
       case "heirclass": return a.heirclass && a.heirclass !== "unsure" ? ["_heirs"] : [];
       case "trustee": return ["_trustee"];
       case "chain": return a.chain === "multi" ? ["_chaindeaths"] : [];
-      case "names": return a.names === "no" ? ["_nameMismatch"] : [];
       default: return [];
     }
   }, []);
+
+  /** Everyone still living whose signature — and therefore ID — we will need. */
+  const signers = useMemo(
+    () => (answers.people ?? []).filter(
+      (p) => p.name.trim() && !p.deceased &&
+        (p.role === "owner" || p.role === "co_owner" || p.role === "spouse" ||
+         p.role === "agent" || p.role === "executor" || p.role === "trustee"),
+    ),
+    [answers.people],
+  );
 
   /** The deed-holder card leads, then each question with whatever it implies. */
   const path = useMemo(() => {
@@ -896,12 +924,12 @@ const OwnershipConfirm = () => {
       for (const f of followUps(k, answers)) if (!out.includes(f)) out.push(f);
     }
     // Two or more living people have to sign, so ask how they'd like to do it.
-    const livingSigners = (answers.people ?? []).filter(
-      (p) => p.name.trim() && !p.deceased && p.role !== "decedent" && p.role !== "heir" && p.role !== "witness",
-    );
-    if (livingSigners.length >= 2) out.push("jointPoa");
+    if (signers.length >= 2) out.push("jointPoa");
+    // Last of all, the ID details that go on the notarised documents.
+    if (signers.length) out.push(IDS_KEY);
     return out;
-  }, [answers, followUps]);
+  }, [answers, followUps, signers]);
+
 
   /**
    * A step is settled once it has an answer the seller owns — they picked it,
