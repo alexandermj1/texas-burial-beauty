@@ -28,6 +28,13 @@ export type OwnershipAnswers = {
   outsideSpouse?: "yes" | "no" | "unsure";
   /** Do any deceased deed holders have surviving biological/adopted descendants? */
   descendants?: "yes" | "no" | "unsure";
+  /** Stage 1 Q3 — is anyone named on the deed deceased? */
+  deceasedAny?: "yes" | "no";
+  /** Stage 1 Q4 — does anyone hold a POA for a living person named on the deed? */
+  poaHolder?: "yes" | "no";
+  /** The details of that power of attorney, in the seller's words. */
+  poaDetails?: string;
+
 
   will?: "yes" | "no";
   probate?: "letters" | "muniment" | "none";
@@ -224,6 +231,24 @@ export const QUESTIONS: Record<string, Question> = {
       { value: "unsure", label: "I don't know" },
     ],
   },
+  deceasedAny: {
+    key: "deceasedAny", eyebrow: "Stage 1 · The deed", question: "Are any of the individuals named on the deed deceased?",
+    hint: "If so we'll ask you which of them, on the next step.",
+    answers: [
+      { value: "no", label: "No — everyone named on the deed is living" },
+      { value: "yes", label: "Yes — one or more of them has died" },
+    ],
+  },
+  poaHolder: {
+    key: "poaHolder", eyebrow: "Stage 1 · Power of attorney", question: "Does anyone hold a power of attorney for a living individual named on the deed?",
+    hint: "This is an existing power of attorney — not the one we prepare for the sale.",
+    answers: [
+      { value: "no", label: "No — each living owner signs for themselves" },
+      { value: "yes", label: "Yes — someone holds a power of attorney" },
+    ],
+  },
+
+
 
   will: {
     key: "will", eyebrow: "Stage 2 · A will", question: "Did any deceased person named on the deed leave a will that specifically identified the cemetery plot or spaces?",
@@ -306,23 +331,46 @@ export const QUESTIONS: Record<string, Question> = {
   },
 };
 
-/** Build only the questions needed from the seller's earlier answers. */
+/**
+ * The questionnaire, written straight from the Stage 1 / Stage 2 checklist.
+ * Nothing else is ever asked. The deed-holder card sits immediately before this
+ * path and gathers Stage 1 question one (who is named on the most current deed).
+ */
 export function questionPath(a: OwnershipAnswers): string[] {
-  // Stage 1 is intentionally short and fixed. The deed-holder card immediately
-  // before this path gathers every deed name and marks each person alive/deceased.
-  const p: string[] = ["rel", "signer"];
-  if (a.signer === "agent") p.push("agentType");
-  p.push("occupied", "outsideSpouse");
+  // Stage 1 — always, in this order.
+  const p: string[] = ["rel", "deceasedAny", "poaHolder", "occupied", "outsideSpouse"];
 
-  // Stage 2 appears only when the confirmed deed roster contains a death (or
-  // the older owner answer already establishes one).
-  const hasDeceasedOwner = a.owner === "deceased" || (a.people ?? []).some(
-    (person) => person.role === "decedent" || person.deceased === true,
-  );
-  if (hasDeceasedOwner) p.push("will", "descendants");
-  const skip = new Set(a.derived ?? []);
-  return p.filter((k) => !skip.has(k));
+  // Stage 2 — only when someone named on the deed has died.
+  if (hasDeceased(a)) p.push("will", "descendants");
+  return p;
 }
+
+/** Is anyone named on the deed deceased? */
+export function hasDeceased(a: OwnershipAnswers): boolean {
+  return a.deceasedAny === "yes" ||
+    (a.people ?? []).some((p) => p.role === "decedent" || p.deceased === true);
+}
+
+/**
+ * The checklist answers, translated into the legacy keys the requirements
+ * engine reads. The seller is never asked these — they follow from Stage 1/2.
+ */
+export function normalizeAnswers(a: OwnershipAnswers): OwnershipAnswers {
+  const deceased = hasDeceased(a);
+  const outside = a.outsideSpouse === "yes";
+  return {
+    ...a,
+    owner: a.owner ?? (deceased ? "deceased" : "living"),
+    signer: a.poaHolder === "yes" ? "agent" : a.poaHolder === "no" ? "self" : a.signer,
+    agentType: a.poaHolder === "yes" ? (a.agentType ?? "poa") : undefined,
+    marital: outside ? "married" : a.marital,
+    spouse: deceased && outside ? "yes" : a.spouse,
+    // No probate question is asked: a plot is settled by affidavit of heirship.
+    heirship: deceased && a.will === "no" ? (a.heirship ?? "affidavit") : a.heirship,
+    probate: deceased && a.will === "yes" ? (a.probate ?? "none") : a.probate,
+  };
+}
+
 
 
 
@@ -461,12 +509,14 @@ export function signingRoster(a: OwnershipAnswers): RosterPerson[] {
  * cemetery's own overrides, then a per-person POA + photo ID for every signer.
  */
 export function computeRequirements(
-  a: OwnershipAnswers,
+  raw: OwnershipAnswers,
   cem?: CemeteryDocRules | null,
 ): Requirement[] {
+  const a = normalizeAnswers(raw);
   const out: Requirement[] = [];
   const add = (r: Requirement) => out.push(r);
   const rules = cem ?? {};
+
 
   // ── Proof of the right being sold ──
   if (a.deed === "no") {
