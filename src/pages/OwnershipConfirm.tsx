@@ -856,23 +856,25 @@ const OwnershipConfirm = () => {
 
   const people = answers.people ?? [];
 
-  const showFamily = answers.owner === "deceased" || answers.owners === "multiple" || people.length > 0;
-
-  const addPerson = () => {
+  /** People gathered by a particular follow-up card, kept in role order. */
+  const slotPeople = (role: PersonRole) => people.filter((p) => p.role === role);
+  const setSlotPeople = (role: PersonRole, next: RosterPerson[]) => {
     dirty.current = true;
     setAnswers((a) => ({
       ...a,
-      people: [...(a.people ?? []), { id: crypto.randomUUID(), name: "", role: "heir" as PersonRole }],
+      people: [...(a.people ?? []).filter((p) => p.role !== role), ...next],
     }));
   };
-  const updatePerson = (id: string, patch: Partial<RosterPerson>) => {
+  const setText = (field: "nameMismatch" | "blockedNotes", v: string) => {
     dirty.current = true;
-    setAnswers((a) => ({ ...a, people: (a.people ?? []).map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
+    setAnswers((a) => ({ ...a, [field]: v } as OwnershipAnswers));
   };
+
   const removePerson = (id: string) => {
     dirty.current = true;
     setAnswers((a) => ({ ...a, people: (a.people ?? []).filter((p) => p.id !== id) }));
   };
+
 
 
   const submit = async () => {
