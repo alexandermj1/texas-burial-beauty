@@ -819,7 +819,7 @@ const OwnershipConfirm = () => {
         body: {
           action: "save",
           submission_id: submissionId,
-          answers: { ...answers, people: (answers.people ?? []).filter((p) => p.name.trim()), sellerNotes: notes.trim() || undefined },
+          answers: { ...answers, confirmedKeys, people: (answers.people ?? []).filter((p) => p.name.trim()), sellerNotes: notes.trim() || undefined },
           finished: false,
         },
       });
