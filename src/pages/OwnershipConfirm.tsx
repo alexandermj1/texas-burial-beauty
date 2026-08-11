@@ -707,8 +707,10 @@ const OwnershipConfirm = () => {
       a.aiSuggested = [...believed];
 
       setAnswers(a);
+      setConfirmedKeys(Array.isArray(a.confirmedKeys) ? a.confirmedKeys : []);
       setNotes(String((p.answers as Record<string, unknown>)?.sellerNotes ?? ""));
       if ((p.answers as Record<string, unknown>)?.sellerConfirmedAt) setSent(true);
+
     }
     setLoading(false);
   }, [submissionId]);
