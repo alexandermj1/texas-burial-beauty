@@ -292,12 +292,10 @@ export function questionPath(a: OwnershipAnswers): string[] {
   if (a.owner === "living") {
     p.push("signer");
     if (a.signer === "agent") p.push("agentType");
-    p.push("owners");
-    if (a.owners === "multiple") p.push("co");
     p.push("marital");
     if (a.marital && a.marital !== "married") p.push("maritalAtPurchase");
   } else if (a.owner === "deceased") {
-    p.push("occupied", "will");
+    p.push("will");
     if (a.will === "yes") p.push("probate", "beneficiaries");
     if (a.will === "no") p.push("heirclass", "heirship");
     p.push("spouse");
@@ -305,10 +303,12 @@ export function questionPath(a: OwnershipAnswers): string[] {
     p.push("chain");
   } else if (a.owner === "trust") p.push("trustee");
   else if (a.owner === "org") p.push("orgStatus");
-  p.push("deed");
+  // Asked of everyone: interment rights follow whoever is already buried there.
+  p.push("occupied", "deed");
   const skip = new Set(a.derived ?? []);
   return p.filter((k) => !skip.has(k));
 }
+
 
 
 export function isComplete(a: OwnershipAnswers): boolean {
