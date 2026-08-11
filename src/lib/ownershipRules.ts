@@ -41,6 +41,9 @@ export type OwnershipAnswers = {
   blockedNotes?: string;
   /** Steps the seller has personally settled, so a reload doesn't re-ask them. */
   confirmedKeys?: string[];
+  /** Questions we worked out ourselves (from the deed roster) and never ask. */
+  derived?: string[];
+
 
 
 
@@ -95,8 +98,13 @@ export type RosterPerson = {
   phone?: string;
   /** True for a person in the chain of title who has died. */
   deceased?: boolean;
+  /** Government name exactly as printed on their photo ID. */
+  legalName?: string;
+  /** Home address as printed on their ID — we prefill the POA with it. */
+  address?: string;
   notes?: string;
 };
+
 
 export const ROLE_LABEL: Record<PersonRole, string> = {
   owner: "Owner on the deed",
@@ -135,7 +143,7 @@ export const QUESTIONS: Record<string, Question> = {
     key: "rel", eyebrow: "The seller", question: "What is the seller's relationship to that person?",
     hint: "This tells us whether they can sign themselves, or whether we need someone else.",
     answers: [
-      { value: "self", label: "They are the owner" },
+      { value: "self", label: "Self — that's me on the deed" },
       { value: "spouse", label: "Husband or wife" },
       { value: "child", label: "Son or daughter" },
       { value: "grandchild", label: "Grandchild" },
@@ -165,14 +173,14 @@ export const QUESTIONS: Record<string, Question> = {
     answers: [{ value: "sole", label: "Just one" }, { value: "multiple", label: "Two or more" }],
   },
   co: {
-    key: "co", eyebrow: "Co-owners", question: "Are all co-owners alive and willing to sell?",
-    hint: "A plot sold as one unit can't be split without the cemetery's consent, so everyone has to sign.",
+    key: "co", eyebrow: "Co-owners", question: "Is everyone on the deed willing to sign the sale?",
+    hint: "A plot sold as one unit can't be split without the cemetery's consent, so everyone still living has to sign.",
     answers: [
-      { value: "all", label: "Yes, all on board" },
-      { value: "deceased", label: "One or more has died" },
-      { value: "blocked", label: "One refuses or can't be found" },
+      { value: "all", label: "Yes, everyone is on board" },
+      { value: "blocked", label: "Someone refuses or can't be found" },
     ],
   },
+
   marital: {
     key: "marital", eyebrow: "Spousal rights", question: "What is the owner's marital status?",
     hint: "A spouse holds a vested right of interment, so this affects whose signature we need.",
@@ -272,7 +280,13 @@ export const QUESTIONS: Record<string, Question> = {
 };
 
 
-/** The ordered list of questions to ask, given what has been answered so far. */
+/**
+ * The ordered list of questions to ask, given what has been answered so far.
+ *
+ * Anything we can work out ourselves — who is on the deed, how many of them
+ * there are, whether one of them has died — is listed in `derived` and never
+ * put to the seller again.
+ */
 export function questionPath(a: OwnershipAnswers): string[] {
   const p: string[] = ["owner", "rel"];
   if (a.owner === "living") {
@@ -291,9 +305,11 @@ export function questionPath(a: OwnershipAnswers): string[] {
     p.push("chain");
   } else if (a.owner === "trust") p.push("trustee");
   else if (a.owner === "org") p.push("orgStatus");
-  p.push("deed", "names");
-  return p;
+  p.push("deed");
+  const skip = new Set(a.derived ?? []);
+  return p.filter((k) => !skip.has(k));
 }
+
 
 export function isComplete(a: OwnershipAnswers): boolean {
   return questionPath(a).every((k) => !!(a as Record<string, unknown>)[k]);

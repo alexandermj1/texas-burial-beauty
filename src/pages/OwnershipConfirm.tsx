@@ -64,7 +64,7 @@ const labelFor = (key: string, value?: string) =>
 
 
 const QuestionCard = ({
-  qKey, answers, believed, confirmed, onAnswer, onConfirm, index, context,
+  qKey, answers, believed, confirmed, onAnswer, onConfirm, index, title, hint, labels,
 }: {
   qKey: string;
   answers: OwnershipAnswers;
@@ -73,8 +73,11 @@ const QuestionCard = ({
   onAnswer: (key: string, value: string) => void;
   onConfirm: (key: string) => void;
   index: number;
-  /** Names already gathered, so a question can say who it is talking about. */
-  context?: string;
+  /** The question rewritten to name the person we're actually talking about. */
+  title?: string;
+  hint?: string;
+  /** Answer labels rewritten the same way, e.g. "Yes, I'll sign personally". */
+  labels?: Record<string, string>;
 }) => {
   const q = QUESTIONS[qKey];
   const value = (answers as Record<string, unknown>)[qKey] as string | undefined;
@@ -104,18 +107,13 @@ const QuestionCard = ({
         <div className="flex-1 min-w-0">
           <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">{q.eyebrow}</div>
           <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
-            {context && qKey === "rel"
-              ? `What is your relationship to ${context}?`
-              : context && qKey === "owner"
-                ? `Which of these describes ${context}?`
-                : q.question}
+            {title ?? q.question}
           </p>
 
-          {q.hint && (
-            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-              {context && qKey === "owner" ? "This decides whose signature the cemetery will accept." : q.hint}
-            </p>
+          {(hint ?? q.hint) && (
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{hint ?? q.hint}</p>
           )}
+
 
 
           {!showChoices && value && (
@@ -124,7 +122,7 @@ const QuestionCard = ({
                 <p className="text-[11px] text-muted-foreground">
                   {believed && !confirmed ? "From our records we believe" : "Your answer"}
                 </p>
-                <p className="text-sm text-foreground mt-0.5">{labelFor(qKey, value)}</p>
+                <p className="text-sm text-foreground mt-0.5">{labels?.[value] ?? labelFor(qKey, value)}</p>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {believed && !confirmed && (
@@ -157,7 +155,7 @@ const QuestionCard = ({
                       : "border-border/70 bg-background hover:border-primary/40"
                   }`}
                 >
-                  <span className="text-sm text-foreground">{opt.label}</span>
+                  <span className="text-sm text-foreground">{labels?.[opt.value] ?? opt.label}</span>
                   {opt.detail && <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.detail}</span>}
                 </button>
               ))}
@@ -605,6 +603,114 @@ const TextSlotCard = ({
   </CardShell>
 );
 
+/** The final card: the ID name and address behind every signature. */
+const IDS_KEY = "_ids";
+
+const IdentityCard = ({
+  index, settled, signers, isSelf, onPatch, onDone,
+}: {
+  index: number;
+  settled: boolean;
+  signers: RosterPerson[];
+  isSelf: boolean;
+  onPatch: (id: string, patch: Partial<RosterPerson>) => void;
+  onDone: () => void;
+}) => {
+  const ready = signers.every((p) => (p.address ?? "").trim().length > 5);
+  return (
+    <CardShell
+      index={index}
+      settled={settled}
+      eyebrow="For the paperwork"
+      title={
+        signers.length === 1 && isSelf
+          ? "Last thing — your name and address exactly as they appear on your ID"
+          : "Last thing — each signer's name and address exactly as on their ID"
+      }
+      hint="Every power of attorney is notarised, so the name and address on it must match the driver's licence or passport the notary sees. We type these straight onto your documents so you never have to."
+    >
+      <div className="mt-4 space-y-3">
+        {signers.map((p) => (
+          <div key={p.id} className="rounded-xl border border-border/70 bg-background p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-medium shrink-0">
+                {initials(p.name) || <UserRound className="w-4 h-4" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-foreground leading-tight truncate">{p.name}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  {p.relationship || ROLE_LABEL[p.role]}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-2">
+              <input
+                value={p.legalName ?? ""}
+                onChange={(e) => onPatch(p.id, { legalName: e.target.value })}
+                placeholder={`Full legal name on the ID (e.g. ${p.name})`}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <input
+                value={p.address ?? ""}
+                onChange={(e) => onPatch(p.id, { address: e.target.value })}
+                placeholder="Home address on the ID — street, city, state, ZIP"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={onDone}
+        disabled={!ready}
+        className="mt-4 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+      >
+        <CheckCircle2 className="w-3.5 h-3.5" /> Save these details
+      </button>
+    </CardShell>
+  );
+};
+
+/**
+ * Say the question out loud the way a broker would: to the owner it's "you",
+ * about anybody else it's their name. Nothing generic, nothing repeated.
+ */
+const phraseFor = (
+  key: string, isSelf: boolean, ownerNames: string, deedNames: string,
+): { title?: string; hint?: string; labels?: Record<string, string> } => {
+  const who = isSelf ? "you" : ownerNames || "the owner";
+  switch (key) {
+    case "rel":
+      return deedNames ? { title: `What is your relationship to ${deedNames}?` } : {};
+    case "signer":
+      return isSelf
+        ? {
+            title: "Will you be signing the paperwork yourself?",
+            labels: { self: "Yes, I'll sign personally", agent: "Someone signs for me — power of attorney or guardian" },
+          }
+        : { title: `Will ${who} be signing the paperwork personally?` };
+    case "co":
+      return { title: isSelf ? "Is everyone else on the deed willing to sign the sale?" : `Is everyone on the deed willing to sign the sale?` };
+    case "marital":
+      return {
+        title: isSelf ? "Are you married?" : `Is ${who} married?`,
+        hint: "A husband or wife has to sign the power of attorney as well — even when they aren't named on the deed.",
+      };
+    case "maritalAtPurchase":
+      return { title: isSelf ? "Were you married when the plot was bought?" : `Was ${who} married when the plot was bought?` };
+    case "deed":
+      return {
+        title: isSelf
+          ? "Do you have the original certificate of ownership?"
+          : `Does ${who} have the original certificate of ownership?`,
+      };
+    default:
+      return {};
+  }
+};
+
+
+
 /**
  * The family, drawn rather than listed. Everyone gathered so far is grouped by
  * the part they play, so the seller can see at a glance that we have the right
@@ -757,15 +863,34 @@ const OwnershipConfirm = () => {
   );
 
   /**
+   * Anything the deed roster already tells us is settled silently — asking a
+   * couple who wrote two names down "how many owners are there?" is the kind
+   * of question that makes people abandon the page.
+   */
+  useEffect(() => {
+    const named = deedPeople.filter((p) => p.name.trim());
+    if (!named.length) return;
+    const owners = named.length > 1 ? "multiple" : "sole";
+    if (answers.owners === owners && (answers.derived ?? []).includes("owners")) return;
+    setAnswers((a) => ({
+      ...a,
+      owners,
+      derived: [...new Set([...(a.derived ?? []), "owners"])],
+    }));
+  }, [deedPeople, answers.owners, answers.derived]);
+
+  /**
    * Every answer that implies people pulls those people in immediately, so the
    * names we need for the documents are gathered in context rather than in one
    * daunting list at the end.
    */
   const followUps = useCallback((k: string, a: OwnershipAnswers): string[] => {
+    const derived = a.derived ?? [];
     switch (k) {
       case "owner": return a.owner === "deceased" ? ["_decedent"] : [];
       case "signer": return a.signer === "agent" ? ["_agent"] : [];
-      case "owners": return a.owners === "multiple" ? ["_coowners"] : [];
+      // Co-owners we read off the deed are already named — don't ask twice.
+      case "owners": return a.owners === "multiple" && !derived.includes("owners") ? ["_coowners"] : [];
       case "co": return a.co === "blocked" ? ["_blocked"] : [];
       case "marital":
         return a.marital === "married" ? ["_spouse"]
@@ -777,10 +902,19 @@ const OwnershipConfirm = () => {
       case "heirclass": return a.heirclass && a.heirclass !== "unsure" ? ["_heirs"] : [];
       case "trustee": return ["_trustee"];
       case "chain": return a.chain === "multi" ? ["_chaindeaths"] : [];
-      case "names": return a.names === "no" ? ["_nameMismatch"] : [];
       default: return [];
     }
   }, []);
+
+  /** Everyone still living whose signature — and therefore ID — we will need. */
+  const signers = useMemo(
+    () => (answers.people ?? []).filter(
+      (p) => p.name.trim() && !p.deceased &&
+        (p.role === "owner" || p.role === "co_owner" || p.role === "spouse" ||
+         p.role === "agent" || p.role === "executor" || p.role === "trustee"),
+    ),
+    [answers.people],
+  );
 
   /** The deed-holder card leads, then each question with whatever it implies. */
   const path = useMemo(() => {
@@ -790,12 +924,12 @@ const OwnershipConfirm = () => {
       for (const f of followUps(k, answers)) if (!out.includes(f)) out.push(f);
     }
     // Two or more living people have to sign, so ask how they'd like to do it.
-    const livingSigners = (answers.people ?? []).filter(
-      (p) => p.name.trim() && !p.deceased && p.role !== "decedent" && p.role !== "heir" && p.role !== "witness",
-    );
-    if (livingSigners.length >= 2) out.push("jointPoa");
+    if (signers.length >= 2) out.push("jointPoa");
+    // Last of all, the ID details that go on the notarised documents.
+    if (signers.length) out.push(IDS_KEY);
     return out;
-  }, [answers, followUps]);
+  }, [answers, followUps, signers]);
+
 
   /**
    * A step is settled once it has an answer the seller owns — they picked it,
@@ -804,8 +938,10 @@ const OwnershipConfirm = () => {
    */
   const isSettled = useCallback(
     (k: string) => {
+      if (k === IDS_KEY) return confirmedKeys.includes(k);
       const slot = SLOTS[k];
       if (slot) return confirmedKeys.includes(k);
+
       const v = k === NAMES_KEY
         ? deedPeople.some((p) => p.name.trim())
         : !!(answers as Record<string, unknown>)[k];
@@ -904,6 +1040,16 @@ const OwnershipConfirm = () => {
     dirty.current = true;
     setAnswers((a) => ({ ...a, people: (a.people ?? []).filter((p) => p.id !== id) }));
   };
+
+  /** Update one person in place — used by the ID name & address card. */
+  const patchPerson = (id: string, patch: Partial<RosterPerson>) => {
+    dirty.current = true;
+    setAnswers((a) => ({
+      ...a,
+      people: (a.people ?? []).map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    }));
+  };
+
 
 
 
@@ -1064,18 +1210,28 @@ const OwnershipConfirm = () => {
                       onChange={(v) => setText((SLOTS[key] as TextSlot).field, v)}
                       onDone={() => confirmKey(key)}
                     />
+                  ) : key === IDS_KEY ? (
+                    <IdentityCard
+                      index={i + 1}
+                      settled={confirmedKeys.includes(IDS_KEY)}
+                      signers={signers}
+                      isSelf={answers.rel === "self"}
+                      onPatch={patchPerson}
+                      onDone={() => confirmKey(IDS_KEY)}
+                    />
                   ) : (
                     <QuestionCard
                       qKey={key}
                       index={i + 1}
                       answers={answers}
-                      context={key === "rel" || key === "owner" ? deedNamesLabel : undefined}
+                      {...phraseFor(key, answers.rel === "self", deedNamesLabel, deedNamesLabel)}
                       believed={believedKeys.has(key)}
                       confirmed={confirmedKeys.includes(key)}
                       onAnswer={setAnswer}
                       onConfirm={confirmKey}
                     />
                   )}
+
 
                 </div>
               ))}
@@ -1130,7 +1286,7 @@ const OwnershipConfirm = () => {
                   className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  {saving ? "Sending…" : "Send this to my broker"}
+                  {saving ? "Sending…" : "Confirm my details"}
                 </button>
                 <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
                   <ArrowRight className="w-3 h-3" /> You can leave anything you're unsure of blank.
