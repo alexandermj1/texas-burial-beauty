@@ -2587,12 +2587,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <div className="flex items-center gap-1.5 shrink-0">
                         {(() => {
                           const iso = lastInteractionMap[s.id] || s.created_at;
+                          const d = new Date(iso);
+                          const now = new Date();
+                          const isToday = d.toDateString() === now.toDateString();
                           return (
                             <span
                               className="text-[10px] text-muted-foreground"
-                              title={`Last interaction ${new Date(iso).toLocaleString()}`}
+                              title={`Last interaction ${d.toLocaleString()}`}
                             >
-                              {formatDate(iso).split(",")[0]}
+                              {isToday
+                                ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+                                : formatDate(iso).split(",")[0]}
                             </span>
                           );
                         })()}
