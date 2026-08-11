@@ -23,13 +23,47 @@ import fern from "@/assets/flowers/fern.png.asset.json";
  * family tree when the plot is being inherited).
  */
 
-type Packet = { seller_name: string | null; cemetery: string | null; answers: OwnershipAnswers };
+type Packet = {
+  seller_name: string | null;
+  cemetery: string | null;
+  lawn?: string | null;
+  space_numbers?: string | null;
+  deed_owner_names?: string | null;
+  relationship_to_owner?: string | null;
+  answers: OwnershipAnswers;
+};
 
 /** The roles a seller can sensibly pick for a family member. */
 const PUBLIC_ROLES: PersonRole[] = ["owner", "co_owner", "spouse", "heir", "executor", "trustee", "agent", "decedent"];
 
+/** The synthetic first card: the names printed on the deed. */
+const NAMES_KEY = "_deedNames";
+
+/** Split "John Smith & Mary Smith" / "John and Mary Smith" into separate names. */
+const splitNames = (raw?: string | null): string[] =>
+  String(raw ?? "")
+    .split(/\s*(?:,|\/|&| and )\s*/i)
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 1 && !/^(unknown|n\/?a|none)$/i.test(s));
+
+/** Read the relationship the seller already told us into one of our choices. */
+const guessRel = (raw?: string | null): string | undefined => {
+  const s = String(raw ?? "").toLowerCase();
+  if (!s.trim()) return undefined;
+  if (/\b(self|me|myself|i am|owner)\b/.test(s)) return "self";
+  if (/\b(husband|wife|spouse)\b/.test(s)) return "spouse";
+  if (/\b(son|daughter|child)\b/.test(s)) return "child";
+  if (/\bgrand(son|daughter|child)\b/.test(s)) return "grandchild";
+  if (/\b(brother|sister|sibling)\b/.test(s)) return "sibling";
+  if (/\b(niece|nephew)\b/.test(s)) return "nibling";
+  if (/\b(in-?law)\b/.test(s)) return "inlaw";
+  if (/\b(executor|trustee|attorney|agent|representative)\b/.test(s)) return "rep";
+  return undefined;
+};
+
 const labelFor = (key: string, value?: string) =>
   QUESTIONS[key]?.answers.find((a) => a.value === value)?.label ?? "";
+
 
 const QuestionCard = ({
   qKey, answers, believed, confirmed, onAnswer, onConfirm, index,
