@@ -216,6 +216,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [lastInteractionMap, setLastInteractionMap] = useState<Record<string, string>>({});
   // AI "where is this up to" summaries, keyed by submission id.
   const [summaryMap, setSummaryMap] = useState<Record<string, string>>({});
+  const [expandedSummaries, setExpandedSummaries] = useState<Record<string, boolean>>({});
+
 
   // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
   // when WE promised to follow up and haven't sent anything since (older than threshold).
