@@ -1210,18 +1210,28 @@ const OwnershipConfirm = () => {
                       onChange={(v) => setText((SLOTS[key] as TextSlot).field, v)}
                       onDone={() => confirmKey(key)}
                     />
+                  ) : key === IDS_KEY ? (
+                    <IdentityCard
+                      index={i + 1}
+                      settled={confirmedKeys.includes(IDS_KEY)}
+                      signers={signers}
+                      isSelf={answers.rel === "self"}
+                      onPatch={patchPerson}
+                      onDone={() => confirmKey(IDS_KEY)}
+                    />
                   ) : (
                     <QuestionCard
                       qKey={key}
                       index={i + 1}
                       answers={answers}
-                      context={key === "rel" || key === "owner" ? deedNamesLabel : undefined}
+                      {...phraseFor(key, answers.rel === "self", deedNamesLabel, deedNamesLabel)}
                       believed={believedKeys.has(key)}
                       confirmed={confirmedKeys.includes(key)}
                       onAnswer={setAnswer}
                       onConfirm={confirmKey}
                     />
                   )}
+
 
                 </div>
               ))}
