@@ -2577,33 +2577,32 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {/* Historical "viewed by" avatars removed — only live presence (workers) is shown. */}
-                        <span className="text-[10px] text-muted-foreground">{formatDate(s.created_at).split(",")[0]}</span>
+                        {(() => {
+                          const iso = lastInteractionMap[s.id] || s.created_at;
+                          return (
+                            <span
+                              className="text-[10px] text-muted-foreground"
+                              title={`Last interaction ${new Date(iso).toLocaleString()}`}
+                            >
+                              {formatDate(iso).split(",")[0]}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
-                    {/* Legacy Bayer stage chips (orange "Quote sent", "Morgued") removed —
-                        status is now shown by the dollar-sign / docs / paid tags above. */}
 
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-3">
                       {sourceLabel(s.source, s.inquiry_channel) && (
                         <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
                       )}
-                      {s.property_type ? `${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
-                      {s.cemetery ? `${s.property_type ? " · " : ""}${s.cemetery}` : ""}
-                      {s.cemetery && countFor(s.cemetery) > 0 ? (
-                        <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
-                      ) : null}
+                      {summaryMap[s.id] || <span className="italic opacity-70">Summarising…</span>}
                     </p>
                     {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
                       <p className="text-[10px] text-[hsl(var(--status-nodocs-fg))] italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
                         ✎ originally: "{(s as any).cemetery_original}"
                       </p>
                     )}
-                    {!isActive && (
-                      <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
-                        {s.message || s.details || s.email || s.phone || "—"}
-                      </p>
-                    )}
+
                   </div>
                   <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
