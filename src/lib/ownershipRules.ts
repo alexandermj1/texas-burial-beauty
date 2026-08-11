@@ -301,26 +301,31 @@ export const QUESTIONS: Record<string, Question> = {
   },
 
   names: {
-    key: "names", eyebrow: "Names", question: "Do the names match across the deed, IDs and any court papers?",
-    hint: "Marriage, divorce or a legal name change can create a mismatch.",
-    answers: [{ value: "yes", label: "Yes, they match" }, { value: "no", label: "No, something differs" }],
-  },
-  jointPoa: {
-    key: "jointPoa", eyebrow: "Signing", question: "Would you rather sign one power of attorney together, or one each?",
-    hint: "A married couple can sign a single document — each signature is acknowledged separately in front of the notary. Separate documents suit people who will sign at different times or places.",
-    answers: [
-      { value: "yes", label: "One document, signed together", detail: "Simplest when you're in the same place" },
-      { value: "no", label: "A separate one for each of us", detail: "Sign at different times or places" },
-    ],
-  },
-};
+export function questionPath(a: OwnershipAnswers): string[] {
+  const p: string[] = ["owner", "rel"];
 
+  if (a.owner === "living") {
+    p.push("signer");
+    if (a.signer === "agent") p.push("agentType");
+    p.push("marital");
+    if (a.marital && a.marital !== "married" && a.marital !== "on_deed") p.push("maritalAtPurchase");
+  } else if (a.owner === "deceased") {
+    p.push("will");
+    if (a.will === "yes") p.push("probate", "beneficiaries");
+    if (a.will === "no") p.push("heirclass", "heirship");
+    p.push("spouse");
+    if (a.spouse === "no") p.push("marital", "maritalAtPurchase");
+    p.push("chain");
+  } else if (a.owner === "trust") p.push("trustee");
+  else if (a.owner === "org") p.push("orgStatus");
 
-/**
- * The ordered list of questions to ask, given what has been answered so far.
- *
- * Anything we can work out ourselves — who is on the deed, how many of them
- * there are, whether one of them has died — is listed in `derived` and never
+  p.push("deed");
+  if (a.deed === "yes") p.push("names");
+  p.push("occupied");
+
+  const skip = new Set(a.derived ?? []);
+  return p.filter((k) => !skip.has(k));
+}
  * put to the seller again.
  */
 export function questionPath(a: OwnershipAnswers): string[] {
