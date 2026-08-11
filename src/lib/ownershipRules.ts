@@ -143,7 +143,7 @@ export const QUESTIONS: Record<string, Question> = {
     key: "rel", eyebrow: "The seller", question: "What is the seller's relationship to that person?",
     hint: "This tells us whether they can sign themselves, or whether we need someone else.",
     answers: [
-      { value: "self", label: "They are the owner" },
+      { value: "self", label: "Self — that's me on the deed" },
       { value: "spouse", label: "Husband or wife" },
       { value: "child", label: "Son or daughter" },
       { value: "grandchild", label: "Grandchild" },
