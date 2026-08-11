@@ -35,6 +35,11 @@ export type OwnershipAnswers = {
   names?: "yes" | "no";
   /** Married couple signing a single joint power of attorney rather than one each. */
   jointPoa?: "yes" | "no";
+  /** What differs between the names on the deed, the ID and any court papers. */
+  nameMismatch?: string;
+  /** Why a co-owner can't or won't sign, in the seller's words. */
+  blockedNotes?: string;
+
 
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
