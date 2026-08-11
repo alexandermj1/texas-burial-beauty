@@ -24,6 +24,10 @@ export type OwnershipAnswers = {
   occupied?: "no" | "yes";
   /** Who is buried in the spaces, when any have been used. */
   occupiedBy?: string;
+  /** Does any deed holder have a current legal spouse who is not also on the deed? */
+  outsideSpouse?: "yes" | "no" | "unsure";
+  /** Do any deceased deed holders have surviving biological/adopted descendants? */
+  descendants?: "yes" | "no" | "unsure";
 
   will?: "yes" | "no";
   probate?: "letters" | "muniment" | "none";
@@ -211,13 +215,31 @@ export const QUESTIONS: Record<string, Question> = {
     hint: "Anyone already buried there gives their spouse and children reserved rights, so we have to account for it.",
     answers: [{ value: "no", label: "No — all the spaces are empty" }, { value: "yes", label: "Yes — one or more has been used" }],
   },
+  outsideSpouse: {
+    key: "outsideSpouse", eyebrow: "Spouses", question: "Does anyone named on the deed have a current legal spouse who is not named on the deed?",
+    hint: "Do not include a former spouse after divorce. A current husband or wife may have interment rights and may need to sign, even when their name is not on the deed.",
+    answers: [
+      { value: "yes", label: "Yes — there is a current spouse not named on the deed" },
+      { value: "no", label: "No — every current spouse is either on the deed, or there is no current spouse" },
+      { value: "unsure", label: "I don't know" },
+    ],
+  },
 
   will: {
-    key: "will", eyebrow: "Establishing authority", question: "Did they leave a will that specifically mentions the plot?",
-    hint: "A will that names the cemetery property is the cleanest way to show who inherits it.",
+    key: "will", eyebrow: "Stage 2 · A will", question: "Did any deceased person named on the deed leave a will that specifically identified the cemetery plot or spaces?",
+    hint: "Only answer yes when the will itself specifically identifies this cemetery property.",
     answers: [
       { value: "yes", label: "Yes — there is a will" },
       { value: "no", label: "No — there is no will", detail: "Texas law decides who inherits" },
+    ],
+  },
+  descendants: {
+    key: "descendants", eyebrow: "Stage 2 · Descendants", question: "Did any deceased person named on the deed leave surviving descendants?",
+    hint: "Include biological and legally adopted children from every marriage, but not step-children. Include grandchildren only when their parent (the deceased person's child) has also died.",
+    answers: [
+      { value: "yes", label: "Yes — there are surviving descendants" },
+      { value: "no", label: "No — there are no surviving descendants" },
+      { value: "unsure", label: "I don't know" },
     ],
   },
 
@@ -277,47 +299,27 @@ export const QUESTIONS: Record<string, Question> = {
     hint: "It's recorded with the cemetery, so a lost one can usually be rebuilt from their records.",
     answers: [{ value: "yes", label: "Yes — I have it" }, { value: "no", label: "No — it's lost" }],
   },
-
   names: {
-    key: "names", eyebrow: "Names", question: "Do the names match across the deed, IDs and any court papers?",
-    hint: "Marriage, divorce or a legal name change can create a mismatch.",
-    answers: [{ value: "yes", label: "Yes, they match" }, { value: "no", label: "No, something differs" }],
-  },
-  jointPoa: {
-    key: "jointPoa", eyebrow: "Signing", question: "Would you rather sign one power of attorney together, or one each?",
-    hint: "A married couple can sign a single document — each signature is acknowledged separately in front of the notary. Separate documents suit people who will sign at different times or places.",
-    answers: [
-      { value: "yes", label: "One document, signed together", detail: "Simplest when you're in the same place" },
-      { value: "no", label: "A separate one for each of us", detail: "Sign at different times or places" },
-    ],
+    key: "names", eyebrow: "Names", question: "Do the names on the deed match the owners' current government-issued identification?",
+    hint: "Tell us about any marriage, divorce, spelling, or other name difference so the documents can be prepared correctly.",
+    answers: [{ value: "yes", label: "Yes — all names match" }, { value: "no", label: "No — something differs" }],
   },
 };
 
-
-/**
- * The ordered list of questions to ask, given what has been answered so far.
- *
- * Anything we can work out ourselves — who is on the deed, how many of them
- * there are, whether one of them has died — is listed in `derived` and never
- * put to the seller again.
- */
+/** Build only the questions needed from the seller's earlier answers. */
 export function questionPath(a: OwnershipAnswers): string[] {
-  const p: string[] = ["owner", "rel"];
-  if (a.owner === "living") {
-    p.push("signer");
-    if (a.signer === "agent") p.push("agentType");
-    p.push("marital");
-    if (a.marital && a.marital !== "married" && a.marital !== "on_deed") p.push("maritalAtPurchase");
-  } else if (a.owner === "deceased") {
-    p.push("will");
-    if (a.will === "yes") p.push("probate", "beneficiaries");
-    if (a.will === "no") p.push("heirclass", "heirship");
-    p.push("spouse");
-    if (a.spouse === "no") p.push("marital", "maritalAtPurchase");
-    p.push("chain");
-  } else if (a.owner === "trust") p.push("trustee");
-  else if (a.owner === "org") p.push("orgStatus");
-  p.push("deed");
+  // Stage 1 is intentionally short and fixed. The deed-holder card immediately
+  // before this path gathers every deed name and marks each person alive/deceased.
+  const p: string[] = ["rel", "signer"];
+  if (a.signer === "agent") p.push("agentType");
+  p.push("occupied", "outsideSpouse");
+
+  // Stage 2 appears only when the confirmed deed roster contains a death (or
+  // the older owner answer already establishes one).
+  const hasDeceasedOwner = a.owner === "deceased" || (a.people ?? []).some(
+    (person) => person.role === "decedent" || person.deceased === true,
+  );
+  if (hasDeceasedOwner) p.push("will", "descendants");
   const skip = new Set(a.derived ?? []);
   return p.filter((k) => !skip.has(k));
 }
@@ -443,7 +445,7 @@ export function signingRoster(a: OwnershipAnswers): RosterPerson[] {
     out.push(placeholder("owner", "Owner on the deed"));
     if (a.owners === "multiple") out.push(placeholder("co_owner", "Each co-owner"));
     if (a.signer === "agent") out.push(placeholder("agent", "Person acting under authority"));
-    if (a.marital === "married") out.push(placeholder("spouse", "Owner's spouse"));
+    if (a.marital === "married" || a.outsideSpouse === "yes") out.push(placeholder("spouse", "Owner's spouse"));
   } else if (a.owner === "deceased") {
     if (a.will === "yes" && a.probate === "letters") out.push(placeholder("executor", "Executor"));
     else out.push(placeholder("heir", "Each heir"));
@@ -534,7 +536,7 @@ export function computeRequirements(
         issuedByUs: true, needsNotary: true, contractKind: "poa",
       });
     }
-    if (a.marital === "married") {
+    if (a.marital === "married" || a.outsideSpouse === "yes") {
       add({
         code: "D3", label: "Spouse's written consent / joinder",
         why: "A sale can't erase their right of interment without it.",

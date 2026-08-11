@@ -16,6 +16,8 @@ const ANSWER_SCHEMA: Record<string, string[]> = {
   co: ["all", "deceased", "blocked"],
   marital: ["married", "divorced", "widowed", "single"],
   occupied: ["no", "yes"],
+  outsideSpouse: ["yes", "no", "unsure"],
+  descendants: ["yes", "no", "unsure"],
   will: ["yes", "no"],
   probate: ["letters", "muniment", "none"],
   beneficiaries: ["sole", "multiple"],
@@ -44,6 +46,8 @@ How to read a seller's file (Texas interment property):
 - People: anyone who has died — including the person printed on the deed when owner = deceased — must be returned with role "decedent" and deceased = true. Never list a dead person as an owner, co-owner or signer: a decedent cannot sign anything.
 - open_questions must only contain things the file genuinely leaves unresolved. Never ask us to confirm something you have just answered, something already stated in the file, or something the arithmetic above settles (such as whether anyone is buried when every space is being sold).
 - The ATTACHED DOCUMENTS section is evidence we physically hold. Read it as carefully as the emails: the names, cemetery, section/lot/space and document type printed on those documents are facts, and they override anything vague in the emails.
+- DEED OWNERS ARE STRICT: only identify someone as an owner/co-owner/decedent on the deed when their name appears in the owners/purchaser/grantee field of an extracted cemetery deed, certificate of ownership, or interment-right certificate. Never treat cemetery staff, salespeople, witnesses, notaries, beneficiaries, email writers, or names from another document as deed owners.
+- Return every exact deed-owner name in deed_owners, preserving middle names/initials and suffixes. The deed itself outranks intake text and emails. If no readable deed is attached, use the explicit "Names on the deed" submission field; otherwise leave deed_owners empty rather than guessing.
 Only answer what the file actually supports. Leave anything else out — a missing answer is far better than a guessed one.
 `.trim();
 
@@ -219,13 +223,26 @@ Deno.serve(async (req) => {
                 additionalProperties: false,
               },
             },
+            deed_owners: {
+              type: "array",
+              description: "Exact names printed as owners/purchasers/grantees on the most current cemetery deed only.",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  deceased: { type: "boolean" },
+                },
+                required: ["name", "deceased"],
+                additionalProperties: false,
+              },
+            },
             open_questions: {
               type: "array",
               description: "The things we still need to ask the seller before the checklist can be trusted.",
               items: { type: "string" },
             },
           },
-          required: ["answers", "reasons", "open_questions"],
+          required: ["answers", "reasons", "deed_owners", "open_questions"],
           additionalProperties: false,
         },
       },
@@ -274,6 +291,13 @@ Deno.serve(async (req) => {
         p.deceased || p.role === "decedent"
           ? { ...p, role: "decedent", deceased: true }
           : p),
+      deed_owners: (parsed.deed_owners ?? [])
+        .filter((p: Record<string, unknown>) => typeof p.name === "string" && p.name.trim())
+        .map((p: Record<string, unknown>, index: number) => ({
+          name: String(p.name).replace(/\s+/g, " ").trim(),
+          role: p.deceased ? "decedent" : (index === 0 ? "owner" : "co_owner"),
+          deceased: p.deceased === true,
+        })),
       // Never hand back an open question about something we have just answered.
       open_questions: (parsed.open_questions ?? []).filter((q: string) => {
         const t = String(q).toLowerCase();

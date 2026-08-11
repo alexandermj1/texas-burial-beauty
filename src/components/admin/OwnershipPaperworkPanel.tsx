@@ -54,6 +54,7 @@ type Reading = {
   answers: Record<string, string>;
   reasons: { key: string; reason: string; confidence: string }[];
   people?: { name: string; role: PersonRole; relationship?: string; email?: string; deceased?: boolean }[];
+  deed_owners?: { name: string; role: PersonRole; deceased?: boolean }[];
   open_questions?: string[];
   sources?: { emails: number; notes: number };
 };
@@ -448,9 +449,19 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .filter((p) => p.name?.trim())
         .map((p) => ({ id: crypto.randomUUID(), ...p }));
       const existing = answers.people ?? [];
+      const deedRoles: PersonRole[] = ["owner", "co_owner", "decedent"];
+      const authoritativeDeed = (r.deed_owners ?? [])
+        .filter((p) => p.name?.trim())
+        .map((p) => ({ id: crypto.randomUUID(), ...p }));
+      const baseExisting = authoritativeDeed.length
+        ? existing.filter((p) => !deedRoles.includes(p.role))
+        : existing;
       const merged = [
-        ...existing,
-        ...people.filter((p) => !existing.some((e) => e.name.trim().toLowerCase() === p.name.trim().toLowerCase())),
+        ...authoritativeDeed,
+        ...baseExisting,
+        ...people.filter((p) =>
+          !authoritativeDeed.some((d) => d.name.trim().toLowerCase() === p.name.trim().toLowerCase()) &&
+          !baseExisting.some((e) => e.name.trim().toLowerCase() === p.name.trim().toLowerCase())),
       ];
       await persistAnswers({
         ...answers,
