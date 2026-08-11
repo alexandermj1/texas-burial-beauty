@@ -41,6 +41,9 @@ export type OwnershipAnswers = {
   blockedNotes?: string;
   /** Steps the seller has personally settled, so a reload doesn't re-ask them. */
   confirmedKeys?: string[];
+  /** Questions we worked out ourselves (from the deed roster) and never ask. */
+  derived?: string[];
+
 
 
 
