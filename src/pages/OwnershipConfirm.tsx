@@ -449,12 +449,14 @@ const CardShell = ({
 
 /** Ask for the people an answer implies — name first, then how to reach them. */
 const PeopleSlotCard = ({
-  slot, index, people, settled, onChange, onDone,
+  slot, index, people, settled, suggestions = [], onChange, onDone,
 }: {
   slot: PeopleSlot;
   index: number;
   people: RosterPerson[];
   settled: boolean;
+  /** Names already on the file, offered as one tap rather than retyping. */
+  suggestions?: string[];
   onChange: (people: RosterPerson[]) => void;
   onDone: (none?: boolean) => void;
 }) => {
@@ -462,14 +464,34 @@ const PeopleSlotCard = ({
     ? people
     : [{ id: "seed", name: "", role: slot.role, relationship: slot.relationship, deceased: slot.deceased }];
   const named = rows.filter((p) => p.name.trim());
-  const patch = (id: string, p: Partial<RosterPerson>) => {
-    const next = rows.map((x) => (x.id === id ? { ...x, ...p } : x));
-    onChange(next.map((x) => (x.id === "seed" ? { ...x, id: crypto.randomUUID() } : x)));
+  const clean = (list: RosterPerson[]) => list.map((x) => (x.id === "seed" ? { ...x, id: crypto.randomUUID() } : x));
+  const patch = (id: string, p: Partial<RosterPerson>) =>
+    onChange(clean(rows.map((x) => (x.id === id ? { ...x, ...p } : x))));
+  const offer = suggestions.filter((s) => !rows.some((r) => r.name.trim().toLowerCase() === s.toLowerCase()));
+  const addNamed = (name: string) => {
+    const blank = rows.find((r) => !r.name.trim());
+    if (blank) return patch(blank.id, { name });
+    onChange(clean([...rows, { id: crypto.randomUUID(), name, role: slot.role, relationship: slot.relationship, deceased: slot.deceased }]));
   };
 
   return (
     <CardShell index={index} settled={settled} eyebrow={slot.eyebrow} title={slot.title} hint={slot.hint}>
+      {offer.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-muted-foreground">From your file:</span>
+          {offer.map((s) => (
+            <button
+              key={s}
+              onClick={() => addNamed(s)}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/[0.06] text-foreground hover:bg-primary/10"
+            >
+              <Plus className="w-3 h-3 text-primary" /> {s}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="mt-4 space-y-3">
+
         {rows.map((p) => (
           <div key={p.id} className="rounded-xl border border-border/70 bg-background p-4">
             <div className="flex items-center gap-3">
