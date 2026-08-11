@@ -617,7 +617,15 @@ const FamilyTree = ({ people, onRemove }: { people: RosterPerson[]; onRemove: (i
     { label: "Inherits", roles: ["heir"] },
     { label: "Acting for them", roles: ["executor", "trustee", "agent"] },
   ];
-  const named = people.filter((p) => p.name.trim());
+  // One card per person: someone named on the deed who has since died is the
+  // same human as the decedent we asked about, so we keep the later entry.
+  const named = Array.from(
+    people
+      .filter((p) => p.name.trim())
+      .reduce((m, p) => m.set(p.name.trim().toLowerCase(), p), new Map<string, RosterPerson>())
+      .values(),
+  );
+
   if (!named.length) return null;
 
   return (
