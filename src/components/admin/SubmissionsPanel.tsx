@@ -2589,17 +2589,47 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-3">
-                      {sourceLabel(s.source, s.inquiry_channel) && (
-                        <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
-                      )}
-                      {summaryMap[s.id] || <span className="italic opacity-70">Summarising…</span>}
-                    </p>
-                    {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
-                      <p className="text-[10px] text-[hsl(var(--status-nodocs-fg))] italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
-                        ✎ originally: "{(s as any).cemetery_original}"
-                      </p>
-                    )}
+                    {(() => {
+                      const raw = summaryMap[s.id] || "";
+                      const [headline, body] = raw.includes("||")
+                        ? [raw.split("||")[0].trim(), raw.split("||").slice(1).join("||").trim()]
+                        : ["", raw];
+                      const expanded = !!expandedSummaries[s.id];
+                      const label = sourceLabel(s.source, s.inquiry_channel);
+                      return (
+                        <>
+                          {headline && (
+                            <p className="text-xs font-semibold text-foreground mt-0.5 flex items-start gap-1.5">
+                              {label && <span className="text-primary/80 font-medium shrink-0">{label} ·</span>}
+                              <span className="min-w-0">{headline}</span>
+                            </p>
+                          )}
+                          {body && (
+                            <p className={`text-xs text-muted-foreground mt-0.5 ${expanded ? "" : "line-clamp-2"}`}>
+                              {!headline && label && <span className="text-primary/80">{label} · </span>}
+                              {body}
+                              {body.length > 110 && (
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedSummaries(prev => ({ ...prev, [s.id]: !prev[s.id] }));
+                                  }}
+                                  className="ml-1 text-[10px] font-medium text-primary hover:underline"
+                                >
+                                  {expanded ? "less" : "more"}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                          {!raw && (
+                            <p className="text-xs text-muted-foreground/70 italic mt-0.5">Summarising…</p>
+                          )}
+                        </>
+                      );
+                    })()}
+
 
                   </div>
                   <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
