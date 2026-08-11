@@ -18,7 +18,7 @@ export type OwnershipAnswers = {
   agentType?: "poa" | "guardian";
   owners?: "sole" | "multiple";
   co?: "all" | "deceased" | "blocked";
-  marital?: "married" | "divorced" | "widowed" | "single" | "unsure";
+  marital?: "on_deed" | "married" | "divorced" | "widowed" | "single" | "unsure";
   /** Was the owner married at the time the plot was bought? Drives §711.039 waivers. */
   maritalAtPurchase?: "yes" | "no" | "unsure";
   occupied?: "no" | "yes";
@@ -186,10 +186,11 @@ export const QUESTIONS: Record<string, Question> = {
   },
 
   marital: {
-    key: "marital", eyebrow: "Spousal rights", question: "Does anyone named on the deed have a legal spouse who is not named on it?",
+    key: "marital", eyebrow: "Spousal rights", question: "Is anyone named on the deed married?",
     hint: "A spouse holds a vested right of interment, so their signature is usually needed even when they aren't on the deed.",
     answers: [
-      { value: "married", label: "Yes — married, and not divorced" },
+      { value: "on_deed", label: "Yes — and the spouse is named on the deed", detail: "Nothing more needed, they already sign as an owner" },
+      { value: "married", label: "Yes — and the spouse is not on the deed" },
       { value: "divorced", label: "No — divorced" },
       { value: "widowed", label: "No — the spouse has died" },
       { value: "single", label: "No — never married" },
@@ -306,7 +307,7 @@ export function questionPath(a: OwnershipAnswers): string[] {
     p.push("signer");
     if (a.signer === "agent") p.push("agentType");
     p.push("marital");
-    if (a.marital && a.marital !== "married") p.push("maritalAtPurchase");
+    if (a.marital && a.marital !== "married" && a.marital !== "on_deed") p.push("maritalAtPurchase");
   } else if (a.owner === "deceased") {
     p.push("will");
     if (a.will === "yes") p.push("probate", "beneficiaries");
@@ -316,8 +317,7 @@ export function questionPath(a: OwnershipAnswers): string[] {
     p.push("chain");
   } else if (a.owner === "trust") p.push("trustee");
   else if (a.owner === "org") p.push("orgStatus");
-  // Asked of everyone: interment rights follow whoever is already buried there.
-  p.push("occupied", "deed");
+  p.push("deed");
   const skip = new Set(a.derived ?? []);
   return p.filter((k) => !skip.has(k));
 }

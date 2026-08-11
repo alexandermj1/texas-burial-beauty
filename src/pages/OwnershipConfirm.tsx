@@ -703,11 +703,16 @@ const phraseFor = (
     case "marital":
       return {
         title: isSelf
-          ? "Do you have a legal spouse who is not named on the deed?"
-          : `Does ${who} have a legal spouse who is not named on the deed?`,
+          ? "Are you married?"
+          : `Is ${who} married?`,
         hint: "A husband or wife signs the power of attorney too — even when they aren't named on the deed.",
         labels: {
-          married: "Yes — married, and not divorced",
+          on_deed: isSelf
+            ? "Yes — and my spouse is named on the deed"
+            : "Yes — and the spouse is named on the deed",
+          married: isSelf
+            ? "Yes — and my spouse is not on the deed"
+            : "Yes — and the spouse is not on the deed",
           divorced: "No — divorced",
           widowed: "No — my spouse has died",
           single: isSelf ? "No — I've never married" : "No — never married",
@@ -716,11 +721,6 @@ const phraseFor = (
       };
     case "maritalAtPurchase":
       return { title: isSelf ? "Were you married when the plot was bought?" : `Was ${who} married when the plot was bought?` };
-    case "occupied":
-      return {
-        title: "Have any of the spaces on the deed ever been used?",
-        hint: "Anyone already buried there brings their own family's rights with them, so the cemetery will ask.",
-      };
     case "deed":
       return {
         title: isSelf
@@ -934,11 +934,14 @@ const OwnershipConfirm = () => {
       // Co-owners we read off the deed are already named — don't ask twice.
       case "owners": return a.owners === "multiple" && !derived.includes("owners") ? ["_coowners"] : [];
       case "co": return a.co === "blocked" ? ["_blocked"] : [];
-      case "occupied": return a.occupied === "yes" ? ["_occupiedBy"] : [];
-      case "marital":
-        return a.marital === "married" ? ["_spouse"]
+      case "marital": {
+        // A spouse already on the deed — or already named in the roster — is
+        // known: asking for their name again reads as though we weren't listening.
+        const spouseKnown = (a.people ?? []).some((p) => p.role === "spouse" && p.name.trim());
+        return a.marital === "married" && !spouseKnown ? ["_spouse"]
           : a.marital === "divorced" ? ["_exspouse"]
           : a.marital === "widowed" ? ["_latespouse"] : [];
+      }
       case "spouse": return a.spouse === "yes" ? ["_spouse"] : [];
       case "probate": return a.probate === "letters" ? ["_executor"] : [];
       case "beneficiaries": return ["_heirs"];
