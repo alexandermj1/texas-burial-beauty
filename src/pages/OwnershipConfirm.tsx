@@ -692,24 +692,43 @@ const phraseFor = (
       return isSelf
         ? {
             title: "Will you be signing the paperwork yourself?",
-            labels: { self: "Yes, I'll sign personally", agent: "Someone signs for me — power of attorney or guardian" },
+            labels: {
+              self: "Yes — I'll sign personally",
+              agent: "No — someone signs for me under a power of attorney or guardianship",
+            },
           }
         : { title: `Will ${who} be signing the paperwork personally?` };
     case "co":
-      return { title: isSelf ? "Is everyone else on the deed willing to sign the sale?" : `Is everyone on the deed willing to sign the sale?` };
+      return { title: isSelf ? "Is everyone else on the deed willing to sign the sale?" : "Is everyone on the deed willing to sign the sale?" };
     case "marital":
       return {
-        title: isSelf ? "Are you married?" : `Is ${who} married?`,
-        hint: "A husband or wife has to sign the power of attorney as well — even when they aren't named on the deed.",
+        title: isSelf
+          ? "Do you have a legal spouse who is not named on the deed?"
+          : `Does ${who} have a legal spouse who is not named on the deed?`,
+        hint: "A husband or wife signs the power of attorney too — even when they aren't named on the deed.",
+        labels: {
+          married: "Yes — married, and not divorced",
+          divorced: "No — divorced",
+          widowed: "No — my spouse has died",
+          single: isSelf ? "No — I've never married" : "No — never married",
+          unsure: "I don't know",
+        },
       };
     case "maritalAtPurchase":
       return { title: isSelf ? "Were you married when the plot was bought?" : `Was ${who} married when the plot was bought?` };
+    case "occupied":
+      return {
+        title: "Have any of the spaces on the deed ever been used?",
+        hint: "Anyone already buried there brings their own family's rights with them, so the cemetery will ask.",
+      };
     case "deed":
       return {
         title: isSelf
           ? "Do you have the original certificate of ownership?"
           : `Does ${who} have the original certificate of ownership?`,
+        labels: isSelf ? { yes: "Yes — I have it", no: "No — it's lost" } : undefined,
       };
+
     default:
       return {};
   }
