@@ -509,12 +509,14 @@ export function signingRoster(a: OwnershipAnswers): RosterPerson[] {
  * cemetery's own overrides, then a per-person POA + photo ID for every signer.
  */
 export function computeRequirements(
-  a: OwnershipAnswers,
+  raw: OwnershipAnswers,
   cem?: CemeteryDocRules | null,
 ): Requirement[] {
+  const a = normalizeAnswers(raw);
   const out: Requirement[] = [];
   const add = (r: Requirement) => out.push(r);
   const rules = cem ?? {};
+
 
   // ── Proof of the right being sold ──
   if (a.deed === "no") {
