@@ -66,7 +66,7 @@ const labelFor = (key: string, value?: string) =>
 
 
 const QuestionCard = ({
-  qKey, answers, believed, confirmed, onAnswer, onConfirm, index,
+  qKey, answers, believed, confirmed, onAnswer, onConfirm, index, context,
 }: {
   qKey: string;
   answers: OwnershipAnswers;
@@ -75,6 +75,8 @@ const QuestionCard = ({
   onAnswer: (key: string, value: string) => void;
   onConfirm: (key: string) => void;
   index: number;
+  /** Names already gathered, so a question can say who it is talking about. */
+  context?: string;
 }) => {
   const q = QUESTIONS[qKey];
   const value = (answers as Record<string, unknown>)[qKey] as string | undefined;
@@ -86,13 +88,15 @@ const QuestionCard = ({
 
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-7 transition-colors ${
-        settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70"
+      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+        settled
+          ? "border-primary/30 bg-primary/[0.04]"
+          : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
       }`}
     >
       <div className="flex items-start gap-4">
         <div
-          className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] ${
+          className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] transition-colors ${
             settled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           }`}
         >
@@ -101,7 +105,10 @@ const QuestionCard = ({
 
         <div className="flex-1 min-w-0">
           <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">{q.eyebrow}</div>
-          <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">{q.question}</p>
+          <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
+            {context && qKey === "rel" ? `What is your relationship to ${context}?` : q.question}
+          </p>
+
           {q.hint && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{q.hint}</p>}
 
           {!showChoices && value && (
