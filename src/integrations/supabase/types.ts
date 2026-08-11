@@ -426,6 +426,9 @@ export type Database = {
           acceptance_channel: string | null
           accepted_quote_amount: number | null
           admin_notes: string | null
+          ai_summary: string | null
+          ai_summary_at: string | null
+          ai_summary_key: string | null
           authorization_confirmed: boolean | null
           authorization_notes: string | null
           bayer_entry_id: string | null
@@ -540,6 +543,9 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_summary?: string | null
+          ai_summary_at?: string | null
+          ai_summary_key?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
           bayer_entry_id?: string | null
@@ -654,6 +660,9 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_summary?: string | null
+          ai_summary_at?: string | null
+          ai_summary_key?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
           bayer_entry_id?: string | null
