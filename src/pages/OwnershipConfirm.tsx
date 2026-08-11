@@ -310,8 +310,352 @@ const NamesCard = ({
 };
 
 
+// ── Follow-up prompts ────────────────────────────────────────────────────────
+//
+// An answer on its own rarely lets us draw a document: "married" only matters
+// once we know the spouse's name, "one refuses" only matters once we know who.
+// Each answer therefore pulls in the people (or the explanation) it implies,
+// right there in the flow rather than in a form at the end.
+
+type PeopleSlot = {
+  kind: "people";
+  eyebrow: string;
+  title: string;
+  hint: string;
+  role: PersonRole;
+  /** Seeded onto anyone added from this card. */
+  relationship?: string;
+  deceased?: boolean;
+  addLabel: string;
+  /** They may honestly have nobody to name. */
+  allowNone?: boolean;
+  noneLabel?: string;
+};
+
+type TextSlot = {
+  kind: "text";
+  eyebrow: string;
+  title: string;
+  hint: string;
+  field: "nameMismatch" | "blockedNotes";
+  placeholder: string;
+};
+
+const SLOTS: Record<string, PeopleSlot | TextSlot> = {
+  _decedent: {
+    kind: "people", eyebrow: "The owner who died", role: "decedent", deceased: true,
+    title: "Who is the person on the deed who has passed away?",
+    hint: "We need their name exactly as the cemetery holds it — every inheritance document is drawn in that name.",
+    addLabel: "Add another owner who has died",
+  },
+  _agent: {
+    kind: "people", eyebrow: "Signing on their behalf", role: "agent",
+    title: "Who will be signing for the owner?",
+    hint: "The person named in the power of attorney or guardianship papers.",
+    addLabel: "Add another agent",
+  },
+  _coowners: {
+    kind: "people", eyebrow: "The other owners", role: "co_owner",
+    title: "Who else owns the plot with you?",
+    hint: "A plot sold as one unit needs every owner's signature, so we'll need to reach each of them.",
+    addLabel: "Add another owner",
+  },
+  _spouse: {
+    kind: "people", eyebrow: "Your spouse", role: "spouse", relationship: "spouse",
+    title: "What is the spouse's full name?",
+    hint: "A husband or wife holds a vested right of interment, so the cemetery will want their signature too.",
+    addLabel: "Add spouse",
+  },
+  _exspouse: {
+    kind: "people", eyebrow: "The former spouse", role: "spouse", relationship: "former spouse",
+    title: "Who was the owner married to at the time?",
+    hint: "A divorce doesn't always end a right of interment — naming them lets us check the decree and clear it properly.",
+    addLabel: "Add former spouse",
+    allowNone: true, noneLabel: "I don't know their name",
+  },
+  _latespouse: {
+    kind: "people", eyebrow: "The late spouse", role: "spouse", deceased: true, relationship: "late spouse",
+    title: "What was your late spouse's full name?",
+    hint: "We may need their death certificate to clear their name from the deed.",
+    addLabel: "Add spouse",
+  },
+  _executor: {
+    kind: "people", eyebrow: "The estate", role: "executor",
+    title: "Who was appointed executor or administrator?",
+    hint: "Their signature carries the estate — the letters from the court will be in this name.",
+    addLabel: "Add another representative",
+  },
+  _heirs: {
+    kind: "people", eyebrow: "Who inherits", role: "heir",
+    title: "Who are the people who inherit the plot?",
+    hint: "Everyone with a claim has to sign or waive, so please name them all — including anyone who has since died.",
+    addLabel: "Add another heir",
+  },
+  _trustee: {
+    kind: "people", eyebrow: "The trust", role: "trustee",
+    title: "Who is the trustee signing for the trust?",
+    hint: "As named in the trust agreement or certification of trust.",
+    addLabel: "Add another trustee",
+  },
+  _chaindeaths: {
+    kind: "people", eyebrow: "Chain of title", role: "decedent", deceased: true,
+    title: "Who else in the family has since died?",
+    hint: "Each death adds a link we have to prove, so we need every name in the chain.",
+    addLabel: "Add another person who has died",
+  },
+  _blocked: {
+    kind: "text", eyebrow: "The owner who won't sign", field: "blockedNotes",
+    title: "Tell us who that is and what's happened",
+    hint: "There is almost always a lawful way forward — knowing the situation lets a broker choose it.",
+    placeholder: "e.g. My brother David Carter hasn't spoken to the family in years and we have no address for him.",
+  },
+  _nameMismatch: {
+    kind: "text", eyebrow: "The names", field: "nameMismatch",
+    title: "Which name differs, and what is it now?",
+    hint: "For example: the deed says Mary Ellen Doe, her driver's licence says Mary E. Carter after she married.",
+    placeholder: "The deed says … but the ID says …",
+  },
+};
+
+const initials = (name: string) =>
+  name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+
+/** Shared shell so every card in the flow looks and moves the same way. */
+const CardShell = ({
+  index, settled, eyebrow, title, hint, children,
+}: {
+  index: number; settled: boolean; eyebrow: string; title: string; hint?: string; children: React.ReactNode;
+}) => (
+  <div
+    className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+      settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
+    }`}
+  >
+    <div className="flex items-start gap-4">
+      <div
+        className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] transition-colors ${
+          settled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {settled ? <CheckCircle2 className="w-4 h-4" /> : index}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">{eyebrow}</div>
+        <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">{title}</p>
+        {hint && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{hint}</p>}
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
+/** Ask for the people an answer implies — name first, then how to reach them. */
+const PeopleSlotCard = ({
+  slot, index, people, settled, onChange, onDone,
+}: {
+  slot: PeopleSlot;
+  index: number;
+  people: RosterPerson[];
+  settled: boolean;
+  onChange: (people: RosterPerson[]) => void;
+  onDone: (none?: boolean) => void;
+}) => {
+  const rows = people.length
+    ? people
+    : [{ id: "seed", name: "", role: slot.role, relationship: slot.relationship, deceased: slot.deceased }];
+  const named = rows.filter((p) => p.name.trim());
+  const patch = (id: string, p: Partial<RosterPerson>) => {
+    const next = rows.map((x) => (x.id === id ? { ...x, ...p } : x));
+    onChange(next.map((x) => (x.id === "seed" ? { ...x, id: crypto.randomUUID() } : x)));
+  };
+
+  return (
+    <CardShell index={index} settled={settled} eyebrow={slot.eyebrow} title={slot.title} hint={slot.hint}>
+      <div className="mt-4 space-y-3">
+        {rows.map((p) => (
+          <div key={p.id} className="rounded-xl border border-border/70 bg-background p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-medium shrink-0">
+                {initials(p.name) || <UserRound className="w-4 h-4" />}
+              </div>
+              <input
+                value={p.name}
+                onChange={(e) => patch(p.id, { name: e.target.value })}
+                placeholder="Full name"
+                className="flex-1 min-w-0 rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              {rows.length > 1 && (
+                <button
+                  onClick={() => onChange(rows.filter((x) => x.id !== p.id))}
+                  className="p-2 rounded-full border border-border text-muted-foreground hover:text-destructive shrink-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {p.name.trim() && (
+              <div className="mt-3 grid sm:grid-cols-2 gap-2 animate-in fade-in duration-300">
+                <input
+                  value={p.email ?? ""}
+                  onChange={(e) => patch(p.id, { email: e.target.value })}
+                  placeholder="Email (so we can send what they sign)"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  value={p.phone ?? ""}
+                  onChange={(e) => patch(p.id, { phone: e.target.value })}
+                  placeholder="Phone (optional)"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  value={p.relationship ?? ""}
+                  onChange={(e) => patch(p.id, { relationship: e.target.value })}
+                  placeholder="Their relationship — daughter, brother…"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer px-1">
+                  <input
+                    type="checkbox"
+                    checked={!!p.deceased}
+                    onChange={(e) => patch(p.id, { deceased: e.target.checked, role: e.target.checked ? "decedent" : slot.role })}
+                    className="accent-[hsl(var(--primary))]"
+                  />
+                  <HeartCrack className="w-3.5 h-3.5" /> This person has passed away
+                </label>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => onChange([
+            ...rows.filter((x) => x.id !== "seed" || x.name.trim()),
+            { id: crypto.randomUUID(), name: "", role: slot.role, relationship: slot.relationship, deceased: slot.deceased },
+          ])}
+          className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
+        >
+          <Plus className="w-3.5 h-3.5" /> {slot.addLabel}
+        </button>
+        {named.length > 0 && (
+          <button
+            onClick={() => onDone()}
+            className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" /> That's everyone
+          </button>
+        )}
+        {slot.allowNone && named.length === 0 && (
+          <button
+            onClick={() => onDone(true)}
+            className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-muted-foreground"
+          >
+            {slot.noneLabel ?? "I don't know"}
+          </button>
+        )}
+      </div>
+    </CardShell>
+  );
+};
+
+/** A short written answer where a choice can't carry the detail. */
+const TextSlotCard = ({
+  slot, index, value, settled, onChange, onDone,
+}: {
+  slot: TextSlot; index: number; value: string; settled: boolean;
+  onChange: (v: string) => void; onDone: () => void;
+}) => (
+  <CardShell index={index} settled={settled} eyebrow={slot.eyebrow} title={slot.title} hint={slot.hint}>
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={3}
+      maxLength={1200}
+      placeholder={slot.placeholder}
+      className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary resize-y"
+    />
+    <button
+      onClick={onDone}
+      disabled={!value.trim()}
+      className="mt-3 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+    >
+      <CheckCircle2 className="w-3.5 h-3.5" /> Save this
+    </button>
+  </CardShell>
+);
+
+/**
+ * The family, drawn rather than listed. Everyone gathered so far is grouped by
+ * the part they play, so the seller can see at a glance that we have the right
+ * people — and spot anyone missing.
+ */
+const FamilyTree = ({ people, onRemove }: { people: RosterPerson[]; onRemove: (id: string) => void }) => {
+  const groups: { label: string; roles: PersonRole[] }[] = [
+    { label: "On the deed", roles: ["owner", "co_owner", "decedent"] },
+    { label: "Spouse", roles: ["spouse"] },
+    { label: "Inherits", roles: ["heir"] },
+    { label: "Acting for them", roles: ["executor", "trustee", "agent"] },
+  ];
+  const named = people.filter((p) => p.name.trim());
+  if (!named.length) return null;
+
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card/60 p-6 sm:p-7">
+      <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
+      <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
+        <Users className="w-5 h-5 text-primary" /> Everyone connected to this plot
+      </p>
+
+      <div className="mt-6 space-y-6">
+        {groups.map((g) => {
+          const members = named.filter((p) => g.roles.includes(p.role));
+          if (!members.length) return null;
+          return (
+            <div key={g.label} className="relative pl-5">
+              <span className="absolute left-0 top-2 bottom-2 w-px bg-primary/25" />
+              <span className="absolute -left-[3px] top-2 w-[7px] h-[7px] rounded-full bg-primary" />
+              <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-2">{g.label}</div>
+              <div className="flex flex-wrap gap-2">
+                {members.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`group inline-flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition ${
+                      p.deceased || p.role === "decedent"
+                        ? "border-border bg-muted/40"
+                        : "border-primary/25 bg-primary/[0.06]"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-full bg-background border border-border/70 flex items-center justify-center text-[10px] text-primary">
+                      {initials(p.name) || <UserRound className="w-3.5 h-3.5" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm text-foreground leading-tight">{p.name}</span>
+                      <span className="block text-[10px] text-muted-foreground leading-tight">
+                        {p.relationship || ROLE_LABEL[p.role]}
+                        {(p.deceased || p.role === "decedent") && " · has passed away"}
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => onRemove(p.id)}
+                      className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
+                      aria-label={`Remove ${p.name}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const OwnershipConfirm = () => {
+
   const [params] = useSearchParams();
   const submissionId = params.get("s") ?? "";
   const [packet, setPacket] = useState<Packet | null>(null);
