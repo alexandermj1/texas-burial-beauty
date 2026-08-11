@@ -216,6 +216,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [lastInteractionMap, setLastInteractionMap] = useState<Record<string, string>>({});
   // AI "where is this up to" summaries, keyed by submission id.
   const [summaryMap, setSummaryMap] = useState<Record<string, string>>({});
+  const [expandedSummaries, setExpandedSummaries] = useState<Record<string, boolean>>({});
+
 
   // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
   // when WE promised to follow up and haven't sent anything since (older than threshold).
@@ -2381,13 +2383,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const fresh = isNew(s);
             const workers = workersFor(s.id);
             const beingWorked = workers.length > 0;
+            const needsReply = !!awaitingMap[s.id];
             const bgCls = isActive
               ? "bg-primary/15 border-l-4 border-l-primary"
-              : beingWorked
-                ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
-                : fresh
-                  ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
-                  : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
+              : needsReply
+                // "Needs reply" is shown as a red row highlight instead of a tag.
+                ? "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70 border-l-4 border-l-[hsl(var(--status-reply))]"
+                : beingWorked
+                  ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
+                  : fresh
+                    ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
+                    : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
+
             return (
               <div key={s.id}>
                 <motion.button
@@ -2435,16 +2442,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           );
                         })()}
-                        {awaitingMap[s.id] && (
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border border-[hsl(var(--status-reply-border))] shadow-sm"
-                            title={`Customer replied ${new Date(awaitingMap[s.id]).toLocaleString()} — no response sent yet`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-reply))] animate-pulse" />
-                            Needs reply
-                          </span>
-                        )}
-                        {!awaitingMap[s.id] && !!((s as any).custom_tag || "").trim() && (
+                        {/* "Needs reply" is now a red row highlight, not a tag. */}
+                        {!needsReply && !!((s as any).custom_tag || "").trim() && (
+
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800 shadow-sm max-w-[180px] truncate"
                             title={(s as any).custom_tag}
@@ -2591,17 +2591,47 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-3">
-                      {sourceLabel(s.source, s.inquiry_channel) && (
-                        <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
-                      )}
-                      {summaryMap[s.id] || <span className="italic opacity-70">Summarising…</span>}
-                    </p>
-                    {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
-                      <p className="text-[10px] text-[hsl(var(--status-nodocs-fg))] italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
-                        ✎ originally: "{(s as any).cemetery_original}"
-                      </p>
-                    )}
+                    {(() => {
+                      const raw = summaryMap[s.id] || "";
+                      const [headline, body] = raw.includes("||")
+                        ? [raw.split("||")[0].trim(), raw.split("||").slice(1).join("||").trim()]
+                        : ["", raw];
+                      const expanded = !!expandedSummaries[s.id];
+                      const label = sourceLabel(s.source, s.inquiry_channel);
+                      return (
+                        <>
+                          {headline && (
+                            <p className="text-xs font-semibold text-foreground mt-0.5 flex items-start gap-1.5">
+                              {label && <span className="text-primary/80 font-medium shrink-0">{label} ·</span>}
+                              <span className="min-w-0">{headline}</span>
+                            </p>
+                          )}
+                          {body && (
+                            <p className={`text-xs text-muted-foreground mt-0.5 ${expanded ? "" : "line-clamp-2"}`}>
+                              {!headline && label && <span className="text-primary/80">{label} · </span>}
+                              {body}
+                              {body.length > 110 && (
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedSummaries(prev => ({ ...prev, [s.id]: !prev[s.id] }));
+                                  }}
+                                  className="ml-1 text-[10px] font-medium text-primary hover:underline"
+                                >
+                                  {expanded ? "less" : "more"}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                          {!raw && (
+                            <p className="text-xs text-muted-foreground/70 italic mt-0.5">Summarising…</p>
+                          )}
+                        </>
+                      );
+                    })()}
+
 
                   </div>
                   <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />

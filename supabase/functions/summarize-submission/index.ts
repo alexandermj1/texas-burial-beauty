@@ -8,18 +8,30 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const SYSTEM = `You summarise the current status of a cemetery-plot seller/buyer enquiry for an internal CRM list.
-Write 2-3 short sentences, plain English, past/present tense, no greeting, no bullet points, no markdown.
-Say where things stand right now and what the next step is for our team.
-Be factual — only use the supplied data. Never invent prices, dates, or promises.
-Maximum 300 characters.`;
+Reply in EXACTLY this format, nothing else:
+HEADLINE: <max 7 words — what they want, or the single next action for our team. Punchy, no full stop.>
+SUMMARY: <1-2 short sentences, max 180 characters, plain English, where things stand.>
+Be factual — only use the supplied data. Never invent prices, dates, or promises. No markdown, no bullets.`;
+
+// Bump the version when the prompt/format changes so cached summaries regenerate.
+const PROMPT_VERSION = "v2";
 
 function fingerprint(s: any, lastMsgAt: string | null): string {
   return [
+    PROMPT_VERSION,
     s.quote_sent_at, s.quote_response, s.quote_responded_at, s.accepted_quote_amount,
     s.documents_requested_at, s.documents_completed_at, s.la_signed_at,
     s.handled, s.custom_tag, lastMsgAt,
   ].map(v => (v == null ? "" : String(v))).join("|");
 }
+
+// Normalise the model output into "headline||summary".
+function pack(raw: string): string {
+  const h = raw.match(/HEADLINE:\s*(.+)/i)?.[1]?.trim().replace(/[.]$/, "") ?? "";
+  const s = raw.match(/SUMMARY:\s*([\s\S]+)/i)?.[1]?.trim() ?? raw.trim();
+  return h ? `${h}||${s}` : s;
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -103,8 +115,10 @@ Deno.serve(async (req) => {
       }
 
       const data = await resp.json();
-      const text = String(data?.choices?.[0]?.message?.content ?? "").trim();
-      if (!text) continue;
+      const raw = String(data?.choices?.[0]?.message?.content ?? "").trim();
+      if (!raw) continue;
+      const text = pack(raw);
+
 
       summaries[s.id] = text;
       await svc.from("contact_submissions")
