@@ -934,11 +934,14 @@ const OwnershipConfirm = () => {
       // Co-owners we read off the deed are already named — don't ask twice.
       case "owners": return a.owners === "multiple" && !derived.includes("owners") ? ["_coowners"] : [];
       case "co": return a.co === "blocked" ? ["_blocked"] : [];
-      case "occupied": return a.occupied === "yes" ? ["_occupiedBy"] : [];
-      case "marital":
-        return a.marital === "married" ? ["_spouse"]
+      case "marital": {
+        // A spouse already on the deed — or already named in the roster — is
+        // known: asking for their name again reads as though we weren't listening.
+        const spouseKnown = (a.people ?? []).some((p) => p.role === "spouse" && p.name.trim());
+        return a.marital === "married" && !spouseKnown ? ["_spouse"]
           : a.marital === "divorced" ? ["_exspouse"]
           : a.marital === "widowed" ? ["_latespouse"] : [];
+      }
       case "spouse": return a.spouse === "yes" ? ["_spouse"] : [];
       case "probate": return a.probate === "letters" ? ["_executor"] : [];
       case "beneficiaries": return ["_heirs"];
