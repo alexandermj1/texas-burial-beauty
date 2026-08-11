@@ -254,13 +254,14 @@ export const QUESTIONS: Record<string, Question> = {
     ],
   },
   spouse: {
-    key: "spouse", eyebrow: "Surviving spouse", question: "Did the owner leave a surviving spouse?",
+    key: "spouse", eyebrow: "Surviving spouse", question: "Did they leave a surviving spouse?",
+    hint: "A widow or widower keeps a right of interment, so we need to know either way.",
     answers: [{ value: "yes", label: "Yes" }, { value: "no", label: "No" }],
   },
   chain: {
     key: "chain", eyebrow: "Chain of title", question: "Has anyone who would inherit also died since?",
-    hint: "For example, the owner left it to a son who has since passed away.",
-    answers: [{ value: "one", label: "No, one death only" }, { value: "multi", label: "Yes, more than one" }],
+    hint: "For example, the plot passed to a son who has since passed away himself.",
+    answers: [{ value: "one", label: "No — one death only" }, { value: "multi", label: "Yes — more than one" }],
   },
   trustee: {
     key: "trustee", eyebrow: "Trust", question: "Who is acting as trustee now?",
@@ -268,13 +269,14 @@ export const QUESTIONS: Record<string, Question> = {
   },
   orgStatus: {
     key: "orgStatus", eyebrow: "Organization", question: "Is the organization still active?",
-    answers: [{ value: "active", label: "Yes, active" }, { value: "inactive", label: "Dissolved or inactive" }],
+    answers: [{ value: "active", label: "Yes — still active" }, { value: "inactive", label: "No — dissolved or inactive" }],
   },
   deed: {
-    key: "deed", eyebrow: "The deed", question: "Do they have the original certificate of ownership?",
+    key: "deed", eyebrow: "The deed", question: "Do you have the original certificate of ownership?",
     hint: "It's recorded with the cemetery, so a lost one can usually be rebuilt from their records.",
-    answers: [{ value: "yes", label: "Yes, they have it" }, { value: "no", label: "No, it's lost" }],
+    answers: [{ value: "yes", label: "Yes — I have it" }, { value: "no", label: "No — it's lost" }],
   },
+
   names: {
     key: "names", eyebrow: "Names", question: "Do the names match across the deed, IDs and any court papers?",
     hint: "Marriage, divorce or a legal name change can create a mismatch.",
