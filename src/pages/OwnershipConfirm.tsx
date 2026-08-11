@@ -155,7 +155,7 @@ const QuestionCard = ({
                       : "border-border/70 bg-background hover:border-primary/40"
                   }`}
                 >
-                  <span className="text-sm text-foreground">{opt.label}</span>
+                  <span className="text-sm text-foreground">{labels?.[opt.value] ?? opt.label}</span>
                   {opt.detail && <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.detail}</span>}
                 </button>
               ))}
