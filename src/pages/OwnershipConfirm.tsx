@@ -161,9 +161,67 @@ const OwnershipConfirm = () => {
   const answered = path.filter((k) => !!(answers as Record<string, unknown>)[k]).length;
   const pct = path.length ? Math.round((answered / path.length) * 100) : 0;
 
-  const setAnswer = (key: string, value: string) =>
+  /**
+   * A question is settled once it has an answer the seller owns — either they
+   * picked it, or they confirmed the one we had guessed. We only ever show one
+   * unsettled question at a time so the page never looks like a form.
+   */
+  const isSettled = useCallback(
+    (k: string) => {
+      const v = (answers as Record<string, unknown>)[k];
+      return !!v && (confirmedKeys.includes(k) || !believedKeys.has(k));
+    },
+    [answers, confirmedKeys, believedKeys],
+  );
+  const nextIndex = path.findIndex((k) => !isSettled(k));
+  const allSettled = nextIndex === -1;
+  const visible = allSettled ? path : path.slice(0, nextIndex + 1);
+  const remaining = path.length - (allSettled ? path.length : nextIndex);
+
+  /** Scroll the newly revealed question into view, but never on first paint. */
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const lastRevealed = useRef<string | null>(null);
+  useEffect(() => {
+    if (loading || sent || allSettled) return;
+    const key = path[nextIndex];
+    if (!key || lastRevealed.current === key) return;
+    if (lastRevealed.current !== null) {
+      cardRefs.current[key]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    lastRevealed.current = key;
+  }, [path, nextIndex, allSettled, loading, sent]);
+
+  /** Quietly keep a draft so nothing is lost if they close the tab mid-way. */
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<Date | null>(null);
+  const dirty = useRef(false);
+  useEffect(() => {
+    if (loading || sent || !submissionId || !dirty.current) return;
+    const t = setTimeout(async () => {
+      setDraftSaving(true);
+      await supabase.functions.invoke("ownership-questions", {
+        body: {
+          action: "save",
+          submission_id: submissionId,
+          answers: { ...answers, people: (answers.people ?? []).filter((p) => p.name.trim()), sellerNotes: notes.trim() || undefined },
+          finished: false,
+        },
+      });
+      setDraftSaving(false);
+      setDraftSavedAt(new Date());
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [answers, notes, loading, sent, submissionId]);
+
+  const setAnswer = (key: string, value: string) => {
+    dirty.current = true;
     setAnswers((a) => ({ ...a, [key]: value } as OwnershipAnswers));
-  const confirmKey = (key: string) => setConfirmedKeys((k) => [...new Set([...k, key])]);
+  };
+  const confirmKey = (key: string) => {
+    dirty.current = true;
+    setConfirmedKeys((k) => [...new Set([...k, key])]);
+  };
+
 
   const people = answers.people ?? [];
   const showFamily = answers.owner === "deceased" || answers.owners === "multiple" || people.length > 0;
