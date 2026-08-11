@@ -768,14 +768,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     setSummaryMap(prev => ({ ...seeded, ...prev }));
   }, [submissions]);
 
+  const summaryRequestedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     let cancelled = false;
-    const missing = filtered.filter(s => !summaryMap[s.id]).slice(0, 8).map(s => s.id);
-    if (!missing.length) return;
+    // Ask for any visible row we haven't asked about this session — the server
+    // returns the cached text unless the state fingerprint (or prompt version)
+    // changed, so stale summaries refresh without extra cost.
+    const batch = filtered
+      .filter(s => !summaryRequestedRef.current.has(s.id))
+      .slice(0, 8)
+      .map(s => s.id);
+    if (!batch.length) return;
     const t = setTimeout(async () => {
+      batch.forEach(id => summaryRequestedRef.current.add(id));
       try {
         const { data } = await supabase.functions.invoke("summarize-submission", {
-          body: { submissionIds: missing },
+          body: { submissionIds: batch },
         });
         if (cancelled || !data?.summaries) return;
         setSummaryMap(prev => ({ ...prev, ...data.summaries }));
