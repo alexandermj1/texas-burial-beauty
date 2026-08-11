@@ -38,11 +38,19 @@ type Packet = {
 const NAMES_KEY = "_deedNames";
 
 /** Split "John Smith & Mary Smith" / "John and Mary Smith" into separate names. */
-const splitNames = (raw?: string | null): string[] =>
-  String(raw ?? "")
-    .split(/\s*(?:,|\/|&| and )\s*/i)
+const splitNames = (raw?: string | null): string[] => {
+  const source = String(raw ?? "").replace(/\s+/g, " ").trim();
+  // Intake text often uses a shared surname: "Danny and Cynthia Roby". Do not
+  // turn the first person into the unusable one-word name "Danny".
+  const shared = source.match(/^([A-Za-z.'-]+)\s+(?:and|&)\s+([A-Za-z.'-]+)\s+([A-Za-z.'-]+)$/i);
+  const normalized = shared
+    ? `${shared[1]} ${shared[3]}, ${shared[2]} ${shared[3]}`
+    : source;
+  return normalized
+    .split(/\s*(?:,|;|\/|&|\band\b)\s*/i)
     .map((s) => s.replace(/\s+/g, " ").trim())
     .filter((s) => s.length > 1 && !/^(unknown|n\/?a|none)$/i.test(s));
+};
 
 /** Read the relationship the seller already told us into one of our choices. */
 const guessRel = (raw?: string | null): string | undefined => {
