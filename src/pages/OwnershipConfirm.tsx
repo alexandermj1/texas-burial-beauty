@@ -1056,92 +1056,12 @@ const OwnershipConfirm = () => {
             )}
 
 
-            {allSettled && showFamily && (
-              <div className="mt-10 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
-
-                <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
-                <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" /> Who is in the picture?
-                </p>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                  List everyone connected to the plot — the person named on the deed, their spouse, and any children or
-                  other relatives who would inherit. Tick “has passed away” for anyone in the chain who has died; we
-                  need them named even so. Nobody is contacted without speaking to you first.
-                </p>
-
-                <div className="mt-5 space-y-3">
-                  {people.map((p) => (
-                    <div key={p.id} className="rounded-xl border border-border/70 bg-background p-4">
-                      <div className="grid sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Full name</label>
-                          <input
-                            value={p.name}
-                            onChange={(e) => updatePerson(p.id, { name: e.target.value })}
-                            placeholder="e.g. Mary Ellen Carter"
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Their part in this</label>
-                          <select
-                            value={p.role}
-                            onChange={(e) => updatePerson(p.id, { role: e.target.value as PersonRole })}
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          >
-                            {PUBLIC_ROLES.map((r) => (
-                              <option key={r} value={r}>{ROLE_LABEL[r]}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Relationship (optional)</label>
-                          <input
-                            value={p.relationship ?? ""}
-                            onChange={(e) => updatePerson(p.id, { relationship: e.target.value })}
-                            placeholder="daughter, brother, surviving spouse…"
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-muted-foreground">Email (optional)</label>
-                          <input
-                            value={p.email ?? ""}
-                            onChange={(e) => updatePerson(p.id, { email: e.target.value })}
-                            placeholder="So we can send them anything they must sign"
-                            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                          />
-                        </div>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={!!p.deceased}
-                            onChange={(e) => updatePerson(p.id, { deceased: e.target.checked })}
-                            className="accent-[hsl(var(--primary))]"
-                          />
-                          <HeartCrack className="w-3.5 h-3.5" /> This person has passed away
-                        </label>
-                        <button
-                          onClick={() => removePerson(p.id)}
-                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={addPerson}
-                  className="mt-4 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40 text-foreground"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add {people.length ? "another person" : "the first person"}
-                </button>
+            {allSettled && people.some((p) => p.name.trim()) && (
+              <div className="mt-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <FamilyTree people={people} onRemove={removePerson} />
               </div>
             )}
+
 
             {allSettled && (
               <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
