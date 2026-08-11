@@ -234,15 +234,16 @@ export const QUESTIONS: Record<string, Question> = {
     answers: [{ value: "sole", label: "One person" }, { value: "multiple", label: "Several people" }],
   },
   heirclass: {
-    key: "heirclass", eyebrow: "The family", question: "Who did the owner leave behind?",
-    hint: "Texas law works down a ladder — the first group that exists inherits everything.",
+    key: "heirclass", eyebrow: "The family", question: "Who survived them?",
+    hint: "Texas law works down a ladder — the first group that exists inherits everything. Count biological and legally adopted children, including from earlier marriages, but not step-children.",
     answers: [
-      { value: "children", label: "Children or grandchildren", detail: "Even if some have since died" },
+      { value: "children", label: "Children, or grandchildren of a child who has died" },
       { value: "parents", label: "No children, but a parent is living" },
-      { value: "siblings", label: "No children or parents — brothers and sisters", detail: "Nieces and nephews step in for any who died" },
-      { value: "unsure", label: "Not sure" },
+      { value: "siblings", label: "No children or parents — brothers and sisters", detail: "Nieces and nephews step in for any who have died" },
+      { value: "unsure", label: "I don't know" },
     ],
   },
+
   heirship: {
     key: "heirship", eyebrow: "Proving heirs", question: "How are the heirs being established?",
     answers: [
