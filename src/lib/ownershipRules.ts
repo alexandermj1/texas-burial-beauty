@@ -28,6 +28,13 @@ export type OwnershipAnswers = {
   outsideSpouse?: "yes" | "no" | "unsure";
   /** Do any deceased deed holders have surviving biological/adopted descendants? */
   descendants?: "yes" | "no" | "unsure";
+  /** Stage 1 Q3 — is anyone named on the deed deceased? */
+  deceasedAny?: "yes" | "no";
+  /** Stage 1 Q4 — does anyone hold a POA for a living person named on the deed? */
+  poaHolder?: "yes" | "no";
+  /** The details of that power of attorney, in the seller's words. */
+  poaDetails?: string;
+
 
   will?: "yes" | "no";
   probate?: "letters" | "muniment" | "none";
