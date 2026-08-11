@@ -64,7 +64,7 @@ const labelFor = (key: string, value?: string) =>
 
 
 const QuestionCard = ({
-  qKey, answers, believed, confirmed, onAnswer, onConfirm, index, context,
+  qKey, answers, believed, confirmed, onAnswer, onConfirm, index, title, hint, labels,
 }: {
   qKey: string;
   answers: OwnershipAnswers;
@@ -73,8 +73,11 @@ const QuestionCard = ({
   onAnswer: (key: string, value: string) => void;
   onConfirm: (key: string) => void;
   index: number;
-  /** Names already gathered, so a question can say who it is talking about. */
-  context?: string;
+  /** The question rewritten to name the person we're actually talking about. */
+  title?: string;
+  hint?: string;
+  /** Answer labels rewritten the same way, e.g. "Yes, I'll sign personally". */
+  labels?: Record<string, string>;
 }) => {
   const q = QUESTIONS[qKey];
   const value = (answers as Record<string, unknown>)[qKey] as string | undefined;
@@ -104,18 +107,13 @@ const QuestionCard = ({
         <div className="flex-1 min-w-0">
           <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">{q.eyebrow}</div>
           <p className="font-display text-xl sm:text-2xl leading-snug text-foreground">
-            {context && qKey === "rel"
-              ? `What is your relationship to ${context}?`
-              : context && qKey === "owner"
-                ? `Which of these describes ${context}?`
-                : q.question}
+            {title ?? q.question}
           </p>
 
-          {q.hint && (
-            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-              {context && qKey === "owner" ? "This decides whose signature the cemetery will accept." : q.hint}
-            </p>
+          {(hint ?? q.hint) && (
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{hint ?? q.hint}</p>
           )}
+
 
 
           {!showChoices && value && (
