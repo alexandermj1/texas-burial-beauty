@@ -758,6 +758,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [editCemeteryInline, setEditCemeteryInline] = useState(false);
   const [reassignCemeteryOpen, setReassignCemeteryOpen] = useState(false);
 
+  // Seed AI summaries already cached on the rows, then top up missing ones for
+  // the visible list in small batches (cheap model, cached server-side).
+  useEffect(() => {
+    const seeded: Record<string, string> = {};
+    for (const s of submissions as any[]) if (s.ai_summary) seeded[s.id] = s.ai_summary;
+    setSummaryMap(prev => ({ ...seeded, ...prev }));
+  }, [submissions]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const missing = filtered.filter(s => !summaryMap[s.id]).slice(0, 8).map(s => s.id);
+    if (!missing.length) return;
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await supabase.functions.invoke("summarize-submission", {
+          body: { submissionIds: missing },
+        });
+        if (cancelled || !data?.summaries) return;
+        setSummaryMap(prev => ({ ...prev, ...data.summaries }));
+      } catch { /* non-blocking */ }
+    }, 400);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [filtered, summaryMap]);
+
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const cemeteryProfileFor = (cemetery: string | null | undefined) => {
