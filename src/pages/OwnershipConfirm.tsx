@@ -825,7 +825,7 @@ const OwnershipConfirm = () => {
       setDraftSavedAt(new Date());
     }, 1200);
     return () => clearTimeout(t);
-  }, [answers, notes, loading, sent, submissionId]);
+  }, [answers, confirmedKeys, notes, loading, sent, submissionId]);
 
   const setAnswer = (key: string, value: string) => {
     dirty.current = true;
