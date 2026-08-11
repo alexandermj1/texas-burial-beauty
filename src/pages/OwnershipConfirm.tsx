@@ -226,15 +226,22 @@ const OwnershipConfirm = () => {
   const people = answers.people ?? [];
   const showFamily = answers.owner === "deceased" || answers.owners === "multiple" || people.length > 0;
 
-  const addPerson = () =>
+  const addPerson = () => {
+    dirty.current = true;
     setAnswers((a) => ({
       ...a,
       people: [...(a.people ?? []), { id: crypto.randomUUID(), name: "", role: "heir" as PersonRole }],
     }));
-  const updatePerson = (id: string, patch: Partial<RosterPerson>) =>
+  };
+  const updatePerson = (id: string, patch: Partial<RosterPerson>) => {
+    dirty.current = true;
     setAnswers((a) => ({ ...a, people: (a.people ?? []).map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
-  const removePerson = (id: string) =>
+  };
+  const removePerson = (id: string) => {
+    dirty.current = true;
     setAnswers((a) => ({ ...a, people: (a.people ?? []).filter((p) => p.id !== id) }));
+  };
+
 
   const submit = async () => {
     setSaving(true);
