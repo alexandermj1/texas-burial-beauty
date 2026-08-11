@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2, Loader2, Pencil, Sparkles, Users, Plus, Trash2,
-  ShieldCheck, ArrowRight, Send, HeartCrack,
+  ShieldCheck, ArrowRight, Send, HeartCrack, Cloud,
 } from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -160,22 +161,87 @@ const OwnershipConfirm = () => {
   const answered = path.filter((k) => !!(answers as Record<string, unknown>)[k]).length;
   const pct = path.length ? Math.round((answered / path.length) * 100) : 0;
 
-  const setAnswer = (key: string, value: string) =>
+  /**
+   * A question is settled once it has an answer the seller owns — either they
+   * picked it, or they confirmed the one we had guessed. We only ever show one
+   * unsettled question at a time so the page never looks like a form.
+   */
+  const isSettled = useCallback(
+    (k: string) => {
+      const v = (answers as Record<string, unknown>)[k];
+      return !!v && (confirmedKeys.includes(k) || !believedKeys.has(k));
+    },
+    [answers, confirmedKeys, believedKeys],
+  );
+  const nextIndex = path.findIndex((k) => !isSettled(k));
+  const allSettled = nextIndex === -1;
+  const visible = allSettled ? path : path.slice(0, nextIndex + 1);
+  const remaining = path.length - (allSettled ? path.length : nextIndex);
+
+  /** Scroll the newly revealed question into view, but never on first paint. */
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const lastRevealed = useRef<string | null>(null);
+  useEffect(() => {
+    if (loading || sent || allSettled) return;
+    const key = path[nextIndex];
+    if (!key || lastRevealed.current === key) return;
+    if (lastRevealed.current !== null) {
+      cardRefs.current[key]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    lastRevealed.current = key;
+  }, [path, nextIndex, allSettled, loading, sent]);
+
+  /** Quietly keep a draft so nothing is lost if they close the tab mid-way. */
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<Date | null>(null);
+  const dirty = useRef(false);
+  useEffect(() => {
+    if (loading || sent || !submissionId || !dirty.current) return;
+    const t = setTimeout(async () => {
+      setDraftSaving(true);
+      await supabase.functions.invoke("ownership-questions", {
+        body: {
+          action: "save",
+          submission_id: submissionId,
+          answers: { ...answers, people: (answers.people ?? []).filter((p) => p.name.trim()), sellerNotes: notes.trim() || undefined },
+          finished: false,
+        },
+      });
+      setDraftSaving(false);
+      setDraftSavedAt(new Date());
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [answers, notes, loading, sent, submissionId]);
+
+  const setAnswer = (key: string, value: string) => {
+    dirty.current = true;
     setAnswers((a) => ({ ...a, [key]: value } as OwnershipAnswers));
-  const confirmKey = (key: string) => setConfirmedKeys((k) => [...new Set([...k, key])]);
+  };
+  const confirmKey = (key: string) => {
+    dirty.current = true;
+    setConfirmedKeys((k) => [...new Set([...k, key])]);
+  };
+
 
   const people = answers.people ?? [];
   const showFamily = answers.owner === "deceased" || answers.owners === "multiple" || people.length > 0;
 
-  const addPerson = () =>
+  const addPerson = () => {
+    dirty.current = true;
     setAnswers((a) => ({
       ...a,
       people: [...(a.people ?? []), { id: crypto.randomUUID(), name: "", role: "heir" as PersonRole }],
     }));
-  const updatePerson = (id: string, patch: Partial<RosterPerson>) =>
+  };
+  const updatePerson = (id: string, patch: Partial<RosterPerson>) => {
+    dirty.current = true;
     setAnswers((a) => ({ ...a, people: (a.people ?? []).map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
-  const removePerson = (id: string) =>
+  };
+  const removePerson = (id: string) => {
+    dirty.current = true;
     setAnswers((a) => ({ ...a, people: (a.people ?? []).filter((p) => p.id !== id) }));
+  };
+
 
   const submit = async () => {
     setSaving(true);
@@ -269,35 +335,59 @@ const OwnershipConfirm = () => {
               </p>
             </div>
 
-            <div className="mt-8 mb-10">
+            <div className="sticky top-0 z-20 -mx-5 px-5 py-3 mt-8 mb-8 bg-background/85 backdrop-blur border-b border-border/60">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-primary" /> {answered} of {path.length} answered
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                  {allSettled
+                    ? "All questions answered"
+                    : `${answered} of ${path.length} answered · ${remaining} to go`}
                 </span>
-                <span>{pct}%</span>
+                <span className="inline-flex items-center gap-2">
+                  {draftSaving ? (
+                    <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving</span>
+                  ) : draftSavedAt ? (
+                    <span className="inline-flex items-center gap-1"><Cloud className="w-3 h-3" /> Saved</span>
+                  ) : null}
+                  <span>{pct}%</span>
+                </span>
               </div>
               <div className="h-1 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
               </div>
             </div>
 
             <div className="space-y-3">
-              {path.map((key, i) => (
-                <QuestionCard
+              {visible.map((key, i) => (
+                <div
                   key={key}
-                  qKey={key}
-                  index={i + 1}
-                  answers={answers}
-                  believed={believedKeys.has(key)}
-                  confirmed={confirmedKeys.includes(key)}
-                  onAnswer={setAnswer}
-                  onConfirm={confirmKey}
-                />
+                  ref={(el) => { cardRefs.current[key] = el; }}
+                  className="animate-in fade-in slide-in-from-bottom-2 duration-500"
+                >
+                  <QuestionCard
+                    qKey={key}
+                    index={i + 1}
+                    answers={answers}
+                    believed={believedKeys.has(key)}
+                    confirmed={confirmedKeys.includes(key)}
+                    onAnswer={setAnswer}
+                    onConfirm={confirmKey}
+                  />
+                </div>
               ))}
             </div>
 
-            {showFamily && (
-              <div className="mt-10 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7">
+            {!allSettled && (
+              <p className="mt-6 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                Answer this one and the next question appears — your place is saved as you go.
+              </p>
+            )}
+
+
+            {allSettled && showFamily && (
+              <div className="mt-10 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
+
                 <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
                 <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" /> Who is in the picture?
@@ -382,42 +472,47 @@ const OwnershipConfirm = () => {
               </div>
             )}
 
-            <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7">
-              <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">Anything else</div>
-              <p className="font-display text-2xl leading-snug text-foreground">
-                Is there something about this plot we should know?
-              </p>
-              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                A disagreement in the family, a name that changed, paperwork you can't find — tell us here and a broker
-                will handle it. Nothing you write causes a delay; not telling us usually does.
-              </p>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-                maxLength={2000}
-                placeholder="Optional — in your own words"
-                className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary resize-y"
-              />
-            </div>
+            {allSettled && (
+              <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">Anything else</div>
+                <p className="font-display text-2xl leading-snug text-foreground">
+                  Is there something about this plot we should know?
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  A disagreement in the family, a name that changed, paperwork you can't find — tell us here and a broker
+                  will handle it. Nothing you write causes a delay; not telling us usually does.
+                </p>
+                <textarea
+                  value={notes}
+                  onChange={(e) => { dirty.current = true; setNotes(e.target.value); }}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="Optional — in your own words"
+                  className="mt-4 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary resize-y"
+                />
+              </div>
+            )}
 
             {error && (
               <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
             )}
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => void submit()}
-                disabled={saving}
-                className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {saving ? "Sending…" : "Send this to my broker"}
-              </button>
-              <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
-                <ArrowRight className="w-3 h-3" /> You can leave anything you're unsure of blank.
-              </span>
-            </div>
+            {allSettled && (
+              <div className="mt-8 flex flex-wrap items-center gap-3 animate-in fade-in duration-500">
+                <button
+                  onClick={() => void submit()}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {saving ? "Sending…" : "Send this to my broker"}
+                </button>
+                <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+                  <ArrowRight className="w-3 h-3" /> You can leave anything you're unsure of blank.
+                </span>
+              </div>
+            )}
+
 
             <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
               <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Rather talk it through?</div>
