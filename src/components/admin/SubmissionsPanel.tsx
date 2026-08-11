@@ -822,6 +822,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
+  const [aiFactsOpen, setAiFactsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
