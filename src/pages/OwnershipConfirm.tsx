@@ -697,59 +697,39 @@ const IdentityCard = ({
 const phraseFor = (
   key: string, isSelf: boolean, ownerNames: string, deedNames: string,
 ): { title?: string; hint?: string; labels?: Record<string, string> } => {
-  const who = isSelf ? "you" : ownerNames || "the owner";
   switch (key) {
     case "rel":
-      return deedNames ? { title: `What is your relationship to ${deedNames}?` } : {};
-    case "signer":
-      return isSelf
+      return deedNames
         ? {
-            title: "Will you be signing the paperwork yourself?",
-            labels: {
-              self: "Yes — I'll sign personally",
-              agent: "No — someone signs for me under a power of attorney or guardianship",
-            },
+            title: `What is your relationship to ${deedNames}?`,
+            labels: { self: `Self — I am ${deedNames.split(" and ")[0] ? "named on the deed" : "named on the deed"}` },
           }
-        : { title: `Will ${who} be signing the paperwork personally?` };
+        : {};
+    case "deceasedAny":
+      return deedNames ? { title: `Are any of ${deedNames} deceased?` } : {};
+    case "poaHolder":
+      return deedNames
+        ? { title: `Does anyone hold a power of attorney for any living person named on the deed?` }
+        : {};
     case "occupied":
       return { title: "Have any of the spaces identified on the deed ever been used?" };
     case "outsideSpouse":
-      return { title: "Does anyone named on the deed — living or deceased — have a current legal spouse who is not named on the deed?" };
-    case "co":
-      return { title: isSelf ? "Is everyone else on the deed willing to sign the sale?" : "Is everyone on the deed willing to sign the sale?" };
-    case "marital":
       return {
-        title: isSelf
-          ? "Are you married?"
-          : `Is ${who} married?`,
-        hint: "A husband or wife signs the power of attorney too — even when they aren't named on the deed.",
-        labels: {
-          on_deed: isSelf
-            ? "Yes — and my spouse is named on the deed"
-            : "Yes — and the spouse is named on the deed",
-          married: isSelf
-            ? "Yes — and my spouse is not on the deed"
-            : "Yes — and the spouse is not on the deed",
-          divorced: "No — divorced",
-          widowed: "No — my spouse has died",
-          single: isSelf ? "No — I've never married" : "No — never married",
-          unsure: "I don't know",
-        },
+        title: "Does anyone named on the deed — living or deceased — have a legal spouse who is not named on the deed?",
+        hint: "Not a former spouse after divorce. A current husband or wife holds interment rights and will need to sign, even when their name is not on the deed.",
+        labels: isSelf
+          ? {
+              yes: "Yes — there is a spouse who is not on the deed",
+              no: "No — every spouse is already on the deed, or there is no spouse",
+              unsure: "I don't know",
+            }
+          : undefined,
       };
-    case "maritalAtPurchase":
-      return { title: isSelf ? "Were you married when the plot was bought?" : `Was ${who} married when the plot was bought?` };
-    case "deed":
-      return {
-        title: isSelf
-          ? "Do you have the original certificate of ownership?"
-          : `Does ${who} have the original certificate of ownership?`,
-        labels: isSelf ? { yes: "Yes — I have it", no: "No — it's lost" } : undefined,
-      };
-
     default:
       return {};
   }
 };
+
 
 
 
