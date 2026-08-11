@@ -720,20 +720,62 @@ const OwnershipConfirm = () => {
 
   /** Answers we filled in ourselves and have not had confirmed yet. */
   const believedKeys = useMemo(() => new Set(answers.aiSuggested ?? []), [answers.aiSuggested]);
-  /** The deed-holder card always leads, then the branching questionnaire. */
-  const path = useMemo(() => [NAMES_KEY, ...questionPath(answers)], [answers]);
 
-  /**
-   * A question is settled once it has an answer the seller owns — either they
-   * picked it, or they confirmed the one we had guessed. We only ever show one
-   * unsettled question at a time so the page never looks like a form.
-   */
   const deedPeople = useMemo(
     () => (answers.people ?? []).filter((p) => p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
     [answers.people],
   );
+
+  /**
+   * Every answer that implies people pulls those people in immediately, so the
+   * names we need for the documents are gathered in context rather than in one
+   * daunting list at the end.
+   */
+  const followUps = useCallback((k: string, a: OwnershipAnswers): string[] => {
+    switch (k) {
+      case "owner": return a.owner === "deceased" ? ["_decedent"] : [];
+      case "signer": return a.signer === "agent" ? ["_agent"] : [];
+      case "owners": return a.owners === "multiple" ? ["_coowners"] : [];
+      case "co": return a.co === "blocked" ? ["_blocked"] : [];
+      case "marital":
+        return a.marital === "married" ? ["_spouse"]
+          : a.marital === "divorced" ? ["_exspouse"]
+          : a.marital === "widowed" ? ["_latespouse"] : [];
+      case "spouse": return a.spouse === "yes" ? ["_spouse"] : [];
+      case "probate": return a.probate === "letters" ? ["_executor"] : [];
+      case "beneficiaries": return ["_heirs"];
+      case "heirclass": return a.heirclass && a.heirclass !== "unsure" ? ["_heirs"] : [];
+      case "trustee": return ["_trustee"];
+      case "chain": return a.chain === "multi" ? ["_chaindeaths"] : [];
+      case "names": return a.names === "no" ? ["_nameMismatch"] : [];
+      default: return [];
+    }
+  }, []);
+
+  /** The deed-holder card leads, then each question with whatever it implies. */
+  const path = useMemo(() => {
+    const out: string[] = [NAMES_KEY];
+    for (const k of questionPath(answers)) {
+      out.push(k);
+      for (const f of followUps(k, answers)) if (!out.includes(f)) out.push(f);
+    }
+    // Two or more living people have to sign, so ask how they'd like to do it.
+    const livingSigners = (answers.people ?? []).filter(
+      (p) => p.name.trim() && !p.deceased && p.role !== "decedent" && p.role !== "heir" && p.role !== "witness",
+    );
+    if (livingSigners.length >= 2) out.push("jointPoa");
+    return out;
+  }, [answers, followUps]);
+
+  /**
+   * A step is settled once it has an answer the seller owns — they picked it,
+   * confirmed the one we had guessed, or finished naming people. We only ever
+   * show one unsettled step at a time so the page never looks like a form.
+   */
   const isSettled = useCallback(
     (k: string) => {
+      const slot = SLOTS[k];
+      if (slot) return confirmedKeys.includes(k);
       const v = k === NAMES_KEY
         ? deedPeople.some((p) => p.name.trim())
         : !!(answers as Record<string, unknown>)[k];
@@ -747,6 +789,7 @@ const OwnershipConfirm = () => {
   const allSettled = nextIndex === -1;
   const visible = allSettled ? path : path.slice(0, nextIndex + 1);
   const remaining = path.length - (allSettled ? path.length : nextIndex);
+
 
 
   /** Scroll the newly revealed question into view, but never on first paint. */
