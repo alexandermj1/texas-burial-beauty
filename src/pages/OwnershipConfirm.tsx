@@ -1012,6 +1012,24 @@ const OwnershipConfirm = () => {
                       onChange={setDeedPeople}
                       onConfirm={() => confirmKey(NAMES_KEY)}
                     />
+                  ) : SLOTS[key]?.kind === "people" ? (
+                    <PeopleSlotCard
+                      slot={SLOTS[key] as PeopleSlot}
+                      index={i + 1}
+                      settled={confirmedKeys.includes(key)}
+                      people={slotPeople((SLOTS[key] as PeopleSlot).role)}
+                      onChange={(next) => setSlotPeople((SLOTS[key] as PeopleSlot).role, next)}
+                      onDone={() => confirmKey(key)}
+                    />
+                  ) : SLOTS[key]?.kind === "text" ? (
+                    <TextSlotCard
+                      slot={SLOTS[key] as TextSlot}
+                      index={i + 1}
+                      settled={confirmedKeys.includes(key)}
+                      value={(answers as Record<string, unknown>)[(SLOTS[key] as TextSlot).field] as string ?? ""}
+                      onChange={(v) => setText((SLOTS[key] as TextSlot).field, v)}
+                      onDone={() => confirmKey(key)}
+                    />
                   ) : (
                     <QuestionCard
                       qKey={key}
@@ -1024,6 +1042,7 @@ const OwnershipConfirm = () => {
                       onConfirm={confirmKey}
                     />
                   )}
+
                 </div>
               ))}
             </div>
