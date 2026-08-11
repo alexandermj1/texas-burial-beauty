@@ -212,6 +212,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Map of submission_id -> latest incoming email received_at (ISO) when the latest
   // message in the thread is from the customer (i.e. we haven't replied yet).
   const [awaitingMap, setAwaitingMap] = useState<Record<string, string>>({});
+  // Timestamp of the most recent interaction (latest email either direction).
+  const [lastInteractionMap, setLastInteractionMap] = useState<Record<string, string>>({});
+  // AI "where is this up to" summaries, keyed by submission id.
+  const [summaryMap, setSummaryMap] = useState<Record<string, string>>({});
+
   // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
   // when WE promised to follow up and haven't sent anything since (older than threshold).
   const [followupMap, setFollowupMap] = useState<Record<string, { since: string; phrase: string }>>({});
@@ -456,7 +461,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           });
         }
       }
+      const nextLastInteraction: Record<string, string> = {};
+      for (const [sid, info] of latestPerSub.entries()) nextLastInteraction[sid] = info.received_at;
+      setLastInteractionMap(nextLastInteraction);
       const nextAwaiting: Record<string, string> = {};
+
       const nextFollowup: Record<string, { since: string; phrase: string }> = {};
       const now = Date.now();
       const subById = new Map(texasSubs.map(s => [s.id, s as any]));
@@ -748,6 +757,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [expandedCemetery, setExpandedCemetery] = useState(false);
   const [editCemeteryInline, setEditCemeteryInline] = useState(false);
   const [reassignCemeteryOpen, setReassignCemeteryOpen] = useState(false);
+
+  // Seed AI summaries already cached on the rows, then top up missing ones for
+  // the visible list in small batches (cheap model, cached server-side).
+  useEffect(() => {
+    const seeded: Record<string, string> = {};
+    for (const s of submissions as any[]) if (s.ai_summary) seeded[s.id] = s.ai_summary;
+    setSummaryMap(prev => ({ ...seeded, ...prev }));
+  }, [submissions]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const missing = filtered.filter(s => !summaryMap[s.id]).slice(0, 8).map(s => s.id);
+    if (!missing.length) return;
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await supabase.functions.invoke("summarize-submission", {
+          body: { submissionIds: missing },
+        });
+        if (cancelled || !data?.summaries) return;
+        setSummaryMap(prev => ({ ...prev, ...data.summaries }));
+      } catch { /* non-blocking */ }
+    }, 400);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [filtered, summaryMap]);
 
 
   const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
@@ -2544,33 +2577,32 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {/* Historical "viewed by" avatars removed — only live presence (workers) is shown. */}
-                        <span className="text-[10px] text-muted-foreground">{formatDate(s.created_at).split(",")[0]}</span>
+                        {(() => {
+                          const iso = lastInteractionMap[s.id] || s.created_at;
+                          return (
+                            <span
+                              className="text-[10px] text-muted-foreground"
+                              title={`Last interaction ${new Date(iso).toLocaleString()}`}
+                            >
+                              {formatDate(iso).split(",")[0]}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
-                    {/* Legacy Bayer stage chips (orange "Quote sent", "Morgued") removed —
-                        status is now shown by the dollar-sign / docs / paid tags above. */}
 
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-3">
                       {sourceLabel(s.source, s.inquiry_channel) && (
                         <span className="text-primary/80">{sourceLabel(s.source, s.inquiry_channel)} · </span>
                       )}
-                      {s.property_type ? `${s.property_type}${s.spaces ? ` ×${s.spaces}` : ""}` : ""}
-                      {s.cemetery ? `${s.property_type ? " · " : ""}${s.cemetery}` : ""}
-                      {s.cemetery && countFor(s.cemetery) > 0 ? (
-                        <span className="ml-1.5 text-[10px] text-primary font-medium">· {countFor(s.cemetery)} in stock</span>
-                      ) : null}
+                      {summaryMap[s.id] || <span className="italic opacity-70">Summarising…</span>}
                     </p>
                     {(s as any).cemetery_original && (s as any).cemetery_original !== s.cemetery && (
                       <p className="text-[10px] text-[hsl(var(--status-nodocs-fg))] italic truncate mt-0.5" title={`Customer originally wrote: "${(s as any).cemetery_original}"`}>
                         ✎ originally: "{(s as any).cemetery_original}"
                       </p>
                     )}
-                    {!isActive && (
-                      <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
-                        {s.message || s.details || s.email || s.phone || "—"}
-                      </p>
-                    )}
+
                   </div>
                   <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
