@@ -122,7 +122,7 @@ const QuestionCard = ({
                 <p className="text-[11px] text-muted-foreground">
                   {believed && !confirmed ? "From our records we believe" : "Your answer"}
                 </p>
-                <p className="text-sm text-foreground mt-0.5">{labelFor(qKey, value)}</p>
+                <p className="text-sm text-foreground mt-0.5">{labels?.[value] ?? labelFor(qKey, value)}</p>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {believed && !confirmed && (
