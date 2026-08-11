@@ -2440,16 +2440,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           );
                         })()}
-                        {awaitingMap[s.id] && (
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[hsl(var(--status-reply-soft))] text-[hsl(var(--status-reply-fg))] border border-[hsl(var(--status-reply-border))] shadow-sm"
-                            title={`Customer replied ${new Date(awaitingMap[s.id]).toLocaleString()} — no response sent yet`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-reply))] animate-pulse" />
-                            Needs reply
-                          </span>
-                        )}
-                        {!awaitingMap[s.id] && !!((s as any).custom_tag || "").trim() && (
+                        {/* "Needs reply" is now a red row highlight, not a tag. */}
+                        {!needsReply && !!((s as any).custom_tag || "").trim() && (
+
                           <span
                             className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800 shadow-sm max-w-[180px] truncate"
                             title={(s as any).custom_tag}
