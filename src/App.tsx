@@ -47,6 +47,7 @@ const SelectStarter = lazy(() => import("./pages/SelectStarter"));
 const SellerPortal = lazy(() => import("./pages/SellerPortal"));
 const SellerPortalMobileUpload = lazy(() => import("./pages/SellerPortalMobileUpload"));
 const SellerDocuments = lazy(() => import("./pages/SellerDocuments"));
+const OwnershipConfirm = lazy(() => import("./pages/OwnershipConfirm"));
 
 
 
