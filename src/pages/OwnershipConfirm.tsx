@@ -333,7 +333,7 @@ type TextSlot = {
   eyebrow: string;
   title: string;
   hint: string;
-  field: "nameMismatch" | "blockedNotes";
+  field: "nameMismatch" | "blockedNotes" | "occupiedBy";
   placeholder: string;
 };
 
@@ -404,6 +404,12 @@ const SLOTS: Record<string, PeopleSlot | TextSlot> = {
     title: "Tell us who that is and what's happened",
     hint: "There is almost always a lawful way forward — knowing the situation lets a broker choose it.",
     placeholder: "e.g. My brother David Carter hasn't spoken to the family in years and we have no address for him.",
+  },
+  _occupiedBy: {
+    kind: "text", eyebrow: "The spaces", field: "occupiedBy",
+    title: "Who is buried in the space, and which space is it?",
+    hint: "Whoever is interred there brings their own family's rights with them, so the cemetery will ask us about it.",
+    placeholder: "e.g. My father, Robert Lee Hayes, is in space 2 — buried 2011.",
   },
   _nameMismatch: {
     kind: "text", eyebrow: "The names", field: "nameMismatch",
@@ -1031,7 +1037,7 @@ const OwnershipConfirm = () => {
       people: [...(a.people ?? []).filter((p) => p.role !== role), ...next],
     }));
   };
-  const setText = (field: "nameMismatch" | "blockedNotes", v: string) => {
+  const setText = (field: "nameMismatch" | "blockedNotes" | "occupiedBy", v: string) => {
     dirty.current = true;
     setAnswers((a) => ({ ...a, [field]: v } as OwnershipAnswers));
   };
