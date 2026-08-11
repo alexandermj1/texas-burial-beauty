@@ -512,6 +512,11 @@ const OwnershipConfirm = () => {
         className="absolute bottom-0 -left-28 w-80 h-80 opacity-[0.12] pointer-events-none"
         style={{ backgroundImage: `url(${fern.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
       />
+      {/* Soft light behind the page so each card lifts off the paper. */}
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[46rem] h-[46rem] rounded-full bg-primary/[0.07] blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] rounded-full bg-accent/[0.10] blur-3xl pointer-events-none" />
+
+
 
       <div className="relative max-w-3xl mx-auto px-5 py-16">
         <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-3">Texas Cemetery Brokers</div>
