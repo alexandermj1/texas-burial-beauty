@@ -335,32 +335,55 @@ const OwnershipConfirm = () => {
               </p>
             </div>
 
-            <div className="mt-8 mb-10">
+            <div className="sticky top-0 z-20 -mx-5 px-5 py-3 mt-8 mb-8 bg-background/85 backdrop-blur border-b border-border/60">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-primary" /> {answered} of {path.length} answered
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                  {allSettled
+                    ? "All questions answered"
+                    : `${answered} of ${path.length} answered · ${remaining} to go`}
                 </span>
-                <span>{pct}%</span>
+                <span className="inline-flex items-center gap-2">
+                  {draftSaving ? (
+                    <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving</span>
+                  ) : draftSavedAt ? (
+                    <span className="inline-flex items-center gap-1"><Cloud className="w-3 h-3" /> Saved</span>
+                  ) : null}
+                  <span>{pct}%</span>
+                </span>
               </div>
               <div className="h-1 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
               </div>
             </div>
 
             <div className="space-y-3">
-              {path.map((key, i) => (
-                <QuestionCard
+              {visible.map((key, i) => (
+                <div
                   key={key}
-                  qKey={key}
-                  index={i + 1}
-                  answers={answers}
-                  believed={believedKeys.has(key)}
-                  confirmed={confirmedKeys.includes(key)}
-                  onAnswer={setAnswer}
-                  onConfirm={confirmKey}
-                />
+                  ref={(el) => { cardRefs.current[key] = el; }}
+                  className="animate-in fade-in slide-in-from-bottom-2 duration-500"
+                >
+                  <QuestionCard
+                    qKey={key}
+                    index={i + 1}
+                    answers={answers}
+                    believed={believedKeys.has(key)}
+                    confirmed={confirmedKeys.includes(key)}
+                    onAnswer={setAnswer}
+                    onConfirm={confirmKey}
+                  />
+                </div>
               ))}
             </div>
+
+            {!allSettled && (
+              <p className="mt-6 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                Answer this one and the next question appears — your place is saved as you go.
+              </p>
+            )}
+
 
             {showFamily && (
               <div className="mt-10 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7">
