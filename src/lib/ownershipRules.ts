@@ -39,6 +39,9 @@ export type OwnershipAnswers = {
   nameMismatch?: string;
   /** Why a co-owner can't or won't sign, in the seller's words. */
   blockedNotes?: string;
+  /** Steps the seller has personally settled, so a reload doesn't re-ask them. */
+  confirmedKeys?: string[];
+
 
 
   /** Named people gathered for the signing roster. */
