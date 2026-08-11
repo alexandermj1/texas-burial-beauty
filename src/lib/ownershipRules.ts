@@ -18,10 +18,13 @@ export type OwnershipAnswers = {
   agentType?: "poa" | "guardian";
   owners?: "sole" | "multiple";
   co?: "all" | "deceased" | "blocked";
-  marital?: "married" | "divorced" | "widowed" | "single";
+  marital?: "married" | "divorced" | "widowed" | "single" | "unsure";
   /** Was the owner married at the time the plot was bought? Drives §711.039 waivers. */
   maritalAtPurchase?: "yes" | "no" | "unsure";
   occupied?: "no" | "yes";
+  /** Who is buried in the spaces, when any have been used. */
+  occupiedBy?: string;
+
   will?: "yes" | "no";
   probate?: "letters" | "muniment" | "none";
   beneficiaries?: "sole" | "multiple";
