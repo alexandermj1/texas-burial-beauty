@@ -299,35 +299,14 @@ export const QUESTIONS: Record<string, Question> = {
     hint: "It's recorded with the cemetery, so a lost one can usually be rebuilt from their records.",
     answers: [{ value: "yes", label: "Yes — I have it" }, { value: "no", label: "No — it's lost" }],
   },
-
   names: {
-export function questionPath(a: OwnershipAnswers): string[] {
-  const p: string[] = ["owner", "rel"];
+    key: "names", eyebrow: "Names", question: "Do the names on the deed match the owners' current government-issued identification?",
+    hint: "Tell us about any marriage, divorce, spelling, or other name difference so the documents can be prepared correctly.",
+    answers: [{ value: "yes", label: "Yes — all names match" }, { value: "no", label: "No — something differs" }],
+  },
+};
 
-  if (a.owner === "living") {
-    p.push("signer");
-    if (a.signer === "agent") p.push("agentType");
-    p.push("marital");
-    if (a.marital && a.marital !== "married" && a.marital !== "on_deed") p.push("maritalAtPurchase");
-  } else if (a.owner === "deceased") {
-    p.push("will");
-    if (a.will === "yes") p.push("probate", "beneficiaries");
-    if (a.will === "no") p.push("heirclass", "heirship");
-    p.push("spouse");
-    if (a.spouse === "no") p.push("marital", "maritalAtPurchase");
-    p.push("chain");
-  } else if (a.owner === "trust") p.push("trustee");
-  else if (a.owner === "org") p.push("orgStatus");
-
-  p.push("deed");
-  if (a.deed === "yes") p.push("names");
-  p.push("occupied");
-
-  const skip = new Set(a.derived ?? []);
-  return p.filter((k) => !skip.has(k));
-}
- * put to the seller again.
- */
+/** Build only the questions needed from the seller's earlier answers. */
 export function questionPath(a: OwnershipAnswers): string[] {
   // Stage 1 is intentionally short and fixed. The deed-holder card immediately
   // before this path gathers every deed name and marks each person alive/deceased.
