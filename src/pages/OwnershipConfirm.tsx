@@ -877,13 +877,30 @@ const OwnershipConfirm = () => {
     const named = deedPeople.filter((p) => p.name.trim());
     if (!named.length) return;
     const owners = named.length > 1 ? "multiple" : "sole";
-    if (answers.owners === owners && (answers.derived ?? []).includes("owners")) return;
+
+    // The seller writing their own name on the deed answers the relationship
+    // question for us — asking a husband and wife "who are you to them?" reads
+    // as though we haven't been listening.
+    const norm = (v: string) => v.toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+    const seller = norm(packet?.seller_name ?? "");
+    const sellerOnDeed = !!seller && named.some((p) => {
+      const n = norm(p.name);
+      return n === seller || (n.split(" ")[0] === seller.split(" ")[0] &&
+        n.split(" ").slice(-1)[0] === seller.split(" ").slice(-1)[0]);
+    });
+
+    const nextDerived = [...new Set([...(answers.derived ?? []), "owners", ...(sellerOnDeed ? ["rel"] : [])])];
+    const relOk = !sellerOnDeed || answers.rel === "self";
+    if (answers.owners === owners && relOk &&
+        nextDerived.length === (answers.derived ?? []).length) return;
+
     setAnswers((a) => ({
       ...a,
       owners,
-      derived: [...new Set([...(a.derived ?? []), "owners"])],
+      ...(sellerOnDeed ? { rel: "self" as const } : {}),
+      derived: nextDerived,
     }));
-  }, [deedPeople, answers.owners, answers.derived]);
+  }, [deedPeople, answers.owners, answers.rel, answers.derived, packet?.seller_name]);
 
   /**
    * Every answer that implies people pulls those people in immediately, so the
@@ -898,6 +915,7 @@ const OwnershipConfirm = () => {
       // Co-owners we read off the deed are already named — don't ask twice.
       case "owners": return a.owners === "multiple" && !derived.includes("owners") ? ["_coowners"] : [];
       case "co": return a.co === "blocked" ? ["_blocked"] : [];
+      case "occupied": return a.occupied === "yes" ? ["_occupiedBy"] : [];
       case "marital":
         return a.marital === "married" ? ["_spouse"]
           : a.marital === "divorced" ? ["_exspouse"]
