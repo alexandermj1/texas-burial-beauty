@@ -603,6 +603,114 @@ const TextSlotCard = ({
   </CardShell>
 );
 
+/** The final card: the ID name and address behind every signature. */
+const IDS_KEY = "_ids";
+
+const IdentityCard = ({
+  index, settled, signers, isSelf, onPatch, onDone,
+}: {
+  index: number;
+  settled: boolean;
+  signers: RosterPerson[];
+  isSelf: boolean;
+  onPatch: (id: string, patch: Partial<RosterPerson>) => void;
+  onDone: () => void;
+}) => {
+  const ready = signers.every((p) => (p.address ?? "").trim().length > 5);
+  return (
+    <CardShell
+      index={index}
+      settled={settled}
+      eyebrow="For the paperwork"
+      title={
+        signers.length === 1 && isSelf
+          ? "Last thing — your name and address exactly as they appear on your ID"
+          : "Last thing — each signer's name and address exactly as on their ID"
+      }
+      hint="Every power of attorney is notarised, so the name and address on it must match the driver's licence or passport the notary sees. We type these straight onto your documents so you never have to."
+    >
+      <div className="mt-4 space-y-3">
+        {signers.map((p) => (
+          <div key={p.id} className="rounded-xl border border-border/70 bg-background p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-medium shrink-0">
+                {initials(p.name) || <UserRound className="w-4 h-4" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-foreground leading-tight truncate">{p.name}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  {p.relationship || ROLE_LABEL[p.role]}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-2">
+              <input
+                value={p.legalName ?? ""}
+                onChange={(e) => onPatch(p.id, { legalName: e.target.value })}
+                placeholder={`Full legal name on the ID (e.g. ${p.name})`}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <input
+                value={p.address ?? ""}
+                onChange={(e) => onPatch(p.id, { address: e.target.value })}
+                placeholder="Home address on the ID — street, city, state, ZIP"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={onDone}
+        disabled={!ready}
+        className="mt-4 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+      >
+        <CheckCircle2 className="w-3.5 h-3.5" /> Save these details
+      </button>
+    </CardShell>
+  );
+};
+
+/**
+ * Say the question out loud the way a broker would: to the owner it's "you",
+ * about anybody else it's their name. Nothing generic, nothing repeated.
+ */
+const phraseFor = (
+  key: string, isSelf: boolean, ownerNames: string, deedNames: string,
+): { title?: string; hint?: string; labels?: Record<string, string> } => {
+  const who = isSelf ? "you" : ownerNames || "the owner";
+  switch (key) {
+    case "rel":
+      return deedNames ? { title: `What is your relationship to ${deedNames}?` } : {};
+    case "signer":
+      return isSelf
+        ? {
+            title: "Will you be signing the paperwork yourself?",
+            labels: { self: "Yes, I'll sign personally", agent: "Someone signs for me — power of attorney or guardian" },
+          }
+        : { title: `Will ${who} be signing the paperwork personally?` };
+    case "co":
+      return { title: isSelf ? "Is everyone else on the deed willing to sign the sale?" : `Is everyone on the deed willing to sign the sale?` };
+    case "marital":
+      return {
+        title: isSelf ? "Are you married?" : `Is ${who} married?`,
+        hint: "A husband or wife has to sign the power of attorney as well — even when they aren't named on the deed.",
+      };
+    case "maritalAtPurchase":
+      return { title: isSelf ? "Were you married when the plot was bought?" : `Was ${who} married when the plot was bought?` };
+    case "deed":
+      return {
+        title: isSelf
+          ? "Do you have the original certificate of ownership?"
+          : `Does ${who} have the original certificate of ownership?`,
+      };
+    default:
+      return {};
+  }
+};
+
+
+
 /**
  * The family, drawn rather than listed. Everyone gathered so far is grouped by
  * the part they play, so the seller can see at a glance that we have the right
