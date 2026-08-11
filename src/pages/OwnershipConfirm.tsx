@@ -573,20 +573,33 @@ const OwnershipConfirm = () => {
                 <div
                   key={key}
                   ref={(el) => { cardRefs.current[key] = el; }}
-                  className="animate-in fade-in slide-in-from-bottom-2 duration-500"
+                  className="animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out"
                 >
-                  <QuestionCard
-                    qKey={key}
-                    index={i + 1}
-                    answers={answers}
-                    believed={believedKeys.has(key)}
-                    confirmed={confirmedKeys.includes(key)}
-                    onAnswer={setAnswer}
-                    onConfirm={confirmKey}
-                  />
+                  {key === NAMES_KEY ? (
+                    <NamesCard
+                      index={i + 1}
+                      people={deedPeople.length ? deedPeople : [{ id: "seed", name: "", role: "owner" as PersonRole }]}
+                      believed={believedKeys.has(NAMES_KEY)}
+                      confirmed={confirmedKeys.includes(NAMES_KEY)}
+                      onChange={setDeedPeople}
+                      onConfirm={() => confirmKey(NAMES_KEY)}
+                    />
+                  ) : (
+                    <QuestionCard
+                      qKey={key}
+                      index={i + 1}
+                      answers={answers}
+                      context={key === "rel" ? deedNamesLabel : undefined}
+                      believed={believedKeys.has(key)}
+                      confirmed={confirmedKeys.includes(key)}
+                      onAnswer={setAnswer}
+                      onConfirm={confirmKey}
+                    />
+                  )}
                 </div>
               ))}
             </div>
+
 
             {!allSettled && (
               <p className="mt-6 text-xs text-muted-foreground inline-flex items-center gap-1.5">
