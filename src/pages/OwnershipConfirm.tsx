@@ -1041,6 +1041,12 @@ const OwnershipConfirm = () => {
                       index={i + 1}
                       settled={confirmedKeys.includes(key)}
                       people={slotPeople((SLOTS[key] as PeopleSlot).role)}
+                      suggestions={
+                        key === "_decedent" || key === "_chaindeaths"
+                          ? deedPeople.map((p) => p.name.trim()).filter(Boolean)
+                          : []
+                      }
+
                       onChange={(next) => setSlotPeople((SLOTS[key] as PeopleSlot).role, next)}
                       onDone={() => confirmKey(key)}
                     />
