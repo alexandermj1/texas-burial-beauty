@@ -385,8 +385,9 @@ const OwnershipConfirm = () => {
             )}
 
 
-            {showFamily && (
-              <div className="mt-10 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7">
+            {allSettled && showFamily && (
+              <div className="mt-10 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
+
                 <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
                 <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" /> Who is in the picture?
