@@ -418,7 +418,8 @@ const OwnershipConfirm = () => {
                     <div style={{"display": "flex", "flexDirection": "column", "gap": "8px", "marginTop": "20px"}}>
                       {(V.deedRows || []).map((d: any, i0: number) => (
                         <React.Fragment key={i0}>
-                          <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "padding": "11px 13px", "borderRadius": "15px", "background": `${d.cardBg}`, "border": `1px solid ${d.cardBd}`, "transition": "background .25s ease, border-color .25s ease"}}>
+                          <div style={{"display": "flex", "flexDirection": "column", "gap": "10px", "padding": "11px 13px", "borderRadius": "15px", "background": `${d.cardBg}`, "border": `1px solid ${d.cardBd}`, "transition": "background .25s ease, border-color .25s ease"}}>
+                           <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center"}}>
                             <div style={{"flex": "none", "width": "38px", "height": "38px", "borderRadius": "50%", "background": `${d.avBg}`, "color": `${d.avFg}`, "display": "grid", "placeItems": "center", "fontSize": "14px", "fontWeight": "600", "transition": "background .25s ease"}}>
                               {d.initials}
                             </div>
@@ -435,6 +436,22 @@ const OwnershipConfirm = () => {
                             <div onClick={d.remove} style={{"flex": "none", "width": "32px", "height": "32px", "display": "grid", "placeItems": "center", "borderRadius": "50%", "color": "#b7b7bf", "fontSize": "18px", "cursor": "pointer", "userSelect": "none"}} className="dcx3">
                               ×
                             </div>
+                           </div>
+                           {d.marriedAsk ? (
+                            <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "paddingLeft": "48px"}}>
+                              <span style={{"fontSize": "13.5px", "fontWeight": "400", "color": "#6e6e73"}}>{d.marriedLabel}</span>
+                              <div style={{"display": "flex", "background": "#f2f2f5", "borderRadius": "10px", "padding": "3px"}}>
+                                {(d.marriedSeg || []).map((o: any, im: number) => (
+                                  <div key={im} onClick={o.pick} style={{"padding": "6px 11px", "borderRadius": "8px", "fontSize": "13px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`, "transition": "background .2s ease, color .2s ease"}}>
+                                    {o.label}
+                                  </div>
+                                ))}
+                              </div>
+                              {d.marriedYes ? (
+                                <input value={d.spouseName ?? ""} onChange={d.setSpouseName} placeholder="Husband or wife's full name" style={{"flex": "1", "minWidth": "180px", "padding": "8px 12px", "fontSize": "15px", "color": "#1d1d1f", "background": "#fafafc", "border": "1px solid #ececf0", "borderRadius": "10px", "outline": "none"}} className="dcx5" />
+                              ) : null}
+                            </div>
+                           ) : null}
                           </div>
                         </React.Fragment>
                       ))}
