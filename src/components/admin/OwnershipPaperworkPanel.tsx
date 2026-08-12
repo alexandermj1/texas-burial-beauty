@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1040,7 +1040,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
-  const generateDoc = async (r: Requirement, overrideFields?: DocFields) => {
+  const generateDoc = async (r: Requirement, overrideFields?: DocFields, silent = false) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     try {
@@ -1075,15 +1075,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (error) throw error;
       const res = data as { pdf_url?: string | null; sign_token?: string | null };
       setDocEdit(null);
-      // Show the filled PDF inline so it can be checked line by line.
-      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
-      toast.success(`${r.label} prepared`, {
-        description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
-      });
+      if (!silent) {
+        // Show the filled PDF inline so it can be checked line by line.
+        if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
+        toast.success(`${r.label} ready`, {
+          description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
+        });
+      }
       await setRowState(r, "issued");
       await load();
     } catch (e) {
-      toast.error((e as Error).message);
+      if (!silent) toast.error((e as Error).message);
     } finally {
       setBusy(null);
     }
@@ -1118,7 +1120,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         setPdfPreview({ url: `${PUBLIC_SITE_URL}/sign/${data.sign_token}`, title: r.label });
         return;
       }
-      toast.error("No prepared PDF found yet — press Prepare first.");
+      toast.error("The PDF is still being completed — try again in a moment.");
     } finally {
       setBusy(null);
     }
@@ -1140,6 +1142,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const name = contractNameOf(c);
     return !r.jointNames.every((n) => name.includes(n.trim().toLowerCase().split(" ")[0]));
   };
+
+  /**
+   * POAs build themselves. The family-tree answers tell us exactly who has to
+   * sign, and every field comes from those answers, so as soon as a POA appears
+   * on the checklist we fill it in the background. Nobody — us or the seller —
+   * has anything to "prepare"; it is only ever checked or edited.
+   */
+  const autoPrepped = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!poaRequirements.length) return;
+    for (const r of poaRequirements) {
+      const key = reqKey(r);
+      if (autoPrepped.current.has(key)) continue;
+      if (preparedPoaFor(r) && !jointMismatch(r)) continue;
+      autoPrepped.current.add(key);
+      void generateDoc(r, undefined, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requirements, contracts]);
 
 
   /** Add a one-off document to this file's checklist. */
@@ -1283,22 +1304,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             </button>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            {r.contractKind && (
-              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => void openDocEditor(r)}
-                title={`Prepare ${r.label} — fills it in and opens the PDF so you can check it`} className="text-[11px] h-7">
-                {busy === key
-                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                {contracts.some((c) => c.kind === r.contractKind && c.status !== "void") ? "Re-prepare" : "Prepare"}
-              </Button>
-            )}
             {r.contractKind && contracts.some((c) => c.kind === r.contractKind && c.status !== "void") && (
-              <Button size="sm" variant="ghost" disabled={busy === `${key}-open`} onClick={() => void openContractPdf(r)}
-                title="Open the prepared PDF to check every field" className="text-[11px] h-7">
+              <Button size="sm" variant="outline" disabled={busy === `${key}-open`} onClick={() => void openContractPdf(r)}
+                title="Open the completed PDF and read every field" className="text-[11px] h-7">
                 {busy === `${key}-open`
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   : <FileText className="w-3.5 h-3.5 mr-1" />}
-                Review
+                Check
+              </Button>
+            )}
+            {r.contractKind && (
+              <Button size="sm" variant="ghost" disabled={busy === key} onClick={() => void openDocEditor(r)}
+                title={`Edit ${r.label} — it is already filled in from their answers`} className="text-[11px] h-7">
+                {busy === key
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                Edit
               </Button>
             )}
 
@@ -1719,7 +1740,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         <DialogContent className="max-w-2xl z-[95] max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <FileSignature className="w-4 h-4" /> Fill in the {docEdit?.r.label ?? "document"}
+              <FileSignature className="w-4 h-4" /> Check or edit the {docEdit?.r.label ?? "document"}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {docEdit?.r.jointNames?.length
@@ -1937,7 +1958,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {poaRequired && (
                 <div className="rounded-md border border-purple-300 bg-purple-50/60 px-3 py-2.5 space-y-2.5">
                   <p className="text-xs font-semibold flex items-center gap-1.5">
-                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — completed here, attached to this email
+                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — already completed and attached
                   </p>
                   {poaRequirements.map((r) => {
                     const prepared = preparedPoaFor(r);
@@ -1949,23 +1970,27 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                         </p>
                         <p className={`text-[11px] mt-0.5 ${bad ? "text-rose-700" : "text-muted-foreground"}`}>
                           {bad
-                            ? `The prepared copy is made out to ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — re-prepare it so both principals appear.`
+                            ? `This copy names ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — edit it so both principals appear.`
                             : prepared
-                              ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their questionnaire answers. Read every line — this exact PDF is attached to the email for them to print and notarise.`
-                              : "Not prepared yet. Prepare it now — it fills itself from the seller's answers and is attached to this email."}
-
+                              ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their family-tree answers. Check it — this exact PDF is attached for them to print and notarise. They cannot change it.`
+                              : "Being completed automatically from their family-tree answers…"}
                         </p>
                         <div className="flex items-center gap-1.5 mt-2">
-                          <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
-                            onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
-                            {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                            {prepared ? "Re-prepare & check" : "Prepare it now"}
-                          </Button>
-                          {prepared && (
-                            <Button size="sm" variant="outline" onClick={() => void openContractPdf(r)}>
-                              <FileText className="w-3.5 h-3.5 mr-1" />Review the POA
+                          {prepared ? (
+                            <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                              onClick={() => void openContractPdf(r)} disabled={busy === `${reqKey(r)}-open`}>
+                              {busy === `${reqKey(r)}-open` ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileText className="w-3.5 h-3.5 mr-1" />}
+                              Check the POA
                             </Button>
+                          ) : (
+                            <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Filling it in…
+                            </span>
                           )}
+                          <Button size="sm" variant="outline" onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
+                            {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                            Edit
+                          </Button>
                         </div>
                       </div>
                     );

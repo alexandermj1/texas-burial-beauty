@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       // seller sees one page with every outstanding action on it.
       const { data: poaRow } = await supabase
         .from("contracts")
-        .select("sign_token, notarized_at, signed_at, kind, created_at")
+        .select("sign_token, notarized_at, signed_at, kind, created_at, filled_pdf_path, signed_pdf_path, notarized_pdf_path")
         .eq("submission_id", submissionId)
         .eq("kind", "poa")
         .order("created_at", { ascending: false })
@@ -82,9 +82,18 @@ Deno.serve(async (req) => {
 
       // A prepared POA has its own action card below. Do not repeat it as an
       // upload request, and collapse any legacy duplicate rows by code/person.
-      const deduped = visible.filter((d) => !(d.doc_code === "D21" && poaRow?.sign_token))
+      const deduped = visible.filter((d) => !(d.doc_code === "D21" && !!poaRow))
         .filter((d, index, all) => index === all.findIndex((x) =>
           x.doc_code === d.doc_code && (x.person_name ?? "") === (d.person_name ?? "")));
+
+      // The POA is completed by us from the family-tree answers — the seller only
+      // ever downloads it, prints it and has it notarised. Nothing to fill in.
+      let poaPdfUrl: string | null = null;
+      const poaPath = poaRow?.notarized_pdf_path || poaRow?.signed_pdf_path || poaRow?.filled_pdf_path;
+      if (poaPath) {
+        const { data: signedUrl } = await supabase.storage.from("contracts").createSignedUrl(poaPath, 60 * 60 * 24);
+        poaPdfUrl = signedUrl?.signedUrl ?? null;
+      }
 
       return json({
         seller_name: sub.name,
@@ -96,9 +105,10 @@ Deno.serve(async (req) => {
               signed_at: listingRow.signed_at,
             }
           : null,
-        poa: poaRow?.sign_token
+        poa: (poaRow?.sign_token || poaPdfUrl)
           ? {
-              sign_token: poaRow.sign_token,
+              sign_token: poaRow?.sign_token ?? null,
+              pdf_url: poaPdfUrl,
               notarized: !!poaRow.notarized_at,
               signed: !!poaRow.signed_at,
             }
