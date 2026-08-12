@@ -1007,7 +1007,7 @@ const OwnershipConfirm = () => {
               </div>
               <div style={{"flex": "0 1 320px", "minWidth": "260px", "maxWidth": "340px"}}>
                 <div style={{"position": "sticky", "top": "74px", "maxHeight": "calc(100vh - 96px)", "overflowY": "auto", "overscrollBehavior": "contain", "display": "flex", "flexDirection": "column", "gap": "14px"}}>
-                <div style={{"background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}> "background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}>
+                <div style={{"background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}>
                   <div style={{"display": "flex", "alignItems": "baseline", "gap": "8px"}}>
                     <div style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
                       The picture so far
