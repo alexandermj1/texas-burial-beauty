@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2, Loader2, Pencil, Sparkles, Users, Plus, Trash2,
   ShieldCheck, ArrowRight, Send, HeartCrack, Cloud, UserRound,
+  Paperclip, FileText, X,
 } from "lucide-react";
 
 
@@ -23,6 +24,8 @@ import fern from "@/assets/flowers/fern.png.asset.json";
  * family tree when the plot is being inherited).
  */
 
+type Attachment = { name: string; url: string; mime: string | null };
+
 type Packet = {
   seller_name: string | null;
   cemetery: string | null;
@@ -30,8 +33,88 @@ type Packet = {
   space_numbers?: string | null;
   deed_owner_names?: string | null;
   relationship_to_owner?: string | null;
+  attachments?: Attachment[];
   answers: OwnershipAnswers;
 };
+
+/**
+ * The paperwork the seller already sent us, kept beside the questions so they
+ * can glance at their own deed instead of guessing at a name or a space number.
+ */
+const DocsRail = ({ files }: { files: Attachment[] }) => {
+  const [open, setOpen] = useState<Attachment | null>(null);
+  if (!files.length) return null;
+
+  const isImage = (f: Attachment) => (f.mime ?? "").startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(f.name);
+  const isPdf = (f: Attachment) => (f.mime ?? "").includes("pdf") || /\.pdf$/i.test(f.name);
+
+  return (
+    <>
+      <div className="rounded-3xl border border-border/60 bg-card/60 backdrop-blur p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Paperclip className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[10px] tracking-[0.28em] uppercase text-primary">Your documents</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed mb-4">
+          What you've already sent us. Tap any one to read it while you answer.
+        </p>
+
+        <div className="grid grid-cols-3 lg:grid-cols-2 gap-2.5">
+          {files.map((f) => (
+            <button
+              key={f.url}
+              onClick={() => setOpen(f)}
+              className="group text-left rounded-2xl overflow-hidden border border-border/60 bg-background hover:border-primary/50 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.6)]"
+            >
+              <div className="aspect-[4/5] bg-muted/50 flex items-center justify-center overflow-hidden">
+                {isImage(f) ? (
+                  <img src={f.url} alt={f.name} loading="lazy" className="w-full h-full object-cover" />
+                ) : (
+                  <FileText className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                )}
+              </div>
+              <div className="px-2 py-1.5">
+                <p className="text-[10px] text-muted-foreground truncate">{f.name}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 bg-foreground/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setOpen(null)}
+        >
+          <div
+            className="bg-background rounded-3xl overflow-hidden w-full max-w-3xl max-h-[88vh] flex flex-col border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border/60">
+              <p className="text-xs text-foreground truncate">{open.name}</p>
+              <div className="flex items-center gap-3 shrink-0">
+                <a href={open.url} target="_blank" rel="noreferrer" className="text-[11px] text-primary hover:underline">
+                  Open
+                </a>
+                <button onClick={() => setOpen(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto bg-muted/30">
+              {isPdf(open) ? (
+                <iframe src={open.url} title={open.name} className="w-full h-[75vh]" />
+              ) : (
+                <img src={open.url} alt={open.name} className="w-full h-auto" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 
 
 /** The synthetic first card: the names printed on the deed. */
@@ -97,7 +180,7 @@ const QuestionCard = ({
 
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+      className={`rounded-3xl border p-6 sm:p-7 transition-all duration-500 ${
         settled
           ? "border-primary/30 bg-primary/[0.04]"
           : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
@@ -199,7 +282,7 @@ const NamesCard = ({
 
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+      className={`rounded-3xl border p-6 sm:p-7 transition-all duration-500 ${
         settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
       }`}
     >
@@ -457,7 +540,7 @@ const CardShell = ({
   index: number; settled: boolean; eyebrow: string; title: string; hint?: string; children: React.ReactNode;
 }) => (
   <div
-    className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+    className={`rounded-3xl border p-6 sm:p-7 transition-all duration-500 ${
       settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
     }`}
   >
@@ -775,7 +858,7 @@ const FamilyTree = ({ people, onRemove }: { people: RosterPerson[]; onRemove: (i
   if (!named.length) return null;
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/60 p-6 sm:p-7">
+    <div className="rounded-3xl border border-border/70 bg-card/60 p-6 sm:p-7">
       <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
       <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
         <Users className="w-5 h-5 text-primary" /> Everyone connected to this plot
@@ -794,7 +877,7 @@ const FamilyTree = ({ people, onRemove }: { people: RosterPerson[]; onRemove: (i
                 {members.map((p) => (
                   <div
                     key={p.id}
-                    className={`group inline-flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition ${
+                    className={`group inline-flex items-center gap-2.5 rounded-3xl border px-3 py-2 transition ${
                       p.deceased || p.role === "decedent"
                         ? "border-border bg-muted/40"
                         : "border-primary/25 bg-primary/[0.06]"
@@ -1125,7 +1208,7 @@ const OwnershipConfirm = () => {
 
 
 
-      <div className="relative max-w-3xl mx-auto px-5 py-16">
+      <div className="relative max-w-5xl mx-auto px-5 py-16">
         <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-3">Texas Cemetery Brokers</div>
         {packet?.seller_name && (
           <p className="text-xs font-medium text-foreground mb-2">Private page for {packet.seller_name}</p>
@@ -1136,7 +1219,7 @@ const OwnershipConfirm = () => {
             <Loader2 className="w-4 h-4 animate-spin" /> Opening your file…
           </div>
         ) : error && !packet ? (
-          <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
+          <div className="mt-10 rounded-3xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
         ) : sent ? (
           <div className="mt-6">
             <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] text-foreground mb-4">
@@ -1146,7 +1229,7 @@ const OwnershipConfirm = () => {
               A broker is reviewing your answers now and will prepare the exact documents your cemetery requires.
               You'll receive one email with the full list — nothing to print until then.
             </p>
-            <div className="mt-8 rounded-2xl border border-primary/30 bg-primary/[0.05] p-6 flex items-start gap-3">
+            <div className="mt-8 rounded-3xl border border-primary/30 bg-primary/[0.05] p-6 flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div>
                 <p className="font-display text-lg text-foreground">Your answers are saved</p>
@@ -1174,7 +1257,7 @@ const OwnershipConfirm = () => {
               please confirm what's right and correct anything that isn't.
             </p>
 
-            <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 px-5 py-4 flex items-start gap-3">
+            <div className="mt-6 rounded-3xl border border-border/60 bg-card/60 backdrop-blur px-5 py-4 flex items-start gap-3">
               <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Answers marked <span className="text-foreground">“From our records we believe”</span> were taken from
@@ -1183,7 +1266,13 @@ const OwnershipConfirm = () => {
               </p>
             </div>
 
-            <div className="sticky top-0 z-20 -mx-5 px-5 py-3 mt-8 mb-8 bg-background/85 backdrop-blur border-b border-border/60">
+            <div className="mt-10 grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_17rem] items-start">
+              <aside className="lg:order-last lg:sticky lg:top-6 space-y-4">
+                <DocsRail files={packet?.attachments ?? []} />
+              </aside>
+
+              <div className="min-w-0">
+            <div className="sticky top-0 z-20 -mx-5 px-5 py-3 mb-8 bg-background/85 backdrop-blur border-b border-border/60">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span className="inline-flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-primary" />
@@ -1205,13 +1294,16 @@ const OwnershipConfirm = () => {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {visible.map((key, i) => (
                 <div
                   key={key}
                   ref={(el) => { cardRefs.current[key] = el; }}
-                  className="animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out"
+                  className={`animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out transition-all ${
+                    isSettled(key) && !allSettled ? "opacity-70 hover:opacity-100 lg:scale-[0.985]" : ""
+                  }`}
                 >
+
                   {key === NAMES_KEY ? (
                     <NamesCard
                       index={i + 1}
@@ -1286,7 +1378,7 @@ const OwnershipConfirm = () => {
 
 
             {allSettled && (
-              <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="mt-6 rounded-3xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">Anything else</div>
                 <p className="font-display text-2xl leading-snug text-foreground">
                   Is there something about this plot we should know?
@@ -1307,7 +1399,7 @@ const OwnershipConfirm = () => {
             )}
 
             {error && (
-              <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
+              <div className="mt-6 rounded-3xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
             )}
 
             {allSettled && (
@@ -1327,7 +1419,7 @@ const OwnershipConfirm = () => {
             )}
 
 
-            <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
+            <div className="mt-12 rounded-3xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
               <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Rather talk it through?</div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 A broker will go through these questions with you on the phone — there is never a charge for asking.
@@ -1341,7 +1433,10 @@ const OwnershipConfirm = () => {
             <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed">
               Your answers are stored privately and used only to transfer this plot.
             </p>
+              </div>
+            </div>
           </>
+
         )}
       </div>
     </div>
