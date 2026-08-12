@@ -176,10 +176,15 @@ Deno.serve(async (req) => {
       filled = await buildJointPoaPdf({
         county: overrides.county ?? overrides.county_state ?? cemLocationCity ?? '',
         county_state: fill.county_state,
-        principals: jointNames.map((n) => ({
-          name: n,
-          address: [overrides.address, overrides.city_state_zip].filter(Boolean).join(', '),
-        })),
+        principals: jointNames.map((n) => {
+          const c = contactFor(ownership, n);
+          const addr = [c.address, c.city_state_zip].filter(Boolean).join(', ');
+          return {
+            name: n,
+            address: addr || [overrides.address, overrides.city_state_zip].filter(Boolean).join(', '),
+          };
+        }),
+
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: overrides.plot_description ??
