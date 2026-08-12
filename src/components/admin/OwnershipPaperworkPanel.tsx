@@ -858,23 +858,30 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         loading: false,
         nameHints,
         plotHints,
-        fields: {
-          seller_name: r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "",
-          joint_second: r.jointNames?.[1] ?? "",
-          address: str(prior?.address),
-          city_state_zip: str(prior?.city_state_zip),
-          phone: str(prior?.phone) || str(s.phone),
-          email: str(prior?.email) || str(s.email),
-          cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
-          county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
-          // The deed is the controlling description — use it verbatim when we hold one.
-          plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
-            [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
-              .filter(Boolean).join(" · "),
-          plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
-          listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
-          authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),
-        },
+        fields: (() => {
+          const principal = r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "";
+          // The seller already gave us their mailing address in the family
+          // confirmation — the POA is built from that, not asked for again.
+          const c = questionnaireContact(principal);
+          return {
+            seller_name: principal,
+            joint_second: r.jointNames?.[1] ?? "",
+            address: str(prior?.address) || c.address,
+            city_state_zip: str(prior?.city_state_zip) || c.city_state_zip,
+            phone: str(prior?.phone) || c.phone || str(s.phone),
+            email: str(prior?.email) || c.email || str(s.email),
+            cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
+            county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
+            // The deed is the controlling description — use it verbatim when we hold one.
+            plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
+              [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
+                .filter(Boolean).join(" · "),
+            plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
+            listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
+            authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),
+          };
+        })(),
+
       } : cur);
     } catch {
       setDocEdit((cur) => (cur ? { ...cur, loading: false } : cur));
