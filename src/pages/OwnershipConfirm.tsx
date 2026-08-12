@@ -142,15 +142,47 @@ const splitNames = (raw?: string | null): string[] => {
     .filter((s) => s.length > 1 && !/^(unknown|n\/?a|none)$/i.test(s));
 };
 
-/** "3, 4" or "12A/12B" becomes the space labels the questionnaire asks about. */
-const splitSpaces = (raw?: string | null): string[] => {
-  const parts = String(raw ?? "")
+/**
+ * Turns the deed's lot and space numbers into one clearly named row per space —
+ * "Lot 77, Space 1", "Lot 77, Space 2" — so the seller ticks each one in turn.
+ * Ranges ("1-3") are expanded, and any lot/block/section written on the file is
+ * carried onto every label.
+ */
+const splitSpaces = (raw?: string | null, lawn?: string | null): string[] => {
+  const text = String(raw ?? "").replace(/\s+/g, " ").trim();
+
+  // Lot / block / section context, taken from the space text itself or the lawn.
+  const context = (() => {
+    const source = `${text} ${String(lawn ?? "")}`;
+    const m = source.match(/\b(lot|block|section|garden|unit|tier|plot)\s*#?\s*([A-Za-z0-9-]+)/i);
+    if (!m) return "";
+    const word = m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+    return `${word} ${m[2].toUpperCase()}`;
+  })();
+
+  // Only the space portion — drop a leading "Lot 77" style prefix.
+  const spacePart = text.replace(/\b(lot|block|section|garden|unit|tier|plot)\s*#?\s*[A-Za-z0-9-]+\s*[,;/&-]?\s*/gi, " ").trim();
+
+  const tokens: string[] = [];
+  spacePart
     .split(/[,;/&]|\band\b/i)
-    .map((s) => s.replace(/\s+/g, " ").trim())
-    .filter(Boolean);
-  if (!parts.length) return ["The spaces on the deed"];
-  return parts.map((p) => (/space/i.test(p) ? p : `Space ${p}`));
+    .map((s) => s.replace(/spaces?|graves?|#/gi, " ").replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .forEach((part) => {
+      const range = part.match(/^(\d+)\s*(?:-|–|to)\s*(\d+)$/i);
+      if (range) {
+        const a = Number(range[1]);
+        const b = Number(range[2]);
+        if (b >= a && b - a < 40) { for (let n = a; n <= b; n++) tokens.push(String(n)); return; }
+      }
+      tokens.push(part);
+    });
+
+  if (!tokens.length) return [context ? `${context} — the spaces on the deed` : "The spaces on the deed"];
+
+  return tokens.map((t) => [context, `Space ${t}`].filter(Boolean).join(", "));
 };
+
 
 const ACCENT = "#4a6b54";
 
