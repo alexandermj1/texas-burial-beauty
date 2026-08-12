@@ -99,16 +99,21 @@ const NotificationsBell = () => {
 
   const acknowledgeCurrent = async (opts?: { follow?: boolean }) => {
     if (!currentAck) return;
-    const id = currentAck.id;
+    const key = ackKey(currentAck);
     const link = currentAck.link_url;
-    setPendingAck(prev => prev.slice(1));
-    setNotes(prev => prev.map(n => n.id === id && !n.read_at ? { ...n, read_at: new Date().toISOString() } : n));
-    await supabase.from("user_notifications" as any).update({ read_at: new Date().toISOString() }).eq("id", id);
+    const now = new Date().toISOString();
+    // Clear every unread copy of this same event, not just the one on screen.
+    const ids = notes.filter(n => !n.read_at && ackKey(n) === key).map(n => n.id);
+    if (!ids.includes(currentAck.id)) ids.push(currentAck.id);
+    setPendingAck(prev => prev.filter(n => ackKey(n) !== key));
+    setNotes(prev => prev.map(n => ids.includes(n.id) && !n.read_at ? { ...n, read_at: now } : n));
+    await supabase.from("user_notifications" as any).update({ read_at: now }).in("id", ids);
     if (opts?.follow && link) {
       navigate(link);
       setTimeout(() => window.dispatchEvent(new PopStateEvent("popstate")), 0);
     }
   };
+
 
   const startReply = (n: Notif) => {
     if (!n.sender_id) return;
