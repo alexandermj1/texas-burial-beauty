@@ -1550,6 +1550,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             </div>
 
 
+            {/* Where this list comes from, in plain words. */}
+            <p className="text-[11px] text-muted-foreground bg-muted/50 rounded px-2 py-1.5">
+              {answers.sellerConfirmedAt
+                ? "Built from the seller's family confirmation above. The power of attorney fills itself in from those same answers and is attached to the document request — nothing for them to complete by hand."
+                : documentRequirements.length > 0
+                  ? "Provisional list. It will be rebuilt from the seller's family confirmation once it comes back, and the power of attorney fills itself from those answers."
+                  : "Nothing to request yet — send the family confirmation above first, and the documents (plus a pre-filled power of attorney) follow from the seller's answers."}
+            </p>
+
 
             {rules && Object.keys(rules).length > 0 && (
               <p className="text-[11px] text-stone-600 bg-stone-100 rounded px-2 py-1.5">
