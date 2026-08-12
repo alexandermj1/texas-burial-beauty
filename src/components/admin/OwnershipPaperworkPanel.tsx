@@ -1516,13 +1516,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold">
-                Documents required ({documentRequirements.length})
+                Step 2 · Documents required ({documentRequirements.length})
                 {outstanding.length > 0 && (
                   <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
                     · {outstanding.length} still outstanding
                   </span>
                 )}
               </span>
+
               <div className="flex items-center gap-1.5">
                 <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
                   <Plus className="w-3.5 h-3.5 mr-1" />Add a document
