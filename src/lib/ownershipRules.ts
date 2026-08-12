@@ -259,14 +259,15 @@ export const QUESTIONS: Record<string, Question> = {
     ],
   },
   descendants: {
-    key: "descendants", eyebrow: "Stage 2 · Descendants", question: "Did any deceased person named on the deed leave surviving descendants?",
-    hint: "Include biological and legally adopted children from every marriage, but not step-children. Include grandchildren only when their parent (the deceased person's child) has also died.",
+    key: "descendants", eyebrow: "Stage 2 · The family", question: "Does the family of anyone named on the deed include living children, brothers or sisters?",
+    hint: "We need the whole immediate family: the children of everyone named on the deed (and their husbands or wives), and the brothers and sisters of everyone named on the deed. Include biological and legally adopted children from every marriage, but not step-children. If a child has died, name that child's own children.",
     answers: [
-      { value: "yes", label: "Yes — there are surviving descendants" },
-      { value: "no", label: "No — there are no surviving descendants" },
+      { value: "yes", label: "Yes — there are children, brothers or sisters" },
+      { value: "no", label: "No — there are none living" },
       { value: "unsure", label: "I don't know" },
     ],
   },
+
 
   probate: {
     key: "probate", eyebrow: "Probate", question: "How has the will been handled?",
