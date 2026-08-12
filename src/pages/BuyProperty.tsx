@@ -8,7 +8,7 @@ import familyEstateImg from "@/assets/property-types/family-estate.png";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
-import { bayCemeteries, regions, CemeteryInfo } from "@/data/cemeteries";
+import { useCemeteryRegistry, REGISTRY_REGIONS, type RegistryCemetery } from "@/hooks/useCemeteryRegistry";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
