@@ -113,10 +113,27 @@ const DocsRail = ({ files }: { files: Attachment[] }) => {
             <div className="flex-1 overflow-auto bg-muted/30">
               {isPdf(open) ? (
                 <iframe src={open.url} title={open.name} className="w-full h-[75vh]" />
+              ) : broken[open.url] ? (
+                <div className="p-10 text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-xs text-muted-foreground">
+                    This file can't be shown in the browser.{" "}
+                    <a href={open.url} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
+                      Download it instead
+                    </a>
+                    .
+                  </p>
+                </div>
               ) : (
-                <img src={open.url} alt={open.name} className="w-full h-auto" />
+                <img
+                  src={open.url}
+                  alt={open.name}
+                  onError={() => setBroken((b) => ({ ...b, [open.url]: true }))}
+                  className="w-full h-auto"
+                />
               )}
             </div>
+
           </div>
         </div>
       )}
