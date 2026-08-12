@@ -25,7 +25,7 @@ export const isIncoming = (from_email: string | null | undefined): boolean => {
 // ---------------------------------------------------------------------------
 // Classify key outgoing emails so the admin thread can show a coloured tag
 // (quote = purple, listing agreement = terracotta/amber, POA = blue).
-export type EmailKind = "quote" | "listing_agreement" | "poa";
+export type EmailKind = "quote" | "listing_agreement" | "poa" | "family_tree";
 
 export const EMAIL_KIND_META: Record<EmailKind, { label: string; className: string }> = {
   quote: {
@@ -40,12 +40,17 @@ export const EMAIL_KIND_META: Record<EmailKind, { label: string; className: stri
     label: "Power of attorney",
     className: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/40",
   },
+  family_tree: {
+    label: "Seller family tree",
+    className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40",
+  },
 };
 
 export const EMAIL_KIND_RING: Record<EmailKind, string> = {
   quote: "bg-purple-500/5 border-purple-500/40 ring-1 ring-purple-500/20",
   listing_agreement: "bg-amber-500/5 border-amber-500/40 ring-1 ring-amber-500/20",
   poa: "bg-sky-500/5 border-sky-500/40 ring-1 ring-sky-500/20",
+  family_tree: "bg-emerald-500/5 border-emerald-500/40 ring-1 ring-emerald-500/20",
 };
 
 export const classifyEmailKind = (
@@ -55,6 +60,10 @@ export const classifyEmailKind = (
   const s = `${subject || ""}`.toLowerCase();
   const b = `${body || ""}`.toLowerCase();
   const hay = `${s} ${b}`;
+  // The family confirmation page email carries a hidden marker so it always
+  // tags correctly, whatever the subject line says.
+  if (hay.includes('data-family-tree="1"') || hay.includes("data-family-tree=\u00221\u0022") ||
+      s.includes("few quick questions about your plot")) return "family_tree";
   if (s.includes("power of attorney") || hay.includes("notary packet")) return "poa";
   if (s.includes("listing agreement") || hay.includes("sign your listing agreement")) return "listing_agreement";
   // Quote emails ONLY when the generated quote block is present — a mention of
