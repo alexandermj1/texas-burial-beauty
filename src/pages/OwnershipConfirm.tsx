@@ -1208,7 +1208,7 @@ const OwnershipConfirm = () => {
 
 
 
-      <div className="relative max-w-3xl mx-auto px-5 py-16">
+      <div className="relative max-w-5xl mx-auto px-5 py-16">
         <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-3">Texas Cemetery Brokers</div>
         {packet?.seller_name && (
           <p className="text-xs font-medium text-foreground mb-2">Private page for {packet.seller_name}</p>
