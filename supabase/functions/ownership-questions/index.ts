@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
 
     const { data: sub } = await svc
       .from("contact_submissions")
-      .select("id, name, email, cemetery, lawn, space_numbers, deed_owner_names, relationship_to_owner, customer_profile_id, deleted_at, ownership_answers, ownership_roster")
+      .select("id, name, email, cemetery, lawn, space_numbers, deed_owner_names, relationship_to_owner, customer_profile_id, deleted_at, ownership_answers, ownership_roster, seller_attachments")
       .eq("id", submissionId)
       .maybeSingle();
     if (!sub || sub.deleted_at) return json({ error: "This link is no longer active." }, 404);
