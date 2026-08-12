@@ -43,10 +43,12 @@ type Packet = {
  */
 const DocsRail = ({ files }: { files: Attachment[] }) => {
   const [open, setOpen] = useState<Attachment | null>(null);
+  const [broken, setBroken] = useState<Record<string, boolean>>({});
   if (!files.length) return null;
 
   const isImage = (f: Attachment) => (f.mime ?? "").startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(f.name);
   const isPdf = (f: Attachment) => (f.mime ?? "").includes("pdf") || /\.pdf$/i.test(f.name);
+
 
   return (
     <>
