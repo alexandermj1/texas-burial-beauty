@@ -173,9 +173,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
   /** The "ask the seller these questions" email review flow. */
   const [ask, setAsk] = useState<null | {
+    /** "names" = admin types the deed names off the deed; "email" = review + send. */
+    step?: "names" | "email";
+    deedNames?: { name: string; deceased: boolean }[];
     loading?: boolean; sending?: boolean; html?: string; subject?: string;
     known?: { label: string; value: string }[]; missing?: string[];
   }>(null);
+
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
   const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
