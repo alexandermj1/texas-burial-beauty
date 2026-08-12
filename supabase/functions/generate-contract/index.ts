@@ -5,6 +5,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
 import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
+import { contactFor } from '../_shared/questionnaire-contacts.ts';
+
 
 const KINDS = ['listing_agreement', 'poa', 'affidavit_heirship', 'spousal_consent'] as const;
 type Kind = typeof KINDS[number];
