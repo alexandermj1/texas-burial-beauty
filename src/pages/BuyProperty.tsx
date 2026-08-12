@@ -480,40 +480,72 @@ const BuyProperty = () => {
 
                 {selections.region && (
                   <>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
-                        {selections.region} · {filteredCemeteries.length} options
-                      </p>
-                      <button
-                        onClick={() => { update("region", ""); update("cemetery", ""); }}
-                        className="text-[11px] text-primary hover:underline"
-                      >
-                        Change region
-                      </button>
-                    </div>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[55vh] overflow-y-auto pr-1">
-                      <button
-                        onClick={() => pick("cemetery", "", 5)}
-                        className={`${cardBase} p-3 ${selections.cemetery === "" ? cardActive : cardIdle}`}
-                      >
-                        <h3 className="font-display text-sm text-foreground">Any cemetery in {selections.region}</h3>
-                        <p className="text-[11px] text-muted-foreground">Show me all options →</p>
-                      </button>
-                      {filteredCemeteries.map(c => (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+                      <div className="relative flex-1">
+                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          value={cemeteryQuery}
+                          onChange={(e) => setCemeteryQuery(e.target.value)}
+                          placeholder={`Search ${selections.region} cemeteries or towns…`}
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="uppercase tracking-wider">{filteredCemeteries.length} options</span>
                         <button
-                          key={c.name}
-                          onClick={() => pick("cemetery", c.name, 5)}
-                          className={`${cardBase} p-3 ${selections.cemetery === c.name ? cardActive : cardIdle}`}
+                          onClick={() => { update("region", ""); update("cemetery", ""); setCemeteryQuery(""); }}
+                          className="text-primary hover:underline"
                         >
-                          <h3 className="font-display text-sm text-foreground">{c.name}</h3>
-                          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> {c.address}
-                          </p>
+                          Change region
                         </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => pick("cemetery", "", 5)}
+                      className={`${cardBase} w-full p-4 mb-4 text-left flex items-center justify-between gap-3 ${selections.cemetery === "" ? cardActive : cardIdle}`}
+                    >
+                      <span>
+                        <span className="block font-display text-sm text-foreground">Any cemetery in {selections.region}</span>
+                        <span className="block text-[11px] text-muted-foreground">We'll show you everything available nearby</span>
+                      </span>
+                      <span className="text-[11px] text-primary shrink-0">Continue →</span>
+                    </button>
+
+                    <div className="max-h-[52vh] overflow-y-auto pr-1 space-y-5">
+                      {loadingCemeteries && (
+                        <p className="text-xs text-muted-foreground">Loading cemeteries…</p>
+                      )}
+                      {!loadingCemeteries && cemeteriesByCity.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          No match — try a different spelling, or choose “Any cemetery” above and we'll find it for you.
+                        </p>
+                      )}
+                      {cemeteriesByCity.map(([city, list]) => (
+                        <div key={city}>
+                          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-2 flex items-center gap-1.5">
+                            <MapPin className="w-3 h-3" /> {city} <span className="opacity-60">· {list.length}</span>
+                          </p>
+                          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {list.map(c => (
+                              <button
+                                key={`${c.id ?? c.name}`}
+                                onClick={() => pick("cemetery", c.name, 5)}
+                                className={`${cardBase} p-3 text-left ${selections.cemetery === c.name ? cardActive : cardIdle}`}
+                              >
+                                <h3 className="font-display text-sm text-foreground leading-snug">{c.name}</h3>
+                                {c.address && (
+                                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{c.address}</p>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </>
                 )}
+
               </motion.div>
             )}
 
