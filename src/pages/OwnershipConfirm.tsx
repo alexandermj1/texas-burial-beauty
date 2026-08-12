@@ -154,8 +154,9 @@ const splitSpaces = (raw?: string | null): string[] => {
 const ACCENT = "#4a6b54";
 
 const HOVER_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap');
 .fcv2 { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.fcv2 h1, .fcv2 h2 { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400 !important; letter-spacing: -0.012em !important; }
 .fcv2 * { box-sizing: border-box; }
 .fcv2 input, .fcv2 textarea, .fcv2 button { font-family: inherit; }
 .fcv2 input::placeholder, .fcv2 textarea::placeholder { color: #b7b7bf; }
@@ -339,10 +340,18 @@ const OwnershipConfirm = () => {
     <div className="fcv2">
       <style>{HOVER_CSS}</style>
       <div style={{"minHeight": "100vh", "background": "#fbfbfd"}}>
-        <div style={{"position": "sticky", "top": "0", "zIndex": "50", "background": "rgba(251,251,253,0.84)", "backdropFilter": "saturate(180%) blur(20px)", "WebkitBackdropFilter": "saturate(180%) blur(20px)", "borderBottom": "1px solid rgba(0,0,0,0.06)"}}>
-          <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px)", "height": "54px", "display": "flex", "alignItems": "center", "gap": "clamp(8px,2.5vw,14px)"}}>
-            <span style={{"flex": "0 1 auto", "minWidth": "0", "overflow": "hidden", "textOverflow": "ellipsis", "whiteSpace": "nowrap", "fontFamily": "'Playfair Display', Georgia, serif", "fontSize": "clamp(14px,4vw,17px)", "letterSpacing": "-0.01em", "color": "#1d1d1f"}}>
-              Texas Cemetery Brokers
+        <div style={{"position": "sticky", "top": "0", "zIndex": "50", "background": "rgba(251,251,253,0.86)", "backdropFilter": "saturate(180%) blur(20px)", "WebkitBackdropFilter": "saturate(180%) blur(20px)", "borderBottom": "1px solid rgba(0,0,0,0.06)"}}>
+          <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px)", "height": "62px", "display": "flex", "alignItems": "center", "gap": "clamp(8px,2.5vw,14px)"}}>
+            <span style={{"flex": "none", "width": "30px", "height": "30px", "borderRadius": "9px", "background": `${V.accent}`, "color": "#ffffff", "display": "grid", "placeItems": "center", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "14px", "letterSpacing": "0.01em"}}>
+              TC
+            </span>
+            <span style={{"flex": "0 1 auto", "minWidth": "0", "display": "flex", "flexDirection": "column", "lineHeight": "1.15"}}>
+              <span style={{"overflow": "hidden", "textOverflow": "ellipsis", "whiteSpace": "nowrap", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "clamp(15px,4vw,18px)", "color": "#1d1d1f"}}>
+                Texas Cemetery Brokers
+              </span>
+              <span style={{"fontSize": "10px", "fontWeight": "500", "letterSpacing": "0.16em", "textTransform": "uppercase", "color": "#9a9aa2", "whiteSpace": "nowrap"}}>
+                Ownership confirmation
+              </span>
             </span>
             <span style={{"flex": "1 1 6px", "minWidth": "0"}}>
             </span>
@@ -357,23 +366,25 @@ const OwnershipConfirm = () => {
         </div>
         <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px) 120px clamp(16px,4vw,28px)"}}>
           <div style={{"padding": "clamp(48px,8vw,76px) 0 clamp(30px,5vw,42px) 0", "textAlign": "center"}}>
-            <div style={{"fontSize": "12.5px", "fontWeight": "500", "letterSpacing": "0.08em", "textTransform": "uppercase", "color": `${V.accent}`}}>
+            <div style={{"fontSize": "11.5px", "fontWeight": "500", "letterSpacing": "0.18em", "textTransform": "uppercase", "color": `${V.accent}`}}>
               For the {V.family} family
             </div>
-            <h1 style={{"margin": "16px 0 0 0", "fontSize": "clamp(32px,7.4vw,50px)", "lineHeight": "1.06", "fontWeight": "600", "letterSpacing": "-0.032em", "color": "#1d1d1f", "textWrap": "balance"}}>
+            <h1 style={{"margin": "18px 0 0 0", "fontSize": "clamp(34px,7.4vw,54px)", "lineHeight": "1.08", "color": "#1d1d1f", "textWrap": "balance"}}>
               Six questions about the deed.
             </h1>
             <p style={{"margin": "20px auto 0 auto", "maxWidth": "33em", "fontSize": "clamp(16.5px,3.6vw,18.5px)", "lineHeight": "1.55", "fontWeight": "300", "color": "#4c4c54", "textWrap": "pretty"}}>
               Cemetery plots pass differently to houses or money. These six answers tell us who legally has a say, and who we need to post a power of attorney to. The family tree draws itself alongside as you go.
             </p>
-            <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "gap": "8px 20px", "marginTop": "26px", "padding": "13px 20px", "borderRadius": "100px", "background": "#f1f1f4"}}>
-              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e6e73"}}>
+            <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "alignItems": "center", "gap": "8px 18px", "marginTop": "26px", "padding": "12px 22px", "borderRadius": "100px", "background": "rgba(74,107,84,0.07)", "border": "1px solid rgba(74,107,84,0.14)"}}>
+              <span style={{"fontSize": "13.5px", "fontWeight": "400", "color": "#4a5a4e"}}>
                 {V.cemetery}
               </span>
-              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e6e73"}}>
+              <span style={{"width": "3px", "height": "3px", "borderRadius": "50%", "background": "#b9c3bb"}}></span>
+              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e7a70"}}>
                 {V.location}
               </span>
-              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e6e73"}}>
+              <span style={{"width": "3px", "height": "3px", "borderRadius": "50%", "background": "#b9c3bb"}}></span>
+              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e7a70"}}>
                 {V.deedNote}
               </span>
             </div>
@@ -407,7 +418,8 @@ const OwnershipConfirm = () => {
                     <div style={{"display": "flex", "flexDirection": "column", "gap": "8px", "marginTop": "20px"}}>
                       {(V.deedRows || []).map((d: any, i0: number) => (
                         <React.Fragment key={i0}>
-                          <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "padding": "11px 13px", "borderRadius": "15px", "background": `${d.cardBg}`, "border": `1px solid ${d.cardBd}`, "transition": "background .25s ease, border-color .25s ease"}}>
+                          <div style={{"display": "flex", "flexDirection": "column", "gap": "10px", "padding": "11px 13px", "borderRadius": "15px", "background": `${d.cardBg}`, "border": `1px solid ${d.cardBd}`, "transition": "background .25s ease, border-color .25s ease"}}>
+                           <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center"}}>
                             <div style={{"flex": "none", "width": "38px", "height": "38px", "borderRadius": "50%", "background": `${d.avBg}`, "color": `${d.avFg}`, "display": "grid", "placeItems": "center", "fontSize": "14px", "fontWeight": "600", "transition": "background .25s ease"}}>
                               {d.initials}
                             </div>
@@ -424,6 +436,22 @@ const OwnershipConfirm = () => {
                             <div onClick={d.remove} style={{"flex": "none", "width": "32px", "height": "32px", "display": "grid", "placeItems": "center", "borderRadius": "50%", "color": "#b7b7bf", "fontSize": "18px", "cursor": "pointer", "userSelect": "none"}} className="dcx3">
                               ×
                             </div>
+                           </div>
+                           {d.marriedAsk ? (
+                            <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "paddingLeft": "48px"}}>
+                              <span style={{"fontSize": "13.5px", "fontWeight": "400", "color": "#6e6e73"}}>{d.marriedLabel}</span>
+                              <div style={{"display": "flex", "background": "#f2f2f5", "borderRadius": "10px", "padding": "3px"}}>
+                                {(d.marriedSeg || []).map((o: any, im: number) => (
+                                  <div key={im} onClick={o.pick} style={{"padding": "6px 11px", "borderRadius": "8px", "fontSize": "13px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`, "transition": "background .2s ease, color .2s ease"}}>
+                                    {o.label}
+                                  </div>
+                                ))}
+                              </div>
+                              {d.marriedYes ? (
+                                <input value={d.spouseName ?? ""} onChange={d.setSpouseName} placeholder="Husband or wife's full name" style={{"flex": "1", "minWidth": "180px", "padding": "8px 12px", "fontSize": "15px", "color": "#1d1d1f", "background": "#fafafc", "border": "1px solid #ececf0", "borderRadius": "10px", "outline": "none"}} className="dcx5" />
+                              ) : null}
+                            </div>
+                           ) : null}
                           </div>
                         </React.Fragment>
                       ))}
@@ -810,8 +838,13 @@ const OwnershipConfirm = () => {
                                           </div>
                                         </React.Fragment>
                                       ))}
-                                      <div onClick={k.addKid} style={{"display": "inline-block", "marginTop": "4px", "padding": "8px 13px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "13.5px", "fontWeight": "500", "color": "#4c4c54", "cursor": "pointer", "userSelect": "none"}} className="dcx18">
-                                        + Add a grandchild
+                                      <div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px", "alignItems": "center", "marginTop": "4px"}}>
+                                        <div onClick={k.addKid} style={{"display": "inline-block", "padding": "8px 13px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "13.5px", "fontWeight": "500", "color": "#4c4c54", "cursor": "pointer", "userSelect": "none"}} className="dcx18">
+                                          + Add a grandchild
+                                        </div>
+                                        <div onClick={k.toggleNoneKids} style={{"display": "inline-block", "padding": "8px 13px", "borderRadius": "100px", "background": k.noneKids ? V.accent : "#ffffff", "color": k.noneKids ? "#ffffff" : "#4c4c54", "border": `1.5px solid ${k.noneKids ? V.accent : "#e3e3e8"}`, "fontSize": "13.5px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none"}}>
+                                          {k.noneKidsLabel}
+                                        </div>
                                       </div>
                                     </div>
                                   </React.Fragment>) : null}
@@ -969,6 +1002,9 @@ const OwnershipConfirm = () => {
                   </React.Fragment>) : null}
                   {V.panelShow ? (<React.Fragment>
                     <div style={{"marginTop": "18px"}}>
+                      <div style={{"textAlign": "center", "margin": "0 0 10px 0", "fontSize": "9.5px", "fontWeight": "600", "letterSpacing": "0.16em", "textTransform": "uppercase", "color": "#b7b7bf"}}>
+                        On the deed
+                      </div>
                       <div style={{"display": "flex", "flexWrap": "wrap", "justifyContent": "center", "gap": "10px"}}>
                         {(V.pDeed || []).map((col: any, i21: number) => (
                           <React.Fragment key={i21}>
@@ -989,7 +1025,7 @@ const OwnershipConfirm = () => {
                                     <div style={{"marginTop": "5px", "fontSize": "12.5px", "fontWeight": "500", "lineHeight": "1.25", "textAlign": "center", "wordBreak": "break-word", "color": `${c.nameFg}`}}>
                                       {c.short}
                                     </div>
-                                    <div style={{"marginTop": "2px", "fontSize": "9.5px", "fontWeight": "500", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${c.tagFg}`}}>
+                                    <div style={{"marginTop": "3px", "padding": "2px 7px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "9px", "fontWeight": "600", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${c.tagFg}`}}>
                                       {c.tag}
                                     </div>
                                   </div>
@@ -1004,6 +1040,9 @@ const OwnershipConfirm = () => {
                           <div style={{"width": "2px", "height": "16px", "background": "#e3e3e8", "margin": "10px auto 0 auto"}}>
                           </div>
                           <div style={{"height": "2px", "background": "#e3e3e8", "margin": "0 auto", "width": "72%", "borderRadius": "2px"}}>
+                          </div>
+                          <div style={{"textAlign": "center", "margin": "10px 0 6px 0", "fontSize": "9.5px", "fontWeight": "600", "letterSpacing": "0.16em", "textTransform": "uppercase", "color": "#b7b7bf"}}>
+                            Their children
                           </div>
                           <div style={{"display": "flex", "flexWrap": "wrap", "justifyContent": "center", "gap": "10px"}}>
                             {(V.pKids || []).map((k: any, i23: number) => (
@@ -1027,7 +1066,7 @@ const OwnershipConfirm = () => {
                                         <div style={{"marginTop": "5px", "fontSize": "12.5px", "fontWeight": "500", "lineHeight": "1.25", "textAlign": "center", "wordBreak": "break-word", "color": `${c.nameFg}`}}>
                                           {c.short}
                                         </div>
-                                        <div style={{"marginTop": "2px", "fontSize": "9.5px", "fontWeight": "500", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${c.tagFg}`}}>
+                                        <div style={{"marginTop": "3px", "padding": "2px 7px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "9px", "fontWeight": "600", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${c.tagFg}`}}>
                                           {c.tag}
                                         </div>
                                       </div>
@@ -1036,6 +1075,9 @@ const OwnershipConfirm = () => {
                                   {k.hasKids ? (<React.Fragment>
                                     <div style={{"display": "flex", "flexDirection": "column", "alignItems": "center", "width": "100%", "animation": "fade .35s both"}}>
                                       <div style={{"width": "2px", "height": "14px", "background": "#e3e3e8", "marginTop": "8px"}}>
+                                      </div>
+                                      <div style={{"fontSize": "9px", "fontWeight": "600", "letterSpacing": "0.12em", "textTransform": "uppercase", "color": "#b7b7bf", "margin": "2px 0 2px 0"}}>
+                                        Step into this share
                                       </div>
                                       {(k.kids || []).map((g: any, i25: number) => (
                                         <React.Fragment key={i25}>
@@ -1046,7 +1088,7 @@ const OwnershipConfirm = () => {
                                             <div style={{"marginTop": "4px", "fontSize": "12px", "fontWeight": "500", "lineHeight": "1.25", "textAlign": "center", "wordBreak": "break-word", "color": `${g.nameFg}`}}>
                                               {g.short}
                                             </div>
-                                            <div style={{"marginTop": "2px", "fontSize": "9.5px", "fontWeight": "500", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${g.tagFg}`}}>
+                                            <div style={{"marginTop": "3px", "padding": "2px 7px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "9px", "fontWeight": "600", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${g.tagFg}`}}>
                                               {g.tag}
                                             </div>
                                           </div>
