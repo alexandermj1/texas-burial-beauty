@@ -838,8 +838,13 @@ const OwnershipConfirm = () => {
                                           </div>
                                         </React.Fragment>
                                       ))}
-                                      <div onClick={k.addKid} style={{"display": "inline-block", "marginTop": "4px", "padding": "8px 13px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "13.5px", "fontWeight": "500", "color": "#4c4c54", "cursor": "pointer", "userSelect": "none"}} className="dcx18">
-                                        + Add a grandchild
+                                      <div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px", "alignItems": "center", "marginTop": "4px"}}>
+                                        <div onClick={k.addKid} style={{"display": "inline-block", "padding": "8px 13px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "13.5px", "fontWeight": "500", "color": "#4c4c54", "cursor": "pointer", "userSelect": "none"}} className="dcx18">
+                                          + Add a grandchild
+                                        </div>
+                                        <div onClick={k.toggleNoneKids} style={{"display": "inline-block", "padding": "8px 13px", "borderRadius": "100px", "background": k.noneKids ? V.accent : "#ffffff", "color": k.noneKids ? "#ffffff" : "#4c4c54", "border": `1.5px solid ${k.noneKids ? V.accent : "#e3e3e8"}`, "fontSize": "13.5px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none"}}>
+                                          {k.noneKidsLabel}
+                                        </div>
                                       </div>
                                     </div>
                                   </React.Fragment>) : null}
