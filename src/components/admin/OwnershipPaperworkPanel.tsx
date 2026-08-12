@@ -737,29 +737,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const poaRequired = requirements.some((r) => r.contractKind === "poa");
   const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
 
-  /** The items and POA links that make up the request, shared by preview and send. */
+  /** The items and completed POAs that make up the request, shared by preview and send. */
   const buildPacketPayload = async () => {
-    // Every POA the checklist calls for, each with the prepared signing link, so
-    // they travel inside the same document request rather than a separate email.
-    const poas: { name: string | null; url: string }[] = [];
+    // Every POA the checklist calls for, each as the finished PDF, so the seller
+    // receives one email with the document already filled in and attached.
+    const poas: { name: string | null; url: string | null; path: string | null }[] = [];
     const sources = poaRequirements.length
       ? poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }))
       : (poaContract ? [{ r: null as Requirement | null, c: poaContract }] : []);
     for (const { r, c: chosen } of sources) {
       if (!chosen) continue;
       const { data: c } = await supabase.from("contracts")
-        .select("sign_token, signature_name, fill_data").eq("id", chosen.id).maybeSingle();
-      if (!c?.sign_token) continue;
-      const url = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
-      if (poas.some((p) => p.url === url)) continue;
+        .select("sign_token, signature_name, fill_data, filled_pdf_path").eq("id", chosen.id).maybeSingle();
+      if (!c) continue;
+      const path = (c as { filled_pdf_path?: string | null }).filled_pdf_path ?? null;
+      const url = c.sign_token ? `${PUBLIC_SITE_URL}/sign/${c.sign_token}` : null;
+      if (path && poas.some((p) => p.path === path)) continue;
       const name = (c as { signature_name?: string | null }).signature_name
         ?? ((c as { fill_data?: Record<string, unknown> | null }).fill_data?.seller_name as string | undefined)
         ?? (r?.jointNames?.length ? r.jointNames.join(" & ") : null)
         ?? r?.personName ?? null;
-      poas.push({ name: name ?? null, url });
+      poas.push({ name: name ?? null, url, path });
     }
     const poaUrl = poas[0]?.url ?? null;
     const poaFor = poas[0]?.name ?? null;
+
     const items = outstanding.map((r) => {
       const g = DOC_GUIDE[r.code];
       return {
