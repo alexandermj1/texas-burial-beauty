@@ -24,6 +24,12 @@ const SendSchema = z.object({
   subject: z.string().max(998).optional().default(""),
   body: z.string().max(200000).optional().default(""),
   htmlBody: z.string().max(400000).optional(),
+  attachments: z.array(z.object({
+    filename: z.string().max(200),
+    mimeType: z.string().max(120).optional(),
+    contentBase64: z.string().max(20000000),
+  })).max(10).optional(),
+
   threadId: z.string().max(200).optional(),
   inReplyToGmailId: z.string().max(200).optional(),
   submissionId: z.string().uuid().optional(),
