@@ -154,8 +154,9 @@ const splitSpaces = (raw?: string | null): string[] => {
 const ACCENT = "#4a6b54";
 
 const HOVER_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap');
 .fcv2 { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.fcv2 h1, .fcv2 h2 { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400 !important; letter-spacing: -0.012em !important; }
 .fcv2 * { box-sizing: border-box; }
 .fcv2 input, .fcv2 textarea, .fcv2 button { font-family: inherit; }
 .fcv2 input::placeholder, .fcv2 textarea::placeholder { color: #b7b7bf; }
