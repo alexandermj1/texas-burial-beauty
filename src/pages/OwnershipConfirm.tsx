@@ -399,7 +399,7 @@ const OwnershipConfirm = () => {
               <div style={{"flex": "4 1 520px", "minWidth": "0"}}>
                 <div style={{"display": "flex", "alignItems": "center", "gap": "12px", "padding": "0 2px 14px 2px"}}>
                   <span style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
-                    Stage one · Your six questions
+                    Stage one · Confirming the deed
                   </span>
                   <span style={{"flex": "1", "height": "1px", "background": "#ececf0"}}>
                   </span>
