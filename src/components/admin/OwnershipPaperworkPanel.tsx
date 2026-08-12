@@ -212,6 +212,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
+    setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
+
     // The AI reading is stored on the file, so its explanation survives a reload.
     if (a?.aiReading) setReading(a.aiReading as Reading);
     setRows((docs ?? []) as DocRow[]);
