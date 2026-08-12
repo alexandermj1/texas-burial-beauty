@@ -340,10 +340,18 @@ const OwnershipConfirm = () => {
     <div className="fcv2">
       <style>{HOVER_CSS}</style>
       <div style={{"minHeight": "100vh", "background": "#fbfbfd"}}>
-        <div style={{"position": "sticky", "top": "0", "zIndex": "50", "background": "rgba(251,251,253,0.84)", "backdropFilter": "saturate(180%) blur(20px)", "WebkitBackdropFilter": "saturate(180%) blur(20px)", "borderBottom": "1px solid rgba(0,0,0,0.06)"}}>
-          <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px)", "height": "54px", "display": "flex", "alignItems": "center", "gap": "clamp(8px,2.5vw,14px)"}}>
-            <span style={{"flex": "0 1 auto", "minWidth": "0", "overflow": "hidden", "textOverflow": "ellipsis", "whiteSpace": "nowrap", "fontFamily": "'Playfair Display', Georgia, serif", "fontSize": "clamp(14px,4vw,17px)", "letterSpacing": "-0.01em", "color": "#1d1d1f"}}>
-              Texas Cemetery Brokers
+        <div style={{"position": "sticky", "top": "0", "zIndex": "50", "background": "rgba(251,251,253,0.86)", "backdropFilter": "saturate(180%) blur(20px)", "WebkitBackdropFilter": "saturate(180%) blur(20px)", "borderBottom": "1px solid rgba(0,0,0,0.06)"}}>
+          <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px)", "height": "62px", "display": "flex", "alignItems": "center", "gap": "clamp(8px,2.5vw,14px)"}}>
+            <span style={{"flex": "none", "width": "30px", "height": "30px", "borderRadius": "9px", "background": `${V.accent}`, "color": "#ffffff", "display": "grid", "placeItems": "center", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "14px", "letterSpacing": "0.01em"}}>
+              TC
+            </span>
+            <span style={{"flex": "0 1 auto", "minWidth": "0", "display": "flex", "flexDirection": "column", "lineHeight": "1.15"}}>
+              <span style={{"overflow": "hidden", "textOverflow": "ellipsis", "whiteSpace": "nowrap", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "clamp(15px,4vw,18px)", "color": "#1d1d1f"}}>
+                Texas Cemetery Brokers
+              </span>
+              <span style={{"fontSize": "10px", "fontWeight": "500", "letterSpacing": "0.16em", "textTransform": "uppercase", "color": "#9a9aa2", "whiteSpace": "nowrap"}}>
+                Ownership confirmation
+              </span>
             </span>
             <span style={{"flex": "1 1 6px", "minWidth": "0"}}>
             </span>
@@ -358,23 +366,25 @@ const OwnershipConfirm = () => {
         </div>
         <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px) 120px clamp(16px,4vw,28px)"}}>
           <div style={{"padding": "clamp(48px,8vw,76px) 0 clamp(30px,5vw,42px) 0", "textAlign": "center"}}>
-            <div style={{"fontSize": "12.5px", "fontWeight": "500", "letterSpacing": "0.08em", "textTransform": "uppercase", "color": `${V.accent}`}}>
+            <div style={{"fontSize": "11.5px", "fontWeight": "500", "letterSpacing": "0.18em", "textTransform": "uppercase", "color": `${V.accent}`}}>
               For the {V.family} family
             </div>
-            <h1 style={{"margin": "16px 0 0 0", "fontSize": "clamp(32px,7.4vw,50px)", "lineHeight": "1.06", "fontWeight": "600", "letterSpacing": "-0.032em", "color": "#1d1d1f", "textWrap": "balance"}}>
+            <h1 style={{"margin": "18px 0 0 0", "fontSize": "clamp(34px,7.4vw,54px)", "lineHeight": "1.08", "color": "#1d1d1f", "textWrap": "balance"}}>
               Six questions about the deed.
             </h1>
             <p style={{"margin": "20px auto 0 auto", "maxWidth": "33em", "fontSize": "clamp(16.5px,3.6vw,18.5px)", "lineHeight": "1.55", "fontWeight": "300", "color": "#4c4c54", "textWrap": "pretty"}}>
               Cemetery plots pass differently to houses or money. These six answers tell us who legally has a say, and who we need to post a power of attorney to. The family tree draws itself alongside as you go.
             </p>
-            <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "gap": "8px 20px", "marginTop": "26px", "padding": "13px 20px", "borderRadius": "100px", "background": "#f1f1f4"}}>
-              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e6e73"}}>
+            <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "alignItems": "center", "gap": "8px 18px", "marginTop": "26px", "padding": "12px 22px", "borderRadius": "100px", "background": "rgba(74,107,84,0.07)", "border": "1px solid rgba(74,107,84,0.14)"}}>
+              <span style={{"fontSize": "13.5px", "fontWeight": "400", "color": "#4a5a4e"}}>
                 {V.cemetery}
               </span>
-              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e6e73"}}>
+              <span style={{"width": "3px", "height": "3px", "borderRadius": "50%", "background": "#b9c3bb"}}></span>
+              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e7a70"}}>
                 {V.location}
               </span>
-              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e6e73"}}>
+              <span style={{"width": "3px", "height": "3px", "borderRadius": "50%", "background": "#b9c3bb"}}></span>
+              <span style={{"fontSize": "13.5px", "fontWeight": "300", "color": "#6e7a70"}}>
                 {V.deedNote}
               </span>
             </div>
