@@ -30,6 +30,19 @@ const formatWhen = (iso: string) => {
 const canReply = (n: Notif) =>
   !!n.sender_id && (n.source_type === "direct_message" || n.source_type === "broadcast");
 
+/** Same event queued twice (e.g. a seller finishing the form twice) shows once. */
+const ackKey = (n: Notif) => `${n.source_type ?? ""}|${n.title}|${n.body ?? ""}`;
+const dedupe = (list: Notif[]) => {
+  const seen = new Set<string>();
+  return list.filter(n => {
+    const k = ackKey(n);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+};
+
+
 const NotificationsBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
