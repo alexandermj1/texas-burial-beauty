@@ -50,9 +50,10 @@ const NotificationsBell = () => {
         .limit(20);
       if (!cancelled && data) {
         setNotes(data as any);
-        // Queue any existing unread notifications for acknowledgment
+        // Queue any existing unread notifications for acknowledgment, collapsing
+        // repeats of the same event so one Acknowledge clears them all.
         const unread = (data as any as Notif[]).filter(n => !n.read_at);
-        if (unread.length > 0) setPendingAck(unread.slice().reverse());
+        if (unread.length > 0) setPendingAck(dedupe(unread.slice().reverse()));
       }
     })();
 
@@ -60,9 +61,10 @@ const NotificationsBell = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_notifications", filter: `user_id=eq.${user.id}` }, (p) => {
         const newNote = p.new as Notif;
         setNotes(prev => [newNote, ...prev].slice(0, 20));
-        setPendingAck(prev => [...prev, newNote]);
+        setPendingAck(prev => dedupe([...prev, newNote]));
         try { new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=").play().catch(() => {}); } catch {}
       })
+
       .subscribe();
 
     return () => { cancelled = true; supabase.removeChannel(channel); };
