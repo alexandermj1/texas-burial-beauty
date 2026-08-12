@@ -89,37 +89,40 @@ Deno.serve(async (req) => {
       </tr>`).join('');
 
     // The POA sits in the same "what we still need" list as every other document,
-    // with its own signing link, so nothing has to be sent in a second email.
+    // with the completed PDF attached, so nothing has to be sent in a second email.
+    const mailToAddress: string | null = body?.poa_mail_to ?? items.find((i) => i.mailTo)?.mailTo ?? null;
     const poaRowHtml = poas.map((p) => `
       <tr>
         <td style="padding:14px 0;border-bottom:1px solid #eee7dc;">
           <div style="font-size:15px;color:#1f2a37;font-family:Georgia,serif;">
             Limited Power of Attorney${p.name ? ` — ${esc(p.name)}` : ''}
             <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6d28d9;margin-left:8px;">Notary</span>
-            <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1d4ed8;margin-left:8px;">Prepared for you</span>
+            <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#15803d;margin-left:8px;">Attached — already completed</span>
           </div>
           <div style="font-size:13px;color:#4a5568;line-height:1.6;margin-top:4px;">
-            Already filled in and ready — open it, confirm your mailing address, then sign it before a notary.
+            Completed for you from the answers you gave us — there is nothing to fill in.
+            Print the attached PDF, sign it in front of a notary, then send it back to us.
           </div>
-          <a href="${esc(p.url)}" style="display:inline-block;margin-top:8px;padding:9px 18px;background:#1f2a37;color:#ffffff;text-decoration:none;border-radius:8px;font-family:Georgia,serif;font-size:13px;">
-            Open your Power of Attorney →
-          </a>
         </td>
       </tr>`).join('');
 
     const poaHtml = poas.length ? `
       <div style="margin:28px 0 0;padding:20px 22px;background:#f7f3ec;border-radius:10px;">
-        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;">About the Power of Attorney${poas.length > 1 ? 's' : ''} above</div>
+        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;">About the Power of Attorney${poas.length > 1 ? 's' : ''} attached</div>
         <p style="margin:8px 0 12px;font-size:13px;color:#4a5568;line-height:1.7;">
           ${poas.length > 1 ? 'These let' : 'This lets'} us handle the cemetery's transfer paperwork on your behalf, so you don't have to
-          post forms back and forth. Because it is a sworn document it must be notarized.
+          post forms back and forth. We have already filled in every detail — your name, address and the exact
+          description of the property — using the answers from your family confirmation. Because it is a sworn
+          document it still has to be notarized.
         </p>
         <ol style="padding-left:18px;margin:0;font-size:13px;color:#4a5568;line-height:1.8;">
-          <li>Open the link above and confirm your mailing address — the document fills in as you type.</li>
-          <li>Sign it online with a remote notary (about 15 minutes, from your phone), or print it and take it to any bank, UPS Store or courthouse notary.</li>
-          <li>Upload the notarized copy on the same page and you're finished.</li>
+          <li>Print the attached PDF (${poas.length > 1 ? 'one for each signer' : 'one page to sign'}) — please do not alter anything on it.</li>
+          <li>Sign it in front of a notary: any bank, UPS Store or courthouse will do, and it takes a few minutes.</li>
+          <li>Send it back — upload a photo on your document page, and post the signed original to us.</li>
         </ol>
+        ${mailToAddress ? `<div style="margin-top:12px;font-size:13px;color:#1f2a37;white-space:pre-line;">${esc(mailToAddress)}</div>` : ''}
       </div>` : '';
+
 
 
     const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
