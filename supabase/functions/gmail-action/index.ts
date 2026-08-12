@@ -68,6 +68,7 @@ function buildRfc2822(opts: {
   from: string; to: string; cc?: string; bcc?: string;
   subject: string; body: string; htmlBody?: string;
   inReplyTo?: string; references?: string; replyTo?: string;
+  attachments?: { filename: string; mimeType?: string; contentBase64: string }[];
 }): string {
   const headers: string[] = [];
   headers.push(`From: ${opts.from}`);
@@ -80,28 +81,59 @@ function buildRfc2822(opts: {
   if (opts.references) headers.push(`References: ${opts.references}`);
   headers.push("MIME-Version: 1.0");
 
-  if (opts.htmlBody) {
-    const boundary = `=_tcb_${crypto.randomUUID().replace(/-/g, "")}`;
-    headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
-    const parts: string[] = [];
-    parts.push(`--${boundary}`);
-    parts.push('Content-Type: text/plain; charset="UTF-8"');
-    parts.push("Content-Transfer-Encoding: 8bit");
-    parts.push("");
-    parts.push(opts.body || "");
-    parts.push(`--${boundary}`);
-    parts.push('Content-Type: text/html; charset="UTF-8"');
-    parts.push("Content-Transfer-Encoding: 8bit");
-    parts.push("");
-    parts.push(opts.htmlBody);
-    parts.push(`--${boundary}--`);
-    return [...headers, "", ...parts].join("\r\n");
+  const attachments = (opts.attachments ?? []).filter((a) => a?.contentBase64);
+
+  /** text/plain (+ text/html) alternative block, without top-level headers. */
+  const bodyPart = (): { header: string; lines: string[] } => {
+    if (opts.htmlBody) {
+      const boundary = `=_tcb_${crypto.randomUUID().replace(/-/g, "")}`;
+      const parts: string[] = [];
+      parts.push(`--${boundary}`);
+      parts.push('Content-Type: text/plain; charset="UTF-8"');
+      parts.push("Content-Transfer-Encoding: 8bit");
+      parts.push("");
+      parts.push(opts.body || "");
+      parts.push(`--${boundary}`);
+      parts.push('Content-Type: text/html; charset="UTF-8"');
+      parts.push("Content-Transfer-Encoding: 8bit");
+      parts.push("");
+      parts.push(opts.htmlBody);
+      parts.push(`--${boundary}--`);
+      return { header: `Content-Type: multipart/alternative; boundary="${boundary}"`, lines: parts };
+    }
+    return {
+      header: 'Content-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: 8bit',
+      lines: [opts.body || ""],
+    };
+  };
+
+  const inner = bodyPart();
+
+  if (!attachments.length) {
+    headers.push(...inner.header.split("\r\n"));
+    return [...headers, "", ...inner.lines].join("\r\n");
   }
 
-  headers.push('Content-Type: text/plain; charset="UTF-8"');
-  headers.push("Content-Transfer-Encoding: 8bit");
-  return [...headers, "", opts.body].join("\r\n");
+  // Attachments (the completed PDFs) wrap the whole body in multipart/mixed.
+  const mixed = `=_tcbmix_${crypto.randomUUID().replace(/-/g, "")}`;
+  headers.push(`Content-Type: multipart/mixed; boundary="${mixed}"`);
+  const out: string[] = [];
+  out.push(`--${mixed}`);
+  out.push(...inner.header.split("\r\n"));
+  out.push("");
+  out.push(...inner.lines);
+  for (const a of attachments) {
+    out.push(`--${mixed}`);
+    out.push(`Content-Type: ${a.mimeType || "application/octet-stream"}; name="${a.filename}"`);
+    out.push(`Content-Disposition: attachment; filename="${a.filename}"`);
+    out.push("Content-Transfer-Encoding: base64");
+    out.push("");
+    out.push(a.contentBase64.replace(/\s+/g, "").replace(/(.{76})/g, "$1\r\n"));
+  }
+  out.push(`--${mixed}--`);
+  return [...headers, "", ...out].join("\r\n");
 }
+
 
 let cachedGmailKey: string | null = null;
 async function resolveGmailKey(lovableKey: string): Promise<string | null> {
