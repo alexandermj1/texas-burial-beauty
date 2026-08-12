@@ -1926,8 +1926,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                           {bad
                             ? `The prepared copy is made out to ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — re-prepare it so both principals appear.`
                             : prepared
-                              ? `Prepared for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"}. Open it and read every line — this exact PDF travels with the email.`
-                              : "Not prepared yet. Prepare it now and it travels inside the same email."}
+                              ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their questionnaire answers. Read every line — this exact PDF is attached to the email for them to print and notarise.`
+                              : "Not prepared yet. Prepare it now — it fills itself from the seller's answers and is attached to this email."}
+
                         </p>
                         <div className="flex items-center gap-1.5 mt-2">
                           <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
