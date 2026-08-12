@@ -2174,6 +2174,7 @@ export type Database = {
           name: string
           notes: string | null
           process_info: string | null
+          region: string | null
           sections: Json
           transfer_fee: number | null
           typical_prices: string | null
@@ -2201,6 +2202,7 @@ export type Database = {
           name: string
           notes?: string | null
           process_info?: string | null
+          region?: string | null
           sections?: Json
           transfer_fee?: number | null
           typical_prices?: string | null
@@ -2228,6 +2230,7 @@ export type Database = {
           name?: string
           notes?: string | null
           process_info?: string | null
+          region?: string | null
           sections?: Json
           transfer_fee?: number | null
           typical_prices?: string | null
@@ -2368,6 +2371,10 @@ export type Database = {
           band: number
           cemetery_key: string
         }[]
+      }
+      cemetery_match_key: {
+        Args: { _city: string; _name: string }
+        Returns: string
       }
       get_listings_with_internal: {
         Args: never
