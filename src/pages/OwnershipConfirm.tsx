@@ -1002,6 +1002,9 @@ const OwnershipConfirm = () => {
                   </React.Fragment>) : null}
                   {V.panelShow ? (<React.Fragment>
                     <div style={{"marginTop": "18px"}}>
+                      <div style={{"textAlign": "center", "margin": "0 0 10px 0", "fontSize": "9.5px", "fontWeight": "600", "letterSpacing": "0.16em", "textTransform": "uppercase", "color": "#b7b7bf"}}>
+                        On the deed
+                      </div>
                       <div style={{"display": "flex", "flexWrap": "wrap", "justifyContent": "center", "gap": "10px"}}>
                         {(V.pDeed || []).map((col: any, i21: number) => (
                           <React.Fragment key={i21}>
