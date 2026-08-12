@@ -41,7 +41,7 @@ const DocsRail = ({ files }: { files: Attachment[] }) => {
 
   return (
     <>
-      <div className="rounded-3xl border border-border/60 bg-card/60 backdrop-blur p-5">
+      <div className="rounded-[20px] border border-border/60 bg-card/60 backdrop-blur p-4">
         <div className="flex items-center gap-2 mb-1">
           <Paperclip className="w-3.5 h-3.5 text-primary" />
           <span className="text-[10px] tracking-[0.28em] uppercase text-primary">Your documents</span>
@@ -50,7 +50,7 @@ const DocsRail = ({ files }: { files: Attachment[] }) => {
           What you've already sent us. Tap any one to read it while you answer.
         </p>
 
-        <div className="grid grid-cols-3 lg:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-4 lg:grid-cols-3 gap-2">
           {files.map((f) => (
             <button
               key={f.url}
@@ -389,7 +389,7 @@ const OwnershipConfirm = () => {
               </p>
             </details>
 
-            <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "alignItems": "center", "gap": "8px 18px", "marginTop": "26px", "padding": "12px 22px", "borderRadius": "100px", "background": "rgba(74,107,84,0.07)", "border": "1px solid rgba(74,107,84,0.14)"}}>
+            <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "alignItems": "center", "gap": "8px 18px", "marginTop": "16px", "padding": "10px 20px", "borderRadius": "100px", "background": "rgba(74,107,84,0.07)", "border": "1px solid rgba(74,107,84,0.14)"}}>
               <span style={{"fontSize": "13.5px", "fontWeight": "400", "color": "#4a5a4e"}}>
                 {V.cemetery}
               </span>
@@ -405,7 +405,7 @@ const OwnershipConfirm = () => {
           </div>
           {V.showForm ? (<React.Fragment>
             <div id="form-top" style={{"display": "flex", "flexWrap": "wrap", "gap": "22px"}}>
-              <div style={{"flex": "4 1 520px", "minWidth": "0"}}>
+              <div style={{"flex": "5 1 600px", "minWidth": "0"}}>
                 <div style={{"display": "flex", "alignItems": "center", "gap": "12px", "padding": "0 2px 14px 2px"}}>
                   <span style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
                     Stage one · Confirming the deed
@@ -1005,9 +1005,9 @@ const OwnershipConfirm = () => {
                   </div>
                 </React.Fragment>) : null}
               </div>
-              <div style={{"flex": "1 1 296px", "minWidth": "268px"}}>
-                <DocsRail files={files} />
-                <div style={{"position": "sticky", "top": "74px", "maxHeight": "calc(100vh - 96px)", "overflowY": "auto", "overscrollBehavior": "contain", "background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}>
+              <div style={{"flex": "0 1 320px", "minWidth": "260px", "maxWidth": "340px"}}>
+                <div style={{"position": "sticky", "top": "74px", "maxHeight": "calc(100vh - 96px)", "overflowY": "auto", "overscrollBehavior": "contain", "display": "flex", "flexDirection": "column", "gap": "14px"}}>
+                <div style={{"background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}> "background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}>
                   <div style={{"display": "flex", "alignItems": "baseline", "gap": "8px"}}>
                     <div style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
                       The picture so far
@@ -1150,6 +1150,8 @@ const OwnershipConfirm = () => {
                       </div>
                     </React.Fragment>) : null}
                   </React.Fragment>) : null}
+                </div>
+                <DocsRail files={files} />
                 </div>
               </div>
             </div>
