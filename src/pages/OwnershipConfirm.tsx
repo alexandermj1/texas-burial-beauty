@@ -23,6 +23,8 @@ import fern from "@/assets/flowers/fern.png.asset.json";
  * family tree when the plot is being inherited).
  */
 
+type Attachment = { name: string; url: string; mime: string | null };
+
 type Packet = {
   seller_name: string | null;
   cemetery: string | null;
@@ -30,8 +32,88 @@ type Packet = {
   space_numbers?: string | null;
   deed_owner_names?: string | null;
   relationship_to_owner?: string | null;
+  attachments?: Attachment[];
   answers: OwnershipAnswers;
 };
+
+/**
+ * The paperwork the seller already sent us, kept beside the questions so they
+ * can glance at their own deed instead of guessing at a name or a space number.
+ */
+const DocsRail = ({ files }: { files: Attachment[] }) => {
+  const [open, setOpen] = useState<Attachment | null>(null);
+  if (!files.length) return null;
+
+  const isImage = (f: Attachment) => (f.mime ?? "").startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(f.name);
+  const isPdf = (f: Attachment) => (f.mime ?? "").includes("pdf") || /\.pdf$/i.test(f.name);
+
+  return (
+    <>
+      <div className="rounded-3xl border border-border/60 bg-card/60 backdrop-blur p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Paperclip className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[10px] tracking-[0.28em] uppercase text-primary">Your documents</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed mb-4">
+          What you've already sent us. Tap any one to read it while you answer.
+        </p>
+
+        <div className="grid grid-cols-3 lg:grid-cols-2 gap-2.5">
+          {files.map((f) => (
+            <button
+              key={f.url}
+              onClick={() => setOpen(f)}
+              className="group text-left rounded-2xl overflow-hidden border border-border/60 bg-background hover:border-primary/50 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.6)]"
+            >
+              <div className="aspect-[4/5] bg-muted/50 flex items-center justify-center overflow-hidden">
+                {isImage(f) ? (
+                  <img src={f.url} alt={f.name} loading="lazy" className="w-full h-full object-cover" />
+                ) : (
+                  <FileText className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                )}
+              </div>
+              <div className="px-2 py-1.5">
+                <p className="text-[10px] text-muted-foreground truncate">{f.name}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 bg-foreground/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setOpen(null)}
+        >
+          <div
+            className="bg-background rounded-3xl overflow-hidden w-full max-w-3xl max-h-[88vh] flex flex-col border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border/60">
+              <p className="text-xs text-foreground truncate">{open.name}</p>
+              <div className="flex items-center gap-3 shrink-0">
+                <a href={open.url} target="_blank" rel="noreferrer" className="text-[11px] text-primary hover:underline">
+                  Open
+                </a>
+                <button onClick={() => setOpen(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto bg-muted/30">
+              {isPdf(open) ? (
+                <iframe src={open.url} title={open.name} className="w-full h-[75vh]" />
+              ) : (
+                <img src={open.url} alt={open.name} className="w-full h-auto" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 
 
 /** The synthetic first card: the names printed on the deed. */
