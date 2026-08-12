@@ -156,19 +156,31 @@ Deno.serve(async (req) => {
       }
 
       if (finished) {
-        const { data: staff } = await svc.from("user_roles").select("user_id").in("role", ["admin", "staff"]);
-        const recipients = [...new Set((staff ?? []).map((r: { user_id: string }) => r.user_id))];
-        if (recipients.length) {
-          await svc.from("user_notifications").insert(recipients.map((uid) => ({
-            user_id: uid,
-            title: `${sub.name ?? "Seller"} confirmed their ownership details`,
-            body: "The ownership questionnaire has been answered — the document checklist can be rebuilt.",
-            link_url: "/admin",
-            source_type: "submission",
-            source_id: submissionId,
-          })));
+        // Only ever notify once per submission — the seller's page can finish
+        // (or re-finish) more than once, and stacked duplicates made the
+        // Acknowledge button look broken.
+        const { data: already } = await svc
+          .from("user_notifications")
+          .select("id")
+          .eq("source_type", "submission")
+          .eq("source_id", submissionId)
+          .limit(1);
+        if (!already?.length) {
+          const { data: staff } = await svc.from("user_roles").select("user_id").in("role", ["admin", "staff"]);
+          const recipients = [...new Set((staff ?? []).map((r: { user_id: string }) => r.user_id))];
+          if (recipients.length) {
+            await svc.from("user_notifications").insert(recipients.map((uid) => ({
+              user_id: uid,
+              title: `${sub.name ?? "Seller"} confirmed their ownership details`,
+              body: "The ownership questionnaire has been answered — the document checklist can be rebuilt.",
+              link_url: "/admin",
+              source_type: "submission",
+              source_id: submissionId,
+            })));
+          }
         }
       }
+
 
       return json({ ok: true });
     }
