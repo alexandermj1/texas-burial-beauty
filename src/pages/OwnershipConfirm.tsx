@@ -1257,7 +1257,7 @@ const OwnershipConfirm = () => {
               please confirm what's right and correct anything that isn't.
             </p>
 
-            <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 px-5 py-4 flex items-start gap-3">
+            <div className="mt-6 rounded-3xl border border-border/60 bg-card/60 backdrop-blur px-5 py-4 flex items-start gap-3">
               <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Answers marked <span className="text-foreground">“From our records we believe”</span> were taken from
@@ -1266,7 +1266,13 @@ const OwnershipConfirm = () => {
               </p>
             </div>
 
-            <div className="sticky top-0 z-20 -mx-5 px-5 py-3 mt-8 mb-8 bg-background/85 backdrop-blur border-b border-border/60">
+            <div className="mt-10 grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_17rem] items-start">
+              <aside className="lg:order-last lg:sticky lg:top-6 space-y-4">
+                <DocsRail files={packet?.attachments ?? []} />
+              </aside>
+
+              <div className="min-w-0">
+            <div className="sticky top-0 z-20 -mx-5 px-5 py-3 mb-8 bg-background/85 backdrop-blur border-b border-border/60">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span className="inline-flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-primary" />
@@ -1288,13 +1294,16 @@ const OwnershipConfirm = () => {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {visible.map((key, i) => (
                 <div
                   key={key}
                   ref={(el) => { cardRefs.current[key] = el; }}
-                  className="animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out"
+                  className={`animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out transition-all ${
+                    isSettled(key) && !allSettled ? "opacity-70 hover:opacity-100 lg:scale-[0.985]" : ""
+                  }`}
                 >
+
                   {key === NAMES_KEY ? (
                     <NamesCard
                       index={i + 1}
