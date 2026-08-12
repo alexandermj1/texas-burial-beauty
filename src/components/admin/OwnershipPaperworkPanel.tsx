@@ -1437,6 +1437,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 v2={(answers as Record<string, unknown>).v2 as V2State}
                 people={(answers.people ?? []) as { name: string; relationship?: string; deceased?: boolean }[]}
                 notes={(answers as { sellerNotes?: string }).sellerNotes}
+                deedNames={deedNamesRaw}
               />
             </div>
           ) : null}

@@ -40,10 +40,13 @@ const SellerAnswersSummary = ({
   v2,
   people,
   notes,
+  deedNames,
 }: {
   v2: V2State;
   people?: { name: string; relationship?: string; deceased?: boolean }[];
   notes?: string;
+  /** The owner names we typed in from the deed before sending the link. */
+  deedNames?: string;
 }) => {
   const deed = (v2.deed ?? []).filter((d) => (d.n || "").trim());
   const nameOf = (id: string) => deed.find((d) => d.id === id)?.n || "";
@@ -52,6 +55,12 @@ const SellerAnswersSummary = ({
 
   return (
     <div className="space-y-3">
+      {deedNames && deedNames.trim() && (
+        <Block title="Names we entered from the deed">
+          <p className="text-[11px] text-foreground">{deedNames}</p>
+        </Block>
+      )}
+
       <Block title="Who answered">
         <Row
           label="Relationship to the owner"
