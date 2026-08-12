@@ -47,11 +47,15 @@ Deno.serve(async (req) => {
     const items: Item[] = Array.isArray(body?.items) ? body.items : [];
     const packetUrl: string = body?.packet_url;
     // Every prepared Power of Attorney travels inside this same request — one
-    // email for the seller, never a separate POA message.
-    const poasIn: { name?: string | null; url: string }[] = Array.isArray(body?.poas) ? body.poas : [];
+    // email for the seller, never a separate POA message. The POA is completed
+    // from their questionnaire answers, so the PDF itself is attached: they
+    // print it, sign before a notary and send it back. No fields to fill in.
+    const poasIn: { name?: string | null; url?: string | null; path?: string | null }[] =
+      Array.isArray(body?.poas) ? body.poas : [];
     const poaUrl: string | null = body?.poa_url ?? null;
     const poaFor: string | null = body?.poa_for ?? null;
     const poas = poasIn.length ? poasIn : (poaUrl ? [{ name: poaFor, url: poaUrl }] : []);
+
     const previewOnly: boolean = body?.preview === true;
     if (!submissionId || !packetUrl) {
       return new Response(JSON.stringify({ error: 'missing submission_id or packet_url' }), { status: 400, headers: corsHeaders });
