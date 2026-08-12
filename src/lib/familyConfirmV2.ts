@@ -146,6 +146,13 @@ export function buildLogic(state, setS, accent0, CRM) {
     const multi = est.length > 1;
     const namedKids = state.kids.filter(k => k.n.trim() || (k.kids || []).some(g => g.n.trim()));
     if (multi && namedKids.some(k => !(k.of || []).length)) return false;
+    // A child who died before their parent passes their share down: we must be
+    // told either their children's names, or that there were none.
+    const deceasedResolved = state.kids.every(k =>
+      k.st !== 'deceased' || !k.n.trim() ||
+      (k.kids || []).some(g => g.n.trim()) || (state.noKids || {})['kid:' + k.id]
+    );
+    if (!deceasedResolved) return false;
     return est.every(d => state.noKids[d.id] || namedKids.some(k => (k.of || []).indexOf(d.id) >= 0));
   },
   done8: () => {
