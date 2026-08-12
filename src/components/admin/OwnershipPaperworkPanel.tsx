@@ -1385,109 +1385,46 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         </div>
       ) : (
         <div className="space-y-4">
-          {/* ── Questionnaire ── */}
+          {/* ── The seller's own confirmation ──
+              We no longer guess the ownership answers here. The seller fills in
+              their own page, and the documents follow from what comes back. */}
           <div className="border rounded-lg p-3 bg-background/60 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Who has the right to sell
+                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Family confirmation
               </span>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-muted-foreground">{prog.answered}/{prog.total} answered</span>
-                <Button
-                  size="sm" variant="outline" className="h-7 text-[11px]"
-                  onClick={inferFromFile} disabled={inferring || !quoteAccepted}
-                  title={quoteAccepted ? "Read the intake form, notes and email chain" : "Available once the seller accepts a quote"}
-                >
-                  {inferring
-                    ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                    : <Sparkles className="w-3.5 h-3.5 mr-1" />}
-                  Read the file
-                </Button>
-                <Button
-                  size="sm" variant="outline" className="h-7 text-[11px]"
-                  onClick={openAsk}
-                  title="Email the seller their own page to confirm what we believe and answer the rest"
-                >
-                  <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
-                </Button>
-              </div>
+              <Button
+                size="sm" variant="outline" className="h-7 text-[11px]"
+                onClick={openAsk}
+                title="Type the deed names, then email the seller their own page"
+              >
+                <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
+              </Button>
             </div>
 
-            {answers.sellerConfirmedAt && (
+            {answers.sellerConfirmedAt ? (
               <div className="rounded-md border border-emerald-200 bg-emerald-50/70 px-2.5 py-2">
                 <p className="text-[11px] text-emerald-900 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
-                  Seller confirmed these answers on {new Date(answers.sellerConfirmedAt).toLocaleString()}
+                  Seller confirmed on {new Date(answers.sellerConfirmedAt).toLocaleString()}
                 </p>
                 {answers.sellerNotes && (
                   <p className="text-[11px] text-emerald-900/80 mt-1 whitespace-pre-line">“{answers.sellerNotes}”</p>
                 )}
               </div>
-            )}
-            {!answers.sellerConfirmedAt && answers.questionsSentAt && (
+            ) : answers.questionsSentAt ? (
               <p className="text-[11px] text-muted-foreground">
-                Questionnaire sent to the seller {new Date(answers.questionsSentAt).toLocaleString()} — waiting on their reply.
+                Sent to the seller {new Date(answers.questionsSentAt).toLocaleString()} — waiting on their answers
+                before we decide which documents to request.
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Send the seller their family confirmation page. Once it comes back, the people below and the
+                documents they need follow from their answers.
               </p>
             )}
-
-
-            {reading && (
-              <div className="rounded-md border border-violet-200 bg-violet-50/60 px-2.5 py-2 space-y-1">
-                <p className="text-[11px] font-medium text-violet-900 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Read from the intake form, notes and {reading.sources?.emails ?? 0} email{reading.sources?.emails === 1 ? "" : "s"}
-                </p>
-                {reading.reasons.map((r) => (
-                  <p key={r.key} className="text-[11px] text-violet-900/80">
-                    <span className="font-medium">{QUESTIONS[r.key]?.eyebrow ?? r.key}:</span> {r.reason}
-                    <span className="ml-1 opacity-60">({r.confidence} confidence)</span>
-                  </p>
-                ))}
-                {(reading.open_questions ?? []).length > 0 && (
-                  <div className="pt-1">
-                    <p className="text-[11px] font-medium text-violet-900">Still to ask the seller</p>
-                    {reading.open_questions!.map((q) => (
-                      <p key={q} className="text-[11px] text-violet-900/80">• {q}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {path.map((key) => {
-              const q = QUESTIONS[key];
-              const value = (answers as Record<string, unknown>)[key] as string | undefined;
-              return (
-                <div key={key} className="space-y-1">
-                  <p className="text-xs font-medium flex items-center gap-1.5">
-                    {q.question}
-                    {(answers.aiSuggested ?? []).includes(key) && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-100 text-violet-800 inline-flex items-center gap-0.5">
-                        <Sparkles className="w-2.5 h-2.5" />AI — confirm
-                      </span>
-                    )}
-                  </p>
-                  {q.hint && <p className="text-[11px] text-muted-foreground">{q.hint}</p>}
-                  <div className="flex flex-wrap gap-1.5 pt-0.5">
-                    {q.answers.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        title={opt.detail}
-                        onClick={() => setAnswer(key, opt.value)}
-                        className={`text-[11px] rounded-full px-2.5 py-1 border transition ${
-                          value === opt.value
-                            ? "bg-foreground text-background border-foreground"
-                            : "bg-background hover:bg-muted border-border text-muted-foreground"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
           </div>
+
 
           {/* ── Roster ── */}
           <div className="border rounded-lg p-3 bg-background/60 space-y-2">
