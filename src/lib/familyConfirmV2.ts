@@ -37,7 +37,7 @@ export function initialState(CRM) {
     rel: '', relOther: '', selfIs: '', youName: '',
     deed: (CRM.deed || []).map((n, i) => ({ id: 'd' + i, n: n, st: 'living' })),
     seq: (CRM.deed || []).length, kseq: 0,
-    poa: {}, spouse: {}, will: {}, taker: {},
+    couple: '', poa: {}, spouse: {}, will: {}, taker: {},
     kids: [], noKids: {}, heirSpouse: {},
     spaces: (CRM.spaces || []).map(l => ({ label: l, used: '', who: '' })),
     contacts: {}, note: '', submitted: false, sent: false
@@ -54,6 +54,24 @@ export function buildLogic(state, setS, accent0, CRM) {
 
 
   named: () => { return state.deed.filter(d => d.n.trim()); },
+
+  // Two names on one deed with the same surname are, nine times out of ten, a
+  // husband and wife. We pre-tick that and skip asking each of them separately
+  // whether they have a spouse, because their spouse is the other owner.
+  coupleIds: () => {
+    const named = L.named();
+    if (named.length !== 2) return [];
+    const last = n => { const k = nameKey(n).split(' '); return k[k.length - 1]; };
+    const a = last(named[0].n), b = last(named[1].n);
+    return a && a === b ? named.map(d => d.id) : [];
+  },
+  coupleAsk: () => { return L.coupleIds().length === 2; },
+  coupleVal: () => { return state.couple || (L.coupleAsk() ? 'yes' : ''); },
+  coupleYes: (id) => { return L.coupleVal() === 'yes' && L.coupleIds().indexOf(id) >= 0; },
+  // The effective spouse answer for a deed owner: married-to-each-other means
+  // there is no off-deed spouse to consent.
+  sp: (id) => { return L.coupleYes(id) ? { has: 'no', n: '' } : (state.spouse[id] || {}); },
+
   living: () => { return L.named().filter(d => d.st === 'living'); },
   gone: () => { return L.named().filter(d => d.st === 'deceased'); },
 
@@ -135,8 +153,8 @@ export function buildLogic(state, setS, accent0, CRM) {
   done4: () => { return state.spaces.every(s => s.used && (s.used !== 'yes' || s.who.trim())); },
   done5: () => {
     return L.named().every(d => {
-      const s = state.spouse[d.id];
-      return s && s.has && (s.has !== 'yes' || (s.n || '').trim());
+      const sp = L.sp(d.id);
+      return sp && sp.has && (sp.has !== 'yes' || (sp.n || '').trim());
     });
   },
   done6: () => { return L.gone().every(d => !!state.will[d.id]); },
@@ -193,7 +211,7 @@ export function buildLogic(state, setS, accent0, CRM) {
         if (p.has === 'yes' && (p.n || '').trim()) add(p.n, 'Holds power of attorney for ' + d.n + ' \u2014 signs in ' + d.n + '\u2019s name', { must: true, agentFor: d.n });
       }
       if (isYou) add(d.n, 'This is you, our point of contact', {});
-      const sp = s.spouse[d.id] || {};
+      const sp = L.sp(d.id);
       if (sp.has === 'yes' && (sp.n || '').trim()) add(sp.n, 'Legal spouse of ' + d.n + ', not on the deed \u2014 holds a right of interment and must consent', { must: true });
     });
 
@@ -250,7 +268,7 @@ export function buildLogic(state, setS, accent0, CRM) {
       stack.push(L.chip(d.n, dead ? 'gone' : 'sign', dead ? 'Deed \u00b7 died' : (isYou ? 'Deed \u00b7 you' : 'On the deed'), ''));
       const p = s.poa[d.id] || {};
       if (!dead && p.has === 'yes') stack.push(L.chip(p.n, 'sign', 'Signs for them', 'power of attorney'));
-      const sp = s.spouse[d.id] || {};
+      const sp = L.sp(d.id);
       if (sp.has === 'yes') stack.push(L.chip(sp.n, 'sign', 'Consents', 'married to'));
       if (sp.has === 'unknown') stack.push(L.chip('', 'need', 'We will check', 'spouse?'));
       return { stack };
@@ -302,7 +320,7 @@ export function buildLogic(state, setS, accent0, CRM) {
       if (p.has === 'yes') add('The power of attorney for ' + d.n, 'We check it covers property and allows the authority to be passed on to us.');
     });
     L.named().forEach(d => {
-      const sp = s.spouse[d.id] || {};
+      const sp = L.sp(d.id);
       if (sp.has === 'yes') add('Spousal consent from ' + (sp.n || 'their spouse'), 'Signed by the husband or wife of ' + d.n + '. We send it already drawn up.');
     });
     s.kids.forEach(k => {
@@ -334,7 +352,7 @@ export function buildLogic(state, setS, accent0, CRM) {
     });
 
     L.named().forEach(d => {
-      const sp = s.spouse[d.id] || {};
+      const sp = L.sp(d.id);
       if (sp.has === 'unknown') push('We do not yet know whether ' + d.n + ' has a spouse', 'A husband or wife holds a right of interment even when they are not on the deed, so we search the marriage records before anything is signed. It is routine.');
       if (sp.has === 'yes' && (sp.n || '').trim() && L.named().some(x => x.id !== d.id && nameKey(x.n) === nameKey(sp.n)))
         push(sp.n.trim() + ' is already named on the deed', 'They are an owner in their own right, so no separate spousal consent is needed. One signature covers both.');
@@ -428,7 +446,7 @@ export function buildLogic(state, setS, accent0, CRM) {
       ],
 
       deedRows: s.deed.map((d, i) => {
-        const sp = s.spouse[d.id] || {};
+        const sp = L.sp(d.id);
         return {
         name: d.n, initials: initials(d.n),
         cardBg: d.st === 'deceased' ? '#fafafa' : '#ffffff',
@@ -436,7 +454,7 @@ export function buildLogic(state, setS, accent0, CRM) {
         avBg: d.st === 'deceased' ? '#f2f2f5' : (d.n.trim() ? '#eef1ea' : '#f5f5f7'),
         avFg: d.st === 'deceased' ? '#9a9aa2' : (d.n.trim() ? acc : '#b7b7bf'),
         marriedYes: sp.has === 'yes',
-        marriedAsk: !!d.n.trim(),
+        marriedAsk: !!d.n.trim() && !L.coupleYes(d.id),
         marriedLabel: d.st === 'deceased' ? 'Was married?' : 'Married?',
         spouseName: sp.n || '',
         marriedSeg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
@@ -448,6 +466,10 @@ export function buildLogic(state, setS, accent0, CRM) {
         remove: () => setS(st => { const l = st.deed.slice(); l.splice(i, 1); return { deed: l }; })
         };
       }),
+      coupleAsk: L.coupleAsk(),
+      coupleNames: L.coupleIds().length === 2 ? L.named().map(d => d.n.trim()).join(' and ') : '',
+      coupleSeg: L.seg(L.coupleVal(), [['yes', 'Yes'], ['no', 'No'], ['unknown', "Don't know"]], v => setS({ couple: v })),
+
       addDeed: () => setS(st => ({ deed: st.deed.concat([{ id: 'd' + st.seq, n: '', st: 'living' }]), seq: st.seq + 1 })),
 
       show2: d1,
@@ -494,8 +516,8 @@ export function buildLogic(state, setS, accent0, CRM) {
       })),
 
       show5: d4,
-      spouseRows: L.named().map(d => {
-        const sp = s.spouse[d.id] || {};
+      spouseRows: L.named().filter(d => !L.coupleYes(d.id)).map(d => {
+        const sp = L.sp(d.id);
         return {
           name: d.n, status: d.st === 'deceased' ? 'Has died' : 'Living',
           yes: sp.has === 'yes', unknown: sp.has === 'unknown', spouseName: sp.n || '',

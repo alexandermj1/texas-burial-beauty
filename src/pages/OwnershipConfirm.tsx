@@ -456,6 +456,20 @@ const OwnershipConfirm = () => {
                         </React.Fragment>
                       ))}
                     </div>
+                    {V.coupleAsk ? (
+                      <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "14px", "padding": "12px 14px", "borderRadius": "15px", "background": "#f7f8f6", "border": "1px solid #ececf0"}}>
+                        <span style={{"fontSize": "14px", "fontWeight": "400", "color": "#3a3a3f"}}>
+                          Are {V.coupleNames} married to each other?
+                        </span>
+                        <div style={{"display": "flex", "background": "#ffffff", "borderRadius": "10px", "padding": "3px", "border": "1px solid #ececf0"}}>
+                          {(V.coupleSeg || []).map((o: any, ic: number) => (
+                            <div key={ic} onClick={o.pick} style={{"padding": "6px 11px", "borderRadius": "8px", "fontSize": "13px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`, "transition": "background .2s ease, color .2s ease"}}>
+                              {o.label}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                     <div onClick={V.addDeed} style={{"display": "inline-block", "marginTop": "11px", "padding": "10px 17px", "borderRadius": "100px", "border": "1.5px dashed #dcdce1", "fontSize": "14.5px", "fontWeight": "500", "color": `${V.accent}`, "cursor": "pointer", "userSelect": "none"}} className="dcx4">
                       + Add another name
                     </div>
