@@ -737,29 +737,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const poaRequired = requirements.some((r) => r.contractKind === "poa");
   const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
 
-  /** The items and POA links that make up the request, shared by preview and send. */
+  /** The items and completed POAs that make up the request, shared by preview and send. */
   const buildPacketPayload = async () => {
-    // Every POA the checklist calls for, each with the prepared signing link, so
-    // they travel inside the same document request rather than a separate email.
-    const poas: { name: string | null; url: string }[] = [];
+    // Every POA the checklist calls for, each as the finished PDF, so the seller
+    // receives one email with the document already filled in and attached.
+    const poas: { name: string | null; url: string | null; path: string | null }[] = [];
     const sources = poaRequirements.length
       ? poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }))
       : (poaContract ? [{ r: null as Requirement | null, c: poaContract }] : []);
     for (const { r, c: chosen } of sources) {
       if (!chosen) continue;
       const { data: c } = await supabase.from("contracts")
-        .select("sign_token, signature_name, fill_data").eq("id", chosen.id).maybeSingle();
-      if (!c?.sign_token) continue;
-      const url = `${PUBLIC_SITE_URL}/sign/${c.sign_token}`;
-      if (poas.some((p) => p.url === url)) continue;
+        .select("sign_token, signature_name, fill_data, filled_pdf_path").eq("id", chosen.id).maybeSingle();
+      if (!c) continue;
+      const path = (c as { filled_pdf_path?: string | null }).filled_pdf_path ?? null;
+      const url = c.sign_token ? `${PUBLIC_SITE_URL}/sign/${c.sign_token}` : null;
+      if (path && poas.some((p) => p.path === path)) continue;
       const name = (c as { signature_name?: string | null }).signature_name
         ?? ((c as { fill_data?: Record<string, unknown> | null }).fill_data?.seller_name as string | undefined)
         ?? (r?.jointNames?.length ? r.jointNames.join(" & ") : null)
         ?? r?.personName ?? null;
-      poas.push({ name: name ?? null, url });
+      poas.push({ name: name ?? null, url, path });
     }
     const poaUrl = poas[0]?.url ?? null;
     const poaFor = poas[0]?.name ?? null;
+
     const items = outstanding.map((r) => {
       const g = DOC_GUIDE[r.code];
       return {
@@ -824,10 +826,42 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
 
+  /** One signer's mailing details exactly as the seller typed them in the family confirmation. */
+  const questionnaireContact = (name: string) => {
+    const key = (n: string) => {
+      const t = String(n ?? "").toLowerCase().replace(/[.,'’]/g, " ").replace(/\s+/g, " ").trim();
+      if (!t) return "";
+      const p = t.split(" ");
+      return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
+    };
+    const contacts = ((answers as Record<string, unknown>).contacts ?? {}) as Record<
+      string, { addr?: string; email?: string; phone?: string }
+    >;
+    const k = key(name);
+    let hit = k ? contacts[k] : undefined;
+    if (!hit && k) {
+      const [first] = k.split(" ");
+      const last = k.split(" ").slice(-1)[0];
+      hit = Object.entries(contacts).find(([ck]) => ck.startsWith(first) && ck.endsWith(last))?.[1];
+    }
+    const raw = String(hit?.addr ?? "").replace(/\r/g, "").trim();
+    const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+    let address = raw, city_state_zip = "";
+    if (lines.length > 1) {
+      address = lines.slice(0, -1).join(", ");
+      city_state_zip = lines[lines.length - 1];
+    } else {
+      const m = /^(.*?),\s*([^,]+,\s*[A-Za-z]{2}\.?\s*\d{5}(?:-\d{4})?)$/.exec(raw);
+      if (m) { address = m[1].trim(); city_state_zip = m[2].trim(); }
+    }
+    return { address, city_state_zip, phone: String(hit?.phone ?? ""), email: String(hit?.email ?? "") };
+  };
+
   /**
    * "Prepare" now opens an inline editor first (same idea as the Listing Agreement
    * panel): the admin checks/fills every blank, then generates the PDF.
    */
+
   const openDocEditor = async (r: Requirement) => {
     if (!r.contractKind) return;
     const blank = {
@@ -856,23 +890,30 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         loading: false,
         nameHints,
         plotHints,
-        fields: {
-          seller_name: r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "",
-          joint_second: r.jointNames?.[1] ?? "",
-          address: str(prior?.address),
-          city_state_zip: str(prior?.city_state_zip),
-          phone: str(prior?.phone) || str(s.phone),
-          email: str(prior?.email) || str(s.email),
-          cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
-          county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
-          // The deed is the controlling description — use it verbatim when we hold one.
-          plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
-            [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
-              .filter(Boolean).join(" · "),
-          plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
-          listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
-          authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),
-        },
+        fields: (() => {
+          const principal = r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "";
+          // The seller already gave us their mailing address in the family
+          // confirmation — the POA is built from that, not asked for again.
+          const c = questionnaireContact(principal);
+          return {
+            seller_name: principal,
+            joint_second: r.jointNames?.[1] ?? "",
+            address: str(prior?.address) || c.address,
+            city_state_zip: str(prior?.city_state_zip) || c.city_state_zip,
+            phone: str(prior?.phone) || c.phone || str(s.phone),
+            email: str(prior?.email) || c.email || str(s.email),
+            cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
+            county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
+            // The deed is the controlling description — use it verbatim when we hold one.
+            plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
+              [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
+                .filter(Boolean).join(" · "),
+            plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
+            listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
+            authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),
+          };
+        })(),
+
       } : cur);
     } catch {
       setDocEdit((cur) => (cur ? { ...cur, loading: false } : cur));
@@ -1871,7 +1912,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {poaRequired && (
                 <div className="rounded-md border border-purple-300 bg-purple-50/60 px-3 py-2.5 space-y-2.5">
                   <p className="text-xs font-semibold flex items-center gap-1.5">
-                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — checked here, sent in this same email
+                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — completed here, attached to this email
                   </p>
                   {poaRequirements.map((r) => {
                     const prepared = preparedPoaFor(r);
@@ -1885,8 +1926,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                           {bad
                             ? `The prepared copy is made out to ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — re-prepare it so both principals appear.`
                             : prepared
-                              ? `Prepared for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"}. Open it and read every line — this exact PDF travels with the email.`
-                              : "Not prepared yet. Prepare it now and it travels inside the same email."}
+                              ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their questionnaire answers. Read every line — this exact PDF is attached to the email for them to print and notarise.`
+                              : "Not prepared yet. Prepare it now — it fills itself from the seller's answers and is attached to this email."}
+
                         </p>
                         <div className="flex items-center gap-1.5 mt-2">
                           <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
