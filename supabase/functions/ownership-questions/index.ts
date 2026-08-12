@@ -55,6 +55,26 @@ Deno.serve(async (req) => {
     const answers: Answers = (sub.ownership_answers as Answers) ?? {};
 
     if (action === "get") {
+      // The seller often needs to re-read their own deed while answering, so we
+      // hand back short-lived signed links to whatever they have already sent us.
+      let attachments: { name: string; url: string; mime: string | null }[] = [];
+      if (sub.customer_profile_id) {
+        const { data: files } = await svc
+          .from("customer_files")
+          .select("file_name, file_path, mime_type, created_at")
+          .eq("customer_profile_id", sub.customer_profile_id)
+          .order("created_at", { ascending: false })
+          .limit(24);
+        for (const f of (files ?? []) as { file_name: string; file_path: string; mime_type: string | null }[]) {
+          const { data: signed } = await svc.storage
+            .from("customer-files")
+            .createSignedUrl(f.file_path, 60 * 60 * 6);
+          if (signed?.signedUrl) {
+            attachments.push({ name: f.file_name, url: signed.signedUrl, mime: f.mime_type });
+          }
+        }
+      }
+
       return json({
         seller_name: sub.name,
         cemetery: sub.cemetery,
@@ -62,9 +82,11 @@ Deno.serve(async (req) => {
         space_numbers: sub.space_numbers,
         deed_owner_names: sub.deed_owner_names,
         relationship_to_owner: sub.relationship_to_owner,
+        attachments,
         answers,
       });
     }
+
 
 
     if (action === "save") {
