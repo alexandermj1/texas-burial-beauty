@@ -1120,7 +1120,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         setPdfPreview({ url: `${PUBLIC_SITE_URL}/sign/${data.sign_token}`, title: r.label });
         return;
       }
-      toast.error("No prepared PDF found yet — press Prepare first.");
+      toast.error("The PDF is still being completed — try again in a moment.");
     } finally {
       setBusy(null);
     }
@@ -1740,7 +1740,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         <DialogContent className="max-w-2xl z-[95] max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <FileSignature className="w-4 h-4" /> Fill in the {docEdit?.r.label ?? "document"}
+              <FileSignature className="w-4 h-4" /> Check or edit the {docEdit?.r.label ?? "document"}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {docEdit?.r.jointNames?.length
