@@ -240,6 +240,8 @@ Deno.serve(async (req) => {
           subject: input.subject || "(no subject)",
           body: input.body,
           htmlBody: input.htmlBody,
+          attachments: input.attachments,
+
           inReplyTo: from === TARGET_MAILBOX ? inReplyTo : undefined,
           references: from === TARGET_MAILBOX ? references : undefined,
           replyTo: from === TARGET_MAILBOX ? undefined : TARGET_MAILBOX,
