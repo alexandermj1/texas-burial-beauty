@@ -180,7 +180,7 @@ const QuestionCard = ({
 
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+      className={`rounded-3xl border p-6 sm:p-7 transition-all duration-500 ${
         settled
           ? "border-primary/30 bg-primary/[0.04]"
           : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
@@ -282,7 +282,7 @@ const NamesCard = ({
 
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+      className={`rounded-3xl border p-6 sm:p-7 transition-all duration-500 ${
         settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
       }`}
     >
@@ -540,7 +540,7 @@ const CardShell = ({
   index: number; settled: boolean; eyebrow: string; title: string; hint?: string; children: React.ReactNode;
 }) => (
   <div
-    className={`rounded-2xl border p-6 sm:p-7 transition-all duration-500 ${
+    className={`rounded-3xl border p-6 sm:p-7 transition-all duration-500 ${
       settled ? "border-primary/30 bg-primary/[0.04]" : "border-border/70 bg-card/70 shadow-[0_8px_40px_-24px_hsl(var(--primary)/0.5)]"
     }`}
   >
@@ -858,7 +858,7 @@ const FamilyTree = ({ people, onRemove }: { people: RosterPerson[]; onRemove: (i
   if (!named.length) return null;
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/60 p-6 sm:p-7">
+    <div className="rounded-3xl border border-border/70 bg-card/60 p-6 sm:p-7">
       <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">The family</div>
       <p className="font-display text-2xl leading-snug text-foreground flex items-center gap-2">
         <Users className="w-5 h-5 text-primary" /> Everyone connected to this plot
@@ -877,7 +877,7 @@ const FamilyTree = ({ people, onRemove }: { people: RosterPerson[]; onRemove: (i
                 {members.map((p) => (
                   <div
                     key={p.id}
-                    className={`group inline-flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition ${
+                    className={`group inline-flex items-center gap-2.5 rounded-3xl border px-3 py-2 transition ${
                       p.deceased || p.role === "decedent"
                         ? "border-border bg-muted/40"
                         : "border-primary/25 bg-primary/[0.06]"
@@ -1219,7 +1219,7 @@ const OwnershipConfirm = () => {
             <Loader2 className="w-4 h-4 animate-spin" /> Opening your file…
           </div>
         ) : error && !packet ? (
-          <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
+          <div className="mt-10 rounded-3xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
         ) : sent ? (
           <div className="mt-6">
             <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] text-foreground mb-4">
@@ -1229,7 +1229,7 @@ const OwnershipConfirm = () => {
               A broker is reviewing your answers now and will prepare the exact documents your cemetery requires.
               You'll receive one email with the full list — nothing to print until then.
             </p>
-            <div className="mt-8 rounded-2xl border border-primary/30 bg-primary/[0.05] p-6 flex items-start gap-3">
+            <div className="mt-8 rounded-3xl border border-primary/30 bg-primary/[0.05] p-6 flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div>
                 <p className="font-display text-lg text-foreground">Your answers are saved</p>
@@ -1378,7 +1378,7 @@ const OwnershipConfirm = () => {
 
 
             {allSettled && (
-              <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="mt-6 rounded-3xl border border-border/70 bg-card/70 p-6 sm:p-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <div className="text-[10px] tracking-[0.28em] uppercase text-primary mb-1.5">Anything else</div>
                 <p className="font-display text-2xl leading-snug text-foreground">
                   Is there something about this plot we should know?
@@ -1399,7 +1399,7 @@ const OwnershipConfirm = () => {
             )}
 
             {error && (
-              <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
+              <div className="mt-6 rounded-3xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
             )}
 
             {allSettled && (
