@@ -69,12 +69,19 @@ const DocsRail = ({ files }: { files: Attachment[] }) => {
               className="group text-left rounded-2xl overflow-hidden border border-border/60 bg-background hover:border-primary/50 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.6)]"
             >
               <div className="aspect-[4/5] bg-muted/50 flex items-center justify-center overflow-hidden">
-                {isImage(f) ? (
-                  <img src={f.url} alt={f.name} loading="lazy" className="w-full h-full object-cover" />
+                {isImage(f) && !broken[f.url] ? (
+                  <img
+                    src={f.url}
+                    alt={f.name}
+                    loading="lazy"
+                    onError={() => setBroken((b) => ({ ...b, [f.url]: true }))}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <FileText className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 )}
               </div>
+
               <div className="px-2 py-1.5">
                 <p className="text-[10px] text-muted-foreground truncate">{f.name}</p>
               </div>
