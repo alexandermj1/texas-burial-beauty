@@ -31,7 +31,7 @@ type PacketDoc = {
 };
 
 
-type Poa = { sign_token: string; notarized: boolean; signed: boolean } | null;
+type Poa = { sign_token: string | null; pdf_url?: string | null; notarized: boolean; signed: boolean } | null;
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
 
 type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; listing_agreement?: ListingAgreement };
@@ -527,15 +527,20 @@ const SellerDocuments = () => {
             <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1">Also to do</div>
             <p className="font-display text-xl text-foreground leading-snug">Your Limited Power of Attorney</p>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-              This lets us handle the cemetery's transfer paperwork for you. Confirm your address, then sign it
-              with an online notary in about fifteen minutes — or print it and use any bank or UPS Store notary.
+              This lets us handle the cemetery's transfer paperwork for you. We have already completed it for you
+              from the answers you gave us — there is nothing to fill in. Print it, sign it in front of any notary
+              (a bank, UPS Store or courthouse takes a few minutes), then upload a photo below.
             </p>
-            <a
-              href={`/sign/${packet.poa.sign_token}`}
-              className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
-            >
-              <Stamp className="w-3.5 h-3.5" /> {packet.poa.signed ? "Finish notarizing" : "Prepare & notarize"}
-            </a>
+            {packet.poa.pdf_url && (
+              <a
+                href={packet.poa.pdf_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+              >
+                <Stamp className="w-3.5 h-3.5" /> Open your completed Power of Attorney
+              </a>
+            )}
             <PoaUpload submissionId={submissionId} onDone={load} />
           </div>
         )}
