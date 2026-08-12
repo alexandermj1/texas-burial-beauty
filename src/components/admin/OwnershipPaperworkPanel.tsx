@@ -1040,7 +1040,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
-  const generateDoc = async (r: Requirement, overrideFields?: DocFields) => {
+  const generateDoc = async (r: Requirement, overrideFields?: DocFields, silent = false) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     try {
