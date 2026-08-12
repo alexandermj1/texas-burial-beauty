@@ -1958,7 +1958,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {poaRequired && (
                 <div className="rounded-md border border-purple-300 bg-purple-50/60 px-3 py-2.5 space-y-2.5">
                   <p className="text-xs font-semibold flex items-center gap-1.5">
-                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — completed here, attached to this email
+                    <FileSignature className="w-3.5 h-3.5" /> Powers of Attorney — already completed and attached
                   </p>
                   {poaRequirements.map((r) => {
                     const prepared = preparedPoaFor(r);
@@ -1970,24 +1970,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                         </p>
                         <p className={`text-[11px] mt-0.5 ${bad ? "text-rose-700" : "text-muted-foreground"}`}>
                           {bad
-                            ? `The prepared copy is made out to ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — re-prepare it so both principals appear.`
+                            ? `This copy names ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — edit it so both principals appear.`
                             : prepared
-                              ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their questionnaire answers. Read every line — this exact PDF is attached to the email for them to print and notarise.`
-                              : "Not prepared yet. Prepare it now — it fills itself from the seller's answers and is attached to this email."}
-
+                              ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their family-tree answers. Check it — this exact PDF is attached for them to print and notarise. They cannot change it.`
+                              : "Being completed automatically from their family-tree answers…"}
                         </p>
                         <div className="flex items-center gap-1.5 mt-2">
-                          <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
-                            onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
-                            {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                            {prepared ? "Re-prepare & check" : "Prepare it now"}
-                          </Button>
-                          {prepared && (
-                            <Button size="sm" variant="outline" onClick={() => void openContractPdf(r)}>
-                              <FileText className="w-3.5 h-3.5 mr-1" />Review the POA
+                          {prepared ? (
+                            <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+                              onClick={() => void openContractPdf(r)} disabled={busy === `${reqKey(r)}-open`}>
+                              {busy === `${reqKey(r)}-open` ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileText className="w-3.5 h-3.5 mr-1" />}
+                              Check the POA
                             </Button>
+                          ) : (
+                            <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Filling it in…
+                            </span>
                           )}
+                          <Button size="sm" variant="outline" onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
+                            {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                            Edit
+                          </Button>
                         </div>
+                      </div>
+                    );
+                  })}
                       </div>
                     );
                   })}
