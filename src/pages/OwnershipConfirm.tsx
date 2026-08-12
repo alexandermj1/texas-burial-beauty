@@ -389,10 +389,25 @@ const SLOTS: Record<string, PeopleSlot | TextSlot> = {
     addLabel: "Add another representative",
   },
   _heirs: {
-    kind: "people", eyebrow: "Who inherits", role: "heir",
-    title: "Who are the descendants of each deceased deed holder?",
-    hint: "List all surviving biological or legally adopted children, including from earlier marriages. Do not include step-children. If a child has died, list that child's surviving children.",
-    addLabel: "Add another descendant",
+    kind: "people", eyebrow: "The children", role: "heir", relationship: "child",
+    title: "Who are the children of everyone named on the deed?",
+    hint: "List all biological or legally adopted children, from every marriage. Do not include step-children. If a child has died, list that child's own children instead.",
+    addLabel: "Add another child",
+    allowNone: true, noneLabel: "There are no children",
+  },
+  _heirspouses: {
+    kind: "people", eyebrow: "Their husbands and wives", role: "spouse", relationship: "spouse of child",
+    title: "Are any of those children married? Please name their husband or wife",
+    hint: "A married child's spouse can hold rights of interment, so the cemetery will want their name on file too.",
+    addLabel: "Add another spouse",
+    allowNone: true, noneLabel: "None of them are married",
+  },
+  _siblings: {
+    kind: "people", eyebrow: "Brothers and sisters", role: "heir", relationship: "sibling",
+    title: "Who are the brothers and sisters of everyone named on the deed?",
+    hint: "Include half-brothers and half-sisters. If one of them has died, name their children instead.",
+    addLabel: "Add another brother or sister",
+    allowNone: true, noneLabel: "There are no brothers or sisters",
   },
   _trustee: {
     kind: "people", eyebrow: "The trust", role: "trustee",
@@ -706,7 +721,10 @@ const phraseFor = (
           }
         : {};
     case "deceasedAny":
-      return deedNames ? { title: `Are any of ${deedNames} deceased?` } : {};
+      if (!deedNames) return {};
+      return isSelf
+        ? { title: "Are any of the other people named on the deed deceased?" }
+        : { title: `Are any of ${deedNames} deceased?` };
     case "poaHolder":
       return deedNames
         ? { title: `Does anyone hold a power of attorney for any living person named on the deed?` }
@@ -918,7 +936,7 @@ const OwnershipConfirm = () => {
       case "poaHolder": return a.poaHolder === "yes" ? ["_poaDetails"] : [];
       case "occupied": return a.occupied === "yes" ? ["_occupiedBy"] : [];
       case "outsideSpouse": return a.outsideSpouse === "yes" ? ["_spouse"] : [];
-      case "descendants": return a.descendants === "yes" ? ["_heirs"] : [];
+      case "descendants": return a.descendants === "yes" ? ["_heirs", "_heirspouses", "_siblings"] : [];
       default: return [];
     }
   }, []);

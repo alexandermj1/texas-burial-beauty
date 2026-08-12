@@ -259,14 +259,15 @@ export const QUESTIONS: Record<string, Question> = {
     ],
   },
   descendants: {
-    key: "descendants", eyebrow: "Stage 2 · Descendants", question: "Did any deceased person named on the deed leave surviving descendants?",
-    hint: "Include biological and legally adopted children from every marriage, but not step-children. Include grandchildren only when their parent (the deceased person's child) has also died.",
+    key: "descendants", eyebrow: "Stage 2 · The family", question: "Does the family of anyone named on the deed include living children, brothers or sisters?",
+    hint: "We need the whole immediate family: the children of everyone named on the deed (and their husbands or wives), and the brothers and sisters of everyone named on the deed. Include biological and legally adopted children from every marriage, but not step-children. If a child has died, name that child's own children.",
     answers: [
-      { value: "yes", label: "Yes — there are surviving descendants" },
-      { value: "no", label: "No — there are no surviving descendants" },
+      { value: "yes", label: "Yes — there are children, brothers or sisters" },
+      { value: "no", label: "No — there are none living" },
       { value: "unsure", label: "I don't know" },
     ],
   },
+
 
   probate: {
     key: "probate", eyebrow: "Probate", question: "How has the will been handled?",
@@ -338,12 +339,23 @@ export const QUESTIONS: Record<string, Question> = {
  */
 export function questionPath(a: OwnershipAnswers): string[] {
   // Stage 1 — always, in this order.
-  const p: string[] = ["rel", "deceasedAny", "poaHolder", "occupied", "outsideSpouse"];
+  const p: string[] = ["rel"];
+
+  // A sole owner filling the form in themselves is plainly alive: never ask.
+  const deedHolders = (a.people ?? []).filter(
+    (p) => p.name?.trim() && (p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
+  );
+  const soleLivingSelf = a.rel === "self" && deedHolders.length <= 1 &&
+    !deedHolders.some((p) => p.deceased || p.role === "decedent");
+  if (!soleLivingSelf) p.push("deceasedAny");
+
+  p.push("poaHolder", "occupied", "outsideSpouse");
 
   // Stage 2 — only when someone named on the deed has died.
   if (hasDeceased(a)) p.push("will", "descendants");
   return p;
 }
+
 
 /** Is anyone named on the deed deceased? */
 export function hasDeceased(a: OwnershipAnswers): boolean {
