@@ -1427,13 +1427,27 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         </div>
       ) : (
         <div className="space-y-4">
+          {/* How the two halves fit together, in one line, so it's obvious that the
+              documents (and the POA inside them) come out of the seller's answers. */}
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <span className="px-2 py-1 rounded-full bg-muted font-medium text-foreground">1 · Ask the seller</span>
+            <span className="opacity-60">→</span>
+            <span className={`px-2 py-1 rounded-full ${answers.sellerConfirmedAt ? "bg-muted font-medium text-foreground" : "border border-dashed border-border"}`}>
+              2 · Their answers decide the documents
+            </span>
+            <span className="opacity-60">→</span>
+            <span className={`px-2 py-1 rounded-full ${answers.sellerConfirmedAt ? "bg-muted font-medium text-foreground" : "border border-dashed border-border"}`}>
+              3 · POA fills itself &amp; goes out with the request
+            </span>
+          </div>
+
           {/* ── The seller's own confirmation ──
               We no longer guess the ownership answers here. The seller fills in
               their own page, and the documents follow from what comes back. */}
           <div className="border rounded-lg p-3 bg-background/60 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Family confirmation
+                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Step 1 · Family confirmation
               </span>
               <Button
                 size="sm" variant="outline" className="h-7 text-[11px]"
@@ -1443,6 +1457,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
               </Button>
             </div>
+
 
             {answers.sellerConfirmedAt ? (
               <div className="rounded-md border border-emerald-200 bg-emerald-50/70 px-2.5 py-2">
