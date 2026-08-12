@@ -75,6 +75,32 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Some files only ever land on the submission itself (intake form) or in
+      // the document packet bucket — include those too, deduped by path.
+      const seen = new Set(attachments.map((a) => a.name));
+      const addSigned = async (bucket: string, path: string, name: string) => {
+        if (!path || seen.has(name)) return;
+        const { data: signed } = await svc.storage.from(bucket).createSignedUrl(path, 60 * 60 * 6);
+        if (signed?.signedUrl) {
+          seen.add(name);
+          attachments.push({ name, url: signed.signedUrl, mime: null });
+        }
+      };
+      const intake = (sub as { seller_attachments?: { path?: string; name?: string }[] }).seller_attachments;
+      for (const f of Array.isArray(intake) ? intake : []) {
+        if (f?.path) await addSigned("customer-files", f.path, f.name ?? f.path.split("/").pop()!);
+      }
+      const { data: docs } = await svc
+        .from("submission_documents")
+        .select("file_urls, file_url")
+        .eq("submission_id", submissionId);
+      for (const d of (docs ?? []) as { file_urls?: string[] | null; file_url?: string | null }[]) {
+        for (const p of [...(d.file_urls ?? []), ...(d.file_url ? [d.file_url] : [])]) {
+          if (p) await addSigned("portal-uploads", p, p.split("/").pop()!);
+        }
+      }
+
+
       return json({
         seller_name: sub.name,
         cemetery: sub.cemetery,
