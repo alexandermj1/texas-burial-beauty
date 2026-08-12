@@ -4,6 +4,7 @@ import { FileText, Paperclip, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { buildLogic, initialState, nameKey } from "@/lib/familyConfirmV2";
+import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
 /**
  * The seller's own copy of the ownership questionnaire — "Family Confirmation v2".
@@ -342,9 +343,13 @@ const OwnershipConfirm = () => {
       <div style={{"minHeight": "100vh", "background": "#fbfbfd"}}>
         <div style={{"position": "sticky", "top": "0", "zIndex": "50", "background": "rgba(251,251,253,0.86)", "backdropFilter": "saturate(180%) blur(20px)", "WebkitBackdropFilter": "saturate(180%) blur(20px)", "borderBottom": "1px solid rgba(0,0,0,0.06)"}}>
           <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px)", "height": "62px", "display": "flex", "alignItems": "center", "gap": "clamp(8px,2.5vw,14px)"}}>
-            <span style={{"flex": "none", "width": "30px", "height": "30px", "borderRadius": "9px", "background": `${V.accent}`, "color": "#ffffff", "display": "grid", "placeItems": "center", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "14px", "letterSpacing": "0.01em"}}>
-              TC
-            </span>
+            <img
+              src={hibiscusLogo.url}
+              alt="Texas Cemetery Brokers"
+              width={30}
+              height={30}
+              style={{ flex: "none", width: "30px", height: "30px", objectFit: "contain" }}
+            />
             <span style={{"flex": "0 1 auto", "minWidth": "0", "display": "flex", "flexDirection": "column", "lineHeight": "1.15"}}>
               <span style={{"overflow": "hidden", "textOverflow": "ellipsis", "whiteSpace": "nowrap", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "clamp(15px,4vw,18px)", "color": "#1d1d1f"}}>
                 Texas Cemetery Brokers
@@ -370,10 +375,10 @@ const OwnershipConfirm = () => {
               For the {V.family} family
             </div>
             <h1 style={{"margin": "18px 0 0 0", "fontSize": "clamp(34px,7.4vw,54px)", "lineHeight": "1.08", "color": "#1d1d1f", "textWrap": "balance"}}>
-              Six questions about the deed.
+              Confirming the ownership of the deed.
             </h1>
-            <p style={{"margin": "20px auto 0 auto", "maxWidth": "33em", "fontSize": "clamp(16.5px,3.6vw,18.5px)", "lineHeight": "1.55", "fontWeight": "300", "color": "#4c4c54", "textWrap": "pretty"}}>
-              Cemetery plots pass differently to houses or money. These six answers tell us who legally has a say, and who we need to post a power of attorney to. The family tree draws itself alongside as you go.
+            <p style={{"margin": "20px auto 0 auto", "maxWidth": "35em", "fontSize": "clamp(16.5px,3.6vw,18.5px)", "lineHeight": "1.55", "fontWeight": "300", "color": "#4c4c54", "textWrap": "pretty"}}>
+              We ask these questions to make absolutely certain the paperwork is correct. Cemetery plots pass differently to houses or money, and cemeteries will refuse a transfer if a single signature or document is missing. Getting it exactly right now means that when a family needs this property at their time of need, the transfer goes through without being held up at the cemetery office. Your answers tell us who legally has a say, and who we need to post a power of attorney to — the family tree draws itself alongside as you go.
             </p>
             <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "alignItems": "center", "gap": "8px 18px", "marginTop": "26px", "padding": "12px 22px", "borderRadius": "100px", "background": "rgba(74,107,84,0.07)", "border": "1px solid rgba(74,107,84,0.14)"}}>
               <span style={{"fontSize": "13.5px", "fontWeight": "400", "color": "#4a5a4e"}}>
@@ -394,7 +399,7 @@ const OwnershipConfirm = () => {
               <div style={{"flex": "4 1 520px", "minWidth": "0"}}>
                 <div style={{"display": "flex", "alignItems": "center", "gap": "12px", "padding": "0 2px 14px 2px"}}>
                   <span style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
-                    Stage one · Your six questions
+                    Stage one · Confirming the deed
                   </span>
                   <span style={{"flex": "1", "height": "1px", "background": "#ececf0"}}>
                   </span>
