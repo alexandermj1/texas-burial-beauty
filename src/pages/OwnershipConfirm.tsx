@@ -4,6 +4,7 @@ import { FileText, Paperclip, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { buildLogic, initialState, nameKey } from "@/lib/familyConfirmV2";
+import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
 /**
  * The seller's own copy of the ownership questionnaire — "Family Confirmation v2".
