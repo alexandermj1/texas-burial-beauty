@@ -43,10 +43,12 @@ type Packet = {
  */
 const DocsRail = ({ files }: { files: Attachment[] }) => {
   const [open, setOpen] = useState<Attachment | null>(null);
+  const [broken, setBroken] = useState<Record<string, boolean>>({});
   if (!files.length) return null;
 
   const isImage = (f: Attachment) => (f.mime ?? "").startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(f.name);
   const isPdf = (f: Attachment) => (f.mime ?? "").includes("pdf") || /\.pdf$/i.test(f.name);
+
 
   return (
     <>
@@ -67,12 +69,19 @@ const DocsRail = ({ files }: { files: Attachment[] }) => {
               className="group text-left rounded-2xl overflow-hidden border border-border/60 bg-background hover:border-primary/50 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.6)]"
             >
               <div className="aspect-[4/5] bg-muted/50 flex items-center justify-center overflow-hidden">
-                {isImage(f) ? (
-                  <img src={f.url} alt={f.name} loading="lazy" className="w-full h-full object-cover" />
+                {isImage(f) && !broken[f.url] ? (
+                  <img
+                    src={f.url}
+                    alt={f.name}
+                    loading="lazy"
+                    onError={() => setBroken((b) => ({ ...b, [f.url]: true }))}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <FileText className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 )}
               </div>
+
               <div className="px-2 py-1.5">
                 <p className="text-[10px] text-muted-foreground truncate">{f.name}</p>
               </div>
@@ -104,10 +113,27 @@ const DocsRail = ({ files }: { files: Attachment[] }) => {
             <div className="flex-1 overflow-auto bg-muted/30">
               {isPdf(open) ? (
                 <iframe src={open.url} title={open.name} className="w-full h-[75vh]" />
+              ) : broken[open.url] ? (
+                <div className="p-10 text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-xs text-muted-foreground">
+                    This file can't be shown in the browser.{" "}
+                    <a href={open.url} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
+                      Download it instead
+                    </a>
+                    .
+                  </p>
+                </div>
               ) : (
-                <img src={open.url} alt={open.name} className="w-full h-auto" />
+                <img
+                  src={open.url}
+                  alt={open.name}
+                  onError={() => setBroken((b) => ({ ...b, [open.url]: true }))}
+                  className="w-full h-auto"
+                />
               )}
             </div>
+
           </div>
         </div>
       )}
