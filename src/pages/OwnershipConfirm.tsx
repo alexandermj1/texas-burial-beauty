@@ -1070,6 +1070,9 @@ const OwnershipConfirm = () => {
                                     <div style={{"display": "flex", "flexDirection": "column", "alignItems": "center", "width": "100%", "animation": "fade .35s both"}}>
                                       <div style={{"width": "2px", "height": "14px", "background": "#e3e3e8", "marginTop": "8px"}}>
                                       </div>
+                                      <div style={{"fontSize": "9px", "fontWeight": "600", "letterSpacing": "0.12em", "textTransform": "uppercase", "color": "#b7b7bf", "margin": "2px 0 2px 0"}}>
+                                        Step into this share
+                                      </div>
                                       {(k.kids || []).map((g: any, i25: number) => (
                                         <React.Fragment key={i25}>
                                           <div style={{"display": "flex", "flexDirection": "column", "alignItems": "center", "width": "100%", "paddingTop": "4px", "animation": "pop .3s cubic-bezier(.2,.7,.3,1) both"}}>
