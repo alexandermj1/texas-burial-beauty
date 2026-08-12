@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2, Loader2, Pencil, Sparkles, Users, Plus, Trash2,
   ShieldCheck, ArrowRight, Send, HeartCrack, Cloud, UserRound,
+  Paperclip, FileText, X,
 } from "lucide-react";
 
 
