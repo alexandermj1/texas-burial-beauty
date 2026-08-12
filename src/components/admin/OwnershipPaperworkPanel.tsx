@@ -1304,22 +1304,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             </button>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            {r.contractKind && (
-              <Button size="sm" variant="outline" disabled={busy === key} onClick={() => void openDocEditor(r)}
-                title={`Prepare ${r.label} — fills it in and opens the PDF so you can check it`} className="text-[11px] h-7">
-                {busy === key
-                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-                {contracts.some((c) => c.kind === r.contractKind && c.status !== "void") ? "Re-prepare" : "Prepare"}
-              </Button>
-            )}
             {r.contractKind && contracts.some((c) => c.kind === r.contractKind && c.status !== "void") && (
-              <Button size="sm" variant="ghost" disabled={busy === `${key}-open`} onClick={() => void openContractPdf(r)}
-                title="Open the prepared PDF to check every field" className="text-[11px] h-7">
+              <Button size="sm" variant="outline" disabled={busy === `${key}-open`} onClick={() => void openContractPdf(r)}
+                title="Open the completed PDF and read every field" className="text-[11px] h-7">
                 {busy === `${key}-open`
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   : <FileText className="w-3.5 h-3.5 mr-1" />}
-                Review
+                Check
+              </Button>
+            )}
+            {r.contractKind && (
+              <Button size="sm" variant="ghost" disabled={busy === key} onClick={() => void openDocEditor(r)}
+                title={`Edit ${r.label} — it is already filled in from their answers`} className="text-[11px] h-7">
+                {busy === key
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                Edit
               </Button>
             )}
 
