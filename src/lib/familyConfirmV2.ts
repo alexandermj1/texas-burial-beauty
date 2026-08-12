@@ -268,6 +268,10 @@ export function buildLogic(state, setS, accent0, CRM) {
       stack.push(L.chip(d.n, dead ? 'gone' : 'sign', dead ? 'Deed \u00b7 died' : (isYou ? 'Deed \u00b7 you' : 'On the deed'), ''));
       const p = s.poa[d.id] || {};
       if (!dead && p.has === 'yes') stack.push(L.chip(p.n, 'sign', 'Signs for them', 'power of attorney'));
+      if (L.coupleYes(d.id)) {
+        const other = L.named().filter(x => x.id !== d.id)[0];
+        if (other) stack.push(L.chip(other.n, 'info', 'Married to each other', 'husband and wife'));
+      }
       const sp = L.sp(d.id);
       if (sp.has === 'yes') stack.push(L.chip(sp.n, 'sign', 'Consents', 'married to'));
       if (sp.has === 'unknown') stack.push(L.chip('', 'need', 'We will check', 'spouse?'));
@@ -286,6 +290,8 @@ export function buildLogic(state, setS, accent0, CRM) {
       }
       const kids = [];
       if (dead) {
+        const hs0 = s.heirSpouse[k.id] || {};
+        if (hs0.has === 'yes' && (hs0.n || '').trim()) stack.push(L.chip(hs0.n, 'info', 'Their surviving spouse', 'married to'));
         (k.kids || []).forEach(g => {
           kids.push(L.chip(g.n, 'sign', 'Steps in', ''));
           const hs = s.heirSpouse[g.id] || {};
