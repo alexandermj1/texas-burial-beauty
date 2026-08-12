@@ -25,6 +25,8 @@ type Packet = {
   relationship_to_owner?: string | null;
   attachments?: Attachment[];
   answers?: Record<string, unknown>;
+  /** The roster the office typed off the deed, including who has died. */
+  deed_owners?: { name: string; deceased?: boolean }[];
 };
 
 const DocsRail = ({ files }: { files: Attachment[] }) => {
