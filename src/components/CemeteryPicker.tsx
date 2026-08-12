@@ -10,14 +10,15 @@
 // of the surrounding form rather than a floating popover.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, MapPin, Search, X, Building2, TreePine } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCemeteryRegistry } from "@/hooks/useCemeteryRegistry";
 
 interface Cemetery {
-  id: string;
+  id: string | null;
   name: string;
   city: string | null;
   address: string | null;
 }
+
 
 interface Props {
   value: string;
