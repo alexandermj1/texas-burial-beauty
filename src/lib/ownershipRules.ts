@@ -338,12 +338,23 @@ export const QUESTIONS: Record<string, Question> = {
  */
 export function questionPath(a: OwnershipAnswers): string[] {
   // Stage 1 — always, in this order.
-  const p: string[] = ["rel", "deceasedAny", "poaHolder", "occupied", "outsideSpouse"];
+  const p: string[] = ["rel"];
+
+  // A sole owner filling the form in themselves is plainly alive: never ask.
+  const deedHolders = (a.people ?? []).filter(
+    (p) => p.name?.trim() && (p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
+  );
+  const soleLivingSelf = a.rel === "self" && deedHolders.length <= 1 &&
+    !deedHolders.some((p) => p.deceased || p.role === "decedent");
+  if (!soleLivingSelf) p.push("deceasedAny");
+
+  p.push("poaHolder", "occupied", "outsideSpouse");
 
   // Stage 2 — only when someone named on the deed has died.
   if (hasDeceased(a)) p.push("will", "descendants");
   return p;
 }
+
 
 /** Is anyone named on the deed deceased? */
 export function hasDeceased(a: OwnershipAnswers): boolean {
