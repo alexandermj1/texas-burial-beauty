@@ -225,8 +225,22 @@ const OwnershipConfirm = () => {
         deed: splitNames(p.deed_owner_names),
         spaces: splitSpaces(p.space_numbers),
       };
+      // The office already ticked who has died when they typed the deed names,
+      // so the seller should never be asked to tell us again.
+      const dead = new Set(
+        (p.deed_owners ?? []).filter((o) => o.deceased).map((o) => nameKey(o.name)),
+      );
+      const seedDeaths = (st: any) => ({
+        ...st,
+        deed: (st.deed ?? []).map((d: any) => (dead.has(nameKey(d.n)) ? { ...d, st: "deceased" } : d)),
+      });
       const saved = (p.answers as any)?.v2;
-      setState(saved && Array.isArray(saved.deed) && saved.deed.length ? saved : initialState(crm));
+      setState(
+        saved && Array.isArray(saved.deed) && saved.deed.length
+          ? saved
+          : seedDeaths(initialState(crm)),
+      );
+
       setLoading(false);
     })();
   }, [submissionId]);
