@@ -1038,6 +1038,9 @@ const OwnershipConfirm = () => {
                           </div>
                           <div style={{"height": "2px", "background": "#e3e3e8", "margin": "0 auto", "width": "72%", "borderRadius": "2px"}}>
                           </div>
+                          <div style={{"textAlign": "center", "margin": "10px 0 6px 0", "fontSize": "9.5px", "fontWeight": "600", "letterSpacing": "0.16em", "textTransform": "uppercase", "color": "#b7b7bf"}}>
+                            Their children
+                          </div>
                           <div style={{"display": "flex", "flexWrap": "wrap", "justifyContent": "center", "gap": "10px"}}>
                             {(V.pKids || []).map((k: any, i23: number) => (
                               <React.Fragment key={i23}>
