@@ -57,7 +57,7 @@ const DocsRail = ({ files }: { files: Attachment[] }) => {
               onClick={() => setOpen(f)}
               className="group text-left rounded-2xl overflow-hidden border border-border/60 bg-background hover:border-primary/50 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.6)]"
             >
-              <div className="aspect-[4/5] bg-muted/50 flex items-center justify-center overflow-hidden">
+              <div className="aspect-square bg-muted/50 flex items-center justify-center overflow-hidden">
                 {isImage(f) && !broken[f.url] ? (
                   <img
                     src={f.url}
