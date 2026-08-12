@@ -370,16 +370,25 @@ const OwnershipConfirm = () => {
           </div>
         </div>
         <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px) 120px clamp(16px,4vw,28px)"}}>
-          <div style={{"padding": "clamp(48px,8vw,76px) 0 clamp(30px,5vw,42px) 0", "textAlign": "center"}}>
-            <div style={{"fontSize": "11.5px", "fontWeight": "500", "letterSpacing": "0.18em", "textTransform": "uppercase", "color": `${V.accent}`}}>
+          <div style={{"padding": "clamp(26px,4.5vw,44px) 0 clamp(20px,3vw,28px) 0", "textAlign": "center", "maxWidth": "48em", "marginLeft": "auto", "marginRight": "auto"}}>
+            <div style={{"fontSize": "11px", "fontWeight": "500", "letterSpacing": "0.18em", "textTransform": "uppercase", "color": `${V.accent}`}}>
               For the {V.family} family
             </div>
-            <h1 style={{"margin": "18px 0 0 0", "fontSize": "clamp(34px,7.4vw,54px)", "lineHeight": "1.08", "color": "#1d1d1f", "textWrap": "balance"}}>
+            <h1 style={{"margin": "12px 0 0 0", "fontSize": "clamp(28px,5.2vw,42px)", "lineHeight": "1.1", "color": "#1d1d1f", "textWrap": "balance"}}>
               Confirming the ownership of the deed.
             </h1>
-            <p style={{"margin": "20px auto 0 auto", "maxWidth": "35em", "fontSize": "clamp(16.5px,3.6vw,18.5px)", "lineHeight": "1.55", "fontWeight": "300", "color": "#4c4c54", "textWrap": "pretty"}}>
-              We ask these questions to make absolutely certain the paperwork is correct. Cemetery plots pass differently to houses or money, and cemeteries will refuse a transfer if a single signature or document is missing. Getting it exactly right now means that when a family needs this property at their time of need, the transfer goes through without being held up at the cemetery office. Your answers tell us who legally has a say, and who we need to post a power of attorney to — the family tree draws itself alongside as you go.
+            <p style={{"margin": "14px auto 0 auto", "maxWidth": "34em", "fontSize": "clamp(15px,3vw,16.5px)", "lineHeight": "1.5", "fontWeight": "300", "color": "#4c4c54", "textWrap": "pretty"}}>
+              A few short questions so the paperwork is exactly right. Your answers tell us who legally has a say — the family tree builds itself as you go.
             </p>
+            <details style={{ marginTop: 10 }}>
+              <summary style={{ listStyle: "none", cursor: "pointer", fontSize: "13px", color: V.accent, fontWeight: 500 }}>
+                Why we ask
+              </summary>
+              <p style={{"margin": "10px auto 0 auto", "maxWidth": "34em", "fontSize": "14.5px", "lineHeight": "1.55", "fontWeight": "300", "color": "#6e6e73", "textWrap": "pretty"}}>
+                Cemetery plots pass differently to houses or money, and cemeteries will refuse a transfer if a single signature or document is missing. Getting it exactly right now means that when a family needs this property at their time of need, the transfer goes through without being held up at the cemetery office.
+              </p>
+            </details>
+
             <div style={{"display": "inline-flex", "flexWrap": "wrap", "justifyContent": "center", "alignItems": "center", "gap": "8px 18px", "marginTop": "26px", "padding": "12px 22px", "borderRadius": "100px", "background": "rgba(74,107,84,0.07)", "border": "1px solid rgba(74,107,84,0.14)"}}>
               <span style={{"fontSize": "13.5px", "fontWeight": "400", "color": "#4a5a4e"}}>
                 {V.cemetery}
