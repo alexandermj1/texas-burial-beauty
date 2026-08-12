@@ -107,6 +107,13 @@ Deno.serve(async (req) => {
         lawn: sub.lawn,
         space_numbers: sub.space_numbers,
         deed_owner_names: sub.deed_owner_names,
+        // Who the office already marked as deceased when typing the deed.
+        deed_owners: (Array.isArray(sub.ownership_roster) ? sub.ownership_roster : [])
+          .map((p: { name?: string; deceased?: boolean; role?: string }) => ({
+            name: String(p?.name ?? ""),
+            deceased: !!p?.deceased || p?.role === "decedent",
+          }))
+          .filter((p: { name: string }) => p.name.trim()),
         relationship_to_owner: sub.relationship_to_owner,
         attachments,
         answers,

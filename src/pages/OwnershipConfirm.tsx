@@ -25,6 +25,8 @@ type Packet = {
   relationship_to_owner?: string | null;
   attachments?: Attachment[];
   answers?: Record<string, unknown>;
+  /** The roster the office typed off the deed, including who has died. */
+  deed_owners?: { name: string; deceased?: boolean }[];
 };
 
 const DocsRail = ({ files }: { files: Attachment[] }) => {
@@ -223,8 +225,22 @@ const OwnershipConfirm = () => {
         deed: splitNames(p.deed_owner_names),
         spaces: splitSpaces(p.space_numbers),
       };
+      // The office already ticked who has died when they typed the deed names,
+      // so the seller should never be asked to tell us again.
+      const dead = new Set(
+        (p.deed_owners ?? []).filter((o) => o.deceased).map((o) => nameKey(o.name)),
+      );
+      const seedDeaths = (st: any) => ({
+        ...st,
+        deed: (st.deed ?? []).map((d: any) => (dead.has(nameKey(d.n)) ? { ...d, st: "deceased" } : d)),
+      });
       const saved = (p.answers as any)?.v2;
-      setState(saved && Array.isArray(saved.deed) && saved.deed.length ? saved : initialState(crm));
+      setState(
+        saved && Array.isArray(saved.deed) && saved.deed.length
+          ? saved
+          : seedDeaths(initialState(crm)),
+      );
+
       setLoading(false);
     })();
   }, [submissionId]);
@@ -930,7 +946,7 @@ const OwnershipConfirm = () => {
               </div>
               <div style={{"flex": "1 1 296px", "minWidth": "268px"}}>
                 <DocsRail files={files} />
-                <div style={{"position": "sticky", "top": "74px", "background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}>
+                <div style={{"position": "sticky", "top": "74px", "maxHeight": "calc(100vh - 96px)", "overflowY": "auto", "overscrollBehavior": "contain", "background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "20px 18px 18px 18px"}}>
                   <div style={{"display": "flex", "alignItems": "baseline", "gap": "8px"}}>
                     <div style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
                       The picture so far
