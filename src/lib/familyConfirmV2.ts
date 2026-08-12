@@ -535,7 +535,10 @@ export function buildLogic(state, setS, accent0, CRM) {
         cardBd: k.st === 'deceased' ? '#e6e6eb' : '#ececf0',
         avBg: k.st === 'deceased' ? '#f2f2f5' : (k.n.trim() ? '#eef1ea' : '#f5f5f7'),
         avFg: k.st === 'deceased' ? '#9a9aa2' : (k.n.trim() ? acc : '#b7b7bf'),
-        passLabel: (k.kids || []).length ? 'Their children step into this share and sign in their place.' : 'Their share passes to their own children. Add them here, or tell us there were none.',
+        passLabel: (k.kids || []).length ? 'Their children step into this share and sign in their place, alongside their living aunts and uncles.' : 'Their share does not disappear \u2014 it passes to their own children. Add them here, or tell us there were none.',
+        noneKids: !!(s.noKids || {})['kid:' + k.id],
+        noneKidsLabel: (s.noKids || {})['kid:' + k.id] ? 'They had no children \u2713' : 'They had no children',
+        toggleNoneKids: () => setS(st => ({ noKids: Object.assign({}, st.noKids, { ['kid:' + k.id]: !(st.noKids || {})['kid:' + k.id] }) })),
         showParents: multiEstate,
         parents: est.map(d => {
           const on = (k.of || []).indexOf(d.id) >= 0;
