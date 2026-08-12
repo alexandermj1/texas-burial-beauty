@@ -1419,7 +1419,7 @@ const OwnershipConfirm = () => {
             )}
 
 
-            <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
+            <div className="mt-12 rounded-3xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
               <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Rather talk it through?</div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 A broker will go through these questions with you on the phone — there is never a charge for asking.
@@ -1433,7 +1433,10 @@ const OwnershipConfirm = () => {
             <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed">
               Your answers are stored privately and used only to transfer this plot.
             </p>
+              </div>
+            </div>
           </>
+
         )}
       </div>
     </div>
