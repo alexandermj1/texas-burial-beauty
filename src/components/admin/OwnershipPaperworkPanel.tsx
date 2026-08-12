@@ -153,6 +153,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [answers, setAnswers] = useState<OwnershipAnswers>({});
+  /** The deed names an admin has typed off the deed, as stored on the submission. */
+  const [deedNamesRaw, setDeedNamesRaw] = useState("");
+
   const [rules, setRules] = useState<CemeteryDocRules | null>(null);
   const [cemName, setCemName] = useState<string | null>(null);
   const [rows, setRows] = useState<DocRow[]>([]);
@@ -173,9 +176,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
   /** The "ask the seller these questions" email review flow. */
   const [ask, setAsk] = useState<null | {
+    /** "names" = admin types the deed names off the deed; "email" = review + send. */
+    step?: "names" | "email";
+    deedNames?: { name: string; deceased: boolean }[];
     loading?: boolean; sending?: boolean; html?: string; subject?: string;
     known?: { label: string; value: string }[]; missing?: string[];
   }>(null);
+
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
   const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
@@ -198,7 +205,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
-        .select("ownership_answers, name, email, customer_profile_id, seller_attachments").eq("id", submissionId).maybeSingle(),
+        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
         .eq("submission_id", submissionId),
@@ -208,6 +215,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
+    setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
+
     // The AI reading is stored on the file, so its explanation survives a reload.
     if (a?.aiReading) setReading(a.aiReading as Reading);
     setRows((docs ?? []) as DocRow[]);
@@ -483,8 +492,65 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
    * Send the seller their own copy of this questionnaire: what we believe,
    * ready to confirm, plus whatever the AI could not work out.
    */
+  /**
+   * Step one: an admin reads the deed themselves and types the names exactly as
+   * printed. We never ask the seller to correct a machine guess.
+   */
+  const openAsk = () => {
+    const fromRoster = (answers.people ?? [])
+      .filter((p) => p.role === "owner" || p.role === "co_owner" || p.role === "decedent")
+      .map((p) => ({ name: p.name, deceased: !!p.deceased || p.role === "decedent" }));
+    const fromRaw = deedNamesRaw
+      .split(/[,;\n]|\band\b|&/i)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((name) => ({ name, deceased: false }));
+    const seeded = (fromRoster.length ? fromRoster : fromRaw);
+    setAsk({ step: "names", deedNames: seeded.length ? seeded : [{ name: "", deceased: false }] });
+  };
+
+  /** Save the typed deed names onto the file, then move to the email review. */
+  const saveDeedNamesAndPreview = async () => {
+    const names = (ask?.deedNames ?? []).map((n) => ({ ...n, name: n.name.trim() })).filter((n) => n.name);
+    if (!names.length) { toast.error("Type at least one name from the deed"); return; }
+
+    const others = (answers.people ?? []).filter(
+      (p) => !(p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
+    );
+    const people: RosterPerson[] = [
+      ...names.map((n, i) => {
+        const prev = (answers.people ?? []).find((p) => p.name.toLowerCase() === n.name.toLowerCase());
+        return {
+          ...(prev ?? {}),
+          id: prev?.id ?? `deed-${i}-${Date.now()}`,
+          name: n.name,
+          role: (n.deceased ? "decedent" : i === 0 ? "owner" : "co_owner") as PersonRole,
+          deceased: n.deceased,
+        } as RosterPerson;
+      }),
+      ...others,
+    ];
+
+    await supabase.from("contact_submissions")
+      .update({ deed_owner_names: names.map((n) => n.name).join(", ") })
+      .eq("id", submissionId);
+    setDeedNamesRaw(names.map((n) => n.name).join(", "));
+    await persistAnswers({
+      ...answers,
+      people,
+      deceasedAny: names.some((n) => n.deceased) ? "yes" : answers.deceasedAny,
+      derived: [...new Set([...(answers.derived ?? []), "_deedNames"])],
+    } as OwnershipAnswers);
+
+    await loadAskPreview();
+  };
+
+  /**
+   * Send the seller their own copy of this questionnaire: what we believe,
+   * ready to confirm, plus whatever the AI could not work out.
+   */
   const loadAskPreview = async () => {
-    setAsk({ loading: true });
+    setAsk((a) => ({ ...(a ?? {}), step: "email", loading: true }));
     try {
       const known = questionPath(answers)
         .filter((k) => !!(answers as Record<string, unknown>)[k])
@@ -501,12 +567,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (error) throw error;
       const r = data as { html?: string; subject?: string; error?: string };
       if (r?.error) throw new Error(r.error);
-      setAsk({ html: r.html, subject: r.subject, known, missing });
+      setAsk((a) => ({ ...(a ?? {}), step: "email", loading: false, html: r.html, subject: r.subject, known, missing }));
     } catch (e) {
       setAsk(null);
       toast.error((e as Error).message);
     }
   };
+
 
   const sendAsk = async () => {
     if (!ask) return;
@@ -1338,7 +1405,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 </Button>
                 <Button
                   size="sm" variant="outline" className="h-7 text-[11px]"
-                  onClick={() => void loadAskPreview()}
+                  onClick={openAsk}
                   title="Email the seller their own page to confirm what we believe and answer the rest"
                 >
                   <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
@@ -2008,32 +2075,132 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       {/* ── Ask the seller to confirm the ownership answers ── */}
       <Dialog open={!!ask} onOpenChange={(o) => !o && setAsk(null)}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Send className="w-4 h-4" /> Ask the seller these questions
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              They get their own page: {ask?.known?.length ?? 0} answer{(ask?.known?.length ?? 0) === 1 ? "" : "s"} to
-              confirm, {ask?.missing?.length ?? 0} still to answer, plus the family tree.
-            </DialogDescription>
-          </DialogHeader>
-          {ask?.loading
-            ? <div className="h-[55vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-            : <iframe srcDoc={ask?.html ?? ""} title="Questionnaire email preview" className="w-full h-[55vh] rounded-md border bg-white" />}
-          <DialogFooter>
-            <Button variant="outline" size="sm"
-              onClick={() => { void navigator.clipboard.writeText(`${PUBLIC_SITE_URL}/confirm?s=${submissionId}`); toast.success("Link copied"); }}>
-              <Link2 className="w-3.5 h-3.5 mr-1" /> Copy link
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setAsk(null)}>Cancel</Button>
-            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
-              onClick={() => void sendAsk()} disabled={ask?.sending || ask?.loading}>
-              {ask?.sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
-              Send to {sellerEmail}
-            </Button>
-          </DialogFooter>
+          {ask?.step === "names" ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <FileText className="w-4 h-4" /> Who is named on the deed?
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Read the deed on the right and type each name exactly as printed. These are the names the seller
+                  will see — they are never guessed.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_15rem] max-h-[58vh] overflow-auto pr-1">
+                <div className="space-y-2">
+                  {(ask.deedNames ?? []).map((n, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={n.name}
+                        placeholder="Full name as printed on the deed"
+                        className="h-8 text-xs"
+                        onChange={(e) => setAsk((a) => {
+                          const list = [...(a?.deedNames ?? [])];
+                          list[i] = { ...list[i], name: e.target.value };
+                          return { ...(a ?? {}), deedNames: list };
+                        })}
+                      />
+                      <label className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={n.deceased}
+                          onChange={(e) => setAsk((a) => {
+                            const list = [...(a?.deedNames ?? [])];
+                            list[i] = { ...list[i], deceased: e.target.checked };
+                            return { ...(a ?? {}), deedNames: list };
+                          })}
+                        />
+                        Deceased
+                      </label>
+                      <Button
+                        variant="ghost" size="sm" className="h-8 w-8 p-0"
+                        onClick={() => setAsk((a) => ({
+                          ...(a ?? {}),
+                          deedNames: (a?.deedNames ?? []).filter((_, j) => j !== i),
+                        }))}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline" size="sm" className="h-7 text-[11px]"
+                    onClick={() => setAsk((a) => ({
+                      ...(a ?? {}),
+                      deedNames: [...(a?.deedNames ?? []), { name: "", deceased: false }],
+                    }))}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Add another name
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">The deed on file</p>
+                  {files.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground">Nothing uploaded yet.</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    {files.map((f) => (
+                      <button
+                        key={f.path}
+                        className="rounded-md border overflow-hidden text-left hover:border-primary/60"
+                        onClick={() => setPdfPreview({ url: thumbs[f.path] ?? "", title: f.name })}
+                        title={f.name}
+                      >
+                        <div className="aspect-[4/5] bg-muted flex items-center justify-center overflow-hidden">
+                          {thumbs[f.path]
+                            ? <img src={thumbs[f.path]} alt={f.name} className="w-full h-full object-cover" />
+                            : <FileText className="w-5 h-5 text-muted-foreground" />}
+                        </div>
+                        <p className="px-1.5 py-1 text-[9px] text-muted-foreground truncate">{f.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="ghost" size="sm" onClick={() => setAsk(null)}>Cancel</Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void saveDeedNamesAndPreview()}>
+                  Save names and preview the email →
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <Send className="w-4 h-4" /> Ask the seller these questions
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  They get their own page: {ask?.known?.length ?? 0} answer{(ask?.known?.length ?? 0) === 1 ? "" : "s"} to
+                  confirm, {ask?.missing?.length ?? 0} still to answer, plus the family tree.
+                </DialogDescription>
+              </DialogHeader>
+              {ask?.loading
+                ? <div className="h-[55vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+                : <iframe srcDoc={ask?.html ?? ""} title="Questionnaire email preview" className="w-full h-[55vh] rounded-md border bg-white" />}
+              <DialogFooter>
+                <Button variant="ghost" size="sm" onClick={() => setAsk((a) => ({ ...(a ?? {}), step: "names" }))}>
+                  ← Back to names
+                </Button>
+                <Button variant="outline" size="sm"
+                  onClick={() => { void navigator.clipboard.writeText(`${PUBLIC_SITE_URL}/confirm?s=${submissionId}`); toast.success("Link copied"); }}>
+                  <Link2 className="w-3.5 h-3.5 mr-1" /> Copy link
+                </Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void sendAsk()} disabled={ask?.sending || ask?.loading}>
+                  {ask?.sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  Send to {sellerEmail}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
+
     </div>
 
   );
