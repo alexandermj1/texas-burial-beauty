@@ -1405,7 +1405,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 </Button>
                 <Button
                   size="sm" variant="outline" className="h-7 text-[11px]"
-                  onClick={() => void loadAskPreview()}
+                  onClick={openAsk}
                   title="Email the seller their own page to confirm what we believe and answer the rest"
                 >
                   <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
