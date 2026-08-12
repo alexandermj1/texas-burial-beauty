@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
