@@ -1143,6 +1143,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return !r.jointNames.every((n) => name.includes(n.trim().toLowerCase().split(" ")[0]));
   };
 
+  /**
+   * POAs build themselves. The family-tree answers tell us exactly who has to
+   * sign, and every field comes from those answers, so as soon as a POA appears
+   * on the checklist we fill it in the background. Nobody — us or the seller —
+   * has anything to "prepare"; it is only ever checked or edited.
+   */
+  const autoPrepped = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!poaRequirements.length) return;
+    for (const r of poaRequirements) {
+      const key = reqKey(r);
+      if (autoPrepped.current.has(key)) continue;
+      if (preparedPoaFor(r) && !jointMismatch(r)) continue;
+      autoPrepped.current.add(key);
+      void generateDoc(r, undefined, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requirements, contracts]);
+
 
   /** Add a one-off document to this file's checklist. */
   const addExtraDoc = async () => {
