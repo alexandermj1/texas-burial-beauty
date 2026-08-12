@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
@@ -8,7 +8,7 @@ import familyEstateImg from "@/assets/property-types/family-estate.png";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
-import { bayCemeteries, regions, CemeteryInfo } from "@/data/cemeteries";
+import { useCemeteryRegistry, REGISTRY_REGIONS, type RegistryCemetery } from "@/hooks/useCemeteryRegistry";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -77,6 +77,9 @@ const BuyProperty = () => {
     note: "",
   });
 
+  // The registry — identical to what the seller form and the admin panel show.
+  const { cemeteries, loading: loadingCemeteries } = useCemeteryRegistry();
+  const [cemeteryQuery, setCemeteryQuery] = useState("");
 
   // Pre-fill from query params (e.g. ?cemetery=...&region=...) — set on first load.
   useEffect(() => {
@@ -84,15 +87,15 @@ const BuyProperty = () => {
     const regionParam = searchParams.get("region") || "";
     if (cemParam || regionParam) {
       // If passed a cemetery, look up its region from the registry so both align.
-      const match = cemParam ? bayCemeteries.find(c => c.name.toLowerCase() === cemParam.toLowerCase()) : null;
+      const match = cemParam ? cemeteries.find(c => c.name.toLowerCase() === cemParam.toLowerCase()) : null;
       setSelections(prev => ({
         ...prev,
-        cemetery: cemParam,
+        cemetery: cemParam || prev.cemetery,
         region: match?.region || regionParam || prev.region,
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cemeteries.length]);
 
   const update = (key: string, value: string) => setSelections(prev => ({ ...prev, [key]: value }));
 
@@ -106,13 +109,13 @@ const BuyProperty = () => {
   // Region counts
   const regionCounts = useMemo(() => {
     const m: Record<string, number> = {};
-    bayCemeteries.forEach(c => { m[c.region] = (m[c.region] || 0) + 1; });
+    cemeteries.forEach(c => { m[c.region] = (m[c.region] || 0) + 1; });
     return m;
-  }, []);
+  }, [cemeteries]);
 
   // Ordered regions: by distance if we have coords, else Houston/Dallas first then by cemetery count
   const orderedRegions = useMemo(() => {
-    const list = regions.filter(r => r !== "All");
+    const list = REGISTRY_REGIONS.filter(r => (regionCounts[r] || 0) > 0);
     if (userCoords) {
       return [...list].sort((a, b) => {
         const ca = regionCenters[a], cb = regionCenters[b];
@@ -131,17 +134,34 @@ const BuyProperty = () => {
     });
   }, [userCoords, regionCounts]);
 
-  const filteredCemeteries: CemeteryInfo[] = useMemo(() => {
+  // Cemeteries in the chosen region, narrowed by the search box, nearest first
+  // when we know where the buyer is.
+  const filteredCemeteries: RegistryCemetery[] = useMemo(() => {
     if (!selections.region) return [];
-    const inRegion = bayCemeteries.filter(c => c.region === selections.region);
+    const q = cemeteryQuery.trim().toLowerCase();
+    let inRegion = cemeteries.filter(c => c.region === selections.region);
+    if (q) {
+      inRegion = inRegion.filter(c => `${c.name} ${c.city}`.toLowerCase().includes(q));
+    }
     if (userCoords) {
       return [...inRegion].sort((a, b) =>
-        haversine(userCoords.lat, userCoords.lng, a.lat, a.lng) -
-        haversine(userCoords.lat, userCoords.lng, b.lat, b.lng)
+        haversine(userCoords.lat, userCoords.lng, a.lat ?? 0, a.lng ?? 0) -
+        haversine(userCoords.lat, userCoords.lng, b.lat ?? 0, b.lng ?? 0)
       );
     }
     return inRegion;
-  }, [selections.region, userCoords]);
+  }, [cemeteries, selections.region, userCoords, cemeteryQuery]);
+
+  // Grouped by city so a long region reads as a short list of places.
+  const cemeteriesByCity = useMemo(() => {
+    const m = new Map<string, RegistryCemetery[]>();
+    for (const c of filteredCemeteries) {
+      const key = c.city || "Elsewhere in Texas";
+      m.set(key, [...(m.get(key) ?? []), c]);
+    }
+    return [...m.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  }, [filteredCemeteries]);
+
 
   const findNearest = () => {
     if (!navigator.geolocation) {
@@ -460,40 +480,72 @@ const BuyProperty = () => {
 
                 {selections.region && (
                   <>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
-                        {selections.region} · {filteredCemeteries.length} options
-                      </p>
-                      <button
-                        onClick={() => { update("region", ""); update("cemetery", ""); }}
-                        className="text-[11px] text-primary hover:underline"
-                      >
-                        Change region
-                      </button>
-                    </div>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[55vh] overflow-y-auto pr-1">
-                      <button
-                        onClick={() => pick("cemetery", "", 5)}
-                        className={`${cardBase} p-3 ${selections.cemetery === "" ? cardActive : cardIdle}`}
-                      >
-                        <h3 className="font-display text-sm text-foreground">Any cemetery in {selections.region}</h3>
-                        <p className="text-[11px] text-muted-foreground">Show me all options →</p>
-                      </button>
-                      {filteredCemeteries.map(c => (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+                      <div className="relative flex-1">
+                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          value={cemeteryQuery}
+                          onChange={(e) => setCemeteryQuery(e.target.value)}
+                          placeholder={`Search ${selections.region} cemeteries or towns…`}
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="uppercase tracking-wider">{filteredCemeteries.length} options</span>
                         <button
-                          key={c.name}
-                          onClick={() => pick("cemetery", c.name, 5)}
-                          className={`${cardBase} p-3 ${selections.cemetery === c.name ? cardActive : cardIdle}`}
+                          onClick={() => { update("region", ""); update("cemetery", ""); setCemeteryQuery(""); }}
+                          className="text-primary hover:underline"
                         >
-                          <h3 className="font-display text-sm text-foreground">{c.name}</h3>
-                          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> {c.address}
-                          </p>
+                          Change region
                         </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => pick("cemetery", "", 5)}
+                      className={`${cardBase} w-full p-4 mb-4 text-left flex items-center justify-between gap-3 ${selections.cemetery === "" ? cardActive : cardIdle}`}
+                    >
+                      <span>
+                        <span className="block font-display text-sm text-foreground">Any cemetery in {selections.region}</span>
+                        <span className="block text-[11px] text-muted-foreground">We'll show you everything available nearby</span>
+                      </span>
+                      <span className="text-[11px] text-primary shrink-0">Continue →</span>
+                    </button>
+
+                    <div className="max-h-[52vh] overflow-y-auto pr-1 space-y-5">
+                      {loadingCemeteries && (
+                        <p className="text-xs text-muted-foreground">Loading cemeteries…</p>
+                      )}
+                      {!loadingCemeteries && cemeteriesByCity.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          No match — try a different spelling, or choose “Any cemetery” above and we'll find it for you.
+                        </p>
+                      )}
+                      {cemeteriesByCity.map(([city, list]) => (
+                        <div key={city}>
+                          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-2 flex items-center gap-1.5">
+                            <MapPin className="w-3 h-3" /> {city} <span className="opacity-60">· {list.length}</span>
+                          </p>
+                          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {list.map(c => (
+                              <button
+                                key={`${c.id ?? c.name}`}
+                                onClick={() => pick("cemetery", c.name, 5)}
+                                className={`${cardBase} p-3 text-left ${selections.cemetery === c.name ? cardActive : cardIdle}`}
+                              >
+                                <h3 className="font-display text-sm text-foreground leading-snug">{c.name}</h3>
+                                {c.address && (
+                                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{c.address}</p>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </>
                 )}
+
               </motion.div>
             )}
 

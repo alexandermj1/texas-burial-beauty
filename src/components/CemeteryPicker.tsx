@@ -10,14 +10,15 @@
 // of the surrounding form rather than a floating popover.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, MapPin, Search, X, Building2, TreePine } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCemeteryRegistry } from "@/hooks/useCemeteryRegistry";
 
 interface Cemetery {
-  id: string;
+  id: string | null;
   name: string;
   city: string | null;
   address: string | null;
 }
+
 
 interface Props {
   value: string;
@@ -39,22 +40,14 @@ const initials = (name: string) =>
     .join("") || name.slice(0, 2).toUpperCase();
 
 const CemeteryPicker = ({ value, isCustom, onChange, variant = "standard", autoFocus }: Props) => {
-  const [rows, setRows] = useState<Cemetery[]>([]);
+  // Same registry the buyer form and the admin panel read.
+  const { cemeteries: rows } = useCemeteryRegistry();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("texas_cemeteries" as any)
-        .select("id,name,city,address")
-        .order("name");
-      setRows(((data as any[]) || []) as Cemetery[]);
-    })();
-  }, []);
 
   // Close on outside click / escape
   useEffect(() => {

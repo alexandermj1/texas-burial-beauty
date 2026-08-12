@@ -1427,13 +1427,27 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         </div>
       ) : (
         <div className="space-y-4">
+          {/* How the two halves fit together, in one line, so it's obvious that the
+              documents (and the POA inside them) come out of the seller's answers. */}
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <span className="px-2 py-1 rounded-full bg-muted font-medium text-foreground">1 · Ask the seller</span>
+            <span className="opacity-60">→</span>
+            <span className={`px-2 py-1 rounded-full ${answers.sellerConfirmedAt ? "bg-muted font-medium text-foreground" : "border border-dashed border-border"}`}>
+              2 · Their answers decide the documents
+            </span>
+            <span className="opacity-60">→</span>
+            <span className={`px-2 py-1 rounded-full ${answers.sellerConfirmedAt ? "bg-muted font-medium text-foreground" : "border border-dashed border-border"}`}>
+              3 · POA fills itself &amp; goes out with the request
+            </span>
+          </div>
+
           {/* ── The seller's own confirmation ──
               We no longer guess the ownership answers here. The seller fills in
               their own page, and the documents follow from what comes back. */}
           <div className="border rounded-lg p-3 bg-background/60 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Family confirmation
+                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Step 1 · Family confirmation
               </span>
               <Button
                 size="sm" variant="outline" className="h-7 text-[11px]"
@@ -1443,6 +1457,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
               </Button>
             </div>
+
 
             {answers.sellerConfirmedAt ? (
               <div className="rounded-md border border-emerald-200 bg-emerald-50/70 px-2.5 py-2">
@@ -1501,13 +1516,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold">
-                Documents required ({documentRequirements.length})
+                Step 2 · Documents required ({documentRequirements.length})
                 {outstanding.length > 0 && (
                   <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
                     · {outstanding.length} still outstanding
                   </span>
                 )}
               </span>
+
               <div className="flex items-center gap-1.5">
                 <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
                   <Plus className="w-3.5 h-3.5 mr-1" />Add a document
@@ -1533,6 +1549,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             </div>
 
+
+            {/* Where this list comes from, in plain words. */}
+            <p className="text-[11px] text-muted-foreground bg-muted/50 rounded px-2 py-1.5">
+              {answers.sellerConfirmedAt
+                ? "Built from the seller's family confirmation above. The power of attorney fills itself in from those same answers and is attached to the document request — nothing for them to complete by hand."
+                : documentRequirements.length > 0
+                  ? "Provisional list. It will be rebuilt from the seller's family confirmation once it comes back, and the power of attorney fills itself from those answers."
+                  : "Nothing to request yet — send the family confirmation above first, and the documents (plus a pre-filled power of attorney) follow from the seller's answers."}
+            </p>
 
 
             {rules && Object.keys(rules).length > 0 && (

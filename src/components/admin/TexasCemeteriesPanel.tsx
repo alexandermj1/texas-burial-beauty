@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
 import type { CemeteryDocRules } from "@/lib/ownershipRules";
+import { refreshCemeteryRegistry, regionForCity } from "@/hooks/useCemeteryRegistry";
 
 
 interface TexasCemetery {
@@ -18,6 +19,8 @@ interface TexasCemetery {
   canonical_name: string | null;
   city: string | null;
   county: string | null;
+  /** Buyer/seller form grouping — kept in step with the city. */
+  region: string | null;
 
   address: string | null;
   contact_name: string | null;
@@ -221,11 +224,13 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   // Auto-create a directory row for a cemetery that's only known from submissions,
   // so the admin can immediately start filling in its profile.
   const ensureProfile = async (stat: { canon: string; displayName: string; sample?: Submission }) => {
+    const city = (stat.sample as any)?.cemetery_city || stat.sample?.region || null;
     const { data, error } = await supabase
       .from("texas_cemeteries" as any)
       .insert({
         name: stat.displayName,
-        city: (stat.sample as any)?.cemetery_city || stat.sample?.region || null,
+        city,
+        region: regionForCity(city),
         auto_created: true,
       })
       .select("id")
@@ -234,6 +239,7 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       toast({ title: "Couldn't open profile", description: error.message, variant: "destructive" });
       return null;
     }
+    refreshCemeteryRegistry();
     await load();
     return (data as any)?.id as string;
   };
@@ -241,6 +247,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
   const save = async (id: string) => {
     const patch = edits[id] || {};
     if (Object.keys(patch).length === 0) return;
+    // Keep the region in step with the city so the buyer and seller forms group it correctly.
+    if (patch.city && !patch.region) patch.region = regionForCity(patch.city as string);
     const { error } = await supabase
       .from("texas_cemeteries" as any)
       .update(patch)
@@ -251,6 +259,7 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
     }
     toast({ title: "Saved" });
     setEdits(e => { const n = { ...e }; delete n[id]; return n; });
+    refreshCemeteryRegistry();
     await load();
   };
 
@@ -266,9 +275,11 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       toast({ title: "Couldn't add", description: error.message, variant: "destructive" });
       return;
     }
+    refreshCemeteryRegistry();
     await load();
     if ((data as any)?.id) setOpenId((data as any).id);
   };
+
 
   // Drag-and-drop merge. The destination cemetery's profile (description, prices,
   // transfer fee, contact info, notes) is preserved — only the source's submissions
