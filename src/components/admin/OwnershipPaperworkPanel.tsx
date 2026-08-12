@@ -1075,15 +1075,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (error) throw error;
       const res = data as { pdf_url?: string | null; sign_token?: string | null };
       setDocEdit(null);
-      // Show the filled PDF inline so it can be checked line by line.
-      if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
-      toast.success(`${r.label} prepared`, {
-        description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
-      });
+      if (!silent) {
+        // Show the filled PDF inline so it can be checked line by line.
+        if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
+        toast.success(`${r.label} ready`, {
+          description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
+        });
+      }
       await setRowState(r, "issued");
       await load();
     } catch (e) {
-      toast.error((e as Error).message);
+      if (!silent) toast.error((e as Error).message);
     } finally {
       setBusy(null);
     }
