@@ -492,8 +492,65 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
    * Send the seller their own copy of this questionnaire: what we believe,
    * ready to confirm, plus whatever the AI could not work out.
    */
+  /**
+   * Step one: an admin reads the deed themselves and types the names exactly as
+   * printed. We never ask the seller to correct a machine guess.
+   */
+  const openAsk = () => {
+    const fromRoster = (answers.people ?? [])
+      .filter((p) => p.role === "owner" || p.role === "co_owner" || p.role === "decedent")
+      .map((p) => ({ name: p.name, deceased: !!p.deceased || p.role === "decedent" }));
+    const fromRaw = deedNamesRaw
+      .split(/[,;\n]|\band\b|&/i)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((name) => ({ name, deceased: false }));
+    const seeded = (fromRoster.length ? fromRoster : fromRaw);
+    setAsk({ step: "names", deedNames: seeded.length ? seeded : [{ name: "", deceased: false }] });
+  };
+
+  /** Save the typed deed names onto the file, then move to the email review. */
+  const saveDeedNamesAndPreview = async () => {
+    const names = (ask?.deedNames ?? []).map((n) => ({ ...n, name: n.name.trim() })).filter((n) => n.name);
+    if (!names.length) { toast.error("Type at least one name from the deed"); return; }
+
+    const others = (answers.people ?? []).filter(
+      (p) => !(p.role === "owner" || p.role === "co_owner" || p.role === "decedent"),
+    );
+    const people: RosterPerson[] = [
+      ...names.map((n, i) => {
+        const prev = (answers.people ?? []).find((p) => p.name.toLowerCase() === n.name.toLowerCase());
+        return {
+          ...(prev ?? {}),
+          id: prev?.id ?? `deed-${i}-${Date.now()}`,
+          name: n.name,
+          role: (n.deceased ? "decedent" : i === 0 ? "owner" : "co_owner") as PersonRole,
+          deceased: n.deceased,
+        } as RosterPerson;
+      }),
+      ...others,
+    ];
+
+    await supabase.from("contact_submissions")
+      .update({ deed_owner_names: names.map((n) => n.name).join(", ") })
+      .eq("id", submissionId);
+    setDeedNamesRaw(names.map((n) => n.name).join(", "));
+    await persistAnswers({
+      ...answers,
+      people,
+      deceasedAny: names.some((n) => n.deceased) ? "yes" : answers.deceasedAny,
+      derived: [...new Set([...(answers.derived ?? []), "_deedNames"])],
+    } as OwnershipAnswers);
+
+    await loadAskPreview();
+  };
+
+  /**
+   * Send the seller their own copy of this questionnaire: what we believe,
+   * ready to confirm, plus whatever the AI could not work out.
+   */
   const loadAskPreview = async () => {
-    setAsk({ loading: true });
+    setAsk((a) => ({ ...(a ?? {}), step: "email", loading: true }));
     try {
       const known = questionPath(answers)
         .filter((k) => !!(answers as Record<string, unknown>)[k])
@@ -510,12 +567,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (error) throw error;
       const r = data as { html?: string; subject?: string; error?: string };
       if (r?.error) throw new Error(r.error);
-      setAsk({ html: r.html, subject: r.subject, known, missing });
+      setAsk((a) => ({ ...(a ?? {}), step: "email", loading: false, html: r.html, subject: r.subject, known, missing }));
     } catch (e) {
       setAsk(null);
       toast.error((e as Error).message);
     }
   };
+
 
   const sendAsk = async () => {
     if (!ask) return;
