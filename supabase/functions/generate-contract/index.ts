@@ -98,14 +98,28 @@ Deno.serve(async (req) => {
     const cemLocationCity = cemeteryCity ?? sub.cemetery_city ?? '';
     const defaultCountyState = cemLocationCity ? `${cemLocationCity}, TX` : '';
 
+    // Everything the seller told us in the family-tree questionnaire — the POA
+    // is now built entirely from this, so nothing is left blank for them to fill.
+    const ownership = (sub.ownership_answers ?? {}) as Record<string, unknown>;
+    const people = Array.isArray(ownership.people) ? ownership.people as Record<string, string>[] : [];
+    const spouseOnRoster = people.find((p) => p.role === 'spouse')?.name;
+    const affiant = overrides.seller_name ?? sub.name ?? '';
+
+    const principalName = String(
+      overrides.seller_name ??
+      (Array.isArray(overrides.joint_names) ? (overrides.joint_names as string[])[0] : '') ??
+      sub.name ?? '',
+    );
+    const sellerContact = contactFor(ownership, principalName);
+
     const fill: FillData = {
       seller_name: overrides.seller_name ?? sub.name ?? '',
       co_owner_name: overrides.co_owner_name ?? sub.deed_owner_names ?? '',
-      // Seller's own mailing address — leave blank when unknown; the seller fills it on the sign page.
-      address: overrides.address ?? '',
-      city_state_zip: overrides.city_state_zip ?? '',
-      phone: overrides.phone ?? sub.phone ?? '',
-      email: overrides.email ?? sub.email ?? '',
+      // Mailing address comes from the seller's own questionnaire answers.
+      address: overrides.address || sellerContact.address || '',
+      city_state_zip: overrides.city_state_zip || sellerContact.city_state_zip || '',
+      phone: overrides.phone || sellerContact.phone || sub.phone || '',
+      email: overrides.email || sellerContact.email || sub.email || '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
       county_state: overrides.county_state ?? defaultCountyState,
       plot_count: overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? '',
@@ -120,12 +134,6 @@ Deno.serve(async (req) => {
       transfer_fee: transferFee ?? undefined,
     };
 
-    // Notary-only documents (Affidavit of Heirship, Spousal Consent) are typeset
-    // from scratch — there is no scanned template to overlay.
-    const ownership = (sub.ownership_answers ?? {}) as Record<string, unknown>;
-    const people = Array.isArray(ownership.people) ? ownership.people as Record<string, string>[] : [];
-    const spouseOnRoster = people.find((p) => p.role === 'spouse')?.name;
-    const affiant = overrides.seller_name ?? sub.name ?? '';
 
     let filled: Uint8Array;
     if (kind === 'affidavit_heirship') {
