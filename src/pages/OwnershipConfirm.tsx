@@ -342,9 +342,13 @@ const OwnershipConfirm = () => {
       <div style={{"minHeight": "100vh", "background": "#fbfbfd"}}>
         <div style={{"position": "sticky", "top": "0", "zIndex": "50", "background": "rgba(251,251,253,0.86)", "backdropFilter": "saturate(180%) blur(20px)", "WebkitBackdropFilter": "saturate(180%) blur(20px)", "borderBottom": "1px solid rgba(0,0,0,0.06)"}}>
           <div style={{"maxWidth": "1180px", "margin": "0 auto", "padding": "0 clamp(16px,4vw,28px)", "height": "62px", "display": "flex", "alignItems": "center", "gap": "clamp(8px,2.5vw,14px)"}}>
-            <span style={{"flex": "none", "width": "30px", "height": "30px", "borderRadius": "9px", "background": `${V.accent}`, "color": "#ffffff", "display": "grid", "placeItems": "center", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "14px", "letterSpacing": "0.01em"}}>
-              TC
-            </span>
+            <img
+              src={hibiscusLogo.url}
+              alt="Texas Cemetery Brokers"
+              width={30}
+              height={30}
+              style={{ flex: "none", width: "30px", height: "30px", objectFit: "contain" }}
+            />
             <span style={{"flex": "0 1 auto", "minWidth": "0", "display": "flex", "flexDirection": "column", "lineHeight": "1.15"}}>
               <span style={{"overflow": "hidden", "textOverflow": "ellipsis", "whiteSpace": "nowrap", "fontFamily": "'DM Serif Display', Georgia, serif", "fontSize": "clamp(15px,4vw,18px)", "color": "#1d1d1f"}}>
                 Texas Cemetery Brokers
