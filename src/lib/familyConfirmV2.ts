@@ -420,18 +420,27 @@ export function buildLogic(state, setS, accent0, CRM) {
         { label: 'Needs a name', bg: '#fdf6f3', ring: '#e6c3b4' }
       ],
 
-      deedRows: s.deed.map((d, i) => ({
+      deedRows: s.deed.map((d, i) => {
+        const sp = s.spouse[d.id] || {};
+        return {
         name: d.n, initials: initials(d.n),
         cardBg: d.st === 'deceased' ? '#fafafa' : '#ffffff',
         cardBd: d.st === 'deceased' ? '#e6e6eb' : '#ececf0',
         avBg: d.st === 'deceased' ? '#f2f2f5' : (d.n.trim() ? '#eef1ea' : '#f5f5f7'),
         avFg: d.st === 'deceased' ? '#9a9aa2' : (d.n.trim() ? acc : '#b7b7bf'),
+        marriedYes: sp.has === 'yes',
+        marriedAsk: !!d.n.trim(),
+        marriedLabel: d.st === 'deceased' ? 'Was married?' : 'Married?',
+        spouseName: sp.n || '',
+        marriedSeg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
+        setSpouseName: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); },
         seg: L.seg(d.st, [['living', 'Living'], ['deceased', 'Has died']], v => setS(st => {
           const l = st.deed.slice(); l[i] = Object.assign({}, l[i], { st: v }); return { deed: l };
         })),
         setName: ev => { const v = ev.target.value; setS(st => { const l = st.deed.slice(); l[i] = Object.assign({}, l[i], { n: v }); return { deed: l }; }); },
         remove: () => setS(st => { const l = st.deed.slice(); l.splice(i, 1); return { deed: l }; })
-      })),
+        };
+      }),
       addDeed: () => setS(st => ({ deed: st.deed.concat([{ id: 'd' + st.seq, n: '', st: 'living' }]), seq: st.seq + 1 })),
 
       show2: d1,
