@@ -202,7 +202,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
-        .select("ownership_answers, name, email, customer_profile_id, seller_attachments").eq("id", submissionId).maybeSingle(),
+        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
         .eq("submission_id", submissionId),
