@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -192,6 +192,12 @@ const needsQuoteActive = (s: Submission) => !!(s as any).needs_quote && !(s as a
 
 interface ViewRow { submission_id: string; user_id: string; user_name: string | null; viewed_at: string }
 
+// Ownership questionnaire ("family tree") state for a submission row.
+const ftState = (s: any): { sentAt: string | null; doneAt: string | null } => {
+  const a = (s?.ownership_answers ?? {}) as Record<string, any>;
+  return { sentAt: a.questionsSentAt ?? null, doneAt: a.sellerConfirmedAt ?? null };
+};
+
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -249,6 +255,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
   const [docsOutFilter, setDocsOutFilter] = useState<boolean>(false);
   const [completeFilter, setCompleteFilter] = useState<boolean>(false);
+  // Family tree (ownership questionnaire) filters: link sent vs seller finished.
+  const [ftSentFilter, setFtSentFilter] = useState<boolean>(false);
+  const [ftDoneFilter, setFtDoneFilter] = useState<boolean>(false);
 
   // Draft for the editable accepted-price field (per submission). Keyed by submission id.
   const [acceptedPriceDraft, setAcceptedPriceDraft] = useState<Record<string, string>>({});
@@ -650,6 +659,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (acceptedFilter && (s as any).quote_response !== "accepted") return false;
       if (docsOutFilter && (!(s as any).documents_requested_at || (s as any).documents_completed_at)) return false;
       if (completeFilter && !(s as any).documents_completed_at) return false;
+      if (ftSentFilter && !(ftState(s).sentAt) ) return false;
+      if (ftDoneFilter && !ftState(s).doneAt) return false;
 
 
       if (eFilter === "new" && !isNew(s)) return false;
@@ -697,7 +708,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
@@ -2346,6 +2357,42 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </button>
               );
             })()}
+            {(() => {
+              const sentCount = submissions.filter(s => subRegion(s) === "texas" && ftState(s).sentAt && !ftState(s).doneAt).length;
+              const isActive = ftSentFilter;
+              return (
+                <button
+                  onClick={() => setFtSentFilter(!isActive)}
+                  title={isActive ? `Showing only sellers we've asked for the family tree (${sentCount}) — click to clear` : `Show sellers we've asked to confirm the deed (${sentCount})`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+                      : "bg-card text-amber-700 dark:text-amber-300 border-border hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                  }`}
+                >
+                  <Users className="w-3 h-3" strokeWidth={2.5} />
+                  Tree sent ({sentCount})
+                </button>
+              );
+            })()}
+            {(() => {
+              const doneCount = submissions.filter(s => subRegion(s) === "texas" && ftState(s).doneAt).length;
+              const isActive = ftDoneFilter;
+              return (
+                <button
+                  onClick={() => setFtDoneFilter(!isActive)}
+                  title={isActive ? `Showing only sellers who returned the family tree (${doneCount}) — click to clear` : `Show sellers who completed the deed questions (${doneCount})`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                    isActive
+                      ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                      : "bg-card text-teal-700 dark:text-teal-300 border-border hover:bg-teal-50 dark:hover:bg-teal-950/30"
+                  }`}
+                >
+                  <Users className="w-3 h-3" strokeWidth={2.5} />
+                  Tree done ({doneCount})
+                </button>
+              );
+            })()}
 
           </div>
         )}
@@ -2538,6 +2585,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Docs sent {formatDate((s as any).documents_requested_at)}
                           </span>
                         ) : null}
+
+                        {(() => {
+                          const ft = ftState(s);
+                          if (ft.doneAt) {
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-teal-600 text-white border border-teal-700 shadow-sm"
+                                title={`Seller completed the deed / family questions · ${formatDate(ft.doneAt)}`}
+                              >
+                                <Users className="w-2.5 h-2.5" strokeWidth={3} />
+                                Tree done
+                              </span>
+                            );
+                          }
+                          if (ft.sentAt) {
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-sm"
+                                title={`Family tree link sent ${formatDate(ft.sentAt)} — waiting on the seller`}
+                              >
+                                <Users className="w-2.5 h-2.5" strokeWidth={2.5} />
+                                Tree sent
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
 
                         {laMap[s.id] && (laMap[s.id].signedAt || laMap[s.id].sentAt) && (() => {
                           const la = laMap[s.id];
