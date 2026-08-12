@@ -77,6 +77,9 @@ const BuyProperty = () => {
     note: "",
   });
 
+  // The registry — identical to what the seller form and the admin panel show.
+  const { cemeteries, loading: loadingCemeteries } = useCemeteryRegistry();
+  const [cemeteryQuery, setCemeteryQuery] = useState("");
 
   // Pre-fill from query params (e.g. ?cemetery=...&region=...) — set on first load.
   useEffect(() => {
@@ -84,15 +87,15 @@ const BuyProperty = () => {
     const regionParam = searchParams.get("region") || "";
     if (cemParam || regionParam) {
       // If passed a cemetery, look up its region from the registry so both align.
-      const match = cemParam ? bayCemeteries.find(c => c.name.toLowerCase() === cemParam.toLowerCase()) : null;
+      const match = cemParam ? cemeteries.find(c => c.name.toLowerCase() === cemParam.toLowerCase()) : null;
       setSelections(prev => ({
         ...prev,
-        cemetery: cemParam,
+        cemetery: cemParam || prev.cemetery,
         region: match?.region || regionParam || prev.region,
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cemeteries.length]);
 
   const update = (key: string, value: string) => setSelections(prev => ({ ...prev, [key]: value }));
 
@@ -106,13 +109,13 @@ const BuyProperty = () => {
   // Region counts
   const regionCounts = useMemo(() => {
     const m: Record<string, number> = {};
-    bayCemeteries.forEach(c => { m[c.region] = (m[c.region] || 0) + 1; });
+    cemeteries.forEach(c => { m[c.region] = (m[c.region] || 0) + 1; });
     return m;
-  }, []);
+  }, [cemeteries]);
 
   // Ordered regions: by distance if we have coords, else Houston/Dallas first then by cemetery count
   const orderedRegions = useMemo(() => {
-    const list = regions.filter(r => r !== "All");
+    const list = REGISTRY_REGIONS.filter(r => (regionCounts[r] || 0) > 0);
     if (userCoords) {
       return [...list].sort((a, b) => {
         const ca = regionCenters[a], cb = regionCenters[b];
@@ -131,17 +134,34 @@ const BuyProperty = () => {
     });
   }, [userCoords, regionCounts]);
 
-  const filteredCemeteries: CemeteryInfo[] = useMemo(() => {
+  // Cemeteries in the chosen region, narrowed by the search box, nearest first
+  // when we know where the buyer is.
+  const filteredCemeteries: RegistryCemetery[] = useMemo(() => {
     if (!selections.region) return [];
-    const inRegion = bayCemeteries.filter(c => c.region === selections.region);
+    const q = cemeteryQuery.trim().toLowerCase();
+    let inRegion = cemeteries.filter(c => c.region === selections.region);
+    if (q) {
+      inRegion = inRegion.filter(c => `${c.name} ${c.city}`.toLowerCase().includes(q));
+    }
     if (userCoords) {
       return [...inRegion].sort((a, b) =>
-        haversine(userCoords.lat, userCoords.lng, a.lat, a.lng) -
-        haversine(userCoords.lat, userCoords.lng, b.lat, b.lng)
+        haversine(userCoords.lat, userCoords.lng, a.lat ?? 0, a.lng ?? 0) -
+        haversine(userCoords.lat, userCoords.lng, b.lat ?? 0, b.lng ?? 0)
       );
     }
     return inRegion;
-  }, [selections.region, userCoords]);
+  }, [cemeteries, selections.region, userCoords, cemeteryQuery]);
+
+  // Grouped by city so a long region reads as a short list of places.
+  const cemeteriesByCity = useMemo(() => {
+    const m = new Map<string, RegistryCemetery[]>();
+    for (const c of filteredCemeteries) {
+      const key = c.city || "Elsewhere in Texas";
+      m.set(key, [...(m.get(key) ?? []), c]);
+    }
+    return [...m.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  }, [filteredCemeteries]);
+
 
   const findNearest = () => {
     if (!navigator.geolocation) {
