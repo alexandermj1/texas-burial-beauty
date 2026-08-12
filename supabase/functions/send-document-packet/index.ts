@@ -204,9 +204,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Each completed POA rides along as a real PDF attachment — printing and
+    // notarising it is the seller's only remaining step.
+    const attachments: { filename: string; mimeType: string; contentBase64: string }[] = [];
+    for (const p of poas) {
+      if (!p.path) continue;
+      const { data: file } = await svc.storage.from('contracts').download(p.path);
+      if (!file) continue;
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      const safeName = String(p.name ?? 'Signer').replace(/[^A-Za-z0-9 ._-]/g, '').trim() || 'Signer';
+      attachments.push({
+        filename: `Power of Attorney - ${safeName}.pdf`,
+        mimeType: 'application/pdf',
+        contentBase64: btoa(bin),
+      });
+    }
+
     // Send through the info@ Gmail mailbox (same path as the quote email) so the
     // message lands in Gmail's Sent folder and can be verified there.
-    const plain = `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPower of Attorney${p.name ? ` (${p.name})` : ''}: ${p.url}`).join('')}`;
+    const plain = `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPower of Attorney${p.name ? ` (${p.name})` : ''}: attached — print, sign before a notary, send it back.`).join('')}`;
     const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {
@@ -220,8 +240,10 @@ Deno.serve(async (req) => {
         subject,
         body: plain,
         htmlBody: html,
+        ...(attachments.length ? { attachments } : {}),
       }),
     });
+
     const gmailText = await gmailRes.text();
     let gmailJson: Record<string, unknown> = {};
     try { gmailJson = JSON.parse(gmailText); } catch { /* non-JSON */ }
