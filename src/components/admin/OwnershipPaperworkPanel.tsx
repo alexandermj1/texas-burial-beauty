@@ -2075,32 +2075,132 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       {/* ── Ask the seller to confirm the ownership answers ── */}
       <Dialog open={!!ask} onOpenChange={(o) => !o && setAsk(null)}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Send className="w-4 h-4" /> Ask the seller these questions
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              They get their own page: {ask?.known?.length ?? 0} answer{(ask?.known?.length ?? 0) === 1 ? "" : "s"} to
-              confirm, {ask?.missing?.length ?? 0} still to answer, plus the family tree.
-            </DialogDescription>
-          </DialogHeader>
-          {ask?.loading
-            ? <div className="h-[55vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-            : <iframe srcDoc={ask?.html ?? ""} title="Questionnaire email preview" className="w-full h-[55vh] rounded-md border bg-white" />}
-          <DialogFooter>
-            <Button variant="outline" size="sm"
-              onClick={() => { void navigator.clipboard.writeText(`${PUBLIC_SITE_URL}/confirm?s=${submissionId}`); toast.success("Link copied"); }}>
-              <Link2 className="w-3.5 h-3.5 mr-1" /> Copy link
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setAsk(null)}>Cancel</Button>
-            <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
-              onClick={() => void sendAsk()} disabled={ask?.sending || ask?.loading}>
-              {ask?.sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
-              Send to {sellerEmail}
-            </Button>
-          </DialogFooter>
+          {ask?.step === "names" ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <FileText className="w-4 h-4" /> Who is named on the deed?
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Read the deed on the right and type each name exactly as printed. These are the names the seller
+                  will see — they are never guessed.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_15rem] max-h-[58vh] overflow-auto pr-1">
+                <div className="space-y-2">
+                  {(ask.deedNames ?? []).map((n, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={n.name}
+                        placeholder="Full name as printed on the deed"
+                        className="h-8 text-xs"
+                        onChange={(e) => setAsk((a) => {
+                          const list = [...(a?.deedNames ?? [])];
+                          list[i] = { ...list[i], name: e.target.value };
+                          return { ...(a ?? {}), deedNames: list };
+                        })}
+                      />
+                      <label className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={n.deceased}
+                          onChange={(e) => setAsk((a) => {
+                            const list = [...(a?.deedNames ?? [])];
+                            list[i] = { ...list[i], deceased: e.target.checked };
+                            return { ...(a ?? {}), deedNames: list };
+                          })}
+                        />
+                        Deceased
+                      </label>
+                      <Button
+                        variant="ghost" size="sm" className="h-8 w-8 p-0"
+                        onClick={() => setAsk((a) => ({
+                          ...(a ?? {}),
+                          deedNames: (a?.deedNames ?? []).filter((_, j) => j !== i),
+                        }))}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline" size="sm" className="h-7 text-[11px]"
+                    onClick={() => setAsk((a) => ({
+                      ...(a ?? {}),
+                      deedNames: [...(a?.deedNames ?? []), { name: "", deceased: false }],
+                    }))}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Add another name
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">The deed on file</p>
+                  {files.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground">Nothing uploaded yet.</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    {files.map((f) => (
+                      <button
+                        key={f.path}
+                        className="rounded-md border overflow-hidden text-left hover:border-primary/60"
+                        onClick={() => setPdfPreview({ url: thumbs[f.path] ?? "", title: f.name })}
+                        title={f.name}
+                      >
+                        <div className="aspect-[4/5] bg-muted flex items-center justify-center overflow-hidden">
+                          {thumbs[f.path]
+                            ? <img src={thumbs[f.path]} alt={f.name} className="w-full h-full object-cover" />
+                            : <FileText className="w-5 h-5 text-muted-foreground" />}
+                        </div>
+                        <p className="px-1.5 py-1 text-[9px] text-muted-foreground truncate">{f.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="ghost" size="sm" onClick={() => setAsk(null)}>Cancel</Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void saveDeedNamesAndPreview()}>
+                  Save names and preview the email →
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <Send className="w-4 h-4" /> Ask the seller these questions
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  They get their own page: {ask?.known?.length ?? 0} answer{(ask?.known?.length ?? 0) === 1 ? "" : "s"} to
+                  confirm, {ask?.missing?.length ?? 0} still to answer, plus the family tree.
+                </DialogDescription>
+              </DialogHeader>
+              {ask?.loading
+                ? <div className="h-[55vh] grid place-items-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+                : <iframe srcDoc={ask?.html ?? ""} title="Questionnaire email preview" className="w-full h-[55vh] rounded-md border bg-white" />}
+              <DialogFooter>
+                <Button variant="ghost" size="sm" onClick={() => setAsk((a) => ({ ...(a ?? {}), step: "names" }))}>
+                  ← Back to names
+                </Button>
+                <Button variant="outline" size="sm"
+                  onClick={() => { void navigator.clipboard.writeText(`${PUBLIC_SITE_URL}/confirm?s=${submissionId}`); toast.success("Link copied"); }}>
+                  <Link2 className="w-3.5 h-3.5 mr-1" /> Copy link
+                </Button>
+                <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  onClick={() => void sendAsk()} disabled={ask?.sending || ask?.loading}>
+                  {ask?.sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  Send to {sellerEmail}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
+
     </div>
 
   );
