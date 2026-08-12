@@ -257,7 +257,7 @@ const OwnershipConfirm = () => {
       setPacket(p);
       const crm = {
         deed: splitNames(p.deed_owner_names),
-        spaces: splitSpaces(p.space_numbers),
+        spaces: splitSpaces(p.space_numbers, p.lawn),
       };
       // The office already ticked who has died when they typed the deed names,
       // so the seller should never be asked to tell us again.
@@ -288,7 +288,7 @@ const OwnershipConfirm = () => {
       location: [packet?.lawn, packet?.space_numbers ? `Spaces ${packet.space_numbers}` : ""].filter(Boolean).join(", ") || "The spaces on your deed",
       deedNote: deed.length ? `Deed names as we read them: ${deed.join(", ")}` : "Deed on file",
       deed,
-      spaces: splitSpaces(packet?.space_numbers),
+      spaces: splitSpaces(packet?.space_numbers, packet?.lawn),
     };
   }, [packet]);
 
