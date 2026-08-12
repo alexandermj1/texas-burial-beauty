@@ -153,6 +153,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [answers, setAnswers] = useState<OwnershipAnswers>({});
+  /** The deed names an admin has typed off the deed, as stored on the submission. */
+  const [deedNamesRaw, setDeedNamesRaw] = useState("");
+
   const [rules, setRules] = useState<CemeteryDocRules | null>(null);
   const [cemName, setCemName] = useState<string | null>(null);
   const [rows, setRows] = useState<DocRow[]>([]);
