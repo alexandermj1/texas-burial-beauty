@@ -30,6 +30,19 @@ const formatWhen = (iso: string) => {
 const canReply = (n: Notif) =>
   !!n.sender_id && (n.source_type === "direct_message" || n.source_type === "broadcast");
 
+/** Same event queued twice (e.g. a seller finishing the form twice) shows once. */
+const ackKey = (n: Notif) => `${n.source_type ?? ""}|${n.title}|${n.body ?? ""}`;
+const dedupe = (list: Notif[]) => {
+  const seen = new Set<string>();
+  return list.filter(n => {
+    const k = ackKey(n);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+};
+
+
 const NotificationsBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,9 +63,10 @@ const NotificationsBell = () => {
         .limit(20);
       if (!cancelled && data) {
         setNotes(data as any);
-        // Queue any existing unread notifications for acknowledgment
+        // Queue any existing unread notifications for acknowledgment, collapsing
+        // repeats of the same event so one Acknowledge clears them all.
         const unread = (data as any as Notif[]).filter(n => !n.read_at);
-        if (unread.length > 0) setPendingAck(unread.slice().reverse());
+        if (unread.length > 0) setPendingAck(dedupe(unread.slice().reverse()));
       }
     })();
 
@@ -60,9 +74,10 @@ const NotificationsBell = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_notifications", filter: `user_id=eq.${user.id}` }, (p) => {
         const newNote = p.new as Notif;
         setNotes(prev => [newNote, ...prev].slice(0, 20));
-        setPendingAck(prev => [...prev, newNote]);
+        setPendingAck(prev => dedupe([...prev, newNote]));
         try { new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=").play().catch(() => {}); } catch {}
       })
+
       .subscribe();
 
     return () => { cancelled = true; supabase.removeChannel(channel); };
@@ -84,16 +99,21 @@ const NotificationsBell = () => {
 
   const acknowledgeCurrent = async (opts?: { follow?: boolean }) => {
     if (!currentAck) return;
-    const id = currentAck.id;
+    const key = ackKey(currentAck);
     const link = currentAck.link_url;
-    setPendingAck(prev => prev.slice(1));
-    setNotes(prev => prev.map(n => n.id === id && !n.read_at ? { ...n, read_at: new Date().toISOString() } : n));
-    await supabase.from("user_notifications" as any).update({ read_at: new Date().toISOString() }).eq("id", id);
+    const now = new Date().toISOString();
+    // Clear every unread copy of this same event, not just the one on screen.
+    const ids = notes.filter(n => !n.read_at && ackKey(n) === key).map(n => n.id);
+    if (!ids.includes(currentAck.id)) ids.push(currentAck.id);
+    setPendingAck(prev => prev.filter(n => ackKey(n) !== key));
+    setNotes(prev => prev.map(n => ids.includes(n.id) && !n.read_at ? { ...n, read_at: now } : n));
+    await supabase.from("user_notifications" as any).update({ read_at: now }).in("id", ids);
     if (opts?.follow && link) {
       navigate(link);
       setTimeout(() => window.dispatchEvent(new PopStateEvent("popstate")), 0);
     }
   };
+
 
   const startReply = (n: Notif) => {
     if (!n.sender_id) return;
