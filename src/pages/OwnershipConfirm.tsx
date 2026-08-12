@@ -1060,7 +1060,7 @@ const OwnershipConfirm = () => {
                                         <div style={{"marginTop": "5px", "fontSize": "12.5px", "fontWeight": "500", "lineHeight": "1.25", "textAlign": "center", "wordBreak": "break-word", "color": `${c.nameFg}`}}>
                                           {c.short}
                                         </div>
-                                        <div style={{"marginTop": "2px", "fontSize": "9.5px", "fontWeight": "500", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${c.tagFg}`}}>
+                                        <div style={{"marginTop": "3px", "padding": "2px 7px", "borderRadius": "100px", "background": "#f5f5f7", "fontSize": "9px", "fontWeight": "600", "letterSpacing": "0.06em", "textTransform": "uppercase", "textAlign": "center", "lineHeight": "1.3", "color": `${c.tagFg}`}}>
                                           {c.tag}
                                         </div>
                                       </div>
