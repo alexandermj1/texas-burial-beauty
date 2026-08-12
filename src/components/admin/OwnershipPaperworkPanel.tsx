@@ -826,10 +826,42 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
 
+  /** One signer's mailing details exactly as the seller typed them in the family confirmation. */
+  const questionnaireContact = (name: string) => {
+    const key = (n: string) => {
+      const t = String(n ?? "").toLowerCase().replace(/[.,'’]/g, " ").replace(/\s+/g, " ").trim();
+      if (!t) return "";
+      const p = t.split(" ");
+      return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
+    };
+    const contacts = ((answers as Record<string, unknown>).contacts ?? {}) as Record<
+      string, { addr?: string; email?: string; phone?: string }
+    >;
+    const k = key(name);
+    let hit = k ? contacts[k] : undefined;
+    if (!hit && k) {
+      const [first] = k.split(" ");
+      const last = k.split(" ").slice(-1)[0];
+      hit = Object.entries(contacts).find(([ck]) => ck.startsWith(first) && ck.endsWith(last))?.[1];
+    }
+    const raw = String(hit?.addr ?? "").replace(/\r/g, "").trim();
+    const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+    let address = raw, city_state_zip = "";
+    if (lines.length > 1) {
+      address = lines.slice(0, -1).join(", ");
+      city_state_zip = lines[lines.length - 1];
+    } else {
+      const m = /^(.*?),\s*([^,]+,\s*[A-Za-z]{2}\.?\s*\d{5}(?:-\d{4})?)$/.exec(raw);
+      if (m) { address = m[1].trim(); city_state_zip = m[2].trim(); }
+    }
+    return { address, city_state_zip, phone: String(hit?.phone ?? ""), email: String(hit?.email ?? "") };
+  };
+
   /**
    * "Prepare" now opens an inline editor first (same idea as the Listing Agreement
    * panel): the admin checks/fills every blank, then generates the PDF.
    */
+
   const openDocEditor = async (r: Requirement) => {
     if (!r.contractKind) return;
     const blank = {
