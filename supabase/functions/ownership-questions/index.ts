@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
 
     const html = `
 <!doctype html>
-<html><body style="margin:0;padding:0;background:#f5f1ea;font-family:Georgia,'Times New Roman',serif;color:#1f2a37;">
+<html><body data-family-tree="1" style="margin:0;padding:0;background:#f5f1ea;font-family:Georgia,'Times New Roman',serif;color:#1f2a37;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ea;padding:32px 12px;">
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(31,42,55,0.08);">
@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
         from_name: "Texas Cemetery Brokers",
         to_email: to,
         subject,
-        snippet: "Ownership questionnaire sent — the seller can confirm or correct our records.",
+        snippet: "Seller family tree — questionnaire sent so the seller can confirm the deed and family.",
         body_text: plain,
         body_html: html,
         received_at: now,

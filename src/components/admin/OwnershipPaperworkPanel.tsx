@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import ContractsPanel from "./ContractsPanel";
+import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
@@ -1426,87 +1427,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </div>
 
 
-          {/* ── Roster ── */}
-          <div className="border rounded-lg p-3 bg-background/60 space-y-2">
-            <div className="flex items-center justify-between">
+          {/* ── Exactly what the seller selected on their page ── */}
+          {(answers as Record<string, unknown>).v2 ? (
+            <div className="border rounded-lg p-3 bg-background/60 space-y-2">
               <span className="text-xs font-semibold flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-muted-foreground" /> People who must sign
+                <Users className="w-3.5 h-3.5 text-muted-foreground" /> The seller's answers
               </span>
-              <Button size="sm" variant="ghost" onClick={addPerson}>
-                <Plus className="w-3.5 h-3.5 mr-1" />Add person
-              </Button>
+              <SellerAnswersSummary
+                v2={(answers as Record<string, unknown>).v2 as V2State}
+                people={(answers.people ?? []) as { name: string; relationship?: string; deceased?: boolean }[]}
+                notes={(answers as { sellerNotes?: string }).sellerNotes}
+              />
             </div>
-            {(answers.people ?? []).length === 0 ? (
-              <p className="text-[11px] text-muted-foreground">
-                Based on the answers above we'll need: {roster.map((r) => r.name).join(", ") || "—"}.
-                Add their real names to generate each person's POA and ID request.
-              </p>
-            ) : (
-              <div className="space-y-1.5">
-                {(answers.people ?? []).map((p) => {
-                  const dead = isDeceasedPerson(p, answers);
-                  return (
-                    <div key={p.id} className="grid grid-cols-1 sm:grid-cols-[1fr_170px_1fr_auto_auto] gap-1.5 items-center">
-                      <Input
-                        className="h-8 text-xs" placeholder="Full legal name" value={p.name}
-                        onChange={(e) => updatePerson(p.id, { name: e.target.value })}
-                        onBlur={commitPeople}
-                      />
-                      <select
-                        className="h-8 text-xs rounded-md border border-input bg-background px-2"
-                        value={p.role}
-                        onChange={(e) => { updatePerson(p.id, { role: e.target.value as PersonRole }); setTimeout(commitPeople, 0); }}
-                      >
-                        {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                      </select>
-                      <Input
-                        className="h-8 text-xs" placeholder="Email (optional)" value={p.email ?? ""}
-                        onChange={(e) => updatePerson(p.id, { email: e.target.value })}
-                        onBlur={commitPeople}
-                      />
-                      <label className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          checked={dead}
-                          onChange={(e) => {
-                            const on = e.target.checked;
-                            void persistAnswers({
-                              ...answers,
-                              people: (answers.people ?? []).map((x) =>
-                                x.id === p.id ? { ...x, deceased: on, role: on ? "decedent" as PersonRole : x.role } : x),
-                            });
-                          }}
-                        />
-                        Deceased
-                      </label>
-                      <Button size="sm" variant="ghost" onClick={() => removePerson(p.id)}>
-                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          ) : null}
 
-            {/* A married couple can execute a single instrument, each signature
-                acknowledged separately — one POA instead of two. */}
-            {canIssueJointPoa(answers) && (
-              <label className="flex items-start gap-2 rounded-md border border-purple-200 bg-purple-50/70 px-2.5 py-2 text-[11px] text-purple-900">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={answers.jointPoa === "yes"}
-                  onChange={(e) => setAnswer("jointPoa", e.target.checked ? "yes" : "no")}
-                />
-                <span>
-                  <strong>Issue one joint Power of Attorney</strong> for{" "}
-                  {roster.filter((p) => p.role !== "witness").map((p) => p.name).join(" & ")} to sign together.
-                  Texas allows two principals on one instrument; each signature is acknowledged separately
-                  before the notary, so they only pay and attend once.
-                </span>
-              </label>
-            )}
-          </div>
 
 
           {/* ── Listing agreement sits on its own, above the paperwork ── */}
