@@ -1995,9 +1995,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                       </div>
                     );
                   })}
-                      </div>
-                    );
-                  })}
                 </div>
               )}
 
