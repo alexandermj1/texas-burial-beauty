@@ -200,12 +200,16 @@ const PoaUpload = ({
 
   const record = useCallback(async (path: string, name: string) => {
     const { error: err } = await supabase.functions.invoke("seller-packet", {
-      body: { action: "record_poa", submission_id: submissionId, path, name },
+      body: {
+        action: "record_poa", submission_id: submissionId, path, name,
+        contract_id: contractId ?? null, signer_name: signerName ?? null,
+      },
     });
     if (err) throw err;
     setDone(true);
     onDone();
-  }, [submissionId, onDone]);
+  }, [submissionId, onDone, contractId, signerName]);
+
 
   useEffect(() => {
     if (!phone) return;
