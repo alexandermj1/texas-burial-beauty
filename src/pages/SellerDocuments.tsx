@@ -31,7 +31,43 @@ type PacketDoc = {
 };
 
 
-type Poa = { sign_token: string | null; pdf_url?: string | null; notarized: boolean; signed: boolean } | null;
+type Poa = { sign_token: string | null; pdf_url?: string | null; notarized: boolean; signed: boolean; mail_to?: string | null } | null;
+
+const MAIL_ADDRESS = "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
+const MAIL_REASON =
+  "We work with Bayer Cemetery Brokers, our partner, who receive and store original documents securely for us — that way the paperwork is ready the moment the cemetery asks for the paper copy and your transfer goes through quickly.";
+
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "Why does the cemetery need originals rather than photos?",
+    a: "Cemetery offices are transferring legal title to an interment right, so most of them will only accept wet-ink originals with a notary stamp. We ask for a photo first so we can check every page is correct before you post anything — then the original follows in the mail to our partner, Bayer Cemetery Brokers, in Glendale, California.",
+  },
+  {
+    q: "What exactly does the Power of Attorney let you do?",
+    a: "Only what is needed to sell this plot: talk to the cemetery, collect and submit their transfer forms, and complete the paperwork at closing. It does not allow us to touch your money, sell at a price you have not agreed, or act on anything other than this property. It expires when the sale completes and you can revoke it in writing at any time.",
+  },
+  {
+    q: "Where do I find a notary, and what does it cost?",
+    a: "Most banks and credit unions notarise free for their customers. UPS Store, FedEx Office, courthouses, title companies and public libraries also offer it, usually $6–$15 per signature in Texas. Mobile notaries will come to your home for around $25–$75. Bring your unsigned document and a valid photo ID — the notary must watch you sign.",
+  },
+  {
+    q: "Do I have to pay for anything on this page?",
+    a: "No. There is no charge from us for any of this paperwork, and no fee at all until your plot sells. The only costs you may face are a notary's fee, postage, and any certified-copy fee a county charges for a death certificate or court order.",
+  },
+  {
+    q: "Several people are named on the deed. Does everyone have to do this?",
+    a: "Yes — every living person named on the deed has to sign, and where an owner has died we need the death certificate plus whatever proves who inherited their share. Each person's items are listed separately below with their name on them, so you can see exactly who still has something to do.",
+  },
+  {
+    q: "How long does the whole process take?",
+    a: "Most sellers finish their paperwork within a week or two. Once we have everything and a buyer is in place, cemeteries typically take two to six weeks to record the transfer. Uploading photos the same day you sign is the single biggest thing that speeds it up.",
+  },
+  {
+    q: "Is my information safe?",
+    a: "Your files are stored privately, are visible only to your broker, and are used solely to transfer this plot. We never sell or share your details, and originals are returned to you if the sale does not complete.",
+  },
+];
+
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
 
 type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; listing_agreement?: ListingAgreement };
@@ -498,6 +534,20 @@ const SellerDocuments = () => {
           </p>
         </div>
 
+        <div className="mt-3 rounded-2xl border border-accent/40 bg-accent/10 px-5 py-4">
+          <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+            <Mail className="w-3.5 h-3.5" /> Where the original paperwork goes
+          </p>
+          <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{MAIL_ADDRESS}</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+            {MAIL_REASON} Upload a photo of each item here first so we can start straight away, then post the originals
+            — apart from your photo ID, which we only ever need as a photograph. Originals stay with your file and are
+            returned to you if the sale does not complete.
+          </p>
+        </div>
+
+
+
 
         {total > 0 && (
           <div className="mt-8 mb-10">
@@ -528,16 +578,46 @@ const SellerDocuments = () => {
             <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1">Also to do</div>
             <p className="font-display text-xl text-foreground leading-snug">Your Limited Power of Attorney</p>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-              This lets us handle the cemetery's transfer paperwork for you. We have already completed it for you
-              from the answers you gave us — there is nothing to fill in. Print it, sign it in front of any notary
-              (a bank, UPS Store or courthouse takes a few minutes), then upload a photo below.
+              Cemeteries will only discuss or transfer a plot with the person named on the deed. The Limited Power of
+              Attorney is the single page that lets us speak to {packet?.cemetery ?? "the cemetery"} on your behalf,
+              request the transfer forms, and hand the paperwork to the buyer at closing — so you are not the one
+              chasing the office, posting forms or taking time off work.
             </p>
+            <div className="mt-3 rounded-xl bg-card/70 border border-border/60 px-4 py-3">
+              <p className="text-[11px] font-medium text-foreground">It is deliberately limited.</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                It covers this plot and this sale only. It does not give us access to your money, your bank accounts or
+                any other property, it does not let us accept an offer or set a price without your say-so, and it ends
+                automatically when the sale completes. You can revoke it in writing at any time.
+              </p>
+            </div>
+            <div className="mt-3 rounded-xl bg-card/70 border border-border/60 px-4 py-3">
+              <p className="text-[11px] font-medium text-foreground">What to do — about 15 minutes</p>
+              <ol className="mt-1.5 space-y-1 text-[11px] text-muted-foreground leading-relaxed list-decimal pl-4">
+                <li>Open the PDF below and print every page. It is already filled in from your answers — nothing to complete.</li>
+                <li>Do <span className="text-foreground">not</span> sign it yet. The notary has to watch you sign.</li>
+                <li>Take it, with your photo ID, to any notary: most banks and credit unions (often free for customers), UPS Store, FedEx Office, courthouses, or a mobile notary who comes to you.</li>
+                <li>Sign in front of them; they stamp and sign it.</li>
+                <li>Photograph or scan every page and upload it here — then post the original to the address below.</li>
+              </ol>
+            </div>
+            {packet.poa.mail_to && (
+              <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
+                <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5" /> Post the signed original to
+                </p>
+                <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{packet.poa.mail_to}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+                  {MAIL_REASON}
+                </p>
+              </div>
+            )}
             {packet.poa.pdf_url && (
               <a
                 href={packet.poa.pdf_url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                className="inline-flex items-center gap-1.5 mt-4 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
               >
                 <Stamp className="w-3.5 h-3.5" /> Open your completed Power of Attorney
               </a>
@@ -545,6 +625,8 @@ const SellerDocuments = () => {
             <PoaUpload submissionId={submissionId} onDone={load} />
           </div>
         )}
+
+
 
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-10">
@@ -564,8 +646,23 @@ const SellerDocuments = () => {
           </div>
         )}
 
-        <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
-          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Questions about any document?</div>
+        <div className="mt-12">
+          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-3">Your questions, answered</div>
+          <div className="space-y-2">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group rounded-2xl border border-border/70 bg-card/70 px-5 py-4">
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
+                  <span className="font-display text-base text-foreground leading-snug">{f.q}</span>
+                  <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-3 whitespace-pre-line">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
+          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Still not sure about something?</div>
           <p className="text-xs text-muted-foreground leading-relaxed">
             A broker will walk you through any item on this page — there is never a charge for asking.
           </p>
@@ -574,6 +671,7 @@ const SellerDocuments = () => {
             <a href="mailto:info@texascemeterybrokers.com" className="text-foreground hover:text-primary">info@texascemeterybrokers.com</a>
           </div>
         </div>
+
 
         <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed">
           Your documents are stored privately and used only to transfer this plot.

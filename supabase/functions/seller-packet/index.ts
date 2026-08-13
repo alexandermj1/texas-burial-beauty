@@ -39,11 +39,27 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!sub || sub.deleted_at) return json({ error: "This link is no longer active." }, 404);
 
-    // Documents the cemetery only accepts as originals: the seller posts them
-    // to us instead of photographing them. Keyed "CODE::personName".
+    // Originals go to our partner, Bayer Cemetery Brokers, who store them
+    // securely for us. Everything posts by default except photo ID; an admin
+    // can switch an item back to photo-only (mailSkip) or set a custom address.
+    const ownershipAnswers =
+      ((sub as Record<string, unknown>).ownership_answers as Record<string, unknown> | null) ?? {};
     const mailOriginals: Record<string, { address?: string }> =
-      ((sub as Record<string, unknown>).ownership_answers as Record<string, unknown> | null)
-        ?.mailOriginals as Record<string, { address?: string }> ?? {};
+      (ownershipAnswers.mailOriginals as Record<string, { address?: string }>) ?? {};
+    const mailSkip: string[] = (ownershipAnswers.mailSkip as string[]) ?? [];
+    const ORIGINALS_MAIL_ADDRESS =
+      "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
+    const defaultMailAddress =
+      String(ownershipAnswers.originalsAddress ?? "").trim() || ORIGINALS_MAIL_ADDRESS;
+    const mailsByDefault = (code: string) => !["REVIEW", "NOTE", "D2", "D2P", "LA"].includes(code);
+    const mailFor = (code: string, person: string): string | null => {
+      const key = `${code}::${person}`;
+      if (mailOriginals[key]?.address) return mailOriginals[key].address ?? null;
+      if (mailSkip.includes(key)) return null;
+      return mailsByDefault(code) ? defaultMailAddress : null;
+    };
+
+
 
 
     if (action === "get") {
@@ -111,8 +127,10 @@ Deno.serve(async (req) => {
               pdf_url: poaPdfUrl,
               notarized: !!poaRow.notarized_at,
               signed: !!poaRow.signed_at,
+              mail_to: mailFor("D21", ""),
             }
           : null,
+
         documents: deduped.map((d) => ({
           id: d.id,
           code: d.doc_code,
@@ -121,7 +139,7 @@ Deno.serve(async (req) => {
           why: d.why,
           needs_notary: d.needs_notary,
           issued_by_us: d.issued_by_us,
-          mail_to: mailOriginals[`${d.doc_code ?? ""}::${d.person_name ?? ""}`]?.address ?? null,
+          mail_to: d.issued_by_us ? null : mailFor(d.doc_code ?? "", d.person_name ?? ""),
           state: d.manual_override ?? d.required_state,
           uploaded: !!d.file_url,
         })),
