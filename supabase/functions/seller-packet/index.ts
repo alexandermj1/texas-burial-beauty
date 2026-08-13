@@ -441,14 +441,19 @@ Deno.serve(async (req) => {
         status: "notarized",
       }).eq("id", poaRow.id);
 
-      // Tick the POA rows on the checklist so the admin panel shows it as
-      // received, with the file kept against the item.
+      // Tick the POA row on the checklist so the admin panel shows it as
+      // received, with the file kept against the item. When the upload belongs
+      // to a named signer only that person's row is ticked.
       const { data: poaDocs } = await supabase
         .from("submission_documents")
-        .select("id, file_urls")
+        .select("id, file_urls, person_name")
         .eq("submission_id", submissionId)
         .eq("doc_code", "D21");
-      for (const d of poaDocs ?? []) {
+      const targetKey = personKeyOf(signerName);
+      const scoped = targetKey
+        ? (poaDocs ?? []).filter((d) => personKeyOf((d as { person_name?: string }).person_name) === targetKey)
+        : (poaDocs ?? []);
+      for (const d of (scoped.length ? scoped : poaDocs ?? [])) {
         const prior: string[] = Array.isArray((d as { file_urls?: string[] }).file_urls)
           ? (d as { file_urls: string[] }).file_urls : [];
         await supabase.from("submission_documents").update({
@@ -459,6 +464,7 @@ Deno.serve(async (req) => {
           manual_override: "notarized",
         }).eq("id", (d as { id: string }).id);
       }
+
 
       if (sub.customer_profile_id) {
         // Keep a copy in the customer's file library so it sits on the
