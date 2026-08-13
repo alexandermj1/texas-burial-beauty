@@ -76,16 +76,18 @@ Deno.serve(async (req) => {
         return state !== "not_needed";
       });
 
-      // The POA lives in `contracts`, not the checklist — surface it so the
-      // seller sees one page with every outstanding action on it.
-      const { data: poaRow } = await supabase
+      // The POAs live in `contracts`, not the checklist — surface every one of
+      // them (a submission can need one per signer) so the seller sees one page
+      // with every outstanding action on it.
+      const { data: poaRows } = await supabase
         .from("contracts")
-        .select("sign_token, notarized_at, signed_at, kind, created_at, filled_pdf_path, signed_pdf_path, notarized_pdf_path")
+        .select("id, principal_key, signature_name, fill_data, sign_token, notarized_at, signed_at, kind, created_at, filled_pdf_path, signed_pdf_path, notarized_pdf_path")
         .eq("submission_id", submissionId)
         .eq("kind", "poa")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .neq("status", "void")
+        .order("created_at", { ascending: true });
+      const poaRow = (poaRows ?? [])[0] ?? null;
+
 
       const { data: listingRow } = await supabase
         .from("contracts")
