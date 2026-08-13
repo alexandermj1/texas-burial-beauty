@@ -564,8 +564,23 @@ const SellerDocuments = () => {
           </div>
         )}
 
-        <div className="mt-12 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
-          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Questions about any document?</div>
+        <div className="mt-12">
+          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-3">Your questions, answered</div>
+          <div className="space-y-2">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group rounded-2xl border border-border/70 bg-card/70 px-5 py-4">
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
+                  <span className="font-display text-base text-foreground leading-snug">{f.q}</span>
+                  <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-3 whitespace-pre-line">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-primary/25 bg-primary/[0.04] px-5 py-5">
+          <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1.5">Still not sure about something?</div>
           <p className="text-xs text-muted-foreground leading-relaxed">
             A broker will walk you through any item on this page — there is never a charge for asking.
           </p>
@@ -574,6 +589,7 @@ const SellerDocuments = () => {
             <a href="mailto:info@texascemeterybrokers.com" className="text-foreground hover:text-primary">info@texascemeterybrokers.com</a>
           </div>
         </div>
+
 
         <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed">
           Your documents are stored privately and used only to transfer this plot.
