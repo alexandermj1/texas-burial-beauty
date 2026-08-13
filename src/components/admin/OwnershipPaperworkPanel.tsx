@@ -1425,6 +1425,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   <Mail className="w-2.5 h-2.5" />Original by post
                 </span>
               )}
+              {postedAt(r) && (
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 inline-flex items-center gap-0.5"
+                  title={`Seller confirmed it was posted on ${new Date(postedAt(r)!).toLocaleDateString()}`}
+                >
+                  <Send className="w-2.5 h-2.5" />Seller posted
+                </span>
+              )}
+
 
               {fromContract && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
