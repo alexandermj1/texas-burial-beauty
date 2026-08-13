@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
         const p = t.split(" ");
         return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
       };
-      const heldFiles = (d: Record<string, unknown>) =>
+      const heldFiles = (d: { file_url?: string | null; file_urls?: unknown }) =>
         (Array.isArray(d.file_urls) ? (d.file_urls as string[]).length : 0) + (d.file_url ? 1 : 0);
       const deduped = visible.filter((d) => !(d.doc_code === "D21" && !!poaRow))
         .filter((d, index, all) => {
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
 
         documents: deduped.map((d) => {
           const state = d.manual_override ?? d.required_state;
-          const held = heldFiles(d as unknown as Record<string, unknown>);
+          const held = heldFiles(d);
           const complete = DONE_STATES.includes(state) || (held > 0 && d.status === "received");
           const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
           return {
