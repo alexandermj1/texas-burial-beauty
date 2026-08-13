@@ -629,9 +629,14 @@ const SellerDocuments = () => {
     void load();
   }, [load]);
 
+  // Every action on this page counts — the uploads and each power of attorney —
+  // otherwise the bar reads "0 of 3" while five things are still outstanding.
   const { done, total } = useMemo(() => {
     const docs = packet?.documents ?? [];
-    return { done: docs.filter((d) => d.complete || d.uploaded || DONE.includes(d.state)).length, total: docs.length };
+    const poas = packet?.poas ?? (packet?.poa ? [packet.poa] : []);
+    const docsDone = docs.filter((d) => d.complete || d.uploaded || DONE.includes(d.state)).length;
+    const poasDone = poas.filter((p) => p?.notarized || p?.signed).length;
+    return { done: docsDone + poasDone, total: docs.length + poas.length };
   }, [packet]);
 
   return (

@@ -73,6 +73,12 @@ export type OwnershipAnswers = {
    * arrived by email long before the checklist existed.
    */
   linkedFiles?: Record<string, string[]>;
+  /**
+   * Files an admin has explicitly detached from a checklist item, keyed the same
+   * way. Beats both a hand link and our own filename guesswork, so a wrongly
+   * attached file stays off the item.
+   */
+  unlinkedFiles?: Record<string, string[]>;
 
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
   aiSuggested?: string[];
