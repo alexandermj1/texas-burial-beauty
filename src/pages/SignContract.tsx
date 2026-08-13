@@ -646,13 +646,89 @@ export default function SignContract() {
               </div>
             </Card>
           ) : (
-            <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
-              <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
-              <h2 className="text-2xl font-serif text-emerald-900">Thank you — your signature is recorded.</h2>
-              <p className="text-sm text-emerald-800 mt-3 max-w-md mx-auto">
-                A copy has been emailed to you. Texas Cemetery Brokers will countersign and send you the fully executed document shortly.
-              </p>
-            </Card>
+            <div className="space-y-6">
+              <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
+                <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
+                <h2 className="text-2xl font-serif text-emerald-900">Thank you — your signature is recorded.</h2>
+                <p className="text-sm text-emerald-800 mt-3 max-w-md mx-auto">
+                  A copy has been emailed to you. Texas Cemetery Brokers will countersign and send you the fully executed document shortly.
+                </p>
+              </Card>
+
+              <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-8">
+                <div className="text-center">
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Two last things</div>
+                  <h3 className="text-xl font-serif text-[#1f2a37]">Send us a photo, then post the originals</h3>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto">
+                    A photo lets us start work today, and telling us the originals are on their way means we can ask
+                    Bayer Cemetery Brokers — our partner who stores originals securely — to watch out for your envelope.
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="rounded-xl border border-[#1f2a37]/15 bg-[#fbf8f2] p-6 text-center">
+                    <div className="w-10 h-10 rounded-full bg-[#1f2a37] text-white flex items-center justify-center mx-auto mb-3">
+                      {followUploaded ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                    </div>
+                    <p className="font-serif text-[#1f2a37] mb-1">1. Photograph the signed documents</p>
+                    {followUploaded ? (
+                      <p className="text-xs text-emerald-700 mt-2">Received — it's saved to your file with us.</p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-muted-foreground mb-4">A clear phone photo or scan of every page is fine.</p>
+                        <input
+                          ref={followInputRef}
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadSignedPhoto(f); }}
+                        />
+                        <Button
+                          onClick={() => followInputRef.current?.click()}
+                          disabled={followUploading}
+                          className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                        >
+                          {followUploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          {followUploading ? "Uploading…" : "Upload photo"}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-[#1f2a37]/15 bg-[#fbf8f2] p-6">
+                    <div className="w-10 h-10 rounded-full bg-[#1f2a37]/10 text-[#1f2a37] flex items-center justify-center mx-auto mb-3">
+                      {mailingConfirmed ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Smartphone className="w-5 h-5" />}
+                    </div>
+                    <p className="font-serif text-[#1f2a37] mb-1 text-center">2. Post the originals</p>
+                    <div className="text-xs text-muted-foreground text-center leading-relaxed mb-4">
+                      Mail every original (ID excepted) to:
+                      <div className="mt-2 text-[#1f2a37] font-medium not-italic">
+                        Bayer Cemetery Brokers<br />100 N Brand Blvd, Ste 213<br />Glendale, CA 91203
+                      </div>
+                    </div>
+                    {mailingConfirmed ? (
+                      <p className="text-xs text-emerald-700 text-center">
+                        Thank you — Bayer Cemetery Brokers has been told to expect your envelope.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <Input value={carrier} onChange={(e) => setCarrier(e.target.value)} placeholder="Carrier (USPS, FedEx…) — optional" />
+                        <Input value={tracking} onChange={(e) => setTracking(e.target.value)} placeholder="Tracking number — optional" />
+                        <Button onClick={() => void confirmMailing()} disabled={mailingBusy} variant="outline" className="w-full border-[#1f2a37]/30">
+                          {mailingBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          I've posted the originals
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center">
+                  Any questions — call <a href="tel:+12142304740" className="underline text-[#1f2a37]">(214) 230-4740</a> or
+                  email <a href="mailto:info@texascemeterybrokers.com" className="underline text-[#1f2a37]">info@texascemeterybrokers.com</a>.
+                </p>
+              </Card>
+            </div>
           )
         ) : isNotaryDoc ? (
           <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-6">
