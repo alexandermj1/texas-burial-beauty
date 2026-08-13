@@ -26,12 +26,23 @@ type PacketDoc = {
   issued_by_us: boolean | null;
   /** When set, the cemetery only accepts the original — post it to this address. */
   mail_to?: string | null;
+  /** Set once the seller has ticked "this is in the post". */
+  mailed_confirmed_at?: string | null;
   state: string;
+  complete?: boolean;
   uploaded: boolean;
 };
 
 
-type Poa = { sign_token: string | null; pdf_url?: string | null; notarized: boolean; signed: boolean; mail_to?: string | null } | null;
+type Poa = {
+  sign_token: string | null;
+  pdf_url?: string | null;
+  notarized: boolean;
+  signed: boolean;
+  mail_to?: string | null;
+  mailed_confirmed_at?: string | null;
+} | null;
+
 
 const MAIL_ADDRESS = "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
 const MAIL_REASON =
@@ -76,6 +87,54 @@ const DONE = ["received", "notarized", "complete"];
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
 type Uploaded = { name: string; path: string; url: string; isImage: boolean };
+
+/**
+ * The seller ticks this to tell us the original is in the post, so our team —
+ * and Bayer, who receive it — know to expect it.
+ */
+const MailTick = ({
+  submissionId, itemKey, confirmedAt, onDone,
+}: { submissionId: string; itemKey: string; confirmedAt?: string | null; onDone: () => void }) => {
+  const [saving, setSaving] = useState(false);
+  const [confirmed, setConfirmed] = useState(!!confirmedAt);
+
+  const toggle = async () => {
+    const next = !confirmed;
+    setSaving(true);
+    setConfirmed(next);
+    try {
+      await supabase.functions.invoke("seller-packet", {
+        body: { action: "confirm_mail", submission_id: submissionId, key: itemKey, undo: !next },
+      });
+      onDone();
+    } catch {
+      setConfirmed(!next);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      disabled={saving}
+      className={`mt-3 w-full text-left inline-flex items-start gap-2.5 rounded-xl border px-4 py-3 transition-colors disabled:opacity-60 ${
+        confirmed ? "border-primary/40 bg-primary/[0.06]" : "border-border/70 bg-card/70 hover:border-primary/40"
+      }`}
+    >
+      <span className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${confirmed ? "bg-primary border-primary text-primary-foreground" : "border-border"}`}>
+        {confirmed && <CheckCircle2 className="w-3 h-3" />}
+      </span>
+      <span className="text-xs text-foreground leading-relaxed">
+        {confirmed
+          ? "Thank you — we've told our team to expect the original in the post."
+          : "Tick here to confirm you're posting the original to us."}
+      </span>
+    </button>
+  );
+};
+
+
 
 const PoaUpload = ({
   submissionId,
@@ -273,7 +332,7 @@ const DocRow = ({
   const [phone, setPhone] = useState(false);
   const [qr, setQr] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [done, setDone] = useState(doc.uploaded || DONE.includes(doc.state));
+  const [done, setDone] = useState(!!doc.complete || doc.uploaded || DONE.includes(doc.state));
   const [uploads, setUploads] = useState<Uploaded[]>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const guide = DOC_GUIDE[doc.code ?? ""];
@@ -375,7 +434,12 @@ const DocRow = ({
                 We send this to you
               </span>
             )}
-            {doc.mail_to && (
+            {done && (
+              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary text-primary-foreground inline-flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />Complete
+              </span>
+            )}
+            {!done && doc.mail_to && (
               <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-accent/20 text-foreground inline-flex items-center gap-1">
                 <Mail className="w-3 h-3" />Original by post
               </span>
@@ -393,7 +457,12 @@ const DocRow = ({
               <p className="text-xs text-muted-foreground leading-relaxed"><span className="font-medium text-foreground/70">How to get it: </span>{guide.how}</p>
             </div>
           )}
-          {doc.mail_to && (
+          {done && (
+            <p className="mt-3 text-xs text-primary inline-flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" /> We already have this — nothing more to do for this item.
+            </p>
+          )}
+          {!done && doc.mail_to && (
             <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
               <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5" />Please post us the original of this document
@@ -404,13 +473,16 @@ const DocRow = ({
                 Originals stay safely with your file and are returned to you if the sale does not complete.
               </p>
               <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{doc.mail_to}</p>
-              <p className="text-[11px] text-muted-foreground mt-2">
-                We'll mark this item complete here as soon as it reaches us.
-              </p>
+              <MailTick
+                submissionId={submissionId}
+                itemKey={`${doc.code ?? ""}::${doc.person_name ?? ""}`}
+                confirmedAt={doc.mailed_confirmed_at}
+                onDone={onDone}
+              />
             </div>
           )}
         </div>
-        {!doc.issued_by_us && (
+        {!doc.issued_by_us && !done && (
 
           <div className="flex items-center gap-2 shrink-0">
             <input
@@ -423,9 +495,9 @@ const DocRow = ({
             <button
               onClick={() => inputRef.current?.click()}
               disabled={uploading}
-              className={`inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full disabled:opacity-60 ${done ? "border border-border hover:border-primary/40" : "bg-primary text-primary-foreground hover:opacity-90"}`}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full disabled:opacity-60 bg-primary text-primary-foreground hover:opacity-90"
             >
-              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} {done ? "Replace" : "Upload"}
+              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
             </button>
             <button
               onClick={() => setPhone((v) => !v)}
@@ -435,6 +507,7 @@ const DocRow = ({
             </button>
           </div>
         )}
+
       </div>
 
       {uploads.length > 0 && (
@@ -617,7 +690,14 @@ const SellerDocuments = () => {
                 <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
                   {MAIL_REASON}
                 </p>
+                <MailTick
+                  submissionId={submissionId}
+                  itemKey="D21::"
+                  confirmedAt={packet.poa.mailed_confirmed_at}
+                  onDone={load}
+                />
               </div>
+
             )}
             {packet.poa.pdf_url && (
               <a

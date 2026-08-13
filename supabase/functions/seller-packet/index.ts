@@ -111,6 +111,11 @@ Deno.serve(async (req) => {
         poaPdfUrl = signedUrl?.signedUrl ?? null;
       }
 
+      // Anything the seller has already told us is in the post.
+      const mailedConfirmed: Record<string, string> =
+        (ownershipAnswers.mailedConfirmed as Record<string, string>) ?? {};
+      const DONE_STATES = ["received", "notarized", "complete"];
+
       return json({
         seller_name: sub.name,
         cemetery: sub.cemetery,
@@ -128,24 +133,68 @@ Deno.serve(async (req) => {
               notarized: !!poaRow.notarized_at,
               signed: !!poaRow.signed_at,
               mail_to: mailFor("D21", ""),
+              mailed_confirmed_at: mailedConfirmed["D21::"] ?? null,
             }
           : null,
 
-        documents: deduped.map((d) => ({
-          id: d.id,
-          code: d.doc_code,
-          label: d.label,
-          person_name: d.person_name,
-          why: d.why,
-          needs_notary: d.needs_notary,
-          issued_by_us: d.issued_by_us,
-          mail_to: d.issued_by_us ? null : mailFor(d.doc_code ?? "", d.person_name ?? ""),
-          state: d.manual_override ?? d.required_state,
-          uploaded: !!d.file_url,
-        })),
+        documents: deduped.map((d) => {
+          const state = d.manual_override ?? d.required_state;
+          const complete = DONE_STATES.includes(state) || (!!d.file_url && d.status === "received");
+          const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
+          return {
+            id: d.id,
+            code: d.doc_code,
+            label: d.label,
+            person_name: d.person_name,
+            why: d.why,
+            needs_notary: d.needs_notary,
+            issued_by_us: d.issued_by_us,
+            // Once we hold an item there is nothing left to post or upload.
+            mail_to: complete || d.issued_by_us ? null : mailFor(d.doc_code ?? "", d.person_name ?? ""),
+            mailed_confirmed_at: mailedConfirmed[key] ?? null,
+            state,
+            complete,
+            uploaded: !!d.file_url,
+          };
+        }),
 
       });
     }
+
+    // The seller ticks "this is in the post" so we (and Bayer) know to expect it.
+    if (action === "confirm_mail") {
+      const key = String(body?.key ?? "");
+      if (!key) return json({ error: "missing item" }, 400);
+      const current = (ownershipAnswers.mailedConfirmed as Record<string, string>) ?? {};
+      const next = { ...current };
+      if (body?.undo) delete next[key];
+      else next[key] = new Date().toISOString();
+
+      const { error } = await supabase
+        .from("contact_submissions")
+        .update({ ownership_answers: { ...ownershipAnswers, mailedConfirmed: next } })
+        .eq("id", submissionId);
+      if (error) throw error;
+
+      if (!body?.undo) {
+        const { data: staff } = await supabase
+          .from("user_roles").select("user_id").in("role", ["admin", "staff", "agent"]);
+        const recipients = [...new Set((staff ?? []).map((r: { user_id: string }) => r.user_id))];
+        if (recipients.length) {
+          await supabase.from("user_notifications").insert(recipients.map((uid) => ({
+            user_id: uid,
+            title: `${sub.name ?? "Seller"} is posting an original`,
+            body: `${key.split("::")[0]}${key.split("::")[1] ? ` for ${key.split("::")[1]}` : ""} is on its way to Bayer Cemetery Brokers.`,
+            link_url: `/admin?submission=${submissionId}`,
+            source_type: "mail_confirmed",
+            source_id: submissionId,
+          })));
+        }
+      }
+
+      return json({ ok: true });
+    }
+
 
     if (action === "record") {
       const docId = String(body?.doc_id ?? "");
