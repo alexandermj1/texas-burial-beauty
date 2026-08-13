@@ -702,19 +702,30 @@ const SellerDocuments = () => {
           </div>
         )}
 
-        {packet?.poa && (
-          <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/[0.05] p-5">
+        {(packet?.poas?.length ? packet.poas : packet?.poa ? [packet.poa] : []).map((poa, i, all) => poa && (
+          <div key={poa.contract_id ?? i} className="mb-6 rounded-2xl border border-primary/30 bg-primary/[0.05] p-5">
             <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1">
-              {packet.poa.notarized ? "Received" : "Also to do"}
+              {poa.notarized ? "Received" : all.length > 1 ? `Also to do — ${i + 1} of ${all.length}` : "Also to do"}
             </div>
 
-            <p className="font-display text-xl text-foreground leading-snug">Your Limited Power of Attorney</p>
+            <p className="font-display text-xl text-foreground leading-snug">
+              {poa.signer_name && all.length > 1
+                ? `Limited Power of Attorney — ${poa.signer_name}`
+                : "Your Limited Power of Attorney"}
+            </p>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
               Cemeteries will only discuss or transfer a plot with the person named on the deed. The Limited Power of
-              Attorney is the single page that lets us speak to {packet?.cemetery ?? "the cemetery"} on your behalf,
+              Attorney is the single page that lets us speak to {packet?.cemetery ?? "the cemetery"} on
+              {poa.signer_name && all.length > 1 ? ` ${poa.signer_name}'s` : " your"} behalf,
               request the transfer forms, and hand the paperwork to the buyer at closing — so you are not the one
               chasing the office, posting forms or taking time off work.
             </p>
+            {all.length > 1 && (
+              <p className="text-[11px] text-foreground/90 mt-2">
+                Everyone named on the deed needs their own notarized copy — this one is
+                for <span className="font-medium">{poa.signer_name ?? "this signer"}</span>.
+              </p>
+            )}
             <div className="mt-3 rounded-xl bg-card/70 border border-border/60 px-4 py-3">
               <p className="text-[11px] font-medium text-foreground">It is deliberately limited.</p>
               <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
@@ -728,41 +739,49 @@ const SellerDocuments = () => {
               <ol className="mt-1.5 space-y-1 text-[11px] text-muted-foreground leading-relaxed list-decimal pl-4">
                 <li>Open the PDF below and print every page. It is already filled in from your answers — nothing to complete.</li>
                 <li>Do <span className="text-foreground">not</span> sign it yet. The notary has to watch you sign.</li>
-                <li>Take it, with your photo ID, to any notary: most banks and credit unions (often free for customers), UPS Store, FedEx Office, courthouses, or a mobile notary who comes to you.</li>
+                <li>Take it, with {poa.signer_name && all.length > 1 ? `${poa.signer_name}'s` : "your"} photo ID, to any notary: most banks and credit unions (often free for customers), UPS Store, FedEx Office, courthouses, or a mobile notary who comes to you.</li>
                 <li>Sign in front of them; they stamp and sign it.</li>
                 <li>Photograph or scan every page and upload it here — then post the original to the address below.</li>
               </ol>
             </div>
-            {packet.poa.mail_to && (
+            {poa.mail_to && (
               <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
                 <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5" /> Post the signed original to
                 </p>
-                <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{packet.poa.mail_to}</p>
+                <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{poa.mail_to}</p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
                   {MAIL_REASON}
                 </p>
                 <MailTick
                   submissionId={submissionId}
-                  itemKey="D21::"
-                  confirmedAt={packet.poa.mailed_confirmed_at}
+                  itemKey={poa.mail_key ?? "D21::"}
+                  confirmedAt={poa.mailed_confirmed_at}
                   onDone={load}
                 />
               </div>
 
             )}
-            {packet.poa.pdf_url && (
+            {poa.pdf_url && (
               <button
                 type="button"
-                onClick={() => void openPrivateFile(packet.poa!.pdf_url!, setError)}
+                onClick={() => void openPrivateFile(poa.pdf_url!, setError)}
                 className="inline-flex items-center gap-1.5 mt-4 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
               >
-                <Stamp className="w-3.5 h-3.5" /> Open your completed Power of Attorney
+                <Stamp className="w-3.5 h-3.5" /> Open the completed Power of Attorney
               </button>
             )}
-            <PoaUpload submissionId={submissionId} onDone={load} alreadyDone={!!packet.poa.notarized} />
+            <PoaUpload
+              submissionId={submissionId}
+              onDone={load}
+              alreadyDone={!!poa.notarized}
+              contractId={poa.contract_id}
+              signerName={all.length > 1 ? poa.signer_name : null}
+              principalKey={poa.principal_key}
+            />
           </div>
-        )}
+        ))}
+
 
 
 
