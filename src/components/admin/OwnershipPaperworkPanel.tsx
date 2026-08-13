@@ -306,12 +306,35 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setLoading(false);
   }, [submissionId, cemetery]);
 
-  /** Open any collected file in a new tab via a short-lived signed URL. */
-  const openFile = async (f: AnyFile) => {
-    const { data, error } = await supabase.storage.from(f.bucket).createSignedUrl(f.path, 60 * 10);
-    if (error || !data) return toast.error("Couldn't open that file");
-    window.open(data.signedUrl, "_blank", "noopener");
+  /**
+   * Chrome refuses to render (or download) a cross-origin PDF served from a
+   * signed storage URL inside our page — it shows "Blocked". Pulling the bytes
+   * down and handing the browser a same-origin blob: URL always works, for both
+   * the inline check and the new tab.
+   */
+  const blobUrlFor = async (bucket: "customer-files" | "portal-uploads" | "contracts", path: string) => {
+    const { data, error } = await supabase.storage.from(bucket).download(path);
+    if (error || !data) return null;
+    const type = data.type && data.type !== "application/octet-stream"
+      ? data.type
+      : (/\.pdf$/i.test(path) ? "application/pdf" : "application/octet-stream");
+    return URL.createObjectURL(new Blob([data], { type }));
   };
+
+  /** Open a URL in a new tab without tripping the pop-up blocker. */
+  const openTab = (url: string) => {
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  /** Open any collected file in a new tab. */
+  const openFile = async (f: AnyFile) => {
+    const url = await blobUrlFor(f.bucket, f.path);
+    if (!url) return toast.error("Couldn't open that file");
+    openTab(url);
+  };
+
 
 
   useEffect(() => { void load(); }, [load]);
