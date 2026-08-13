@@ -602,7 +602,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       .eq("submission_id", submissionId);
     return (data ?? []) as DocRow[];
   };
-  const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${person ?? ""}`;
+  const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${personKey(person)}`;
+  /** Same requirement, matched loosely on the person's name. */
+  const rowFor = (r: Requirement) => rows.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
 
   /** Write the computed checklist into submission_documents, preserving progress. */
   const syncChecklist = async () => {
