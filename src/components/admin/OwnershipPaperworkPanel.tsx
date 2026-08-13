@@ -408,7 +408,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (r.manual_override) { m[key] = r.manual_override as RequiredState; continue; }
       const fromContract = contractStates[key];
       if (fromContract) { m[key] = fromContract; continue; }
-      m[key] = (r.required_state as RequiredState) ?? "needed";
+      const state = (r.required_state as RequiredState) ?? "needed";
+      // A file the seller has actually sent for this item always outranks a
+      // freshly re-computed "needed" — otherwise a checklist sync silently
+      // un-ticks documents we already hold.
+      const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0);
+      m[key] = held && !["notarized", "complete"].includes(state) ? "received" : state;
+
     }
     return m;
   }, [rows, contractStates]);
