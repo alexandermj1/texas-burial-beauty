@@ -1362,8 +1362,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Files that look like they satisfy this requirement, plus any linked by hand. */
   const filesFor = (r: Requirement): AnyFile[] => {
     const row = rowFor(r);
-    const linked = answers.linkedFiles?.[reqKey(r)] ?? [];
-    return files.filter((f) => linked.includes(f.path) || fileMatchesRequirement(f, r, row));
+    const key = reqKey(r);
+    const linked = answers.linkedFiles?.[key] ?? [];
+    const detached = answers.unlinkedFiles?.[key] ?? [];
+    return files.filter((f) => !detached.includes(f.path)
+      && (linked.includes(f.path) || fileMatchesRequirement(f, r, row)));
   };
 
   /** Attach a document we already hold (an email attachment, say) to an item. */
@@ -1371,9 +1374,24 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const key = reqKey(r);
     const next = { ...(answers.linkedFiles ?? {}) };
     next[key] = [...new Set([...(next[key] ?? []), path])];
-    await persistAnswers({ ...answers, linkedFiles: next } as OwnershipAnswers);
+    const detached = { ...(answers.unlinkedFiles ?? {}) };
+    detached[key] = (detached[key] ?? []).filter((p) => p !== path);
+    await persistAnswers({ ...answers, linkedFiles: next, unlinkedFiles: detached } as OwnershipAnswers);
     await setRowState(r, "received");
     toast.success("Linked — this item now counts as received");
+  };
+
+  /** Take a wrongly attached file back off an item (the little ×). */
+  const unlinkFileFromRequirement = async (r: Requirement, path: string) => {
+    const key = reqKey(r);
+    const linked = { ...(answers.linkedFiles ?? {}) };
+    linked[key] = (linked[key] ?? []).filter((p) => p !== path);
+    const detached = { ...(answers.unlinkedFiles ?? {}) };
+    detached[key] = [...new Set([...(detached[key] ?? []), path])];
+    await persistAnswers({ ...answers, linkedFiles: linked, unlinkedFiles: detached } as OwnershipAnswers);
+    // Nothing left on the item? Then it is still outstanding.
+    if (filesFor(r).filter((f) => f.path !== path).length === 0) await setRowState(r, "needed");
+    toast.success("Removed from this document");
   };
 
 
