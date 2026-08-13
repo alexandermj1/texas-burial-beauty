@@ -69,67 +69,15 @@ Deno.serve(async (req) => {
     const firstName = (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` at ${esc(sub.cemetery)}` : '';
 
-    const itemHtml = items.map((it) => `
-      <tr>
-        <td style="padding:14px 0;border-bottom:1px solid #eee7dc;">
-          <div style="font-size:15px;color:#1f2a37;font-family:Georgia,serif;">
-            ${esc(it.label)}
-            ${it.needsNotary ? '<span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6d28d9;margin-left:8px;">Notary</span>' : ''}
-            ${it.issuedByUs ? '<span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#1d4ed8;margin-left:8px;">We send this to you</span>' : ''}
-            ${it.mailTo ? '<span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b91c1c;margin-left:8px;">Original by post</span>' : ''}
-          </div>
-          ${it.what ? `<div style="font-size:13px;color:#4a5568;line-height:1.6;margin-top:4px;">${esc(it.what)}</div>` : ''}
-          ${it.how ? `<div style="font-size:13px;color:#6b7280;line-height:1.6;margin-top:4px;"><em>How to get it:</em> ${esc(it.how)}</div>` : ''}
-          ${it.mailTo ? `<div style="margin-top:8px;padding:10px 12px;background:#fdf2f2;border-radius:8px;font-size:13px;color:#7f1d1d;line-height:1.6;">
-            Please post the <strong>original</strong> of this document to us. We work with Bayer Cemetery Brokers, our partner, who
-            receive and store original documents securely on our behalf — that way the paperwork is on hand the moment the cemetery
-            asks for it and your transfer is processed quickly. Originals are kept safely on your file and returned to you if the
-            sale does not complete.
-            <div style="margin-top:6px;color:#1f2a37;white-space:pre-line;">${esc(it.mailTo)}</div>
-          </div>` : ''}
-        </td>
-      </tr>`).join('');
-
-    // The POA sits in the same "what we still need" list as every other document,
-    // with the completed PDF attached, so nothing has to be sent in a second email.
-    const mailToAddress: string | null = body?.poa_mail_to ?? items.find((i) => i.mailTo)?.mailTo ?? null;
-    const poaRowHtml = poas.map((p) => `
-      <tr>
-        <td style="padding:14px 0;border-bottom:1px solid #eee7dc;">
-          <div style="font-size:15px;color:#1f2a37;font-family:Georgia,serif;">
-            Limited Power of Attorney${p.name ? ` — ${esc(p.name)}` : ''}
-            <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6d28d9;margin-left:8px;">Notary</span>
-            <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#15803d;margin-left:8px;">Attached — already completed</span>
-          </div>
-          <div style="font-size:13px;color:#4a5568;line-height:1.6;margin-top:4px;">
-            Completed for you from the answers you gave us — there is nothing to fill in.
-            Print the attached PDF, sign it in front of a notary, then send it back to us.
-          </div>
-        </td>
-      </tr>`).join('');
-
-    const poaHtml = poas.length ? `
-      <div style="margin:28px 0 0;padding:20px 22px;background:#f7f3ec;border-radius:10px;">
-        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;">About the Power of Attorney${poas.length > 1 ? 's' : ''} attached</div>
-        <p style="margin:8px 0 12px;font-size:13px;color:#4a5568;line-height:1.7;">
-          ${poas.length > 1 ? 'These let' : 'This lets'} us handle the cemetery's transfer paperwork on your behalf, so you don't have to
-          post forms back and forth. We have already filled in every detail — your name, address and the exact
-          description of the property — using the answers from your family confirmation. Because it is a sworn
-          document it still has to be notarized.
-        </p>
-        <ol style="padding-left:18px;margin:0;font-size:13px;color:#4a5568;line-height:1.8;">
-          <li>Print the attached PDF (${poas.length > 1 ? 'one for each signer' : 'one page to sign'}) — please do not alter anything on it.</li>
-          <li>Sign it in front of a notary: any bank, UPS Store or courthouse will do, and it takes a few minutes.</li>
-          <li>Send it back — upload a photo on your document page, and post the signed original to the address below.</li>
-        </ol>
-        <p style="margin:12px 0 0;font-size:13px;color:#4a5568;line-height:1.7;">
-          The signed original goes to our partner, Bayer Cemetery Brokers, who receive and store original documents securely for us
-          so the transfer can be processed as soon as the cemetery asks for the paper copy.
-        </p>
-        ${mailToAddress ? `<div style="margin-top:12px;font-size:13px;color:#1f2a37;white-space:pre-line;">${esc(mailToAddress)}</div>` : ''}
-      </div>` : '';
-
-
+    // The email stays deliberately short: a simple checklist of names and one
+    // button. Every instruction — how to get each document, notary steps, the
+    // mailing address — lives on the seller's document page, never in here.
+    const itemNames = [
+      ...items.map((it) => it.person ? `${it.label} — ${it.person}` : it.label),
+      ...poas.map((p) => `Limited Power of Attorney${p.name ? ` — ${p.name}` : ''}`),
+    ];
+    const listHtml = itemNames.map((n) => `
+      <tr><td style="padding:7px 0;font-size:14px;color:#4a5568;line-height:1.6;">• ${esc(n)}</td></tr>`).join('');
 
     const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
 
@@ -141,66 +89,48 @@ Deno.serve(async (req) => {
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(31,42,55,0.08);">
         <tr><td style="background:#1f2a37;color:#ffffff;padding:32px 40px;text-align:center;">
           <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
-          <div style="font-size:22px;margin-top:10px;">Everything we need, on one page</div>
+          <div style="font-size:22px;margin-top:10px;">Your document page is ready</div>
         </td></tr>
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
-          <p style="margin:0 0 16px;">
-            Thank you again for listing your property${cemLine} with us. To transfer it cleanly we need a
-            short list of documents — everything is gathered on one secure page made just for you.
-          </p>
           <p style="margin:0 0 22px;">
-            You can upload straight from your computer, or tap <strong>Phone</strong> on any item, scan the
-            QR code with your camera and simply photograph the document. The page updates itself as each
-            item arrives, so you always know what is left.
+            To complete the sale of your property${cemLine} we need a few documents. We've put them all on one
+            secure page for you, with simple instructions for each one.
           </p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 26px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 22px;">
             <tr><td align="center" style="background:#1f2a37;border-radius:8px;">
-              <a href="${esc(packetUrl)}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;">
+              <a href="${esc(packetUrl)}" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:17px;">
                 Open your document page →
               </a>
             </td></tr>
           </table>
-          ${items.length ? `
-          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:8px;">What we still need</div>
-          <p style="margin:0 0 14px;font-size:13px;color:#4a5568;line-height:1.7;">
-            Our team has worked directly with the cemetery${sub?.cemetery ? ` (${esc(sub.cemetery)})` : ''} to confirm this list.
-            It is the <strong>complete set of documents</strong> required to sell your property — these would be needed
-            regardless of how you sold it, privately or through a broker. The only item unique to selling through us is
-            the Limited Power of Attorney, which lets us handle the cemetery paperwork on your behalf.
+          <p style="margin:0 0 22px;text-align:center;font-size:13px;color:#6b7280;">
+            Everything you need to know is on that page — just click the button above.
           </p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemHtml}${poaRowHtml}</table>` : (poaRowHtml ? `
-          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:8px;">What we still need</div>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${poaRowHtml}</table>` : `
-          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`)}
-          ${poaHtml}
+          ${listHtml ? `
+          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:6px;">In short, we need</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${listHtml}</table>` : `
+          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`}
           <p style="margin:26px 0 0;font-size:13px;color:#4a5568;">
-            Or copy this link into your browser:<br/>
+            If the button doesn't work, copy this link into your browser:<br/>
             <span style="color:#1f2a37;word-break:break-all;">${esc(packetUrl)}</span>
           </p>
-          <div style="margin:24px 0 0;padding:18px 20px;background:#f7f3ec;border-radius:10px;">
-            <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;">Questions about any document?</div>
-            <p style="margin:8px 0 0;font-size:13px;color:#4a5568;line-height:1.7;">
-              Call us on <a href="tel:+12142304740" style="color:#1f2a37;text-decoration:none;"><strong>(214) 230-4740</strong></a>,
-              email <a href="mailto:info@texascemeterybrokers.com" style="color:#1f2a37;">info@texascemeterybrokers.com</a>,
-              or simply reply to this message — a broker will walk you through it personally.
-            </p>
-          </div>
+          <p style="margin:20px 0 0;font-size:13px;color:#4a5568;line-height:1.7;">
+            Any questions, call <a href="tel:+12142304740" style="color:#1f2a37;text-decoration:none;"><strong>(214) 230-4740</strong></a>
+            or just reply to this email.
+          </p>
         </td></tr>
         <tr><td style="background:#1f2a37;padding:22px 40px;text-align:center;">
           <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
           <div style="font-size:12px;color:#a9b4c2;margin-top:8px;">
-            The Modern Way to Sell Cemetery Property in Texas
-          </div>
-          <div style="font-size:12px;color:#a9b4c2;margin-top:8px;">
             (214) 230-4740 · info@texascemeterybrokers.com · texascemeterybrokers.com
           </div>
         </td></tr>
-
       </table>
     </td></tr>
   </table>
 </body></html>`;
+
 
     // Preview mode: hand the exact email back so the admin can read it before
     // anything is sent. Nothing is emailed and nothing is written.
