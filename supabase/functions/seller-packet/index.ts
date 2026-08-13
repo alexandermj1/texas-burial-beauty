@@ -18,6 +18,15 @@ const json = (body: unknown, status = 200) =>
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Loose name key so "Jamie Floy Alford" and "Jamie Alford" are one person. */
+const personKeyOf = (n?: string | null) => {
+  const t = String(n ?? "").toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const p = t.split(" ");
+  return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
+};
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -76,16 +85,18 @@ Deno.serve(async (req) => {
         return state !== "not_needed";
       });
 
-      // The POA lives in `contracts`, not the checklist — surface it so the
-      // seller sees one page with every outstanding action on it.
-      const { data: poaRow } = await supabase
+      // The POAs live in `contracts`, not the checklist — surface every one of
+      // them (a submission can need one per signer) so the seller sees one page
+      // with every outstanding action on it.
+      const { data: poaRows } = await supabase
         .from("contracts")
-        .select("sign_token, notarized_at, signed_at, kind, created_at, filled_pdf_path, signed_pdf_path, notarized_pdf_path")
+        .select("id, principal_key, signature_name, fill_data, sign_token, notarized_at, signed_at, kind, created_at, filled_pdf_path, signed_pdf_path, notarized_pdf_path")
         .eq("submission_id", submissionId)
         .eq("kind", "poa")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .neq("status", "void")
+        .order("created_at", { ascending: true });
+      const poaRow = (poaRows ?? [])[0] ?? null;
+
 
       const { data: listingRow } = await supabase
         .from("contracts")
@@ -119,19 +130,44 @@ Deno.serve(async (req) => {
           return all[index] === best;
         });
 
-      // The POA is completed by us from the family-tree answers — the seller only
-      // ever downloads it, prints it and has it notarised. Nothing to fill in.
-      let poaPdfUrl: string | null = null;
-      const poaPath = poaRow?.notarized_pdf_path || poaRow?.signed_pdf_path || poaRow?.filled_pdf_path;
-      if (poaPath) {
-        const { data: signedUrl } = await supabase.storage.from("contracts").createSignedUrl(poaPath, 60 * 60 * 24);
-        poaPdfUrl = signedUrl?.signedUrl ?? null;
-      }
-
       // Anything the seller has already told us is in the post.
       const mailedConfirmed: Record<string, string> =
         (ownershipAnswers.mailedConfirmed as Record<string, string>) ?? {};
       const DONE_STATES = ["received", "notarized", "complete"];
+
+      // Each POA is completed by us from the family-tree answers — the seller only
+      // ever downloads it, prints it and has it notarised. Nothing to fill in.
+      const signedPdf = async (path?: string | null) => {
+        if (!path) return null;
+        const { data } = await supabase.storage.from("contracts").createSignedUrl(path, 60 * 60 * 24);
+        return data?.signedUrl ?? null;
+      };
+      const poas = [];
+      for (const row of poaRows ?? []) {
+        const r = row as Record<string, unknown>;
+        const fill = (r.fill_data ?? {}) as Record<string, unknown>;
+        const signer = String(fill.seller_name ?? r.signature_name ?? "").trim();
+        const pdfUrl = await signedPdf(
+          (r.notarized_pdf_path as string) || (r.signed_pdf_path as string) || (r.filled_pdf_path as string),
+        );
+        if (!r.sign_token && !pdfUrl) continue;
+        poas.push({
+          contract_id: r.id as string,
+          principal_key: (r.principal_key as string) ?? "",
+          signer_name: signer || null,
+          sign_token: (r.sign_token as string) ?? null,
+          pdf_url: pdfUrl,
+          notarized: !!r.notarized_at,
+          signed: !!r.signed_at,
+          mail_to: mailFor("D21", signer),
+          // Legacy submissions stored one unnamed tick under "D21::".
+          mailed_confirmed_at:
+            mailedConfirmed[`D21::${signer}`] ??
+            ((poaRows ?? []).length === 1 ? mailedConfirmed["D21::"] ?? null : null),
+
+          mail_key: `D21::${signer}`,
+        });
+      }
 
       return json({
         seller_name: sub.name,
@@ -143,16 +179,9 @@ Deno.serve(async (req) => {
               signed_at: listingRow.signed_at,
             }
           : null,
-        poa: (poaRow?.sign_token || poaPdfUrl)
-          ? {
-              sign_token: poaRow?.sign_token ?? null,
-              pdf_url: poaPdfUrl,
-              notarized: !!poaRow.notarized_at,
-              signed: !!poaRow.signed_at,
-              mail_to: mailFor("D21", ""),
-              mailed_confirmed_at: mailedConfirmed["D21::"] ?? null,
-            }
-          : null,
+        poas,
+        poa: poas[0] ?? null,
+
 
         documents: deduped.map((d) => {
           const state = d.manual_override ?? d.required_state;
@@ -346,20 +375,36 @@ Deno.serve(async (req) => {
         .list(submissionId, { limit: 100 });
 
       if (kind === "poa") {
-        const poaFiles = (remainingFiles ?? []).filter((f) => f.name.startsWith("poa-notarized-"));
+        // Each signer's uploads live under their own prefix, so only that
+        // person's POA is reset when their last file goes.
+        const docKey = String(body?.doc_key ?? "poa-notarized");
+        const contractId = String(body?.contract_id ?? "");
+        const signerName = String(body?.signer_name ?? "").trim();
+        const poaFiles = (remainingFiles ?? []).filter((f) => f.name.startsWith(`${docKey}-`));
         if (!poaFiles.length) {
-          const { data: poa } = await supabase.from("contracts")
-            .select("id, notarized_pdf_path").eq("submission_id", submissionId).eq("kind", "poa")
-            .order("created_at", { ascending: false }).limit(1).maybeSingle();
+          let q = supabase.from("contracts")
+            .select("id, notarized_pdf_path").eq("submission_id", submissionId).eq("kind", "poa");
+          if (UUID.test(contractId)) q = q.eq("id", contractId);
+          const { data: poa } = await q.order("created_at", { ascending: false }).limit(1).maybeSingle();
           if (poa?.notarized_pdf_path) await supabase.storage.from("contracts").remove([poa.notarized_pdf_path]);
           if (poa) await supabase.from("contracts").update({
             notarized_pdf_path: null, notarized_at: null, signed_at: null, status: "draft",
           }).eq("id", poa.id);
-          await supabase.from("submission_documents").update({
-            file_url: null, file_urls: [], status: "pending", required_state: "needed", manual_override: "needed",
-          }).eq("submission_id", submissionId).eq("doc_code", "D21");
+          const { data: poaDocs } = await supabase.from("submission_documents")
+            .select("id, person_name").eq("submission_id", submissionId).eq("doc_code", "D21");
+          const key = personKeyOf(signerName);
+          const scoped = key
+            ? (poaDocs ?? []).filter((d) => personKeyOf((d as { person_name?: string }).person_name) === key)
+            : (poaDocs ?? []);
+          const ids = (scoped.length ? scoped : poaDocs ?? []).map((d) => (d as { id: string }).id);
+          if (ids.length) {
+            await supabase.from("submission_documents").update({
+              file_url: null, file_urls: [], status: "pending", required_state: "needed", manual_override: "needed",
+            }).in("id", ids);
+          }
         }
       } else {
+
         if (!UUID.test(docId)) return json({ error: "invalid document" }, 400);
         const prefix = `${docId}-`;
         const matching = (remainingFiles ?? []).filter((f) => f.name.startsWith(prefix))
@@ -379,18 +424,24 @@ Deno.serve(async (req) => {
     if (action === "record_poa") {
       const path = String(body?.path ?? "");
       const name = String(body?.name ?? "notarized POA");
+      const contractId = String(body?.contract_id ?? "");
+      const signerName = String(body?.signer_name ?? "").trim();
       if (!path) return json({ error: "missing file" }, 400);
 
-      // The current POA contract row for this submission.
-      const { data: poaRow } = await supabase
+      // The POA contract row this upload belongs to. A submission can have one
+      // POA per signer, so prefer the row the seller's card names.
+      let poaQuery = supabase
         .from("contracts")
         .select("id, signed_pdf_path, filled_pdf_path, kind")
         .eq("submission_id", submissionId)
-        .eq("kind", "poa")
+        .eq("kind", "poa");
+      if (UUID.test(contractId)) poaQuery = poaQuery.eq("id", contractId);
+      const { data: poaRow } = await poaQuery
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (!poaRow) return json({ error: "no prepared POA found" }, 404);
+
 
       // Copy the uploaded file from portal-uploads to the contracts bucket for
       // permanent storage alongside the other contract documents.
@@ -415,14 +466,19 @@ Deno.serve(async (req) => {
         status: "notarized",
       }).eq("id", poaRow.id);
 
-      // Tick the POA rows on the checklist so the admin panel shows it as
-      // received, with the file kept against the item.
+      // Tick the POA row on the checklist so the admin panel shows it as
+      // received, with the file kept against the item. When the upload belongs
+      // to a named signer only that person's row is ticked.
       const { data: poaDocs } = await supabase
         .from("submission_documents")
-        .select("id, file_urls")
+        .select("id, file_urls, person_name")
         .eq("submission_id", submissionId)
         .eq("doc_code", "D21");
-      for (const d of poaDocs ?? []) {
+      const targetKey = personKeyOf(signerName);
+      const scoped = targetKey
+        ? (poaDocs ?? []).filter((d) => personKeyOf((d as { person_name?: string }).person_name) === targetKey)
+        : (poaDocs ?? []);
+      for (const d of (scoped.length ? scoped : poaDocs ?? [])) {
         const prior: string[] = Array.isArray((d as { file_urls?: string[] }).file_urls)
           ? (d as { file_urls: string[] }).file_urls : [];
         await supabase.from("submission_documents").update({
@@ -433,6 +489,7 @@ Deno.serve(async (req) => {
           manual_override: "notarized",
         }).eq("id", (d as { id: string }).id);
       }
+
 
       if (sub.customer_profile_id) {
         // Keep a copy in the customer's file library so it sits on the

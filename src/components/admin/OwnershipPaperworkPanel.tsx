@@ -1307,6 +1307,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     if (mailSkip.includes(reqKey(r))) return undefined;
     return mailsByDefault(r.code) ? { address: defaultMailAddress } : undefined;
   };
+  /** The seller ticks "this is in the post" on their page — surface that here. */
+  const mailedConfirmed =
+    ((answers as Record<string, unknown>).mailedConfirmed as Record<string, string> | undefined) ?? {};
+  const postedAt = (r: Requirement): string | undefined => {
+    const exact = mailedConfirmed[reqKey(r)];
+    if (exact) return exact;
+    const want = `${r.code}::${personKey(r.personName)}`;
+    for (const [k, v] of Object.entries(mailedConfirmed)) {
+      const [code, person] = k.split("::");
+      if (`${code}::${personKey(person)}` === want) return v;
+    }
+    // Legacy single-signer ticks were stored without a name.
+    if (r.code === "D21" && mailedConfirmed["D21::"]) return mailedConfirmed["D21::"];
+    return undefined;
+  };
+
   const openMailDialog = (r: Requirement) =>
     setMailDoc({ r, address: mailFor(r)?.address ?? defaultMailAddress });
   const saveMailOriginal = async () => {
@@ -1409,6 +1425,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   <Mail className="w-2.5 h-2.5" />Original by post
                 </span>
               )}
+              {postedAt(r) && (
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 inline-flex items-center gap-0.5"
+                  title={`Seller confirmed it was posted on ${new Date(postedAt(r)!).toLocaleDateString()}`}
+                >
+                  <Send className="w-2.5 h-2.5" />Seller posted
+                </span>
+              )}
+
 
               {fromContract && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
