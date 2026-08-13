@@ -193,7 +193,8 @@ const PoaUpload = ({
     }));
     setUploads(next);
     return next;
-  }, [submissionId]);
+  }, [submissionId, docKey]);
+
 
   useEffect(() => { void refreshUploads(); }, [refreshUploads]);
 
