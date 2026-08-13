@@ -528,16 +528,46 @@ const SellerDocuments = () => {
             <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1">Also to do</div>
             <p className="font-display text-xl text-foreground leading-snug">Your Limited Power of Attorney</p>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-              This lets us handle the cemetery's transfer paperwork for you. We have already completed it for you
-              from the answers you gave us — there is nothing to fill in. Print it, sign it in front of any notary
-              (a bank, UPS Store or courthouse takes a few minutes), then upload a photo below.
+              Cemeteries will only discuss or transfer a plot with the person named on the deed. The Limited Power of
+              Attorney is the single page that lets us speak to {packet?.cemetery ?? "the cemetery"} on your behalf,
+              request the transfer forms, and hand the paperwork to the buyer at closing — so you are not the one
+              chasing the office, posting forms or taking time off work.
             </p>
+            <div className="mt-3 rounded-xl bg-card/70 border border-border/60 px-4 py-3">
+              <p className="text-[11px] font-medium text-foreground">It is deliberately limited.</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                It covers this plot and this sale only. It does not give us access to your money, your bank accounts or
+                any other property, it does not let us accept an offer or set a price without your say-so, and it ends
+                automatically when the sale completes. You can revoke it in writing at any time.
+              </p>
+            </div>
+            <div className="mt-3 rounded-xl bg-card/70 border border-border/60 px-4 py-3">
+              <p className="text-[11px] font-medium text-foreground">What to do — about 15 minutes</p>
+              <ol className="mt-1.5 space-y-1 text-[11px] text-muted-foreground leading-relaxed list-decimal pl-4">
+                <li>Open the PDF below and print every page. It is already filled in from your answers — nothing to complete.</li>
+                <li>Do <span className="text-foreground">not</span> sign it yet. The notary has to watch you sign.</li>
+                <li>Take it, with your photo ID, to any notary: most banks and credit unions (often free for customers), UPS Store, FedEx Office, courthouses, or a mobile notary who comes to you.</li>
+                <li>Sign in front of them; they stamp and sign it.</li>
+                <li>Photograph or scan every page and upload it here — then post the original to the address below.</li>
+              </ol>
+            </div>
+            {packet.poa.mail_to && (
+              <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
+                <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5" /> Post the signed original to
+                </p>
+                <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{packet.poa.mail_to}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+                  {MAIL_REASON}
+                </p>
+              </div>
+            )}
             {packet.poa.pdf_url && (
               <a
                 href={packet.poa.pdf_url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                className="inline-flex items-center gap-1.5 mt-4 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
               >
                 <Stamp className="w-3.5 h-3.5" /> Open your completed Power of Attorney
               </a>
@@ -545,6 +575,8 @@ const SellerDocuments = () => {
             <PoaUpload submissionId={submissionId} onDone={load} />
           </div>
         )}
+
+
 
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-10">
