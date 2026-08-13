@@ -629,7 +629,7 @@ const SellerDocuments = () => {
                 <Stamp className="w-3.5 h-3.5" /> Open your completed Power of Attorney
               </a>
             )}
-            <PoaUpload submissionId={submissionId} onDone={load} />
+            <PoaUpload submissionId={submissionId} onDone={load} alreadyDone={!!packet.poa.notarized} />
           </div>
         )}
 
