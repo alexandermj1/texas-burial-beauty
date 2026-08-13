@@ -2006,11 +2006,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                               {busy === `${reqKey(r)}-open` ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileText className="w-3.5 h-3.5 mr-1" />}
                               Check the POA
                             </Button>
+                          ) : genFailed.has(reqKey(r)) ? (
+                            <Button size="sm" variant="outline" className="border-rose-300 text-rose-700"
+                              onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>
+                              {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                              Fill it in now
+                            </Button>
                           ) : (
                             <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
                               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Filling it in…
                             </span>
                           )}
+
                           <Button size="sm" variant="outline" onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
                             {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
                             Edit
