@@ -253,8 +253,12 @@ const PoaUpload = ({
     if (!window.confirm("Remove this uploaded POA? It will be needed again.")) return;
     setError("");
     const { data, error: removeError } = await supabase.functions.invoke("seller-packet", {
-      body: { action: "remove_upload", submission_id: submissionId, path: upload.path, kind: "poa" },
+      body: {
+        action: "remove_upload", submission_id: submissionId, path: upload.path, kind: "poa",
+        doc_key: docKey, contract_id: contractId ?? null, signer_name: signerName ?? null,
+      },
     });
+
     if (removeError || (data as { error?: string } | null)?.error) {
       setError((data as { error?: string } | null)?.error ?? removeError?.message ?? "The upload could not be removed.");
       return;
