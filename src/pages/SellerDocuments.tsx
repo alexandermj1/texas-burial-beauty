@@ -36,13 +36,18 @@ type PacketDoc = {
 
 
 type Poa = {
+  contract_id?: string | null;
+  principal_key?: string | null;
+  signer_name?: string | null;
   sign_token: string | null;
   pdf_url?: string | null;
   notarized: boolean;
   signed: boolean;
   mail_to?: string | null;
+  mail_key?: string | null;
   mailed_confirmed_at?: string | null;
 } | null;
+
 
 
 const MAIL_ADDRESS = "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
