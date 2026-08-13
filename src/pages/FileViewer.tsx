@@ -24,7 +24,8 @@ export default function FileViewer() {
     (async () => {
       try {
         const source = JSON.parse(raw) as FileViewerSource;
-        setName(source.name || ("path" in source ? source.path.split("/").pop() || "Document" : "Document"));
+        const sourceName = source.name || ("path" in source ? source.path.split("/").pop() || "Document" : "Document");
+        setName(sourceName);
         const result = "url" in source
           ? await fetch(source.url).then(async (response) => {
               if (!response.ok) throw new Error("The file could not be downloaded.");
@@ -34,7 +35,7 @@ export default function FileViewer() {
               if (downloadError || !data) throw downloadError ?? new Error("The file could not be downloaded.");
               return data;
             });
-        const finalMime = source.mime || result.type || (name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/octet-stream");
+        const finalMime = source.mime || result.type || (sourceName.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/octet-stream");
         const blob = result.type === finalMime ? result : new Blob([result], { type: finalMime });
         setMime(finalMime);
         objectUrl = URL.createObjectURL(blob);
