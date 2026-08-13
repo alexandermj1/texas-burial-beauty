@@ -45,6 +45,7 @@ type Props = {
 type ContractRow = {
   id: string;
   kind: string;
+  principal_key?: string | null;
   status: string;
   signature_name: string | null;
   fill_data?: Record<string, unknown> | null;
@@ -231,7 +232,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
         .eq("submission_id", submissionId),
       supabase.from("contracts")
-        .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token")
+        .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token, principal_key")
         .eq("submission_id", submissionId),
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
@@ -365,7 +366,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (!st || !code) continue;
       // POAs are per-person; everything else is a single submission-level item.
       const poaPeople = requirements.filter((r) => r.code === "D21").map((r) => r.personName).filter(Boolean);
-      const poaPerson = c.signature_name || (poaPeople.length === 1 ? poaPeople[0] : "");
+      const poaPerson = c.signature_name
+        || ((c.fill_data as Record<string, unknown> | null)?.seller_name as string | undefined)
+        || c.principal_key
+        || (poaPeople.length === 1 ? poaPeople[0] : "");
       const key = code === "D21" ? `D21::${personKey(poaPerson)}` : `${code}::`;
       const prev = m[key];
       if (!prev || rank.indexOf(st) > rank.indexOf(prev)) m[key] = st;

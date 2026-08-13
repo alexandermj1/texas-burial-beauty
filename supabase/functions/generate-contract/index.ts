@@ -134,6 +134,11 @@ Deno.serve(async (req) => {
     const principalName = fullName(rawPrincipal);
     const sellerContact = contactFor(ownership, principalName);
 
+    // A submission can require one POA per signer. Keep each person's document
+    // in its own contract row instead of letting the next generated POA replace
+    // the previous person's PDF.
+    const principalKey = kind === 'poa' ? nameKey(principalName) : '';
+
     const fill: FillData = {
       seller_name: principalName || (sub.name ?? ''),
       co_owner_name: overrides.co_owner_name ?? sub.deed_owner_names ?? '',
@@ -243,11 +248,12 @@ Deno.serve(async (req) => {
       fill_data: fill,
       filled_pdf_path: path,
       created_by: userData.user.id,
+      principal_key: principalKey,
     };
 
-    const SELECT_COLS = 'id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token';
+    const SELECT_COLS = 'id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token, principal_key';
     const { data: inserted, error: insErr } = await svc.from('contracts')
-      .upsert(row, { onConflict: 'submission_id,kind' })
+      .upsert(row, { onConflict: 'submission_id,kind,principal_key' })
       .select(SELECT_COLS)
       .single();
     if (insErr) throw insErr;
