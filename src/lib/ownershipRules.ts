@@ -78,8 +78,11 @@ export type OwnershipAnswers = {
    * paper to us instead of photographing it. Keyed by "CODE::personName".
    */
   mailOriginals?: Record<string, { address: string }>;
+  /** Items the admin has explicitly switched back to photo-upload only. */
+  mailSkip?: string[];
   /** Default postal address used when an item is switched to originals-by-mail. */
   originalsAddress?: string;
+
   /** The last AI reading, kept so its explanation survives a reload. */
   aiReading?: {
     answers?: Record<string, string>;
