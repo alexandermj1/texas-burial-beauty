@@ -177,7 +177,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [rules, setRules] = useState<CemeteryDocRules | null>(null);
   const [cemName, setCemName] = useState<string | null>(null);
   const [rows, setRows] = useState<DocRow[]>([]);
-  const [open, setOpen] = useState(false);
+  // A file with an accepted quote is always in paperwork mode, so open on arrival.
+  const [open, setOpen] = useState(!!quoteAccepted);
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   /** Requirements whose auto-fill failed — shown with a retry rather than an endless spinner. */
   const [genFailed, setGenFailed] = useState<Set<string>>(new Set());
@@ -328,7 +329,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   const path = questionPath(answers);
   const prog = progress(answers);
-  const requirements = useMemo(() => computeRequirements(answers, rules), [answers, rules]);
+  const requirements = useMemo(() => {
+    const removed = new Set(answers.removedDocs ?? []);
+    return computeRequirements(answers, rules).filter((r) => !removed.has(reqKey(r)));
+  }, [answers, rules]);
   const roster = useMemo(() => signingRoster(answers), [answers]);
 
   /**
@@ -388,9 +392,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   // seller's own page is never empty just because nobody pressed Sync.
   useEffect(() => {
     if (!open || loading || autoSynced) return;
-    if (!requirements.length || rows.some((r) => r.doc_code)) return;
+    if (!requirements.length) return;
     setAutoSynced(true);
-    void syncChecklist();
+    void syncChecklist(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, loading, autoSynced, rows]);
 
@@ -628,7 +632,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const rowFor = (r: Requirement) => rows.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
 
   /** Write the computed checklist into submission_documents, preserving progress. */
-  const syncChecklist = async () => {
+  const syncChecklist = async (silent = false) => {
     setSaving(true);
     try {
       // Read the live rows first: the unique index is on (submission, code,
@@ -695,7 +699,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (stale.length) {
         await supabase.from("submission_documents").delete().in("id", stale.map((s) => s.id));
       }
-      toast.success("Paperwork checklist updated");
+      if (!silent) toast.success("Paperwork checklist updated");
       await load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -746,9 +750,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** The seller's curated upload page — one link with everything on it. */
   const packetUrl = `${PUBLIC_SITE_URL}/documents?s=${submissionId}`;
-  const copyPacketLink = async () => {
-    await navigator.clipboard.writeText(packetUrl);
-    toast.success("Seller document link copied");
+  const openPacketLink = () => {
+    window.open(packetUrl, "_blank", "noopener,noreferrer");
   };
   /** Everything still owed by the seller, in the order the checklist shows it. */
   const outstanding = useMemo(() => requirements.filter((r) => {
@@ -1231,6 +1234,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     toast.success(`"${label}" added — press Sync checklist to publish it to the seller's page`);
   };
 
+  /** Take a requirement off this file's checklist for good (not just "not needed"). */
+  const removeRequirement = async (r: Requirement) => {
+    const id = r.code.startsWith("X-") ? r.code.slice(2) : null;
+    if (id) return removeExtraDoc(id);
+    if (!window.confirm(`Remove "${r.label}" from this request? It will disappear from the seller's page.`)) return;
+    await persistAnswers({
+      ...answers,
+      removedDocs: [...new Set([...(answers.removedDocs ?? []), reqKey(r)])],
+    } as OwnershipAnswers);
+    const live = await fetchLiveRows();
+    const match = live.filter((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r)).map((x) => x.id);
+    if (match.length) await supabase.from("submission_documents").delete().in("id", match);
+    await load();
+    toast.success(`"${r.label}" removed from the request`);
+  };
+
   const removeExtraDoc = async (id: string) => {
     await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
     await supabase.from("submission_documents").delete()
@@ -1411,6 +1430,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             >
               {supplied ? <Undo2 className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
             </Button>
+            {r.code !== "REVIEW" && r.code !== "NOTE" && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-[11px] h-7 text-muted-foreground hover:text-rose-600"
+                onClick={() => void removeRequirement(r)}
+                title="Remove this document from the request altogether"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
             <select
               className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
               value={s}
@@ -1615,11 +1645,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
                   <Plus className="w-3.5 h-3.5 mr-1" />Add a document
                 </Button>
-                <Button size="sm" variant="ghost" onClick={copyPacketLink}>
-
-                  <Link2 className="w-3.5 h-3.5 mr-1" />Copy seller link
+                <Button size="sm" variant="ghost" onClick={openPacketLink} title="Open the seller's document page in a new tab">
+                  <Link2 className="w-3.5 h-3.5 mr-1" />Open seller page
                 </Button>
-                <Button size="sm" variant="outline" onClick={syncChecklist} disabled={saving}>
+                <Button size="sm" variant="outline" onClick={() => void syncChecklist()} disabled={saving}>
                   {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
                   Sync checklist
                 </Button>
