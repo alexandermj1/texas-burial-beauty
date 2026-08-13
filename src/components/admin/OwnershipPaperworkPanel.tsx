@@ -792,11 +792,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         person: r.personName ?? null,
         needsNotary: !!r.needsNotary,
         issuedByUs: !!r.issuedByUs,
-        mailTo: (answers.mailOriginals ?? {})[reqKey(r)]?.address ?? null,
+        mailTo: mailFor(r)?.address ?? null,
 
       };
     });
-    return { items, poas, poaUrl, poaFor };
+    const poaMailTo = poaRequirements.length
+      ? (mailFor(poaRequirements[0])?.address ?? null)
+      : ORIGINALS_MAIL_ADDRESS;
+    return { items, poas, poaUrl, poaFor, poaMailTo };
+
   };
 
   /** Step 2 of the review: fetch the exact email without sending anything. */
