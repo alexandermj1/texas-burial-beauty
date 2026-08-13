@@ -2038,7 +2038,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className={`mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs ${
                       done
                         ? "bg-teal-50 dark:bg-teal-950/30 border-teal-300 dark:border-teal-800 text-teal-800 dark:text-teal-200"
-                        : "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200"
+                        : "bg-indigo-50 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200"
                     }`}>
                       <Users className="w-3.5 h-3.5" strokeWidth={2.5} />
                       <span className="font-semibold uppercase tracking-wide text-[10px]">
