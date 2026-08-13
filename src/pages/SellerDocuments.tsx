@@ -8,6 +8,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
+import { openFileViewer } from "@/lib/fileViewer";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
 /**
@@ -81,19 +82,7 @@ const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 type Uploaded = { name: string; path: string; url: string; isImage: boolean };
 
 const openPrivateFile = async (url: string, setError: (message: string) => void) => {
-  const tab = window.open("about:blank", "_blank");
-  if (!tab) { setError("Your browser blocked the new tab. Allow pop-ups for this site, then try again."); return; }
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("The file could not be downloaded.");
-    const blobUrl = URL.createObjectURL(await response.blob());
-    tab.opener = null;
-    tab.location.href = blobUrl;
-    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-  } catch (error) {
-    tab.close();
-    setError(error instanceof Error ? error.message : "The file could not be opened.");
-  }
+  if (!openFileViewer({ url })) setError("Your browser blocked the new tab. Allow pop-ups for this site, then try again.");
 };
 
 /**

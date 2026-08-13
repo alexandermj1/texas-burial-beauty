@@ -10,6 +10,7 @@ import {
   Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { openFileViewer } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
@@ -323,15 +324,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Open any collected file in a new tab. */
   const openFile = async (f: AnyFile) => {
-    // Safari only permits a new tab while the original click is still running,
-    // so reserve it before waiting for the private-file download.
-    const tab = window.open("about:blank", "_blank");
-    if (!tab) return toast.error("Pop-up blocked — allow pop-ups for this site and try again");
-    const url = await blobUrlFor(f.bucket, f.path);
-    if (!url) { tab.close(); return toast.error("Couldn't open that file"); }
-    tab.opener = null;
-    tab.location.href = url;
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    if (!openFileViewer({ bucket: f.bucket, path: f.path, name: f.name }))
+      toast.error("Pop-up blocked — allow pop-ups for this site and try again");
   };
 
 
