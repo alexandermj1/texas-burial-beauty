@@ -80,13 +80,16 @@ type Uploaded = { name: string; path: string; url: string; isImage: boolean };
 const PoaUpload = ({
   submissionId,
   onDone,
+  alreadyDone = false,
 }: {
   submissionId: string;
   onDone: () => void;
+  alreadyDone?: boolean;
 }) => {
   const [uploading, setUploading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(alreadyDone);
   const [error, setError] = useState("");
+
   const [phone, setPhone] = useState(false);
   const [qr, setQr] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
