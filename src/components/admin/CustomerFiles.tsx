@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cleanDisplayName } from "@/lib/displayName";
+import { openFileViewer } from "@/lib/fileViewer";
 import { Paperclip, Upload, Trash2, Download, FileText, Loader2, Image as ImageIcon, FileQuestion, Sparkles, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 
 interface CustomerFileRow {
@@ -183,18 +184,9 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
   };
 
   const openFile = async (row: CustomerFileRow) => {
-    // Reserve the tab during the click itself. Safari blocks a window opened
-    // after the asynchronous storage download has finished.
-    const tab = window.open("about:blank", "_blank");
-    if (!tab) {
+    if (!openFileViewer({ bucket: "customer-files", path: row.file_path, name: row.file_name, mime: row.mime_type })) {
       toast({ title: "Pop-up blocked", description: "Allow pop-ups for this site, then try again.", variant: "destructive" });
-      return;
     }
-    tab.document.write("<!doctype html><title>Opening file…</title><p style='font:14px system-ui;padding:24px'>Opening file…</p>");
-    const url = await fetchBlobUrl(row);
-    if (!url) { tab.close(); return; }
-    tab.location.replace(url);
-    setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
   };
 
   const downloadFile = async (row: CustomerFileRow) => {

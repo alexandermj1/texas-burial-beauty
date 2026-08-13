@@ -10,6 +10,7 @@ import {
   Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { openFileViewer } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
@@ -323,17 +324,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Open any collected file in a new tab. */
   const openFile = async (f: AnyFile) => {
-    // Safari only permits a new tab while the original click is still running,
-    // so reserve it before waiting for the private-file download.
-    const tab = window.open("about:blank", "_blank");
-    if (!tab) return toast.error("Pop-up blocked — allow pop-ups for this site and try again");
-    tab.document.write("<!doctype html><title>Opening file…</title><p style='font:14px system-ui;padding:24px'>Opening file…</p>");
-    const url = await blobUrlFor(f.bucket, f.path);
-    if (!url) { tab.close(); return toast.error("Couldn't open that file"); }
-    // Keep the opener relationship until after navigation. Chromium and Safari
-    // reject opener-created blob URLs if opener is nulled first, leaving about:blank.
-    tab.location.replace(url);
-    window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
+    if (!openFileViewer({ bucket: f.bucket, path: f.path, name: f.name }))
+      toast.error("Pop-up blocked — allow pop-ups for this site and try again");
   };
 
 

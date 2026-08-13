@@ -26,6 +26,7 @@ import CustomerFiles from "./CustomerFiles";
 import ContractsPanel from "./ContractsPanel";
 import OwnershipPaperworkPanel from "./OwnershipPaperworkPanel";
 import { supabase } from "@/integrations/supabase/client";
+import { openFileViewer } from "@/lib/fileViewer";
 import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
@@ -3235,22 +3236,9 @@ const PipelineOverview = ({
 // — we download it as a blob before opening so ad blockers do not block backend URLs.
 const SellerAttachmentsBlock = ({ files }: { files: Array<{ path: string; name: string; size?: number; type?: string }> }) => {
   const open = async (file: { path: string; name: string; type?: string }) => {
-    const tab = window.open("about:blank", "_blank");
-    if (!tab) {
+    if (!openFileViewer({ bucket: "customer-files", path: file.path, name: file.name, mime: file.type })) {
       alert("Pop-up blocked. Allow pop-ups for this site, then try again.");
-      return;
     }
-    tab.document.write("<!doctype html><title>Opening file…</title><p style='font:14px system-ui;padding:24px'>Opening file…</p>");
-    const { data, error } = await supabase.storage.from("customer-files").download(file.path);
-    if (error || !data) {
-      tab.close();
-      alert("Couldn't open file: " + (error?.message || "unknown"));
-      return;
-    }
-    const blob = file.type ? new Blob([data], { type: file.type }) : data;
-    const url = URL.createObjectURL(blob);
-    tab.location.replace(url);
-    setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
   };
   return (
     <div className="bg-[hsl(var(--status-docs))]/5 border border-[hsl(var(--status-docs))]/25 rounded-lg p-4 space-y-2">
