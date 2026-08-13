@@ -808,9 +808,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setReview({ step: 2, loading: true });
     try {
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, preview: true },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, preview: true },
       });
       if (error) throw error;
       const res = data as { html?: string; subject?: string };
@@ -829,10 +829,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     try {
       // Make sure the seller's page actually lists these items.
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo },
       });
       if (error) throw error;
       toast.success(`Document request emailed to ${sellerEmail}`, {
