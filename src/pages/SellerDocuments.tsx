@@ -181,38 +181,38 @@ const PoaUpload = ({
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
             Once a notary has signed and stamped it, send the document back here. A photo or PDF of every page is fine.
           </p>
-          {done ? (
+          {done && (
             <div className="mt-3 rounded-xl border border-primary/30 bg-primary/[0.05] px-4 py-3">
               <p className="text-xs text-foreground flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> We have the notarized copy — thank you.
+                <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> We have the notarized copy — thank you. You can
+                still send a clearer photo or a different copy below if you need to.
               </p>
             </div>
-          ) : (
-            <div className="mt-4 flex items-center gap-2 flex-wrap">
-              <input
-                ref={inputRef}
-                type="file"
-                multiple
-                accept="image/*,application/pdf"
-                className="hidden"
-                onChange={(e) => { const fs = e.target.files; if (fs?.length) void handleFiles(fs); }}
-              />
-              <button
-                onClick={() => inputRef.current?.click()}
-                disabled={uploading}
-                className={`inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full disabled:opacity-60 ${uploading ? "bg-primary/20 text-primary" : "bg-primary text-primary-foreground hover:opacity-90"}`}
-              >
-                {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                {uploading ? "Uploading…" : "Upload from this computer"}
-              </button>
-              <button
-                onClick={() => setPhone((v) => !v)}
-                className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40"
-              >
-                {phone ? <X className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />} Phone
-              </button>
-            </div>
           )}
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={(e) => { const fs = e.target.files; if (fs?.length) void handleFiles(fs); }}
+            />
+            <button
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className={`inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full disabled:opacity-60 ${done ? "border border-border hover:border-primary/40" : uploading ? "bg-primary/20 text-primary" : "bg-primary text-primary-foreground hover:opacity-90"}`}
+            >
+              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+              {uploading ? "Uploading…" : done ? "Replace or add a page" : "Upload from this computer"}
+            </button>
+            <button
+              onClick={() => setPhone((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-primary/40"
+            >
+              {phone ? <X className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />} Phone
+            </button>
+          </div>
           {error && (
             <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 text-xs text-destructive px-4 py-3">
               {error}
@@ -221,7 +221,7 @@ const PoaUpload = ({
         </div>
       </div>
 
-      {uploads.length > 0 && !done && (
+      {uploads.length > 0 && (
         <div className="mt-4 border-t border-border/60 px-1 pt-4">
           <p className="text-[11px] text-muted-foreground mb-3">
             {uploads.length} {uploads.length === 1 ? "file" : "files"} received — tap to view.
@@ -249,7 +249,8 @@ const PoaUpload = ({
         </div>
       )}
 
-      {phone && !done && (
+      {phone && (
+
         <div className="border-t border-border/60 mt-4 pt-5 text-center bg-muted/20 rounded-xl px-5 py-6">
           <p className="text-sm text-foreground mb-3">Scan with your phone camera, then photograph the notarized POA.</p>
           {qr ? <img src={qr} alt="QR code to upload from your phone" className="w-40 h-40 mx-auto" /> : <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />}
