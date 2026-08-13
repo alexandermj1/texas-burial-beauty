@@ -1058,6 +1058,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const generateDoc = async (r: Requirement, overrideFields?: DocFields, silent = false) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
+    setGenFailed((s) => { const n = new Set(s); n.delete(reqKey(r)); return n; });
     try {
       const f = overrideFields;
       const jointNames = f
@@ -1088,8 +1089,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: { submission_id: submissionId, kind: r.contractKind, overrides },
       });
       if (error) throw error;
-      const res = data as { pdf_url?: string | null; sign_token?: string | null };
+      const res = data as { pdf_url?: string | null; sign_token?: string | null; error?: string; contract?: ContractRow | null };
+      if (res?.error) throw new Error(res.error);
       setDocEdit(null);
+      // Show it as ready immediately — no waiting on a full panel reload.
+      if (res?.contract) {
+        setContracts((prev) => [...prev.filter((c) => c.id !== res.contract!.id), res.contract!]);
+      }
       if (!silent) {
         // Show the filled PDF inline so it can be checked line by line.
         if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
@@ -1097,14 +1103,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
         });
       }
-      await setRowState(r, "issued");
-      await load();
+      void setRowState(r, "issued").then(() => load());
     } catch (e) {
+      setGenFailed((s) => new Set(s).add(reqKey(r)));
       if (!silent) toast.error((e as Error).message);
     } finally {
       setBusy(null);
     }
   };
+
 
 
   /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
