@@ -2038,7 +2038,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     <div className={`mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs ${
                       done
                         ? "bg-teal-50 dark:bg-teal-950/30 border-teal-300 dark:border-teal-800 text-teal-800 dark:text-teal-200"
-                        : "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200"
+                        : "bg-indigo-50 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200"
                     }`}>
                       <Users className="w-3.5 h-3.5" strokeWidth={2.5} />
                       <span className="font-semibold uppercase tracking-wide text-[10px]">
@@ -2391,8 +2391,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   title={isActive ? `Showing only sellers we've asked for the family tree (${sentCount}) — click to clear` : `Show sellers we've asked to confirm the deed (${sentCount})`}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
                     isActive
-                      ? "bg-amber-600 text-white border-amber-600 shadow-sm"
-                      : "bg-card text-amber-700 dark:text-amber-300 border-border hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                      : "bg-card text-indigo-700 dark:text-indigo-300 border-border hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
                   }`}
                 >
                   <Users className="w-3 h-3" strokeWidth={2.5} />
@@ -2627,7 +2627,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           if (ft.sentAt) {
                             return (
                               <span
-                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-sm"
+                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shadow-sm"
                                 title={`Family tree link sent ${formatDate(ft.sentAt)} — waiting on the seller`}
                               >
                                 <Users className="w-2.5 h-2.5" strokeWidth={2.5} />
