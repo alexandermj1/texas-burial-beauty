@@ -60,6 +60,19 @@ type Reading = {
   sources?: { emails: number; notes: number };
 };
 
+/**
+ * Loose name key (first + last, lowercased) so a middle name or a spelling
+ * variant — "David Alan Cline" vs "David Allan Cline" — is treated as the same
+ * person and never spawns a duplicate checklist row.
+ */
+const personKey = (n?: string | null) => {
+  const t = String(n ?? "").toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const p = t.split(" ");
+  return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
+};
+const reqDbKey = (r: Requirement) => `${r.code}::${personKey(r.personName)}`;
+
 type DocRow = {
   id: string;
   doc_code: string | null;
@@ -343,7 +356,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // POAs are per-person; everything else is a single submission-level item.
       const poaPeople = requirements.filter((r) => r.code === "D21").map((r) => r.personName).filter(Boolean);
       const poaPerson = c.signature_name || (poaPeople.length === 1 ? poaPeople[0] : "");
-      const key = code === "D21" ? `D21::${poaPerson ?? ""}` : `${code}::`;
+      const key = code === "D21" ? `D21::${personKey(poaPerson)}` : `${code}::`;
       const prev = m[key];
       if (!prev || rank.indexOf(st) > rank.indexOf(prev)) m[key] = st;
     }
@@ -354,7 +367,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const m: Record<string, RequiredState> = { ...contractStates };
     for (const r of rows) {
       if (!r.doc_code) continue;
-      const key = `${r.doc_code}::${r.person_name ?? ""}`;
+      const key = `${r.doc_code}::${personKey(r.person_name)}`;
       if (r.manual_override) { m[key] = r.manual_override as RequiredState; continue; }
       const fromContract = contractStates[key];
       if (fromContract) { m[key] = fromContract; continue; }
@@ -602,7 +615,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       .eq("submission_id", submissionId);
     return (data ?? []) as DocRow[];
   };
-  const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${person ?? ""}`;
+  const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${personKey(person)}`;
+  /** Same requirement, matched loosely on the person's name. */
+  const rowFor = (r: Requirement) => rows.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
 
   /** Write the computed checklist into submission_documents, preserving progress. */
   const syncChecklist = async () => {
@@ -618,7 +633,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const updates: { id: string; patch: Record<string, unknown> }[] = [];
 
       requirements.forEach((r, i) => {
-        const key = reqKey(r);
+        const key = reqDbKey(r);
         if (seen.has(key)) return; // never write the same item twice in one pass
         seen.add(key);
         const prev = existing.get(key);
@@ -659,7 +674,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
-      const wanted = new Set(requirements.map(reqKey));
+      const wanted = new Set(requirements.map(reqDbKey));
       const stale = live.filter((r) => {
          const key = keyOf(r.doc_code, r.person_name);
          const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
@@ -685,7 +700,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const setRowState = async (r: Requirement, value: RequiredState) => {
     const status = ["received", "notarized", "complete"].includes(value) ? "received" : "pending";
     const patch = { manual_override: value, required_state: value, status };
-    const local = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    const local = rowFor(r);
     if (local) {
       setRows((prev) => prev.map((x) => (x.id === local.id ? { ...x, ...patch } : x)));
       const { error } = await supabase.from("submission_documents").update(patch).eq("id", local.id);
@@ -694,7 +709,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
     // No local row — the DB may still hold one (another tab, the seller page).
     const live = await fetchLiveRows();
-    const remote = live.find((x) => keyOf(x.doc_code, x.person_name) === reqKey(r));
+    const remote = live.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
     if (remote) {
       const { error } = await supabase.from("submission_documents").update(patch).eq("id", remote.id);
       if (error) { toast.error(error.message); return; }
@@ -730,7 +745,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Everything still owed by the seller, in the order the checklist shows it. */
   const outstanding = useMemo(() => requirements.filter((r) => {
     if (r.code === "REVIEW" || r.code === "NOTE" || r.code === "LA") return false;
-    const s = stateByKey[reqKey(r)] ?? (r.review ? "maybe" : "needed");
+    const s = stateByKey[reqDbKey(r)] ?? (r.review ? "maybe" : "needed");
     return !["complete", "received", "notarized", "not_needed"].includes(s);
   }), [requirements, stateByKey]);
 
@@ -1225,7 +1240,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Files that look like they satisfy this requirement. */
   const filesFor = (r: Requirement): AnyFile[] => {
-    const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
+    const row = rowFor(r);
     return files.filter((f) => fileMatchesRequirement(f, r, row));
   };
 
@@ -1237,8 +1252,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     if (loading || !requirements.length || !files.length) return;
     const satisfied = requirements.filter((r) => {
       if (["LA", "D21", "REVIEW", "NOTE"].includes(r.code)) return false;
-      const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-      const state = stateByKey[reqKey(r)];
+      const row = rowFor(r);
+      const state = stateByKey[reqDbKey(r)];
       return !row?.manual_override && !["received", "notarized", "complete"].includes(state ?? "")
         && files.some((f) => f.extractedData && fileMatchesRequirement(f, r, row));
     });
@@ -1254,9 +1269,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   const Chip = ({ r }: { r: Requirement }) => {
     const key = reqKey(r);
-    const s = stateByKey[key] ?? (r.review ? "maybe" : "needed");
-    const row = rows.find((x) => x.doc_code === r.code && (x.person_name ?? "") === (r.personName ?? ""));
-    const fromContract = !row?.manual_override && !!contractStates[key];
+    const s = stateByKey[reqDbKey(r)] ?? (r.review ? "maybe" : "needed");
+    const row = rowFor(r);
+    const fromContract = !row?.manual_override && !!contractStates[reqDbKey(r)];
     const guide = DOC_GUIDE[r.code];
     const attached = filesFor(r);
     const isOpen = !!expanded[key];
