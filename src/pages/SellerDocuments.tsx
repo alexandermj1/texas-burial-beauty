@@ -142,10 +142,17 @@ const PoaUpload = ({
   submissionId,
   onDone,
   alreadyDone = false,
+  contractId,
+  signerName,
+  principalKey,
 }: {
   submissionId: string;
   onDone: () => void;
   alreadyDone?: boolean;
+  /** A submission can need one POA per signer, so each card keeps its own files. */
+  contractId?: string | null;
+  signerName?: string | null;
+  principalKey?: string | null;
 }) => {
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(alreadyDone);
@@ -156,10 +163,13 @@ const PoaUpload = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploads, setUploads] = useState<Uploaded[]>([]);
 
-  const docKey = "poa-notarized";
+  const slug = String(principalKey ?? "").replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-|-$/g, "");
+  const docKey = slug ? `poa-notarized-${slug}` : "poa-notarized";
+  const uploadLabel = signerName ? `notarized POA for ${signerName}` : "notarized POA";
   const mobileUrl = typeof window !== "undefined"
-    ? `${PUBLIC_SITE_URL}/seller-portal/upload/mobile?session=${submissionId}&doc=${encodeURIComponent(docKey)}&label=${encodeURIComponent("notarized POA")}`
+    ? `${PUBLIC_SITE_URL}/seller-portal/upload/mobile?session=${submissionId}&doc=${encodeURIComponent(docKey)}&label=${encodeURIComponent(uploadLabel)}`
     : "";
+
 
   useEffect(() => {
     if (!phone || !mobileUrl) return;
