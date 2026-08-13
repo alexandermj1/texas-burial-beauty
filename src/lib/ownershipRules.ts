@@ -67,6 +67,13 @@ export type OwnershipAnswers = {
   extraDocs?: { id: string; label: string; why?: string; person?: string; needsNotary?: boolean }[];
   /** Requirement keys an admin has removed outright from this file's checklist. */
   removedDocs?: string[];
+  /**
+   * Files we already hold that an admin has linked to a checklist item by hand,
+   * keyed by "CODE::personName" and holding storage paths. Used when a document
+   * arrived by email long before the checklist existed.
+   */
+  linkedFiles?: Record<string, string[]>;
+
   /** Keys that were filled in by the AI reading and not yet confirmed by a human. */
   aiSuggested?: string[];
   /** When we emailed the seller their own copy of this questionnaire. */

@@ -579,7 +579,7 @@ const SellerDocuments = () => {
 
   const { done, total } = useMemo(() => {
     const docs = packet?.documents ?? [];
-    return { done: docs.filter((d) => d.uploaded || DONE.includes(d.state)).length, total: docs.length };
+    return { done: docs.filter((d) => d.complete || d.uploaded || DONE.includes(d.state)).length, total: docs.length };
   }, [packet]);
 
   return (
