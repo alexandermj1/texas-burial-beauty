@@ -574,9 +574,12 @@ const SellerDocuments = () => {
           </div>
         )}
 
-        {packet?.poa && !packet.poa.notarized && (
+        {packet?.poa && (
           <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/[0.05] p-5">
-            <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1">Also to do</div>
+            <div className="text-[10px] uppercase tracking-[0.28em] text-primary mb-1">
+              {packet.poa.notarized ? "Received" : "Also to do"}
+            </div>
+
             <p className="font-display text-xl text-foreground leading-snug">Your Limited Power of Attorney</p>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
               Cemeteries will only discuss or transfer a plot with the person named on the deed. The Limited Power of
