@@ -127,8 +127,10 @@ Deno.serve(async (req) => {
               pdf_url: poaPdfUrl,
               notarized: !!poaRow.notarized_at,
               signed: !!poaRow.signed_at,
+              mail_to: mailFor("D21", ""),
             }
           : null,
+
         documents: deduped.map((d) => ({
           id: d.id,
           code: d.doc_code,
