@@ -1992,13 +1992,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                         <p className="text-[12px]">
                           {r.jointNames?.length ? `Joint POA — ${r.jointNames.join(" & ")}` : r.label}
                         </p>
-                        <p className={`text-[11px] mt-0.5 ${bad ? "text-rose-700" : "text-muted-foreground"}`}>
+                        <p className={`text-[11px] mt-0.5 ${bad || (!prepared && genFailed.has(reqKey(r))) ? "text-rose-700" : "text-muted-foreground"}`}>
                           {bad
                             ? `This copy names ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — edit it so both principals appear.`
                             : prepared
                               ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their family-tree answers. Check it — this exact PDF is attached for them to print and notarise. They cannot change it.`
-                              : "Being completed automatically from their family-tree answers…"}
+                              : genFailed.has(reqKey(r))
+                                ? "This one didn't save — press Fill it in now to build it again."
+                                : "Being completed automatically from their family-tree answers…"}
                         </p>
+
                         <div className="flex items-center gap-1.5 mt-2">
                           {prepared ? (
                             <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
