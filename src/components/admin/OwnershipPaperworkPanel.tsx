@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor,
+  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { openFileViewer } from "@/lib/fileViewer";
