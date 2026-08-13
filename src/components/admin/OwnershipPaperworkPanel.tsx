@@ -1216,9 +1216,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   // particular). For those items the seller is asked to post the document to us
   // rather than photograph it, and we hold the original on file.
   const mailOriginals = answers.mailOriginals ?? {};
-  const mailFor = (r: Requirement) => mailOriginals[reqKey(r)];
+  const mailSkip = answers.mailSkip ?? [];
+  const defaultMailAddress = answers.originalsAddress?.trim() || ORIGINALS_MAIL_ADDRESS;
+  /** Everything except photo ID is posted to our partner by default. */
+  const mailFor = (r: Requirement): { address: string } | undefined => {
+    const explicit = mailOriginals[reqKey(r)];
+    if (explicit) return explicit;
+    if (mailSkip.includes(reqKey(r))) return undefined;
+    return mailsByDefault(r.code) ? { address: defaultMailAddress } : undefined;
+  };
   const openMailDialog = (r: Requirement) =>
-    setMailDoc({ r, address: mailFor(r)?.address ?? answers.originalsAddress ?? "" });
+    setMailDoc({ r, address: mailFor(r)?.address ?? defaultMailAddress });
   const saveMailOriginal = async () => {
     if (!mailDoc) return;
     const address = mailDoc.address.trim();
@@ -1226,6 +1234,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     await persistAnswers({
       ...answers,
       originalsAddress: address,
+      mailSkip: mailSkip.filter((k) => k !== reqKey(mailDoc.r)),
       mailOriginals: { ...mailOriginals, [reqKey(mailDoc.r)]: { address } },
     } as OwnershipAnswers);
     setMailDoc(null);
@@ -1234,8 +1243,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const clearMailOriginal = async (r: Requirement) => {
     const next = { ...mailOriginals };
     delete next[reqKey(r)];
-    await persistAnswers({ ...answers, mailOriginals: next } as OwnershipAnswers);
+    await persistAnswers({
+      ...answers,
+      mailOriginals: next,
+      mailSkip: [...new Set([...mailSkip, reqKey(r)])],
+    } as OwnershipAnswers);
   };
+
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
