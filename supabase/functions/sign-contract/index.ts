@@ -432,6 +432,88 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ============ SELLER FOLLOW-UP: photo of the signed pack + "it's in the post" ============
+    // Called from the signing page after a Listing Agreement is signed. Stores an
+    // optional photo in the customer's file library and records that the seller has
+    // posted the originals, so we can tell Bayer Cemetery Brokers to expect them.
+    if (action === 'seller_followup') {
+      const { token, path, name, mailing_confirmed, carrier, tracking } = body ?? {};
+      const c = await loadContract(token);
+      if (!c) {
+        return new Response(JSON.stringify({ error: 'invalid_token' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const submissionId = c.submission_id as string;
+      const { data: sub } = await svc
+        .from('contact_submissions')
+        .select('id, name, email, customer_profile_id')
+        .eq('id', submissionId)
+        .maybeSingle();
+
+      let storedPath: string | null = null;
+      if (path) {
+        const rel = String(path).startsWith('portal-uploads/') ? String(path).slice('portal-uploads/'.length) : String(path);
+        const { data: blob } = await svc.storage.from('portal-uploads').download(rel);
+        if (blob) {
+          const bytes = new Uint8Array(await blob.arrayBuffer());
+          const safeName = String(name ?? 'signed-documents').replace(/[^\w.\-]+/g, '_');
+          if (sub?.customer_profile_id) {
+            const dest = `${sub.customer_profile_id}/${Date.now()}-${safeName}`;
+            const { error: upErr } = await svc.storage
+              .from('customer-files')
+              .upload(dest, bytes, { contentType: blob.type || 'application/octet-stream', upsert: true });
+            if (!upErr) {
+              storedPath = dest;
+              await svc.from('customer_files').insert({
+                customer_profile_id: sub.customer_profile_id,
+                file_name: String(name ?? safeName),
+                file_path: dest,
+                file_size: bytes.byteLength,
+                mime_type: blob.type || null,
+                document_type: 'Signed documents (seller photo)',
+                notes: 'Uploaded by the seller on the signing page after signing the Listing Agreement',
+                uploaded_by_name: sub.name ?? 'Seller',
+              });
+            }
+          }
+        }
+      }
+
+      if (sub?.customer_profile_id) {
+        await svc.from('customer_activity_log').insert({
+          customer_profile_id: sub.customer_profile_id,
+          submission_id: submissionId,
+          actor_name: sub.name ?? 'Seller',
+          action_type: mailing_confirmed ? 'originals_mailed' : 'seller_photo_uploaded',
+          action_summary: mailing_confirmed
+            ? `Seller confirmed the original documents are in the post to Bayer Cemetery Brokers${carrier ? ` via ${carrier}` : ''}${tracking ? ` (tracking ${tracking})` : ''}`
+            : `Seller uploaded a photo of the signed documents`,
+          details: { path: storedPath, carrier: carrier ?? null, tracking: tracking ?? null },
+        });
+      }
+
+      const { data: staff } = await svc.from('user_roles').select('user_id').in('role', ['admin', 'staff']);
+      const recipients = [...new Set((staff ?? []).map((r: { user_id: string }) => r.user_id))];
+      if (recipients.length) {
+        await svc.from('user_notifications').insert(recipients.map((uid) => ({
+          user_id: uid,
+          title: mailing_confirmed
+            ? `${sub?.name ?? 'Seller'} has posted the originals — tell Bayer to expect them`
+            : `${sub?.name ?? 'Seller'} uploaded a photo of the signed documents`,
+          body: mailing_confirmed
+            ? `Originals are on their way to Bayer Cemetery Brokers, 100 N Brand Blvd, Ste 213, Glendale, CA 91203${carrier ? ` · ${carrier}` : ''}${tracking ? ` · tracking ${tracking}` : ''}`
+            : 'A photo of the signed paperwork is now in their file library.',
+          link_url: `/admin?submission=${submissionId}`,
+          source_type: mailing_confirmed ? 'originals_mailed' : 'seller_photo',
+          source_id: submissionId,
+        })));
+      }
+
+      return new Response(JSON.stringify({ ok: true, path: storedPath }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
 
     // ================= COUNTERSIGN: admin stamps broker signature =================
