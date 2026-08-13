@@ -375,20 +375,36 @@ Deno.serve(async (req) => {
         .list(submissionId, { limit: 100 });
 
       if (kind === "poa") {
-        const poaFiles = (remainingFiles ?? []).filter((f) => f.name.startsWith("poa-notarized-"));
+        // Each signer's uploads live under their own prefix, so only that
+        // person's POA is reset when their last file goes.
+        const docKey = String(body?.doc_key ?? "poa-notarized");
+        const contractId = String(body?.contract_id ?? "");
+        const signerName = String(body?.signer_name ?? "").trim();
+        const poaFiles = (remainingFiles ?? []).filter((f) => f.name.startsWith(`${docKey}-`));
         if (!poaFiles.length) {
-          const { data: poa } = await supabase.from("contracts")
-            .select("id, notarized_pdf_path").eq("submission_id", submissionId).eq("kind", "poa")
-            .order("created_at", { ascending: false }).limit(1).maybeSingle();
+          let q = supabase.from("contracts")
+            .select("id, notarized_pdf_path").eq("submission_id", submissionId).eq("kind", "poa");
+          if (UUID.test(contractId)) q = q.eq("id", contractId);
+          const { data: poa } = await q.order("created_at", { ascending: false }).limit(1).maybeSingle();
           if (poa?.notarized_pdf_path) await supabase.storage.from("contracts").remove([poa.notarized_pdf_path]);
           if (poa) await supabase.from("contracts").update({
             notarized_pdf_path: null, notarized_at: null, signed_at: null, status: "draft",
           }).eq("id", poa.id);
-          await supabase.from("submission_documents").update({
-            file_url: null, file_urls: [], status: "pending", required_state: "needed", manual_override: "needed",
-          }).eq("submission_id", submissionId).eq("doc_code", "D21");
+          const { data: poaDocs } = await supabase.from("submission_documents")
+            .select("id, person_name").eq("submission_id", submissionId).eq("doc_code", "D21");
+          const key = personKeyOf(signerName);
+          const scoped = key
+            ? (poaDocs ?? []).filter((d) => personKeyOf((d as { person_name?: string }).person_name) === key)
+            : (poaDocs ?? []);
+          const ids = (scoped.length ? scoped : poaDocs ?? []).map((d) => (d as { id: string }).id);
+          if (ids.length) {
+            await supabase.from("submission_documents").update({
+              file_url: null, file_urls: [], status: "pending", required_state: "needed", manual_override: "needed",
+            }).in("id", ids);
+          }
         }
       } else {
+
         if (!UUID.test(docId)) return json({ error: "invalid document" }, 400);
         const prefix = `${docId}-`;
         const matching = (remainingFiles ?? []).filter((f) => f.name.startsWith(prefix))
