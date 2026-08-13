@@ -558,7 +558,9 @@ export function computeRequirements(
         fromCemetery: true,
       });
     }
-  } else if (a.deed) {
+  } else {
+    // Every file needs proof of the right being sold, so the deed is listed by
+    // default — even before the seller has told us whether they still have it.
     add({
       code: "D1",
       label: "Certificate of ownership (plot deed)",
@@ -567,6 +569,7 @@ export function computeRequirements(
       fromCemetery: rules.requires_originals,
     });
   }
+
 
   // ── Living owner ──
   if (a.owner === "living") {
