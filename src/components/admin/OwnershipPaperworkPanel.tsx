@@ -1311,11 +1311,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const deedOnFile = files.some((f) => codesForFile(f).includes("D1"));
 
 
-  /** Files that look like they satisfy this requirement. */
+  /** Files that look like they satisfy this requirement, plus any linked by hand. */
   const filesFor = (r: Requirement): AnyFile[] => {
     const row = rowFor(r);
-    return files.filter((f) => fileMatchesRequirement(f, r, row));
+    const linked = answers.linkedFiles?.[reqKey(r)] ?? [];
+    return files.filter((f) => linked.includes(f.path) || fileMatchesRequirement(f, r, row));
   };
+
+  /** Attach a document we already hold (an email attachment, say) to an item. */
+  const linkFileToRequirement = async (r: Requirement, path: string) => {
+    const key = reqKey(r);
+    const next = { ...(answers.linkedFiles ?? {}) };
+    next[key] = [...new Set([...(next[key] ?? []), path])];
+    await persistAnswers({ ...answers, linkedFiles: next } as OwnershipAnswers);
+    await setRowState(r, "received");
+    toast.success("Linked — this item now counts as received");
+  };
+
 
   // Documents often arrive before the ownership interview. Auto-ticking only
   // happens on hard evidence: a file the extractor has actually read and
