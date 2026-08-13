@@ -356,11 +356,12 @@ const DocRow = ({
           {doc.mail_to && (
             <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
               <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5" />The cemetery requires the original of this document
+                <Mail className="w-3.5 h-3.5" />Please post us the original of this document
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                A photo or scan will not be accepted for this one. Please post the original document to us — we store
-                all originals safely with your file and return them to you if the sale does not complete.
+                We work with Bayer Cemetery Brokers, our partner, who receive and store original documents securely for us —
+                that way the paperwork is ready the moment the cemetery asks for it and your transfer is processed quickly.
+                Originals stay safely with your file and are returned to you if the sale does not complete.
               </p>
               <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{doc.mail_to}</p>
               <p className="text-[11px] text-muted-foreground mt-2">
@@ -369,7 +370,7 @@ const DocRow = ({
             </div>
           )}
         </div>
-        {!doc.issued_by_us && !doc.mail_to && (
+        {!doc.issued_by_us && (
 
           <div className="flex items-center gap-2 shrink-0">
             <input

@@ -15,7 +15,9 @@ import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
-  canIssueJointPoa, isDeceasedPerson,
+  canIssueJointPoa, isDeceasedPerson, mailsByDefault,
+  ORIGINALS_MAIL_ADDRESS, ORIGINALS_MAIL_REASON,
+
   type OwnershipAnswers, type RosterPerson, type PersonRole,
   type RequiredState, type Requirement, type CemeteryDocRules,
 } from "@/lib/ownershipRules";
@@ -790,11 +792,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         person: r.personName ?? null,
         needsNotary: !!r.needsNotary,
         issuedByUs: !!r.issuedByUs,
-        mailTo: (answers.mailOriginals ?? {})[reqKey(r)]?.address ?? null,
+        mailTo: mailFor(r)?.address ?? null,
 
       };
     });
-    return { items, poas, poaUrl, poaFor };
+    const poaMailTo = poaRequirements.length
+      ? (mailFor(poaRequirements[0])?.address ?? null)
+      : ORIGINALS_MAIL_ADDRESS;
+    return { items, poas, poaUrl, poaFor, poaMailTo };
+
   };
 
   /** Step 2 of the review: fetch the exact email without sending anything. */
@@ -802,9 +808,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setReview({ step: 2, loading: true });
     try {
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, preview: true },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, preview: true },
       });
       if (error) throw error;
       const res = data as { html?: string; subject?: string };
@@ -823,10 +829,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     try {
       // Make sure the seller's page actually lists these items.
       if (!rows.some((r) => r.doc_code)) await syncChecklist();
-      const { items, poas, poaUrl, poaFor } = await buildPacketPayload();
+      const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo },
       });
       if (error) throw error;
       toast.success(`Document request emailed to ${sellerEmail}`, {
@@ -1216,9 +1222,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   // particular). For those items the seller is asked to post the document to us
   // rather than photograph it, and we hold the original on file.
   const mailOriginals = answers.mailOriginals ?? {};
-  const mailFor = (r: Requirement) => mailOriginals[reqKey(r)];
+  const mailSkip = answers.mailSkip ?? [];
+  const defaultMailAddress = answers.originalsAddress?.trim() || ORIGINALS_MAIL_ADDRESS;
+  /** Everything except photo ID is posted to our partner by default. */
+  const mailFor = (r: Requirement): { address: string } | undefined => {
+    const explicit = mailOriginals[reqKey(r)];
+    if (explicit) return explicit;
+    if (mailSkip.includes(reqKey(r))) return undefined;
+    return mailsByDefault(r.code) ? { address: defaultMailAddress } : undefined;
+  };
   const openMailDialog = (r: Requirement) =>
-    setMailDoc({ r, address: mailFor(r)?.address ?? answers.originalsAddress ?? "" });
+    setMailDoc({ r, address: mailFor(r)?.address ?? defaultMailAddress });
   const saveMailOriginal = async () => {
     if (!mailDoc) return;
     const address = mailDoc.address.trim();
@@ -1226,6 +1240,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     await persistAnswers({
       ...answers,
       originalsAddress: address,
+      mailSkip: mailSkip.filter((k) => k !== reqKey(mailDoc.r)),
       mailOriginals: { ...mailOriginals, [reqKey(mailDoc.r)]: { address } },
     } as OwnershipAnswers);
     setMailDoc(null);
@@ -1234,8 +1249,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const clearMailOriginal = async (r: Requirement) => {
     const next = { ...mailOriginals };
     delete next[reqKey(r)];
-    await persistAnswers({ ...answers, mailOriginals: next } as OwnershipAnswers);
+    await persistAnswers({
+      ...answers,
+      mailOriginals: next,
+      mailSkip: [...new Set([...mailSkip, reqKey(r)])],
+    } as OwnershipAnswers);
   };
+
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
@@ -1347,7 +1367,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </Button>
             )}
 
-            {!r.issuedByUs && r.code !== "REVIEW" && r.code !== "NOTE" && (
+            {r.code !== "REVIEW" && r.code !== "NOTE" && (
               <Button
                 size="sm"
                 variant={mailFor(r) ? "default" : "ghost"}
@@ -1421,8 +1441,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             {mailFor(r) && (
               <div className="rounded-md border border-rose-200 bg-rose-50/60 px-2.5 py-2">
                 <p className="text-[11px] font-medium text-rose-900 flex items-center gap-1">
-                  <Mail className="w-3 h-3" />The cemetery requires the original — the seller posts it to us
+                  <Mail className="w-3 h-3" />The original is posted to us
                 </p>
+                <p className="text-[11px] text-rose-900/70 mt-0.5">{ORIGINALS_MAIL_REASON}</p>
                 <p className="text-[11px] text-rose-900/80 whitespace-pre-line mt-0.5">{mailFor(r)!.address}</p>
                 <button type="button" onClick={() => openMailDialog(r)} className="text-[11px] underline text-rose-900/70 mt-1">
                   Change the address

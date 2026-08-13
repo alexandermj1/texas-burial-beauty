@@ -81,8 +81,10 @@ Deno.serve(async (req) => {
           ${it.what ? `<div style="font-size:13px;color:#4a5568;line-height:1.6;margin-top:4px;">${esc(it.what)}</div>` : ''}
           ${it.how ? `<div style="font-size:13px;color:#6b7280;line-height:1.6;margin-top:4px;"><em>How to get it:</em> ${esc(it.how)}</div>` : ''}
           ${it.mailTo ? `<div style="margin-top:8px;padding:10px 12px;background:#fdf2f2;border-radius:8px;font-size:13px;color:#7f1d1d;line-height:1.6;">
-            The cemetery requires an <strong>original copy</strong> of this document — a photograph or scan will not be accepted.
-            Please post the original to us; we store all originals safely on your file and return them to you if the sale does not complete.
+            Please post the <strong>original</strong> of this document to us. We work with Bayer Cemetery Brokers, our partner, who
+            receive and store original documents securely on our behalf — that way the paperwork is on hand the moment the cemetery
+            asks for it and your transfer is processed quickly. Originals are kept safely on your file and returned to you if the
+            sale does not complete.
             <div style="margin-top:6px;color:#1f2a37;white-space:pre-line;">${esc(it.mailTo)}</div>
           </div>` : ''}
         </td>
@@ -118,8 +120,12 @@ Deno.serve(async (req) => {
         <ol style="padding-left:18px;margin:0;font-size:13px;color:#4a5568;line-height:1.8;">
           <li>Print the attached PDF (${poas.length > 1 ? 'one for each signer' : 'one page to sign'}) — please do not alter anything on it.</li>
           <li>Sign it in front of a notary: any bank, UPS Store or courthouse will do, and it takes a few minutes.</li>
-          <li>Send it back — upload a photo on your document page, and post the signed original to us.</li>
+          <li>Send it back — upload a photo on your document page, and post the signed original to the address below.</li>
         </ol>
+        <p style="margin:12px 0 0;font-size:13px;color:#4a5568;line-height:1.7;">
+          The signed original goes to our partner, Bayer Cemetery Brokers, who receive and store original documents securely for us
+          so the transfer can be processed as soon as the cemetery asks for the paper copy.
+        </p>
         ${mailToAddress ? `<div style="margin-top:12px;font-size:13px;color:#1f2a37;white-space:pre-line;">${esc(mailToAddress)}</div>` : ''}
       </div>` : '';
 
