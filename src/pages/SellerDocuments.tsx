@@ -275,7 +275,10 @@ const PoaUpload = ({
           {done ? <CheckCircle2 className="w-5 h-5" /> : <Stamp className="w-5 h-5" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-display text-lg text-foreground leading-snug">Upload the notarized POA</p>
+          <p className="font-display text-lg text-foreground leading-snug">
+            Upload the notarized POA{signerName ? ` for ${signerName}` : ""}
+          </p>
+
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
             Once a notary has signed and stamped it, send the document back here. A photo or PDF of every page is fine.
           </p>
