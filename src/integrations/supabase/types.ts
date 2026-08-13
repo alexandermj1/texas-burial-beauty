@@ -811,6 +811,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["contract_kind"]
           notarized_at: string | null
           notarized_pdf_path: string | null
+          principal_key: string
           sent_at: string | null
           sign_token: string | null
           sign_token_expires_at: string | null
@@ -849,6 +850,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["contract_kind"]
           notarized_at?: string | null
           notarized_pdf_path?: string | null
+          principal_key?: string
           sent_at?: string | null
           sign_token?: string | null
           sign_token_expires_at?: string | null
@@ -887,6 +889,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["contract_kind"]
           notarized_at?: string | null
           notarized_pdf_path?: string | null
+          principal_key?: string
           sent_at?: string | null
           sign_token?: string | null
           sign_token_expires_at?: string | null
