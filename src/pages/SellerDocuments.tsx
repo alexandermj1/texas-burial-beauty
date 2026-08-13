@@ -690,7 +690,14 @@ const SellerDocuments = () => {
                 <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
                   {MAIL_REASON}
                 </p>
+                <MailTick
+                  submissionId={submissionId}
+                  itemKey="D21::"
+                  confirmedAt={packet.poa.mailed_confirmed_at}
+                  onDone={load}
+                />
               </div>
+
             )}
             {packet.poa.pdf_url && (
               <a
