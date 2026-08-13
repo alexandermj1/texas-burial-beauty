@@ -422,7 +422,7 @@ const DocRow = ({
               disabled={uploading}
               className={`inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full disabled:opacity-60 ${done ? "border border-border hover:border-primary/40" : "bg-primary text-primary-foreground hover:opacity-90"}`}
             >
-              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} {done ? "Add another" : "Upload"}
+              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} {done ? "Replace" : "Upload"}
             </button>
             <button
               onClick={() => setPhone((v) => !v)}
