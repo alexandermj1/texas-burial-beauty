@@ -169,6 +169,59 @@ export default function SignContract() {
     }
   };
 
+  // ---- After signing: photo of the paperwork + "originals are in the post" ----
+  const [followUploading, setFollowUploading] = useState(false);
+  const [followUploaded, setFollowUploaded] = useState(false);
+  const [mailingBusy, setMailingBusy] = useState(false);
+  const [mailingConfirmed, setMailingConfirmed] = useState(false);
+  const [carrier, setCarrier] = useState("");
+  const [tracking, setTracking] = useState("");
+  const followInputRef = useRef<HTMLInputElement | null>(null);
+
+  const postFollowUp = async (payload: Record<string, unknown>) => {
+    const res = await fetch(FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
+      body: JSON.stringify({ action: "seller_followup", token, ...payload }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Could not save");
+    return data;
+  };
+
+  const uploadSignedPhoto = async (f: File) => {
+    if (!submissionId) return;
+    setFollowUploading(true);
+    try {
+      const ext = (f.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${submissionId}/signed-docs-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext || "jpg"}`;
+      const { error } = await supabase.storage
+        .from("portal-uploads")
+        .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type });
+      if (error) throw error;
+      await postFollowUp({ path, name: f.name });
+      setFollowUploaded(true);
+      toast.success("Photo received — thank you.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setFollowUploading(false);
+    }
+  };
+
+  const confirmMailing = async () => {
+    setMailingBusy(true);
+    try {
+      await postFollowUp({ mailing_confirmed: true, carrier, tracking });
+      setMailingConfirmed(true);
+      toast.success("Thank you — we'll let Bayer Cemetery Brokers know to expect them.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setMailingBusy(false);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
