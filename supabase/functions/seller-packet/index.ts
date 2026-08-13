@@ -151,10 +151,11 @@ Deno.serve(async (req) => {
           notarized: !!r.notarized_at,
           signed: !!r.signed_at,
           mail_to: mailFor("D21", signer),
+          // Legacy submissions stored one unnamed tick under "D21::".
           mailed_confirmed_at:
-            mailedConfirmed[`D21::${signer}`] ?? (poaRows ?? []).length === 1
-              ? mailedConfirmed[`D21::${signer}`] ?? mailedConfirmed["D21::"] ?? null
-              : mailedConfirmed[`D21::${signer}`] ?? null,
+            mailedConfirmed[`D21::${signer}`] ??
+            ((poaRows ?? []).length === 1 ? mailedConfirmed["D21::"] ?? null : null),
+
           mail_key: `D21::${signer}`,
         });
       }
