@@ -370,7 +370,7 @@ const DocRow = ({
             </div>
           )}
         </div>
-        {!doc.issued_by_us && !doc.mail_to && (
+        {!doc.issued_by_us && (
 
           <div className="flex items-center gap-2 shrink-0">
             <input
