@@ -26,12 +26,23 @@ type PacketDoc = {
   issued_by_us: boolean | null;
   /** When set, the cemetery only accepts the original — post it to this address. */
   mail_to?: string | null;
+  /** Set once the seller has ticked "this is in the post". */
+  mailed_confirmed_at?: string | null;
   state: string;
+  complete?: boolean;
   uploaded: boolean;
 };
 
 
-type Poa = { sign_token: string | null; pdf_url?: string | null; notarized: boolean; signed: boolean; mail_to?: string | null } | null;
+type Poa = {
+  sign_token: string | null;
+  pdf_url?: string | null;
+  notarized: boolean;
+  signed: boolean;
+  mail_to?: string | null;
+  mailed_confirmed_at?: string | null;
+} | null;
+
 
 const MAIL_ADDRESS = "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
 const MAIL_REASON =
