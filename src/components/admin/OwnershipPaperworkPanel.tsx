@@ -1363,7 +1363,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </Button>
             )}
 
-            {!r.issuedByUs && r.code !== "REVIEW" && r.code !== "NOTE" && (
+            {r.code !== "REVIEW" && r.code !== "NOTE" && (
               <Button
                 size="sm"
                 variant={mailFor(r) ? "default" : "ghost"}
