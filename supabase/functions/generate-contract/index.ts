@@ -5,7 +5,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
 import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
-import { contactFor } from '../_shared/questionnaire-contacts.ts';
+import { contactFor, nameKey } from '../_shared/questionnaire-contacts.ts';
 
 
 const KINDS = ['listing_agreement', 'poa', 'affidavit_heirship', 'spousal_consent'] as const;
@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
       });
     } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.filter(Boolean).length > 1) {
       // A married couple signing one instrument instead of one POA each.
-      const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2);
+      const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2).map(fullName);
       // Remember this on the contract so every later regeneration (the seller's
       // sign page, the notary packet) rebuilds the JOINT document, not the
       // single-signer template.
