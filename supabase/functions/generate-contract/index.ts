@@ -247,7 +247,10 @@ Deno.serve(async (req) => {
       created_by: userData.user.id,
     };
 
-    await svc.from('contracts').insert(row);
+    const { data: inserted, error: insErr } = await svc.from('contracts')
+      .insert(row).select('id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token')
+      .single();
+    if (insErr) throw insErr;
 
 
     const { data: signedUrl } = await svc.storage.from('contracts').createSignedUrl(path, 60 * 60 * 24);
@@ -258,6 +261,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true, sign_token: signToken, pdf_url: signedUrl?.signedUrl ?? null, pdf_path: path,
+      contract: inserted ?? null,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     console.error('generate-contract error', err);

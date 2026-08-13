@@ -175,6 +175,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [rows, setRows] = useState<DocRow[]>([]);
   const [open, setOpen] = useState(false);
   const [contracts, setContracts] = useState<ContractRow[]>([]);
+  /** Requirements whose auto-fill failed — shown with a retry rather than an endless spinner. */
+  const [genFailed, setGenFailed] = useState<Set<string>>(new Set());
   const [inferring, setInferring] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
   const [files, setFiles] = useState<AnyFile[]>([]);
@@ -1058,6 +1060,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const generateDoc = async (r: Requirement, overrideFields?: DocFields, silent = false) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
+    setGenFailed((s) => { const n = new Set(s); n.delete(reqKey(r)); return n; });
     try {
       const f = overrideFields;
       const jointNames = f
@@ -1088,8 +1091,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: { submission_id: submissionId, kind: r.contractKind, overrides },
       });
       if (error) throw error;
-      const res = data as { pdf_url?: string | null; sign_token?: string | null };
+      const res = data as { pdf_url?: string | null; sign_token?: string | null; error?: string; contract?: ContractRow | null };
+      if (res?.error) throw new Error(res.error);
       setDocEdit(null);
+      // Show it as ready immediately — no waiting on a full panel reload.
+      if (res?.contract) {
+        setContracts((prev) => [...prev.filter((c) => c.id !== res.contract!.id), res.contract!]);
+      }
       if (!silent) {
         // Show the filled PDF inline so it can be checked line by line.
         if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
@@ -1097,14 +1105,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
         });
       }
-      await setRowState(r, "issued");
-      await load();
+      void setRowState(r, "issued").then(() => load());
     } catch (e) {
+      setGenFailed((s) => new Set(s).add(reqKey(r)));
       if (!silent) toast.error((e as Error).message);
     } finally {
       setBusy(null);
     }
   };
+
 
 
   /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
@@ -1983,13 +1992,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                         <p className="text-[12px]">
                           {r.jointNames?.length ? `Joint POA — ${r.jointNames.join(" & ")}` : r.label}
                         </p>
-                        <p className={`text-[11px] mt-0.5 ${bad ? "text-rose-700" : "text-muted-foreground"}`}>
+                        <p className={`text-[11px] mt-0.5 ${bad || (!prepared && genFailed.has(reqKey(r))) ? "text-rose-700" : "text-muted-foreground"}`}>
                           {bad
                             ? `This copy names ${prepared?.signature_name ?? (prepared?.fill_data as { seller_name?: string } | null)?.seller_name ?? "one person"} only — edit it so both principals appear.`
                             : prepared
                               ? `Completed for ${prepared.signature_name ?? (prepared.fill_data as { seller_name?: string } | null)?.seller_name ?? "the signer"} from their family-tree answers. Check it — this exact PDF is attached for them to print and notarise. They cannot change it.`
-                              : "Being completed automatically from their family-tree answers…"}
+                              : genFailed.has(reqKey(r))
+                                ? "This one didn't save — press Fill it in now to build it again."
+                                : "Being completed automatically from their family-tree answers…"}
                         </p>
+
                         <div className="flex items-center gap-1.5 mt-2">
                           {prepared ? (
                             <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
@@ -1997,11 +2009,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                               {busy === `${reqKey(r)}-open` ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileText className="w-3.5 h-3.5 mr-1" />}
                               Check the POA
                             </Button>
+                          ) : genFailed.has(reqKey(r)) ? (
+                            <Button size="sm" variant="outline" className="border-rose-300 text-rose-700"
+                              onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>
+                              {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
+                              Fill it in now
+                            </Button>
                           ) : (
                             <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
                               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Filling it in…
                             </span>
                           )}
+
                           <Button size="sm" variant="outline" onClick={() => void openDocEditor(r)} disabled={busy === reqKey(r)}>
                             {busy === reqKey(r) ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
                             Edit
