@@ -121,19 +121,43 @@ Deno.serve(async (req) => {
           return all[index] === best;
         });
 
-      // The POA is completed by us from the family-tree answers — the seller only
-      // ever downloads it, prints it and has it notarised. Nothing to fill in.
-      let poaPdfUrl: string | null = null;
-      const poaPath = poaRow?.notarized_pdf_path || poaRow?.signed_pdf_path || poaRow?.filled_pdf_path;
-      if (poaPath) {
-        const { data: signedUrl } = await supabase.storage.from("contracts").createSignedUrl(poaPath, 60 * 60 * 24);
-        poaPdfUrl = signedUrl?.signedUrl ?? null;
-      }
-
       // Anything the seller has already told us is in the post.
       const mailedConfirmed: Record<string, string> =
         (ownershipAnswers.mailedConfirmed as Record<string, string>) ?? {};
       const DONE_STATES = ["received", "notarized", "complete"];
+
+      // Each POA is completed by us from the family-tree answers — the seller only
+      // ever downloads it, prints it and has it notarised. Nothing to fill in.
+      const signedPdf = async (path?: string | null) => {
+        if (!path) return null;
+        const { data } = await supabase.storage.from("contracts").createSignedUrl(path, 60 * 60 * 24);
+        return data?.signedUrl ?? null;
+      };
+      const poas = [];
+      for (const row of poaRows ?? []) {
+        const r = row as Record<string, unknown>;
+        const fill = (r.fill_data ?? {}) as Record<string, unknown>;
+        const signer = String(fill.seller_name ?? r.signature_name ?? "").trim();
+        const pdfUrl = await signedPdf(
+          (r.notarized_pdf_path as string) || (r.signed_pdf_path as string) || (r.filled_pdf_path as string),
+        );
+        if (!r.sign_token && !pdfUrl) continue;
+        poas.push({
+          contract_id: r.id as string,
+          principal_key: (r.principal_key as string) ?? "",
+          signer_name: signer || null,
+          sign_token: (r.sign_token as string) ?? null,
+          pdf_url: pdfUrl,
+          notarized: !!r.notarized_at,
+          signed: !!r.signed_at,
+          mail_to: mailFor("D21", signer),
+          mailed_confirmed_at:
+            mailedConfirmed[`D21::${signer}`] ?? (poaRows ?? []).length === 1
+              ? mailedConfirmed[`D21::${signer}`] ?? mailedConfirmed["D21::"] ?? null
+              : mailedConfirmed[`D21::${signer}`] ?? null,
+          mail_key: `D21::${signer}`,
+        });
+      }
 
       return json({
         seller_name: sub.name,
@@ -145,16 +169,9 @@ Deno.serve(async (req) => {
               signed_at: listingRow.signed_at,
             }
           : null,
-        poa: (poaRow?.sign_token || poaPdfUrl)
-          ? {
-              sign_token: poaRow?.sign_token ?? null,
-              pdf_url: poaPdfUrl,
-              notarized: !!poaRow.notarized_at,
-              signed: !!poaRow.signed_at,
-              mail_to: mailFor("D21", ""),
-              mailed_confirmed_at: mailedConfirmed["D21::"] ?? null,
-            }
-          : null,
+        poas,
+        poa: poas[0] ?? null,
+
 
         documents: deduped.map((d) => {
           const state = d.manual_override ?? d.required_state;
