@@ -362,7 +362,47 @@ Deno.serve(async (req) => {
         status: "notarized",
       }).eq("id", poaRow.id);
 
+      // Tick the POA rows on the checklist so the admin panel shows it as
+      // received, with the file kept against the item.
+      const { data: poaDocs } = await supabase
+        .from("submission_documents")
+        .select("id, file_urls")
+        .eq("submission_id", submissionId)
+        .eq("doc_code", "D21");
+      for (const d of poaDocs ?? []) {
+        const prior: string[] = Array.isArray((d as { file_urls?: string[] }).file_urls)
+          ? (d as { file_urls: string[] }).file_urls : [];
+        await supabase.from("submission_documents").update({
+          file_url: filePath,
+          file_urls: prior.includes(filePath) ? prior : [...prior, filePath],
+          status: "received",
+          required_state: "notarized",
+          manual_override: "notarized",
+        }).eq("id", (d as { id: string }).id);
+      }
+
       if (sub.customer_profile_id) {
+        // Keep a copy in the customer's file library so it sits on the
+        // submission alongside every other document.
+        try {
+          const destPath = `${sub.customer_profile_id}/${Date.now()}-${safeName}`;
+          const { error: cpErr } = await supabase.storage
+            .from("customer-files")
+            .upload(destPath, bytes, { contentType: fileData.type || "application/pdf", upsert: true });
+          if (!cpErr) {
+            await supabase.from("customer_files").insert({
+              customer_profile_id: sub.customer_profile_id,
+              file_name: name,
+              file_path: destPath,
+              file_size: bytes.byteLength,
+              mime_type: fileData.type || "application/pdf",
+              document_type: "Notarized power of attorney",
+              notes: "Uploaded by the seller via the document packet",
+              uploaded_by_name: sub.name ?? "Seller",
+            });
+          }
+        } catch (_e) { /* best-effort mirror */ }
+
         await supabase.from("customer_activity_log").insert({
           customer_profile_id: sub.customer_profile_id,
           submission_id: submissionId,
@@ -371,6 +411,7 @@ Deno.serve(async (req) => {
           action_summary: `Seller uploaded the notarized Power of Attorney (${safeName})`,
         });
       }
+
 
       // Notify staff that the POA has been returned.
       const { data: staff } = await supabase
