@@ -31,7 +31,43 @@ type PacketDoc = {
 };
 
 
-type Poa = { sign_token: string | null; pdf_url?: string | null; notarized: boolean; signed: boolean } | null;
+type Poa = { sign_token: string | null; pdf_url?: string | null; notarized: boolean; signed: boolean; mail_to?: string | null } | null;
+
+const MAIL_ADDRESS = "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
+const MAIL_REASON =
+  "We work with Bayer Cemetery Brokers, our partner, who receive and store original documents securely for us — that way the paperwork is ready the moment the cemetery asks for the paper copy and your transfer goes through quickly.";
+
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "Why does the cemetery need originals rather than photos?",
+    a: "Cemetery offices are transferring legal title to an interment right, so most of them will only accept wet-ink originals with a notary stamp. We ask for a photo first so we can check every page is correct before you post anything — then the original follows in the mail to our partner, Bayer Cemetery Brokers, in Glendale, California.",
+  },
+  {
+    q: "What exactly does the Power of Attorney let you do?",
+    a: "Only what is needed to sell this plot: talk to the cemetery, collect and submit their transfer forms, and complete the paperwork at closing. It does not allow us to touch your money, sell at a price you have not agreed, or act on anything other than this property. It expires when the sale completes and you can revoke it in writing at any time.",
+  },
+  {
+    q: "Where do I find a notary, and what does it cost?",
+    a: "Most banks and credit unions notarise free for their customers. UPS Store, FedEx Office, courthouses, title companies and public libraries also offer it, usually $6–$15 per signature in Texas. Mobile notaries will come to your home for around $25–$75. Bring your unsigned document and a valid photo ID — the notary must watch you sign.",
+  },
+  {
+    q: "Do I have to pay for anything on this page?",
+    a: "No. There is no charge from us for any of this paperwork, and no fee at all until your plot sells. The only costs you may face are a notary's fee, postage, and any certified-copy fee a county charges for a death certificate or court order.",
+  },
+  {
+    q: "Several people are named on the deed. Does everyone have to do this?",
+    a: "Yes — every living person named on the deed has to sign, and where an owner has died we need the death certificate plus whatever proves who inherited their share. Each person's items are listed separately below with their name on them, so you can see exactly who still has something to do.",
+  },
+  {
+    q: "How long does the whole process take?",
+    a: "Most sellers finish their paperwork within a week or two. Once we have everything and a buyer is in place, cemeteries typically take two to six weeks to record the transfer. Uploading photos the same day you sign is the single biggest thing that speeds it up.",
+  },
+  {
+    q: "Is my information safe?",
+    a: "Your files are stored privately, are visible only to your broker, and are used solely to transfer this plot. We never sell or share your details, and originals are returned to you if the sale does not complete.",
+  },
+];
+
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
 
 type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; listing_agreement?: ListingAgreement };
