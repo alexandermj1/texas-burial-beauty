@@ -2071,7 +2071,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <iframe src={pdfPreview.url} title={pdfPreview.title} className="w-full h-[70vh] rounded-md border bg-white" />
           )}
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => pdfPreview && openTab(pdfPreview.url)}>
+            <Button variant="outline" size="sm" onClick={() => {
+              if (!pdfPreview) return;
+              const tab = window.open(pdfPreview.url, "_blank");
+              if (!tab) toast.error("Pop-up blocked — allow pop-ups for this site and try again");
+              else tab.opener = null;
+            }}>
               Open in new tab
             </Button>
             <Button size="sm" onClick={() => setPdfPreview(null)}>Looks right</Button>
