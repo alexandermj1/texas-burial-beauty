@@ -166,7 +166,7 @@ const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
 
 
 
-export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
+export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted, onSent }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
