@@ -498,6 +498,20 @@ const SellerDocuments = () => {
           </p>
         </div>
 
+        <div className="mt-3 rounded-2xl border border-accent/40 bg-accent/10 px-5 py-4">
+          <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+            <Mail className="w-3.5 h-3.5" /> Where the original paperwork goes
+          </p>
+          <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{MAIL_ADDRESS}</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+            {MAIL_REASON} Upload a photo of each item here first so we can start straight away, then post the originals
+            — apart from your photo ID, which we only ever need as a photograph. Originals stay with your file and are
+            returned to you if the sale does not complete.
+          </p>
+        </div>
+
+
+
 
         {total > 0 && (
           <div className="mt-8 mb-10">
