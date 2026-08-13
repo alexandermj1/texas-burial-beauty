@@ -175,6 +175,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [rows, setRows] = useState<DocRow[]>([]);
   const [open, setOpen] = useState(false);
   const [contracts, setContracts] = useState<ContractRow[]>([]);
+  /** Requirements whose auto-fill failed — shown with a retry rather than an endless spinner. */
+  const [genFailed, setGenFailed] = useState<Set<string>>(new Set());
   const [inferring, setInferring] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
   const [files, setFiles] = useState<AnyFile[]>([]);
