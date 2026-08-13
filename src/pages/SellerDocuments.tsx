@@ -88,6 +88,54 @@ const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
 type Uploaded = { name: string; path: string; url: string; isImage: boolean };
 
+/**
+ * The seller ticks this to tell us the original is in the post, so our team —
+ * and Bayer, who receive it — know to expect it.
+ */
+const MailTick = ({
+  submissionId, itemKey, confirmedAt, onDone,
+}: { submissionId: string; itemKey: string; confirmedAt?: string | null; onDone: () => void }) => {
+  const [saving, setSaving] = useState(false);
+  const [confirmed, setConfirmed] = useState(!!confirmedAt);
+
+  const toggle = async () => {
+    const next = !confirmed;
+    setSaving(true);
+    setConfirmed(next);
+    try {
+      await supabase.functions.invoke("seller-packet", {
+        body: { action: "confirm_mail", submission_id: submissionId, key: itemKey, undo: !next },
+      });
+      onDone();
+    } catch {
+      setConfirmed(!next);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      disabled={saving}
+      className={`mt-3 w-full text-left inline-flex items-start gap-2.5 rounded-xl border px-4 py-3 transition-colors disabled:opacity-60 ${
+        confirmed ? "border-primary/40 bg-primary/[0.06]" : "border-border/70 bg-card/70 hover:border-primary/40"
+      }`}
+    >
+      <span className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${confirmed ? "bg-primary border-primary text-primary-foreground" : "border-border"}`}>
+        {confirmed && <CheckCircle2 className="w-3 h-3" />}
+      </span>
+      <span className="text-xs text-foreground leading-relaxed">
+        {confirmed
+          ? "Thank you — we've told our team to expect the original in the post."
+          : "Tick here to confirm you're posting the original to us."}
+      </span>
+    </button>
+  );
+};
+
+
+
 const PoaUpload = ({
   submissionId,
   onDone,
