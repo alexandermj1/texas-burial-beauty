@@ -232,10 +232,8 @@ Deno.serve(async (req) => {
     // "confirm your mailing address" page that then emails the seller a notary-ready packet.
     const signToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
 
-    // Always insert a new contract row when (re)generating. Previous versions
-    // are preserved so admins can look back at earlier drafts / signed copies
-    // rather than having them silently overwritten. ContractsPanel picks the
-    // latest per kind (by created_at desc) for the active workflow.
+    // There is a unique constraint on (submission_id, kind), so regenerating a
+    // document must update the existing row rather than insert a second one.
     const row = {
       submission_id,
       kind,
@@ -247,8 +245,10 @@ Deno.serve(async (req) => {
       created_by: userData.user.id,
     };
 
+    const SELECT_COLS = 'id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token';
     const { data: inserted, error: insErr } = await svc.from('contracts')
-      .insert(row).select('id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token')
+      .upsert(row, { onConflict: 'submission_id,kind' })
+      .select(SELECT_COLS)
       .single();
     if (insErr) throw insErr;
 
