@@ -412,7 +412,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return m;
   }, [rows, contractStates]);
 
-  const stats = useMemo(() => summarise(requirements, stateByKey), [requirements, stateByKey]);
+  // `summarise` keys states by the raw requirement key (`code::Person Name`)
+  // while `stateByKey` uses the normalised person key, so hand it a re-keyed
+  // copy — otherwise person-scoped rows silently read "needed" and the
+  // "x of y complete" counter is wrong.
+  const statsStates = useMemo(() => {
+    const m: Record<string, RequiredState> = {};
+    for (const r of requirements) m[reqKey(r)] = stateByKey[reqDbKey(r)] ?? "needed";
+    return m;
+  }, [requirements, stateByKey]);
+  const stats = useMemo(() => summarise(requirements, statsStates), [requirements, statsStates]);
 
   // Save the computed checklist the first time an admin opens the panel, so the
   // seller's own page is never empty just because nobody pressed Sync.
