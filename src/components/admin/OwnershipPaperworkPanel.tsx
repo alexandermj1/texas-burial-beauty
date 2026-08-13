@@ -861,9 +861,26 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const p = t.split(" ");
       return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
     };
-    const contacts = ((answers as Record<string, unknown>).contacts ?? {}) as Record<
+    // The seller's confirmation page saves these under `v2.contacts`; the older
+    // roster editor put them at the top level or on each person.
+    const a = answers as Record<string, unknown>;
+    const v2c = ((a.v2 as Record<string, unknown> | undefined)?.contacts ?? {}) as Record<
       string, { addr?: string; email?: string; phone?: string }
     >;
+    const contacts: Record<string, { addr?: string; email?: string; phone?: string }> = {
+      ...v2c,
+      ...((a.contacts ?? {}) as Record<string, { addr?: string; email?: string; phone?: string }>),
+    };
+    for (const p of (Array.isArray(a.people) ? (a.people as Record<string, string>[]) : [])) {
+      const pk = key(p?.name);
+      if (!pk) continue;
+      const ex = contacts[pk] ?? {};
+      contacts[pk] = {
+        addr: ex.addr || String(p?.address ?? ""),
+        email: ex.email || String(p?.email ?? ""),
+        phone: ex.phone || String(p?.phone ?? ""),
+      };
+    }
     const k = key(name);
     let hit = k ? contacts[k] : undefined;
     if (!hit && k) {

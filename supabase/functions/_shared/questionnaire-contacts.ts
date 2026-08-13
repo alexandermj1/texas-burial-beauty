@@ -38,7 +38,25 @@ function splitAddress(raw: string): { address: string; city_state_zip: string } 
  */
 export function contactFor(answers: unknown, name: string): ContactDetails {
   const a = (answers ?? {}) as Record<string, unknown>;
-  const contacts = (a.contacts ?? {}) as Record<string, { addr?: string; email?: string; phone?: string }>;
+  // The seller's page saves contact details under `v2.contacts`; older records
+  // (and the admin roster) keep them at the top level or on `people[]`.
+  const v2 = (a.v2 ?? {}) as Record<string, unknown>;
+  const contacts: Record<string, { addr?: string; email?: string; phone?: string }> = {
+    ...((v2.contacts ?? {}) as Record<string, { addr?: string; email?: string; phone?: string }>),
+    ...((a.contacts ?? {}) as Record<string, { addr?: string; email?: string; phone?: string }>),
+  };
+  // People saved with their own address/phone/email (roster editor) count too.
+  const people = Array.isArray(a.people) ? (a.people as Record<string, string>[]) : [];
+  for (const p of people) {
+    const k = nameKey(p?.name);
+    if (!k) continue;
+    const existing = contacts[k] ?? {};
+    contacts[k] = {
+      addr: existing.addr || String(p?.address ?? ''),
+      email: existing.email || String(p?.email ?? ''),
+      phone: existing.phone || String(p?.phone ?? ''),
+    };
+  }
   const key = nameKey(name);
   let hit = key ? contacts[key] : undefined;
   if (!hit && key) {
