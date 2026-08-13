@@ -434,7 +434,12 @@ const DocRow = ({
                 We send this to you
               </span>
             )}
-            {doc.mail_to && (
+            {done && (
+              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary text-primary-foreground inline-flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />Complete
+              </span>
+            )}
+            {!done && doc.mail_to && (
               <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-accent/20 text-foreground inline-flex items-center gap-1">
                 <Mail className="w-3 h-3" />Original by post
               </span>
@@ -452,7 +457,12 @@ const DocRow = ({
               <p className="text-xs text-muted-foreground leading-relaxed"><span className="font-medium text-foreground/70">How to get it: </span>{guide.how}</p>
             </div>
           )}
-          {doc.mail_to && (
+          {done && (
+            <p className="mt-3 text-xs text-primary inline-flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" /> We already have this — nothing more to do for this item.
+            </p>
+          )}
+          {!done && doc.mail_to && (
             <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
               <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5" />Please post us the original of this document
@@ -463,13 +473,16 @@ const DocRow = ({
                 Originals stay safely with your file and are returned to you if the sale does not complete.
               </p>
               <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{doc.mail_to}</p>
-              <p className="text-[11px] text-muted-foreground mt-2">
-                We'll mark this item complete here as soon as it reaches us.
-              </p>
+              <MailTick
+                submissionId={submissionId}
+                itemKey={`${doc.code ?? ""}::${doc.person_name ?? ""}`}
+                confirmedAt={doc.mailed_confirmed_at}
+                onDone={onDone}
+              />
             </div>
           )}
         </div>
-        {!doc.issued_by_us && (
+        {!doc.issued_by_us && !done && (
 
           <div className="flex items-center gap-2 shrink-0">
             <input
@@ -482,9 +495,9 @@ const DocRow = ({
             <button
               onClick={() => inputRef.current?.click()}
               disabled={uploading}
-              className={`inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full disabled:opacity-60 ${done ? "border border-border hover:border-primary/40" : "bg-primary text-primary-foreground hover:opacity-90"}`}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full disabled:opacity-60 bg-primary text-primary-foreground hover:opacity-90"
             >
-              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} {done ? "Replace" : "Upload"}
+              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
             </button>
             <button
               onClick={() => setPhone((v) => !v)}
@@ -494,6 +507,7 @@ const DocRow = ({
             </button>
           </div>
         )}
+
       </div>
 
       {uploads.length > 0 && (
