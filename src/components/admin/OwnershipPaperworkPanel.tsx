@@ -60,6 +60,19 @@ type Reading = {
   sources?: { emails: number; notes: number };
 };
 
+/**
+ * Loose name key (first + last, lowercased) so a middle name or a spelling
+ * variant — "David Alan Cline" vs "David Allan Cline" — is treated as the same
+ * person and never spawns a duplicate checklist row.
+ */
+const personKey = (n?: string | null) => {
+  const t = String(n ?? "").toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const p = t.split(" ");
+  return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
+};
+const reqDbKey = (r: Requirement) => `${r.code}::${personKey(r.personName)}`;
+
 type DocRow = {
   id: string;
   doc_code: string | null;
