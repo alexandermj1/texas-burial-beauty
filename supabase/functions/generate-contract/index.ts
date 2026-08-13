@@ -107,15 +107,35 @@ Deno.serve(async (req) => {
     const spouseOnRoster = people.find((p) => p.role === 'spouse')?.name;
     const affiant = overrides.seller_name ?? sub.name ?? '';
 
-    const principalName = String(
+    const rawPrincipal = String(
       overrides.seller_name ??
       (Array.isArray(overrides.joint_names) ? (overrides.joint_names as string[])[0] : '') ??
       sub.name ?? '',
     );
+    // Always print the full legal name the seller gave us in the questionnaire
+    // ("David Allan Cline"), not the short name on the enquiry ("David Cline").
+    const rosterNames = [
+      ...people.map((p) => p.name),
+      ...(Array.isArray((sub as Record<string, unknown>).ownership_roster)
+        ? ((sub as Record<string, unknown>).ownership_roster as Record<string, string>[]).map((p) => p.name)
+        : []),
+      ...(() => {
+        const v2 = (ownership.v2 ?? {}) as Record<string, unknown>;
+        const deed = Array.isArray(v2.deed) ? v2.deed as Record<string, string>[] : [];
+        return deed.map((d) => d.n);
+      })(),
+    ].filter((n) => typeof n === 'string' && n.trim());
+    const fullName = (n: string) => {
+      const key = nameKey(n);
+      const hits = rosterNames.filter((c) => nameKey(c) === key);
+      // Prefer the most complete spelling (middle names included).
+      return hits.sort((a, b) => b.trim().length - a.trim().length)[0] ?? n;
+    };
+    const principalName = fullName(rawPrincipal);
     const sellerContact = contactFor(ownership, principalName);
 
     const fill: FillData = {
-      seller_name: overrides.seller_name ?? sub.name ?? '',
+      seller_name: principalName || (sub.name ?? ''),
       co_owner_name: overrides.co_owner_name ?? sub.deed_owner_names ?? '',
       // Mailing address comes from the seller's own questionnaire answers.
       address: overrides.address || sellerContact.address || '',
