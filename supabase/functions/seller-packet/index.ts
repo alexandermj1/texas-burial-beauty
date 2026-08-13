@@ -18,6 +18,15 @@ const json = (body: unknown, status = 200) =>
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Loose name key so "Jamie Floy Alford" and "Jamie Alford" are one person. */
+const personKeyOf = (n?: string | null) => {
+  const t = String(n ?? "").toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const p = t.split(" ");
+  return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
+};
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
