@@ -988,3 +988,18 @@ export function matchTerms(code: string, label: string): string[] {
     .filter((w) => w.length > 4 && !["texas", "cemetery", "brokers", "every", "person", "signing"].includes(w));
   return [...new Set([...(guide?.match ?? []), ...fromLabel])];
 }
+
+/**
+ * Where sellers post original paperwork. Bayer Cemetery Brokers is our partner:
+ * they receive and store the originals securely on our behalf so transfers can
+ * be processed the moment a cemetery asks for the paper copy.
+ */
+export const ORIGINALS_MAIL_ADDRESS =
+  "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
+
+export const ORIGINALS_MAIL_REASON =
+  "We work with Bayer Cemetery Brokers, our partner, who collect and store original documents securely for us so we can process the transfer quickly the moment the cemetery asks for the paper copy.";
+
+/** Photo ID is the only item we are happy to take as a photograph. */
+export const mailsByDefault = (code: string): boolean =>
+  !["REVIEW", "NOTE", "D2", "D2P"].includes(code);
