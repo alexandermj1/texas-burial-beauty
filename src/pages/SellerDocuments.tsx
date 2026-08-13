@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import QRCode from "qrcode";
 import {
   CheckCircle2, Loader2, Upload, Smartphone, FileText, ShieldCheck,
-  ChevronDown, Stamp, X, Mail,
+  ChevronDown, Stamp, X, Mail, Trash2,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -66,14 +66,6 @@ const FAQ: { q: string; a: string }[] = [
     a: "No. There is no charge from us for any of this paperwork, and no fee at all until your plot sells. The only costs you may face are a notary's fee, postage, and any certified-copy fee a county charges for a death certificate or court order.",
   },
   {
-    q: "Several people are named on the deed. Does everyone have to do this?",
-    a: "Yes — every living person named on the deed has to sign, and where an owner has died we need the death certificate plus whatever proves who inherited their share. Each person's items are listed separately below with their name on them, so you can see exactly who still has something to do.",
-  },
-  {
-    q: "How long does the whole process take?",
-    a: "Most sellers finish their paperwork within a week or two. Once we have everything and a buyer is in place, cemeteries typically take two to six weeks to record the transfer. Uploading photos the same day you sign is the single biggest thing that speeds it up.",
-  },
-  {
     q: "Is my information safe?",
     a: "Your files are stored privately, are visible only to your broker, and are used solely to transfer this plot. We never sell or share your details, and originals are returned to you if the sale does not complete.",
   },
@@ -87,6 +79,22 @@ const DONE = ["received", "notarized", "complete"];
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
 
 type Uploaded = { name: string; path: string; url: string; isImage: boolean };
+
+const openPrivateFile = async (url: string, setError: (message: string) => void) => {
+  const tab = window.open("about:blank", "_blank");
+  if (!tab) { setError("Your browser blocked the new tab. Allow pop-ups for this site, then try again."); return; }
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("The file could not be downloaded.");
+    const blobUrl = URL.createObjectURL(await response.blob());
+    tab.opener = null;
+    tab.location.href = blobUrl;
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  } catch (error) {
+    tab.close();
+    setError(error instanceof Error ? error.message : "The file could not be opened.");
+  }
+};
 
 /**
  * The seller ticks this to tell us the original is in the post, so our team —
@@ -232,6 +240,21 @@ const PoaUpload = ({
     }
   };
 
+  const removeUpload = async (upload: Uploaded) => {
+    if (!window.confirm("Remove this uploaded POA? It will be needed again.")) return;
+    setError("");
+    const { data, error: removeError } = await supabase.functions.invoke("seller-packet", {
+      body: { action: "remove_upload", submission_id: submissionId, path: upload.path, kind: "poa" },
+    });
+    if (removeError || (data as { error?: string } | null)?.error) {
+      setError((data as { error?: string } | null)?.error ?? removeError?.message ?? "The upload could not be removed.");
+      return;
+    }
+    const next = await refreshUploads();
+    setDone(next.length > 0);
+    onDone();
+  };
+
   return (
     <div className="mt-4 rounded-2xl border border-border/70 bg-card/70 p-5">
       <div className="flex items-start gap-4">
@@ -290,14 +313,12 @@ const PoaUpload = ({
           </p>
           <div className="flex flex-wrap gap-3">
             {uploads.map((u) => (
-              <a
+              <div
                 key={u.path}
-                href={u.url}
-                target="_blank"
-                rel="noreferrer"
-                className="group block w-24 h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
+                className="group relative block w-24 h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
                 title={u.name}
               >
+                <button type="button" onClick={() => void openPrivateFile(u.url, setError)} className="absolute inset-0 z-0" aria-label={`Open ${u.name}`} />
                 {u.isImage ? (
                   <img src={u.url} alt="Notarized POA" className="w-full h-full object-cover group-hover:opacity-90" />
                 ) : (
@@ -305,7 +326,10 @@ const PoaUpload = ({
                     <FileText className="w-5 h-5 text-primary" /> View file
                   </span>
                 )}
-              </a>
+                <button type="button" onClick={() => void removeUpload(u)} className="absolute z-10 top-1 right-1 rounded-full bg-background/90 p-1 text-destructive shadow" title="Remove upload" aria-label={`Remove ${u.name}`}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -414,6 +438,17 @@ const DocRow = ({
     }
   };
 
+  const removeUpload = async (upload: Uploaded) => {
+    if (!window.confirm("Remove this upload? This document will be marked as needed again if no other files remain.")) return;
+    const { data, error } = await supabase.functions.invoke("seller-packet", {
+      body: { action: "remove_upload", submission_id: submissionId, doc_id: doc.id, path: upload.path, kind: "document" },
+    });
+    if (error || (data as { error?: string } | null)?.error) return;
+    const next = await refreshUploads();
+    setDone(next.length > 0 || !!doc.complete);
+    onDone();
+  };
+
   return (
     <div className={`rounded-2xl border transition-colors overflow-hidden ${done ? "border-primary/40 bg-primary/[0.04]" : "border-border/70 bg-card/70"}`}>
       <div className="flex items-start gap-4 p-5">
@@ -517,14 +552,12 @@ const DocRow = ({
           </p>
           <div className="flex flex-wrap gap-3">
             {uploads.map((u) => (
-              <a
+              <div
                 key={u.path}
-                href={u.url}
-                target="_blank"
-                rel="noreferrer"
-                className="group block w-24 h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
+                className="group relative block w-24 h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
                 title={u.name}
               >
+                <button type="button" onClick={() => void openPrivateFile(u.url, () => {})} className="absolute inset-0 z-0" aria-label={`Open ${u.name}`} />
                 {u.isImage ? (
                   <img src={u.url} alt={doc.label} className="w-full h-full object-cover group-hover:opacity-90" />
                 ) : (
@@ -532,7 +565,10 @@ const DocRow = ({
                     <FileText className="w-5 h-5 text-primary" /> View file
                   </span>
                 )}
-              </a>
+                <button type="button" onClick={() => void removeUpload(u)} className="absolute z-10 top-1 right-1 rounded-full bg-background/90 p-1 text-destructive shadow" title="Remove upload" aria-label={`Remove ${u.name}`}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -700,14 +736,13 @@ const SellerDocuments = () => {
 
             )}
             {packet.poa.pdf_url && (
-              <a
-                href={packet.poa.pdf_url}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => void openPrivateFile(packet.poa!.pdf_url!, setError)}
                 className="inline-flex items-center gap-1.5 mt-4 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
               >
                 <Stamp className="w-3.5 h-3.5" /> Open your completed Power of Attorney
-              </a>
+              </button>
             )}
             <PoaUpload submissionId={submissionId} onDone={load} alreadyDone={!!packet.poa.notarized} />
           </div>
