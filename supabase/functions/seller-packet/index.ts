@@ -267,7 +267,7 @@ Deno.serve(async (req) => {
                 file_size: bytes.byteLength,
                 mime_type: blob.type || body?.type || null,
                 document_type: docRow?.label ?? null,
-                notes: `Uploaded by the seller via the document packet${docRow?.person_name ? ` (${docRow.person_name})` : ""}`,
+                notes: `Uploaded by the seller via the document packet${docRow?.person_name ? ` (${docRow.person_name})` : ""} · source:${path}`,
                 uploaded_by_name: sub.name ?? "Seller",
               });
             }
@@ -321,6 +321,59 @@ Deno.serve(async (req) => {
       }
 
       return json({ ok: true, all_done: allDone });
+    }
+
+    if (action === "remove_upload") {
+      const path = String(body?.path ?? "").replace(/^portal-uploads\//, "");
+      const docId = String(body?.doc_id ?? "");
+      const kind = String(body?.kind ?? "document");
+      if (!path || !path.startsWith(`${submissionId}/`)) return json({ error: "invalid file" }, 400);
+
+      const { error: storageError } = await supabase.storage.from("portal-uploads").remove([path]);
+      if (storageError) throw storageError;
+
+      // Remove the mirrored customer-file copy when it was created by this flow.
+      if (sub.customer_profile_id) {
+        const { data: mirrors } = await supabase.from("customer_files")
+          .select("id, file_path").eq("customer_profile_id", sub.customer_profile_id)
+          .like("notes", `%source:${path}%`);
+        const mirrorPaths = (mirrors ?? []).map((f) => f.file_path).filter(Boolean);
+        if (mirrorPaths.length) await supabase.storage.from("customer-files").remove(mirrorPaths);
+        if ((mirrors ?? []).length) await supabase.from("customer_files").delete().in("id", mirrors!.map((f) => f.id));
+      }
+
+      const { data: remainingFiles } = await supabase.storage.from("portal-uploads")
+        .list(submissionId, { limit: 100 });
+
+      if (kind === "poa") {
+        const poaFiles = (remainingFiles ?? []).filter((f) => f.name.startsWith("poa-notarized-"));
+        if (!poaFiles.length) {
+          const { data: poa } = await supabase.from("contracts")
+            .select("id, notarized_pdf_path").eq("submission_id", submissionId).eq("kind", "poa")
+            .order("created_at", { ascending: false }).limit(1).maybeSingle();
+          if (poa?.notarized_pdf_path) await supabase.storage.from("contracts").remove([poa.notarized_pdf_path]);
+          if (poa) await supabase.from("contracts").update({
+            notarized_pdf_path: null, notarized_at: null, signed_at: null, status: "draft",
+          }).eq("id", poa.id);
+          await supabase.from("submission_documents").update({
+            file_url: null, file_urls: [], status: "pending", required_state: "needed", manual_override: "needed",
+          }).eq("submission_id", submissionId).eq("doc_code", "D21");
+        }
+      } else {
+        if (!UUID.test(docId)) return json({ error: "invalid document" }, 400);
+        const prefix = `${docId}-`;
+        const matching = (remainingFiles ?? []).filter((f) => f.name.startsWith(prefix))
+          .map((f) => `${submissionId}/${f.name}`);
+        await supabase.from("submission_documents").update({
+          file_url: matching[matching.length - 1] ?? null,
+          file_urls: matching,
+          status: matching.length ? "received" : "pending",
+          required_state: matching.length ? "received" : "needed",
+          manual_override: matching.length ? null : "needed",
+        }).eq("id", docId).eq("submission_id", submissionId);
+      }
+
+      return json({ ok: true });
     }
 
     if (action === "record_poa") {

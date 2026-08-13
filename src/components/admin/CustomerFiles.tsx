@@ -183,9 +183,17 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
   };
 
   const openFile = async (row: CustomerFileRow) => {
+    // Reserve the tab during the click itself. Safari blocks a window opened
+    // after the asynchronous storage download has finished.
+    const tab = window.open("about:blank", "_blank");
+    if (!tab) {
+      toast({ title: "Pop-up blocked", description: "Allow pop-ups for this site, then try again.", variant: "destructive" });
+      return;
+    }
     const url = await fetchBlobUrl(row);
-    if (!url) return;
-    window.open(url, "_blank", "noopener");
+    if (!url) { tab.close(); return; }
+    tab.opener = null;
+    tab.location.href = url;
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 

@@ -321,18 +321,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return URL.createObjectURL(new Blob([data], { type }));
   };
 
-  /** Open a URL in a new tab without tripping the pop-up blocker. */
-  const openTab = (url: string) => {
-    const a = document.createElement("a");
-    a.href = url; a.target = "_blank"; a.rel = "noopener";
-    document.body.appendChild(a); a.click(); a.remove();
-  };
-
   /** Open any collected file in a new tab. */
   const openFile = async (f: AnyFile) => {
+    // Safari only permits a new tab while the original click is still running,
+    // so reserve it before waiting for the private-file download.
+    const tab = window.open("about:blank", "_blank");
+    if (!tab) return toast.error("Pop-up blocked — allow pop-ups for this site and try again");
     const url = await blobUrlFor(f.bucket, f.path);
-    if (!url) return toast.error("Couldn't open that file");
-    openTab(url);
+    if (!url) { tab.close(); return toast.error("Couldn't open that file"); }
+    tab.opener = null;
+    tab.location.href = url;
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
 
@@ -2072,7 +2071,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <iframe src={pdfPreview.url} title={pdfPreview.title} className="w-full h-[70vh] rounded-md border bg-white" />
           )}
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => pdfPreview && openTab(pdfPreview.url)}>
+            <Button variant="outline" size="sm" onClick={() => {
+              if (!pdfPreview) return;
+              const tab = window.open(pdfPreview.url, "_blank");
+              if (!tab) toast.error("Pop-up blocked — allow pop-ups for this site and try again");
+              else tab.opener = null;
+            }}>
               Open in new tab
             </Button>
             <Button size="sm" onClick={() => setPdfPreview(null)}>Looks right</Button>
