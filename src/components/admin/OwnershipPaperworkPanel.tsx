@@ -15,7 +15,9 @@ import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
-  canIssueJointPoa, isDeceasedPerson,
+  canIssueJointPoa, isDeceasedPerson, mailsByDefault,
+  ORIGINALS_MAIL_ADDRESS, ORIGINALS_MAIL_REASON,
+
   type OwnershipAnswers, type RosterPerson, type PersonRole,
   type RequiredState, type Requirement, type CemeteryDocRules,
 } from "@/lib/ownershipRules";
