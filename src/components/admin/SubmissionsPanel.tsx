@@ -2029,6 +2029,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   );
                 })()}
 
+                {/* Family tree questionnaire status — visible at a glance on the submission. */}
+                {(() => {
+                  const ft = ftState(selected);
+                  if (!ft.sentAt && !ft.doneAt) return null;
+                  const done = !!ft.doneAt;
+                  return (
+                    <div className={`mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs ${
+                      done
+                        ? "bg-teal-50 dark:bg-teal-950/30 border-teal-300 dark:border-teal-800 text-teal-800 dark:text-teal-200"
+                        : "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200"
+                    }`}>
+                      <Users className="w-3.5 h-3.5" strokeWidth={2.5} />
+                      <span className="font-semibold uppercase tracking-wide text-[10px]">
+                        {done ? "Family tree completed" : "Family tree sent"}
+                      </span>
+                      <span className="opacity-80">
+                        {done
+                          ? `Seller confirmed the deed and family on ${formatDate(ft.doneAt)}`
+                          : `Questionnaire emailed ${formatDate(ft.sentAt)} — waiting on the seller`}
+                      </span>
+                    </div>
+                  );
+                })()}
+
                 {/* Ownership proof + the exact paperwork this seller needs. */}
                 <OwnershipPaperworkPanel
                   submissionId={selected.id}
@@ -2036,6 +2060,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   sellerEmail={selected.email}
                   sellerName={selected.name}
                   quoteAccepted={(selected as any).quote_response === "accepted"}
+                  onSent={() => onRefresh?.()}
                 />
 
                 {/* Contracts live inside the paperwork panel above — no separate section. */}

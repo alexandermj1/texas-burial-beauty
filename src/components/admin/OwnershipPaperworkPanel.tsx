@@ -38,6 +38,8 @@ type Props = {
   sellerEmail?: string | null;
   /** AI reading only runs once the seller has accepted a quote — it costs money. */
   quoteAccepted?: boolean;
+  /** Fires after the family-tree questionnaire is emailed, so the row badge updates. */
+  onSent?: () => void;
 };
 
 type ContractRow = {
@@ -164,7 +166,7 @@ const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
 
 
 
-export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted }: Props) {
+export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted, onSent }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -604,6 +606,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if ((data as { error?: string })?.error) throw new Error((data as { error?: string }).error);
       toast.success("Sent — the seller can now confirm or correct every answer");
       setAsk(null);
+      setAnswers({ ...answers, questionsSentAt: new Date().toISOString() } as OwnershipAnswers);
+      onSent?.();
     } catch (e) {
       setAsk({ ...ask, sending: false });
       toast.error((e as Error).message);
