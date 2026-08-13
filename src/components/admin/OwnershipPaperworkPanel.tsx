@@ -1200,8 +1200,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .select("filled_pdf_path, signed_pdf_path, notarized_pdf_path, sign_token").eq("id", c.id).maybeSingle();
       const path = data?.notarized_pdf_path || data?.signed_pdf_path || data?.filled_pdf_path;
       if (path) {
-        const { data: signed } = await supabase.storage.from("contracts").createSignedUrl(path, 3600);
-        if (signed?.signedUrl) { setPdfPreview({ url: signed.signedUrl, title: r.label }); return; }
+        const url = await blobUrlFor("contracts", path);
+        if (url) { setPdfPreview({ url, title: r.label }); return; }
+
       }
       if (data?.sign_token) {
         setPdfPreview({ url: `${PUBLIC_SITE_URL}/sign/${data.sign_token}`, title: r.label });
