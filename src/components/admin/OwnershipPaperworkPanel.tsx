@@ -1557,24 +1557,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             {attached.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {attached.map((f) => (
-                  <button
-                    key={f.path}
-                    onClick={() => void openFile(f)}
-                    className="group w-[104px] text-left rounded-lg border border-border/60 bg-background overflow-hidden hover:border-teal-400 hover:shadow-sm transition"
-                    title={f.name}
-                  >
-                    <div className="h-[72px] bg-muted/50 flex items-center justify-center overflow-hidden">
-                      {thumbs[f.path] ? (
-                        <img src={thumbs[f.path]} alt={f.name} loading="lazy" className="w-full h-full object-cover" />
-                      ) : (
-                        <Paperclip className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="px-1.5 py-1">
-                      <span className="block text-[9px] font-semibold uppercase tracking-wide text-teal-700 truncate">{f.origin}</span>
-                      <span className="block text-[10px] text-muted-foreground truncate">{f.name}</span>
-                    </div>
-                  </button>
+                  <div key={f.path} className="relative w-[104px]">
+                    <button
+                      onClick={() => void openFile(f)}
+                      className="group w-full text-left rounded-lg border border-border/60 bg-background overflow-hidden hover:border-teal-400 hover:shadow-sm transition"
+                      title={f.name}
+                    >
+                      <div className="h-[72px] bg-muted/50 flex items-center justify-center overflow-hidden">
+                        {thumbs[f.path] ? (
+                          <img src={thumbs[f.path]} alt={f.name} loading="lazy" className="w-full h-full object-cover" />
+                        ) : (
+                          <Paperclip className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="px-1.5 py-1">
+                        <span className="block text-[9px] font-semibold uppercase tracking-wide text-teal-700 truncate">{f.origin}</span>
+                        <span className="block text-[10px] text-muted-foreground truncate">{f.name}</span>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void unlinkFileFromRequirement(r, f.path)}
+                      title="Take this file off this document"
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-background border border-border text-muted-foreground hover:text-rose-600 hover:border-rose-300 shadow-sm flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : (
