@@ -79,7 +79,7 @@ const FAQ: { q: string; a: string }[] = [
 
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
 
-type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; listing_agreement?: ListingAgreement };
+type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; poas?: Poa[]; listing_agreement?: ListingAgreement };
 
 const DONE = ["received", "notarized", "complete"];
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
