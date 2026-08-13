@@ -399,18 +399,24 @@ Deno.serve(async (req) => {
     if (action === "record_poa") {
       const path = String(body?.path ?? "");
       const name = String(body?.name ?? "notarized POA");
+      const contractId = String(body?.contract_id ?? "");
+      const signerName = String(body?.signer_name ?? "").trim();
       if (!path) return json({ error: "missing file" }, 400);
 
-      // The current POA contract row for this submission.
-      const { data: poaRow } = await supabase
+      // The POA contract row this upload belongs to. A submission can have one
+      // POA per signer, so prefer the row the seller's card names.
+      let poaQuery = supabase
         .from("contracts")
         .select("id, signed_pdf_path, filled_pdf_path, kind")
         .eq("submission_id", submissionId)
-        .eq("kind", "poa")
+        .eq("kind", "poa");
+      if (UUID.test(contractId)) poaQuery = poaQuery.eq("id", contractId);
+      const { data: poaRow } = await poaQuery
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (!poaRow) return json({ error: "no prepared POA found" }, 404);
+
 
       // Copy the uploaded file from portal-uploads to the contracts bucket for
       // permanent storage alongside the other contract documents.
