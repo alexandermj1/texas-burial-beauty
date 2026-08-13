@@ -327,11 +327,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // so reserve it before waiting for the private-file download.
     const tab = window.open("about:blank", "_blank");
     if (!tab) return toast.error("Pop-up blocked — allow pop-ups for this site and try again");
+    tab.document.write("<!doctype html><title>Opening file…</title><p style='font:14px system-ui;padding:24px'>Opening file…</p>");
     const url = await blobUrlFor(f.bucket, f.path);
     if (!url) { tab.close(); return toast.error("Couldn't open that file"); }
-    tab.opener = null;
-    tab.location.href = url;
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    // Keep the opener relationship until after navigation. Chromium and Safari
+    // reject opener-created blob URLs if opener is nulled first, leaving about:blank.
+    tab.location.replace(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
   };
 
 

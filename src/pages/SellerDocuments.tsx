@@ -83,13 +83,13 @@ type Uploaded = { name: string; path: string; url: string; isImage: boolean };
 const openPrivateFile = async (url: string, setError: (message: string) => void) => {
   const tab = window.open("about:blank", "_blank");
   if (!tab) { setError("Your browser blocked the new tab. Allow pop-ups for this site, then try again."); return; }
+  tab.document.write("<!doctype html><title>Opening file…</title><p style='font:14px system-ui;padding:24px'>Opening file…</p>");
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error("The file could not be downloaded.");
     const blobUrl = URL.createObjectURL(await response.blob());
-    tab.opener = null;
-    tab.location.href = blobUrl;
-    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    tab.location.replace(blobUrl);
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60_000);
   } catch (error) {
     tab.close();
     setError(error instanceof Error ? error.message : "The file could not be opened.");
