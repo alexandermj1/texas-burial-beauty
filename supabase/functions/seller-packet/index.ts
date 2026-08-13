@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     if (action === "get") {
       const { data: docs } = await supabase
         .from("submission_documents")
-        .select("id, doc_code, person_name, label, status, required_state, manual_override, why, needs_notary, issued_by_us, file_url, sort_order")
+        .select("id, doc_code, person_name, label, status, required_state, manual_override, why, needs_notary, issued_by_us, file_url, file_urls, sort_order")
         .eq("submission_id", submissionId)
         .order("sort_order", { ascending: true });
 
@@ -98,9 +98,26 @@ Deno.serve(async (req) => {
 
       // A prepared POA has its own action card below. Do not repeat it as an
       // upload request, and collapse any legacy duplicate rows by code/person.
+      // Loose name key: "Jamie Floy Alford" and "Jamie Alford" are one person,
+      // so a spelling variant never shows the seller the same item twice.
+      const personKey = (n?: string | null) => {
+        const t = String(n ?? "").toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
+        if (!t) return "";
+        const p = t.split(" ");
+        return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
+      };
+      const heldFiles = (d: Record<string, unknown>) =>
+        (Array.isArray(d.file_urls) ? (d.file_urls as string[]).length : 0) + (d.file_url ? 1 : 0);
       const deduped = visible.filter((d) => !(d.doc_code === "D21" && !!poaRow))
-        .filter((d, index, all) => index === all.findIndex((x) =>
-          x.doc_code === d.doc_code && (x.person_name ?? "") === (d.person_name ?? "")));
+        .filter((d, index, all) => {
+          const same = all.filter((x) =>
+            x.doc_code === d.doc_code && personKey(x.person_name) === personKey(d.person_name));
+          // Keep the most complete of the duplicates (files first, then progress).
+          const best = same.slice().sort((a, b) =>
+            (heldFiles(b) - heldFiles(a))
+            || (Number(!!b.manual_override) - Number(!!a.manual_override)))[0];
+          return all[index] === best;
+        });
 
       // The POA is completed by us from the family-tree answers — the seller only
       // ever downloads it, prints it and has it notarised. Nothing to fill in.
@@ -139,7 +156,8 @@ Deno.serve(async (req) => {
 
         documents: deduped.map((d) => {
           const state = d.manual_override ?? d.required_state;
-          const complete = DONE_STATES.includes(state) || (!!d.file_url && d.status === "received");
+          const held = heldFiles(d as unknown as Record<string, unknown>);
+          const complete = DONE_STATES.includes(state) || (held > 0 && d.status === "received");
           const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
           return {
             id: d.id,
@@ -154,7 +172,7 @@ Deno.serve(async (req) => {
             mailed_confirmed_at: mailedConfirmed[key] ?? null,
             state,
             complete,
-            uploaded: !!d.file_url,
+            uploaded: held > 0,
           };
         }),
 
