@@ -306,12 +306,35 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setLoading(false);
   }, [submissionId, cemetery]);
 
-  /** Open any collected file in a new tab via a short-lived signed URL. */
-  const openFile = async (f: AnyFile) => {
-    const { data, error } = await supabase.storage.from(f.bucket).createSignedUrl(f.path, 60 * 10);
-    if (error || !data) return toast.error("Couldn't open that file");
-    window.open(data.signedUrl, "_blank", "noopener");
+  /**
+   * Chrome refuses to render (or download) a cross-origin PDF served from a
+   * signed storage URL inside our page — it shows "Blocked". Pulling the bytes
+   * down and handing the browser a same-origin blob: URL always works, for both
+   * the inline check and the new tab.
+   */
+  const blobUrlFor = async (bucket: "customer-files" | "portal-uploads" | "contracts", path: string) => {
+    const { data, error } = await supabase.storage.from(bucket).download(path);
+    if (error || !data) return null;
+    const type = data.type && data.type !== "application/octet-stream"
+      ? data.type
+      : (/\.pdf$/i.test(path) ? "application/pdf" : "application/octet-stream");
+    return URL.createObjectURL(new Blob([data], { type }));
   };
+
+  /** Open a URL in a new tab without tripping the pop-up blocker. */
+  const openTab = (url: string) => {
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  /** Open any collected file in a new tab. */
+  const openFile = async (f: AnyFile) => {
+    const url = await blobUrlFor(f.bucket, f.path);
+    if (!url) return toast.error("Couldn't open that file");
+    openTab(url);
+  };
+
 
 
   useEffect(() => { void load(); }, [load]);
@@ -385,7 +408,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (r.manual_override) { m[key] = r.manual_override as RequiredState; continue; }
       const fromContract = contractStates[key];
       if (fromContract) { m[key] = fromContract; continue; }
-      m[key] = (r.required_state as RequiredState) ?? "needed";
+      const state = (r.required_state as RequiredState) ?? "needed";
+      // A file the seller has actually sent for this item always outranks a
+      // freshly re-computed "needed" — otherwise a checklist sync silently
+      // un-ticks documents we already hold.
+      const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0);
+      m[key] = held && !["notarized", "complete"].includes(state) ? "received" : state;
+
     }
     return m;
   }, [rows, contractStates]);
@@ -1171,8 +1200,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .select("filled_pdf_path, signed_pdf_path, notarized_pdf_path, sign_token").eq("id", c.id).maybeSingle();
       const path = data?.notarized_pdf_path || data?.signed_pdf_path || data?.filled_pdf_path;
       if (path) {
-        const { data: signed } = await supabase.storage.from("contracts").createSignedUrl(path, 3600);
-        if (signed?.signedUrl) { setPdfPreview({ url: signed.signedUrl, title: r.label }); return; }
+        const url = await blobUrlFor("contracts", path);
+        if (url) { setPdfPreview({ url, title: r.label }); return; }
+
       }
       if (data?.sign_token) {
         setPdfPreview({ url: `${PUBLIC_SITE_URL}/sign/${data.sign_token}`, title: r.label });
@@ -2042,7 +2072,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <iframe src={pdfPreview.url} title={pdfPreview.title} className="w-full h-[70vh] rounded-md border bg-white" />
           )}
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => window.open(pdfPreview?.url, "_blank", "noopener")}>
+            <Button variant="outline" size="sm" onClick={() => pdfPreview && openTab(pdfPreview.url)}>
               Open in new tab
             </Button>
             <Button size="sm" onClick={() => setPdfPreview(null)}>Looks right</Button>
