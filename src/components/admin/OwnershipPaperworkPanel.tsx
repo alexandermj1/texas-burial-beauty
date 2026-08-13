@@ -1505,6 +1505,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             ) : (
               <p className="text-[11px] text-muted-foreground italic">Nothing uploaded for this item yet.</p>
             )}
+            {!r.issuedByUs && files.filter((f) => !attached.some((a) => a.path === f.path)).length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] text-muted-foreground">Already have it on file?</span>
+                <select
+                  className="text-[11px] border border-border rounded px-1.5 py-1 bg-background max-w-[240px]"
+                  value=""
+                  onChange={(e) => { const p = e.target.value; if (p) void linkFileToRequirement(r, p); }}
+                >
+                  <option value="">Link a file we hold…</option>
+                  {files.filter((f) => !attached.some((a) => a.path === f.path)).map((f) => (
+                    <option key={f.path} value={f.path}>{f.origin} — {f.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {mailFor(r) && (
               <div className="rounded-md border border-rose-200 bg-rose-50/60 px-2.5 py-2">
                 <p className="text-[11px] font-medium text-rose-900 flex items-center gap-1">
