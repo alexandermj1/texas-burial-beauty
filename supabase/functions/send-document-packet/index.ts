@@ -141,10 +141,31 @@ Deno.serve(async (req) => {
     }
 
     // Each completed POA rides along as a real PDF attachment — printing and
-    // notarising it is the seller's only remaining step.
+    // notarising it is the seller's only remaining step. If the panel did not
+    // hand us a stored path, fall back to every live POA on this submission so
+    // the seller never receives the request without the documents themselves.
+    let poaSources = poas.filter((p) => p.path);
+    if (!poaSources.length) {
+      const { data: liveContracts } = await svc.from('contracts')
+        .select('signature_name, fill_data, filled_pdf_path, principal_key, status')
+        .eq('submission_id', submissionId).eq('kind', 'poa').neq('status', 'void');
+      poaSources = ((liveContracts ?? []) as {
+        signature_name?: string | null; fill_data?: Record<string, unknown> | null;
+        filled_pdf_path?: string | null; principal_key?: string | null;
+      }[])
+        .filter((c) => c.filled_pdf_path)
+        .map((c) => ({
+          name: c.signature_name ?? (c.fill_data?.seller_name as string | undefined) ?? c.principal_key ?? null,
+          url: null,
+          path: c.filled_pdf_path ?? null,
+        }));
+    }
+
     const attachments: { filename: string; mimeType: string; contentBase64: string }[] = [];
-    for (const p of poas) {
-      if (!p.path) continue;
+    const seenPaths = new Set<string>();
+    for (const p of poaSources) {
+      if (!p.path || seenPaths.has(p.path)) continue;
+      seenPaths.add(p.path);
       const { data: file } = await svc.storage.from('contracts').download(p.path);
       if (!file) continue;
       const bytes = new Uint8Array(await file.arrayBuffer());
@@ -160,9 +181,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Keep the request inside the customer's existing Gmail conversation so the
+    // whole chain stays in one place on the submission.
+    const { data: lastMsg } = await svc.from('email_messages')
+      .select('gmail_thread_id, gmail_message_id, received_at')
+      .eq('matched_submission_id', submissionId)
+      .not('gmail_thread_id', 'is', null)
+      .order('received_at', { ascending: false })
+      .limit(20);
+    const realThread = ((lastMsg ?? []) as { gmail_thread_id: string | null; gmail_message_id: string | null }[])
+      .find((m) => m.gmail_thread_id && !m.gmail_thread_id.startsWith('packet-') && !m.gmail_thread_id.startsWith('ownership-') && !m.gmail_thread_id.startsWith('local-'));
+
     // Send through the info@ Gmail mailbox (same path as the quote email) so the
     // message lands in Gmail's Sent folder and can be verified there.
-    const plain = `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poas.map((p) => `\n\nPower of Attorney${p.name ? ` (${p.name})` : ''}: attached — print, sign before a notary, send it back.`).join('')}`;
+    const plain = `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poaSources.map((p) => `\n\nPower of Attorney${p.name ? ` (${p.name})` : ''}: attached — print, sign before a notary, send it back.`).join('')}`;
     const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {
@@ -176,9 +208,13 @@ Deno.serve(async (req) => {
         subject,
         body: plain,
         htmlBody: html,
+        submissionId,
+        ...(realThread?.gmail_thread_id ? { threadId: realThread.gmail_thread_id } : {}),
+        ...(realThread?.gmail_message_id ? { inReplyToGmailId: realThread.gmail_message_id } : {}),
         ...(attachments.length ? { attachments } : {}),
       }),
     });
+
 
     const gmailText = await gmailRes.text();
     let gmailJson: Record<string, unknown> = {};
@@ -201,7 +237,7 @@ Deno.serve(async (req) => {
       from_name: 'Texas Cemetery Brokers',
       to_email: to,
       subject,
-      snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${poas.length ? ` + ${poas.length} Power of Attorney` : ''}.`,
+      snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${attachments.length ? ` + ${attachments.length} Power of Attorney attached` : ''}.`,
       body_text: plain,
       body_html: html,
       received_at: now,
