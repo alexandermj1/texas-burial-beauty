@@ -554,11 +554,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       setAcceptSuggestMap(nextAcceptSuggest);
     };
     recompute();
+    // Debounce realtime bursts — the inbox sync writes many rows at once and
+    // each one used to trigger a full refetch, which is what made the tags lag.
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => { t = null; recompute(); }, 2500);
+    };
     const ch = supabase.channel("email_messages_awaiting")
-      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, () => { recompute(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, schedule)
       .subscribe();
-    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
-  }, [submissions]);
+    return () => { cancelled = true; if (t) clearTimeout(t); ch.unsubscribe(); supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingKey]);
+
 
   // Texas-only: build a set of customer emails that have uploaded files (customer_files
   // joined through customer_profiles by primary/alt email). Used to group the list by
