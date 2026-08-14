@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
       from_name: 'Texas Cemetery Brokers',
       to_email: to,
       subject,
-      snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${poas.length ? ` + ${poas.length} Power of Attorney` : ''}.`,
+      snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${attachments.length ? ` + ${attachments.length} Power of Attorney attached` : ''}.`,
       body_text: plain,
       body_html: html,
       received_at: now,
