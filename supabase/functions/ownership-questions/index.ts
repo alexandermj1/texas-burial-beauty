@@ -278,6 +278,17 @@ Deno.serve(async (req) => {
     if (action === "send") {
       if (!to) return json({ error: "no recipient email" }, 400);
       const plain = `Confirm your ownership details: ${link}`;
+      // Keep the questionnaire inside the customer's existing Gmail conversation
+      // so the whole chain stays together on the submission.
+      const { data: recent } = await svc.from("email_messages")
+        .select("gmail_thread_id, gmail_message_id, received_at")
+        .eq("matched_submission_id", submissionId)
+        .not("gmail_thread_id", "is", null)
+        .order("received_at", { ascending: false })
+        .limit(20);
+      const realThread = ((recent ?? []) as { gmail_thread_id: string | null; gmail_message_id: string | null }[])
+        .find((m) => m.gmail_thread_id && !m.gmail_thread_id.startsWith("packet-")
+          && !m.gmail_thread_id.startsWith("ownership-") && !m.gmail_thread_id.startsWith("local-"));
       const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
         method: "POST",
         headers: {
@@ -285,8 +296,14 @@ Deno.serve(async (req) => {
           Authorization: req.headers.get("Authorization") ?? "",
           apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
         },
-        body: JSON.stringify({ action: "send", to, subject, body: plain, htmlBody: html }),
+        body: JSON.stringify({
+          action: "send", to, subject, body: plain, htmlBody: html,
+          submissionId,
+          ...(realThread?.gmail_thread_id ? { threadId: realThread.gmail_thread_id } : {}),
+          ...(realThread?.gmail_message_id ? { inReplyToGmailId: realThread.gmail_message_id } : {}),
+        }),
       });
+
       const gmailText = await gmailRes.text();
       let gmailJson: Record<string, unknown> = {};
       try { gmailJson = JSON.parse(gmailText); } catch { /* non-JSON */ }
