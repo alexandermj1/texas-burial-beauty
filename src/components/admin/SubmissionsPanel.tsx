@@ -417,7 +417,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // address appears in from_email / to_email. We pick the latest message in that
   // combined thread; if it's from the customer (not from one of our addresses),
   // the submission is awaiting our reply.
+  // Stable key so this only re-runs when something it actually depends on changes
+  // (not on every submissions array identity change).
+  const awaitingKey = useMemo(() => submissions
+    .filter(s => subRegion(s) === "texas")
+    .map(s => [s.id, (s.email || "").toLowerCase(), (s as any).quote_sent_at, (s as any).quote_response,
+      (s as any).reply_dismissed_at, (s as any).manual_followup].join("~"))
+    .join("|"), [submissions]);
+
   useEffect(() => {
+
     const texasSubs = submissions.filter(s => subRegion(s) === "texas");
     if (texasSubs.length === 0) { setAwaitingMap({}); setFollowupMap({}); return; }
     const texasIds = texasSubs.map(s => s.id);
@@ -445,18 +454,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return out.join(",");
     };
     const recompute = async () => {
+      // Light pass: no body_text/body_html (those are megabytes and made this
+      // filter take seconds to appear). Bodies are fetched afterwards only for
+      // the handful of messages we actually need to scan.
       const { data } = await supabase
         .from("email_messages" as any)
-        .select("matched_submission_id, from_email, to_email, received_at, body_text, snippet")
+        .select("id, matched_submission_id, from_email, to_email, received_at")
         .order("received_at", { ascending: false })
-        .limit(5000);
+        .limit(2000);
+
       if (cancelled || !data) return;
-      const latestPerSub = new Map<string, { received_at: string; outgoing: boolean; body: string }>();
+      const texasIdSet = new Set(texasIds);
+      const latestPerSub = new Map<string, { id: string; received_at: string; outgoing: boolean; body: string }>();
       for (const row of data as any[]) {
         const fromAddr = extractAddr(row.from_email);
         const toAddrs = extractAddr(row.to_email);
         const candidateIds = new Set<string>();
-        if (row.matched_submission_id && texasIds.includes(row.matched_submission_id)) {
+        if (row.matched_submission_id && texasIdSet.has(row.matched_submission_id)) {
           candidateIds.add(row.matched_submission_id);
         }
         for (const [addr, sids] of emailToSub.entries()) {
@@ -467,12 +481,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         for (const sid of candidateIds) {
           if (latestPerSub.has(sid)) continue;
           latestPerSub.set(sid, {
+            id: row.id,
             received_at: row.received_at,
             outgoing: isOutgoing(row.from_email),
-            body: String(row.body_text || row.snippet || ""),
+            body: "",
           });
         }
       }
+      // Second pass: pull bodies only for the latest message per submission
+      // (used for follow-up promises + acceptance detection).
+      const bodyIds = Array.from(latestPerSub.values()).map(v => v.id).filter(Boolean);
+      if (bodyIds.length > 0) {
+        const { data: bodies } = await supabase
+          .from("email_messages" as any)
+          .select("id, body_text, snippet")
+          .in("id", bodyIds);
+        if (cancelled) return;
+        const bodyById = new Map((bodies ?? []).map((b: any) => [b.id, String(b.body_text || b.snippet || "")]));
+        for (const info of latestPerSub.values()) info.body = bodyById.get(info.id) || "";
+      }
+
       const nextLastInteraction: Record<string, string> = {};
       for (const [sid, info] of latestPerSub.entries()) nextLastInteraction[sid] = info.received_at;
       setLastInteractionMap(nextLastInteraction);
@@ -535,21 +563,34 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       setAcceptSuggestMap(nextAcceptSuggest);
     };
     recompute();
+    // Debounce realtime bursts — the inbox sync writes many rows at once and
+    // each one used to trigger a full refetch, which is what made the tags lag.
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => { t = null; recompute(); }, 2500);
+    };
     const ch = supabase.channel("email_messages_awaiting")
-      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, () => { recompute(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, schedule)
       .subscribe();
-    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
-  }, [submissions]);
+    return () => { cancelled = true; if (t) clearTimeout(t); ch.unsubscribe(); supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingKey]);
+
 
   // Texas-only: build a set of customer emails that have uploaded files (customer_files
   // joined through customer_profiles by primary/alt email). Used to group the list by
   // "documents received" vs "awaiting documents".
+  const texasEmailsKey = useMemo(() => submissions
+    .filter(s => subRegion(s) === "texas")
+    .map(s => (s.email || "").trim().toLowerCase())
+    .filter(Boolean).sort().join("|"), [submissions]);
+
   useEffect(() => {
-    const texasEmails = submissions
-      .filter(s => subRegion(s) === "texas")
-      .map(s => (s.email || "").trim().toLowerCase())
-      .filter(Boolean);
+    const texasEmails = texasEmailsKey ? texasEmailsKey.split("|") : [];
     if (texasEmails.length === 0) { setDocsEmails(new Set()); return; }
+    const texasEmailSet = new Set(texasEmails);
+
     let cancelled = false;
     const load = async () => {
       // Get customer profiles whose primary_email matches any texas submission email.
@@ -563,7 +604,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         const emails: string[] = [];
         if (p.primary_email) emails.push(String(p.primary_email).toLowerCase());
         if (Array.isArray(p.alt_emails)) emails.push(...p.alt_emails.map((e: string) => String(e).toLowerCase()));
-        if (emails.some(e => texasEmails.includes(e))) {
+        if (emails.some(e => texasEmailSet.has(e))) {
           profileIds.push(p.id);
           idToEmails.set(p.id, emails);
         }
@@ -582,11 +623,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       setDocsEmails(withFiles);
     };
     load();
+    let ft: ReturnType<typeof setTimeout> | null = null;
+    const scheduleLoad = () => {
+      if (ft) clearTimeout(ft);
+      ft = setTimeout(() => { ft = null; load(); }, 2500);
+    };
     const ch = supabase.channel("customer_files_for_texas")
-      .on("postgres_changes", { event: "*", schema: "public", table: "customer_files" }, () => { load(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "customer_files" }, scheduleLoad)
       .subscribe();
-    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
-  }, [submissions]);
+    return () => { cancelled = true; if (ft) clearTimeout(ft); ch.unsubscribe(); supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texasEmailsKey]);
+
 
   const hasDocs = (s: Submission) => {
     const e = (s.email || "").trim().toLowerCase();
