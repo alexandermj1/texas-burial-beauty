@@ -445,11 +445,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return out.join(",");
     };
     const recompute = async () => {
+      // Light pass: no body_text/body_html (those are megabytes and made this
+      // filter take seconds to appear). Bodies are fetched afterwards only for
+      // the handful of messages we actually need to scan.
       const { data } = await supabase
         .from("email_messages" as any)
-        .select("matched_submission_id, from_email, to_email, received_at, body_text, snippet")
+        .select("id, matched_submission_id, from_email, to_email, received_at")
         .order("received_at", { ascending: false })
-        .limit(5000);
+        .limit(2000);
+
       if (cancelled || !data) return;
       const latestPerSub = new Map<string, { received_at: string; outgoing: boolean; body: string }>();
       for (const row of data as any[]) {
