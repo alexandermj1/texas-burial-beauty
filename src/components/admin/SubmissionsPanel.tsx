@@ -604,7 +604,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         const emails: string[] = [];
         if (p.primary_email) emails.push(String(p.primary_email).toLowerCase());
         if (Array.isArray(p.alt_emails)) emails.push(...p.alt_emails.map((e: string) => String(e).toLowerCase()));
-        if (emails.some(e => texasEmails.includes(e))) {
+        if (emails.some(e => texasEmailSet.has(e))) {
           profileIds.push(p.id);
           idToEmails.set(p.id, emails);
         }
@@ -623,11 +623,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       setDocsEmails(withFiles);
     };
     load();
+    let ft: ReturnType<typeof setTimeout> | null = null;
+    const scheduleLoad = () => {
+      if (ft) clearTimeout(ft);
+      ft = setTimeout(() => { ft = null; load(); }, 2500);
+    };
     const ch = supabase.channel("customer_files_for_texas")
-      .on("postgres_changes", { event: "*", schema: "public", table: "customer_files" }, () => { load(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "customer_files" }, scheduleLoad)
       .subscribe();
-    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
-  }, [submissions]);
+    return () => { cancelled = true; if (ft) clearTimeout(ft); ch.unsubscribe(); supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texasEmailsKey]);
+
 
   const hasDocs = (s: Submission) => {
     const e = (s.email || "").trim().toLowerCase();
