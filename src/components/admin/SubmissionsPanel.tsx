@@ -581,12 +581,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Texas-only: build a set of customer emails that have uploaded files (customer_files
   // joined through customer_profiles by primary/alt email). Used to group the list by
   // "documents received" vs "awaiting documents".
+  const texasEmailsKey = useMemo(() => submissions
+    .filter(s => subRegion(s) === "texas")
+    .map(s => (s.email || "").trim().toLowerCase())
+    .filter(Boolean).sort().join("|"), [submissions]);
+
   useEffect(() => {
-    const texasEmails = submissions
-      .filter(s => subRegion(s) === "texas")
-      .map(s => (s.email || "").trim().toLowerCase())
-      .filter(Boolean);
+    const texasEmails = texasEmailsKey ? texasEmailsKey.split("|") : [];
     if (texasEmails.length === 0) { setDocsEmails(new Set()); return; }
+    const texasEmailSet = new Set(texasEmails);
+
     let cancelled = false;
     const load = async () => {
       // Get customer profiles whose primary_email matches any texas submission email.
