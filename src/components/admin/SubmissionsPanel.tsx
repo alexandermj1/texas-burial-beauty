@@ -417,7 +417,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // address appears in from_email / to_email. We pick the latest message in that
   // combined thread; if it's from the customer (not from one of our addresses),
   // the submission is awaiting our reply.
+  // Stable key so this only re-runs when something it actually depends on changes
+  // (not on every submissions array identity change).
+  const awaitingKey = useMemo(() => submissions
+    .filter(s => subRegion(s) === "texas")
+    .map(s => [s.id, (s.email || "").toLowerCase(), (s as any).quote_sent_at, (s as any).quote_response,
+      (s as any).reply_dismissed_at, (s as any).manual_followup].join("~"))
+    .join("|"), [submissions]);
+
   useEffect(() => {
+
     const texasSubs = submissions.filter(s => subRegion(s) === "texas");
     if (texasSubs.length === 0) { setAwaitingMap({}); setFollowupMap({}); return; }
     const texasIds = texasSubs.map(s => s.id);
