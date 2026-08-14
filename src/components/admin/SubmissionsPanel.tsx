@@ -455,12 +455,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         .limit(2000);
 
       if (cancelled || !data) return;
-      const latestPerSub = new Map<string, { received_at: string; outgoing: boolean; body: string }>();
+      const texasIdSet = new Set(texasIds);
+      const latestPerSub = new Map<string, { id: string; received_at: string; outgoing: boolean; body: string }>();
       for (const row of data as any[]) {
         const fromAddr = extractAddr(row.from_email);
         const toAddrs = extractAddr(row.to_email);
         const candidateIds = new Set<string>();
-        if (row.matched_submission_id && texasIds.includes(row.matched_submission_id)) {
+        if (row.matched_submission_id && texasIdSet.has(row.matched_submission_id)) {
           candidateIds.add(row.matched_submission_id);
         }
         for (const [addr, sids] of emailToSub.entries()) {
@@ -471,12 +472,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         for (const sid of candidateIds) {
           if (latestPerSub.has(sid)) continue;
           latestPerSub.set(sid, {
+            id: row.id,
             received_at: row.received_at,
             outgoing: isOutgoing(row.from_email),
-            body: String(row.body_text || row.snippet || ""),
+            body: "",
           });
         }
       }
+      // Second pass: pull bodies only for the latest message per submission
+      // (used for follow-up promises + acceptance detection).
+      const bodyIds = Array.from(latestPerSub.values()).map(v => v.id).filter(Boolean);
+      if (bodyIds.length > 0) {
+        const { data: bodies } = await supabase
+          .from("email_messages" as any)
+          .select("id, body_text, snippet")
+          .in("id", bodyIds);
+        if (cancelled) return;
+        const bodyById = new Map((bodies ?? []).map((b: any) => [b.id, String(b.body_text || b.snippet || "")]));
+        for (const info of latestPerSub.values()) info.body = bodyById.get(info.id) || "";
+      }
+
       const nextLastInteraction: Record<string, string> = {};
       for (const [sid, info] of latestPerSub.entries()) nextLastInteraction[sid] = info.received_at;
       setLastInteractionMap(nextLastInteraction);
