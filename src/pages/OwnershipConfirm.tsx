@@ -1244,10 +1244,10 @@ const OwnershipConfirm = () => {
               </div>
               <div style={{"background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "clamp(22px,4vw,32px) clamp(18px,3.6vw,32px)", "marginTop": "12px"}}>
                 <h3 style={{"margin": "0 0 3px 0", "fontSize": "21px", "fontWeight": "600", "letterSpacing": "-0.019em"}}>
-                  Documents to send us
+                  Documents we will likely need
                 </h3>
                 <p style={{"margin": "0 0 6px 0", "fontSize": "15px", "fontWeight": "300", "color": "#6e6e73"}}>
-                  Photos from a phone are fine. Reply to our email with whatever you have.
+                  Please do not send anything yet. A senior broker reviews your answers and then emails you the official list, with a secure link where you can upload each document.
                 </p>
                 {(V.docs || []).map((d: any, i29: number) => (
                   <React.Fragment key={i29}>
