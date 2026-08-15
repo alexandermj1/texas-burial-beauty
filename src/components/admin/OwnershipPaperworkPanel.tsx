@@ -208,7 +208,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
-  const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
+  const [newDoc, setNewDoc] = useState<{
+    kind: "custom" | "poa" | "joint_poa" | "affidavit_heirship";
+    label: string; why: string; person: string; person2: string; needsNotary: boolean;
+  }>({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
+
   /** Switching a document to "post us the original" and setting the address. */
   const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
   /** Inline editor for a contract (POA / Listing Agreement) before it is generated. */
@@ -1255,20 +1259,32 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Add a one-off document to this file's checklist. */
   const addExtraDoc = async () => {
-    const label = newDoc.label.trim();
+    const kind = newDoc.kind;
+    const person = newDoc.person.trim();
+    const person2 = newDoc.person2.trim();
+    if (kind === "poa" && !person) return toast.error("Who is the power of attorney for?");
+    if (kind === "joint_poa" && (!person || !person2)) return toast.error("Name both people signing the joint POA");
+    const label = newDoc.label.trim() || (
+      kind === "poa" ? `Limited power of attorney to Texas Cemetery Brokers — ${person}`
+        : kind === "joint_poa" ? `Joint limited power of attorney — ${person} & ${person2}`
+          : kind === "affidavit_heirship" ? "Affidavit of Heirship"
+            : "");
     if (!label) return toast.error("Give the document a name");
     const extraDocs = [...(answers.extraDocs ?? []), {
       id: crypto.randomUUID().slice(0, 8),
+      kind,
       label,
       why: newDoc.why.trim() || undefined,
-      person: newDoc.person.trim() || undefined,
-      needsNotary: newDoc.needsNotary,
+      person: person || undefined,
+      person2: person2 || undefined,
+      needsNotary: kind === "custom" ? newDoc.needsNotary : true,
     }];
     await persistAnswers({ ...answers, extraDocs });
-    setNewDoc({ label: "", why: "", person: "", needsNotary: false });
+    setNewDoc({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
     setAddDocOpen(false);
     toast.success(`"${label}" added — press Sync checklist to publish it to the seller's page`);
   };
+
 
   /** Take a requirement off this file's checklist for good (not just "not needed"). */
   const removeRequirement = async (r: Requirement) => {
@@ -1868,25 +1884,77 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs">What is it called?</Label>
-              <Input className="mt-1" value={newDoc.label} placeholder="e.g. Divorce decree"
-                onChange={(e) => setNewDoc({ ...newDoc, label: e.target.value })} />
+              <Label className="text-xs">What kind of document?</Label>
+              <div className="mt-1 grid grid-cols-2 gap-1.5">
+                {([
+                  { k: "custom", l: "Something to send us" },
+                  { k: "poa", l: "Power of attorney" },
+                  { k: "joint_poa", l: "Joint power of attorney" },
+                  { k: "affidavit_heirship", l: "Affidavit of heirship" },
+                ] as const).map((o) => (
+                  <button
+                    key={o.k}
+                    type="button"
+                    onClick={() => setNewDoc({ ...newDoc, kind: o.k, label: "" })}
+                    className={`text-[12px] rounded-md border px-2 py-1.5 text-left transition ${
+                      newDoc.kind === o.k
+                        ? "border-[#1f2a37] bg-[#1f2a37] text-white"
+                        : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+              {newDoc.kind !== "custom" && (
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  We prepare and fill this one ourselves — it appears in the checklist ready to check, edit and send for notarising.
+                </p>
+              )}
             </div>
+            <datalist id="roster-names">
+              {(answers.people ?? []).filter((p) => p.name?.trim()).map((p) => (
+                <option key={p.name} value={p.name} />
+              ))}
+            </datalist>
+            {newDoc.kind === "custom" && (
+              <div>
+                <Label className="text-xs">What is it called?</Label>
+                <Input className="mt-1" value={newDoc.label} placeholder="e.g. Divorce decree"
+                  onChange={(e) => setNewDoc({ ...newDoc, label: e.target.value })} />
+              </div>
+            )}
             <div>
               <Label className="text-xs">Why we need it (shown to the seller)</Label>
               <Input className="mt-1" value={newDoc.why} placeholder="e.g. The cemetery needs proof the plot was awarded to you"
                 onChange={(e) => setNewDoc({ ...newDoc, why: e.target.value })} />
             </div>
             <div>
-              <Label className="text-xs">For one person only (optional)</Label>
-              <Input className="mt-1" value={newDoc.person} placeholder="Leave blank if it's about the property"
+              <Label className="text-xs">
+                {newDoc.kind === "poa" ? "Who signs it?"
+                  : newDoc.kind === "joint_poa" ? "First person signing"
+                    : newDoc.kind === "affidavit_heirship" ? "Affiant (optional)"
+                      : "For one person only (optional)"}
+              </Label>
+              <Input className="mt-1" list="roster-names" value={newDoc.person}
+                placeholder={newDoc.kind === "custom" ? "Leave blank if it's about the property" : "Full legal name"}
                 onChange={(e) => setNewDoc({ ...newDoc, person: e.target.value })} />
             </div>
-            <label className="flex items-center gap-2 text-xs">
-              <input type="checkbox" checked={newDoc.needsNotary}
-                onChange={(e) => setNewDoc({ ...newDoc, needsNotary: e.target.checked })} />
-              This one has to be notarized
-            </label>
+            {newDoc.kind === "joint_poa" && (
+              <div>
+                <Label className="text-xs">Second person signing</Label>
+                <Input className="mt-1" list="roster-names" value={newDoc.person2} placeholder="Full legal name"
+                  onChange={(e) => setNewDoc({ ...newDoc, person2: e.target.value })} />
+              </div>
+            )}
+            {newDoc.kind === "custom" && (
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" checked={newDoc.needsNotary}
+                  onChange={(e) => setNewDoc({ ...newDoc, needsNotary: e.target.checked })} />
+                This one has to be notarized
+              </label>
+            )}
+
             {(answers.extraDocs ?? []).length > 0 && (
               <div className="pt-1 space-y-1">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Already added by hand</p>
