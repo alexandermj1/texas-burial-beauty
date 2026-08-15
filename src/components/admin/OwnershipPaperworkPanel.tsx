@@ -1270,7 +1270,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           : kind === "affidavit_heirship" ? "Affidavit of Heirship"
             : "");
     if (!label) return toast.error("Give the document a name");
-    const extraDocs = [...(answers.extraDocs ?? []), {
+    const addedDoc = {
       id: crypto.randomUUID().slice(0, 8),
       kind,
       label,
@@ -1278,8 +1278,18 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       person: person || undefined,
       person2: person2 || undefined,
       needsNotary: kind === "custom" ? newDoc.needsNotary : true,
-    }];
-    await persistAnswers({ ...answers, extraDocs });
+    };
+    const extraDocs = [...(answers.extraDocs ?? []), addedDoc];
+    // A broker may remove an automatically suggested POA and then add the right
+    // POA by hand. The old removal key must not hide the newly added document.
+    const addedCode = kind === "affidavit_heirship" ? "D12" : kind === "custom" ? `X-${addedDoc.id}` : "D21";
+    const addedKey = `${addedCode}::${person}`;
+    const nextAnswers = {
+      ...answers,
+      extraDocs,
+      removedDocs: (answers.removedDocs ?? []).filter((key) => key !== addedKey),
+    } as OwnershipAnswers;
+    await persistAnswers(nextAnswers);
     setNewDoc({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
     setAddDocOpen(false);
     // Anything we prepare ourselves goes straight into the field check, so the
@@ -1387,7 +1397,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
   const general = documentRequirements.filter((r) => !r.personName);
-  const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
+  // Match names the same way everywhere else in this panel. Exact string
+  // matching caused hand-added rows with a middle name/initial variation to be
+  // considered claimed, but then rendered in neither the roster nor orphan list.
+  const byPerson = roster.map((p) => ({
+    person: p,
+    items: documentRequirements.filter((r) => r.personName && personKey(r.personName) === personKey(p.name)),
+  }))
     .filter((g) => g.items.length);
 
   // A broker can add a power of attorney by hand for somebody who is not in the
