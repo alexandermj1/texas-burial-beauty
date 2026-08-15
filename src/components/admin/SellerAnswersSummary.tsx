@@ -20,7 +20,7 @@ export type V2State = {
 };
 
 const yn = (v?: string) =>
-  v === "yes" ? "Yes" : v === "no" ? "No" : v === "unknown" ? "Not sure" : "—";
+  v === "yes" ? "Yes" : v === "no" ? "No" : v === "unknown" || v === "unsure" ? "Not sure" : "—";
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="flex items-start justify-between gap-3 py-1 border-b border-border/40 last:border-0">
@@ -89,16 +89,25 @@ const SellerAnswersSummary = ({
                     </span>
                   </p>
                   {d.st !== "deceased" && (
-                    <>
-                      <Row label="Someone holds power of attorney" value={`${yn(poa.has)}${poa.n ? ` — ${poa.n}` : ""}`} />
-                      <Row label="Spouse not on the deed" value={`${yn(sp.has)}${sp.n ? ` — ${sp.n}` : ""}`} />
-                    </>
+                    <Row label="Someone holds power of attorney" value={`${yn(poa.has)}${poa.n ? ` — ${poa.n}` : ""}`} />
                   )}
+                  <Row
+                    label={d.st === "deceased" ? "Spouse (not on the deed)" : "Spouse not on the deed"}
+                    value={`${yn(sp.has)}${sp.n ? ` — ${sp.n}` : ""}`}
+                  />
                   {d.st === "deceased" && (
                     <>
                       <Row label="Left a will naming the plot" value={yn(will)} />
                       {v2.taker?.[d.id] && <Row label="Left to" value={v2.taker[d.id]} />}
-                      {v2.noKids?.[d.id] && <Row label="Children" value="They had no children" />}
+                      <Row
+                        label="Children"
+                        value={
+                          v2.noKids?.[d.id]
+                            ? "They had no children"
+                            : (v2.kids ?? []).filter((k) => (k.of ?? []).includes(d.id) && (k.n || "").trim())
+                                .map((k) => k.n).join(", ") || "—"
+                        }
+                      />
                     </>
                   )}
                 </div>
@@ -124,7 +133,12 @@ const SellerAnswersSummary = ({
                     {parents && <span className="text-muted-foreground"> · child of {parents}</span>}
                   </p>
                   {k.st !== "deceased" && (
-                    <Row label="Married" value={`${yn(hs.has)}${hs.n ? ` — ${hs.n}` : ""}`} />
+                    <>
+                      <Row label="Married" value={`${yn(hs.has)}${hs.n ? ` — ${hs.n}` : ""}`} />
+                      {(k.kids ?? []).filter((g) => (g.n || "").trim()).map((g) => (
+                        <Row key={g.id} label="Their child" value={g.n} />
+                      ))}
+                    </>
                   )}
                   {k.st === "deceased" && (
                     <>
