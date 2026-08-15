@@ -1259,20 +1259,32 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Add a one-off document to this file's checklist. */
   const addExtraDoc = async () => {
-    const label = newDoc.label.trim();
+    const kind = newDoc.kind;
+    const person = newDoc.person.trim();
+    const person2 = newDoc.person2.trim();
+    if (kind === "poa" && !person) return toast.error("Who is the power of attorney for?");
+    if (kind === "joint_poa" && (!person || !person2)) return toast.error("Name both people signing the joint POA");
+    const label = newDoc.label.trim() || (
+      kind === "poa" ? `Limited power of attorney to Texas Cemetery Brokers — ${person}`
+        : kind === "joint_poa" ? `Joint limited power of attorney — ${person} & ${person2}`
+          : kind === "affidavit_heirship" ? "Affidavit of Heirship"
+            : "");
     if (!label) return toast.error("Give the document a name");
     const extraDocs = [...(answers.extraDocs ?? []), {
       id: crypto.randomUUID().slice(0, 8),
+      kind,
       label,
       why: newDoc.why.trim() || undefined,
-      person: newDoc.person.trim() || undefined,
-      needsNotary: newDoc.needsNotary,
+      person: person || undefined,
+      person2: person2 || undefined,
+      needsNotary: kind === "custom" ? newDoc.needsNotary : true,
     }];
     await persistAnswers({ ...answers, extraDocs });
-    setNewDoc({ label: "", why: "", person: "", needsNotary: false });
+    setNewDoc({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
     setAddDocOpen(false);
     toast.success(`"${label}" added — press Sync checklist to publish it to the seller's page`);
   };
+
 
   /** Take a requirement off this file's checklist for good (not just "not needed"). */
   const removeRequirement = async (r: Requirement) => {
