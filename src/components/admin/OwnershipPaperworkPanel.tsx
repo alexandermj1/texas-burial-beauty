@@ -427,15 +427,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   }, [requirements, stateByKey]);
   const stats = useMemo(() => summarise(requirements, statsStates), [requirements, statsStates]);
 
-  // Save the computed checklist the first time an admin opens the panel, so the
-  // seller's own page is never empty just because nobody pressed Sync.
+  // Keep the seller's own page honest: every time the computed checklist
+  // changes (a document added by hand, one removed, a name corrected) publish
+  // it straight into submission_documents. Waiting for someone to press "Sync"
+  // is what left sellers looking at the original, superseded list.
+  const lastSynced = useRef<string>("");
+  const wantedSignature = useMemo(
+    () => requirements.map(reqDbKey).sort().join("|"),
+    [requirements],
+  );
   useEffect(() => {
-    if (!open || loading || autoSynced) return;
+    if (!open || loading || saving) return;
     if (!requirements.length) return;
+    if (lastSynced.current === wantedSignature) return;
+    lastSynced.current = wantedSignature;
     setAutoSynced(true);
     void syncChecklist(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, loading, autoSynced, rows]);
+  }, [open, loading, wantedSignature]);
+
 
   /** Is this roster entry plainly the person who sent us the submission? */
   const isTheSeller = (name?: string) => {
