@@ -1371,6 +1371,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
 
+  // A broker can add a power of attorney by hand for somebody who is not in the
+  // signing roster yet. Those rows used to vanish — they belong to a person, but
+  // no roster group claimed them. Group them under their own name instead.
+  const claimed = new Set(roster.map((p) => personKey(p.name)));
+  const orphanGroups = (() => {
+    const m = new Map<string, { name: string; items: Requirement[] }>();
+    for (const r of documentRequirements) {
+      if (!r.personName || claimed.has(personKey(r.personName))) continue;
+      const k = personKey(r.personName);
+      if (!m.has(k)) m.set(k, { name: r.personName, items: [] });
+      m.get(k)!.items.push(r);
+    }
+    return [...m.values()];
+  })();
+
+
   /** Do we physically hold a certificate of ownership / plot deed already? */
   const deedOnFile = files.some((f) => codesForFile(f).includes("D1"));
 
