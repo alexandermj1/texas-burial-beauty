@@ -2775,6 +2775,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           );
                         })()}
+                        {!paidMap[s.id] && (() => {
+                          const t = String((s as any).listing_tier || "").toLowerCase();
+                          const key = t === "custom_plus" ? "featured" : t;
+                          if (!["starter", "pro", "featured"].includes(key)) return null;
+                          const amount = `$${TIER_PRICE[key as "starter" | "pro" | "featured"].toLocaleString()}`;
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
+                              title={`${TIER_LABEL[key as "starter" | "pro" | "featured"]} listing option selected · ${amount}`}
+                            >
+                              <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                              {amount}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
