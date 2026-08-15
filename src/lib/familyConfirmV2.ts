@@ -659,10 +659,10 @@ export function buildLogic(state, setS, accent0, CRM) {
       })),
       flags: F, hasFlags: F.length > 0,
       steps: [
-        { n: '1', t: 'We read it through', d: 'Usually the same day. If something is missing we ask for that one thing, not the whole list again.' },
+        { n: '1', t: 'A senior broker reviews your answers', d: 'Usually the same day. Please do not send any documents yet \u2014 there is nothing for you to do right now.' },
         { n: '2', t: 'We confirm the picture', d: 'Marriage and probate records, and the cemetery\u2019s own file, so nobody with a claim is missed.' },
-        { n: '3', t: 'You get a written offer', d: 'A firm number for the plot, with no obligation to take it.' },
-        { n: '4', t: 'Everyone signs', d: 'A limited power of attorney goes out to each person on the list. A notary comes to them. We then record the transfer with the cemetery within three business days.' }
+        { n: '3', t: 'You get one follow-up email', d: 'It contains the official list of documents for your file and a secure link where you can upload each one.' },
+        { n: '4', t: 'Everyone signs', d: 'A limited power of attorney goes out to each person on the list, already prepared. A notary comes to them. We then record the transfer with the cemetery.' }
       ],
       sendLabel: s.sent ? 'Sent to Texas Cemetery Brokers' : 'Send this to Texas Cemetery Brokers',
       sendBg: s.sent ? '#f0f0f3' : acc,
