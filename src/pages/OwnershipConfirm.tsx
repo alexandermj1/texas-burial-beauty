@@ -1209,7 +1209,7 @@ const OwnershipConfirm = () => {
                   The power of attorney goes to
                 </h3>
                 <p style={{"margin": "0 0 20px 0", "fontSize": "15px", "fontWeight": "300", "color": "#6e6e73"}}>
-                  One document each, in the post, already prepared.
+                  We prepare one document each once a broker has reviewed your answers. Nothing for you to do yet.
                 </p>
                 <div style={{"display": "flex", "flexDirection": "column", "gap": "10px"}}>
                   {(V.signers || []).map((p: any, i27: number) => (
