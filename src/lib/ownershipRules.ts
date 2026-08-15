@@ -64,7 +64,18 @@ export type OwnershipAnswers = {
   /** Named people gathered for the signing roster. */
   people?: RosterPerson[];
   /** Extra documents an admin has added by hand for this file only. */
-  extraDocs?: { id: string; label: string; why?: string; person?: string; needsNotary?: boolean }[];
+  extraDocs?: {
+    id: string; label: string; why?: string; person?: string; needsNotary?: boolean;
+    /**
+     * Which kind of document this is. "custom" is a plain thing we ask the
+     * seller for; the others are documents we prepare and issue ourselves, so
+     * they get the same generate / check / edit machinery as the automatic ones.
+     */
+    kind?: "custom" | "poa" | "joint_poa" | "affidavit_heirship";
+    /** Second principal when kind is "joint_poa". */
+    person2?: string;
+  }[];
+
   /** Requirement keys an admin has removed outright from this file's checklist. */
   removedDocs?: string[];
   /**
