@@ -1320,7 +1320,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               key={t.key}
                               onClick={() => onUpdate(selected.id, (active
                                 ? { listing_tier: null, listing_option: null }
-                                : { listing_tier: t.key, listing_option: t.key }) as any)}
+                                : {
+                                    listing_tier: t.key,
+                                    listing_option: t.key,
+                                    // Choosing a listing option means they accepted the quote
+                                    quote_response: "accepted",
+                                    quote_responded_at: (selected as any).quote_responded_at || new Date().toISOString(),
+                                    quote_sent_at: (selected as any).quote_sent_at || new Date().toISOString(),
+                                    accepted_quote_amount:
+                                      (selected as any).accepted_quote_amount ?? (selected as any).quote_amount ?? null,
+                                  }) as any)}
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                                 active
                                   ? "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300"
