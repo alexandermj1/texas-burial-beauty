@@ -208,7 +208,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** Adding a one-off document to this file's checklist. */
   const [addDocOpen, setAddDocOpen] = useState(false);
-  const [newDoc, setNewDoc] = useState({ label: "", why: "", person: "", needsNotary: false });
+  const [newDoc, setNewDoc] = useState<{
+    kind: "custom" | "poa" | "joint_poa" | "affidavit_heirship";
+    label: string; why: string; person: string; person2: string; needsNotary: boolean;
+  }>({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
+
   /** Switching a document to "post us the original" and setting the address. */
   const [mailDoc, setMailDoc] = useState<{ r: Requirement; address: string } | null>(null);
   /** Inline editor for a contract (POA / Listing Agreement) before it is generated. */
