@@ -119,7 +119,12 @@ Deno.serve(async (req) => {
       .select("id, name, email, cemetery, ownership_answers, deleted_at")
       .is("deleted_at", null)
       .not("email", "is", null)
-      .limit(200);
+      // Only rows where the questionnaire link was actually sent — otherwise a
+      // large submission table pushes the real candidates past the page limit.
+      .not("ownership_answers->>questionsSentAt", "is", null)
+      .is("ownership_answers->>sellerConfirmedAt", null)
+      .is("ownership_answers->>treeFollowupSentAt", null)
+      .limit(500);
     if (onlyId) q = q.eq("id", onlyId);
     const { data: subs, error } = await q;
     if (error) throw error;
