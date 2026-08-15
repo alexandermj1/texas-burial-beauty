@@ -1283,16 +1283,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </div>
                           );
                         })()}
-                        {!paid && manualTier && (
-                          <div className={`${bandBase} ${teal}`}>
-                            <div className="flex flex-col leading-tight">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing option selected</span>
-                              <span className="font-display text-lg font-bold">
-                                {manualTier === "starter" ? "Starter" : manualTier === "pro" ? "Pro" : manualTier === "custom_plus" || manualTier === "featured" ? "Featured" : manualTier}
-                              </span>
+                        {!paid && manualTier && (() => {
+                          const key = (manualTier === "custom_plus" ? "featured" : manualTier) as "starter" | "pro" | "featured";
+                          const known = ["starter", "pro", "featured"].includes(key);
+                          return (
+                            <div className={`${bandBase} ${teal}`}>
+                              <div className="flex flex-col leading-tight">
+                                <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing option selected</span>
+                                <span className="font-display text-lg font-bold">
+                                  {known ? TIER_LABEL[key] : manualTier}
+                                  {known && ` · $${TIER_PRICE[key].toLocaleString()}`}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
                     );
                   })()}
