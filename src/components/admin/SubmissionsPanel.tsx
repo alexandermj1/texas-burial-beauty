@@ -1172,9 +1172,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const quotedAccepted = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
                     const quotedPending = Number((selected as any).quote_amount) || 0;
                     const paid = paidMap[selected.id];
+                    const manualTier = String((selected as any).listing_tier || "").toLowerCase();
                     const showAccepted = isAccepted && quotedAccepted > 0;
                     const showPending = !isAccepted && hasQuote && quotedPending > 0;
-                    if (!showAccepted && !showPending && !paid) return null;
+                    if (!showAccepted && !showPending && !paid && !manualTier) return null;
 
                     const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
                     // quote_amount and cemetery_retail are stored PER PLOT.
@@ -1282,6 +1283,50 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </div>
                           );
                         })()}
+                        {!paid && manualTier && (
+                          <div className={`${bandBase} ${teal}`}>
+                            <div className="flex flex-col leading-tight">
+                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing option selected</span>
+                              <span className="font-display text-lg font-bold">
+                                {manualTier === "starter" ? "Starter" : manualTier === "pro" ? "Pro" : manualTier === "custom_plus" || manualTier === "featured" ? "Featured" : manualTier}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Which listing option did they pick? — manual selector */}
+                  {(() => {
+                    const current = String((selected as any).listing_tier || "").toLowerCase();
+                    const tiers: { key: string; label: string }[] = [
+                      { key: "starter", label: "Starter" },
+                      { key: "pro", label: "Pro" },
+                      { key: "featured", label: "Featured" },
+                    ];
+                    return (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Listing option</span>
+                        {tiers.map(t => {
+                          const active = current === t.key || (t.key === "featured" && current === "custom_plus");
+                          return (
+                            <button
+                              key={t.key}
+                              onClick={() => onUpdate(selected.id, (active
+                                ? { listing_tier: null, listing_option: null }
+                                : { listing_tier: t.key, listing_option: t.key }) as any)}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                                active
+                                  ? "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300"
+                                  : "border-border text-muted-foreground hover:bg-muted/50"
+                              }`}
+                              title={active ? "Click to clear" : `Mark ${t.label} as selected`}
+                            >
+                              {t.label}
+                            </button>
+                          );
+                        })}
                       </div>
                     );
                   })()}
