@@ -818,16 +818,58 @@ export function computeRequirements(
   }
 
   // ── Documents added by hand for this file only ──
+  // Most are plain requests, but a broker can also add a power of attorney, a
+  // joint power of attorney or an affidavit of heirship by hand. Those carry the
+  // real D-codes and contract kinds so they are prepared and signed exactly like
+  // the ones the rules produce automatically.
   for (const x of a.extraDocs ?? []) {
+    const kind = x?.kind ?? "custom";
+    const person = x?.person?.trim() ?? "";
+    const person2 = x?.person2?.trim() ?? "";
+
+    if (kind === "poa" && person) {
+      add({
+        code: "D21",
+        label: x.label?.trim() || `Limited power of attorney to Texas Cemetery Brokers — ${person}`,
+        why: x.why?.trim() || "Lets us sign the transfer paperwork at the cemetery on their behalf.",
+        issuedByUs: true, needsNotary: true, contractKind: "poa",
+        personName: person,
+      });
+      continue;
+    }
+    if (kind === "joint_poa" && person && person2) {
+      add({
+        code: "D21",
+        label: x.label?.trim() || `Joint limited power of attorney — ${person} & ${person2}`,
+        why: x.why?.trim() || "One document both people sign, each acknowledged separately before the notary.",
+        statute: "§751.031",
+        issuedByUs: true, needsNotary: true, contractKind: "poa",
+        personName: person, jointNames: [person, person2],
+      });
+      continue;
+    }
+    if (kind === "affidavit_heirship") {
+      add({
+        code: "D12",
+        label: x.label?.trim() || "Affidavit of Heirship",
+        why: x.why?.trim() || "Sworn by the affiant and a second disinterested witness, in place of probate.",
+        statute: "Estates Code §203.001",
+        issuedByUs: true, needsNotary: true, contractKind: "affidavit_heirship",
+        ...(person ? { personName: person } : {}),
+      });
+      continue;
+    }
+
     if (!x?.label?.trim()) continue;
     add({
       code: `X-${x.id}`,
       label: x.label.trim(),
       why: x.why?.trim() || "Added for this file by the broker.",
       needsNotary: !!x.needsNotary,
-      ...(x.person?.trim() ? { personName: x.person.trim() } : {}),
+      ...(person ? { personName: person } : {}),
     });
   }
+
 
 
 
