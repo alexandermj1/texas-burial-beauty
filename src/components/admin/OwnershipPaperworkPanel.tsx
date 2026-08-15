@@ -863,7 +863,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const loadEmailPreview = async () => {
     setReview({ step: 2, loading: true });
     try {
-      if (!rows.some((r) => r.doc_code)) await syncChecklist();
+      // Publish the current checklist first — the email and the seller's page
+      // must show the documents we decided on, not an earlier version.
+      await syncChecklist(true);
       const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
         body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, preview: true },
@@ -884,7 +886,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setSending(true);
     try {
       // Make sure the seller's page actually lists these items.
-      if (!rows.some((r) => r.doc_code)) await syncChecklist();
+      // Publish the current checklist first — the email and the seller's page
+      // must show the documents we decided on, not an earlier version.
+      await syncChecklist(true);
       const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
