@@ -427,15 +427,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   }, [requirements, stateByKey]);
   const stats = useMemo(() => summarise(requirements, statsStates), [requirements, statsStates]);
 
-  // Save the computed checklist the first time an admin opens the panel, so the
-  // seller's own page is never empty just because nobody pressed Sync.
+  // Keep the seller's own page honest: every time the computed checklist
+  // changes (a document added by hand, one removed, a name corrected) publish
+  // it straight into submission_documents. Waiting for someone to press "Sync"
+  // is what left sellers looking at the original, superseded list.
+  const lastSynced = useRef<string>("");
+  const wantedSignature = useMemo(
+    () => requirements.map(reqDbKey).sort().join("|"),
+    [requirements],
+  );
   useEffect(() => {
-    if (!open || loading || autoSynced) return;
+    if (!open || loading || saving) return;
     if (!requirements.length) return;
+    if (lastSynced.current === wantedSignature) return;
+    lastSynced.current = wantedSignature;
     setAutoSynced(true);
     void syncChecklist(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, loading, autoSynced, rows]);
+  }, [open, loading, wantedSignature]);
+
 
   /** Is this roster entry plainly the person who sent us the submission? */
   const isTheSeller = (name?: string) => {
@@ -853,7 +863,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const loadEmailPreview = async () => {
     setReview({ step: 2, loading: true });
     try {
-      if (!rows.some((r) => r.doc_code)) await syncChecklist();
+      // Publish the current checklist first — the email and the seller's page
+      // must show the documents we decided on, not an earlier version.
+      await syncChecklist(true);
       const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
         body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, preview: true },
@@ -874,7 +886,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setSending(true);
     try {
       // Make sure the seller's page actually lists these items.
-      if (!rows.some((r) => r.doc_code)) await syncChecklist();
+      // Publish the current checklist first — the email and the seller's page
+      // must show the documents we decided on, not an earlier version.
+      await syncChecklist(true);
       const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
@@ -1327,16 +1341,52 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const live = await fetchLiveRows();
     const match = live.filter((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r)).map((x) => x.id);
     if (match.length) await supabase.from("submission_documents").delete().in("id", match);
+    // A prepared POA / affidavit lives in `contracts`, not the checklist. Void it
+    // too, otherwise the seller's page keeps offering the document we dropped.
+    await voidPreparedFor(r);
     await load();
     toast.success(`"${r.label}" removed from the request`);
   };
 
+  /** Void any prepared contract belonging to a requirement we've just dropped. */
+  const voidPreparedFor = async (r: Requirement) => {
+    if (!r.contractKind) return;
+    const names = [r.personName, ...(r.jointNames ?? [])].filter(Boolean) as string[];
+    const keys = new Set(names.map((n) => personKey(n)));
+    const { data } = await supabase.from("contracts")
+      .select("id, kind, principal_key, signature_name, fill_data")
+      .eq("submission_id", submissionId).neq("status", "void");
+    for (const c of (data ?? []) as Record<string, unknown>[]) {
+      if (c.kind !== r.contractKind) continue;
+      const signer = String(
+        (c.fill_data as Record<string, unknown> | null)?.seller_name ?? c.signature_name ?? c.principal_key ?? "",
+      );
+      if (!keys.size || keys.has(personKey(signer)) || keys.has(personKey(String(c.principal_key ?? "")))) {
+        await supabase.from("contracts").update({ status: "void" }).eq("id", c.id as string);
+      }
+    }
+  };
+
+
   const removeExtraDoc = async (id: string) => {
+    const gone = (answers.extraDocs ?? []).find((d) => d.id === id);
     await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
     await supabase.from("submission_documents").delete()
       .eq("submission_id", submissionId).eq("doc_code", `X-${id}`);
+    // Hand-added POAs and affidavits also have a prepared PDF behind them.
+    if (gone && gone.kind && gone.kind !== "custom") {
+      await voidPreparedFor({
+        code: gone.kind === "affidavit_heirship" ? "D12" : "D21",
+        label: gone.label,
+        why: gone.why ?? "",
+        contractKind: gone.kind === "affidavit_heirship" ? "affidavit_heirship" : "poa",
+        ...(gone.person ? { personName: gone.person } : {}),
+        ...(gone.person2 ? { jointNames: [gone.person ?? "", gone.person2] } : {}),
+      } as Requirement);
+    }
     await load();
   };
+
 
   // ── Originals by post ──────────────────────────────────────────────────────
   // Some cemeteries will only accept the original paper (death certificates in
