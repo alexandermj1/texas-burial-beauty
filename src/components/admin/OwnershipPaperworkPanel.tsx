@@ -1884,25 +1884,77 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs">What is it called?</Label>
-              <Input className="mt-1" value={newDoc.label} placeholder="e.g. Divorce decree"
-                onChange={(e) => setNewDoc({ ...newDoc, label: e.target.value })} />
+              <Label className="text-xs">What kind of document?</Label>
+              <div className="mt-1 grid grid-cols-2 gap-1.5">
+                {([
+                  { k: "custom", l: "Something to send us" },
+                  { k: "poa", l: "Power of attorney" },
+                  { k: "joint_poa", l: "Joint power of attorney" },
+                  { k: "affidavit_heirship", l: "Affidavit of heirship" },
+                ] as const).map((o) => (
+                  <button
+                    key={o.k}
+                    type="button"
+                    onClick={() => setNewDoc({ ...newDoc, kind: o.k, label: "" })}
+                    className={`text-[12px] rounded-md border px-2 py-1.5 text-left transition ${
+                      newDoc.kind === o.k
+                        ? "border-[#1f2a37] bg-[#1f2a37] text-white"
+                        : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+              {newDoc.kind !== "custom" && (
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  We prepare and fill this one ourselves — it appears in the checklist ready to check, edit and send for notarising.
+                </p>
+              )}
             </div>
+            <datalist id="roster-names">
+              {(answers.people ?? []).filter((p) => p.name?.trim()).map((p) => (
+                <option key={p.name} value={p.name} />
+              ))}
+            </datalist>
+            {newDoc.kind === "custom" && (
+              <div>
+                <Label className="text-xs">What is it called?</Label>
+                <Input className="mt-1" value={newDoc.label} placeholder="e.g. Divorce decree"
+                  onChange={(e) => setNewDoc({ ...newDoc, label: e.target.value })} />
+              </div>
+            )}
             <div>
               <Label className="text-xs">Why we need it (shown to the seller)</Label>
               <Input className="mt-1" value={newDoc.why} placeholder="e.g. The cemetery needs proof the plot was awarded to you"
                 onChange={(e) => setNewDoc({ ...newDoc, why: e.target.value })} />
             </div>
             <div>
-              <Label className="text-xs">For one person only (optional)</Label>
-              <Input className="mt-1" value={newDoc.person} placeholder="Leave blank if it's about the property"
+              <Label className="text-xs">
+                {newDoc.kind === "poa" ? "Who signs it?"
+                  : newDoc.kind === "joint_poa" ? "First person signing"
+                    : newDoc.kind === "affidavit_heirship" ? "Affiant (optional)"
+                      : "For one person only (optional)"}
+              </Label>
+              <Input className="mt-1" list="roster-names" value={newDoc.person}
+                placeholder={newDoc.kind === "custom" ? "Leave blank if it's about the property" : "Full legal name"}
                 onChange={(e) => setNewDoc({ ...newDoc, person: e.target.value })} />
             </div>
-            <label className="flex items-center gap-2 text-xs">
-              <input type="checkbox" checked={newDoc.needsNotary}
-                onChange={(e) => setNewDoc({ ...newDoc, needsNotary: e.target.checked })} />
-              This one has to be notarized
-            </label>
+            {newDoc.kind === "joint_poa" && (
+              <div>
+                <Label className="text-xs">Second person signing</Label>
+                <Input className="mt-1" list="roster-names" value={newDoc.person2} placeholder="Full legal name"
+                  onChange={(e) => setNewDoc({ ...newDoc, person2: e.target.value })} />
+              </div>
+            )}
+            {newDoc.kind === "custom" && (
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" checked={newDoc.needsNotary}
+                  onChange={(e) => setNewDoc({ ...newDoc, needsNotary: e.target.checked })} />
+                This one has to be notarized
+              </label>
+            )}
+
             {(answers.extraDocs ?? []).length > 0 && (
               <div className="pt-1 space-y-1">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Already added by hand</p>
