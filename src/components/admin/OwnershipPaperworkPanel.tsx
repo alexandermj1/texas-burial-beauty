@@ -1863,19 +1863,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             ))}
 
-            {/* The POA only appears here when the checklist itself has no POA line,
-                otherwise it would ask for the same thing twice. */}
-            {!requirements.some((r) => r.code === "D21") && (
-              <div className="pt-1">
-                <ContractsPanel
-                  submissionId={submissionId}
-                  sellerName={sellerName}
-                  sellerEmail={sellerEmail}
-                  kinds={["poa"]}
-                  hideHeader
-                />
+            {orphanGroups.map((g) => (
+              <div key={`orphan-${g.name}`} className="space-y-1.5 pt-1">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  {g.name} · Added by hand
+                </p>
+                {g.items.map((r) => <Chip key={reqKey(r) + r.label} r={r} />)}
               </div>
-            )}
+            ))}
+
           </div>
 
 
