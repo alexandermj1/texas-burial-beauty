@@ -1369,11 +1369,24 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
   const removeExtraDoc = async (id: string) => {
+    const gone = (answers.extraDocs ?? []).find((d) => d.id === id);
     await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
     await supabase.from("submission_documents").delete()
       .eq("submission_id", submissionId).eq("doc_code", `X-${id}`);
+    // Hand-added POAs and affidavits also have a prepared PDF behind them.
+    if (gone && gone.kind && gone.kind !== "custom") {
+      await voidPreparedFor({
+        code: gone.kind === "affidavit_heirship" ? "D12" : "D21",
+        label: gone.label,
+        why: gone.why ?? "",
+        contractKind: gone.kind === "affidavit_heirship" ? "affidavit_heirship" : "poa",
+        ...(gone.person ? { personName: gone.person } : {}),
+        ...(gone.person2 ? { jointNames: [gone.person ?? "", gone.person2] } : {}),
+      } as Requirement);
+    }
     await load();
   };
+
 
   // ── Originals by post ──────────────────────────────────────────────────────
   // Some cemeteries will only accept the original paper (death certificates in
