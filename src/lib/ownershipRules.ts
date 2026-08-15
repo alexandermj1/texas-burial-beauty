@@ -449,7 +449,7 @@ export const STATE_LABEL: Record<RequiredState, string> = {
   not_needed: "Not needed",
   maybe: "Maybe",
   needed: "Needed",
-  issued: "Issued",
+  issued: "Drafted — not sent",
   awaiting_seller: "Waiting on seller",
   received: "Received",
   notarized: "Notarized",
