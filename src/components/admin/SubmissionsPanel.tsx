@@ -1172,9 +1172,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const quotedAccepted = Number((selected as any).accepted_quote_amount ?? (selected as any).quote_amount) || 0;
                     const quotedPending = Number((selected as any).quote_amount) || 0;
                     const paid = paidMap[selected.id];
+                    const manualTier = String((selected as any).listing_tier || "").toLowerCase();
                     const showAccepted = isAccepted && quotedAccepted > 0;
                     const showPending = !isAccepted && hasQuote && quotedPending > 0;
-                    if (!showAccepted && !showPending && !paid) return null;
+                    if (!showAccepted && !showPending && !paid && !manualTier) return null;
 
                     const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
                     // quote_amount and cemetery_retail are stored PER PLOT.
