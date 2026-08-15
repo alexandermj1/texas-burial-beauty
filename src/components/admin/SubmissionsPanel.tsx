@@ -1283,16 +1283,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </div>
                           );
                         })()}
-                        {!paid && manualTier && (
-                          <div className={`${bandBase} ${teal}`}>
-                            <div className="flex flex-col leading-tight">
-                              <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing option selected</span>
-                              <span className="font-display text-lg font-bold">
-                                {manualTier === "starter" ? "Starter" : manualTier === "pro" ? "Pro" : manualTier === "custom_plus" || manualTier === "featured" ? "Featured" : manualTier}
-                              </span>
+                        {!paid && manualTier && (() => {
+                          const key = (manualTier === "custom_plus" ? "featured" : manualTier) as "starter" | "pro" | "featured";
+                          const known = ["starter", "pro", "featured"].includes(key);
+                          return (
+                            <div className={`${bandBase} ${teal}`}>
+                              <div className="flex flex-col leading-tight">
+                                <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing option selected</span>
+                                <span className="font-display text-lg font-bold">
+                                  {known ? TIER_LABEL[key] : manualTier}
+                                  {known && ` · $${TIER_PRICE[key].toLocaleString()}`}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
                     );
                   })()}
@@ -1315,7 +1320,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               key={t.key}
                               onClick={() => onUpdate(selected.id, (active
                                 ? { listing_tier: null, listing_option: null }
-                                : { listing_tier: t.key, listing_option: t.key }) as any)}
+                                : {
+                                    listing_tier: t.key,
+                                    listing_option: t.key,
+                                    // Choosing a listing option means they accepted the quote
+                                    quote_response: "accepted",
+                                    quote_responded_at: (selected as any).quote_responded_at || new Date().toISOString(),
+                                    quote_sent_at: (selected as any).quote_sent_at || new Date().toISOString(),
+                                    accepted_quote_amount:
+                                      (selected as any).accepted_quote_amount ?? (selected as any).quote_amount ?? null,
+                                  }) as any)}
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                                 active
                                   ? "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300"
@@ -2769,6 +2783,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             <span
                               className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
                               title={`${label} listing paid · ${amount} · ${p.paidAt ? formatDate(p.paidAt) : "recently"}`}
+                            >
+                              <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                              {amount}
+                            </span>
+                          );
+                        })()}
+                        {!paidMap[s.id] && (() => {
+                          const t = String((s as any).listing_tier || "").toLowerCase();
+                          const key = t === "custom_plus" ? "featured" : t;
+                          if (!["starter", "pro", "featured"].includes(key)) return null;
+                          const amount = `$${TIER_PRICE[key as "starter" | "pro" | "featured"].toLocaleString()}`;
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
+                              title={`${TIER_LABEL[key as "starter" | "pro" | "featured"]} listing option selected · ${amount}`}
                             >
                               <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
                               {amount}
