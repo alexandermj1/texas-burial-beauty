@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.activate-starter-listing]
 verify_jwt = false
+
+[functions.family-tree-followup]
+verify_jwt = false
