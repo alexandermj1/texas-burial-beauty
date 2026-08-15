@@ -1282,7 +1282,26 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     await persistAnswers({ ...answers, extraDocs });
     setNewDoc({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
     setAddDocOpen(false);
+    // Anything we prepare ourselves goes straight into the field check, so the
+    // broker fills it in there and then instead of hunting for an Edit button.
+    if (kind !== "custom") {
+      const r: Requirement = {
+        code: kind === "affidavit_heirship" ? "D12" : "D21",
+        label,
+        why: newDoc.why.trim() || "Added for this file by the broker.",
+        issuedByUs: true,
+        needsNotary: true,
+        contractKind: kind === "affidavit_heirship" ? "affidavit_heirship" : "poa",
+        ...(person ? { personName: person } : {}),
+        ...(kind === "joint_poa" ? { jointNames: [person, person2] } : {}),
+      };
+      // Don't let the background auto-prepare race the editor.
+      autoPrepped.current.add(reqKey(r));
+      void openDocEditor(r);
+      return;
+    }
     toast.success(`"${label}" added — press Sync checklist to publish it to the seller's page`);
+
   };
 
 
