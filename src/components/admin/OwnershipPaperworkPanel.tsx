@@ -1371,6 +1371,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const byPerson = roster.map((p) => ({ person: p, items: requirements.filter((r) => r.personName === p.name) }))
     .filter((g) => g.items.length);
 
+  // A broker can add a power of attorney by hand for somebody who is not in the
+  // signing roster yet. Those rows used to vanish — they belong to a person, but
+  // no roster group claimed them. Group them under their own name instead.
+  const claimed = new Set(roster.map((p) => personKey(p.name)));
+  const orphanGroups = (() => {
+    const m = new Map<string, { name: string; items: Requirement[] }>();
+    for (const r of documentRequirements) {
+      if (!r.personName || claimed.has(personKey(r.personName))) continue;
+      const k = personKey(r.personName);
+      if (!m.has(k)) m.set(k, { name: r.personName, items: [] });
+      m.get(k)!.items.push(r);
+    }
+    return [...m.values()];
+  })();
+
+
   /** Do we physically hold a certificate of ownership / plot deed already? */
   const deedOnFile = files.some((f) => codesForFile(f).includes("D1"));
 
@@ -1847,19 +1863,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             ))}
 
-            {/* The POA only appears here when the checklist itself has no POA line,
-                otherwise it would ask for the same thing twice. */}
-            {!requirements.some((r) => r.code === "D21") && (
-              <div className="pt-1">
-                <ContractsPanel
-                  submissionId={submissionId}
-                  sellerName={sellerName}
-                  sellerEmail={sellerEmail}
-                  kinds={["poa"]}
-                  hideHeader
-                />
+            {orphanGroups.map((g) => (
+              <div key={`orphan-${g.name}`} className="space-y-1.5 pt-1">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  {g.name} · Added by hand
+                </p>
+                {g.items.map((r) => <Chip key={reqKey(r) + r.label} r={r} />)}
               </div>
-            )}
+            ))}
+
           </div>
 
 
