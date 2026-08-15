@@ -1341,9 +1341,32 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const live = await fetchLiveRows();
     const match = live.filter((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r)).map((x) => x.id);
     if (match.length) await supabase.from("submission_documents").delete().in("id", match);
+    // A prepared POA / affidavit lives in `contracts`, not the checklist. Void it
+    // too, otherwise the seller's page keeps offering the document we dropped.
+    await voidPreparedFor(r);
     await load();
     toast.success(`"${r.label}" removed from the request`);
   };
+
+  /** Void any prepared contract belonging to a requirement we've just dropped. */
+  const voidPreparedFor = async (r: Requirement) => {
+    if (!r.contractKind) return;
+    const names = [r.personName, ...(r.jointNames ?? [])].filter(Boolean) as string[];
+    const keys = new Set(names.map((n) => personKey(n)));
+    const { data } = await supabase.from("contracts")
+      .select("id, kind, principal_key, signature_name, fill_data")
+      .eq("submission_id", submissionId).neq("status", "void");
+    for (const c of (data ?? []) as Record<string, unknown>[]) {
+      if (c.kind !== r.contractKind) continue;
+      const signer = String(
+        (c.fill_data as Record<string, unknown> | null)?.seller_name ?? c.signature_name ?? c.principal_key ?? "",
+      );
+      if (!keys.size || keys.has(personKey(signer)) || keys.has(personKey(String(c.principal_key ?? "")))) {
+        await supabase.from("contracts").update({ status: "void" }).eq("id", c.id as string);
+      }
+    }
+  };
+
 
   const removeExtraDoc = async (id: string) => {
     await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
