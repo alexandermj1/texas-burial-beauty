@@ -457,13 +457,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       // Light pass: no body_text/body_html (those are megabytes and made this
       // filter take seconds to appear). Bodies are fetched afterwards only for
       // the handful of messages we actually need to scan.
-      const { data } = await supabase
-        .from("email_messages" as any)
-        .select("id, matched_submission_id, from_email, to_email, received_at")
-        .order("received_at", { ascending: false })
-        .limit(2000);
+      // NOTE: the API caps a single request at 1000 rows, so we page through
+      // explicitly. Without this, older threads fell outside the window and were
+      // wrongly treated as "no emails at all" → false "Needs reply".
+      const PAGE = 1000;
+      const MAX_ROWS = 10000;
+      const rows: any[] = [];
+      for (let from = 0; from < MAX_ROWS; from += PAGE) {
+        const { data: page } = await supabase
+          .from("email_messages" as any)
+          .select("id, matched_submission_id, from_email, to_email, received_at")
+          .order("received_at", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (cancelled) return;
+        if (!page || page.length === 0) break;
+        rows.push(...(page as any[]));
+        if (page.length < PAGE) break;
+      }
+      const data = rows;
 
-      if (cancelled || !data) return;
+      if (cancelled || data.length === 0) return;
+
       const texasIdSet = new Set(texasIds);
       const latestPerSub = new Map<string, { id: string; received_at: string; outgoing: boolean; body: string }>();
       for (const row of data as any[]) {
