@@ -134,6 +134,7 @@ const TIER_LABEL: Record<string, string> = {
   starter: "Starter",
   pro: "Pro",
   custom_plus: "Custom Plus",
+  set_your_price: "Set Your Own Price",
 };
 
 function receiptBlock(tx: any, itemLabel: string, cardBrand?: string, cardLast4?: string) {

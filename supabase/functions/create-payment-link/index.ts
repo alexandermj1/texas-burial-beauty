@@ -19,7 +19,7 @@ const BodySchema = z.object({
   description: z.string().min(2).max(500),
   recipientEmail: z.string().email(),
   recipientName: z.string().max(200).optional().default(""),
-  listingTier: z.enum(["starter", "pro", "custom_plus"]).optional(),
+  listingTier: z.enum(["starter", "pro", "custom_plus", "set_your_price"]).optional(),
   environment: z.enum(["sandbox", "live"]).optional(),
 });
 
