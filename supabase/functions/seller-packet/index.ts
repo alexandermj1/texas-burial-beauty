@@ -169,6 +169,39 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Documents we prepare and issue ourselves — the affidavit of heirship and
+      // any spousal consent — live in `contracts` just like the POAs. Attach the
+      // finished PDF to its checklist item so the seller can actually open it.
+      const { data: preparedRows } = await supabase
+        .from("contracts")
+        .select("id, kind, principal_key, signature_name, fill_data, filled_pdf_path, signed_pdf_path, notarized_pdf_path, created_at")
+        .eq("submission_id", submissionId)
+        .in("kind", ["affidavit_heirship", "spousal_consent"])
+        .neq("status", "void")
+        .order("created_at", { ascending: true });
+      const preparedByKind: Record<string, { key: string; url: string | null }[]> = {};
+      for (const row of preparedRows ?? []) {
+        const r = row as Record<string, unknown>;
+        const fill = (r.fill_data ?? {}) as Record<string, unknown>;
+        const who = String(fill.seller_name ?? r.signature_name ?? r.principal_key ?? "").trim();
+        const url = await signedPdf(
+          (r.notarized_pdf_path as string) || (r.signed_pdf_path as string) || (r.filled_pdf_path as string),
+        );
+        if (!url) continue;
+        const kind = String(r.kind);
+        (preparedByKind[kind] ??= []).push({ key: personKeyOf(who), url });
+      }
+      const preparedFor = (label: string, person?: string | null): string | null => {
+        const l = label.toLowerCase();
+        const kind = l.includes("heirship") || l.includes("affidavit")
+          ? "affidavit_heirship"
+          : l.includes("spous") ? "spousal_consent" : null;
+        const list = kind ? preparedByKind[kind] ?? [] : [];
+        if (!list.length) return null;
+        const k = personKeyOf(person);
+        return (k && list.find((x) => x.key === k)?.url) || list[0].url;
+      };
+
       return json({
         seller_name: String(ownershipAnswers.packetGreeting ?? "").trim() || sub.name,
         broker_note: String(ownershipAnswers.packetNote ?? "").trim() || null,
@@ -189,6 +222,7 @@ Deno.serve(async (req) => {
           const held = heldFiles(d);
           const complete = DONE_STATES.includes(state) || (held > 0 && d.status === "received");
           const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
+          const preparedUrl = d.issued_by_us ? preparedFor(d.label ?? "", d.person_name) : null;
           return {
             id: d.id,
             code: d.doc_code,
@@ -198,7 +232,12 @@ Deno.serve(async (req) => {
             needs_notary: d.needs_notary,
             issued_by_us: d.issued_by_us,
             // Once we hold an item there is nothing left to post or upload.
-            mail_to: complete || d.issued_by_us ? null : mailFor(d.doc_code ?? "", d.person_name ?? ""),
+            prepared_pdf_url: preparedUrl,
+            // A document we prepared still has to come back to us as a signed
+            // original, so it keeps its posting address once it is issued.
+            mail_to: complete || (d.issued_by_us && !preparedUrl)
+              ? null
+              : mailFor(d.doc_code ?? "", d.person_name ?? ""),
             mailed_confirmed_at: mailedConfirmed[key] ?? null,
             state,
             complete,

@@ -25,6 +25,8 @@ type PacketDoc = {
   why: string | null;
   needs_notary: boolean | null;
   issued_by_us: boolean | null;
+  /** The finished PDF when this is a document we prepared for them (affidavit, consent). */
+  prepared_pdf_url?: string | null;
   /** When set, the cemetery only accepts the original — post it to this address. */
   mail_to?: string | null;
   /** Set once the seller has ticked "this is in the post". */
@@ -482,7 +484,7 @@ const DocRow = ({
             )}
             {doc.issued_by_us && (
               <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                We send this to you
+                {doc.prepared_pdf_url ? "We prepared this for you" : "We send this to you"}
               </span>
             )}
             {done && (
@@ -506,6 +508,24 @@ const DocRow = ({
             <div className="mt-3 rounded-xl bg-muted/40 px-4 py-3 space-y-2">
               <p className="text-xs text-foreground/80 leading-relaxed">{guide.what}</p>
               <p className="text-xs text-muted-foreground leading-relaxed"><span className="font-medium text-foreground/70">How to get it: </span>{guide.how}</p>
+            </div>
+          )}
+          {doc.prepared_pdf_url && (
+            <div className="mt-3 rounded-xl bg-card/70 border border-border/60 px-4 py-3">
+              <p className="text-[11px] font-medium text-foreground">What to do — about 15 minutes</p>
+              <ol className="mt-1.5 space-y-1 text-[11px] text-muted-foreground leading-relaxed list-decimal pl-4">
+                <li>Open the document below and print every page — it is already filled in from your answers.</li>
+                <li>Do <span className="text-foreground">not</span> sign it yet{doc.needs_notary ? " — the notary has to watch you sign" : ""}.</li>
+                <li>{doc.needs_notary ? "Take it, with your photo ID, to any notary and sign in front of them." : "Sign and date every page."}</li>
+                <li>Photograph or scan every page and upload it here{doc.mail_to ? ", then post the original to the address below" : ""}.</li>
+              </ol>
+              <button
+                type="button"
+                onClick={() => void openPrivateFile(doc.prepared_pdf_url!, setError)}
+                className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+              >
+                <Stamp className="w-3.5 h-3.5" /> Open the document we prepared
+              </button>
             </div>
           )}
           {done && (
@@ -533,7 +553,7 @@ const DocRow = ({
             </div>
           )}
         </div>
-        {!doc.issued_by_us && !done && (
+        {(!doc.issued_by_us || !!doc.prepared_pdf_url) && !done && (
 
           <div className="flex items-center gap-2 shrink-0">
             <input
