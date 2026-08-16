@@ -171,8 +171,13 @@ Deno.serve(async (req) => {
         affiant_relationship: overrides.affiant_relationship ?? sub.relationship_to_owner ?? '',
         affiant_is_heir: overrides.affiant_is_heir ?? true,
         decedent_name: overrides.decedent_name ?? sub.deed_owner_names ?? '',
+        // Only people who actually inherit FROM the decedent belong in the heir
+        // table. A spouse of an heir (e.g. the seller's wife) holds a right of
+        // interment and consents separately — she is not an heir of the decedent
+        // and must not be sworn to as one.
         heirs: overrides.heirs ?? people
           .filter((p) => p.role === 'heir' || p.role === 'co_owner')
+          .filter((p) => !/husband or wife of|spouse of (?!.*deed)/i.test(p.relationship ?? ''))
           .map((p) => ({ name: p.name, relationship: p.relationship ?? '', address: p.address ?? '' })),
         surviving_spouse: overrides.surviving_spouse ?? spouseOnRoster ?? '',
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
