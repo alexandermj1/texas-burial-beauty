@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
@@ -197,6 +198,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string } | null>(null);
   /** The send-document-request review flow. */
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
+  /** The broker's own touches on this request: who it greets and what it says. */
+  const [greetName, setGreetName] = useState("");
+  const [emailNote, setEmailNote] = useState("");
+  const [pageNote, setPageNote] = useState("");
   /** The "ask the seller these questions" email review flow. */
   const [ask, setAsk] = useState<null | {
     /** "names" = admin types the deed names off the deed; "email" = review + send. */
@@ -446,6 +451,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, loading, wantedSignature]);
 
+
+  useEffect(() => {
+    if (review?.step !== 1) return;
+    const a = answers as Record<string, unknown>;
+    setGreetName(String(a.packetGreeting ?? "").trim() || (sellerName ?? "").trim().split(/\s+/)[0] || "");
+    setEmailNote(String(a.packetEmailNote ?? ""));
+    setPageNote(String(a.packetNote ?? ""));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [review?.step]);
 
   /** Is this roster entry plainly the person who sent us the submission? */
   const isTheSeller = (name?: string) => {
@@ -859,6 +873,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   };
 
+  /** Save the greeting and messages so both the email and the seller's page use them. */
+  const persistPacketMessages = async () => {
+    await persistAnswers({
+      ...answers,
+      packetGreeting: greetName.trim(),
+      packetEmailNote: emailNote,
+      packetNote: pageNote,
+    } as OwnershipAnswers);
+  };
+
   /** Step 2 of the review: fetch the exact email without sending anything. */
   const loadEmailPreview = async () => {
     setReview({ step: 2, loading: true });
@@ -866,9 +890,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // Publish the current checklist first — the email and the seller's page
       // must show the documents we decided on, not an earlier version.
       await syncChecklist(true);
+      await persistPacketMessages();
       const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, preview: true },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim(), preview: true },
       });
       if (error) throw error;
       const res = data as { html?: string; subject?: string };
@@ -889,10 +914,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // Publish the current checklist first — the email and the seller's page
       // must show the documents we decided on, not an earlier version.
       await syncChecklist(true);
+      await persistPacketMessages();
       const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim() },
       });
       if (error) throw error;
       toast.success(`Document request emailed to ${sellerEmail}`, {
@@ -2320,6 +2346,29 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
           {review?.step === 1 && (
             <div className="space-y-3 max-h-[65vh] overflow-y-auto">
+              <div className="rounded-md border p-3 space-y-2.5">
+                <div>
+                  <p className="text-xs font-semibold">Who the email greets</p>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">
+                    Used as "Dear …" — change it if the name we picked is wrong.
+                  </p>
+                  <Input value={greetName} onChange={(e) => setGreetName(e.target.value)}
+                    placeholder="First name" className="h-8 text-xs" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold">Your message in the email</p>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">Optional — appears at the top, above the checklist.</p>
+                  <Textarea value={emailNote} onChange={(e) => setEmailNote(e.target.value)} rows={3}
+                    placeholder="Hi Joel, lovely speaking with you today…" className="text-xs" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold">Your message on their document page</p>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">Optional — shown as a note from you at the top of the page.</p>
+                  <Textarea value={pageNote} onChange={(e) => setPageNote(e.target.value)} rows={3}
+                    placeholder="Anything they should know before uploading…" className="text-xs" />
+                </div>
+              </div>
+
               <div className="rounded-md border p-3 space-y-1.5">
                 <p className="text-xs font-semibold">{outstanding.length} item{outstanding.length === 1 ? "" : "s"} will be asked for</p>
                 {outstanding.length === 0 ? (
