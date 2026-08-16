@@ -59,8 +59,10 @@ const Footer = () => {
         <div className="divider-earth mb-6" />
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Texas Cemetery Brokers. All rights reserved. In partnership with Bayer Cemetery Brokers.
+            © {new Date().getFullYear()} Texas Cemetery Brokers. All rights reserved. In partnership with Bayer Cemetery Brokers. ·{" "}
+            <Link to="/privacy" className="hover:text-foreground transition-colors underline underline-offset-2">Privacy Policy</Link>
           </p>
+
           <div className="flex items-center gap-4">
             <Link
               to="/seller-portal"
