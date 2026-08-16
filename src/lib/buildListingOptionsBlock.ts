@@ -16,7 +16,9 @@ export const TIERS = [
   { id: "starter", label: "Starter", price: 0, priceLabel: "$0 Upfront", blurb: "List your property with zero out-of-pocket costs. (Please note: an early cancellation fee applies if withdrawn within 36 months)." },
   { id: "pro", label: "Pro", price: 99, priceLabel: "$99 One-Time Upfront Fee", blurb: "Your property is actively marketed and sent directly to local mortuaries and family counselors to help find a buyer. Cancel anytime at no charge." },
   { id: "custom_plus", label: "Featured", price: 299, priceLabel: "$299 One-Time Upfront Fee", blurbTemplate: (cem: string) => `Our most aggressive marketing package. This tier includes active digital advertising (Google Ads and Meta Ads) specifically targeted for your plots to prompt a faster sale. Additionally, your property will be featured at the very top of the priority list we send to local mortuaries and counselors, ensuring it is seen before any other available properties at ${cem}. Cancel anytime at no charge.` },
+  { id: "set_your_price", label: "Set Your Own Price", price: 499, priceLabel: "$499 One-Time Upfront Fee", blurb: "Everything included in the Featured package, plus the right to set your own asking price rather than our suggested sales price. This option is designed for sellers who are willing to wait longer in exchange for a potentially higher return. We always pursue the highest achievable price regardless of which option you choose — this simply raises the floor below which we will not sell. Please note that pricing above the suggested figure typically lengthens the time to sell. Cancel anytime at no charge." },
 ] as const;
+
 
 export const parseSpaces = (s: string | null | undefined): number => {
   if (!s) return 1;
@@ -143,15 +145,15 @@ export async function buildListingOptionsBlock(opts: {
   const priceCallout = `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:2px solid ${BRAND_PRIMARY};border-radius:12px;margin:0 0 22px;background:${BRAND_CARD_BG};">
   <tr><td style="padding:24px 26px;">
-    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:800;">Your Authorized Sale Quote</p>
+    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:800;">Our Suggested Sales Price</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border-radius:8px;margin:14px 0 16px;">
       <tr><td style="padding:18px 20px;">
-        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Authorized Minimum Sale Price</p>
+        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price</p>
         <p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(salePerSpace)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">per space</span></p>
         ${plotCount > 1 ? `<p style="font-family:${SANS};font-size:13px;color:${BRAND_INK_MUTED};margin:8px 0 0;">${fmtUsd(totalSale)} across all ${plotCount} spaces</p>` : ""}
       </td></tr>
     </table>
-    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the minimum figure at which you authorize us to complete a sale on your behalf. In practice we always pursue the highest achievable price — the final sale may close at this figure or above it, and any amount above the authorized minimum flows through to your proceeds on the same terms.</p>
+    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the price we suggest listing at to stay in line with other listings at this location, and the minimum figure at which you authorize us to complete a sale on your behalf. In practice we always pursue the highest achievable price — the final sale may close at this figure or above it, and any amount above the suggested price flows through to your proceeds on the same terms.</p>
   </td></tr>
 </table>`.trim();
 
@@ -174,15 +176,15 @@ export async function buildListingOptionsBlock(opts: {
         <td style="padding:14px 0 0;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(proceedsPerSpace)}${proceedsTotalLine}</td>
       </tr>
     </table>
-    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the authorized minimum.</p>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price.</p>
   </td></tr>
 </table>`.trim();
 
   // ── TIER SECTION ──────────────────────────────────────────────────
   const tierSection = `
-<p style="font-family:${SANS};font-size:14px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0 0 16px;">To move forward, choose one of three tailored listing options. There are no additional broker fees beyond the 15% commission in any of these options:</p>
+<p style="font-family:${SANS};font-size:14px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0 0 16px;">To move forward, choose one of four tailored listing options. There are no additional broker fees beyond the 15% commission in any of these options:</p>
 ${tierCards}
-<p style="font-family:${SANS};font-size:12.5px;color:${BRAND_INK_FAINT};margin:6px 0 4px;font-style:italic;">This quote is valid until ${deadline}.</p>`.trim();
+<p style="font-family:${SANS};font-size:12.5px;color:${BRAND_INK_FAINT};margin:6px 0 4px;font-style:italic;">This suggested price is valid until ${deadline}.</p>`.trim();
 
   // ── ASSEMBLE ──────────────────────────────────────────────────────
   const cardHtml = `
@@ -195,12 +197,12 @@ ${tierCards}
       <tr><td align="center" style="background:${BRAND_CARD_BG};padding:28px 40px 18px;border-bottom:1px solid ${BRAND_BORDER};">
         <img src="${LOGO_URL}" alt="Texas Cemetery Brokers" width="56" style="display:block;width:56px;height:auto;margin:0 auto 12px;">
         <p style="font-family:${SERIF};font-size:18px;color:${BRAND_INK};margin:0 0 4px;font-weight:600;letter-spacing:.01em;">Texas Cemetery Brokers</p>
-        <p style="font-family:${SERIF};font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:${BRAND_PRIMARY};font-weight:700;margin:0;">Sale Authorization Quote</p>
+        <p style="font-family:${SERIF};font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:${BRAND_PRIMARY};font-weight:700;margin:0;">Suggested Sales Price</p>
       </td></tr>
 
       <!-- INTRO -->
       <tr><td style="padding:30px 40px 4px;">
-        ${p(`Thank you for considering Texas Cemetery Brokers for the sale of your interment property. After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${escapeHtml(cemLabel)}, we are pleased to present your authorized sale quote.`)}
+        ${p(`Thank you for considering Texas Cemetery Brokers for the sale of your interment property. After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${escapeHtml(cemLabel)}, we are pleased to present our suggested sales price.`)}
         ${propertyCallout}
       </td></tr>
 
@@ -225,7 +227,7 @@ ${tierCards}
       <tr><td style="padding:26px 40px 4px;">
         ${eyebrow("Section")}
         ${h2("Your proceeds")}
-        ${p(`Upon sale, our brokerage commission of 15% of the final sale price is deducted, and the balance is remitted to you. At the authorized minimum, that means:`, true)}
+        ${p(`Upon sale, our brokerage commission of 15% of the final sale price is deducted, and the balance is remitted to you. At the suggested sales price, that means:`, true)}
         ${proceedsCard}
       </td></tr>
 
@@ -246,9 +248,9 @@ ${tierCards}
         ${eyebrow("Next steps")}
         ${h2("How to move forward")}
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;">
-          ${nextStep(1, "Review the quote", "Consider the authorized sale price and the market strategy outlined above.")}
-          ${nextStep(2, "Select your listing option", "Choose Starter, Pro, or Featured — simply click the button on the option you want.")}
-          ${nextStep(3, "Authorize the sale", "Reply to this email to confirm your authorization for us to sell at the quoted price or higher. We will promptly send your Exclusive Sales Agreement, which formalizes the authorization and commission terms, and guide you through listing.")}
+          ${nextStep(1, "Review the suggested sales price", "Consider the suggested sales price and the market strategy outlined above.")}
+          ${nextStep(2, "Select your listing option", "Choose Starter, Pro, Featured, or Set Your Own Price — simply click the button on the option you want.")}
+          ${nextStep(3, "Authorize the sale", "Reply to this email to confirm your authorization for us to sell at the agreed price or higher. We will promptly send your Exclusive Sales Agreement, which formalizes the authorization and commission terms, and guide you through listing.")}
         </table>
         <p style="font-family:${SANS};font-size:14px;line-height:1.7;color:${BRAND_INK};margin:16px 0 0;">We look forward to achieving a successful sale on your behalf.</p>
       </td></tr>
