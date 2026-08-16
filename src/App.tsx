@@ -39,6 +39,7 @@ const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost")
 const CityPlotsPage = lazy(() => import("./pages/CityPlotsPage"));
 import { CITY_PAGES } from "./pages/city-page-data";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
@@ -98,6 +99,7 @@ const App = () => (
                   <Route key={c.slug} path={`/cemetery-plots-for-sale-${c.slug}`} element={<CityPlotsPage />} />
                 ))}
                 <Route path="/thank-you" element={<ThankYou />} />
+                <Route path="/privacy" element={<Privacy />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/select-starter" element={<SelectStarter />} />
                 <Route path="/seller-portal" element={<SellerPortal />} />
