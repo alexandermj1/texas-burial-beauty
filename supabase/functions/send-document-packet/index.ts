@@ -66,7 +66,11 @@ Deno.serve(async (req) => {
     const to = body?.to || sub?.email;
     if (!to) throw new Error('no recipient email');
 
-    const firstName = (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
+    // The broker can override the greeting (the auto-picked name is sometimes
+    // wrong) and add a personal message of their own above the checklist.
+    const greetingOverride = String(body?.greeting_name ?? '').trim();
+    const brokerNote = String(body?.note ?? '').trim();
+    const firstName = greetingOverride || (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` at ${esc(sub.cemetery)}` : '';
 
     // The email stays deliberately short: a simple checklist of names and one
@@ -93,6 +97,12 @@ Deno.serve(async (req) => {
         </td></tr>
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
+          ${brokerNote ? `
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">
+            <tr><td style="border-left:3px solid #d9c7a3;background:#faf7f1;padding:14px 18px;font-size:15px;line-height:1.7;color:#1f2a37;">
+              ${esc(brokerNote).replace(/\n/g, '<br/>')}
+            </td></tr>
+          </table>` : ''}
           <p style="margin:0 0 22px;">
             To complete the sale of your property${cemLine} we need a few documents. We've put them all on one
             secure page for you, with simple instructions for each one.
