@@ -521,7 +521,7 @@ const DocRow = ({
               </ol>
               <button
                 type="button"
-                onClick={() => void openPrivateFile(doc.prepared_pdf_url!, setError)}
+                onClick={() => void openPrivateFile(doc.prepared_pdf_url!, () => {})}
                 className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
               >
                 <Stamp className="w-3.5 h-3.5" /> Open the document we prepared
