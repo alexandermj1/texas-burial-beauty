@@ -80,7 +80,6 @@ export const classifyEmailKind = (
   // a family-tree thread must never inherit that thread's tag.
   const isReply = /^(re|fwd|fw)\s*:/.test(s);
   const b = stripQuoted(body).toLowerCase();
-  const hay = `${s} ${b}`;
   // The document request email — its own tag so it is easy to spot in the chain.
   if (
     s.includes("documents we need to complete your sale") ||
