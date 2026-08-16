@@ -109,6 +109,13 @@ export type OwnershipAnswers = {
   /** Default postal address used when an item is switched to originals-by-mail. */
   originalsAddress?: string;
 
+  /** Name the document-request email greets, when the auto-picked one is wrong. */
+  packetGreeting?: string;
+  /** The broker's own message inside the document-request email. */
+  packetEmailNote?: string;
+  /** The broker's own message shown at the top of the seller's document page. */
+  packetNote?: string;
+
   /** The last AI reading, kept so its explanation survives a reload. */
   aiReading?: {
     answers?: Record<string, string>;
