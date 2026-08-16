@@ -79,7 +79,7 @@ const FAQ: { q: string; a: string }[] = [
 
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
 
-type Packet = { seller_name: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; poas?: Poa[]; listing_agreement?: ListingAgreement };
+type Packet = { seller_name: string | null; broker_note?: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; poas?: Poa[]; listing_agreement?: ListingAgreement };
 
 const DONE = ["received", "notarized", "complete"];
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
@@ -658,6 +658,13 @@ const SellerDocuments = () => {
           One page, one list. Upload from this computer, or tap <span className="text-foreground">Phone</span> on any
           item and photograph it with your camera{packet?.cemetery ? ` — everything below is what ${packet.cemetery} requires` : ""}.
         </p>
+
+        {packet?.broker_note && (
+          <div className="mt-6 rounded-2xl border-l-4 border-primary bg-primary/[0.06] px-5 py-4">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-primary mb-2">A note from your broker</p>
+            <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{packet.broker_note}</p>
+          </div>
+        )}
 
         <div className="mt-6 rounded-2xl border border-border/70 bg-card/70 px-5 py-4">
           <p className="text-xs text-muted-foreground leading-relaxed">
