@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X,
+  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X, Check,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { openFileViewer } from "@/lib/fileViewer";
@@ -192,6 +192,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [sending, setSending] = useState(false);
+  // When the document request was last emailed — the send button turns green
+  // and reads "Request sent" so it is obvious it has already gone out.
+  const [requestedAt, setRequestedAt] = useState<string | null>(null);
   const [poaPrompt, setPoaPrompt] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
   /** A prepared PDF shown inline so it can be checked without leaving the page. */
@@ -237,7 +240,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
-        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names").eq("id", submissionId).maybeSingle(),
+        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
         .eq("submission_id", submissionId),
@@ -248,6 +251,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
     setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
+    setRequestedAt(((sub as { documents_requested_at?: string | null } | null)?.documents_requested_at ?? null));
 
     // The AI reading is stored on the file, so its explanation survives a reload.
     if (a?.aiReading) setReading(a.aiReading as Reading);
@@ -1913,13 +1917,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+                  className={requestedAt
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : "bg-[#1f2a37] hover:bg-[#111827] text-white"}
                   onClick={() => setReview({ step: 1 })}
                   disabled={sending || !sellerEmail}
-                  title={sellerEmail ? `Review, then send everything to ${sellerEmail}` : "No email on this submission"}
+                  title={requestedAt
+                    ? `Sent ${new Date(requestedAt).toLocaleString()} — click to send again`
+                    : sellerEmail ? `Review, then send everything to ${sellerEmail}` : "No email on this submission"}
                 >
-                  {sending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
-                  Send document request
+                  {sending
+                    ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    : requestedAt ? <Check className="w-3.5 h-3.5 mr-1" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  {requestedAt
+                    ? `Request sent ${new Date(requestedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+                    : "Send document request"}
                 </Button>
               </div>
             </div>
