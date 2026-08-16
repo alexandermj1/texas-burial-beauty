@@ -2412,135 +2412,123 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
         {regionFilter === "texas" && (
-          <div className="flex items-center gap-2 flex-wrap px-3 py-2.5 border-b border-border/50 bg-sand-light/30 dark:bg-muted/20">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mr-1">Filter:</span>
+          <div className="px-3 py-2.5 border-b border-border/50 bg-sand-light/30 dark:bg-muted/20">
+            <span className="block text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
+              Pipeline — filter by stage
+            </span>
             {(() => {
-              const withCount = submissions.filter(s => subRegion(s) === "texas" && hasDocs(s)).length;
-              const isActive = docsFilter === "with";
+              const tx = submissions.filter(s => subRegion(s) === "texas");
+              const steps: {
+                key: string;
+                label: string;
+                icon: typeof Paperclip;
+                count: number;
+                active: boolean;
+                toggle: () => void;
+                onCls: string;
+                offCls: string;
+              }[] = [
+                {
+                  key: "docs",
+                  label: "Attachments",
+                  icon: Paperclip,
+                  count: tx.filter(s => hasDocs(s)).length,
+                  active: docsFilter === "with",
+                  toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"),
+                  onCls: "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))] shadow-sm",
+                  offCls: "bg-card text-[hsl(var(--status-docs-fg))] border-border hover:bg-[hsl(var(--status-docs-soft))]",
+                },
+                {
+                  key: "quoted",
+                  label: "Quoted",
+                  icon: DollarSign,
+                  count: tx.filter(s => (s as any).quote_sent_at).length,
+                  active: quotedFilter,
+                  toggle: () => setQuotedFilter(!quotedFilter),
+                  onCls: "bg-purple-600 text-white border-purple-600 shadow-sm",
+                  offCls: "bg-card text-purple-700 dark:text-purple-300 border-border hover:bg-purple-50 dark:hover:bg-purple-950/30",
+                },
+                {
+                  key: "accepted",
+                  label: "Accepted",
+                  icon: DollarSign,
+                  count: tx.filter(s => (s as any).quote_response === "accepted").length,
+                  active: acceptedFilter,
+                  toggle: () => setAcceptedFilter(!acceptedFilter),
+                  onCls: "bg-emerald-600 text-white border-emerald-600 shadow-sm",
+                  offCls: "bg-card text-emerald-700 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30",
+                },
+                {
+                  key: "tree-sent",
+                  label: "Tree sent",
+                  icon: Users,
+                  count: tx.filter(s => ftState(s).sentAt && !ftState(s).doneAt).length,
+                  active: ftSentFilter,
+                  toggle: () => setFtSentFilter(!ftSentFilter),
+                  onCls: "bg-indigo-600 text-white border-indigo-600 shadow-sm",
+                  offCls: "bg-card text-indigo-700 dark:text-indigo-300 border-border hover:bg-indigo-50 dark:hover:bg-indigo-950/30",
+                },
+                {
+                  key: "tree-done",
+                  label: "Tree done",
+                  icon: Users,
+                  count: tx.filter(s => ftState(s).doneAt).length,
+                  active: ftDoneFilter,
+                  toggle: () => setFtDoneFilter(!ftDoneFilter),
+                  onCls: "bg-teal-600 text-white border-teal-600 shadow-sm",
+                  offCls: "bg-card text-teal-700 dark:text-teal-300 border-border hover:bg-teal-50 dark:hover:bg-teal-950/30",
+                },
+                {
+                  key: "docs-out",
+                  label: "Docs out",
+                  icon: FileText,
+                  count: tx.filter(s => (s as any).documents_requested_at && !(s as any).documents_completed_at).length,
+                  active: docsOutFilter,
+                  toggle: () => setDocsOutFilter(!docsOutFilter),
+                  onCls: "bg-sky-600 text-white border-sky-600 shadow-sm",
+                  offCls: "bg-card text-sky-700 dark:text-sky-300 border-border hover:bg-sky-50 dark:hover:bg-sky-950/30",
+                },
+                {
+                  key: "complete",
+                  label: "Complete",
+                  icon: CheckCircle,
+                  count: tx.filter(s => (s as any).documents_completed_at).length,
+                  active: completeFilter,
+                  toggle: () => setCompleteFilter(!completeFilter),
+                  onCls: "bg-emerald-700 text-white border-emerald-700 shadow-sm",
+                  offCls: "bg-card text-emerald-800 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30",
+                },
+              ];
               return (
-                <button
-                  onClick={() => setDocsFilter(isActive ? "all" : "with")}
-                  title={isActive ? "Showing only submissions with attachments — click to clear" : "Show only submissions with attachments"}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                    isActive
-                      ? "bg-[hsl(var(--status-docs))] text-white border-[hsl(var(--status-docs))] shadow-sm"
-                      : "bg-card text-[hsl(var(--status-docs-fg))] border-border hover:bg-[hsl(var(--status-docs-soft))]"
-                  }`}
-                >
-                  <Paperclip className="w-3 h-3" />
-                  Attachments ({withCount})
-                </button>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {steps.map((st, i) => {
+                    const Icon = st.icon;
+                    return (
+                      <div key={st.key} className="flex items-center gap-1">
+                        {i > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground/40 shrink-0" />}
+                        <button
+                          onClick={st.toggle}
+                          title={st.active
+                            ? `Showing only "${st.label}" (${st.count}) — click to clear`
+                            : `Step ${i + 1} of ${steps.length} · show only "${st.label}" (${st.count})`}
+                          className={`inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                            st.active ? st.onCls : st.offCls
+                          }`}
+                        >
+                          <span className={`w-4 h-4 rounded-full grid place-items-center text-[9px] font-bold ${
+                            st.active ? "bg-white/25 text-white" : "bg-muted text-muted-foreground"
+                          }`}>
+                            {i + 1}
+                          </span>
+                          <Icon className="w-3 h-3" strokeWidth={2.5} />
+                          {st.label} ({st.count})
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               );
             })()}
-            {(() => {
-              const quotedCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).quote_sent_at).length;
-              const isActive = quotedFilter;
-              return (
-                <button
-                  onClick={() => setQuotedFilter(!isActive)}
-                  title={isActive ? `Showing only sellers we've quoted (${quotedCount}) — click to clear` : `Show only sellers we've quoted (${quotedCount})`}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                    isActive
-                      ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                      : "bg-card text-purple-700 dark:text-purple-300 border-border hover:bg-purple-50 dark:hover:bg-purple-950/30"
-                  }`}
-                >
-                  <DollarSign className="w-3 h-3" strokeWidth={2.5} />
-                  ({quotedCount})
-                </button>
-              );
-            })()}
-            {(() => {
-              const acceptedCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).quote_response === "accepted").length;
-              const isActive = acceptedFilter;
-              return (
-                <button
-                  onClick={() => setAcceptedFilter(!isActive)}
-                  title={isActive ? `Showing only accepted quotes (${acceptedCount}) — click to clear` : `Show only sellers who accepted our quote (${acceptedCount})`}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                    isActive
-                      ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                      : "bg-card text-emerald-700 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                  }`}
-                >
-                  <DollarSign className="w-3 h-3" strokeWidth={2.5} />
-                  ({acceptedCount})
-                </button>
-              );
-            })()}
-            {(() => {
-              const docsOutCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).documents_requested_at && !(s as any).documents_completed_at).length;
-              const isActive = docsOutFilter;
-              return (
-                <button
-                  onClick={() => setDocsOutFilter(!isActive)}
-                  title={isActive ? `Showing only sellers with an open document request (${docsOutCount}) — click to clear` : `Show only sellers with an open document request (${docsOutCount})`}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                    isActive
-                      ? "bg-sky-600 text-white border-sky-600 shadow-sm"
-                      : "bg-card text-sky-700 dark:text-sky-300 border-border hover:bg-sky-50 dark:hover:bg-sky-950/30"
-                  }`}
-                >
-                  <FileText className="w-3 h-3" strokeWidth={2.5} />
-                  Docs out ({docsOutCount})
-                </button>
-              );
-            })()}
-            {(() => {
-              const completeCount = submissions.filter(s => subRegion(s) === "texas" && (s as any).documents_completed_at).length;
-              const isActive = completeFilter;
-              return (
-                <button
-                  onClick={() => setCompleteFilter(!isActive)}
-                  title={isActive ? `Showing only complete listings (${completeCount}) — click to clear` : `Show only listings with every document received (${completeCount})`}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                    isActive
-                      ? "bg-emerald-700 text-white border-emerald-700 shadow-sm"
-                      : "bg-card text-emerald-800 dark:text-emerald-300 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                  }`}
-                >
-                  <CheckCircle className="w-3 h-3" strokeWidth={2.5} />
-                  Complete ({completeCount})
-                </button>
-              );
-            })()}
-            {(() => {
-              const sentCount = submissions.filter(s => subRegion(s) === "texas" && ftState(s).sentAt && !ftState(s).doneAt).length;
-              const isActive = ftSentFilter;
-              return (
-                <button
-                  onClick={() => setFtSentFilter(!isActive)}
-                  title={isActive ? `Showing only sellers we've asked for the family tree (${sentCount}) — click to clear` : `Show sellers we've asked to confirm the deed (${sentCount})`}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                    isActive
-                      ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                      : "bg-card text-indigo-700 dark:text-indigo-300 border-border hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
-                  }`}
-                >
-                  <Users className="w-3 h-3" strokeWidth={2.5} />
-                  Tree sent ({sentCount})
-                </button>
-              );
-            })()}
-            {(() => {
-              const doneCount = submissions.filter(s => subRegion(s) === "texas" && ftState(s).doneAt).length;
-              const isActive = ftDoneFilter;
-              return (
-                <button
-                  onClick={() => setFtDoneFilter(!isActive)}
-                  title={isActive ? `Showing only sellers who returned the family tree (${doneCount}) — click to clear` : `Show sellers who completed the deed questions (${doneCount})`}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
-                    isActive
-                      ? "bg-teal-600 text-white border-teal-600 shadow-sm"
-                      : "bg-card text-teal-700 dark:text-teal-300 border-border hover:bg-teal-50 dark:hover:bg-teal-950/30"
-                  }`}
-                >
-                  <Users className="w-3 h-3" strokeWidth={2.5} />
-                  Tree done ({doneCount})
-                </button>
-              );
-            })()}
-
           </div>
         )}
         {regionFilter === "texas" && cemeteryLabel && (
