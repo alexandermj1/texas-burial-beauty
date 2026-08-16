@@ -170,7 +170,8 @@ Deno.serve(async (req) => {
       }
 
       return json({
-        seller_name: sub.name,
+        seller_name: String(ownershipAnswers.packetGreeting ?? "").trim() || sub.name,
+        broker_note: String(ownershipAnswers.packetNote ?? "").trim() || null,
         cemetery: sub.cemetery,
         listing_agreement: listingRow
           ? {
