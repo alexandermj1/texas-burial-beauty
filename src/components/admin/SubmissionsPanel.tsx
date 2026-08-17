@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -252,6 +252,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
   const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
+  const [awaitingQuoteFilter, setAwaitingQuoteFilter] = useState<boolean>(false);
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
   const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
   const [docsOutFilter, setDocsOutFilter] = useState<boolean>(false);
@@ -718,6 +719,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (docsFilter === "with" && !has) return false;
         if (docsFilter === "without" && has) return false;
       }
+      // Awaiting quote = has uploaded attachments but no quote has gone out yet.
+      if (awaitingQuoteFilter && (!hasDocs(s) || (s as any).quote_sent_at)) return false;
       if (quotedFilter && !(s as any).quote_sent_at) return false;
       if (acceptedFilter && (s as any).quote_response !== "accepted") return false;
       if (docsOutFilter && (!(s as any).documents_requested_at || (s as any).documents_completed_at)) return false;
@@ -771,7 +774,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
@@ -1384,6 +1387,66 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             Undo declined
                           </button>
                         )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Manual stage mover — force a submission into any pipeline stage. */}
+                  {(() => {
+                    const x = selected as any;
+                    const ans = (x.ownership_answers ?? {}) as Record<string, any>;
+                    const now = new Date().toISOString();
+                    const STAGES = [
+                      { key: "awaiting_quote", label: "Awaiting quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
+                      { key: "quoted",         label: "Quoted",         cls: "bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300" },
+                      { key: "accepted",       label: "Accepted",       cls: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300" },
+                      { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
+                      { key: "tree_done",      label: "Tree done",      cls: "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300" },
+                      { key: "docs_out",       label: "Docs out",       cls: "bg-sky-500/15 border-sky-500/50 text-sky-700 dark:text-sky-300" },
+                      { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
+                    ];
+                    const current =
+                      x.documents_completed_at ? "complete"
+                      : x.documents_requested_at ? "docs_out"
+                      : ans.sellerConfirmedAt ? "tree_done"
+                      : ans.questionsSentAt ? "tree_sent"
+                      : x.quote_response === "accepted" ? "accepted"
+                      : x.quote_sent_at ? "quoted"
+                      : "awaiting_quote";
+
+                    const move = async (key: string) => {
+                      const idx = STAGES.findIndex(s => s.key === key);
+                      const at = (k: string) => STAGES.findIndex(s => s.key === k) <= idx;
+                      const answers = { ...ans };
+                      answers.questionsSentAt = at("tree_sent") ? (ans.questionsSentAt || now) : null;
+                      answers.sellerConfirmedAt = at("tree_done") ? (ans.sellerConfirmedAt || now) : null;
+                      const patch: any = {
+                        ownership_answers: answers,
+                        quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
+                        quote_response: at("accepted") ? "accepted" : (x.quote_response === "accepted" ? null : x.quote_response),
+                        quote_responded_at: at("accepted") ? (x.quote_responded_at || now) : (x.quote_response === "accepted" ? null : x.quote_responded_at),
+                        documents_requested_at: at("docs_out") ? (x.documents_requested_at || now) : null,
+                        documents_completed_at: at("complete") ? (x.documents_completed_at || now) : null,
+                      };
+                      await onUpdate(selected.id, patch);
+                      toast({ title: "Stage updated", description: STAGES[idx].label });
+                    };
+
+                    return (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Move to stage</span>
+                        {STAGES.map(st => (
+                          <button
+                            key={st.key}
+                            onClick={() => move(st.key)}
+                            title={`Move this submission to "${st.label}"`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                              current === st.key ? st.cls : "border-border text-muted-foreground hover:bg-muted/50"
+                            }`}
+                          >
+                            {st.label}
+                          </button>
+                        ))}
                       </div>
                     );
                   })()}
@@ -2424,6 +2487,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 teal:    { dot: "bg-teal-600",    ring: "ring-teal-500/40",    text: "text-teal-700 dark:text-teal-300",       soft: "bg-teal-500/10" },
                 sky:     { dot: "bg-sky-600",     ring: "ring-sky-500/40",     text: "text-sky-700 dark:text-sky-300",         soft: "bg-sky-500/10" },
                 green:   { dot: "bg-emerald-700", ring: "ring-emerald-600/40", text: "text-emerald-800 dark:text-emerald-300", soft: "bg-emerald-600/10" },
+                amber:   { dot: "bg-amber-500",   ring: "ring-amber-500/40",   text: "text-amber-700 dark:text-amber-300",     soft: "bg-amber-500/10" },
               };
               const steps: {
                 key: string; label: string; icon: typeof Paperclip; count: number;
@@ -2433,6 +2497,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   count: tx.filter(s => hasDocs(s)).length,
                   active: docsFilter === "with",
                   toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.slate },
+                { key: "awaiting-quote", label: "Awaiting quote", icon: Clock,
+                  count: tx.filter(s => hasDocs(s) && !(s as any).quote_sent_at).length,
+                  active: awaitingQuoteFilter, toggle: () => setAwaitingQuoteFilter(!awaitingQuoteFilter), tone: tones.amber },
                 { key: "quoted", label: "Quoted", icon: DollarSign,
                   count: tx.filter(s => (s as any).quote_sent_at).length,
                   active: quotedFilter, toggle: () => setQuotedFilter(!quotedFilter), tone: tones.purple },
@@ -2462,7 +2529,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {anyActive && (
                       <button
                         onClick={() => {
-                          setDocsFilter("all"); setQuotedFilter(false); setAcceptedFilter(false);
+                          setDocsFilter("all"); setAwaitingQuoteFilter(false); setQuotedFilter(false); setAcceptedFilter(false);
                           setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setCompleteFilter(false);
                         }}
                         className="text-[10px] font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
