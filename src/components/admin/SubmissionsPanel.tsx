@@ -2646,6 +2646,120 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
                     : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
 
+            // ---- Stage resolution: one authoritative pill per submission ----
+            const ft = ftState(s);
+            const la = laMap[s.id];
+            const stage = (() => {
+              if ((s as any).documents_completed_at) return { label: "Complete", cls: "bg-emerald-600 text-white border-emerald-700", icon: CheckCircle, at: (s as any).documents_completed_at };
+              if ((s as any).documents_requested_at) return { label: "Docs out", cls: "bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800", icon: FileText, at: (s as any).documents_requested_at };
+              if (ft.doneAt) return { label: "Tree done", cls: "bg-teal-600 text-white border-teal-700", icon: Users, at: ft.doneAt };
+              if (ft.sentAt) return { label: "Tree sent", cls: "bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800", icon: Users, at: ft.sentAt };
+              if ((s as any).quote_response === "accepted") return { label: "Accepted", cls: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700", icon: CheckCircle, at: (s as any).quote_responded_at };
+              if ((s as any).quote_sent_at) return { label: "Quoted", cls: "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800", icon: DollarSign, at: (s as any).quote_sent_at };
+              if (hasDocs(s)) return { label: "Awaiting quote", cls: "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-800", icon: Clock, at: null as string | null };
+              return { label: "New inquiry", cls: "bg-muted text-muted-foreground border-border", icon: Inbox, at: null as string | null };
+            })();
+            const StageIcon = stage.icon;
+
+            // ---- Quiet meta chips: money, docs, agreement, payment ----
+            type Chip = { key: string; icon: any; text?: string; tone: string; title: string };
+            const chips: Chip[] = [];
+
+            if (hasDocs(s)) {
+              chips.push({ key: "files", icon: Paperclip, tone: "text-[hsl(var(--status-docs-fg))] bg-[hsl(var(--status-docs-soft))] border-[hsl(var(--status-docs-border))]", title: "Customer submitted attachments" });
+            }
+
+            if ((s as any).quote_sent_at) {
+              const accepted = (s as any).quote_response === "accepted";
+              const quotedPer = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
+              const rowSpaces = Math.max(1, Number((s as any).spaces) || 1);
+              const rowRetailPer = Number((s as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
+              const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
+              const rowProp = [
+                (s as any).property_type || null,
+                rowSpaces ? `${rowSpaces} space${rowSpaces > 1 ? "s" : ""}` : null,
+                rowPlotLocation,
+                (s as any).space_numbers || null,
+              ].filter(Boolean).join(" · ") || "property not specified";
+              const salesPer = rowRetailPer > 0 ? Math.round((rowRetailPer * 0.67) / 100) * 100 : 0;
+              const total = (accepted ? salesPer : quotedPer) * rowSpaces;
+              if (total > 0) {
+                chips.push({
+                  key: "money",
+                  icon: DollarSign,
+                  text: `$${total.toLocaleString()}${rowSpaces > 1 ? ` ×${rowSpaces}` : ""}`,
+                  tone: accepted
+                    ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300/70 dark:border-emerald-800"
+                    : "text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30 border-purple-300/70 dark:border-purple-800",
+                  title: accepted
+                    ? `Agreed sales price for ${rowProp} · $${salesPer.toLocaleString()}/plot`
+                    : `Quote sent for ${rowProp} · $${quotedPer.toLocaleString()}/plot · ${formatDate((s as any).quote_sent_at)}`,
+                });
+              }
+            }
+
+            if (la && (la.signedAt || la.sentAt)) {
+              chips.push({
+                key: "la",
+                icon: FileSignature,
+                text: la.signedAt ? "LA signed" : "LA sent",
+                tone: la.signedAt
+                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300/70 dark:border-emerald-800"
+                  : "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border-amber-300/70 dark:border-amber-800",
+                title: la.signedAt
+                  ? `Listing agreement signed ${formatDate(la.signedAt)}`
+                  : `Listing agreement sent ${formatDate(la.sentAt!)}`,
+              });
+            }
+
+            (() => {
+              const p = paidMap[s.id];
+              if (p) {
+                const t = (p.tier || "").toLowerCase();
+                const label = t === "starter" ? "Starter" : t === "pro" ? "Pro" : (t === "custom_plus" || t === "featured") ? "Featured" : "Paid";
+                const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "$0";
+                chips.push({
+                  key: "paid",
+                  icon: CheckCircle,
+                  text: `${label} ${amount}`,
+                  tone: "text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/30 border-teal-300/70 dark:border-teal-800",
+                  title: `${label} listing paid · ${amount} · ${p.paidAt ? formatDate(p.paidAt) : "recently"}`,
+                });
+                return;
+              }
+              const t = String((s as any).listing_tier || "").toLowerCase();
+              const key = t === "custom_plus" ? "featured" : t;
+              if (!["starter", "pro", "featured"].includes(key)) return;
+              const k = key as "starter" | "pro" | "featured";
+              chips.push({
+                key: "tier",
+                icon: Clock,
+                text: `${TIER_LABEL[k]} $${TIER_PRICE[k].toLocaleString()}`,
+                tone: "text-teal-700 dark:text-teal-300 bg-teal-50/60 dark:bg-teal-950/20 border-teal-300/60 dark:border-teal-800/70 border-dashed",
+                title: `${TIER_LABEL[k]} listing option selected — payment not received yet`,
+              });
+            })();
+
+            const customTag = String((s as any).custom_tag || "").trim();
+            if (customTag) {
+              chips.push({
+                key: "custom",
+                icon: Sparkles,
+                text: customTag,
+                tone: "text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/30 border-amber-300/70 dark:border-amber-800",
+                title: customTag,
+              });
+            }
+
+            const dupKey = (s.email || "").trim().toLowerCase();
+            const dupCount = dupKey ? (dupIdsByEmail.get(dupKey)?.length || 1) : 1;
+
+            const lastIso = lastInteractionMap[s.id] || s.created_at;
+            const lastD = new Date(lastIso);
+            const lastLabel = lastD.toDateString() === new Date().toDateString()
+              ? lastD.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+              : formatDate(lastIso).split(",")[0];
+
             return (
               <div key={s.id}>
                 <motion.button
@@ -2656,239 +2770,42 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`w-full text-left px-4 py-3 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
+                  className={`group w-full text-left px-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
                 >
                   <img
                     src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
                     alt=""
-                    className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
+                    className="w-11 h-11 rounded-xl object-cover bg-muted/40 shrink-0 mt-0.5 ring-1 ring-border/60"
                   />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-0.5">
-                       <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                        <p className={`text-sm truncate max-w-[60vw] sm:max-w-none ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
-                        {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
-                        {beingWorked && (
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
-                            title={`${workers.map(w => w.user_name).join(", ")} viewing now`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                            {workers[0].user_name}{workers.length > 1 ? ` +${workers.length - 1}` : ""}
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    {/* Line 1 — who, and where they are */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex items-center gap-2">
+                        <p className={`text-[15px] leading-tight truncate ${fresh ? "font-bold text-foreground" : "font-semibold text-foreground"}`}>
+                          {s.name || "Anonymous"}
+                        </p>
+                        {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
+                        {needsReply && (
+                          <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-[hsl(var(--status-reply))] text-white shrink-0">
+                            Reply
                           </span>
                         )}
-                        {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
-                        <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
-                        {(() => {
-                          const key = (s.email || "").trim().toLowerCase();
-                          const dupCount = key ? (dupIdsByEmail.get(key)?.length || 1) : 1;
-                          if (dupCount <= 1) return null;
-                          const earlier = dupCount - 1;
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border"
-                              title={`This person submitted the form ${dupCount} times — showing the most recent. ${earlier} older ${earlier === 1 ? "submission is" : "submissions are"} merged into this record.`}
-                            >
-                              {earlier} prior form{earlier === 1 ? "" : "s"}
-                            </span>
-                          );
-                        })()}
-                        {/* "Needs reply" is now a red row highlight, not a tag. */}
-                        {!needsReply && !!((s as any).custom_tag || "").trim() && (
-
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800 shadow-sm max-w-[180px] truncate"
-                            title={(s as any).custom_tag}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            <span className="truncate">{(s as any).custom_tag}</span>
-                          </span>
-                        )}
-                        {hasDocs(s) && (
-                          <span
-                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))] shadow-sm"
-                            title="Customer submitted attachments"
-                          >
-                            <Paperclip className="w-3 h-3" />
-                          </span>
-                        )}
-                        {(s as any).quote_sent_at && (() => {
-                          const accepted = (s as any).quote_response === "accepted";
-                          // quote_amount / cemetery_retail are stored PER PLOT.
-                          const quotedPer = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
-                          const rowSpaces = Math.max(1, Number((s as any).spaces) || 1);
-                          const rowMulti = rowSpaces > 1;
-                          const rowRetailPer = Number((s as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
-                          const quoted = quotedPer * rowSpaces;
-                          const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
-                          const rowPlotId = (s as any).space_numbers || null;
-                          const rowProp = [
-                            (s as any).property_type || null,
-                            rowSpaces ? `${rowSpaces} space${rowMulti ? "s" : ""}` : null,
-                            rowPlotLocation,
-                            rowPlotId,
-                          ].filter(Boolean).join(" · ") || "property not specified";
-                          if (accepted) {
-                            if (quotedPer > 0) {
-                              const salesPer = Math.round((rowRetailPer * 0.67) / 100) * 100;
-                              const sales = salesPer * rowSpaces;
-                              return (
-                                <span
-                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm tabular-nums"
-                                  title={`Sales price for ${rowProp} · quoted $${quotedPer.toLocaleString()}/plot ($${quoted.toLocaleString()} total) → retail $${Math.round(rowRetailPer).toLocaleString()}/plot → sales $${salesPer.toLocaleString()}/plot ($${sales.toLocaleString()} total)`}
-                                >
-                                  <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
-                                  ${sales.toLocaleString()}
-                                  {rowMulti && <span className="font-semibold opacity-80">×{rowSpaces}</span>}
-                                </span>
-                              );
-                            }
-                            return (
-                              <span
-                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm"
-                                title={`Quote accepted for ${rowProp} · ${formatDate((s as any).quote_responded_at || (s as any).quote_sent_at)}`}
-                              >
-                                <DollarSign className="w-2.5 h-2.5" strokeWidth={3} />
-                                Accepted
-                                {rowMulti && <span className="font-semibold opacity-80">×{rowSpaces}</span>}
-                              </span>
-                            );
-                          }
-                          return (
-                            <span
-                              className={`inline-flex items-center justify-center ${rowMulti ? "gap-0.5 px-1.5 h-5" : "w-5 h-5"} rounded-full border shadow-sm bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800`}
-                              title={`Quote sent for ${rowProp} · ${formatDate((s as any).quote_sent_at)}`}
-                            >
-                              <DollarSign className="w-3 h-3" strokeWidth={2.5} />
-                              {rowMulti && <span className="text-[10px] font-bold">×{rowSpaces}</span>}
-                            </span>
-                          );
-                        })()}
-                        {(s as any).documents_completed_at ? (
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white border border-emerald-700 shadow-sm"
-                            title={`All requested documents received · ${formatDate((s as any).documents_completed_at)}`}
-                          >
-                            <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
-                            Complete {formatDate((s as any).documents_completed_at)}
-                          </span>
-                        ) : (s as any).documents_requested_at ? (
-                          <span
-                            className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800 shadow-sm"
-                            title={`Document request sent ${formatDate((s as any).documents_requested_at)}`}
-                          >
-                            <FileText className="w-2.5 h-2.5" strokeWidth={2.5} />
-                            Docs sent {formatDate((s as any).documents_requested_at)}
-                          </span>
-                        ) : null}
-
-                        {(() => {
-                          const ft = ftState(s);
-                          if (ft.doneAt) {
-                            return (
-                              <span
-                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-teal-600 text-white border border-teal-700 shadow-sm"
-                                title={`Seller completed the deed / family questions · ${formatDate(ft.doneAt)}`}
-                              >
-                                <Users className="w-2.5 h-2.5" strokeWidth={3} />
-                                Tree done
-                              </span>
-                            );
-                          }
-                          if (ft.sentAt) {
-                            return (
-                              <span
-                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shadow-sm"
-                                title={`Family tree link sent ${formatDate(ft.sentAt)} — waiting on the seller`}
-                              >
-                                <Users className="w-2.5 h-2.5" strokeWidth={2.5} />
-                                Tree sent
-                              </span>
-                            );
-                          }
-                          return null;
-                        })()}
-
-                        {laMap[s.id] && (laMap[s.id].signedAt || laMap[s.id].sentAt) && (() => {
-                          const la = laMap[s.id];
-                          if (la.signedAt) {
-                            return (
-                              <span
-                                className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 shadow-sm"
-                                title={`Listing agreement signed ${formatDate(la.signedAt)}${la.countersignedAt ? ` · countersigned ${formatDate(la.countersignedAt)}` : ""}`}
-                              >
-                                <FileSignature className="w-2.5 h-2.5" strokeWidth={3} />
-                                LA signed {formatDate(la.signedAt)}
-                              </span>
-                            );
-                          }
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-sm"
-                              title={`Listing agreement sent ${formatDate(la.sentAt!)}`}
-                            >
-                              <FileSignature className="w-2.5 h-2.5" strokeWidth={2.5} />
-                              LA sent {formatDate(la.sentAt!)}
-                            </span>
-                          );
-                        })()}
-
-
-                        {paidMap[s.id] && (() => {
-                          const p = paidMap[s.id];
-                          const tierLabel = (p.tier || "").toLowerCase();
-                          const label = tierLabel === "starter" ? "Starter"
-                            : tierLabel === "pro" ? "Pro"
-                            : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
-                            : "Paid";
-                          const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "$0";
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
-                              title={`${label} listing paid · ${amount} · ${p.paidAt ? formatDate(p.paidAt) : "recently"}`}
-                            >
-                              <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
-                              {amount}
-                            </span>
-                          );
-                        })()}
-                        {!paidMap[s.id] && (() => {
-                          const t = String((s as any).listing_tier || "").toLowerCase();
-                          const key = t === "custom_plus" ? "featured" : t;
-                          if (!["starter", "pro", "featured"].includes(key)) return null;
-                          const amount = `$${TIER_PRICE[key as "starter" | "pro" | "featured"].toLocaleString()}`;
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-400 dark:border-teal-700 shadow-sm tabular-nums"
-                              title={`${TIER_LABEL[key as "starter" | "pro" | "featured"]} listing option selected · ${amount}`}
-                            >
-                              <CheckCircle className="w-2.5 h-2.5" strokeWidth={3} />
-                              {amount}
-                            </span>
-                          );
-                        })()}
                       </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {(() => {
-                          const iso = lastInteractionMap[s.id] || s.created_at;
-                          const d = new Date(iso);
-                          const now = new Date();
-                          const isToday = d.toDateString() === now.toDateString();
-                          return (
-                            <span
-                              className="text-[10px] text-muted-foreground"
-                              title={`Last interaction ${d.toLocaleString()}`}
-                            >
-                              {isToday
-                                ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-                                : formatDate(iso).split(",")[0]}
-                            </span>
-                          );
-                        })()}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${stage.cls}`}
+                          title={stage.at ? `${stage.label} · ${formatDate(stage.at)}` : stage.label}
+                        >
+                          <StageIcon className="w-2.5 h-2.5" strokeWidth={2.75} />
+                          {stage.label}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground tabular-nums" title={`Last interaction ${lastD.toLocaleString()}`}>
+                          {lastLabel}
+                        </span>
                       </div>
                     </div>
 
+                    {/* Line 2 — plain-language summary */}
                     {(() => {
                       const raw = summaryMap[s.id] || "";
                       const [headline, body] = raw.includes("||")
@@ -2898,28 +2815,63 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       return (
                         <>
                           {headline && needsReply && (
-                            <p className="text-xs font-bold text-[hsl(var(--status-reply))] mt-0.5 flex items-start gap-1.5">
-                              {label && <span className="text-primary/80 font-medium shrink-0">{label} ·</span>}
-                              <span className="min-w-0">{headline}</span>
+                            <p className="text-xs font-semibold text-[hsl(var(--status-reply))] leading-snug">
+                              {label && <span className="text-primary/80 font-medium">{label} · </span>}
+                              {headline}
                             </p>
                           )}
                           {body && (
-                            <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                            <p className="text-xs text-muted-foreground leading-snug line-clamp-2">
                               {(!headline || !needsReply) && label && <span className="text-primary/80">{label} · </span>}
                               {body}
                             </p>
                           )}
-                          {!raw && (
-                            <p className="text-xs text-muted-foreground/70 italic mt-0.5">Summarising…</p>
-                          )}
+                          {!raw && <p className="text-xs text-muted-foreground/60 italic">Summarising…</p>}
                         </>
                       );
                     })()}
 
-
+                    {/* Line 3 — quiet meta strip */}
+                    {(chips.length > 0 || beingWorked || sKind !== "seller" || dupCount > 1) && (
+                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                        {chips.map(c => {
+                          const Icon = c.icon;
+                          return (
+                            <span
+                              key={c.key}
+                              className={`inline-flex items-center gap-1 h-5 ${c.text ? "px-1.5" : "w-5 justify-center"} rounded-md border text-[10px] font-semibold tabular-nums max-w-[190px] ${c.tone}`}
+                              title={c.title}
+                            >
+                              <Icon className="w-2.5 h-2.5 shrink-0" strokeWidth={2.75} />
+                              {c.text && <span className="truncate">{c.text}</span>}
+                            </span>
+                          );
+                        })}
+                        {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
+                        <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
+                        {dupCount > 1 && (
+                          <span
+                            className="inline-flex items-center h-5 px-1.5 rounded-md border border-border bg-muted/60 text-[10px] font-medium text-muted-foreground"
+                            title={`This person submitted the form ${dupCount} times — ${dupCount - 1} older ${dupCount - 1 === 1 ? "submission is" : "submissions are"} merged into this record.`}
+                          >
+                            +{dupCount - 1} prior
+                          </span>
+                        )}
+                        {beingWorked && (
+                          <span
+                            className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md bg-accent/10 text-accent border border-accent/30 text-[10px] font-semibold"
+                            title={`${workers.map(w => w.user_name).join(", ")} viewing now`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                            {workers[0].user_name}{workers.length > 1 ? ` +${workers.length - 1}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-muted-foreground/40 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 text-muted-foreground/30 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
+
 
                 {isMobile && isActive && (
                   <MobileInlineDetail submission={s} />
