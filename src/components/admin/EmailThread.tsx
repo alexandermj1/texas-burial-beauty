@@ -182,13 +182,34 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const sender = outgoing ? "You" : (e.from_name && e.from_name.trim()) || e.from_email;
             const body = (e.body_text && e.body_text.trim()) || e.snippet || "";
             const kind = kindOf(e);
-            // Nth quote in the thread → later ones are revisions, showing the new figure.
-            const quoteIndex = kind === "quote" ? emails.filter((m) => kindOf(m) === "quote").findIndex((m) => m.id === e.id) : -1;
+            // A later quote only counts as a *revision* when the figure actually
+            // changed from the previous quote in the thread; otherwise it is a re-send.
             const quoteAmount = kind === "quote" ? extractQuoteAmount(`${e.body_html || ""} ${e.body_text || ""}`) : null;
+            let quoteLabel = "";
+            if (kind === "quote") {
+              const quotes = emails.filter((m) => kindOf(m) === "quote");
+              const idx = quotes.findIndex((m) => m.id === e.id);
+              const prevAmount = idx > 0
+                ? (() => {
+                    for (let i = idx - 1; i >= 0; i--) {
+                      const a = extractQuoteAmount(`${quotes[i].body_html || ""} ${quotes[i].body_text || ""}`);
+                      if (a) return a;
+                    }
+                    return null;
+                  })()
+                : null;
+              const amt = quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : "";
+              if (idx <= 0) quoteLabel = `Quote sent${amt}`;
+              else if (quoteAmount && prevAmount && quoteAmount !== prevAmount)
+                quoteLabel = `Quote revised${amt} (was $${prevAmount.toLocaleString()})`;
+              else quoteLabel = `Quote re-sent${amt}`;
+            }
             const laSigned = kind === "listing_agreement" && !!laSignedAt;
             const kindLabel = kind === "quote"
-              ? (quoteIndex > 0 ? `Quote revised${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}` : `Quote sent${quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : ""}`)
+              ? quoteLabel
               : laSigned ? "Listing agreement signed"
+              : kind ? EMAIL_KIND_META[kind].label : "";
+
               : kind ? EMAIL_KIND_META[kind].label : "";
             const kindClass = laSigned
               ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
