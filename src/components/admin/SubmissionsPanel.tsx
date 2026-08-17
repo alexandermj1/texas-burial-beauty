@@ -423,7 +423,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const awaitingKey = useMemo(() => submissions
     .filter(s => subRegion(s) === "texas")
     .map(s => [s.id, (s.email || "").toLowerCase(), (s as any).quote_sent_at, (s as any).quote_response,
-      (s as any).reply_dismissed_at, (s as any).manual_followup].join("~"))
+      (s as any).reply_dismissed_at, (s as any).manual_followup, ftState(s).doneAt].join("~"))
     .join("|"), [submissions]);
 
   useEffect(() => {
@@ -553,6 +553,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (nextAwaiting[s.id]) continue;
         if (!latestPerSub.has(s.id)) nextAwaiting[s.id] = s.created_at;
       }
+      // Family tree completed → treat as an inbound event that needs our reply,
+      // unless we've already sent something after they finished it.
+      for (const s of texasSubs) {
+        const doneAt = ftState(s).doneAt;
+        if (!doneAt) continue;
+        const latest = latestPerSub.get(s.id);
+        const repliedAfter = latest?.outgoing && new Date(latest.received_at).getTime() > new Date(doneAt).getTime();
+        if (repliedAfter) continue;
+        const existing = nextAwaiting[s.id];
+        if (!existing || new Date(existing).getTime() < new Date(doneAt).getTime()) {
+          nextAwaiting[s.id] = doneAt;
+        }
+      }
+
       // Honor manual dismissal: if the admin marked "doesn't need a reply", drop the
       // Needs reply tag UNLESS a newer inbound email has arrived since they dismissed.
       // Note: manual_followup no longer suppresses needs-reply — if the customer
