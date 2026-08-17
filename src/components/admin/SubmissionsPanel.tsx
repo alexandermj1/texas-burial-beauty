@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -2469,7 +2469,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {anyActive && (
                       <button
                         onClick={() => {
-                          setDocsFilter("all"); setQuotedFilter(false); setAcceptedFilter(false);
+                          setDocsFilter("all"); setAwaitingQuoteFilter(false); setQuotedFilter(false); setAcceptedFilter(false);
                           setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setCompleteFilter(false);
                         }}
                         className="text-[10px] font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
