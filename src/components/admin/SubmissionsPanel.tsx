@@ -2635,31 +2635,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const workers = workersFor(s.id);
             const beingWorked = workers.length > 0;
             const needsReply = !!awaitingMap[s.id];
-            const bgCls = isActive
-              ? "bg-primary/15 border-l-4 border-l-primary"
-              : needsReply
-                // "Needs reply" is shown as a red row highlight instead of a tag.
-                ? "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70 border-l-4 border-l-[hsl(var(--status-reply))]"
-                : beingWorked
-                  ? "bg-accent/10 hover:bg-accent/15 border-l-4 border-l-accent"
-                  : fresh
-                    ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70 border-l-4 border-l-[hsl(var(--status-new))]"
-                    : "bg-card hover:bg-muted/40 border-l-4 border-l-transparent";
-
-            // ---- Stage resolution: one authoritative pill per submission ----
+            // ---- Stage resolution: one authoritative stage per submission ----
             const ft = ftState(s);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((s as any).documents_completed_at) return { label: "Complete", cls: "bg-emerald-600 text-white border-emerald-700", icon: CheckCircle, at: (s as any).documents_completed_at };
-              if ((s as any).documents_requested_at) return { label: "Docs out", cls: "bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800", icon: FileText, at: (s as any).documents_requested_at };
-              if (ft.doneAt) return { label: "Tree done", cls: "bg-teal-600 text-white border-teal-700", icon: Users, at: ft.doneAt };
-              if (ft.sentAt) return { label: "Tree sent", cls: "bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800", icon: Users, at: ft.sentAt };
-              if ((s as any).quote_response === "accepted") return { label: "Accepted", cls: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700", icon: CheckCircle, at: (s as any).quote_responded_at };
-              if ((s as any).quote_sent_at) return { label: "Quoted", cls: "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800", icon: DollarSign, at: (s as any).quote_sent_at };
-              if (hasDocs(s)) return { label: "Awaiting quote", cls: "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-800", icon: Clock, at: null as string | null };
-              return { label: "New inquiry", cls: "bg-muted text-muted-foreground border-border", icon: Inbox, at: null as string | null };
+              if ((s as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (s as any).documents_completed_at };
+              if ((s as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (s as any).documents_requested_at };
+              if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
+              if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
+              if ((s as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (s as any).quote_responded_at };
+              if ((s as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (s as any).quote_sent_at };
+              if (hasDocs(s)) return { step: 2, label: "Awaiting quote", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
+              return { step: 1, label: "New inquiry", accent: "slate", cls: "bg-muted text-muted-foreground border-border", bar: "bg-muted-foreground/40", tint: "bg-card hover:bg-muted/40", icon: Inbox, at: null as string | null };
             })();
             const StageIcon = stage.icon;
+
+            const bgCls = isActive
+              ? "bg-primary/15"
+              : needsReply
+                // "Needs reply" is shown as a red row highlight instead of a tag.
+                ? "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
+                : beingWorked
+                  ? "bg-accent/10 hover:bg-accent/15"
+                  : stage.tint;
+
 
             // ---- Quiet meta chips: money, docs, agreement, payment ----
             type Chip = { key: string; icon: any; text?: string; tone: string; title: string };
