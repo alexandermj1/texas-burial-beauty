@@ -182,6 +182,15 @@ const NotificationsBell = () => {
                         </button>
                       )}
                     </div>
+                    {n.link_url?.includes("submission=") && (
+                      <button
+                        type="button"
+                        onClick={() => goToLink(n)}
+                        className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      >
+                        Open submission <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
