@@ -835,9 +835,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // Every POA the checklist calls for, each as the finished PDF, so the seller
     // receives one email with the document already filled in and attached.
     const poas: { name: string | null; url: string | null; path: string | null }[] = [];
-    const sources = poaRequirements.length
-      ? poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }))
-      : (poaContract ? [{ r: null as Requirement | null, c: poaContract }] : []);
+    // Only the POAs the current checklist still asks for. A POA removed by hand
+    // must never reappear in the email, so there is deliberately no fallback to
+    // "any prepared POA on this submission".
+    const sources = poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }));
+
     for (const { r, c: chosen } of sources) {
       if (!chosen) continue;
       const { data: c } = await supabase.from("contracts")
