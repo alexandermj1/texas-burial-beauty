@@ -91,17 +91,20 @@ export const classifyEmailKind = (
       s.includes("few quick questions about your plot"))) return "family_tree";
   if (s.includes("power of attorney") || b.includes("notary packet")) return "poa";
   if (s.includes("listing agreement") || b.includes("sign your listing agreement")) return "listing_agreement";
-  // Quote / suggested sales price emails. The generated block carries a marker,
-  // but plain-text copies of the same email only keep the wording.
-  if (
+  // Quote / suggested sales price emails. Only the email that actually carries
+  // the pricing block counts — a plain reply inside the quote thread inherits
+  // the subject line ("Re: Your Property Valuation is Complete…") and must NOT
+  // be tagged as a quote (that used to produce phantom "Quote revised" tags).
+  const bodyIsQuote =
     b.includes('data-listing-options="1"') ||
     b.includes("sale authorization quote") ||
-    b.includes("suggested sales price") ||
     b.includes("authorized sale quote") ||
+    (b.includes("suggested sales price") && /listing option|starter|featured|pay securely|per space/.test(b));
+  const subjectIsQuote =
     s.includes("suggested sales price") ||
     s.includes("your property valuation is complete") ||
-    s.includes("listing offer for")
-  ) return "quote";
+    s.includes("listing offer for");
+  if (bodyIsQuote || (!isReply && subjectIsQuote)) return "quote";
   return null;
 };
 
@@ -128,11 +131,10 @@ export const extractQuoteAmount = (body?: string | null): number | null => {
     const n = m ? parseMoney(m[1]) : null;
     if (n && n >= 500) return n;
   }
-  const matches = [...text.matchAll(new RegExp(money, "g"))];
-  const nums = matches
-    .map((m) => parseMoney(m[1]))
-    .filter((n): n is number => !!n && n >= 500);
-  return nums.length ? Math.max(...nums) : null;
+  // No structured figure found — do not guess from stray dollar amounts
+  // (listing fees, transfer fees) as that produced wrong "revised" figures.
+  return null;
 };
+
 
 
