@@ -828,7 +828,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   }), [requirements, stateByKey]);
 
   const poaRequired = requirements.some((r) => r.contractKind === "poa");
-  const poaContract = contracts.find((c) => c.kind === "poa" && c.status !== "void");
 
   /** The items and completed POAs that make up the request, shared by preview and send. */
   const buildPacketPayload = async () => {
