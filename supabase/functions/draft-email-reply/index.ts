@@ -452,6 +452,8 @@ async function runTool(name: string, args: any, ctx: { submissionId?: string }):
     case "get_business_faq": return BUSINESS_FAQ;
     case "get_required_documents_reference": return REQUIRED_DOCUMENTS_REFERENCE;
     case "get_ownership_authority_guide": return OWNERSHIP_AUTHORITY_GUIDE;
+    case "get_process_flow": return PROCESS_FLOW;
+    case "get_recent_broker_corrections": return await getRecentBrokerCorrections();
     case "lookup_cemetery": return await lookupCemetery(String(args?.name || ""));
     case "get_submission_context":
       if (!ctx.submissionId) return "No submission is linked to this draft — cannot load customer context.";
