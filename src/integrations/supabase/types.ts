@@ -2415,6 +2415,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      notify_staff: {
+        Args: {
+          _body: string
+          _source_type: string
+          _submission_id: string
+          _title: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "agent" | "staff"

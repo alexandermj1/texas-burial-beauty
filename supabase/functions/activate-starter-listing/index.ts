@@ -124,14 +124,16 @@ Deno.serve(async (req) => {
 
       // Admin notification.
       try {
-        const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+        const { data: admins } = await supabase.from("user_roles").select("user_id").in("role", ["admin", "staff"]);
         if (admins?.length) {
-          await supabase.from("user_notifications").insert(admins.map((a: any) => ({
-            user_id: a.user_id,
+          const recipients = [...new Set(admins.map((a: any) => a.user_id))];
+          await supabase.from("user_notifications").insert(recipients.map((uid: string) => ({
+            user_id: uid,
             title: "Starter listing selected",
-            message: `${tx.recipient_name || tx.recipient_email || "Seller"} clicked to activate a free Starter listing.`,
-            link: `/admin?submission=${tx.submission_id}`,
-            read: false,
+            body: `${tx.recipient_name || tx.recipient_email || "Seller"} clicked to activate a free Starter listing.`,
+            link_url: `/admin?tab=submissions&submission=${tx.submission_id}`,
+            source_type: "listing_tier",
+            source_id: tx.submission_id,
           })));
         }
       } catch (e) { console.error("Starter admin notify failed", e); }

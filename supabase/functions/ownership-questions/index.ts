@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
               user_id: uid,
               title: `${sub.name ?? "Seller"} confirmed their ownership details`,
               body: "The ownership questionnaire has been answered — the document checklist can be rebuilt.",
-              link_url: "/admin",
+              link_url: `/admin?tab=submissions&submission=${submissionId}`,
               source_type: "submission",
               source_id: submissionId,
             })));

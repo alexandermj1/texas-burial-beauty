@@ -117,12 +117,16 @@ async function sendEmail(to: string, subject: string, html: string) {
 async function notifyAdmins(title: string, message: string, submissionId: string | null) {
   try {
     const { data: admins } = await db()
-      .from("user_roles").select("user_id").eq("role", "admin");
+      .from("user_roles").select("user_id").in("role", ["admin", "staff"]);
     if (!admins?.length) return;
-    const rows = admins.map(a => ({
-      user_id: a.user_id, title, message,
-      link: submissionId ? `/admin?submission=${submissionId}` : "/admin",
-      read: false,
+    const recipients = [...new Set(admins.map((a: any) => a.user_id))];
+    const rows = recipients.map((uid) => ({
+      user_id: uid,
+      title,
+      body: message,
+      link_url: submissionId ? `/admin?tab=submissions&submission=${submissionId}` : "/admin",
+      source_type: "payment",
+      source_id: submissionId,
     }));
     await db().from("user_notifications").insert(rows);
   } catch (e) {
