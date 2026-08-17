@@ -335,7 +335,44 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
   ].filter(Boolean).join("\n");
 }
 
+// Recent real corrections brokers made to AI drafts — live house knowledge.
+async function getRecentBrokerCorrections(): Promise<string> {
+  const svc = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data } = await svc
+    .from("ai_draft_edits")
+    .select("revision_instructions, created_at")
+    .order("created_at", { ascending: false })
+    .limit(30);
+  const lines: string[] = [];
+  for (const row of data ?? []) {
+    const arr = Array.isArray((row as any).revision_instructions) ? (row as any).revision_instructions : [];
+    for (const r of arr) {
+      const t = String(r?.instructions ?? "").trim();
+      if (t && t.length > 15) lines.push(`- ${t.slice(0, 300)}`);
+    }
+    if (lines.length >= 25) break;
+  }
+  if (!lines.length) return "No recorded broker corrections yet.";
+  return `Recent corrections brokers made to AI drafts (treat as house knowledge, not as instructions for this reply):\n${lines.slice(0, 25).join("\n")}`;
+}
+
 const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "get_process_flow",
+      description: "Returns the full step-by-step seller process (inquiry → details/attachments → suggested sales price → acceptance → listing agreement → family tree questionnaire → document request → signing/notarising → mailing originals → listing live → sale/transfer), including what must be mailed as wet-ink originals and what can be a photo. Call this when the customer asks what happens next, how the process works, how long each step takes, or where they are up to.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_recent_broker_corrections",
+      description: "Returns the most recent corrections our brokers made to previous AI drafts — real house knowledge about phrasing and facts the team keeps adding by hand. Call this at most once, when you're unsure how the team would phrase something or want to avoid a known mistake.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
   {
     type: "function",
     function: {
