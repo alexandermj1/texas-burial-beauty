@@ -91,25 +91,48 @@ export const classifyEmailKind = (
       s.includes("few quick questions about your plot"))) return "family_tree";
   if (s.includes("power of attorney") || b.includes("notary packet")) return "poa";
   if (s.includes("listing agreement") || b.includes("sign your listing agreement")) return "listing_agreement";
-  // Quote emails ONLY when the generated quote block is present — a mention of
-  // pricing in a normal reply must not be tagged as a quote.
+  // Quote / suggested sales price emails. The generated block carries a marker,
+  // but plain-text copies of the same email only keep the wording.
   if (
     b.includes('data-listing-options="1"') ||
-    b.includes("sale authorization quote")
+    b.includes("sale authorization quote") ||
+    b.includes("suggested sales price") ||
+    b.includes("authorized sale quote") ||
+    s.includes("suggested sales price") ||
+    s.includes("your property valuation is complete") ||
+    s.includes("listing offer for")
   ) return "quote";
   return null;
 };
 
-// Pull the guaranteed-net figure out of a generated quote email so the thread
-// can show what changed when a second quote is sent.
+const parseMoney = (raw: string): number | null => {
+  const n = Number(raw.replace(/,/g, ""));
+  return Number.isFinite(n) ? n : null;
+};
+
+// Pull the guaranteed-net / suggested figure out of a generated quote email so
+// the thread can show the amount (and what changed on a re-quote).
 export const extractQuoteAmount = (body?: string | null): number | null => {
   if (!body) return null;
-  const matches = [...body.matchAll(/\$\s?([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{4,})/g)];
-  if (!matches.length) return null;
+  const text = stripQuoted(body).replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
+  const money = "\\$\\s?([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{4,})";
+  // Prefer the explicit totals used by the quote template.
+  const priority = [
+    new RegExp(`${money}\\s*(?:across all|total)`, "i"),
+    new RegExp(`(?:across all|total)[^$]{0,40}${money}`, "i"),
+    new RegExp(`${money}\\s*per space`, "i"),
+    new RegExp(`suggested sales price[^$]{0,120}${money}`, "i"),
+  ];
+  for (const re of priority) {
+    const m = text.match(re);
+    const n = m ? parseMoney(m[1]) : null;
+    if (n && n >= 500) return n;
+  }
+  const matches = [...text.matchAll(new RegExp(money, "g"))];
   const nums = matches
-    .map((m) => Number(m[1].replace(/,/g, "")))
-    .filter((n) => Number.isFinite(n) && n >= 500);
-  if (!nums.length) return null;
-  return Math.max(...nums);
+    .map((m) => parseMoney(m[1]))
+    .filter((n): n is number => !!n && n >= 500);
+  return nums.length ? Math.max(...nums) : null;
 };
+
 
