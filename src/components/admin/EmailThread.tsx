@@ -209,8 +209,6 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
               ? quoteLabel
               : laSigned ? "Listing agreement signed"
               : kind ? EMAIL_KIND_META[kind].label : "";
-
-              : kind ? EMAIL_KIND_META[kind].label : "";
             const kindClass = laSigned
               ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
               : kind ? EMAIL_KIND_META[kind].className : "";
