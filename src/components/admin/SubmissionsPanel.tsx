@@ -1390,6 +1390,66 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     );
                   })()}
+
+                  {/* Manual stage mover — force a submission into any pipeline stage. */}
+                  {(() => {
+                    const x = selected as any;
+                    const ans = (x.ownership_answers ?? {}) as Record<string, any>;
+                    const now = new Date().toISOString();
+                    const STAGES = [
+                      { key: "awaiting_quote", label: "Awaiting quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
+                      { key: "quoted",         label: "Quoted",         cls: "bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300" },
+                      { key: "accepted",       label: "Accepted",       cls: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300" },
+                      { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
+                      { key: "tree_done",      label: "Tree done",      cls: "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300" },
+                      { key: "docs_out",       label: "Docs out",       cls: "bg-sky-500/15 border-sky-500/50 text-sky-700 dark:text-sky-300" },
+                      { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
+                    ];
+                    const current =
+                      x.documents_completed_at ? "complete"
+                      : x.documents_requested_at ? "docs_out"
+                      : ans.sellerConfirmedAt ? "tree_done"
+                      : ans.questionsSentAt ? "tree_sent"
+                      : x.quote_response === "accepted" ? "accepted"
+                      : x.quote_sent_at ? "quoted"
+                      : "awaiting_quote";
+
+                    const move = async (key: string) => {
+                      const idx = STAGES.findIndex(s => s.key === key);
+                      const at = (k: string) => STAGES.findIndex(s => s.key === k) <= idx;
+                      const answers = { ...ans };
+                      answers.questionsSentAt = at("tree_sent") ? (ans.questionsSentAt || now) : null;
+                      answers.sellerConfirmedAt = at("tree_done") ? (ans.sellerConfirmedAt || now) : null;
+                      const patch: any = {
+                        ownership_answers: answers,
+                        quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
+                        quote_response: at("accepted") ? "accepted" : (x.quote_response === "accepted" ? null : x.quote_response),
+                        quote_responded_at: at("accepted") ? (x.quote_responded_at || now) : (x.quote_response === "accepted" ? null : x.quote_responded_at),
+                        documents_requested_at: at("docs_out") ? (x.documents_requested_at || now) : null,
+                        documents_completed_at: at("complete") ? (x.documents_completed_at || now) : null,
+                      };
+                      await onUpdate(selected.id, patch);
+                      toast({ title: "Stage updated", description: STAGES[idx].label });
+                    };
+
+                    return (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Move to stage</span>
+                        {STAGES.map(st => (
+                          <button
+                            key={st.key}
+                            onClick={() => move(st.key)}
+                            title={`Move this submission to "${st.label}"`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                              current === st.key ? st.cls : "border-border text-muted-foreground hover:bg-muted/50"
+                            }`}
+                          >
+                            {st.label}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
