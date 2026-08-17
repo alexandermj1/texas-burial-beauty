@@ -40,11 +40,51 @@ Listing options (factual, non-promotional):
 - Starter — $0. Listed on our website.
 - Pro — $99. In 2025 data, Pro listings sold on average 22% faster than Starter.
 - Featured — $299. In 2025 data, Featured listings sold on average 61% faster. Useful context: ~90% of plot sales originate through mortuaries, so being near the top of the list they show families matters.
+- Set Your Own Price — $499. Everything in Featured, and the seller sets their own floor price. For sellers who are comfortable waiting longer for a sale in exchange for a potentially higher return. We always try to sell for the highest amount regardless of the option chosen; this option only raises the floor.
 Quotes:
-- We provide a valuation and a suggested listing price based on the specific cemetery and property type.
+- We present a SUGGESTED SALES PRICE (not a "quote" in the take-it-or-leave-it sense), based on the specific cemetery and property type and in line with other listings at that location.
 - Never promise a sale timeline or guarantee a sale.
 - If a specific figure hasn't been given to the seller yet, say we will follow up with the exact figure rather than estimating.
 `.trim();
+
+const PROCESS_FLOW = `
+The seller process, in order (this is the same for everybody up to the family tree, then each file diverges):
+
+1. INQUIRY — the seller contacts us about property they want to sell.
+2. DETAILS & ATTACHMENTS — we ask for their cemetery/section/space details and a copy of the certificate of ownership ("deed" from the cemetery) — a clear photo or scan emailed to us is fine at this stage.
+3. SUGGESTED SALES PRICE — we review comparable listings at that cemetery and send them a suggested sales price plus the listing options.
+4. ACCEPTANCE — the seller accepts the price and chooses a listing option.
+5. LISTING AGREEMENT — we send the listing agreement for e-signature. We countersign after review.
+6. FAMILY TREE / OWNERSHIP CONFIRMATION — we email a link to a secure online questionnaire ("confirming the deed") where the seller walks through who is on the deed, who is living or deceased, marriages, heirs and so on. This is what tells us who actually has authority to sign. It takes a few minutes and can be done on a phone.
+7. DOCUMENT REQUEST — only AFTER the questionnaire is finished and one of our brokers has reviewed it do we know the exact document list. We then send a personalised document request with everything prepared for them.
+8. SIGNING, NOTARISING & MAILING — the seller signs; anything that has to be notarised (the limited power of attorney and, where applicable, affidavits/consents) is notarised in person or online (we send an online-notary link).
+9. FINALISING THE LISTING — the ORIGINAL wet-ink documents must be MAILED to us: the certificate of ownership (deed) and the notarised POA and any other originals. Photo IDs (driver's licence etc.) do NOT need mailing — a clear photo or scan is fine. Our partner Bayer Cemetery Brokers holds physical records securely in case the cemetery requires them at the time of sale: 100 N Brand Blvd #213, Glendale, CA 91203.
+10. LIVE LISTING → SALE → TRANSFER — once the paperwork is in hand the listing goes live. When it sells we handle the cemetery transfer and the seller is paid at closing.
+
+TIMING RULES FOR REPLIES:
+- Before the family tree is complete, NEVER give a final document list. Say what is generally needed and that we'll confirm the exact list once the ownership questionnaire is reviewed.
+- After the family tree is complete and reviewed by a broker, the checklist on the submission IS the answer — use get_submission_context and reference the actual items rather than generalising.
+- Do not ask for something the submission shows we already have.
+`.trim();
+
+// Distilled from real broker corrections to past AI drafts (ai_draft_edits).
+// These are house rules the team has repeatedly had to add by hand.
+const HOUSE_RULES_LEARNED = `
+House rules learned from broker corrections to previous drafts:
+- Originals: a signed scan emailed to us is not the end of it — the wet-ink original still has to be mailed to our partner Bayer Cemetery Brokers, 100 N Brand Blvd #213, Glendale, CA 91203, who keep it on file securely in case the cemetery requires it at the time of sale. Bayer Cemetery Brokers is our partner — say so plainly if the name comes up.
+- Driver's licences / photo IDs never need mailing — a clear photo or scan is fine.
+- If a notarisation is missing, be gentle: allow that we may be looking at the wrong document, say we can't see the notary stamp, and point them to where they can get it notarised (bank, UPS store, or the online notary link we sent).
+- Explain WHY we need the deed, not just that we need it. And tell them they can simply reply to the email with a scan or clear photo.
+- Whenever a link is referenced, be explicit that the link is in THIS email — sellers often go looking through older emails.
+- Be appreciative and specific when a seller has been thorough or quick to respond.
+- When we've received documents, say we'll review and may come back with clarifying questions, and tell them the next step.
+- Buyers asking us to find the owner of a specific plot: who owns a specific plot is proprietary information held confidentially by the cemetery. The resale market is seller-led — we can only sell what owners voluntarily list. Offer to take their requirements (property type, number of spaces, area) and keep them on file.
+- Never say we'll clarify something with the cemetery on the seller's behalf unless the admin instructions say so — usually we ask the SELLER to confirm the configuration with the cemetery.
+- Popular cemeteries can carry roughly a one-month wait for a suitable property; anything we already have available today has no wait.
+- Don't over-claim availability; if inventory is thin for at-need buyers, say so honestly and ask what they're looking for.
+`.trim();
+
+
 
 const BUSINESS_FAQ = `
 Business FAQ:
@@ -190,13 +230,35 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
       payment_link_sent_at, payment_received_at,
       la_issued_at, la_signed_at, la_countersigned_at,
       poa_signed_at, poa_notarized_at,
-      documents_requested_at, listing_live_at, listing_url,
+      documents_requested_at, documents_completed_at, listing_live_at, listing_url,
+      ownership_answers, ownership_roster, ownership_reviewed_at,
       customer_profile_id, seller_attachments, admin_notes
     `)
     .eq("id", submissionId)
     .maybeSingle();
 
   if (!sub) return `No submission found for id ${submissionId}.`;
+
+  // Family tree / ownership questionnaire ("confirming the deed") state.
+  const ans: any = (sub as any).ownership_answers ?? {};
+  const roster: any[] = Array.isArray((sub as any).ownership_roster) ? (sub as any).ownership_roster : [];
+  const treeSentAt = ans?.sentAt ?? ans?.sent_at ?? null;
+  const treeDoneAt = ans?.sellerConfirmedAt ?? ans?.seller_confirmed_at ?? null;
+  const answerLines = Object.entries(ans)
+    .filter(([k, v]) => v != null && v !== "" && !/^(sentAt|sent_at|sellerConfirmedAt|seller_confirmed_at|token)$/.test(k))
+    .slice(0, 40)
+    .map(([k, v]) => `- ${k}: ${typeof v === "object" ? JSON.stringify(v).slice(0, 200) : String(v).slice(0, 200)}`);
+  const rosterLines = roster.slice(0, 20).map((p: any) =>
+    `- ${p?.name ?? "(unnamed)"}${p?.role ? ` — ${p.role}` : ""}${p?.relation ? ` (${p.relation})` : ""}${p?.deceased ? " — DECEASED" : ""}${p?.signer ? " — must sign" : ""}`
+  );
+  const treeBlock = [
+    `- Questionnaire sent: ${treeSentAt ? String(treeSentAt).slice(0, 10) : "no"}   Completed by seller: ${treeDoneAt ? String(treeDoneAt).slice(0, 10) : "no"}`,
+    `- Reviewed by a broker: ${(sub as any).ownership_reviewed_at ? String((sub as any).ownership_reviewed_at).slice(0, 10) : "no — the exact document list is NOT final yet"}`,
+    answerLines.length ? `Answers given by the seller:\n${answerLines.join("\n")}` : "(no answers recorded yet)",
+    rosterLines.length ? `People identified:\n${rosterLines.join("\n")}` : "",
+  ].filter(Boolean).join("\n");
+
+
 
   // Documents attached to this customer, with AI-extracted summaries.
   let filesBlock = "(no documents on file for this customer)";
@@ -256,7 +318,10 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
     `- Payment link sent: ${sub.payment_link_sent_at ? sub.payment_link_sent_at.slice(0,10) : "no"}   Payment received: ${sub.payment_received_at ? sub.payment_received_at.slice(0,10) : "no"}`,
     `- Listing agreement: issued ${sub.la_issued_at ? sub.la_issued_at.slice(0,10) : "no"}, signed ${sub.la_signed_at ? sub.la_signed_at.slice(0,10) : "no"}, countersigned ${sub.la_countersigned_at ? sub.la_countersigned_at.slice(0,10) : "no"}`,
     `- POA: signed ${sub.poa_signed_at ? sub.poa_signed_at.slice(0,10) : "no"}, notarized ${sub.poa_notarized_at ? sub.poa_notarized_at.slice(0,10) : "no"}`,
-    `- Documents requested: ${sub.documents_requested_at ? sub.documents_requested_at.slice(0,10) : "no"}   Listing live: ${sub.listing_live_at ? sub.listing_live_at.slice(0,10) : "no"}`,
+    `- Documents requested: ${sub.documents_requested_at ? sub.documents_requested_at.slice(0,10) : "no"}   All documents received: ${(sub as any).documents_completed_at ? String((sub as any).documents_completed_at).slice(0,10) : "no"}   Listing live: ${sub.listing_live_at ? sub.listing_live_at.slice(0,10) : "no"}`,
+    ``,
+    `FAMILY TREE / OWNERSHIP QUESTIONNAIRE ("confirming the deed")`,
+    treeBlock,
     ``,
     `CUSTOMER FORM MESSAGE`,
     fmt(sub.message) === "—" ? "(none)" : String(sub.message).slice(0, 800),
@@ -270,7 +335,44 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
   ].filter(Boolean).join("\n");
 }
 
+// Recent real corrections brokers made to AI drafts — live house knowledge.
+async function getRecentBrokerCorrections(): Promise<string> {
+  const svc = createClient(SUPABASE_URL, SERVICE_KEY);
+  const { data } = await svc
+    .from("ai_draft_edits")
+    .select("revision_instructions, created_at")
+    .order("created_at", { ascending: false })
+    .limit(30);
+  const lines: string[] = [];
+  for (const row of data ?? []) {
+    const arr = Array.isArray((row as any).revision_instructions) ? (row as any).revision_instructions : [];
+    for (const r of arr) {
+      const t = String(r?.instructions ?? "").trim();
+      if (t && t.length > 15) lines.push(`- ${t.slice(0, 300)}`);
+    }
+    if (lines.length >= 25) break;
+  }
+  if (!lines.length) return "No recorded broker corrections yet.";
+  return `Recent corrections brokers made to AI drafts (treat as house knowledge, not as instructions for this reply):\n${lines.slice(0, 25).join("\n")}`;
+}
+
 const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "get_process_flow",
+      description: "Returns the full step-by-step seller process (inquiry → details/attachments → suggested sales price → acceptance → listing agreement → family tree questionnaire → document request → signing/notarising → mailing originals → listing live → sale/transfer), including what must be mailed as wet-ink originals and what can be a photo. Call this when the customer asks what happens next, how the process works, how long each step takes, or where they are up to.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_recent_broker_corrections",
+      description: "Returns the most recent corrections our brokers made to previous AI drafts — real house knowledge about phrasing and facts the team keeps adding by hand. Call this at most once, when you're unsure how the team would phrase something or want to avoid a known mistake.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
   {
     type: "function",
     function: {
@@ -350,6 +452,8 @@ async function runTool(name: string, args: any, ctx: { submissionId?: string }):
     case "get_business_faq": return BUSINESS_FAQ;
     case "get_required_documents_reference": return REQUIRED_DOCUMENTS_REFERENCE;
     case "get_ownership_authority_guide": return OWNERSHIP_AUTHORITY_GUIDE;
+    case "get_process_flow": return PROCESS_FLOW;
+    case "get_recent_broker_corrections": return await getRecentBrokerCorrections();
     case "lookup_cemetery": return await lookupCemetery(String(args?.name || ""));
     case "get_submission_context":
       if (!ctx.submissionId) return "No submission is linked to this draft — cannot load customer context.";
@@ -403,11 +507,18 @@ RULES:
 - Never mention competitors or compare cemetery prices.
 - CORE FRAMING RULE for documents/authority questions: the honest answer to "what do you need from me" is "it depends on the situation." Give the general shape, then offer to confirm the exact list after we review their deed and details. NEVER give a definitive final document checklist. NEVER promise cemetery-specific requirements. NEVER tell a customer they definitely can or cannot sell, or that their document definitely is or isn't sufficient. NEVER give legal advice or interpret a will, POA, or estate — we're not attorneys. If multiple owners or heirs may exist, do not assume one person can act alone. When ambiguous, ask ONE clarifying question (typically: is the owner living or deceased? married? other heirs?). For complicated estates, disputes, occupied plots, or anything involving a POA/guardianship, offer to have a team member confirm the details.
 
+HOW OUR PROCESS RUNS (know this by heart, keep it accurate):
+Inquiry → seller sends details and a copy of the deed → we send a suggested sales price and listing options → seller accepts → listing agreement signed and countersigned → seller completes the online family-tree / ownership questionnaire ("confirming the deed") → a broker reviews it and only THEN do we know the exact documents → we send the personalised document request → seller signs, and anything requiring notarisation (the limited POA, and any affidavits or consents) is notarised in person or through the online notary link we send → the ORIGINAL wet-ink deed, POA and other originals are MAILED to us to finalise the listing (photo IDs are fine as a photo or scan, no mailing) → listing goes live → sale → we handle the cemetery transfer and the seller is paid at closing.
+Never present a final document checklist before the questionnaire is completed and reviewed. Once it has been, use get_submission_context and speak to their actual checklist and answers rather than generalities. Call get_process_flow for the detailed version.
+
+${HOUSE_RULES_LEARNED}
+
 TOOLS — use sparingly to keep costs down:
 - Only call a tool when the customer's question or the admin's instructions actually require that specific information.
 - Do NOT call tools "just in case". If the reply doesn't need contract details, don't fetch them.
-- When the reply should be specific to this customer (their cemetery, their documents, their quote status, whether they've already sent us the deed), call get_submission_context ONCE early — it's a single cheap call that tells you what we already know about them.
+- When the reply should be specific to this customer (their cemetery, their documents, their quote status, whether they've already sent us the deed, what they answered in the family tree), call get_submission_context ONCE early — it's a single cheap call that tells you what we already know about them, including the ownership questionnaire answers and the people identified on it.
 - For "what documents do you need" or "who has to sign" questions, call get_ownership_authority_guide (and get_required_documents_reference if useful) AFTER get_submission_context, so your answer reflects what the customer has already provided (paid, LA signed, deed uploaded, POA signed, etc.) rather than asking for it again.
+- For "what happens next / how does this work" questions, call get_process_flow.
 - Never call more than 3 tools for one reply unless clearly necessary.
 - After you have what you need, write the final reply as plain text — no tool calls in the final message.
 `.trim();
