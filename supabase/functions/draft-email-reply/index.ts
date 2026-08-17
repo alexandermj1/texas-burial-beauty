@@ -40,11 +40,51 @@ Listing options (factual, non-promotional):
 - Starter — $0. Listed on our website.
 - Pro — $99. In 2025 data, Pro listings sold on average 22% faster than Starter.
 - Featured — $299. In 2025 data, Featured listings sold on average 61% faster. Useful context: ~90% of plot sales originate through mortuaries, so being near the top of the list they show families matters.
+- Set Your Own Price — $499. Everything in Featured, and the seller sets their own floor price. For sellers who are comfortable waiting longer for a sale in exchange for a potentially higher return. We always try to sell for the highest amount regardless of the option chosen; this option only raises the floor.
 Quotes:
-- We provide a valuation and a suggested listing price based on the specific cemetery and property type.
+- We present a SUGGESTED SALES PRICE (not a "quote" in the take-it-or-leave-it sense), based on the specific cemetery and property type and in line with other listings at that location.
 - Never promise a sale timeline or guarantee a sale.
 - If a specific figure hasn't been given to the seller yet, say we will follow up with the exact figure rather than estimating.
 `.trim();
+
+const PROCESS_FLOW = `
+The seller process, in order (this is the same for everybody up to the family tree, then each file diverges):
+
+1. INQUIRY — the seller contacts us about property they want to sell.
+2. DETAILS & ATTACHMENTS — we ask for their cemetery/section/space details and a copy of the certificate of ownership ("deed" from the cemetery) — a clear photo or scan emailed to us is fine at this stage.
+3. SUGGESTED SALES PRICE — we review comparable listings at that cemetery and send them a suggested sales price plus the listing options.
+4. ACCEPTANCE — the seller accepts the price and chooses a listing option.
+5. LISTING AGREEMENT — we send the listing agreement for e-signature. We countersign after review.
+6. FAMILY TREE / OWNERSHIP CONFIRMATION — we email a link to a secure online questionnaire ("confirming the deed") where the seller walks through who is on the deed, who is living or deceased, marriages, heirs and so on. This is what tells us who actually has authority to sign. It takes a few minutes and can be done on a phone.
+7. DOCUMENT REQUEST — only AFTER the questionnaire is finished and one of our brokers has reviewed it do we know the exact document list. We then send a personalised document request with everything prepared for them.
+8. SIGNING, NOTARISING & MAILING — the seller signs; anything that has to be notarised (the limited power of attorney and, where applicable, affidavits/consents) is notarised in person or online (we send an online-notary link).
+9. FINALISING THE LISTING — the ORIGINAL wet-ink documents must be MAILED to us: the certificate of ownership (deed) and the notarised POA and any other originals. Photo IDs (driver's licence etc.) do NOT need mailing — a clear photo or scan is fine. Our partner Bayer Cemetery Brokers holds physical records securely in case the cemetery requires them at the time of sale: 100 N Brand Blvd #213, Glendale, CA 91203.
+10. LIVE LISTING → SALE → TRANSFER — once the paperwork is in hand the listing goes live. When it sells we handle the cemetery transfer and the seller is paid at closing.
+
+TIMING RULES FOR REPLIES:
+- Before the family tree is complete, NEVER give a final document list. Say what is generally needed and that we'll confirm the exact list once the ownership questionnaire is reviewed.
+- After the family tree is complete and reviewed by a broker, the checklist on the submission IS the answer — use get_submission_context and reference the actual items rather than generalising.
+- Do not ask for something the submission shows we already have.
+`.trim();
+
+// Distilled from real broker corrections to past AI drafts (ai_draft_edits).
+// These are house rules the team has repeatedly had to add by hand.
+const HOUSE_RULES_LEARNED = `
+House rules learned from broker corrections to previous drafts:
+- Originals: a signed scan emailed to us is not the end of it — the wet-ink original still has to be mailed to our partner Bayer Cemetery Brokers, 100 N Brand Blvd #213, Glendale, CA 91203, who keep it on file securely in case the cemetery requires it at the time of sale. Bayer Cemetery Brokers is our partner — say so plainly if the name comes up.
+- Driver's licences / photo IDs never need mailing — a clear photo or scan is fine.
+- If a notarisation is missing, be gentle: allow that we may be looking at the wrong document, say we can't see the notary stamp, and point them to where they can get it notarised (bank, UPS store, or the online notary link we sent).
+- Explain WHY we need the deed, not just that we need it. And tell them they can simply reply to the email with a scan or clear photo.
+- Whenever a link is referenced, be explicit that the link is in THIS email — sellers often go looking through older emails.
+- Be appreciative and specific when a seller has been thorough or quick to respond.
+- When we've received documents, say we'll review and may come back with clarifying questions, and tell them the next step.
+- Buyers asking us to find the owner of a specific plot: who owns a specific plot is proprietary information held confidentially by the cemetery. The resale market is seller-led — we can only sell what owners voluntarily list. Offer to take their requirements (property type, number of spaces, area) and keep them on file.
+- Never say we'll clarify something with the cemetery on the seller's behalf unless the admin instructions say so — usually we ask the SELLER to confirm the configuration with the cemetery.
+- Popular cemeteries can carry roughly a one-month wait for a suitable property; anything we already have available today has no wait.
+- Don't over-claim availability; if inventory is thin for at-need buyers, say so honestly and ask what they're looking for.
+`.trim();
+
+
 
 const BUSINESS_FAQ = `
 Business FAQ:
