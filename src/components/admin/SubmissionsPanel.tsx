@@ -252,6 +252,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
   const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
+  const [awaitingQuoteFilter, setAwaitingQuoteFilter] = useState<boolean>(false);
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
   const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
   const [docsOutFilter, setDocsOutFilter] = useState<boolean>(false);
@@ -718,6 +719,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (docsFilter === "with" && !has) return false;
         if (docsFilter === "without" && has) return false;
       }
+      // Awaiting quote = has uploaded attachments but no quote has gone out yet.
+      if (awaitingQuoteFilter && (!hasDocs(s) || (s as any).quote_sent_at)) return false;
       if (quotedFilter && !(s as any).quote_sent_at) return false;
       if (acceptedFilter && (s as any).quote_response !== "accepted") return false;
       if (docsOutFilter && (!(s as any).documents_requested_at || (s as any).documents_completed_at)) return false;
