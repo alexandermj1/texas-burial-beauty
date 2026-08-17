@@ -230,13 +230,35 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
       payment_link_sent_at, payment_received_at,
       la_issued_at, la_signed_at, la_countersigned_at,
       poa_signed_at, poa_notarized_at,
-      documents_requested_at, listing_live_at, listing_url,
+      documents_requested_at, documents_completed_at, listing_live_at, listing_url,
+      ownership_answers, ownership_roster, ownership_reviewed_at,
       customer_profile_id, seller_attachments, admin_notes
     `)
     .eq("id", submissionId)
     .maybeSingle();
 
   if (!sub) return `No submission found for id ${submissionId}.`;
+
+  // Family tree / ownership questionnaire ("confirming the deed") state.
+  const ans: any = (sub as any).ownership_answers ?? {};
+  const roster: any[] = Array.isArray((sub as any).ownership_roster) ? (sub as any).ownership_roster : [];
+  const treeSentAt = ans?.sentAt ?? ans?.sent_at ?? null;
+  const treeDoneAt = ans?.sellerConfirmedAt ?? ans?.seller_confirmed_at ?? null;
+  const answerLines = Object.entries(ans)
+    .filter(([k, v]) => v != null && v !== "" && !/^(sentAt|sent_at|sellerConfirmedAt|seller_confirmed_at|token)$/.test(k))
+    .slice(0, 40)
+    .map(([k, v]) => `- ${k}: ${typeof v === "object" ? JSON.stringify(v).slice(0, 200) : String(v).slice(0, 200)}`);
+  const rosterLines = roster.slice(0, 20).map((p: any) =>
+    `- ${p?.name ?? "(unnamed)"}${p?.role ? ` — ${p.role}` : ""}${p?.relation ? ` (${p.relation})` : ""}${p?.deceased ? " — DECEASED" : ""}${p?.signer ? " — must sign" : ""}`
+  );
+  const treeBlock = [
+    `- Questionnaire sent: ${treeSentAt ? String(treeSentAt).slice(0, 10) : "no"}   Completed by seller: ${treeDoneAt ? String(treeDoneAt).slice(0, 10) : "no"}`,
+    `- Reviewed by a broker: ${(sub as any).ownership_reviewed_at ? String((sub as any).ownership_reviewed_at).slice(0, 10) : "no — the exact document list is NOT final yet"}`,
+    answerLines.length ? `Answers given by the seller:\n${answerLines.join("\n")}` : "(no answers recorded yet)",
+    rosterLines.length ? `People identified:\n${rosterLines.join("\n")}` : "",
+  ].filter(Boolean).join("\n");
+
+
 
   // Documents attached to this customer, with AI-extracted summaries.
   let filesBlock = "(no documents on file for this customer)";
