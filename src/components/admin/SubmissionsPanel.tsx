@@ -2427,6 +2427,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 teal:    { dot: "bg-teal-600",    ring: "ring-teal-500/40",    text: "text-teal-700 dark:text-teal-300",       soft: "bg-teal-500/10" },
                 sky:     { dot: "bg-sky-600",     ring: "ring-sky-500/40",     text: "text-sky-700 dark:text-sky-300",         soft: "bg-sky-500/10" },
                 green:   { dot: "bg-emerald-700", ring: "ring-emerald-600/40", text: "text-emerald-800 dark:text-emerald-300", soft: "bg-emerald-600/10" },
+                amber:   { dot: "bg-amber-500",   ring: "ring-amber-500/40",   text: "text-amber-700 dark:text-amber-300",     soft: "bg-amber-500/10" },
               };
               const steps: {
                 key: string; label: string; icon: typeof Paperclip; count: number;
