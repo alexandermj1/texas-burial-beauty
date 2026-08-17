@@ -150,12 +150,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Each completed POA rides along as a real PDF attachment — printing and
-    // notarising it is the seller's only remaining step. If the panel did not
-    // hand us a stored path, fall back to every live POA on this submission so
-    // the seller never receives the request without the documents themselves.
+    // Each POA the checklist asks for rides along as a real PDF attachment.
+    // The panel is the single source of truth: if it sent a `poas` array we use
+    // exactly that, so a document removed from the request can never sneak back
+    // into the email. Only legacy callers that send no array at all fall back to
+    // the live POAs on the submission.
+    const clientSuppliedPoas = Array.isArray(body?.poas) || !!poaUrl;
     let poaSources = poas.filter((p) => p.path);
-    if (!poaSources.length) {
+    if (!poaSources.length && !clientSuppliedPoas) {
       const { data: liveContracts } = await svc.from('contracts')
         .select('signature_name, fill_data, filled_pdf_path, principal_key, status')
         .eq('submission_id', submissionId).eq('kind', 'poa').neq('status', 'void');
@@ -170,6 +172,7 @@ Deno.serve(async (req) => {
           path: c.filled_pdf_path ?? null,
         }));
     }
+
 
     const attachments: { filename: string; mimeType: string; contentBase64: string }[] = [];
     const seenPaths = new Set<string>();
