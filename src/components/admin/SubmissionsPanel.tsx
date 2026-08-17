@@ -423,7 +423,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const awaitingKey = useMemo(() => submissions
     .filter(s => subRegion(s) === "texas")
     .map(s => [s.id, (s.email || "").toLowerCase(), (s as any).quote_sent_at, (s as any).quote_response,
-      (s as any).reply_dismissed_at, (s as any).manual_followup].join("~"))
+      (s as any).reply_dismissed_at, (s as any).manual_followup, ftState(s).doneAt].join("~"))
     .join("|"), [submissions]);
 
   useEffect(() => {
