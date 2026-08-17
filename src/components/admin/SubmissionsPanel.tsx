@@ -2769,13 +2769,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`group w-full text-left px-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
+                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
                 >
+                  {/* Stage rail — colour + fill height show how far along they are */}
+                  <span
+                    className="absolute left-1.5 top-2.5 bottom-2.5 w-[3px] rounded-full bg-border/60 overflow-hidden"
+                    title={`Step ${stage.step} of 8 · ${stage.label}`}
+                  >
+                    <span
+                      className={`absolute inset-x-0 bottom-0 rounded-full ${stage.bar}`}
+                      style={{ height: `${(stage.step / 8) * 100}%` }}
+                    />
+                  </span>
+                  {isActive && <span className="absolute inset-y-0 left-0 w-[2px] bg-primary" />}
                   <img
                     src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
                     alt=""
                     className="w-11 h-11 rounded-xl object-cover bg-muted/40 shrink-0 mt-0.5 ring-1 ring-border/60"
                   />
+
                   <div className="flex-1 min-w-0 space-y-1.5">
                     {/* Line 1 — who, and where they are */}
                     <div className="flex items-start justify-between gap-3">
