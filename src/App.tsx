@@ -37,7 +37,6 @@ const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemetery
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
 const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
 const CityPlotsPage = lazy(() => import("./pages/CityPlotsPage"));
-const TexasCemeteryMap = lazy(() => import("./pages/TexasCemeteryMap"));
 import { CITY_PAGES } from "./pages/city-page-data";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -90,8 +89,6 @@ const App = () => (
                 <Route path="/agent" element={<AgentDashboard />} />
                 <Route path="/partners" element={<Partners />} />
                 <Route path="/cemeteries" element={<CemeteryDirectory />} />
-                <Route path="/texas-cemetery-map" element={<TexasCemeteryMap />} />
-                <Route path="/cemetery-map" element={<Navigate to="/texas-cemetery-map" replace />} />
                 <Route path="/cemeteries/:slug" element={<CemeteryDetail />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/guides" element={<Guides />} />
