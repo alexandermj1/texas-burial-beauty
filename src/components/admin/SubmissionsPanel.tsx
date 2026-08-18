@@ -1640,6 +1640,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       adminName,
                       cemetery: selected.cemetery,
                     }),
+                    buildSellerListingAgreementTemplate({
+                      recipientName: selected.name,
+                      adminName,
+                      cemetery: selected.cemetery,
+                    }),
                   ];
               return (
                 <EmailThread
