@@ -46,7 +46,6 @@ const Footer = () => {
               <Link to="/cemetery-plots-for-sale-san-antonio" className="block hover:text-foreground transition-colors">San Antonio</Link>
               <Link to="/cemetery-plots-for-sale-texas" className="block hover:text-foreground transition-colors">All of Texas</Link>
               <Link to="/cemetery-plot-cost-texas" className="block hover:text-foreground transition-colors">Plot cost guide</Link>
-              <Link to="/texas-cemetery-map" className="block hover:text-foreground transition-colors">Texas cemetery map</Link>
             </div>
           </div>
           <div>
