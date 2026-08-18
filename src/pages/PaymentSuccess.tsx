@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import Seo from "@/components/Seo";
 
 interface Summary {
   found: boolean;
@@ -25,8 +26,6 @@ export default function PaymentSuccess() {
   const sessionId = params.get("session_id");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => { document.title = "Payment received — Texas Cemetery Brokers"; }, []);
 
   useEffect(() => {
     if (!sessionId) { setLoading(false); return; }
@@ -59,6 +58,13 @@ export default function PaymentSuccess() {
   const greetingName = firstName(summary?.recipientName);
 
   return (
+    <>
+    <Seo
+      title="Payment Received | Texas Cemetery Brokers"
+      description="Your payment to Texas Cemetery Brokers was received. Your receipt is on its way by email and your broker will follow up with the next steps."
+      path="/payment-success"
+      noindex
+    />
     <main className="min-h-[80vh] flex items-center justify-center bg-background px-6 py-16">
       <div className="max-w-lg w-full bg-card border border-border/60 rounded-2xl shadow-sm p-10 text-center">
         <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-6">
@@ -109,5 +115,6 @@ export default function PaymentSuccess() {
         </Link>
       </div>
     </main>
+    </>
   );
 }
