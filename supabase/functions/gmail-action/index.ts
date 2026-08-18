@@ -70,6 +70,21 @@ function encodeBase64Url(s: string): string {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * RFC 2047 encode a header value when it contains non-ASCII characters.
+ * Without this, UTF-8 bytes (em dashes, curly quotes, accents) are read as
+ * Latin-1 by mail clients and show up as "Ã¢Â€Â".
+ */
+function encodeHeaderValue(value: string): string {
+  const s = value ?? "";
+  // eslint-disable-next-line no-control-regex
+  if (!/[^\x00-\x7F]/.test(s)) return s;
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return `=?UTF-8?B?${btoa(bin)}?=`;
+}
+
 function buildRfc2822(opts: {
   from: string; to: string; cc?: string; bcc?: string;
   subject: string; body: string; htmlBody?: string;
@@ -82,7 +97,7 @@ function buildRfc2822(opts: {
   if (opts.cc) headers.push(`Cc: ${opts.cc}`);
   if (opts.bcc) headers.push(`Bcc: ${opts.bcc}`);
   if (opts.replyTo) headers.push(`Reply-To: ${opts.replyTo}`);
-  headers.push(`Subject: ${opts.subject}`);
+  headers.push(`Subject: ${encodeHeaderValue(opts.subject)}`);
   if (opts.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`);
   if (opts.references) headers.push(`References: ${opts.references}`);
   headers.push("MIME-Version: 1.0");
