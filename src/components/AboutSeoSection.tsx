@@ -205,7 +205,7 @@ const AboutSeoSection = () => {
                 <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
                   <img
                     src={bayerLogo}
-                    alt="Bayer Cemetery Brokers logo"
+                    alt="Bayer Cemetery Brokers"
                     className="w-full h-full object-contain"
                     loading="lazy"
                     width={112}
