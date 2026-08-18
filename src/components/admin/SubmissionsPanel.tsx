@@ -2338,8 +2338,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Toolbar (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2.5">
-        <div className="flex items-center gap-1.5 flex-wrap">
+      <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2 flex items-center gap-3 flex-wrap xl:flex-nowrap">
+        <div className="flex items-center gap-1.5 flex-wrap shrink-0">
           <button
             onClick={() => setCemeteriesOpen(o => !o)}
             className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
@@ -2475,7 +2475,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           })()}
         </div>
         {regionFilter === "texas" && (
-          <div className="pt-2 mt-1 border-t border-border/50">
+          <div className="flex-1 min-w-0 xl:border-l xl:border-border/50 xl:pl-3">
             {(() => {
               const tx = submissions.filter(s => subRegion(s) === "texas");
               type Tone = { dot: string; ring: string; text: string; soft: string };
@@ -2521,25 +2521,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               ];
               const anyActive = steps.some(s => s.active);
               return (
-                <>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-semibold">
-                      Seller process
-                    </span>
-                    {anyActive && (
-                      <button
-                        onClick={() => {
-                          setDocsFilter("all"); setAwaitingQuoteFilter(false); setQuotedFilter(false); setAcceptedFilter(false);
-                          setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setCompleteFilter(false);
-                        }}
-                        className="text-[10px] font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-                      >
-                        <X className="w-3 h-3" /> Clear
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="relative flex items-stretch gap-0 overflow-x-auto pb-1 -mx-1 px-1">
+                <div className="relative flex items-center gap-0 overflow-x-auto -mx-1 px-1">
                     {steps.map((st, i) => {
                       const Icon = st.icon;
                       return (
@@ -2585,8 +2567,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </div>
                       );
                     })}
+                    {anyActive && (
+                      <button
+                        onClick={() => {
+                          setDocsFilter("all"); setAwaitingQuoteFilter(false); setQuotedFilter(false); setAcceptedFilter(false);
+                          setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setCompleteFilter(false);
+                        }}
+                        title="Clear stage filters"
+                        className="ml-2 shrink-0 w-6 h-6 rounded-full grid place-items-center border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
-                </>
               );
             })()}
           </div>
