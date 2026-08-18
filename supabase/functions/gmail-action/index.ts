@@ -319,6 +319,9 @@ Deno.serve(async (req) => {
           subject: input.subject || "(no subject)",
           snippet: input.body.slice(0, 200),
           body_text: input.body,
+          // Store the HTML too — our email tags (quote / listing agreement /
+          // POA / document request) are driven by hidden markers in the HTML.
+          body_html: input.htmlBody || null,
           received_at: new Date().toISOString(),
           is_read: true,
           matched_submission_id: input.submissionId || null,

@@ -241,16 +241,45 @@ Deno.serve(async (req) => {
     // Both the Listing Agreement and the Power of Attorney get a signing token.
     // The LA uses it for a full e-sign session; the POA uses it for a lightweight
     // "confirm your mailing address" page that then emails the seller a notary-ready packet.
-    const signToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+    //
+    // IMPORTANT: if this document already exists we KEEP the existing signing
+    // token (and its sent status). Rotating the token on every regeneration
+    // silently invalidated links we had already emailed — sellers landed on
+    // "Link not valid".
+    const { data: existing } = await svc
+      .from('contracts')
+      .select('id, sign_token, sign_token_expires_at, status, sent_at, signed_at')
+      .eq('submission_id', submission_id)
+      .eq('kind', kind)
+      .eq('principal_key', principalKey)
+      .maybeSingle();
+
+    const existingTokenUsable =
+      !!existing?.sign_token &&
+      existing.status !== 'void' &&
+      (!existing.sign_token_expires_at || new Date(existing.sign_token_expires_at) > new Date());
+
+    const signToken = existingTokenUsable
+      ? (existing!.sign_token as string)
+      : crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+
+    // Keep "sent" (or later) states — regenerating the PDF for an already-sent
+    // agreement must not knock it back to draft in the contracts panel.
+    const keepStatus =
+      existing && ['sent', 'viewed', 'signed', 'countersigned', 'completed'].includes(String(existing.status))
+        ? (existing.status as string)
+        : 'draft';
 
     // There is a unique constraint on (submission_id, kind), so regenerating a
     // document must update the existing row rather than insert a second one.
     const row = {
       submission_id,
       kind,
-      status: 'draft' as const,
+      status: keepStatus,
       sign_token: signToken,
-      sign_token_expires_at: signToken ? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString() : null,
+      sign_token_expires_at: existingTokenUsable
+        ? (existing!.sign_token_expires_at as string | null)
+        : new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
       fill_data: fill,
       filled_pdf_path: path,
       created_by: userData.user.id,
@@ -272,7 +301,8 @@ Deno.serve(async (req) => {
     // once the signing link is actually emailed.
 
     return new Response(JSON.stringify({
-      ok: true, sign_token: signToken, pdf_url: signedUrl?.signedUrl ?? null, pdf_path: path,
+      ok: true, sign_token: signToken, contract_id: inserted?.id ?? existing?.id ?? null,
+      pdf_url: signedUrl?.signedUrl ?? null, pdf_path: path,
       contract: inserted ?? null,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {

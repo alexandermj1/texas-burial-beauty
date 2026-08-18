@@ -102,7 +102,13 @@ export const buildListingAgreementBlock = async (
   const signToken = (data as any)?.sign_token as string | undefined;
   if (!signToken) throw new Error("The contract was generated but no signing link came back.");
 
-  const signUrl = `${window.location.origin}/sign/${signToken}`;
+  // Always send sellers to the live site — never the admin's preview origin,
+  // which produces links that fail for anyone outside the workspace.
+  const origin = window.location.origin;
+  const base = /localhost|127\.0\.0\.1|texascemeterybrokers\.com/.test(origin)
+    ? origin
+    : "https://www.texascemeterybrokers.com";
+  const signUrl = `${base}/sign/${signToken}`;
   return {
     signToken,
     signUrl,
