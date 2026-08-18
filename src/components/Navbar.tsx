@@ -160,16 +160,6 @@ const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
                             ))}
                           </div>
                         </div>
-
-                        <div className="col-span-12 lg:col-span-3 lg:border-l border-border/60 lg:pl-8 flex items-end">
-                          <Link
-                            to="/texas-cemetery-map"
-                            className="group/c w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 bg-card/80 hover:bg-card text-sm text-foreground/85 hover:text-foreground transition-colors border border-border/50"
-                          >
-                            <span className="italic font-display text-[15px]">Open the Texas cemetery map</span>
-                            <ArrowRight className="w-4 h-4 text-sage group-hover/c:translate-x-0.5 transition-transform" />
-                          </Link>
-                        </div>
                       </div>
                     </div>
                   </div>
