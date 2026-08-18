@@ -1,11 +1,16 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { XCircle } from "lucide-react";
+import Seo from "@/components/Seo";
 
 export default function PaymentCancelled() {
-  useEffect(() => { document.title = "Payment cancelled — Texas Cemetery Brokers"; }, []);
-
   return (
+    <>
+    <Seo
+      title="Payment Cancelled | Texas Cemetery Brokers"
+      description="Your checkout was cancelled and no card was charged. Reopen your Texas Cemetery Brokers payment link any time within 30 days to complete it."
+      path="/payment-cancelled"
+      noindex
+    />
     <main className="min-h-[80vh] flex items-center justify-center bg-background px-6 py-16">
       <div className="max-w-lg w-full bg-card border border-border/60 rounded-2xl shadow-sm p-10 text-center">
         <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
@@ -25,5 +30,6 @@ export default function PaymentCancelled() {
         </Link>
       </div>
     </main>
+    </>
   );
 }
