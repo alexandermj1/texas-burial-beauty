@@ -42,13 +42,28 @@ const buildButtonHtml = (opts: { amountCents: number; description: string; url: 
 </table>`.trim();
 };
 
+const PRESETS: { id: "starter" | "pro" | "custom_plus" | "set_your_price"; label: string; amount: number; desc: string }[] = [
+  { id: "starter", label: "Starter", amount: 0, desc: "Starter listing — $0 upfront" },
+  { id: "pro", label: "Pro", amount: 99, desc: "Pro listing — one-time upfront fee" },
+  { id: "custom_plus", label: "Featured", amount: 299, desc: "Featured listing — one-time upfront fee" },
+  { id: "set_your_price", label: "Set Your Own Price", amount: 499, desc: "Set Your Own Price listing — one-time upfront fee" },
+];
+
 const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail, recipientName, onAttach }: Props) => {
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [preset, setPreset] = useState<string | null>(null);
 
   if (!open) return null;
+
+  const selectPreset = (p: (typeof PRESETS)[number]) => {
+    setPreset(p.id);
+    setAmount(String(p.amount));
+    setDescription(p.desc);
+  };
+
 
   const submit = async () => {
     const dollars = parseFloat(amount);
