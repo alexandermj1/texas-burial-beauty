@@ -301,7 +301,8 @@ Deno.serve(async (req) => {
     // once the signing link is actually emailed.
 
     return new Response(JSON.stringify({
-      ok: true, sign_token: signToken, pdf_url: signedUrl?.signedUrl ?? null, pdf_path: path,
+      ok: true, sign_token: signToken, contract_id: inserted?.id ?? existing?.id ?? null,
+      pdf_url: signedUrl?.signedUrl ?? null, pdf_path: path,
       contract: inserted ?? null,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
