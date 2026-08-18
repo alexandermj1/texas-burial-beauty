@@ -761,8 +761,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (qDigits.length >= 3) {
         const tail = (d: string) => (d.length > 10 ? d.slice(-10) : d);
         const needle = tail(qDigits);
-        const hay = [s.phone, s.message, s.details].map(v => tail(digits(v)));
+        const hay = [tail(digits(s.phone)), digits(s.message), digits(s.details)];
         if (hay.some(h => h && h.includes(needle))) return true;
+
       }
       return false;
 
