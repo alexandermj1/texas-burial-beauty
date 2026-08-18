@@ -377,7 +377,9 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
             ) : contract?.viewed_at ? (
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Viewed</span>
             ) : contract?.sent_at ? (
-              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Sent</span>
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                Sent {new Date(contract.sent_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+              </span>
             ) : contract?.filled_pdf_path ? (
               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Draft — not sent</span>
             ) : (
