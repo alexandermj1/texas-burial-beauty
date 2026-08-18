@@ -15,6 +15,7 @@ import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
+import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
 import AttachPaymentButtonDialog from "./AttachPaymentButtonDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
