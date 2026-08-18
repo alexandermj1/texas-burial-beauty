@@ -154,7 +154,8 @@ Deno.serve(async (req) => {
         [sub.section && `Section ${sub.section}`, sub.spaces && `Spaces ${sub.spaces}`, sub.space_numbers]
           .filter(Boolean).join(' • '),
       authorized_min_total: authMinTotal || undefined,
-      authorized_min_per_plot: authMinTotal ? Math.round(authMinTotal / plots) : undefined,
+      authorized_min_per_plot: Number(overrides.authorized_min_per_plot) ||
+        (authMinTotal ? Math.round(authMinTotal / plots) : undefined),
       listing_option: overrides.listing_option ?? sub.listing_tier ?? sub.listing_option ?? 'Starter',
       quote_amount: Number(sub.quote_amount ?? 0) || undefined,
       retail_price: Number(sub.cemetery_retail ?? 0) || undefined,

@@ -111,7 +111,7 @@ function buildLaOverlays(page1: PDFPage, page2: PDFPage, font: PDFFont, bold: PD
   const opt = (data.listing_option ?? '').toLowerCase();
   if (opt.includes('starter') || opt === 'option 1') checkBox(page2, LA_P2.optStarter.x, LA_P2.optStarter.y, bold);
   else if (opt.includes('pro') || opt === 'option 2') checkBox(page2, LA_P2.optPro.x, LA_P2.optPro.y, bold);
-  else if (opt.includes('featured') || opt === 'option 3') checkBox(page2, LA_P2.optFeatured.x, LA_P2.optFeatured.y, bold);
+  else if (opt.includes('featured') || opt.includes('own price') || opt === 'option 3' || opt === 'option 4') checkBox(page2, LA_P2.optFeatured.x, LA_P2.optFeatured.y, bold);
 
   if (data.authorized_min_per_plot != null) {
     const s = Number(data.authorized_min_per_plot).toLocaleString('en-US');
