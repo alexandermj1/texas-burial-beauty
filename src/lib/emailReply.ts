@@ -71,42 +71,30 @@ const stripQuoted = (body?: string | null): string => {
   return cuts.length ? raw.slice(0, Math.min(...cuts)) : raw;
 };
 
+// Tags are marker-driven ONLY. An email is tagged when it was produced by one
+// of our generators (quote generator, listing-agreement panel, POA/notary
+// packet, document packet, family-tree questionnaire) — each of those stamps a
+// hidden marker into the HTML. Subject-line guessing is deliberately gone: it
+// used to tag ordinary replies that merely mentioned a phrase or inherited a
+// thread subject.
 export const classifyEmailKind = (
-  subject: string | null | undefined,
+  _subject: string | null | undefined,
   body?: string | null,
 ): EmailKind | null => {
-  const s = `${subject || ""}`.toLowerCase().trim();
-  // Replies in a thread quote the original message, so a plain "Re:" answer in
-  // a family-tree thread must never inherit that thread's tag.
-  const isReply = /^(re|fwd|fw)\s*:/.test(s);
-  const b = stripQuoted(body).toLowerCase();
-  // The document request email — its own tag so it is easy to spot in the chain.
-  if (
-    s.includes("documents we need to complete your sale") ||
-    b.includes("open your document page")
-  ) return "document_request";
-  // The family confirmation page email carries a hidden marker so it always
-  // tags correctly, whatever the subject line says.
-  if (!isReply && (b.includes('data-family-tree="1"') ||
-      s.includes("few quick questions about your plot"))) return "family_tree";
-  if (s.includes("power of attorney") || b.includes("notary packet")) return "poa";
-  if (s.includes("listing agreement") || b.includes("sign your listing agreement")) return "listing_agreement";
-  // Quote / suggested sales price emails. Only the email that actually carries
-  // the pricing block counts — a plain reply inside the quote thread inherits
-  // the subject line ("Re: Your Property Valuation is Complete…") and must NOT
-  // be tagged as a quote (that used to produce phantom "Quote revised" tags).
-  const bodyIsQuote =
-    b.includes('data-listing-options="1"') ||
-    b.includes("sale authorization quote") ||
-    b.includes("authorized sale quote") ||
-    (b.includes("suggested sales price") && /listing option|starter|featured|pay securely|per space/.test(b));
-  const subjectIsQuote =
-    s.includes("suggested sales price") ||
-    s.includes("your property valuation is complete") ||
-    s.includes("listing offer for");
-  if (bodyIsQuote || (!isReply && subjectIsQuote)) return "quote";
+  const b = stripQuoted(body);
+  if (!b) return null;
+  const marker = b.match(/data-tcb-email=["']([a-z_]+)["']/i)?.[1]?.toLowerCase();
+  if (marker === "poa") return "poa";
+  if (marker === "listing_agreement") return "listing_agreement";
+  if (marker === "document_request") return "document_request";
+  if (marker === "family_tree") return "family_tree";
+  if (marker === "quote") return "quote";
+  if (/data-family-tree=["']1["']/i.test(b)) return "family_tree";
+  if (/data-listing-agreement=["']1["']/i.test(b)) return "listing_agreement";
+  if (/data-listing-options=["']1["']/i.test(b)) return "quote";
   return null;
 };
+
 
 const parseMoney = (raw: string): number | null => {
   const n = Number(raw.replace(/,/g, ""));
