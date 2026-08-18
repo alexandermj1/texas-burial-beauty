@@ -15,6 +15,7 @@ import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
+import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
 import AttachPaymentButtonDialog from "./AttachPaymentButtonDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
@@ -271,6 +272,8 @@ const InlineEmailComposer = ({
   const [plotPickerOpen, setPlotPickerOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [listingBlockInserted, setListingBlockInserted] = useState(false);
+  const [laBlockInserted, setLaBlockInserted] = useState(false);
+  const [laSignToken, setLaSignToken] = useState<string | null>(null);
   // For replies, start with the plain greeting+signature so we don't
   // clobber the user's reply with a full template. Templates can still be
   // chosen from the picker below.
@@ -381,6 +384,8 @@ const InlineEmailComposer = ({
       setActiveTemplateId(null);
       setBodyTouched(false);
       setListingBlockInserted(false);
+      setLaBlockInserted(false);
+      setLaSignToken(null);
       return;
     }
     const t = templates?.find((x) => x.id === id);
@@ -391,10 +396,18 @@ const InlineEmailComposer = ({
     editorRef.current?.setHtml(next);
     setBodyTouched(false);
     setListingBlockInserted(false);
+    setLaBlockInserted(false);
+    setLaSignToken(null);
     if (id === "seller_listing_options") {
       setSubject(quoteSubjectFor(sellerContext?.cemetery));
     }
+    if (id === "seller_listing_agreement") {
+      setSubject(
+        `Your Listing Agreement${sellerContext?.cemetery ? ` for ${sellerContext.cemetery}` : ""} — ready to sign`,
+      );
+    }
   };
+
 
   const send = async () => {
     const plain = htmlToText(html);
@@ -451,6 +464,18 @@ const InlineEmailComposer = ({
       }
     } catch (e) {
       console.warn("quote_sent_at update failed", e);
+    }
+    // If a listing agreement sign-link was inserted, mark that contract as sent
+    // so the panel status reflects it (same as the old email button did).
+    try {
+      if (laBlockInserted && laSignToken) {
+        await supabase
+          .from("contracts" as any)
+          .update({ status: "sent", sent_at: new Date().toISOString() })
+          .eq("sign_token", laSignToken);
+      }
+    } catch (e) {
+      console.warn("contract sent_at update failed", e);
     }
     // Log AI-drafted email + admin edits for future training. Best-effort.
     try {
@@ -729,6 +754,26 @@ const InlineEmailComposer = ({
             setBodyTouched(true);
             setListingBlockInserted(true);
             setSubject(quoteSubjectFor(sellerContext?.cemetery));
+          }}
+        />
+      )}
+      {sellerContext && activeTemplateId === "seller_listing_agreement" && (
+        <ListingAgreementInlinePanel
+          seller={sellerContext}
+          hasGenerated={laBlockInserted}
+          onGenerated={(blockHtml, meta) => {
+            const current = editorRef.current?.getHtml() ?? html;
+            const stripped = current.replace(
+              /<div data-listing-agreement="1"[\s\S]*?<\/table>\s*<\/div>\s*(<p><br><\/p>)?/g,
+              "",
+            );
+            editorRef.current?.setHtml(stripped);
+            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+            const next = editorRef.current?.getHtml() ?? blockHtml;
+            setHtml(next);
+            setBodyTouched(true);
+            setLaBlockInserted(true);
+            setLaSignToken(meta.signToken);
           }}
         />
       )}
