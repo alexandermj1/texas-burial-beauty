@@ -13,6 +13,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { openFileViewer } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
+import ProofreadButton from "./ProofreadButton";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
