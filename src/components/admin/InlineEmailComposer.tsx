@@ -384,6 +384,8 @@ const InlineEmailComposer = ({
       setActiveTemplateId(null);
       setBodyTouched(false);
       setListingBlockInserted(false);
+      setLaBlockInserted(false);
+      setLaSignToken(null);
       return;
     }
     const t = templates?.find((x) => x.id === id);
@@ -394,10 +396,18 @@ const InlineEmailComposer = ({
     editorRef.current?.setHtml(next);
     setBodyTouched(false);
     setListingBlockInserted(false);
+    setLaBlockInserted(false);
+    setLaSignToken(null);
     if (id === "seller_listing_options") {
       setSubject(quoteSubjectFor(sellerContext?.cemetery));
     }
+    if (id === "seller_listing_agreement") {
+      setSubject(
+        `Your Listing Agreement${sellerContext?.cemetery ? ` for ${sellerContext.cemetery}` : ""} — ready to sign`,
+      );
+    }
   };
+
 
   const send = async () => {
     const plain = htmlToText(html);
