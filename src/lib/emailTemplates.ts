@@ -183,35 +183,6 @@ ${signature(i.adminName)}`;
   return { id: "seller_listing_options", label: "Quote (with pay buttons)", body };
 };
 
-// Consultative note explaining the difference between the $99 and $299
-// listing packages — used when a seller asks which tier they should pick.
-// Deliberately non-pushy: sets realistic expectations about the resale
-// market, then explains why $299 is currently the strongest value.
-export const buildListingOptionsRecommendationTemplate = (i: SellerInput): EmailTemplate => {
-  const body = `Dear ${first(i.recipientName)},
-
-Thank you for coming back to me — happy to explain the difference between the three options.
-
-All three give your property real representation from our sales team, and every plot in our inventory is shown to buyers regardless of tier. The differences are down to visibility and priority:
-
-• Free listing — your property is added to our inventory and shown to buyers who ask about that cemetery. No cost, no time limit.
-• Pro ($99) — broader promotion across our marketing channels.
-• Featured ($299) — priority placement with our funeral home and mortuary partners, plus targeted digital advertising.
-
-The reason Featured performs the strongest is straightforward: around 90% of resale plot sales originate through a mortuary or funeral home referral, so being at the top of that list matters. $299 is also a good value at the moment while buyer demand is elevated and we're holding the price down.
-
-That said, no package can guarantee a faster sale — the resale market is genuinely unpredictable, and buyers make deeply personal decisions based on family history, sight lines, and religious considerations. Whichever tier you choose, we handle the marketing, showings, negotiations and paperwork from here.
-
-Happy to jump on a quick call if it's easier to talk through.
-
-${signature(i.adminName)}`;
-  return {
-    id: "seller_listing_options_recommendation",
-    label: "Which listing option? (consultative)",
-    body,
-  };
-};
-
 // Seller "Listing agreement" — the admin picks this, then uses the inline
 // Listing agreement panel to generate the contract and insert the branded
 // signing block. Body is just greeting + next steps + signature.
