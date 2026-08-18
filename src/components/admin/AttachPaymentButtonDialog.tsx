@@ -42,17 +42,33 @@ const buildButtonHtml = (opts: { amountCents: number; description: string; url: 
 </table>`.trim();
 };
 
+const PRESETS: { id: "starter" | "pro" | "custom_plus" | "set_your_price"; label: string; amount: number; desc: string }[] = [
+  { id: "starter", label: "Starter", amount: 0, desc: "Starter listing — $0 upfront" },
+  { id: "pro", label: "Pro", amount: 99, desc: "Pro listing — one-time upfront fee" },
+  { id: "custom_plus", label: "Featured", amount: 299, desc: "Featured listing — one-time upfront fee" },
+  { id: "set_your_price", label: "Set Your Own Price", amount: 499, desc: "Set Your Own Price listing — one-time upfront fee" },
+];
+
 const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail, recipientName, onAttach }: Props) => {
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [preset, setPreset] = useState<string | null>(null);
 
   if (!open) return null;
 
+  const selectPreset = (p: (typeof PRESETS)[number]) => {
+    setPreset(p.id);
+    setAmount(String(p.amount));
+    setDescription(p.desc);
+  };
+
+
   const submit = async () => {
     const dollars = parseFloat(amount);
-    if (!isFinite(dollars) || dollars <= 0) {
+    const isStarter = preset === "starter";
+    if (!isFinite(dollars) || (dollars <= 0 && !isStarter)) {
       toast({ title: "Enter a valid amount", variant: "destructive" });
       return;
     }
@@ -65,7 +81,8 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
     const { data, error } = await supabase.functions.invoke("create-payment-link", {
       body: {
         submissionId,
-        kind: "custom",
+        kind: preset ? "listing_fee" : "custom",
+        ...(preset && { listingTier: preset }),
         amountCents,
         description: description.trim(),
         recipientEmail,
@@ -87,8 +104,10 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
     toast({ title: "Payment button attached", description: `${dollars.toFixed(2)} · ${description.trim()}` });
     setAmount("");
     setDescription("");
+    setPreset(null);
     onClose();
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -107,21 +126,43 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
         </div>
 
         <div className="space-y-1.5">
+          <label className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Listing options</label>
+          <div className="grid grid-cols-2 gap-2">
+            {PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => selectPreset(p)}
+                className={`text-left px-3 py-2 rounded border text-xs transition ${
+                  preset === p.id
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-background hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <span className="block font-medium text-foreground">{p.label}</span>
+                <span className="block">{p.amount === 0 ? "$0 upfront" : `$${p.amount} one-time`}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground">Or enter a custom amount below.</p>
+        </div>
+
+        <div className="space-y-1.5">
           <label className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Amount (USD)</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
             <input
               type="number"
-              min="0.50"
+              min="0"
               step="0.01"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => { setAmount(e.target.value); setPreset(null); }}
               placeholder="0.00"
               className="w-full text-sm pl-7 pr-3 py-2 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-              autoFocus
             />
           </div>
         </div>
+
 
         <div className="space-y-1.5">
           <label className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
