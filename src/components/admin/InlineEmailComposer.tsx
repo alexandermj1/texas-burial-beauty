@@ -745,6 +745,26 @@ const InlineEmailComposer = ({
           }}
         />
       )}
+      {sellerContext && activeTemplateId === "seller_listing_agreement" && (
+        <ListingAgreementInlinePanel
+          seller={sellerContext}
+          hasGenerated={laBlockInserted}
+          onGenerated={(blockHtml, meta) => {
+            const current = editorRef.current?.getHtml() ?? html;
+            const stripped = current.replace(
+              /<div data-listing-agreement="1"[\s\S]*?<\/table>\s*<\/div>\s*(<p><br><\/p>)?/g,
+              "",
+            );
+            editorRef.current?.setHtml(stripped);
+            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+            const next = editorRef.current?.getHtml() ?? blockHtml;
+            setHtml(next);
+            setBodyTouched(true);
+            setLaBlockInserted(true);
+            setLaSignToken(meta.signToken);
+          }}
+        />
+      )}
       <div className={expanded ? "flex-1 min-h-0 overflow-auto" : ""}>
         <RichTextEditor
           ref={editorRef}
