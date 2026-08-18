@@ -23,7 +23,7 @@ const REGION_BLURB: Record<string, string> = {
   "East Texas": "Tyler, Longview, Beaumont and the Piney Woods.",
   "El Paso & West Texas": "El Paso, Midland, Odessa and the far west.",
   "South Texas": "Corpus Christi, the Valley and the coastal bend.",
-  "West & North Texas": "Lubbock, Amarillo, Abilene and the Panchandle plains.",
+  "West & North Texas": "Lubbock, Amarillo, Abilene and the Panhandle plains.",
 };
 
 const HOW = [
