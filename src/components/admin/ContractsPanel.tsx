@@ -474,8 +474,8 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
               Open signing page
             </a>
             {contract.sent_at && (
-              <span className="text-[11px] text-muted-foreground">
-                Sent {new Date(contract.sent_at).toLocaleDateString()}
+              <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                Signing link sent {new Date(contract.sent_at).toLocaleString()}
               </span>
             )}
           </div>
