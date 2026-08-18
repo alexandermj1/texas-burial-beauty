@@ -2338,7 +2338,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Toolbar (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 flex items-center gap-1.5 flex-wrap rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-2 py-2">
+      <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setCemeteriesOpen(o => !o)}
             className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
@@ -2472,24 +2473,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </span>
             );
           })()}
-      </div>
-      )}
-
-      <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
-      <AddSubmissionDialog
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        onCreated={(id) => { setSelectedId(id); onRefresh?.(); }}
-      />
-
-
-      {/* Pipeline stage filter intentionally removed — it duplicated the stepper inside the Bayer pipeline panel.
-          Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
-
-
-      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
+        </div>
         {regionFilter === "texas" && (
-          <div className="px-3 pt-3 pb-2 border-b border-border/50 bg-gradient-to-b from-sand-light/40 to-transparent dark:from-muted/25">
+          <div className="pt-2 mt-1 border-t border-border/50">
             {(() => {
               const tx = submissions.filter(s => subRegion(s) === "texas");
               type Tone = { dot: string; ring: string; text: string; soft: string };
@@ -2605,7 +2591,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
           </div>
         )}
+      </div>
+      )}
 
+      <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
+      <AddSubmissionDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onCreated={(id) => { setSelectedId(id); onRefresh?.(); }}
+      />
+
+
+      {/* Pipeline stage filter intentionally removed — it duplicated the stepper inside the Bayer pipeline panel.
+          Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
+
+
+      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
         {regionFilter === "texas" && cemeteryLabel && (
           <div className="flex items-center justify-between gap-2 px-4 py-2 bg-[hsl(var(--status-nodocs-soft))] border-b border-[hsl(var(--status-nodocs-border))] text-xs">
             <span className="text-[hsl(var(--status-nodocs-fg))]">
