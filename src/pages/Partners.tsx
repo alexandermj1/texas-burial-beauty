@@ -112,10 +112,6 @@ const testimonialPoints = [
 ];
 
 const Partners = () => {
-  useEffect(() => {
-    document.title = "Our Partnership with Bayer Cemetery Brokers | Texas Cemetery Brokers";
-  }, []);
-
   // Hero parallax — image drifts slower than the page scroll.
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress: heroProgress } = useScroll({
@@ -139,7 +135,7 @@ const Partners = () => {
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Bayer Cemetery Brokers — Our Texas Partnership"
-        description="Bayer Cemetery Brokers is our partner brokerage: licensed in California (CEB 1512) with 30+ years of cemetery resale experience, now serving Texas families."
+        description="Our partner brokerage Bayer Cemetery Brokers is licensed in California (CEB 1512) with 30+ years of cemetery resale experience, now serving Texas."
         path="/partners"
         jsonLd={[
           {

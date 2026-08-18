@@ -39,7 +39,7 @@ export const STATIC_ROUTES: RouteMeta[] = [
     path: "/partners",
     title: "Bayer Cemetery Brokers — Our Texas Partnership",
     description:
-      "Bayer Cemetery Brokers is our partner brokerage: licensed in California (CEB 1512) with 30+ years of cemetery resale experience, now serving Texas families.",
+      "Our partner brokerage Bayer Cemetery Brokers is licensed in California (CEB 1512) with 30+ years of cemetery resale experience, now serving Texas.",
   },
   {
     path: "/cemeteries",

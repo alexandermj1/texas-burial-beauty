@@ -327,10 +327,6 @@ export const Properties2Browser = () => {
 };
 
 const Properties2 = () => {
-  useEffect(() => {
-    document.title = "Available Plots — Texas | Properties 2";
-  }, []);
-
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
       <Seo
