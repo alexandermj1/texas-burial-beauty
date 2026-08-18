@@ -2369,17 +2369,32 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                     placeholder="First name" className="h-8 text-xs" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold">Your message in the email</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold">Your message in the email</p>
+                    <ProofreadButton
+                      value={emailNote}
+                      onFixed={setEmailNote}
+                      subject="Document request"
+                    />
+                  </div>
                   <p className="text-[11px] text-muted-foreground mb-1.5">Optional — appears at the top, above the checklist.</p>
                   <Textarea value={emailNote} onChange={(e) => setEmailNote(e.target.value)} rows={3}
                     placeholder="Hi Joel, lovely speaking with you today…" className="text-xs" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold">Your message on their document page</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold">Your message on their document page</p>
+                    <ProofreadButton
+                      value={pageNote}
+                      onFixed={setPageNote}
+                      subject="Note on document page"
+                    />
+                  </div>
                   <p className="text-[11px] text-muted-foreground mb-1.5">Optional — shown as a note from you at the top of the page.</p>
                   <Textarea value={pageNote} onChange={(e) => setPageNote(e.target.value)} rows={3}
                     placeholder="Anything they should know before uploading…" className="text-xs" />
                 </div>
+
               </div>
 
               <div className="rounded-md border p-3 space-y-1.5">
