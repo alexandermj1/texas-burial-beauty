@@ -67,7 +67,8 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
 
   const submit = async () => {
     const dollars = parseFloat(amount);
-    if (!isFinite(dollars) || dollars <= 0) {
+    const isStarter = preset === "starter";
+    if (!isFinite(dollars) || (dollars <= 0 && !isStarter)) {
       toast({ title: "Enter a valid amount", variant: "destructive" });
       return;
     }
@@ -80,7 +81,8 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
     const { data, error } = await supabase.functions.invoke("create-payment-link", {
       body: {
         submissionId,
-        kind: "custom",
+        kind: preset ? "listing_fee" : "custom",
+        ...(preset && { listingTier: preset }),
         amountCents,
         description: description.trim(),
         recipientEmail,
@@ -102,8 +104,10 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
     toast({ title: "Payment button attached", description: `${dollars.toFixed(2)} · ${description.trim()}` });
     setAmount("");
     setDescription("");
+    setPreset(null);
     onClose();
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
