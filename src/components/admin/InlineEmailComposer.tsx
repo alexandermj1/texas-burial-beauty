@@ -771,12 +771,19 @@ const InlineEmailComposer = ({
           seller={sellerContext}
           hasGenerated={laBlockInserted}
           onGenerated={(blockHtml, meta) => {
+            // Generating the agreement replaces the whole body: only the
+            // signature (and any quoted history) is kept, so the admin never
+            // has to hand-delete whatever was already typed in the box.
             const current = editorRef.current?.getHtml() ?? html;
-            const stripped = current.replace(
-              /<div data-listing-agreement="1"[\s\S]*?<\/table>\s*<\/div>\s*(<p><br><\/p>)?/g,
-              "",
-            );
-            editorRef.current?.setHtml(stripped);
+            const SIG_RE = /\b(best regards|warm regards|kind regards|sincerely|thank(s| you)|cheers|regards)\b/i;
+            const holder = document.createElement("div");
+            holder.innerHTML = current;
+            const blocks = Array.from(holder.children) as HTMLElement[];
+            const sigIdx = blocks.findIndex((b) => SIG_RE.test(b.textContent || ""));
+            const keep = sigIdx >= 0
+              ? blocks.slice(sigIdx).map((b) => b.outerHTML).join("")
+              : "";
+            editorRef.current?.setHtml(keep);
             editorRef.current?.insertHtmlBeforeSignature(blockHtml);
             const next = editorRef.current?.getHtml() ?? blockHtml;
             setHtml(next);
