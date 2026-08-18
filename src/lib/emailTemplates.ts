@@ -211,3 +211,21 @@ ${signature(i.adminName)}`;
     body,
   };
 };
+
+// Seller "Listing agreement" — the admin picks this, then uses the inline
+// Listing agreement panel to generate the contract and insert the branded
+// signing block. Body is just greeting + next steps + signature.
+export const buildSellerListingAgreementTemplate = (i: SellerInput): EmailTemplate => {
+  const cemetery = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
+  const body = `Dear ${first(i.recipientName)},
+
+Thank you for choosing Texas Cemetery Brokers to represent the sale of your cemetery property${cemetery}. Your Exclusive Right-to-Sell Agreement is now prepared and ready for your review.
+
+
+Once it's signed, we'll countersign, email you a copy for your records, and begin marketing the property straight away.
+
+If you have any questions at all, simply reply to this email — I'm happy to walk you through it.
+
+${signature(i.adminName)}`;
+  return { id: "seller_listing_agreement", label: "Listing agreement (sign link)", body };
+};
