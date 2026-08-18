@@ -783,6 +783,11 @@ const InlineEmailComposer = ({
             setBodyTouched(true);
             setLaBlockInserted(true);
             setLaSignToken(meta.signToken);
+            // Always correct the subject line when the agreement goes in — it
+            // must match the contract email, not whatever the thread inherited.
+            setSubject(
+              `Your Listing Agreement${sellerContext?.cemetery ? ` for ${sellerContext.cemetery}` : ""} — ready to sign`,
+            );
           }}
         />
       )}
