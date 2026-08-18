@@ -750,9 +750,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
-      return [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
+      const textHit = [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
         .filter(Boolean)
         .some(v => String(v).toLowerCase().includes(q));
+      if (textHit) return true;
+      // Phone search: compare digits only so "(214) 555-0199", "214-555-0199"
+      // and "2145550199" all match each other (last 10 digits, ignoring +1).
+      const digits = (v: any) => String(v ?? "").replace(/\D/g, "");
+      const qDigits = digits(searchQuery);
+      if (qDigits.length >= 3) {
+        const tail = (d: string) => (d.length > 10 ? d.slice(-10) : d);
+        const needle = tail(qDigits);
+        const hay = [tail(digits(s.phone)), digits(s.message), digits(s.details)];
+        if (hay.some(h => h && h.includes(needle))) return true;
+
+      }
+      return false;
+
     });
     // Within each group, sort newest → oldest by created_at so brand-new
     // submissions surface at the top of their bucket.
