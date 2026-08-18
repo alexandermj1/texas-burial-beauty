@@ -469,10 +469,19 @@ const InlineEmailComposer = ({
     // so the panel status reflects it (same as the old email button did).
     try {
       if (laBlockInserted && laSignToken) {
+        const nowIso = new Date().toISOString();
         await supabase
           .from("contracts" as any)
-          .update({ status: "sent", sent_at: new Date().toISOString() })
+          .update({ status: "sent", sent_at: nowIso })
           .eq("sign_token", laSignToken);
+        // Mirror the old "send contract link" behaviour: the submission is only
+        // marked as having the agreement issued once it has actually gone out.
+        if (sellerContext?.id) {
+          await supabase
+            .from("contact_submissions")
+            .update({ la_issued_at: nowIso })
+            .eq("id", sellerContext.id);
+        }
       }
     } catch (e) {
       console.warn("contract sent_at update failed", e);
