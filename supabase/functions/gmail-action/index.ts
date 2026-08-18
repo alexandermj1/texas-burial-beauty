@@ -82,7 +82,7 @@ function buildRfc2822(opts: {
   if (opts.cc) headers.push(`Cc: ${opts.cc}`);
   if (opts.bcc) headers.push(`Bcc: ${opts.bcc}`);
   if (opts.replyTo) headers.push(`Reply-To: ${opts.replyTo}`);
-  headers.push(`Subject: ${opts.subject}`);
+  headers.push(`Subject: ${encodeHeaderValue(opts.subject)}`);
   if (opts.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`);
   if (opts.references) headers.push(`References: ${opts.references}`);
   headers.push("MIME-Version: 1.0");
