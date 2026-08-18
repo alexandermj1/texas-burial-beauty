@@ -446,14 +446,21 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
             <Button
               size="sm"
               variant="default"
-              className="bg-[#1f2a37] hover:bg-[#111827] text-white"
+              className={contract.sent_at
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "bg-[#1f2a37] hover:bg-[#111827] text-white"}
               onClick={() => emailSignLink(contract)}
               disabled={busy === contract.id}
+              title={contract.sent_at ? `Sent ${new Date(contract.sent_at).toLocaleString()}` : undefined}
             >
               {busy === contract.id
                 ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                : <Send className="w-3.5 h-3.5 mr-1" />}
-              {contract.sent_at ? "Re-send signing link" : "Email signing link to seller"}
+                : contract.sent_at
+                  ? <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                  : <Send className="w-3.5 h-3.5 mr-1" />}
+              {contract.sent_at
+                ? `Sent ${new Date(contract.sent_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} — re-send`
+                : "Email signing link to seller"}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => copySignLink(contract)}>
               <Copy className="w-3.5 h-3.5 mr-1" />Copy link
