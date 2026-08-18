@@ -126,21 +126,43 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
         </div>
 
         <div className="space-y-1.5">
+          <label className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Listing options</label>
+          <div className="grid grid-cols-2 gap-2">
+            {PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => selectPreset(p)}
+                className={`text-left px-3 py-2 rounded border text-xs transition ${
+                  preset === p.id
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-background hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                <span className="block font-medium text-foreground">{p.label}</span>
+                <span className="block">{p.amount === 0 ? "$0 upfront" : `$${p.amount} one-time`}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground">Or enter a custom amount below.</p>
+        </div>
+
+        <div className="space-y-1.5">
           <label className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Amount (USD)</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
             <input
               type="number"
-              min="0.50"
+              min="0"
               step="0.01"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => { setAmount(e.target.value); setPreset(null); }}
               placeholder="0.00"
               className="w-full text-sm pl-7 pr-3 py-2 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-              autoFocus
             />
           </div>
         </div>
+
 
         <div className="space-y-1.5">
           <label className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
