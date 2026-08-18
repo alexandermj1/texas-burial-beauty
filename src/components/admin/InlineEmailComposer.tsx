@@ -465,6 +465,18 @@ const InlineEmailComposer = ({
     } catch (e) {
       console.warn("quote_sent_at update failed", e);
     }
+    // If a listing agreement sign-link was inserted, mark that contract as sent
+    // so the panel status reflects it (same as the old email button did).
+    try {
+      if (laBlockInserted && laSignToken) {
+        await supabase
+          .from("contracts" as any)
+          .update({ status: "sent", sent_at: new Date().toISOString() })
+          .eq("sign_token", laSignToken);
+      }
+    } catch (e) {
+      console.warn("contract sent_at update failed", e);
+    }
     // Log AI-drafted email + admin edits for future training. Best-effort.
     try {
       const training = aiTrainingRef.current;
