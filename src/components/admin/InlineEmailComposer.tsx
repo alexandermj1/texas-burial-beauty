@@ -402,6 +402,10 @@ const InlineEmailComposer = ({
     setListingBlockInserted(false);
     setLaBlockInserted(false);
     setLaSignToken(null);
+    setFtBlockInserted(false);
+    if (id === "seller_family_tree") {
+      setSubject(familyTreeSubject(sellerContext?.cemetery));
+    }
     if (id === "seller_listing_options") {
       setSubject(quoteSubjectFor(sellerContext?.cemetery));
     }
