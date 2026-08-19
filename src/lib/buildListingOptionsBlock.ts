@@ -313,9 +313,9 @@ function sheetRow(name: string, city: string, detail: string, type: string, pric
 }
 
 const SHEET_PHOTO_1 =
-  "https://www.texascemeterybrokers.com/__l5e/assets-v1/e129d242-4623-4bcc-acee-75da380da434/cemetery-grounds-1.jpg";
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/c10da282-9a37-4c7b-a105-49d1cae46bf5/sheet-featured-1.webp";
 const SHEET_PHOTO_2 =
-  "https://www.texascemeterybrokers.com/__l5e/assets-v1/f66efcf6-8bad-4a28-88ac-54165f569077/cemetery-grounds-2.jpg";
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/a6187396-d504-4570-bd25-e033c1442046/sheet-featured-2.webp";
 const BAYER_LOGO_NAVY =
   "https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png";
 
