@@ -236,12 +236,22 @@ ${tierCards}
         ${p(`For clarity on the closing statement you'll eventually see: the mandatory cemetery transfer fee at ${escapeHtml(cemLabel)}${transferFee > 0 ? ` (${fmtUsd(transferFee)})` : ""} is paid by the buyer, not you. The buyer is responsible for all cemetery fees—such as transfer, quitclaim, and additional endowment care—as well as broker fees, including marketing, referral, and processing expenses. Buyers may also elect additional services through our company — financing, mortuary referral coordination, in-person showings, and similar — which are likewise billed to the buyer and itemized separately. As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
       `)}
 
+      <!-- MORTUARY SHEET PREVIEW -->
+      <tr><td style="padding:26px 40px 4px;">
+        ${eyebrow("How buyers see it")}
+        ${h2("Your property on our mortuary list")}
+        ${p(`Every fortnight we send a verified property list to funeral homes, mortuaries and family counselors across Texas — the people who are sitting with families at the moment a plot is needed. Where your property appears on that list depends on the option you choose below.`, true)}
+        ${buildMortuarySheetPreview({ cemLabel, propertyLine, salePerSpace })}
+        ${p(`<strong style="color:${BRAND_INK};">Featured</strong> listings open the sheet with photography, an expanded description and a direct broker line. <strong style="color:${BRAND_INK};">Pro</strong> and <strong style="color:${BRAND_INK};">Starter</strong> listings appear in the standard schedule below it.`, true)}
+      </td></tr>
+
       <!-- LISTING OPTIONS -->
       <tr><td style="padding:26px 40px 4px;">
         ${eyebrow("Choose your plan")}
         ${h2("Listing options")}
         ${tierSection}
       </td></tr>
+
 
       <!-- NEXT STEPS -->
       <tr><td style="padding:26px 40px 32px;">
