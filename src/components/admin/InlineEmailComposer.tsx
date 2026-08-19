@@ -16,6 +16,8 @@ import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
 import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
+import FamilyTreeInlinePanel from "./FamilyTreeInlinePanel";
+import { familyTreeSubject } from "@/lib/buildFamilyTreeBlock";
 import AttachPaymentButtonDialog from "./AttachPaymentButtonDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
@@ -274,6 +276,7 @@ const InlineEmailComposer = ({
   const [listingBlockInserted, setListingBlockInserted] = useState(false);
   const [laBlockInserted, setLaBlockInserted] = useState(false);
   const [laSignToken, setLaSignToken] = useState<string | null>(null);
+  const [ftBlockInserted, setFtBlockInserted] = useState(false);
   // For replies, start with the plain greeting+signature so we don't
   // clobber the user's reply with a full template. Templates can still be
   // chosen from the picker below.
@@ -386,6 +389,7 @@ const InlineEmailComposer = ({
       setListingBlockInserted(false);
       setLaBlockInserted(false);
       setLaSignToken(null);
+      setFtBlockInserted(false);
       return;
     }
     const t = templates?.find((x) => x.id === id);
@@ -398,6 +402,10 @@ const InlineEmailComposer = ({
     setListingBlockInserted(false);
     setLaBlockInserted(false);
     setLaSignToken(null);
+    setFtBlockInserted(false);
+    if (id === "seller_family_tree") {
+      setSubject(familyTreeSubject(sellerContext?.cemetery));
+    }
     if (id === "seller_listing_options") {
       setSubject(quoteSubjectFor(sellerContext?.cemetery));
     }
@@ -420,7 +428,10 @@ const InlineEmailComposer = ({
     // Quote emails (listing-options block already includes brand header/footer)
     // ship without the extra masthead shell to avoid double branding.
     const hasListingBlock = /data-listing-options="1"/.test(normalizedHtml);
-    const brandedHtml = hasListingBlock ? normalizedHtml : wrapInBrandedShell(normalizedHtml);
+    // The family-tree block is fully branded too — keep the marker intact and
+    // don't wrap it in a second masthead.
+    const hasFamilyTree = /data-family-tree="1"/.test(normalizedHtml);
+    const brandedHtml = hasListingBlock || hasFamilyTree ? normalizedHtml : wrapInBrandedShell(normalizedHtml);
     const { data, error } = await supabase.functions.invoke("gmail-action", {
       body: {
         action: "send",
@@ -485,6 +496,37 @@ const InlineEmailComposer = ({
       }
     } catch (e) {
       console.warn("contract sent_at update failed", e);
+    }
+    // If the family-tree block went out, stamp questionsSentAt on the
+    // submission so the pipeline shows "Tree sent", the 24h reminder job picks
+    // it up, and the paperwork panel reflects it — same as the standalone
+    // ownership-questions email.
+    try {
+      const targetId = sellerContext?.id ?? submissionId;
+      if (ftBlockInserted && targetId) {
+        const nowIso = new Date().toISOString();
+        const { data: row } = await supabase
+          .from("contact_submissions")
+          .select("ownership_answers, customer_profile_id, name")
+          .eq("id", targetId)
+          .maybeSingle();
+        const prev = ((row?.ownership_answers ?? {}) as Record<string, unknown>);
+        await supabase
+          .from("contact_submissions")
+          .update({ ownership_answers: { ...prev, questionsSentAt: nowIso } as never })
+          .eq("id", targetId);
+        if ((row as any)?.customer_profile_id) {
+          await supabase.from("customer_activity_log" as any).insert({
+            customer_profile_id: (row as any).customer_profile_id,
+            submission_id: targetId,
+            actor_name: adminName || "Staff",
+            action_type: "family_tree_sent",
+            action_summary: "Family tree / ownership questionnaire emailed to the seller",
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("family tree sent stamp failed", e);
     }
     // Log AI-drafted email + admin edits for future training. Best-effort.
     try {
@@ -763,6 +805,30 @@ const InlineEmailComposer = ({
             setBodyTouched(true);
             setListingBlockInserted(true);
             setSubject(quoteSubjectFor(sellerContext?.cemetery));
+          }}
+        />
+      )}
+      {(sellerContext || submissionId) && activeTemplateId === "seller_family_tree" && (
+        <FamilyTreeInlinePanel
+          seller={{
+            id: (sellerContext?.id ?? submissionId)!,
+            name: sellerContext?.name ?? recipientName ?? null,
+            cemetery: sellerContext?.cemetery ?? null,
+          }}
+          hasGenerated={ftBlockInserted}
+          onGenerated={(blockHtml) => {
+            // Replace any previous family-tree block, keep the signature.
+            const current = editorRef.current?.getHtml() ?? html;
+            const holder = document.createElement("div");
+            holder.innerHTML = current;
+            holder.querySelectorAll('[data-family-tree="1"]').forEach((n) => n.remove());
+            editorRef.current?.setHtml(holder.innerHTML);
+            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+            const next = editorRef.current?.getHtml() ?? blockHtml;
+            setHtml(next);
+            setBodyTouched(true);
+            setFtBlockInserted(true);
+            setSubject(familyTreeSubject(sellerContext?.cemetery));
           }}
         />
       )}

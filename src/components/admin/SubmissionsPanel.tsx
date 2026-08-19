@@ -12,7 +12,7 @@ import CustomerJourney from "./CustomerJourney";
 import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
-import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate, buildSellerListingAgreementTemplate } from "@/lib/emailTemplates";
+import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate, buildSellerListingAgreementTemplate, buildSellerFamilyTreeTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryInfoCard from "./CemeteryInfoCard";
@@ -1650,6 +1650,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       cemetery: selected.cemetery,
                     }),
                     buildSellerListingAgreementTemplate({
+                      recipientName: selected.name,
+                      adminName,
+                      cemetery: selected.cemetery,
+                    }),
+                    buildSellerFamilyTreeTemplate({
                       recipientName: selected.name,
                       adminName,
                       cemetery: selected.cemetery,

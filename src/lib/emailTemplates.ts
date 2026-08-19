@@ -200,3 +200,13 @@ If you have any questions at all, simply reply to this email — I'm happy to wa
 ${signature(i.adminName)}`;
   return { id: "seller_listing_agreement", label: "Listing agreement (sign link)", body };
 };
+
+// Seller "Family tree" — the admin picks this, then uses the inline Family tree
+// panel to edit the copy and insert the branded secure-link block. Body is just
+// greeting + signature; the block carries the message.
+export const buildSellerFamilyTreeTemplate = (i: SellerInput): EmailTemplate => {
+  const body = `Dear ${first(i.recipientName)},
+
+${signature(i.adminName)}`;
+  return { id: "seller_family_tree", label: "Family tree (confirm the deed)", body };
+};
