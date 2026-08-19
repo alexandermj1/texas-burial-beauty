@@ -56,6 +56,9 @@ const LOGO_URL =
 /** Public PDF of the real Available Property List we circulate to mortuaries. */
 export const SAMPLE_SHEET_URL =
   "https://www.texascemeterybrokers.com/__l5e/assets-v1/4f4d9a57-3daf-4acc-bef9-f182c7bf8e0f/texas-cemetery-brokers-featured-listings.pdf";
+/** Public web page (HTML) version of the sample Available Property List. */
+export const SAMPLE_SHEET_WEB_URL =
+  "https://www.texascemeterybrokers.com/sample-listing-sheet.html";
 
 export async function buildListingOptionsBlock(opts: {
   seller: SellerForBlock;
