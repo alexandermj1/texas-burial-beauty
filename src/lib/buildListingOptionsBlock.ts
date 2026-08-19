@@ -312,9 +312,46 @@ function sheetRow(name: string, city: string, detail: string, type: string, pric
 </tr>`;
 }
 
+const SHEET_PHOTO_1 =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/e129d242-4623-4bcc-acee-75da380da434/cemetery-grounds-1.jpg";
+const SHEET_PHOTO_2 =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/f66efcf6-8bad-4a28-88ac-54165f569077/cemetery-grounds-2.jpg";
+const BAYER_LOGO_NAVY =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png";
+
+function featuredCard(opts: {
+  photo: string;
+  badge: string;
+  title: string;
+  sub: string;
+  body: string;
+  price: string;
+  wasPrice?: string;
+  saves?: string;
+  highlight?: boolean;
+}) {
+  const { photo, badge, title, sub, body, price, wasPrice, saves, highlight } = opts;
+  return `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_CARD};border:1px solid ${highlight ? SHEET_CORAL : SHEET_BORDER};border-radius:10px;margin:8px 0 0;overflow:hidden;">
+  <tr><td style="padding:0;">
+    <img src="${photo}" alt="" width="560" style="display:block;width:100%;max-width:100%;height:auto;border-radius:10px 10px 0 0;">
+  </td></tr>
+  <tr><td style="padding:14px 16px;">
+    <span style="display:inline-block;background:${highlight ? SHEET_CORAL : SHEET_INK};color:${highlight ? "#ffffff" : "#d9c7a3"};font-family:${SANS};font-size:8px;letter-spacing:.24em;text-transform:uppercase;padding:4px 7px;border-radius:3px;">${badge}</span>
+    <p style="font-family:${SERIF};font-size:17px;color:${SHEET_INK};margin:8px 0 2px;font-weight:600;">${title}</p>
+    <p style="font-family:${SANS};font-size:11px;color:${SHEET_MUTED};margin:0 0 8px;">${sub}</p>
+    <p style="font-family:${SANS};font-size:11.5px;line-height:1.55;color:${SHEET_BODY};margin:0 0 10px;">${body}</p>
+    <p style="font-family:${SERIF};font-size:20px;color:${SHEET_INK};margin:0;font-weight:700;">${price} <span style="font-family:${SANS};font-size:11px;font-weight:400;color:${SHEET_MUTED};">per space${wasPrice ? ` · cemetery price <span style="text-decoration:line-through;">${wasPrice}</span>` : " · verified, deed-clear, transfer-ready"}</span></p>
+    ${saves ? `<p style="margin:8px 0 0;"><span style="display:inline-block;background:#e9f2ec;color:#3f6b52;font-family:${SANS};font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:5px 8px;border-radius:3px;">Family saves ${saves}</span></p>` : ""}
+  </td></tr>
+</table>`;
+}
+
 function buildMortuarySheetPreview(opts: { cemLabel: string; propertyLine: string; salePerSpace: number }) {
   const { cemLabel, propertyLine, salePerSpace } = opts;
   const listPrice = fmtUsd(salePerSpace);
+  const cemPrice = fmtUsd(Math.round((salePerSpace / 0.42) / 100) * 100);
+  const saves = fmtUsd(Math.round((salePerSpace / 0.42) / 100) * 100 - salePerSpace);
   return `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_PAGE};border:1px solid ${SHEET_BORDER};border-radius:10px;margin:0 0 18px;overflow:hidden;">
   <tr><td style="height:4px;background:${SHEET_INK};line-height:4px;font-size:0;">&nbsp;</td></tr>
@@ -333,18 +370,35 @@ function buildMortuarySheetPreview(opts: { cemLabel: string; propertyLine: strin
     </table>
   </td></tr>
 
+  <!-- prepared-for bar -->
+  <tr><td style="background:${BRAND_BG_ACCENT};border-bottom:1px solid ${SHEET_BORDER};padding:9px 18px;">
+    <p style="font-family:${SANS};font-size:10px;color:${SHEET_MUTED};margin:0;">Prepared for funeral homes, mortuaries &amp; family counselors · To reserve a property call <strong style="color:${SHEET_INK};">(469) 630-9040</strong> or email <strong style="color:${SHEET_INK};">info@texascemeterybrokers.com</strong></p>
+  </td></tr>
+
   <!-- featured -->
   <tr><td style="padding:14px 18px 6px;">
     <p style="font-family:${SERIF};font-size:14px;color:${SHEET_INK};margin:0 0 2px;font-weight:600;">Featured Properties <span style="font-family:${SANS};font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:${SHEET_CORAL};">Priority placement</span></p>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_CARD};border:1px solid ${SHEET_BORDER};border-radius:10px;margin:8px 0 0;">
-      <tr><td style="padding:14px 16px;">
-        <span style="display:inline-block;background:${SHEET_INK};color:#d9c7a3;font-family:${SANS};font-size:8px;letter-spacing:.24em;text-transform:uppercase;padding:4px 7px;border-radius:3px;">Featured</span>
-        <p style="font-family:${SERIF};font-size:17px;color:${SHEET_INK};margin:8px 0 2px;font-weight:600;">${escapeHtml(cemLabel)}</p>
-        <p style="font-family:${SANS};font-size:11px;color:${SHEET_MUTED};margin:0 0 8px;">${propertyLine}</p>
-        <p style="font-family:${SANS};font-size:11.5px;line-height:1.55;color:${SHEET_BODY};margin:0 0 10px;">Photography of the section, an expanded description written by your broker, and a direct line for the family — shown ahead of every other property at this cemetery.</p>
-        <p style="font-family:${SERIF};font-size:20px;color:${SHEET_INK};margin:0;font-weight:700;">${listPrice} <span style="font-family:${SANS};font-size:11px;font-weight:400;color:${SHEET_MUTED};">per space · verified, deed-clear, transfer-ready</span></p>
-      </td></tr>
-    </table>
+    ${featuredCard({
+      photo: SHEET_PHOTO_1,
+      badge: "Featured · your property",
+      title: escapeHtml(cemLabel),
+      sub: propertyLine,
+      body: "Photography of the section, an expanded description written by your broker, and a direct line for the family — shown ahead of every other property at this cemetery.",
+      price: listPrice,
+      wasPrice: cemPrice,
+      saves,
+      highlight: true,
+    })}
+    ${featuredCard({
+      photo: SHEET_PHOTO_2,
+      badge: "Featured",
+      title: "Restland Memorial Park",
+      sub: "Dallas · Garden of Devotion · Lot 208, Spaces 1–2",
+      body: "Companion pair on a level lawn section with mature oaks, walking distance from the chapel. Deed verified and transfer-ready.",
+      price: "$11,400",
+      wasPrice: "$27,000",
+      saves: "$15,600",
+    })}
   </td></tr>
 
   <!-- standard schedule -->
@@ -352,14 +406,23 @@ function buildMortuarySheetPreview(opts: { cemLabel: string; propertyLine: strin
     <p style="font-family:${SERIF};font-size:13px;color:${SHEET_INK};margin:0 0 6px;font-weight:600;">Standard Schedule</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       ${sheetRow(escapeHtml(cemLabel), "Your listing", "Starter / Pro placement", "Name, location and price only", listPrice)}
-      ${sheetRow("Restland Memorial Park", "Dallas", "Sec. 12 · Lot 208, Sp. 1", "Single plot", "$11,400", true)}
       ${sheetRow("Bluebonnet Hills Mem. Park", "Fort Worth", "Mausoleum · Tier C, Crypt 214", "Companion crypt", "$18,900", true)}
       ${sheetRow("Memorial Oaks Cemetery", "Houston", "Garden of Faith · Lot 42B", "Single plot", "$11,750", true)}
+      ${sheetRow("Laurel Land Memorial Park", "Dallas", "Sec. 7 · Lot 118, Sp. 3", "Single plot", "$9,200", true)}
     </table>
     <p style="font-family:${SANS};font-size:10px;color:${SHEET_MUTED};margin:8px 0 0;">Illustrative sheet — other properties shown are examples, not live inventory.</p>
   </td></tr>
+
+  <!-- partner footer -->
+  <tr><td style="background:${SHEET_CARD};border-top:1px solid ${SHEET_BORDER};padding:12px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="middle"><p style="font-family:${SANS};font-size:10px;color:${SHEET_MUTED};margin:0;">Distributed in partnership with</p></td>
+      <td valign="middle" align="right"><img src="${BAYER_LOGO_NAVY}" alt="Bayer Cemetery Brokers" height="18" style="display:block;height:18px;width:auto;"></td>
+    </tr></table>
+  </td></tr>
 </table>`.trim();
 }
+
 
 function nextStep(n: number, title: string, body: string) {
 
