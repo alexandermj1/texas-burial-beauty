@@ -65,7 +65,6 @@ const FamilyTreeInlinePanel = ({ seller, hasGenerated, onGenerated }: Props) => 
     () =>
       buildFamilyTreeBlock({
         submissionId: seller.id,
-        firstName,
         cemetery,
         paragraphs: paragraphs.split(/\n{2,}/),
         ctaLabel,

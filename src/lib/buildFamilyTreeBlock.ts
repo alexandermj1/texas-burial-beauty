@@ -5,7 +5,8 @@
 
 export interface FamilyTreeBlockInput {
   submissionId: string;
-  firstName: string;
+  /** Optional greeting inside the card (the composer already writes one). */
+  firstName?: string;
   cemetery?: string | null;
   /** Editable body copy — one paragraph per entry. */
   paragraphs: string[];
@@ -69,9 +70,13 @@ export const buildFamilyTreeBlock = (i: FamilyTreeBlockInput): string => {
           <div style="font-size:22px;margin-top:10px;">A few quick questions</div>
         </td></tr>
         <tr><td style="padding:30px 40px;">
-          <p style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.7;color:#1f2a37;">Dear ${esc(
-            i.firstName || "there",
-          )},</p>
+          ${
+            i.firstName
+              ? `<p style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.7;color:#1f2a37;">Dear ${esc(
+                  i.firstName,
+                )},</p>`
+              : ""
+          }
           ${body}
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px auto 8px;">
             <tr><td align="center" style="background:#1f2a37;border-radius:8px;">
