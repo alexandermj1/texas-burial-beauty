@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://texascemeterybrokers.com/</loc>
     <lastmod>2026-05-10</lastmod>
@@ -12,6 +11,11 @@
     <lastmod>2026-05-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/texas-cemetery-map</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://texascemeterybrokers.com/buy</loc>
@@ -38,6 +42,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://texascemeterybrokers.com/team</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://texascemeterybrokers.com/guides</loc>
     <lastmod>2026-06-01</lastmod>
     <changefreq>weekly</changefreq>
@@ -56,103 +65,53 @@
     <priority>0.85</priority>
   </url>
   <url>
+    <loc>https://texascemeterybrokers.com/cemetery-plot-cost-texas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://texascemeterybrokers.com/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/restland-memorial-park</loc>
+    <loc>https://texascemeterybrokers.com/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-houston</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-dallas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-san-antonio</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-austin</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/ridgeview-memorial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/hillcrest-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/arlington-cemetery</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/sparkman-hillcrest-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/calvary-hill-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/grove-hill-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/laurel-land-memorial-park-dallas</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/oakland-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/greenwood-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/temple-emanu-el-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/crown-hill-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/greenwood-memorial-park-fort-worth</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/mount-olivet-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/laurel-land-memorial-park-fort-worth</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/oakwood-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/rose-hill-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/bluebonnet-hills-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/moore-sons-funeral-home</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -169,13 +128,206 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/restland-funeral-home-cemetery-plano</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/rolling-oaks-memorial-center</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/ridgeview-memorial-park</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/hilltop-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/city-of-cleburne-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/green-acres</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/bluebonnet-hills-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/calvary-hill-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/crown-hill-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/dallas-fort-worth-national-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-lawn-cemetery-dallas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/greenwood-cemetery-dallas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/grove-hill-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/laurel-land-memorial-park-dallas</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/lincoln-memorial-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/oakland-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/pleasant-mound-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/restland-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/singing-hills-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/sparkman-hillcrest-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/temple-emanu-el-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/holy-redeemer-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/little-bethel-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/bear-creek-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/bishop-mason-mausoleum-and-columbarium</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/greenwood-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/greenwood-mount-olivet</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/laurel-land-memorial-park-fort-worth</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/mount-olivet-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/oakwood-cemetery-fort-worth</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rose-hill-memorial-park-fort-worth</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/shannon-rose-hill</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/holly-hills-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/bluebonnet-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/oak-grove-memorial-gardens</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/emerald-hills-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/edgewood-cemetery-lancaster</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/lucas-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rest-haven-funeral-home</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/pecan-grove-memorial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -187,8 +339,24 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/pecan-grove-memorial-park</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/garden-of-memories-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/laurel-oaks-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/restland-funeral-home-cemetery-plano</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rest-haven-cemetery-rockwall</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -199,92 +367,79 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/dfw-national-cemetery</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/sacred-heart-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/roselawn-memorial-gardens</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/cedarlawn-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/earthman-memory-gardens-baytown</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/restwood-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/conroe-memorial-cemetery-mcnutt-funeral-home</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-the-woodlands</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/garden-park-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/garden-of-memories-cemetery</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/holy-cross-catholic-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/broadway-cemetery-historic-district</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/calvary-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/lakeview-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/rest-haven-memorial-park-rowlett</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/sterling-white-funeral-home</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/restland-memorial-park-garland</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/galveston-memorial-park-cemetery</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/memorial-oaks-cemetery-irving</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/oak-grove-memorial-gardens</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/rolling-oaks-memorial-center</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/bear-creek-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/lucas-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-lawndale-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-westheimer-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-east-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/memorial-oaks-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/glenwood-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/hollywood-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/grace-memorial-park</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -301,8 +456,22 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/earthman-resthaven-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/earthman-resthaven-funeral-home-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-lawn-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-lawndale</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-westheimer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -313,31 +482,134 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/glendale-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/glenwood-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/hollywood-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/holy-cross-cemetery-houston</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://texascemeterybrokers.com/cemeteries/houston-national-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/forest-lawn-cemetery-houston</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/magnolia-cemetery-houston</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/memorial-oaks-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/earthman-resthaven-park</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/olivewood-cemetery</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/magnolia-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/paradise-cemetery-north</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/san-jacinto-funeral-home</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/washington-cemetery</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://texascemeterybrokers.com/cemeteries/woodlawn-garden-of-memories</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rosewood-funeral-home-atascocita</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rosewood-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/klein-funeral-homes-memorial</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/memorial-hill-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/crown-hill-cemetery-pasadena</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/grand-view-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rosewood-funeral-home-pasadena</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/houston-memorial-gardens</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/south-park-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/klein-memorial-park-tomball</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rosewood-funeral-home-porter</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/davis-greenlawn-funeral-chapels-and-cemeteries</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/sugar-land-memorial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -355,74 +627,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/rosewood-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/garden-park-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/garden-oaks-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/grand-view-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/mount-olivet-cemetery-dickinson</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/galveston-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/lakeview-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/sugar-land-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/davis-greenlawn-funeral-chapels-cemeteries</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/austin-memorial-park-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/cook-walden-capital-parks</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/cook-walden-forest-oaks-funeral-home-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-east</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -433,14 +638,28 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/austin-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://texascemeterybrokers.com/cemeteries/calvary-catholic-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/texas-state-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-oaks-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/oak-hill-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/oakwood-cemetery-annex</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -451,8 +670,23 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/memorial-park-cemetery-round-rock</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/onion-creek-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/remembrance-gardens</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/texas-state-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/lakeland-hills-memorial-park</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -463,37 +697,58 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/i-o-o-f-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/kyle-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/hudson-bend-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/the-city-of-marble-falls-city-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/cook-walden-capital-parks-funeral-home-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://texascemeterybrokers.com/cemeteries/san-marcos-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/san-jose-burial-park</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/san-marcos-city-cemetery</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/mission-burial-park-south</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/taylor-city-cemetery</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/mission-burial-park-north</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/guadalupe-valley-memorial-park</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/sunset-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/chapel-hill-memorial-gardens</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/roselawn-memorial-park</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/fort-sam-houston-national-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -505,7 +760,23 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/fort-sam-houston-national-cemetery</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/lockehill-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/meadowlawn-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/mission-burial-park-north</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/mission-burial-park-south</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -517,163 +788,44 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/san-fernando-cemeteries</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/mission-park-chapels-dominion</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/roselawn-memorial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/restlawn-memorial-park</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/san-fernando-cemetery-no-1</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/san-fernando-cemetery-no-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/san-fernando-cemetery-no-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/san-jose-burial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/evergreen-cemetery-east</loc>
-    <lastmod>2026-05-10</lastmod>
+    <loc>https://texascemeterybrokers.com/cemeteries/southern-memorial-park</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/evergreen-cemetery-west-concordia</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/mount-carmel-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/fort-bliss-national-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/restlawn-memorial-park-lubbock</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/city-of-lubbock-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/resthaven-memorial-park-lubbock</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/llano-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/memorial-park-cemetery-amarillo</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/greenleaf-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/oakwood-cemetery-waco</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/restland-cemetery-tyler</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/cathedral-in-the-pines-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/memorial-park-cemetery-tyler</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-cemetery-beaumont</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/magnolia-cemetery-beaumont</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/rose-hill-cemetery-corpus-christi</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/seaside-memorial-park</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/memory-gardens-mcallen</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/valley-memorial-gardens</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/brownsville-city-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/rio-grande-valley-state-veterans-cemetery</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/resthaven-memorial-park-midland</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/sunset-memorial-gardens-odessa</loc>
-    <lastmod>2026-05-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/restland-memorial-park-wichita-falls</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/sunset-memorial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -685,13 +837,279 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/memorial-park-cemetery-killeen</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/central-texas-state-veterans-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/central-texas-state-veterans-cemetery</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/killeen-city-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/killeen-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/waco-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/greenleaf-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/oakwood-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-lawn-beaumont</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/forest-park-cemetery-beaumont</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/magnolia-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/magnolia-cemetery-co</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/van-zandt-county-haven-of-memories</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/greenlawn-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/lakeview-memorial-gardens</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/memory-park-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/algoma-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/autumn-oaks-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rose-lawn-palestine</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/oak-bluff-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/chapelwood-memorial-gardens-and-monuments</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/cathedral-in-the-pines-memorial-gardens</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/tyler-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/concordia-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/evergreen-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/evergreen-cemetery-west-concordia</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/evergreen-east-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/fort-bliss-national-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/mount-carmel-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/restlawn-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/midland-fairview-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/resthaven-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/serenity-memorial-gardens-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/sunset-memorial-gardens</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/belvedere-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/fairmount-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/lawnhaven-memorial-gardens</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/brownsville-city-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/buena-vista-burial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/memory-gardens-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/memory-gardens-funeral-home-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/paradise-cemetery-south</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rose-hill-burial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rose-hill-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/seaside-memorial-park</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rest-lawn-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/rio-grande-valley-state-veterans-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/valley-memorial-gardens</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/funeraria-del-angel-palm-valley</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/robstown-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/mont-meta-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/resurrection-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/highland-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/hochheim-cemetery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/elmwood-memorial-park</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -703,39 +1121,40 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemeteries/elmwood-memorial-park</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/llano-cemetery</loc>
     <lastmod>2026-05-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-houston</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-dallas</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-san-antonio</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemetery-plots-for-sale-austin</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://texascemeterybrokers.com/cemetery-plot-cost-texas</loc>
+    <loc>https://texascemeterybrokers.com/cemeteries/memorial-park-cemetery</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://texascemeterybrokers.com/privacy</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <loc>https://texascemeterybrokers.com/cemeteries/memory-gardens-cemetery-of-amarillo</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/city-of-lubbock-cemetery</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/peaceful-gardens-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/resthaven-funeral-home-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://texascemeterybrokers.com/cemeteries/crestview-memorial-park</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
