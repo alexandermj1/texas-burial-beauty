@@ -219,14 +219,20 @@ Deno.serve(async (req) => {
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
           <p style="margin:0 0 16px;">
-            Before we prepare the transfer paperwork${sub.cemetery ? ` for your property at ${esc(sub.cemetery)}` : ""},
-            we need to be certain who has the legal right to sell it. From your file we have already worked
-            out most of the answers — we would simply like you to confirm them.
+            Before we can market your property${sub.cemetery ? ` at ${esc(sub.cemetery)}` : ""}, the cemetery
+            requires proof of exactly who holds the right to sell it. Confirming this now is what allows us
+            to promise a family that the plot is genuinely theirs the day they need it.
+          </p>
+          <p style="margin:0 0 16px;">
+            Most of our buyers come to us at the hardest moment of their lives — a funeral is already
+            being arranged. If the ownership record is incomplete, the cemetery holds the transfer up at
+            the counter and a grieving family is left waiting. Getting this right today means that never happens.
           </p>
           <p style="margin:0 0 22px;">
-            It takes about three minutes, there is nothing to print, and it saves the cemetery
-            rejecting the transfer later.
+            Everything we need is on one secure page — it takes about three minutes, there is nothing to
+            print, and nothing to post.
           </p>
+
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 8px;">
             <tr><td align="center" style="background:#1f2a37;border-radius:8px;">
               <a href="${esc(link)}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;">
