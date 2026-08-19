@@ -198,25 +198,13 @@ Deno.serve(async (req) => {
     const missing: string[] = Array.isArray(body?.missing) ? body.missing : [];
     const subject = `A few quick questions about your plot${sub.cemetery ? ` at ${sub.cemetery}` : ""}`;
 
-    const knownHtml = known.length ? `
-      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin:26px 0 8px;">What we already believe</div>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${known.map((k) => `
-        <tr><td style="padding:11px 0;border-bottom:1px solid #eee7dc;">
-          <div style="font-size:13px;color:#6b7280;">${esc(k.label)}</div>
-          <div style="font-size:15px;color:#1f2a37;margin-top:2px;">${esc(k.value)}</div>
-        </td></tr>`).join("")}
-      </table>
-      <p style="margin:12px 0 0;font-size:13px;color:#4a5568;line-height:1.7;">
-        Please confirm each of these on the page — or correct anything we have wrong.
-      </p>` : "";
+    // The questions themselves live only on the secure page — the email just
+    // explains why we need them. (known/missing are still accepted from the
+    // admin panel so the preview payload stays compatible.)
+    void known; void missing;
+    const knownHtml = "";
+    const missingHtml = "";
 
-    const missingHtml = missing.length ? `
-      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin:26px 0 8px;">What we still need to ask</div>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${missing.map((m) => `
-        <tr><td style="padding:10px 0;border-bottom:1px solid #eee7dc;font-size:14px;color:#1f2a37;">${esc(m)}</td></tr>`).join("")}
-      </table>` : "";
 
     const html = `
 <!doctype html>
@@ -231,14 +219,20 @@ Deno.serve(async (req) => {
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
           <p style="margin:0 0 16px;">
-            Before we prepare the transfer paperwork${sub.cemetery ? ` for your property at ${esc(sub.cemetery)}` : ""},
-            we need to be certain who has the legal right to sell it. From your file we have already worked
-            out most of the answers — we would simply like you to confirm them.
+            Before we can market your property${sub.cemetery ? ` at ${esc(sub.cemetery)}` : ""}, the cemetery
+            requires proof of exactly who holds the right to sell it. Confirming this now is what allows us
+            to promise a family that the plot is genuinely theirs the day they need it.
+          </p>
+          <p style="margin:0 0 16px;">
+            Most of our buyers come to us at the hardest moment of their lives — a funeral is already
+            being arranged. If the ownership record is incomplete, the cemetery holds the transfer up at
+            the counter and a grieving family is left waiting. Getting this right today means that never happens.
           </p>
           <p style="margin:0 0 22px;">
-            It takes about three minutes, there is nothing to print, and it saves the cemetery
-            rejecting the transfer later.
+            Everything we need is on one secure page — it takes about three minutes, there is nothing to
+            print, and nothing to post.
           </p>
+
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 8px;">
             <tr><td align="center" style="background:#1f2a37;border-radius:8px;">
               <a href="${esc(link)}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:16px;">
