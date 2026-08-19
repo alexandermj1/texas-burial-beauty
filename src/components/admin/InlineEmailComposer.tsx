@@ -497,6 +497,37 @@ const InlineEmailComposer = ({
     } catch (e) {
       console.warn("contract sent_at update failed", e);
     }
+    // If the family-tree block went out, stamp questionsSentAt on the
+    // submission so the pipeline shows "Tree sent", the 24h reminder job picks
+    // it up, and the paperwork panel reflects it — same as the standalone
+    // ownership-questions email.
+    try {
+      const targetId = sellerContext?.id ?? submissionId;
+      if (ftBlockInserted && targetId) {
+        const nowIso = new Date().toISOString();
+        const { data: row } = await supabase
+          .from("contact_submissions")
+          .select("ownership_answers, customer_profile_id, name")
+          .eq("id", targetId)
+          .maybeSingle();
+        const prev = ((row?.ownership_answers ?? {}) as Record<string, unknown>);
+        await supabase
+          .from("contact_submissions")
+          .update({ ownership_answers: { ...prev, questionsSentAt: nowIso } as never })
+          .eq("id", targetId);
+        if ((row as any)?.customer_profile_id) {
+          await supabase.from("customer_activity_log" as any).insert({
+            customer_profile_id: (row as any).customer_profile_id,
+            submission_id: targetId,
+            actor_name: adminName || "Staff",
+            action_type: "family_tree_sent",
+            action_summary: "Family tree / ownership questionnaire emailed to the seller",
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("family tree sent stamp failed", e);
+    }
     // Log AI-drafted email + admin edits for future training. Best-effort.
     try {
       const training = aiTrainingRef.current;
