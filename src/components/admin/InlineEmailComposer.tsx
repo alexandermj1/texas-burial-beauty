@@ -819,11 +819,10 @@ const InlineEmailComposer = ({
           onGenerated={(blockHtml) => {
             // Replace any previous family-tree block, keep the signature.
             const current = editorRef.current?.getHtml() ?? html;
-            const stripped = current.replace(
-              /<div data-family-tree="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
-              "",
-            );
-            editorRef.current?.setHtml(stripped);
+            const holder = document.createElement("div");
+            holder.innerHTML = current;
+            holder.querySelectorAll('[data-family-tree="1"]').forEach((n) => n.remove());
+            editorRef.current?.setHtml(holder.innerHTML);
             editorRef.current?.insertHtmlBeforeSignature(blockHtml);
             const next = editorRef.current?.getHtml() ?? blockHtml;
             setHtml(next);
