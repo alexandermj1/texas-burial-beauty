@@ -16,6 +16,8 @@ import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
 import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
+import FamilyTreeInlinePanel from "./FamilyTreeInlinePanel";
+import { familyTreeSubject } from "@/lib/buildFamilyTreeBlock";
 import AttachPaymentButtonDialog from "./AttachPaymentButtonDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
