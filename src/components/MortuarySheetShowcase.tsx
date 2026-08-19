@@ -41,10 +41,17 @@ const schedule = [
 
 const points = [
   "Sent every fortnight to funeral homes, mortuaries and family counselors statewide",
-  "Featured listings open the sheet with photography and a direct broker line",
+  "Featured listings open the sheet with an expanded description and a direct broker line",
   "Pro and Starter listings appear in the standard property schedule",
   "Buyers come pre-qualified through the professional handling their arrangements",
 ];
+
+const stats = [
+  ["600+", "Texas funeral professionals on the distribution list"],
+  ["2×", "Sheets published every month, year round"],
+  ["47", "Properties carried on a typical issue"],
+];
+
 
 /**
  * The mortuary "Available Property List" — the real sheet shown beside the
