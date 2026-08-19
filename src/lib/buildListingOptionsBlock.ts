@@ -53,6 +53,9 @@ const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const LOGO_URL =
   "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png";
+/** Public PDF of the real Available Property List we circulate to mortuaries. */
+export const SAMPLE_SHEET_URL =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/4f4d9a57-3daf-4acc-bef9-f182c7bf8e0f/texas-cemetery-brokers-featured-listings.pdf";
 
 export async function buildListingOptionsBlock(opts: {
   seller: SellerForBlock;
