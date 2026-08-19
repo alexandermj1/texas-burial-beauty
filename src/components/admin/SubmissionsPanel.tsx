@@ -750,14 +750,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         if (docsFilter === "with" && !has) return false;
         if (docsFilter === "without" && has) return false;
       }
-      // Awaiting quote = has uploaded attachments but no quote has gone out yet.
-      if (awaitingQuoteFilter && (!hasDocs(s) || (s as any).quote_sent_at)) return false;
-      if (quotedFilter && !(s as any).quote_sent_at) return false;
-      if (acceptedFilter && (s as any).quote_response !== "accepted") return false;
-      if (docsOutFilter && (!(s as any).documents_requested_at || (s as any).documents_completed_at)) return false;
-      if (completeFilter && !(s as any).documents_completed_at) return false;
-      if (ftSentFilter && !(ftState(s).sentAt) ) return false;
-      if (ftDoneFilter && !ftState(s).doneAt) return false;
+      // Each pipeline filter matches only its exact stage — a submission lives
+      // in exactly one stage (the furthest reached), so no double-counting.
+      const step = stageStep(s);
+      if (awaitingQuoteFilter && step !== 2) return false;
+      if (quotedFilter && step !== 3) return false;
+      if (acceptedFilter && step !== 4) return false;
+      if (ftSentFilter && step !== 5) return false;
+      if (ftDoneFilter && step !== 6) return false;
+      if (docsOutFilter && step !== 7) return false;
+      if (completeFilter && step !== 8) return false;
 
 
       if (eFilter === "new" && !isNew(s)) return false;
