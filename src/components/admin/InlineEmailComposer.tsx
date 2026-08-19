@@ -389,6 +389,7 @@ const InlineEmailComposer = ({
       setListingBlockInserted(false);
       setLaBlockInserted(false);
       setLaSignToken(null);
+      setFtBlockInserted(false);
       return;
     }
     const t = templates?.find((x) => x.id === id);
