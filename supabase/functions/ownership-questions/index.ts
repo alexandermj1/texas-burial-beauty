@@ -198,25 +198,13 @@ Deno.serve(async (req) => {
     const missing: string[] = Array.isArray(body?.missing) ? body.missing : [];
     const subject = `A few quick questions about your plot${sub.cemetery ? ` at ${sub.cemetery}` : ""}`;
 
-    const knownHtml = known.length ? `
-      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin:26px 0 8px;">What we already believe</div>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${known.map((k) => `
-        <tr><td style="padding:11px 0;border-bottom:1px solid #eee7dc;">
-          <div style="font-size:13px;color:#6b7280;">${esc(k.label)}</div>
-          <div style="font-size:15px;color:#1f2a37;margin-top:2px;">${esc(k.value)}</div>
-        </td></tr>`).join("")}
-      </table>
-      <p style="margin:12px 0 0;font-size:13px;color:#4a5568;line-height:1.7;">
-        Please confirm each of these on the page — or correct anything we have wrong.
-      </p>` : "";
+    // The questions themselves live only on the secure page — the email just
+    // explains why we need them. (known/missing are still accepted from the
+    // admin panel so the preview payload stays compatible.)
+    void known; void missing;
+    const knownHtml = "";
+    const missingHtml = "";
 
-    const missingHtml = missing.length ? `
-      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin:26px 0 8px;">What we still need to ask</div>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${missing.map((m) => `
-        <tr><td style="padding:10px 0;border-bottom:1px solid #eee7dc;font-size:14px;color:#1f2a37;">${esc(m)}</td></tr>`).join("")}
-      </table>` : "";
 
     const html = `
 <!doctype html>
