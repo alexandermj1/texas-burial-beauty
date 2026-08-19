@@ -280,6 +280,7 @@ ${tierCards}
 }
 
 function nextStep(n: number, title: string, body: string) {
+
   return `
 <tr>
   <td valign="top" width="34" style="padding:6px 12px 6px 0;">
