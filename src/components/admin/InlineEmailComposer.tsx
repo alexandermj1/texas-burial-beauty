@@ -428,7 +428,10 @@ const InlineEmailComposer = ({
     // Quote emails (listing-options block already includes brand header/footer)
     // ship without the extra masthead shell to avoid double branding.
     const hasListingBlock = /data-listing-options="1"/.test(normalizedHtml);
-    const brandedHtml = hasListingBlock ? normalizedHtml : wrapInBrandedShell(normalizedHtml);
+    // The family-tree block is fully branded too — keep the marker intact and
+    // don't wrap it in a second masthead.
+    const hasFamilyTree = /data-family-tree="1"/.test(normalizedHtml);
+    const brandedHtml = hasListingBlock || hasFamilyTree ? normalizedHtml : wrapInBrandedShell(normalizedHtml);
     const { data, error } = await supabase.functions.invoke("gmail-action", {
       body: {
         action: "send",
