@@ -276,6 +276,7 @@ const InlineEmailComposer = ({
   const [listingBlockInserted, setListingBlockInserted] = useState(false);
   const [laBlockInserted, setLaBlockInserted] = useState(false);
   const [laSignToken, setLaSignToken] = useState<string | null>(null);
+  const [ftBlockInserted, setFtBlockInserted] = useState(false);
   // For replies, start with the plain greeting+signature so we don't
   // clobber the user's reply with a full template. Templates can still be
   // chosen from the picker below.
