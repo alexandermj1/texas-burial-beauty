@@ -142,22 +142,66 @@ Deno.serve(async (req) => {
       ? `Your ${docName}${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — confirm address to receive notary packet`
       : `Your Listing Agreement${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — ready to sign`;
 
-    const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+    // Send from the real info@texascemeterybrokers.com mailbox through Gmail.
+    // Sellers reply to (and trust) that address, and Gmail-to-inbox delivery is
+    // far more reliable than a separate contracts@ sending domain — several
+    // sellers never received the Resend copy at all.
+    const plain = `${headline}\n\nSigning link: ${sign_url}`;
+    const { data: recent } = await svc.from('email_messages')
+      .select('gmail_thread_id, gmail_message_id, received_at')
+      .eq('matched_submission_id', c.submission_id)
+      .not('gmail_thread_id', 'is', null)
+      .order('received_at', { ascending: false })
+      .limit(20);
+    const realThread = ((recent ?? []) as { gmail_thread_id: string | null; gmail_message_id: string | null }[])
+      .find((m) => m.gmail_thread_id && !/^(packet-|ownership-|local-|contract-)/.test(m.gmail_thread_id));
+
+    let sentVia = 'gmail';
+    let gmailJson: Record<string, unknown> = {};
+    const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'X-Connection-Api-Key': RESEND_KEY,
+        Authorization: req.headers.get('Authorization') ?? '',
+        apikey: Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       },
       body: JSON.stringify({
-        from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
-        to: [to],
-        bcc: ['contracts@texascemeterybrokers.com'],
+        action: 'send',
+        to,
+        bcc: 'info@texascemeterybrokers.com',
         subject,
-        html,
+        body: plain,
+        htmlBody: html,
+        submissionId: c.submission_id ?? undefined,
+        ...(realThread?.gmail_thread_id ? { threadId: realThread.gmail_thread_id } : {}),
+        ...(realThread?.gmail_message_id ? { inReplyToGmailId: realThread.gmail_message_id } : {}),
       }),
     });
-    if (!res.ok) throw new Error(`Resend error: ${res.status} ${await res.text()}`);
+    const gmailText = await gmailRes.text();
+    try { gmailJson = JSON.parse(gmailText); } catch { /* non-JSON */ }
+
+    if (!gmailRes.ok || gmailJson.error) {
+      // Never silently drop a contract email — fall back to Resend.
+      console.warn('gmail send failed, falling back to Resend', gmailRes.status, gmailText);
+      const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          'X-Connection-Api-Key': RESEND_KEY,
+        },
+        body: JSON.stringify({
+          from: 'Texas Cemetery Brokers <info@texascemeterybrokers.com>',
+          reply_to: 'info@texascemeterybrokers.com',
+          to: [to],
+          bcc: ['info@texascemeterybrokers.com'],
+          subject,
+          html,
+        }),
+      });
+      if (!res.ok) throw new Error(`Could not send the contract email (Gmail: ${gmailText}; Resend: ${res.status} ${await res.text()})`);
+      sentVia = 'resend';
+    }
 
     await svc.from('contracts')
       .update({ sent_at: new Date().toISOString(), status: 'sent' })
@@ -166,24 +210,26 @@ Deno.serve(async (req) => {
     // Log the send into the email thread so admins see a dated record of the
     // listing agreement / POA alongside the rest of the conversation.
     try {
-      await svc.from('email_messages').insert({
-        gmail_message_id: `contract-${c.id}-${Date.now()}`,
-        gmail_thread_id: null,
-        from_email: 'contracts@texascemeterybrokers.com',
+      await svc.from('email_messages').upsert({
+        gmail_message_id: (typeof gmailJson.id === 'string' ? gmailJson.id : null) || `contract-${c.id}-${Date.now()}`,
+        gmail_thread_id: (typeof gmailJson.threadId === 'string' ? gmailJson.threadId : null),
+        from_email: 'info@texascemeterybrokers.com',
         from_name: 'Texas Cemetery Brokers',
         to_email: to,
         subject,
         snippet: isPoa
           ? `${docName} sent for signature / notarization.`
           : 'Listing Agreement sent for signature.',
-        body_text: `${headline}\n\nSigning link: ${sign_url}`,
+        body_text: plain,
+        body_html: html,
         received_at: new Date().toISOString(),
         matched_submission_id: c.submission_id ?? null,
         is_read: true,
-      } as Record<string, unknown>);
+      } as Record<string, unknown>, { onConflict: 'gmail_message_id' });
     } catch (logErr) {
       console.warn('could not log contract email to thread', logErr);
     }
+
 
 
     // Only now — after the signing link has actually been emailed — do we mark
