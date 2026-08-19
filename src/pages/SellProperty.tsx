@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ArrowRight, Plus, FileText, ArrowUpRight } from "lucide-react";
-import { SAMPLE_SHEET_URL } from "@/lib/buildListingOptionsBlock";
+import { Mail, ArrowRight, Plus } from "lucide-react";
+import MortuarySheetShowcase from "@/components/MortuarySheetShowcase";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
