@@ -219,18 +219,18 @@ Deno.serve(async (req) => {
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;">
           <p style="margin:0 0 16px;">Dear ${esc(firstName)},</p>
           <p style="margin:0 0 16px;">
-            Before we can market your property${sub.cemetery ? ` at ${esc(sub.cemetery)}` : ""}, the cemetery
-            requires proof of exactly who holds the right to sell it. Confirming this now is what allows us
-            to promise a family that the plot is genuinely theirs the day they need it.
+            Thank you for trusting us with your property${sub.cemetery ? ` at ${esc(sub.cemetery)}` : ""}.
+            Before we begin marketing it, the cemetery simply asks us to confirm who holds the right to
+            sell — a short step that keeps everything moving smoothly later on.
           </p>
           <p style="margin:0 0 16px;">
-            Most of our buyers come to us at the hardest moment of their lives — a funeral is already
-            being arranged. If the ownership record is incomplete, the cemetery holds the transfer up at
-            the counter and a grieving family is left waiting. Getting this right today means that never happens.
+            Many of our buyers come to us while a funeral is already being arranged. When the ownership
+            details are confirmed in advance, the transfer goes through without delay and the family is
+            looked after straight away.
           </p>
           <p style="margin:0 0 22px;">
-            Everything we need is on one secure page — it takes about three minutes, there is nothing to
-            print, and nothing to post.
+            Everything is on one secure page — it takes about three minutes, with nothing to print
+            and nothing to post.
           </p>
 
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 8px;">
