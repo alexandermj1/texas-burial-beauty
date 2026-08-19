@@ -53,6 +53,9 @@ const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const LOGO_URL =
   "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png";
+/** Public PDF of the real Available Property List we circulate to mortuaries. */
+export const SAMPLE_SHEET_URL =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/4f4d9a57-3daf-4acc-bef9-f182c7bf8e0f/texas-cemetery-brokers-featured-listings.pdf";
 
 export async function buildListingOptionsBlock(opts: {
   seller: SellerForBlock;
@@ -243,6 +246,10 @@ ${tierCards}
         ${p(`Every fortnight we send a verified property list to funeral homes, mortuaries and family counselors across Texas — the people who are sitting with families at the moment a plot is needed. Where your property appears on that list depends on the option you choose below.`, true)}
         ${buildMortuarySheetPreview({ cemLabel, propertyLine, salePerSpace })}
         ${p(`<strong style="color:${BRAND_INK};">Featured</strong> listings open the sheet with photography, an expanded description and a direct broker line. <strong style="color:${BRAND_INK};">Pro</strong> and <strong style="color:${BRAND_INK};">Starter</strong> listings appear in the standard schedule below it.`, true)}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 4px;"><tr><td style="border-radius:8px;background:${BRAND_PRIMARY};">
+          <a href="${SAMPLE_SHEET_URL}" target="_blank" style="display:inline-block;padding:12px 22px;font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.06em;color:${BRAND_PRIMARY_FG};text-decoration:none;">View the full listing sheet (PDF)</a>
+        </td></tr></table>
+        ${p(`This is the actual document that goes out to our mortuary and funeral-home network — open it to see the complete list exactly as they receive it.`, true)}
       </td></tr>
 
       <!-- LISTING OPTIONS -->

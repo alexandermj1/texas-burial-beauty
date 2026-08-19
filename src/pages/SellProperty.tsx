@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ArrowRight, Plus } from "lucide-react";
+import { Mail, ArrowRight, Plus, FileText, ArrowUpRight } from "lucide-react";
+import { SAMPLE_SHEET_URL } from "@/lib/buildListingOptionsBlock";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
@@ -254,6 +255,84 @@ const SellProperty = () => {
           </div>
         </div>
       </section>
+
+      {/* ============================================
+          THE MORTUARY NETWORK — what sets us apart
+         ============================================ */}
+      <section className="relative py-24 md:py-32 bg-[hsl(var(--sand-light))] overflow-hidden">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6 }}
+              className="lg:col-span-6"
+            >
+              <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-4">What sets us apart</p>
+              <h2 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05] tracking-tight">
+                Your plot, on the desk of the people <span className="italic text-primary">families turn to first.</span>
+              </h2>
+              <p className="text-foreground/70 leading-relaxed mt-6 text-[15px] max-w-xl">
+                Most resale sites simply post your property online and wait. We don't. Every fortnight we publish a
+                verified Available Property List and send it directly to funeral directors, mortuaries and family
+                counselors across Texas — the professionals sitting with a family at the exact moment a plot is needed.
+              </p>
+              <p className="text-foreground/70 leading-relaxed mt-4 text-[15px] max-w-xl">
+                These are industry relationships built over years, not advertising. They put your property in front of
+                the small number of families who genuinely need it — which is why our listings sell to real buyers
+                rather than sitting on a classifieds page.
+              </p>
+              <ul className="mt-8 space-y-3">
+                {[
+                  "Sent every fortnight to funeral homes, mortuaries and family counselors statewide",
+                  "Featured listings open the sheet with photography and a direct broker line",
+                  "Pro and Starter listings appear in the standard property schedule",
+                  "Buyers come pre-qualified through the professional handling their arrangements",
+                ].map((line) => (
+                  <li key={line} className="flex gap-3 text-[15px] text-foreground/80 leading-relaxed">
+                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6, delay: 0.1 }}
+              className="lg:col-span-6"
+            >
+              <div className="rounded-2xl border border-foreground/15 bg-[hsl(var(--warm-white))] p-8 shadow-soft">
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </span>
+                  <div>
+                    <p className="font-display text-xl text-foreground leading-tight">The Available Property List</p>
+                    <p className="text-[11px] tracking-[0.22em] uppercase text-accent font-bold mt-1">Sample edition</p>
+                  </div>
+                </div>
+                <p className="text-foreground/70 text-[15px] leading-relaxed">
+                  See exactly what our mortuary network receives — featured properties with photography up front,
+                  followed by the full statewide schedule of available plots, crypts and niches.
+                </p>
+                <a
+                  href={SAMPLE_SHEET_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shadow-soft"
+                >
+                  Open the sample listing sheet (PDF) <ArrowUpRight className="w-4 h-4" />
+                </a>
+                <p className="text-xs text-foreground/50 mt-4">
+                  Example edition. Prices and availability change with each publication.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+
 
       {/* FAQs — editorial accordion */}
       <FaqSection faqs={faqs} />
