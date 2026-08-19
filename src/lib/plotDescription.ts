@@ -42,12 +42,14 @@ const TITLES: Record<Slot, string> = {
 const clean = (s: string) => s.replace(/\s+/g, " ").replace(/^[\s.,;:#/-]+|[\s.,;:/-]+$/g, "").trim();
 
 export function formatPlotDescription(input: PlotDescriptionInput): string {
-  const raw = [input.section, input.lawn, input.space_numbers]
-    .map((v) => (v == null ? "" : String(v)))
-    .filter((v) => v.trim().length > 0);
+  const raw: Array<[string, Slot]> = [
+    [input.section == null ? "" : String(input.section), "section"],
+    [input.lawn == null ? "" : String(input.lawn), "lot"],
+    [input.space_numbers == null ? "" : String(input.space_numbers), "space"],
+  ].filter(([v]) => v.trim().length > 0) as Array<[string, Slot]>;
 
   const values: Partial<Record<Slot, string[]>> = {};
-  const loose: string[] = [];
+  const loose: Array<[string, Slot]> = [];
 
   const push = (slot: Slot, value: string) => {
     const v = clean(value);
@@ -56,27 +58,35 @@ export function formatPlotDescription(input: PlotDescriptionInput): string {
     if (!list.some((x) => x.toLowerCase() === v.toLowerCase())) list.push(v);
   };
 
-  for (const chunk of raw) {
+  for (const [chunk, fallback] of raw) {
     const tokens = chunk.split(/[·•|;,\n]+|\s+[-–]\s+/g).map(clean).filter(Boolean);
     for (const token of tokens) {
-      const hit = LABELS.find(([re]) => re.test(token));
-      if (hit) {
-        const value = clean(token.replace(hit[0], ""));
-        if (value) push(hit[1], value);
-      } else {
-        loose.push(token);
+      // Strip every stacked label ("Lot/Space Lot 211" -> lot 211).
+      let rest = token;
+      let slot: Slot | null = null;
+      for (let i = 0; i < 3; i++) {
+        const hit = LABELS.find(([re]) => re.test(rest));
+        if (!hit) break;
+        slot ??= hit[1];
+        const stripped = clean(rest.replace(hit[0], ""));
+        if (!stripped) break;
+        rest = stripped;
       }
+      if (slot) push(slot, rest);
+      else loose.push([rest, fallback]);
     }
   }
 
-  // A bare value only becomes a section when it isn't just a repeat of a value
-  // the seller already labelled somewhere else in the same description.
+  // A bare value only keeps its field's default slot when it isn't just a
+  // repeat of a value the seller already labelled elsewhere.
   const known = () =>
     ORDER.flatMap((s) => values[s] ?? []).map((v) => v.toLowerCase());
-  for (const token of loose) {
+  for (const [token, fallback] of loose) {
     if (known().includes(token.toLowerCase())) continue;
-    push("section", token);
+    push(fallback, token);
   }
+
+
 
   const parts = ORDER.filter((slot) => (values[slot] ?? []).length > 0).map((slot) => {
     const list = values[slot]!;
