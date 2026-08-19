@@ -242,18 +242,18 @@ ${tierCards}
         ${p(`For clarity on the closing statement you'll eventually see: the mandatory cemetery transfer fee at ${escapeHtml(cemLabel)}${transferFee > 0 ? ` (${fmtUsd(transferFee)})` : ""} is paid by the buyer, not you. The buyer is responsible for all cemetery fees—such as transfer, quitclaim, and additional endowment care—as well as broker fees, including marketing, referral, and processing expenses. Buyers may also elect additional services through our company — financing, mortuary referral coordination, in-person showings, and similar — which are likewise billed to the buyer and itemized separately. As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
       `)}
 
-      <!-- MORTUARY SHEET PREVIEW -->
+      <!-- MORTUARY SHEET LINK -->
       <tr><td style="padding:26px 40px 4px;">
         ${eyebrow("How buyers see it")}
         ${h2("Your property on our mortuary list")}
-        ${p(`Every fortnight we send a verified property list to funeral homes, mortuaries and family counselors across Texas — the people who are sitting with families at the moment a plot is needed. Where your property appears on that list depends on the option you choose below.`, true)}
-        ${buildMortuarySheetPreview({ cemLabel, propertyLine, salePerSpace })}
-        ${p(`<strong style="color:${BRAND_INK};">Featured</strong> listings open the sheet with photography, an expanded description and a direct broker line. <strong style="color:${BRAND_INK};">Pro</strong> and <strong style="color:${BRAND_INK};">Starter</strong> listings appear in the standard schedule below it.`, true)}
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 4px;"><tr><td style="border-radius:8px;background:${BRAND_PRIMARY};">
-          <a href="${SAMPLE_SHEET_WEB_URL}" target="_blank" style="display:inline-block;padding:12px 22px;font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.06em;color:${BRAND_PRIMARY_FG};text-decoration:none;">View the full listing sheet</a>
+        ${p(`Every fortnight we send a verified property list to funeral homes, mortuaries and family counselors across Texas — the people who are sitting with families at the moment a plot is needed. This is a relationship-driven channel most resale companies simply don't have, and it is where the majority of our sales begin.`, true)}
+        ${p(`Where your property appears on that list depends on the option you choose below: <strong style="color:${BRAND_INK};">Featured</strong> listings open the sheet with an expanded description and a direct broker line, while <strong style="color:${BRAND_INK};">Pro</strong> and <strong style="color:${BRAND_INK};">Starter</strong> listings appear in the standard property schedule.`, true)}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0 4px;"><tr><td style="border-radius:8px;background:${BRAND_PRIMARY};">
+          <a href="${SAMPLE_SHEET_WEB_URL}" target="_blank" style="display:inline-block;padding:12px 22px;font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.06em;color:${BRAND_PRIMARY_FG};text-decoration:none;">View a sample listing sheet</a>
         </td></tr></table>
-        ${p(`This is the actual document that goes out to our mortuary and funeral-home network — open it to see the complete list exactly as they receive it. You can also <a href="${SAMPLE_SHEET_URL}" target="_blank" style="color:${BRAND_PRIMARY};">download it as a PDF</a>.`, true)}
+        ${p(`Click above to open an example of the actual document that goes out to our mortuary and funeral-home network, so you can see exactly how a Featured placement and a standard schedule line are presented. You can also <a href="${SAMPLE_SHEET_URL}" target="_blank" style="color:${BRAND_PRIMARY};">download it as a PDF</a>.`, true)}
       </td></tr>
+
 
       <!-- LISTING OPTIONS -->
       <tr><td style="padding:26px 40px 4px;">
