@@ -279,7 +279,80 @@ ${tierCards}
   return cardHtml.trim();
 }
 
+// ── Mortuary "Available Property List" preview ──────────────────────
+// A miniature, email-safe replica of the printed sheet we circulate to
+// funeral homes, so the seller can see the difference between a Featured
+// placement and a standard schedule line.
+const SHEET_PAGE = "#faf7f2";
+const SHEET_CARD = "#fffdf9";
+const SHEET_BORDER = "#e3d9c6";
+const SHEET_RULE = "#ede5d6";
+const SHEET_INK = "#1f2a37";
+const SHEET_MUTED = "#8b7d6b";
+const SHEET_BODY = "#4a5568";
+const SHEET_CORAL = "#c97b5d";
+const SHEET_GOLD = "#a08256";
+
+function sheetRow(name: string, city: string, detail: string, type: string, price: string, faint = false) {
+  const c = faint ? SHEET_MUTED : SHEET_INK;
+  return `
+<tr>
+  <td style="padding:7px 4px;border-bottom:1px solid ${SHEET_RULE};font-family:${SANS};font-size:11px;color:${c};font-weight:${faint ? 400 : 600};">${name}<span style="color:${SHEET_MUTED};font-weight:400;"> · ${city}</span><br><span style="color:${SHEET_MUTED};font-size:10px;">${detail} · ${type}</span></td>
+  <td align="right" style="padding:7px 4px;border-bottom:1px solid ${SHEET_RULE};font-family:${SANS};font-size:11.5px;color:${SHEET_INK};font-weight:600;white-space:nowrap;">${price}</td>
+</tr>`;
+}
+
+function buildMortuarySheetPreview(opts: { cemLabel: string; propertyLine: string; salePerSpace: number }) {
+  const { cemLabel, propertyLine, salePerSpace } = opts;
+  const listPrice = fmtUsd(salePerSpace);
+  return `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_PAGE};border:1px solid ${SHEET_BORDER};border-radius:10px;margin:0 0 18px;overflow:hidden;">
+  <tr><td style="height:4px;background:${SHEET_INK};line-height:4px;font-size:0;">&nbsp;</td></tr>
+
+  <!-- sheet header -->
+  <tr><td style="background:${SHEET_CARD};border-bottom:1px solid ${SHEET_BORDER};padding:14px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td valign="middle" width="34" style="padding-right:10px;"><img src="${LOGO_URL}" alt="" width="30" style="display:block;width:30px;height:auto;"></td>
+        <td valign="middle">
+          <p style="font-family:${SERIF};font-size:16px;color:${SHEET_INK};margin:0;font-weight:600;">Texas Cemetery Brokers</p>
+          <p style="font-family:${SANS};font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;color:${SHEET_GOLD};margin:3px 0 0;">Available Property List · sent to Texas mortuaries</p>
+        </td>
+        <td valign="middle" align="right"><span style="display:inline-block;background:${SHEET_CORAL};color:${SHEET_CARD};font-family:${SANS};font-size:9px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;padding:6px 9px;border-radius:4px;">Example</span></td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- featured -->
+  <tr><td style="padding:14px 18px 6px;">
+    <p style="font-family:${SERIF};font-size:14px;color:${SHEET_INK};margin:0 0 2px;font-weight:600;">Featured Properties <span style="font-family:${SANS};font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:${SHEET_CORAL};">Priority placement</span></p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_CARD};border:1px solid ${SHEET_BORDER};border-radius:10px;margin:8px 0 0;">
+      <tr><td style="padding:14px 16px;">
+        <span style="display:inline-block;background:${SHEET_INK};color:#d9c7a3;font-family:${SANS};font-size:8px;letter-spacing:.24em;text-transform:uppercase;padding:4px 7px;border-radius:3px;">Featured</span>
+        <p style="font-family:${SERIF};font-size:17px;color:${SHEET_INK};margin:8px 0 2px;font-weight:600;">${escapeHtml(cemLabel)}</p>
+        <p style="font-family:${SANS};font-size:11px;color:${SHEET_MUTED};margin:0 0 8px;">${propertyLine}</p>
+        <p style="font-family:${SANS};font-size:11.5px;line-height:1.55;color:${SHEET_BODY};margin:0 0 10px;">Photography of the section, an expanded description written by your broker, and a direct line for the family — shown ahead of every other property at this cemetery.</p>
+        <p style="font-family:${SERIF};font-size:20px;color:${SHEET_INK};margin:0;font-weight:700;">${listPrice} <span style="font-family:${SANS};font-size:11px;font-weight:400;color:${SHEET_MUTED};">per space · verified, deed-clear, transfer-ready</span></p>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- standard schedule -->
+  <tr><td style="padding:14px 18px 16px;">
+    <p style="font-family:${SERIF};font-size:13px;color:${SHEET_INK};margin:0 0 6px;font-weight:600;">Standard Schedule</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      ${sheetRow(escapeHtml(cemLabel), "Your listing", "Starter / Pro placement", "Name, location and price only", listPrice)}
+      ${sheetRow("Restland Memorial Park", "Dallas", "Sec. 12 · Lot 208, Sp. 1", "Single plot", "$11,400", true)}
+      ${sheetRow("Bluebonnet Hills Mem. Park", "Fort Worth", "Mausoleum · Tier C, Crypt 214", "Companion crypt", "$18,900", true)}
+      ${sheetRow("Memorial Oaks Cemetery", "Houston", "Garden of Faith · Lot 42B", "Single plot", "$11,750", true)}
+    </table>
+    <p style="font-family:${SANS};font-size:10px;color:${SHEET_MUTED};margin:8px 0 0;">Illustrative sheet — other properties shown are examples, not live inventory.</p>
+  </td></tr>
+</table>`.trim();
+}
+
 function nextStep(n: number, title: string, body: string) {
+
 
   return `
 <tr>
