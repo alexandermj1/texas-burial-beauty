@@ -15,6 +15,7 @@ import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { buildListingAgreementBlock } from "@/lib/buildListingAgreementBlock";
+import { formatPlotDescription } from "@/lib/plotDescription";
 
 interface Seller {
   id: string;
@@ -124,9 +125,12 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
       setCemetery(row.cemetery ?? seller.cemetery ?? "");
       setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
       setPlotDescription(
-        [row.section && `Section ${row.section}`, row.lawn, row.spaces && `Spaces ${row.spaces}`, row.space_numbers]
-          .filter(Boolean)
-          .join(" • "),
+        formatPlotDescription({
+          section: row.section,
+          lawn: row.lawn,
+          spaces: row.spaces,
+          space_numbers: row.space_numbers,
+        }),
       );
 
       // Mailing address from the family-tree questionnaire, when the seller gave one.

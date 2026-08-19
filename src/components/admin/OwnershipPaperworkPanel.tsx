@@ -1,3 +1,4 @@
+import { formatPlotDescription } from "@/lib/plotDescription";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -1038,8 +1039,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
             // The deed is the controlling description — use it verbatim when we hold one.
             plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
-              [s.section && `Section ${str(s.section)}`, s.lawn && str(s.lawn), s.space_numbers && `Spaces ${str(s.space_numbers)}`]
-                .filter(Boolean).join(" · "),
+              formatPlotDescription({ section: str(s.section), lawn: str(s.lawn), space_numbers: str(s.space_numbers) }),
             plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
             listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
             authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),

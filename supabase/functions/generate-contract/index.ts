@@ -6,6 +6,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
 import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
 import { contactFor, nameKey } from '../_shared/questionnaire-contacts.ts';
+import { formatPlotDescription } from '../_shared/plot-description.ts';
 
 
 const KINDS = ['listing_agreement', 'poa', 'affidavit_heirship', 'spousal_consent'] as const;
@@ -151,8 +152,7 @@ Deno.serve(async (req) => {
       county_state: overrides.county_state ?? defaultCountyState,
       plot_count: overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? '',
       plot_description: overrides.plot_description ??
-        [sub.section && `Section ${sub.section}`, sub.spaces && `Spaces ${sub.spaces}`, sub.space_numbers]
-          .filter(Boolean).join(' • '),
+        formatPlotDescription({ section: sub.section, lawn: sub.lawn, spaces: sub.spaces, space_numbers: sub.space_numbers }),
       authorized_min_total: authMinTotal || undefined,
       authorized_min_per_plot: Number(overrides.authorized_min_per_plot) ||
         (authMinTotal ? Math.round(authMinTotal / plots) : undefined),
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: overrides.plot_description ??
-          [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
+          formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers }),
         spaces: sub.spaces ?? '',
         include_spouse_page: overrides.include_spouse_page ?? ownership.spouse === 'yes',
       });
@@ -195,7 +195,7 @@ Deno.serve(async (req) => {
         owner_name: overrides.owner_name ?? sub.deed_owner_names ?? sub.name ?? '',
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
-        plot_description: [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
+        plot_description: formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers }),
         spaces: sub.spaces ?? '',
       });
     } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.filter(Boolean).length > 1) {
@@ -221,7 +221,7 @@ Deno.serve(async (req) => {
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: overrides.plot_description ??
-          [sub.section && `Section ${sub.section}`, sub.lawn, sub.space_numbers].filter(Boolean).join(' · '),
+          formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers }),
         spaces: overrides.plot_description ? '' : (sub.spaces ?? ''),
         phone: fill.phone,
         email: fill.email,

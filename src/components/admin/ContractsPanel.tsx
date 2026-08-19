@@ -1,3 +1,4 @@
+import { formatPlotDescription } from "@/lib/plotDescription";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -141,11 +142,12 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
         email: merged.email ?? "",
         cemetery: merged.cemetery ?? "",
         county_state: merged.cemetery_city ? `${merged.cemetery_city}, TX` : "",
-        plot_description: [
-          merged.section && `Section ${merged.section}`,
-          merged.spaces && `Spaces ${merged.spaces}`,
-          merged.space_numbers,
-        ].filter(Boolean).join(" • "),
+        plot_description: formatPlotDescription({
+          section: merged.section,
+          lawn: (merged as any).lawn,
+          spaces: merged.spaces,
+          space_numbers: merged.space_numbers,
+        }),
         plot_count: String(merged.plot_count ?? ""),
         listing_option: merged.listing_tier ?? merged.listing_option ?? "Starter",
         authorized_min_total: authTotal ? String(authTotal) : "",
