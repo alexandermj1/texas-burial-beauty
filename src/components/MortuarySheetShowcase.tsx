@@ -61,41 +61,30 @@ const MortuarySheetShowcase = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6 }}
-            className="lg:col-span-5 flex flex-col justify-between h-full"
+            className="lg:col-span-5 flex flex-col justify-center h-full"
           >
-            <div>
-              <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-4">What sets us apart</p>
-              <h2 className="font-display text-4xl md:text-[2.75rem] text-foreground leading-[1.05] tracking-tight">
-                Your plot, on the desk of the people{" "}
-                <span className="italic text-primary">families turn to first.</span>
-              </h2>
-              <p className="text-foreground/70 leading-relaxed mt-6 text-[15px]">
-                Every fortnight we publish a verified Available Property List and send it directly to funeral directors,
-                mortuaries and family counselors across Texas — the professionals sitting with a family at the exact
-                moment a plot is needed. These are industry relationships built over years, and they put your property
-                in front of the families who actually need it. This is the sheet they receive.
-              </p>
-            </div>
+            <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-4">What sets us apart</p>
+            <h2 className="font-display text-4xl md:text-[2.75rem] text-foreground leading-[1.05] tracking-tight">
+              Your plot, on the desk of the people{" "}
+              <span className="italic text-primary">families turn to first.</span>
+            </h2>
+            <p className="text-foreground/70 leading-relaxed mt-6 text-[15px]">
+              Every fortnight we publish a verified Available Property List and send it directly to funeral directors,
+              mortuaries and family counselors across Texas — the professionals sitting with a family at the exact
+              moment a plot is needed. These are industry relationships built over years, and they put your property
+              in front of the families who actually need it. This is the sheet they receive.
+            </p>
 
-            <ul className="space-y-2.5 my-8">
+            <ul className="mt-8 pt-8 border-t border-foreground/10 space-y-3.5">
               {points.map((line) => (
                 <li key={line} className="flex gap-3 text-[14px] text-foreground/75 leading-relaxed">
-                  <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                  {line}
+                  <span className="mt-[0.55rem] w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                  <span>{line}</span>
                 </li>
               ))}
             </ul>
 
-            <div className="grid grid-cols-3 gap-4 py-6 border-y border-foreground/10">
-              {stats.map(([n, label]) => (
-                <div key={n}>
-                  <p className="font-display text-2xl md:text-3xl text-foreground leading-none">{n}</p>
-                  <p className="text-[11px] text-foreground/55 leading-snug mt-2">{label}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center gap-3">
               <a
                 href={SAMPLE_SHEET_WEB_URL}
                 target="_blank"
@@ -113,6 +102,7 @@ const MortuarySheetShowcase = () => {
                 Download PDF
               </a>
             </div>
+
           </motion.div>
 
 
