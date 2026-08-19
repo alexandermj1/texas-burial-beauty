@@ -110,6 +110,8 @@ const Index = () => {
       <Navbar />
       <HeroSection />
 
+      <HomeCemeteryMap />
+
       {/* Featured Available Plots — emerges from background as you scroll in */}
       {featuredListings.length > 0 && (
         <section className="relative py-14 sm:py-20 bg-gradient-warm overflow-hidden">
@@ -187,7 +189,6 @@ const Index = () => {
         variant="wide"
       />
 
-      <HomeCemeteryMap />
 
       <WhyUsSection />
       <GuidesCarousel />
