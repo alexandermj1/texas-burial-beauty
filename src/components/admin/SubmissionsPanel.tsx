@@ -670,6 +670,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return !!e && docsEmails.has(e);
   };
 
+  // ---- Single authoritative pipeline stage (1..8) ----
+  // A submission belongs to exactly ONE stage: the furthest one it has reached.
+  // Both the pipeline filters and the row badge use this, so nobody can appear
+  // under "Awaiting quote" and "Accepted" at the same time.
+  const stageStep = (s: Submission): number => {
+    const a = s as any;
+    if (a.documents_completed_at) return 8;
+    if (a.documents_requested_at) return 7;
+    if (ftState(s).doneAt) return 6;
+    if (ftState(s).sentAt) return 5;
+    if (a.quote_response === "accepted") return 4;
+    if (a.quote_sent_at) return 3;
+    if (hasDocs(s)) return 2;
+    return 1;
+  };
+
+
 
 
 
