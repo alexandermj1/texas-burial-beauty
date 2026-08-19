@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
         .eq('id', c.submission_id);
     }
 
-    return new Response(JSON.stringify({ ok: true, to }), {
+    return new Response(JSON.stringify({ ok: true, to, sent_via: sentVia }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
