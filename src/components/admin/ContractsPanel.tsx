@@ -1,3 +1,4 @@
+import { formatPlotDescription } from "@/lib/plotDescription";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
-import { formatPlotDescription } from "@/lib/plotDescription";
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
   ScrollText, Shield, Mail, PenLine, Send, X,
 } from "lucide-react";

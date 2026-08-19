@@ -1,3 +1,4 @@
+import { formatPlotDescription } from "@/lib/plotDescription";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,6 @@ import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
-import { formatPlotDescription } from "@/lib/plotDescription";
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
   canIssueJointPoa, isDeceasedPerson, mailsByDefault,
