@@ -808,6 +808,31 @@ const InlineEmailComposer = ({
           }}
         />
       )}
+      {(sellerContext || submissionId) && activeTemplateId === "seller_family_tree" && (
+        <FamilyTreeInlinePanel
+          seller={{
+            id: (sellerContext?.id ?? submissionId)!,
+            name: sellerContext?.name ?? recipientName ?? null,
+            cemetery: sellerContext?.cemetery ?? null,
+          }}
+          hasGenerated={ftBlockInserted}
+          onGenerated={(blockHtml) => {
+            // Replace any previous family-tree block, keep the signature.
+            const current = editorRef.current?.getHtml() ?? html;
+            const stripped = current.replace(
+              /<div data-family-tree="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
+              "",
+            );
+            editorRef.current?.setHtml(stripped);
+            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+            const next = editorRef.current?.getHtml() ?? blockHtml;
+            setHtml(next);
+            setBodyTouched(true);
+            setFtBlockInserted(true);
+            setSubject(familyTreeSubject(sellerContext?.cemetery));
+          }}
+        />
+      )}
       {sellerContext && activeTemplateId === "seller_listing_agreement" && (
         <ListingAgreementInlinePanel
           seller={sellerContext}
