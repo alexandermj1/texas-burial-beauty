@@ -59,19 +59,64 @@ Deno.serve(async (req) => {
         <p>If you have any questions, just reply to this email.</p>
         <p style="margin-top:24px">— Texas Cemetery Brokers</p>
       </div>`;
-    const res = await fetch('https://api.resend.com/emails', {
+    // Send through the info@ Gmail mailbox so it lands in the seller's inbox
+    // and stays in their existing conversation; Resend is only a fallback.
+    const subject = `Your signed ${docLabel} — copy for your records`;
+    const { data: recent } = await svc.from('email_messages')
+      .select('gmail_thread_id, gmail_message_id, received_at')
+      .eq('matched_submission_id', c.submission_id)
+      .not('gmail_thread_id', 'is', null)
+      .order('received_at', { ascending: false })
+      .limit(20);
+    const realThread = ((recent ?? []) as { gmail_thread_id: string | null; gmail_message_id: string | null }[])
+      .find((m) => m.gmail_thread_id && !/^(packet-|ownership-|local-|contract-)/.test(m.gmail_thread_id));
+
+    const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: req.headers.get('Authorization') ?? '',
+        apikey: Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      },
       body: JSON.stringify({
-        from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
-        to: [to],
-        bcc: ['contracts@texascemeterybrokers.com'],
-        subject: `Your signed ${docLabel} — copy for your records`,
-        html,
-        attachments: [{ filename, content: b64 }],
+        action: 'send',
+        to,
+        bcc: 'info@texascemeterybrokers.com',
+        subject,
+        body: `Here is a copy of your signed ${docLabel}.`,
+        htmlBody: html,
+        submissionId: c.submission_id ?? undefined,
+        attachments: [{ filename, mimeType: 'application/pdf', contentBase64: b64 }],
+        ...(realThread?.gmail_thread_id ? { threadId: realThread.gmail_thread_id } : {}),
+        ...(realThread?.gmail_message_id ? { inReplyToGmailId: realThread.gmail_message_id } : {}),
       }),
     });
-    if (!res.ok) throw new Error(`Resend error: ${res.status} ${await res.text()}`);
+    const gmailText = await gmailRes.text();
+    let gmailJson: Record<string, unknown> = {};
+    try { gmailJson = JSON.parse(gmailText); } catch { /* non-JSON */ }
+
+    if (!gmailRes.ok || gmailJson.error) {
+      console.warn('gmail send failed, falling back to Resend', gmailRes.status, gmailText);
+      const res = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+          'X-Connection-Api-Key': RESEND_KEY,
+        },
+        body: JSON.stringify({
+          from: 'Texas Cemetery Brokers <info@texascemeterybrokers.com>',
+          reply_to: 'info@texascemeterybrokers.com',
+          to: [to],
+          bcc: ['info@texascemeterybrokers.com'],
+          subject,
+          html,
+          attachments: [{ filename, content: b64 }],
+        }),
+      });
+      if (!res.ok) throw new Error(`Could not send the signed copy (Gmail: ${gmailText}; Resend: ${res.status} ${await res.text()})`);
+    }
+
 
     await svc.from('contracts')
       .update({ signed_copy_emailed_at: new Date().toISOString() })
