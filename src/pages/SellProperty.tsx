@@ -189,7 +189,11 @@ const SellProperty = () => {
       {/* Listing fee promo — reduced pricing while buyer demand is high */}
       <ListingFeePromo compact />
 
+      {/* The mortuary Available Property List — rendered on the page */}
+      <MortuarySheetShowcase />
+
       {/* Seller Journey Video */}
+
       <section className="py-16 bg-[hsl(var(--sand-light))] border-t border-foreground/10">
         <div className="container mx-auto px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
