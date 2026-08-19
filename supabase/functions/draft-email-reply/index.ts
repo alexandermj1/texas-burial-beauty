@@ -41,6 +41,8 @@ Listing options (factual, non-promotional):
 - Pro — $99. In 2025 data, Pro listings sold on average 22% faster than Starter.
 - Featured — $299. In 2025 data, Featured listings sold on average 61% faster. Useful context: ~90% of plot sales originate through mortuaries, so being near the top of the list they show families matters.
 - Set Your Own Price — $499. Everything in Featured, and the seller sets their own floor price. For sellers who are comfortable waiting longer for a sale in exchange for a potentially higher return. We always try to sell for the highest amount regardless of the option chosen; this option only raises the floor.
+Sample mortuary listing sheet:
+- We publish a sample of the actual Available Property List we circulate to Texas funeral homes and mortuaries. If a seller asks how we market the property, what the list looks like, or where their plot would appear, share this link: https://www.texascemeterybrokers.com/sample-listing-sheet.html (opens in any browser; a PDF version is at https://www.texascemeterybrokers.com/__l5e/assets-v1/4f4d9a57-3daf-4acc-bef9-f182c7bf8e0f/texas-cemetery-brokers-featured-listings.pdf). Make clear it is an example document, not current inventory.
 Quotes:
 - We present a SUGGESTED SALES PRICE (not a "quote" in the take-it-or-leave-it sense), based on the specific cemetery and property type and in line with other listings at that location.
 - Never promise a sale timeline or guarantee a sale.
