@@ -73,17 +73,11 @@ Deno.serve(async (req) => {
     const firstName = greetingOverride || (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` at ${esc(sub.cemetery)}` : '';
 
-    // The email stays deliberately short: a simple checklist of names and one
-    // button. Every instruction — how to get each document, notary steps, the
-    // mailing address — lives on the seller's document page, never in here.
-    const itemNames = [
-      ...items.map((it) => it.person ? `${it.label} — ${it.person}` : it.label),
-      ...poas.map((p) => `Limited Power of Attorney${p.name ? ` — ${p.name}` : ''}`),
-    ];
-    const listHtml = itemNames.map((n) => `
-      <tr><td style="padding:7px 0;font-size:14px;color:#4a5568;line-height:1.6;">• ${esc(n)}</td></tr>`).join('');
-
+    // The email stays deliberately short: one button, nothing else. The list of
+    // documents, how to get each one, notary steps and the mailing address all
+    // live on the seller's document page — never in the email itself.
     const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
+
 
     const html = `
 <!doctype html>
