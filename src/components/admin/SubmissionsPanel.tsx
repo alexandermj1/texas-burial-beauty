@@ -686,6 +686,31 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return 1;
   };
 
+  // Duplicate submissions from the same email are merged into one visible card, so
+  // the stage must be resolved across the WHOLE group — otherwise an older, un-quoted
+  // duplicate can keep someone sitting in "Awaiting quote" after they were quoted.
+  const groupBest = useMemo(() => {
+    const best = new Map<string, Submission>();
+    for (const s of submissions) {
+      const key = (s.email || "").trim().toLowerCase();
+      if (!key || UNMERGED_IDS.has(s.id)) continue;
+      const cur = best.get(key);
+      if (!cur || stageStep(s) > stageStep(cur)) best.set(key, s);
+    }
+    return best;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissions, docsEmails]);
+
+  // The submission that defines the group's stage (itself when un-merged).
+  const stageSource = (s: Submission): Submission => {
+    const key = (s.email || "").trim().toLowerCase();
+    if (!key || UNMERGED_IDS.has(s.id)) return s;
+    return groupBest.get(key) || s;
+  };
+  const effStep = (s: Submission) => stageStep(stageSource(s));
+
+
+
 
 
 
@@ -795,7 +820,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       // Each pipeline filter matches only its exact stage — a submission lives
       // in exactly one stage (the furthest reached), so no double-counting.
-      const step = stageStep(s);
+      const step = effStep(s);
       if (awaitingQuoteFilter && step !== 2) return false;
       if (quotedFilter && step !== 3) return false;
       if (acceptedFilter && step !== 4) return false;
@@ -2559,6 +2584,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           <div className="flex-1 min-w-0 xl:border-l xl:border-border/50 xl:pl-3">
             {(() => {
               const tx = submissions.filter(s => subRegion(s) === "texas");
+              // Count merged people once, not once per duplicate submission.
+              const seenTx = new Set<string>();
+              const txU = tx.filter(s => {
+                const k = (s.email || "").trim().toLowerCase();
+                if (!k || UNMERGED_IDS.has(s.id)) return true;
+                if (seenTx.has(k)) return false;
+                seenTx.add(k); return true;
+              });
               type Tone = { dot: string; ring: string; text: string; soft: string };
               const tones: Record<string, Tone> = {
                 slate:   { dot: "bg-slate-500",   ring: "ring-slate-500/40",   text: "text-slate-600 dark:text-slate-300",     soft: "bg-slate-500/10" },
@@ -2575,29 +2608,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 active: boolean; toggle: () => void; tone: Tone;
               }[] = [
                 { key: "docs", label: "Attachments", icon: Paperclip,
-                  count: tx.filter(s => hasDocs(s)).length,
+                  count: txU.filter(s => hasDocs(s)).length,
                   active: docsFilter === "with",
                   toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.slate },
                 { key: "awaiting-quote", label: "Awaiting quote", icon: Clock,
-                  count: tx.filter(s => stageStep(s) === 2).length,
+                  count: txU.filter(s => effStep(s) === 2).length,
                   active: awaitingQuoteFilter, toggle: () => setAwaitingQuoteFilter(!awaitingQuoteFilter), tone: tones.amber },
                 { key: "quoted", label: "Quoted", icon: DollarSign,
-                  count: tx.filter(s => stageStep(s) === 3).length,
+                  count: txU.filter(s => effStep(s) === 3).length,
                   active: quotedFilter, toggle: () => setQuotedFilter(!quotedFilter), tone: tones.purple },
                 { key: "accepted", label: "Accepted", icon: CheckCircle,
-                  count: tx.filter(s => stageStep(s) === 4).length,
+                  count: txU.filter(s => effStep(s) === 4).length,
                   active: acceptedFilter, toggle: () => setAcceptedFilter(!acceptedFilter), tone: tones.emerald },
                 { key: "tree-sent", label: "Tree sent", icon: Send,
-                  count: tx.filter(s => stageStep(s) === 5).length,
+                  count: txU.filter(s => effStep(s) === 5).length,
                   active: ftSentFilter, toggle: () => setFtSentFilter(!ftSentFilter), tone: tones.indigo },
                 { key: "tree-done", label: "Tree done", icon: Users,
-                  count: tx.filter(s => stageStep(s) === 6).length,
+                  count: txU.filter(s => effStep(s) === 6).length,
                   active: ftDoneFilter, toggle: () => setFtDoneFilter(!ftDoneFilter), tone: tones.teal },
                 { key: "docs-out", label: "Docs out", icon: FileText,
-                  count: tx.filter(s => stageStep(s) === 7).length,
+                  count: txU.filter(s => effStep(s) === 7).length,
                   active: docsOutFilter, toggle: () => setDocsOutFilter(!docsOutFilter), tone: tones.sky },
                 { key: "complete", label: "Complete", icon: Sparkles,
-                  count: tx.filter(s => (s as any).documents_completed_at).length,
+                  count: txU.filter(s => effStep(s) === 8).length,
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
               ];
               const anyActive = steps.some(s => s.active);
@@ -2725,16 +2758,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const beingWorked = workers.length > 0;
             const needsReply = !!awaitingAll[s.id];
             // ---- Stage resolution: one authoritative stage per submission ----
-            const ft = ftState(s);
+            const sg = stageSource(s);
+            const ft = ftState(sg);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((s as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (s as any).documents_completed_at };
-              if ((s as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (s as any).documents_requested_at };
+              if ((sg as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
+              if ((sg as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
               if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
               if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
-              if ((s as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (s as any).quote_responded_at };
-              if ((s as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (s as any).quote_sent_at };
-              if (hasDocs(s)) return { step: 2, label: "Awaiting quote", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
+              if ((sg as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
+              if ((sg as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (sg as any).quote_sent_at };
+              if (hasDocs(sg)) return { step: 2, label: "Awaiting quote", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
               return { step: 1, label: "New inquiry", accent: "slate", cls: "bg-muted text-muted-foreground border-border", bar: "bg-muted-foreground/40", tint: "bg-card hover:bg-muted/40", icon: Inbox, at: null as string | null };
             })();
             const StageIcon = stage.icon;
@@ -2757,11 +2791,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               chips.push({ key: "files", icon: Paperclip, tone: "text-[hsl(var(--status-docs-fg))] bg-[hsl(var(--status-docs-soft))] border-[hsl(var(--status-docs-border))]", title: "Customer submitted attachments" });
             }
 
-            if ((s as any).quote_sent_at) {
-              const accepted = (s as any).quote_response === "accepted";
-              const quotedPer = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
+            if ((sg as any).quote_sent_at) {
+              const accepted = (sg as any).quote_response === "accepted";
+              const quotedPer = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
               const rowSpaces = Math.max(1, Number((s as any).spaces) || 1);
-              const rowRetailPer = Number((s as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
+              const rowRetailPer = Number((sg as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
               const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
               const rowProp = [
                 (s as any).property_type || null,
@@ -2781,7 +2815,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     : "text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30 border-purple-300/70 dark:border-purple-800",
                   title: accepted
                     ? `Agreed sales price for ${rowProp} · $${salesPer.toLocaleString()}/plot`
-                    : `Quote sent for ${rowProp} · $${quotedPer.toLocaleString()}/plot · ${formatDate((s as any).quote_sent_at)}`,
+                    : `Quote sent for ${rowProp} · $${quotedPer.toLocaleString()}/plot · ${formatDate((sg as any).quote_sent_at)}`,
                 });
               }
             }
