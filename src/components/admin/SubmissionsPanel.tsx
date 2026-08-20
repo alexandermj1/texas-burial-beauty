@@ -2758,16 +2758,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const beingWorked = workers.length > 0;
             const needsReply = !!awaitingAll[s.id];
             // ---- Stage resolution: one authoritative stage per submission ----
-            const ft = ftState(s);
+            const sg = stageSource(s);
+            const ft = ftState(sg);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((s as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (s as any).documents_completed_at };
-              if ((s as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (s as any).documents_requested_at };
+              if ((sg as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (s as any).documents_completed_at };
+              if ((sg as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
               if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
               if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
-              if ((s as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (s as any).quote_responded_at };
-              if ((s as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (s as any).quote_sent_at };
-              if (hasDocs(s)) return { step: 2, label: "Awaiting quote", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
+              if ((sg as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
+              if ((sg as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (sg as any).quote_sent_at };
+              if (hasDocs(sg)) return { step: 2, label: "Awaiting quote", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
               return { step: 1, label: "New inquiry", accent: "slate", cls: "bg-muted text-muted-foreground border-border", bar: "bg-muted-foreground/40", tint: "bg-card hover:bg-muted/40", icon: Inbox, at: null as string | null };
             })();
             const StageIcon = stage.icon;
