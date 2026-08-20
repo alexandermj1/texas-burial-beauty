@@ -68,6 +68,7 @@ const BuyProperty = () => {
     propertyType: "",
     timeline: "",
     budget: "",
+    quantity: "1",
     region: "",
     cemetery: "",
     name: "",
@@ -418,6 +419,46 @@ const BuyProperty = () => {
               <motion.div key="s3" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
                 className="w-full"
               >
+                {/* How many plots — stylised quantity selector */}
+                <div className="mb-4 rounded-2xl border border-primary/15 bg-gradient-sage p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Quantity</p>
+                      <h3 className="font-display text-lg sm:text-xl text-foreground leading-tight mt-0.5">How many plots do you need?</h3>
+                      <p className="text-xs text-muted-foreground mt-1">Families often buy side-by-side spaces — we can hold adjacent plots together.</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {["1", "2", "3", "4", "5+"].map(q => {
+                        const active = selections.quantity === q;
+                        return (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => update("quantity", q)}
+                            aria-pressed={active}
+                            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl font-display text-base transition-all border ${
+                              active
+                                ? "bg-primary text-primary-foreground border-primary shadow-soft scale-105"
+                                : "bg-background/70 text-foreground border-border hover:border-primary/40 hover:bg-background"
+                            }`}
+                          >
+                            {q}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {selections.quantity === "5+" && (
+                    <input
+                      type="number"
+                      min={5}
+                      placeholder="How many exactly?"
+                      onChange={(e) => update("quantity", e.target.value ? `${e.target.value}` : "5+")}
+                      className="mt-3 w-full sm:w-56 px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  )}
+                </div>
+
                 <div className="mb-4 p-3 rounded-lg bg-gradient-sage border border-primary/10 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary shrink-0" />
                   <p className="text-xs sm:text-sm text-foreground">
