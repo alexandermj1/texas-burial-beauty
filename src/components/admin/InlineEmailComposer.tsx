@@ -635,14 +635,15 @@ const InlineEmailComposer = ({
           .select("from_email, subject, body_text, snippet, received_at")
           .or(`from_email.ilike.%${addr}%,to_email.ilike.%${addr}%`)
           .order("received_at", { ascending: true })
-          .limit(20);
+          .limit(40);
         thread = ((data as any[]) || []).map((m) => {
           const addrLc = (m.from_email || "").toLowerCase();
           const ours = addrLc.includes("texascemeterybrokers");
           return {
             from: ours ? "us" : "them",
             subject: m.subject || undefined,
-            body: (m.body_text || m.snippet || "").slice(0, 2000),
+            body: (m.body_text || m.snippet || "").slice(0, 6000),
+
           };
         });
       }
