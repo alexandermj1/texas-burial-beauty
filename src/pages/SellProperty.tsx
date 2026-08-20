@@ -307,6 +307,102 @@ const SellProperty = () => {
   );
 };
 
+/* ============================================================
+   BUYER FINANCING — editorial split. Seller paid in full upfront,
+   buyer pays over time at 0%.
+   ============================================================ */
+const FinancingSection = () => (
+  <section className="relative py-24 md:py-32 bg-[hsl(var(--warm-white))] overflow-hidden border-t border-foreground/10">
+    <motion.img
+      src={plumeriaCluster.url}
+      alt=""
+      aria-hidden
+      initial={{ opacity: 0, rotate: -8 }}
+      whileInView={{ opacity: 0.14, rotate: -14 }}
+      viewport={{ once: true }}
+      transition={{ duration: 1.2 }}
+      className="hidden md:block absolute -left-24 bottom-0 w-72 pointer-events-none select-none"
+    />
+    <div className="relative container mx-auto px-6">
+      <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-x-12 gap-y-12 items-start">
+        {/* Left — the story */}
+        <div className="lg:col-span-6">
+          <div className="flex items-center gap-4 mb-6">
+            <span className="text-[10px] tracking-[0.35em] uppercase font-bold text-accent">N° 02</span>
+            <span className="h-px w-16 bg-foreground/25" />
+            <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55">Buyer financing</span>
+          </div>
+          <h2 className="font-display text-4xl md:text-6xl text-foreground tracking-tight leading-[1.02]">
+            More buyers can say yes —
+            <span className="block italic text-primary">you still get paid in full.</span>
+          </h2>
+          <p className="text-base md:text-lg text-foreground/80 leading-relaxed font-light mt-6 max-w-xl">
+            Most families who need a plot need it suddenly, and not everyone has the full amount on hand that week. So we
+            finance the purchase for them — at <span className="font-medium text-foreground">0% interest</span>, with no
+            fees passed to you. They pay us over time. You are paid the agreed amount, in full, upfront at closing.
+          </p>
+          <p className="text-base text-foreground/70 leading-relaxed font-light mt-4 max-w-xl">
+            It's the reason our properties reach a far wider pool of buyers than a private listing ever could — and why
+            plots that sat unsold for months often move once financing is on the table.
+          </p>
+
+          <div className="mt-10 grid sm:grid-cols-2 gap-px bg-foreground/15 border-y border-foreground/15">
+            {[
+              { v: "0%", l: "Interest for buyers" },
+              { v: "100%", l: "Paid to you upfront" },
+            ].map((s) => (
+              <div key={s.l} className="bg-[hsl(var(--warm-white))] px-5 py-6">
+                <div className="font-display text-4xl italic text-primary">{s.v}</div>
+                <div className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/60 mt-1">{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right — the three-beat flow */}
+        <div className="lg:col-span-5 lg:col-start-8">
+          <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-6">How it works</p>
+          <ol className="relative border-l border-foreground/20 pl-8 space-y-9">
+            {[
+              {
+                t: "A buyer chooses your plot.",
+                d: "If they can't pay the full amount today, we offer them an interest-free payment plan on the spot.",
+              },
+              {
+                t: "We carry the financing.",
+                d: "The plan is between us and the buyer. You are not lending anything and you carry no risk.",
+              },
+              {
+                t: "You are paid in full at closing.",
+                d: "One payment, the agreed amount, upfront — regardless of how long the buyer takes to finish paying us.",
+              },
+            ].map((s, i) => (
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="relative"
+              >
+                <span className="absolute -left-[41px] top-1 w-4 h-4 rounded-full bg-[hsl(var(--warm-white))] border border-primary flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                </span>
+                <h3 className="font-display text-xl md:text-2xl text-foreground tracking-tight leading-snug">{s.t}</h3>
+                <p className="text-[15px] text-foreground/70 leading-relaxed mt-2">{s.d}</p>
+              </motion.li>
+            ))}
+          </ol>
+          <p className="font-display italic text-lg text-foreground/70 leading-snug mt-10 border-t border-foreground/15 pt-6">
+            Financing is ours to carry — the sale is yours to keep.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+
 const FaqSection = ({ faqs }: { faqs: { q: string; a: string }[] }) => {
   const [open, setOpen] = useState<number | null>(0);
   return (
