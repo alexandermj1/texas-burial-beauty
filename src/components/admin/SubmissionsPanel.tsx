@@ -1644,10 +1644,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const kind = resolveKind(selected.customer_kind, selected.source);
               const x = selected as any;
               const templates = kind === "buyer"
-                ? [
-                    buildBuyerHaveItTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery, propertyType: selected.property_type, spaces: selected.spaces }),
-                    buildBuyerNoInventoryTemplate({ recipientName: selected.name, adminName, cemetery: selected.cemetery }),
-                  ]
+                ? []
                 : [
                     buildSellerIntakeTemplate({
                       recipientName: selected.name,
