@@ -873,12 +873,28 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       };
     });
+    // Any other document we prepare for them (affidavit of heirship, custom
+    // contracts) travels as a PDF attachment too, so the email carries every
+    // paper they have to print and sign.
+    const docs: { label: string; path: string }[] = [];
+    for (const r of requirements) {
+      if (!r.contractKind || r.contractKind === "poa") continue;
+      const match = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
+      if (!match) continue;
+      const { data: c } = await supabase.from("contracts")
+        .select("filled_pdf_path").eq("id", match.id).maybeSingle();
+      const path = (c as { filled_pdf_path?: string | null } | null)?.filled_pdf_path ?? null;
+      if (!path || docs.some((d) => d.path === path)) continue;
+      docs.push({ label: r.label, path });
+    }
+
     const poaMailTo = poaRequirements.length
       ? (mailFor(poaRequirements[0])?.address ?? null)
       : ORIGINALS_MAIL_ADDRESS;
-    return { items, poas, poaUrl, poaFor, poaMailTo };
+    return { items, poas, docs, poaUrl, poaFor, poaMailTo };
 
   };
+
 
   /** Save the greeting and messages so both the email and the seller's page use them. */
   const persistPacketMessages = async () => {
@@ -898,10 +914,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // must show the documents we decided on, not an earlier version.
       await syncChecklist(true);
       await persistPacketMessages();
-      const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
+      const { items, poas, docs, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
       const { data, error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim(), preview: true },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim(), preview: true },
       });
+
       if (error) throw error;
       const res = data as { html?: string; subject?: string };
       setReview({ step: 2, html: res?.html, subject: res?.subject });
@@ -922,15 +939,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // must show the documents we decided on, not an earlier version.
       await syncChecklist(true);
       await persistPacketMessages();
-      const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
+      const { items, poas, docs, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim() },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim() },
       });
       if (error) throw error;
       toast.success(`Document request emailed to ${sellerEmail}`, {
-        description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}`,
+        description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}${docs.length ? ` + ${docs.length} prepared document${docs.length === 1 ? "" : "s"}` : ""}`,
       });
+
       setPoaPrompt(false);
       setReview(null);
       await load();

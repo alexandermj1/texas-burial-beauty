@@ -55,6 +55,11 @@ Deno.serve(async (req) => {
     const poaUrl: string | null = body?.poa_url ?? null;
     const poaFor: string | null = body?.poa_for ?? null;
     const poas = poasIn.length ? poasIn : (poaUrl ? [{ name: poaFor, url: poaUrl }] : []);
+    // Any other paper we prepared for them (affidavit of heirship, custom
+    // contracts) is attached as a finished PDF alongside the POAs.
+    const extraDocs: { label?: string | null; path?: string | null }[] =
+      Array.isArray(body?.docs) ? body.docs : [];
+
 
     const previewOnly: boolean = body?.preview === true;
     if (!submissionId || !packetUrl) {
@@ -73,17 +78,13 @@ Deno.serve(async (req) => {
     const firstName = greetingOverride || (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` at ${esc(sub.cemetery)}` : '';
 
-    // The email stays deliberately short: a simple checklist of names and one
-    // button. Every instruction — how to get each document, notary steps, the
-    // mailing address — lives on the seller's document page, never in here.
-    const itemNames = [
-      ...items.map((it) => it.person ? `${it.label} — ${it.person}` : it.label),
-      ...poas.map((p) => `Limited Power of Attorney${p.name ? ` — ${p.name}` : ''}`),
-    ];
-    const listHtml = itemNames.map((n) => `
-      <tr><td style="padding:7px 0;font-size:14px;color:#4a5568;line-height:1.6;">• ${esc(n)}</td></tr>`).join('');
-
+    // The email stays deliberately short: one button, nothing else. The list of
+    // documents, how to get each one, notary steps and the mailing address all
+    // live on the seller's document page — never in the email itself.
     const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
+    const attachCount = poas.filter((p) => p.path).length + extraDocs.filter((d) => d.path).length;
+
+
 
     const html = `
 <!doctype html>
@@ -117,10 +118,13 @@ Deno.serve(async (req) => {
           <p style="margin:0 0 22px;text-align:center;font-size:13px;color:#6b7280;">
             Everything you need to know is on that page — just click the button above.
           </p>
-          ${listHtml ? `
-          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:6px;">In short, we need</div>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${listHtml}</table>` : `
-          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`}
+          ${attachCount ? `
+          <p style="margin:0 0 22px;font-size:14px;color:#4a5568;line-height:1.7;">
+            We've also attached ${attachCount === 1 ? 'a document' : `${attachCount} documents`} to this email that we've
+            already prepared and filled in for you — please print, sign where indicated (before a notary where the page says so)
+            and send back to us.
+          </p>` : ''}
+
           <p style="margin:26px 0 0;font-size:13px;color:#4a5568;">
             If the button doesn't work, copy this link into your browser:<br/>
             <span style="color:#1f2a37;word-break:break-all;">${esc(packetUrl)}</span>
@@ -194,6 +198,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Every other prepared document (affidavit of heirship, custom paperwork).
+    for (const d of extraDocs) {
+      if (!d.path || seenPaths.has(d.path)) continue;
+      seenPaths.add(d.path);
+      const { data: file } = await svc.storage.from('contracts').download(d.path);
+      if (!file) continue;
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      const safeLabel = String(d.label ?? 'Document').replace(/[^A-Za-z0-9 ._-]/g, '').trim().slice(0, 80) || 'Document';
+      attachments.push({
+        filename: `${safeLabel}.pdf`,
+        mimeType: 'application/pdf',
+        contentBase64: btoa(bin),
+      });
+    }
+
+
     // Keep the request inside the customer's existing Gmail conversation so the
     // whole chain stays in one place on the submission.
     const { data: lastMsg } = await svc.from('email_messages')
@@ -207,7 +231,7 @@ Deno.serve(async (req) => {
 
     // Send through the info@ Gmail mailbox (same path as the quote email) so the
     // message lands in Gmail's Sent folder and can be verified there.
-    const plain = `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poaSources.map((p) => `\n\nPower of Attorney${p.name ? ` (${p.name})` : ''}: attached — print, sign before a notary, send it back.`).join('')}`;
+    const plain = `Your document page: ${packetUrl}\n\nEverything we need is listed on that page.${attachments.length ? `\n\nWe've attached ${attachments.length} document${attachments.length === 1 ? '' : 's'} we've already filled in for you — please print, sign (before a notary where indicated) and send back.` : ''}`;
     const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {
