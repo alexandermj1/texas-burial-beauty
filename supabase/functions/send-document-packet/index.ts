@@ -82,6 +82,8 @@ Deno.serve(async (req) => {
     // documents, how to get each one, notary steps and the mailing address all
     // live on the seller's document page — never in the email itself.
     const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
+    const attachCount = poas.filter((p) => p.path).length + extraDocs.filter((d) => d.path).length;
+
 
 
     const html = `
