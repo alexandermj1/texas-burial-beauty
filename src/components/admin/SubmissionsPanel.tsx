@@ -806,7 +806,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       if (eFilter === "new" && !isNew(s)) return false;
-      if (eFilter === "awaiting_reply" && !awaitingMap[s.id]) return false;
+      if (eFilter === "awaiting_reply" && !awaitingAll[s.id]) return false;
 
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
@@ -838,14 +838,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // instead — so someone who just emailed back today jumps to the top even
     // if their original submission is weeks old.
     const byLatestInbound = (a: Submission, b: Submission) => {
-      const at = new Date(awaitingMap[a.id] || a.created_at).getTime();
-      const bt = new Date(awaitingMap[b.id] || b.created_at).getTime();
+      const at = new Date(awaitingAll[a.id] || a.created_at).getTime();
+      const bt = new Date(awaitingAll[b.id] || b.created_at).getTime();
       return bt - at;
     };
     // Order: Needs reply → everything else.
     // Custom-tagged submissions rank just below Needs reply within "others".
-    const awaitingRows = matches.filter(s => awaitingMap[s.id]).sort(byLatestInbound);
-    const rest = matches.filter(s => !awaitingMap[s.id]);
+    const awaitingRows = matches.filter(s => awaitingAll[s.id]).sort(byLatestInbound);
+    const rest = matches.filter(s => !awaitingAll[s.id]);
     const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
     const otherRows = rest.filter(s => !((s as any).custom_tag || "").trim()).sort(byNewest);
     const ordered = [...awaitingRows, ...taggedRows, ...otherRows];
@@ -864,7 +864,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingMap, followupMap, paidMap]);
+  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
@@ -2723,7 +2723,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const fresh = isNew(s);
             const workers = workersFor(s.id);
             const beingWorked = workers.length > 0;
-            const needsReply = !!awaitingMap[s.id];
+            const needsReply = !!awaitingAll[s.id];
             // ---- Stage resolution: one authoritative stage per submission ----
             const ft = ftState(s);
             const la = laMap[s.id];
