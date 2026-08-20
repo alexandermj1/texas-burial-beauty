@@ -939,15 +939,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // must show the documents we decided on, not an earlier version.
       await syncChecklist(true);
       await persistPacketMessages();
-      const { items, poas, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
+      const { items, poas, docs, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
       const { error } = await supabase.functions.invoke("send-document-packet", {
-        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim() },
+        body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim() },
       });
       if (error) throw error;
       toast.success(`Document request emailed to ${sellerEmail}`, {
-        description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}`,
+        description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}${docs.length ? ` + ${docs.length} prepared document${docs.length === 1 ? "" : "s"}` : ""}`,
       });
+
       setPoaPrompt(false);
       setReview(null);
       await load();
