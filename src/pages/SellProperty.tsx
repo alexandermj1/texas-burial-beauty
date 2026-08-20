@@ -190,6 +190,9 @@ const SellProperty = () => {
       {/* Listing fee promo — reduced pricing while buyer demand is high */}
       <ListingFeePromo compact />
 
+      {/* Buyer financing — why it means a faster sale for you */}
+      <FinancingSection />
+
       {/* The mortuary Available Property List — rendered on the page */}
       <MortuarySheetShowcase />
 
