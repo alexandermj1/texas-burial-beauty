@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
 
     // Send through the info@ Gmail mailbox (same path as the quote email) so the
     // message lands in Gmail's Sent folder and can be verified there.
-    const plain = `Document page: ${packetUrl}\n\n${items.map((i) => `• ${i.label}`).join('\n')}${poaSources.map((p) => `\n\nPower of Attorney${p.name ? ` (${p.name})` : ''}: attached — print, sign before a notary, send it back.`).join('')}`;
+    const plain = `Your document page: ${packetUrl}\n\nEverything we need is listed on that page.${attachments.length ? `\n\nWe've attached ${attachments.length} document${attachments.length === 1 ? '' : 's'} we've already filled in for you — please print, sign (before a notary where indicated) and send back.` : ''}`;
     const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {
