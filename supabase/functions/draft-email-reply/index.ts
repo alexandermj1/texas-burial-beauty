@@ -213,6 +213,69 @@ async function lookupCemetery(name: string): Promise<string> {
 // Compact snapshot of what THIS customer submitted + any documents already
 // analyzed for them. Small, factual, no chit-chat — the model uses it to be
 // specific ("I see you already sent the deed") instead of generic.
+// --- Buyer inventory search ------------------------------------------------
+// Buyers get a real answer based on actual inventory: (a) live listings at the
+// cemetery, and (b) seller files that are past "quote accepted" (property we
+// have secured and will be listing shortly). If nothing matches, the reply
+// should offer the waiting list rather than over-promising.
+async function findInventory(args: { cemetery?: string; city?: string; propertyType?: string }): Promise<string> {
+  const svc = createClient(SUPABASE_URL, SERVICE_KEY);
+  const cem = (args?.cemetery || "").trim();
+  const city = (args?.city || "").trim();
+  const type = (args?.propertyType || "").trim();
+
+  let lq = svc
+    .from("listings")
+    .select("id, cemetery, city, plot_type, section, spaces, asking_price, status, created_at")
+    .eq("status", "active")
+    .limit(15);
+  if (cem) lq = lq.ilike("cemetery", `%${cem}%`);
+  else if (city) lq = lq.ilike("city", `%${city}%`);
+  if (type) lq = lq.ilike("plot_type", `%${type}%`);
+  const { data: listings } = await lq;
+
+  let sq = svc
+    .from("contact_submissions")
+    .select("id, cemetery, cemetery_city, property_type, spaces, section, accepted_quote_amount, quote_response, quote_amount, listing_live_at, la_signed_at, documents_completed_at")
+    .not("accepted_quote_amount", "is", null)
+    .limit(25);
+  if (cem) sq = sq.ilike("cemetery", `%${cem}%`);
+  else if (city) sq = sq.ilike("cemetery_city", `%${city}%`);
+  const { data: secured } = await sq;
+
+  const securedMatches = (secured || []).filter((s: any) =>
+    !type || String(s.property_type || "").toLowerCase().includes(type.toLowerCase()));
+
+  const lines: string[] = [];
+  lines.push(`Inventory search — cemetery: ${cem || "(any)"}${city ? `, city: ${city}` : ""}${type ? `, type: ${type}` : ""}`);
+
+  if (listings?.length) {
+    lines.push("LIVE LISTINGS (available now, no wait):");
+    for (const l of listings as any[]) {
+      lines.push(`- ${l.cemetery}${l.city ? `, ${l.city}` : ""} — ${l.plot_type || "property"}${l.section ? `, ${l.section}` : ""}, ${l.spaces ?? 1} space(s)${l.asking_price != null ? ` — asking $${l.asking_price}` : ""}`);
+    }
+  } else {
+    lines.push("LIVE LISTINGS: none matching.");
+  }
+
+  if (securedMatches.length) {
+    lines.push("SECURED PROPERTY (seller has accepted our price — past the accepted stage, paperwork in progress, coming to market shortly):");
+    for (const s of securedMatches as any[]) {
+      const stage = s.listing_live_at ? "listing live" : s.documents_completed_at ? "paperwork complete" : s.la_signed_at ? "agreement signed" : "price accepted";
+      lines.push(`- ${s.cemetery}${s.cemetery_city ? `, ${s.cemetery_city}` : ""} — ${s.property_type || "property"}${s.section ? `, ${s.section}` : ""}, ${s.spaces ?? 1} space(s) — stage: ${stage}`);
+    }
+  } else {
+    lines.push("SECURED PROPERTY: none matching.");
+  }
+
+  const any = (listings?.length || 0) + securedMatches.length > 0;
+  lines.push(any
+    ? `HOW TO USE THIS: mention only what is listed above, in general terms (cemetery, property type, number of spaces). Prioritise SECURED PROPERTY and LIVE LISTINGS. Do NOT quote a price to the buyer unless the admin instructions supply one — say we can send the exact figures and details across. Resale property is typically around 40% below what the cemetery charges for the equivalent property today, so it is fine to say savings are usually significant, phrased as "approximately" and "typically".`
+    : `HOW TO USE THIS: we have NOTHING matching right now. Say so honestly and kindly. Explain that we keep a waiting list, that we are actively working with families who are bringing property at this cemetery to market, and offer to add them to the list so we can contact them as soon as something suitable comes in. Mention that resale property typically comes in at approximately 40% below the cemetery's current price, so it is usually worth the wait, phrased gently and without pressure. Ask what exactly they are looking for (property type, number of spaces, preferred area/section) and whether their need is at-need or pre-need. Never invent inventory.`);
+
+  return lines.join("\n");
+}
+
 async function getSubmissionContext(submissionId: string): Promise<string> {
   if (!submissionId?.trim()) return "No submission id supplied.";
   const svc = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -402,6 +465,22 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "find_inventory",
+      description: "Searches our ACTUAL inventory for a buyer: live active listings plus seller files that are past the 'quote accepted' stage (property we have secured and are bringing to market). ALWAYS call this before replying to a buyer enquiry about availability at a cemetery or city. Returns matches, or confirmation that we have nothing and should offer the waiting list.",
+      parameters: {
+        type: "object",
+        properties: {
+          cemetery: { type: "string", description: "Cemetery name the buyer asked about." },
+          city: { type: "string", description: "City or area, if no specific cemetery was named." },
+          propertyType: { type: "string", description: "Property type wanted, e.g. plot, lawn crypt, niche, mausoleum." },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "get_business_faq",
       description: "Returns general business facts: brokerage model, payment timing, commission, transfer fees, territory. Call this only when the customer asks a general 'how does this work' question that isn't covered elsewhere.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
@@ -456,6 +535,7 @@ async function runTool(name: string, args: any, ctx: { submissionId?: string }):
     case "get_ownership_authority_guide": return OWNERSHIP_AUTHORITY_GUIDE;
     case "get_process_flow": return PROCESS_FLOW;
     case "get_recent_broker_corrections": return await getRecentBrokerCorrections();
+    case "find_inventory": return await findInventory(args || {});
     case "lookup_cemetery": return await lookupCemetery(String(args?.name || ""));
     case "get_submission_context":
       if (!ctx.submissionId) return "No submission is linked to this draft — cannot load customer context.";
@@ -512,6 +592,12 @@ RULES:
 HOW OUR PROCESS RUNS (know this by heart, keep it accurate):
 Inquiry → seller sends details and a copy of the deed → we send a suggested sales price and listing options → seller accepts → listing agreement signed and countersigned → seller completes the online family-tree / ownership questionnaire ("confirming the deed") → a broker reviews it and only THEN do we know the exact documents → we send the personalised document request → seller signs, and anything requiring notarisation (the limited POA, and any affidavits or consents) is notarised in person or through the online notary link we send → the ORIGINAL wet-ink deed, POA and other originals are MAILED to us to finalise the listing (photo IDs are fine as a photo or scan, no mailing) → listing goes live → sale → we handle the cemetery transfer and the seller is paid at closing.
 Never present a final document checklist before the questionnaire is completed and reviewed. Once it has been, use get_submission_context and speak to their actual checklist and answers rather than generalities. Call get_process_flow for the detailed version.
+
+BUYER ENQUIRIES (replies to people who want to BUY property):
+- ALWAYS call find_inventory first, using the cemetery (or city) and property type they asked about. Never guess at availability.
+- If there are matches, describe them in general terms and offer to send full details. Give priority to property that is already secured (past the accepted-price stage) or live.
+- If there is nothing matching, be honest and kind: we do not have anything at that cemetery at the moment, we keep a waiting list, we are actively working with families bringing property to market there, and would they like us to add them so we can reach out the moment something suitable comes in. Note that resale property is typically around 40% less than the cemetery's current price for the equivalent property (always "approximately"/"typically", never an exact promise), so the wait is usually worthwhile. Ask what they are looking for (type, number of spaces, preferred area) and whether it is needed now or for the future.
+- Never invent listings, never promise a date, and never quote a specific price unless the admin instructions supply one.
 
 ${HOUSE_RULES_LEARNED}
 

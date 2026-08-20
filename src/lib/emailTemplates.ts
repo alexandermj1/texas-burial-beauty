@@ -134,41 +134,6 @@ ${ask}${closing}${signature(i.adminName)}`;
   return { id: "seller_intake", label: "Seller intake (asks for missing info)", body };
 };
 
-interface BuyerInput {
-  recipientName?: string | null;
-  adminName?: string | null;
-  cemetery?: string | null;
-  propertyType?: string | null;
-  spaces?: string | null;
-}
-
-export const buildBuyerNoInventoryTemplate = (i: BuyerInput): EmailTemplate => {
-  const at = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
-  const body = `Dear ${first(i.recipientName)},
-
-Thank you for reaching out about cemetery property${at}.
-
-Unfortunately we don't have anything matching your request available at this moment. New inventory comes in often, however, and I'll keep your request on file and reach out the moment something fitting becomes available.
-
-If your needs change in the meantime, just let me know.
-
-${signature(i.adminName)}`;
-  return { id: "buyer_none", label: "No inventory yet", body };
-};
-
-export const buildBuyerHaveItTemplate = (i: BuyerInput): EmailTemplate => {
-  const at = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
-  const desc = [i.spaces, i.propertyType].filter(Boolean).join(" ") || "cemetery property";
-  const body = `Dear ${first(i.recipientName)},
-
-Great news — we currently have ${desc}${at} available that matches what you're looking for.
-
-I'd be happy to share the full details and pricing. When would be a good time for a quick call, or would you prefer I send the information by email?
-
-${signature(i.adminName)}`;
-  return { id: "buyer_have", label: "We have a match", body };
-};
-
 // Seller "Listing Options" — the admin picks this, then clicks
 // "Attach listing options" to inject 3 Stripe pay buttons + the offer intro.
 // The body here is just the closing text (greeting + next steps + signature);
