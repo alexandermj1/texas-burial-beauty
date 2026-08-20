@@ -248,11 +248,12 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
   const treeDoneAt = ans?.sellerConfirmedAt ?? ans?.seller_confirmed_at ?? null;
   const answerLines = Object.entries(ans)
     .filter(([k, v]) => v != null && v !== "" && !/^(sentAt|sent_at|sellerConfirmedAt|seller_confirmed_at|token)$/.test(k))
-    .slice(0, 40)
-    .map(([k, v]) => `- ${k}: ${typeof v === "object" ? JSON.stringify(v).slice(0, 200) : String(v).slice(0, 200)}`);
-  const rosterLines = roster.slice(0, 20).map((p: any) =>
-    `- ${p?.name ?? "(unnamed)"}${p?.role ? ` — ${p.role}` : ""}${p?.relation ? ` (${p.relation})` : ""}${p?.deceased ? " — DECEASED" : ""}${p?.signer ? " — must sign" : ""}`
+    .slice(0, 120)
+    .map(([k, v]) => `- ${k}: ${typeof v === "object" ? JSON.stringify(v).slice(0, 1200) : String(v).slice(0, 1200)}`);
+  const rosterLines = roster.slice(0, 60).map((p: any) =>
+    `- ${p?.name ?? "(unnamed)"}${p?.role ? ` — ${p.role}` : ""}${p?.relation ? ` (${p.relation})` : ""}${p?.deceased ? " — DECEASED" : ""}${p?.signer ? " — must sign" : ""}${p?.notes ? ` — notes: ${String(p.notes).slice(0, 300)}` : ""}`
   );
+
   const treeBlock = [
     `- Questionnaire sent: ${treeSentAt ? String(treeSentAt).slice(0, 10) : "no"}   Completed by seller: ${treeDoneAt ? String(treeDoneAt).slice(0, 10) : "no"}`,
     `- Reviewed by a broker: ${(sub as any).ownership_reviewed_at ? String((sub as any).ownership_reviewed_at).slice(0, 10) : "no — the exact document list is NOT final yet"}`,
@@ -270,15 +271,16 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
       .select("file_name, document_type, extracted_summary, extraction_status, created_at")
       .eq("customer_profile_id", sub.customer_profile_id)
       .order("created_at", { ascending: true })
-      .limit(20);
+      .limit(40);
     if (files?.length) {
       filesBlock = files.map((f: any, i: number) => {
         const status = f.extraction_status || "unknown";
-        const summary = (f.extracted_summary || "").slice(0, 400);
+        const summary = (f.extracted_summary || "").slice(0, 1500);
         return `[${i + 1}] ${f.file_name}${f.document_type ? ` (${f.document_type})` : ""} — extraction: ${status}${summary ? `\n   Summary: ${summary}` : ""}`;
       }).join("\n");
     }
   }
+
 
   // Any explicit document checklist tracked on the submission.
   const { data: docReqs } = await svc
@@ -325,9 +327,15 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
     `FAMILY TREE / OWNERSHIP QUESTIONNAIRE ("confirming the deed")`,
     treeBlock,
     ``,
-    `CUSTOMER FORM MESSAGE`,
-    fmt(sub.message) === "—" ? "(none)" : String(sub.message).slice(0, 800),
-    sub.details ? `\nDetails: ${String(sub.details).slice(0, 400)}` : "",
+    `CUSTOMER FORM MESSAGE (verbatim — read it all)`,
+    fmt(sub.message) === "—" ? "(none)" : String(sub.message).slice(0, 6000),
+    sub.details
+      ? `\nFORM DETAILS (verbatim):\n${typeof sub.details === "object" ? JSON.stringify(sub.details, null, 1).slice(0, 6000) : String(sub.details).slice(0, 6000)}`
+      : "",
+    (sub as any).admin_notes ? `\nINTERNAL BROKER NOTES (do not quote to the customer):\n${String((sub as any).admin_notes).slice(0, 2000)}` : "",
+    (sub as any).seller_attachments
+      ? `\nSELLER ATTACHMENTS ON THE FORM:\n${(typeof (sub as any).seller_attachments === "object" ? JSON.stringify((sub as any).seller_attachments) : String((sub as any).seller_attachments)).slice(0, 1500)}`
+      : "",
     ``,
     `DOCUMENT CHECKLIST`,
     reqsBlock,
@@ -335,6 +343,7 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
     `ATTACHED DOCUMENTS (AI-extracted summaries)`,
     filesBlock,
   ].filter(Boolean).join("\n");
+
 }
 
 // Recent real corrections brokers made to AI drafts — live house knowledge.
@@ -440,10 +449,11 @@ const TOOLS = [
     type: "function",
     function: {
       name: "get_submission_context",
-      description: "Returns THIS specific customer's submission: what they told us on the form (cemetery, property, ownership, timeline), the current pipeline state (quote sent/accepted, payment, listing agreement, POA), the document checklist, and AI-extracted summaries of any documents they've already uploaded (e.g. their deed). Call this when the reply should reference the customer's own situation — what they submitted, what documents we already have from them, whether we've quoted them, whether they've signed, etc. Prefer calling this ONCE early rather than guessing.",
+      description: "DEPRECATED — this customer's full file is already included in the user message. Do not call it; re-read the file instead.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
+
 ];
 
 async function runTool(name: string, args: any, ctx: { submissionId?: string }): Promise<string> {
@@ -511,17 +521,15 @@ RULES:
 
 HOW OUR PROCESS RUNS (know this by heart, keep it accurate):
 Inquiry → seller sends details and a copy of the deed → we send a suggested sales price and listing options → seller accepts → listing agreement signed and countersigned → seller completes the online family-tree / ownership questionnaire ("confirming the deed") → a broker reviews it and only THEN do we know the exact documents → we send the personalised document request → seller signs, and anything requiring notarisation (the limited POA, and any affidavits or consents) is notarised in person or through the online notary link we send → the ORIGINAL wet-ink deed, POA and other originals are MAILED to us to finalise the listing (photo IDs are fine as a photo or scan, no mailing) → listing goes live → sale → we handle the cemetery transfer and the seller is paid at closing.
-Never present a final document checklist before the questionnaire is completed and reviewed. Once it has been, use get_submission_context and speak to their actual checklist and answers rather than generalities. Call get_process_flow for the detailed version.
+Never present a final document checklist before the questionnaire is completed and reviewed. Once it has been, speak to their actual checklist and answers (both are in the customer file below) rather than generalities. Call get_process_flow for the detailed version.
 
 ${HOUSE_RULES_LEARNED}
 
-TOOLS — use sparingly to keep costs down:
-- Only call a tool when the customer's question or the admin's instructions actually require that specific information.
-- Do NOT call tools "just in case". If the reply doesn't need contract details, don't fetch them.
-- When the reply should be specific to this customer (their cemetery, their documents, their quote status, whether they've already sent us the deed, what they answered in the family tree), call get_submission_context ONCE early — it's a single cheap call that tells you what we already know about them, including the ownership questionnaire answers and the people identified on it.
-- For "what documents do you need" or "who has to sign" questions, call get_ownership_authority_guide (and get_required_documents_reference if useful) AFTER get_submission_context, so your answer reflects what the customer has already provided (paid, LA signed, deed uploaded, POA signed, etc.) rather than asking for it again.
-- For "what happens next / how does this work" questions, call get_process_flow.
-- Never call more than 3 tools for one reply unless clearly necessary.
+TOOLS — the customer's full file is ALREADY provided below; use tools only for anything it doesn't cover:
+- THIS CUSTOMER'S FILE (their form message, property, ownership, questionnaire answers, checklist, uploaded document summaries) is included in the user message. Read every line of it before writing. Do NOT call get_submission_context — you already have it.
+- Never write anything that contradicts, ignores, or re-asks for something already in that file. If they already told us something (owner deceased, co-owners, section/space numbers, deed uploaded), acknowledge it instead of asking again.
+- Only call a tool when the customer's question or the admin's instructions require reference material you don't have (process detail, contract/POA terms, pricing, cemetery lookup, ownership authority guide).
+- Do NOT call tools "just in case". Never call more than 3 tools for one reply.
 - After you have what you need, write the final reply as plain text — no tool calls in the final message.
 `.trim();
 
@@ -532,10 +540,21 @@ TOOLS — use sparingly to keep costs down:
         }).join("\n\n---\n\n")
       : (customerLastMessage ? `[1] CUSTOMER\n${customerLastMessage}` : "(no prior thread supplied)");
 
+    // Always preload the customer's full submission file — the model used to
+    // skip the tool call and reply generically, ignoring what the seller told us.
+    let contextBlock = "(no submission linked to this draft)";
+    if (submissionId) {
+      try { contextBlock = await getSubmissionContext(String(submissionId)); }
+      catch (e) { contextBlock = `(could not load submission context: ${(e as Error).message})`; }
+    }
+
     const userMsg = `
 RECIPIENT: ${recipientName || "(unknown)"} <${recipientEmail || "unknown"}>
 ADMIN (sender name for signature): ${adminName || "Texas Cemetery Brokers"}
 SUBJECT LINE (context only, do not repeat inside body): ${subject || "(none)"}
+
+THIS CUSTOMER'S FILE — everything they have given us so far. Read all of it and use it:
+${contextBlock}
 
 PRIOR THREAD (oldest → newest):
 ${threadBlock}
@@ -543,8 +562,9 @@ ${threadBlock}
 ADMIN INSTRUCTIONS FOR THIS REPLY:
 ${instructions?.trim() || "(none — write a natural, helpful reply to the customer's last message)"}
 
-Write the reply. Call tools ONLY if you need specific facts you don't already have.
+Before writing, silently check the file above for: what they asked for, what they already told us, what documents we already hold, and where they are in the process. Never ask for information already in the file. Write the reply. Call tools ONLY for reference facts not in the file.
 `.trim();
+
 
     const messages: any[] = [
       { role: "system", content: system },
