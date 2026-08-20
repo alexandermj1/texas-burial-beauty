@@ -820,7 +820,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       // Each pipeline filter matches only its exact stage — a submission lives
       // in exactly one stage (the furthest reached), so no double-counting.
-      const step = stageStep(s);
+      const step = effStep(s);
       if (awaitingQuoteFilter && step !== 2) return false;
       if (quotedFilter && step !== 3) return false;
       if (acceptedFilter && step !== 4) return false;
@@ -2584,6 +2584,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           <div className="flex-1 min-w-0 xl:border-l xl:border-border/50 xl:pl-3">
             {(() => {
               const tx = submissions.filter(s => subRegion(s) === "texas");
+              // Count merged people once, not once per duplicate submission.
+              const seenTx = new Set<string>();
+              const txU = tx.filter(s => {
+                const k = (s.email || "").trim().toLowerCase();
+                if (!k || UNMERGED_IDS.has(s.id)) return true;
+                if (seenTx.has(k)) return false;
+                seenTx.add(k); return true;
+              });
               type Tone = { dot: string; ring: string; text: string; soft: string };
               const tones: Record<string, Tone> = {
                 slate:   { dot: "bg-slate-500",   ring: "ring-slate-500/40",   text: "text-slate-600 dark:text-slate-300",     soft: "bg-slate-500/10" },
@@ -2600,29 +2608,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 active: boolean; toggle: () => void; tone: Tone;
               }[] = [
                 { key: "docs", label: "Attachments", icon: Paperclip,
-                  count: tx.filter(s => hasDocs(s)).length,
+                  count: txU.filter(s => hasDocs(s)).length,
                   active: docsFilter === "with",
                   toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.slate },
                 { key: "awaiting-quote", label: "Awaiting quote", icon: Clock,
-                  count: tx.filter(s => stageStep(s) === 2).length,
+                  count: txU.filter(s => effStep(s) === 2).length,
                   active: awaitingQuoteFilter, toggle: () => setAwaitingQuoteFilter(!awaitingQuoteFilter), tone: tones.amber },
                 { key: "quoted", label: "Quoted", icon: DollarSign,
-                  count: tx.filter(s => stageStep(s) === 3).length,
+                  count: txU.filter(s => effStep(s) === 3).length,
                   active: quotedFilter, toggle: () => setQuotedFilter(!quotedFilter), tone: tones.purple },
                 { key: "accepted", label: "Accepted", icon: CheckCircle,
-                  count: tx.filter(s => stageStep(s) === 4).length,
+                  count: txU.filter(s => effStep(s) === 4).length,
                   active: acceptedFilter, toggle: () => setAcceptedFilter(!acceptedFilter), tone: tones.emerald },
                 { key: "tree-sent", label: "Tree sent", icon: Send,
-                  count: tx.filter(s => stageStep(s) === 5).length,
+                  count: txU.filter(s => effStep(s) === 5).length,
                   active: ftSentFilter, toggle: () => setFtSentFilter(!ftSentFilter), tone: tones.indigo },
                 { key: "tree-done", label: "Tree done", icon: Users,
-                  count: tx.filter(s => stageStep(s) === 6).length,
+                  count: txU.filter(s => effStep(s) === 6).length,
                   active: ftDoneFilter, toggle: () => setFtDoneFilter(!ftDoneFilter), tone: tones.teal },
                 { key: "docs-out", label: "Docs out", icon: FileText,
-                  count: tx.filter(s => stageStep(s) === 7).length,
+                  count: txU.filter(s => effStep(s) === 7).length,
                   active: docsOutFilter, toggle: () => setDocsOutFilter(!docsOutFilter), tone: tones.sky },
                 { key: "complete", label: "Complete", icon: Sparkles,
-                  count: tx.filter(s => (s as any).documents_completed_at).length,
+                  count: txU.filter(s => effStep(s) === 8).length,
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
               ];
               const anyActive = steps.some(s => s.active);
