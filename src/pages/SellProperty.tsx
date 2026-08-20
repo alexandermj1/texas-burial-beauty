@@ -28,6 +28,7 @@ const faqs = [
   { q: "How much does it cost to list?", a: "Through August 31, listing fees are reduced: Starter is $0 (was $299), Pro is $99 (was $399), and Featured is $299 (was $599). No marketing costs or hidden charges." },
   { q: "How do you determine the value of my property?", a: "We research recent sales of similar properties in the same cemetery, considering factors like location within the cemetery, property type, and current market demand." },
   { q: "What if I inherited property and don't have the deed?", a: "No problem. We can help you navigate the process of obtaining a replacement deed or the necessary documentation from the cemetery." },
+  { q: "Do buyers have to pay all at once?", a: "No — we offer qualified buyers 0% interest financing, which widens the pool of families who can purchase your property. It makes no difference to you: you're still paid the full agreed amount upfront at closing, and we carry the payment plan." },
 ];
 
 const SellProperty = () => {
