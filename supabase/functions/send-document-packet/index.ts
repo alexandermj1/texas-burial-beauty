@@ -198,6 +198,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Every other prepared document (affidavit of heirship, custom paperwork).
+    for (const d of extraDocs) {
+      if (!d.path || seenPaths.has(d.path)) continue;
+      seenPaths.add(d.path);
+      const { data: file } = await svc.storage.from('contracts').download(d.path);
+      if (!file) continue;
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      const safeLabel = String(d.label ?? 'Document').replace(/[^A-Za-z0-9 ._-]/g, '').trim().slice(0, 80) || 'Document';
+      attachments.push({
+        filename: `${safeLabel}.pdf`,
+        mimeType: 'application/pdf',
+        contentBase64: btoa(bin),
+      });
+    }
+
+
     // Keep the request inside the customer's existing Gmail conversation so the
     // whole chain stays in one place on the submission.
     const { data: lastMsg } = await svc.from('email_messages')
