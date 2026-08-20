@@ -2828,6 +2828,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               });
             })();
 
+            const plotMatch = plotMatchMap[s.id];
+            if (plotMatch) {
+              chips.push({
+                key: "plotmatch",
+                icon: Sparkles,
+                text: "Potential Plot Match",
+                tone: "text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-50 dark:bg-fuchsia-950/30 border-fuchsia-300/70 dark:border-fuchsia-800",
+                title: `Pre-need buyer — a seller just accepted a quote at ${plotMatch.cemetery || "their cemetery"} (${formatDate(plotMatch.at)})`,
+              });
+            }
+
             const customTag = String((s as any).custom_tag || "").trim();
             if (customTag) {
               chips.push({
