@@ -2762,7 +2762,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const ft = ftState(sg);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((sg as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (s as any).documents_completed_at };
+              if ((sg as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
               if ((sg as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
               if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
               if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
@@ -2791,11 +2791,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               chips.push({ key: "files", icon: Paperclip, tone: "text-[hsl(var(--status-docs-fg))] bg-[hsl(var(--status-docs-soft))] border-[hsl(var(--status-docs-border))]", title: "Customer submitted attachments" });
             }
 
-            if ((s as any).quote_sent_at) {
-              const accepted = (s as any).quote_response === "accepted";
-              const quotedPer = Number((s as any).accepted_quote_amount ?? (s as any).quote_amount) || 0;
+            if ((sg as any).quote_sent_at) {
+              const accepted = (sg as any).quote_response === "accepted";
+              const quotedPer = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
               const rowSpaces = Math.max(1, Number((s as any).spaces) || 1);
-              const rowRetailPer = Number((s as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
+              const rowRetailPer = Number((sg as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
               const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
               const rowProp = [
                 (s as any).property_type || null,
@@ -2815,7 +2815,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     : "text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30 border-purple-300/70 dark:border-purple-800",
                   title: accepted
                     ? `Agreed sales price for ${rowProp} · $${salesPer.toLocaleString()}/plot`
-                    : `Quote sent for ${rowProp} · $${quotedPer.toLocaleString()}/plot · ${formatDate((s as any).quote_sent_at)}`,
+                    : `Quote sent for ${rowProp} · $${quotedPer.toLocaleString()}/plot · ${formatDate((sg as any).quote_sent_at)}`,
                 });
               }
             }
