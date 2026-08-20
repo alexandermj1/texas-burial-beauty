@@ -271,15 +271,16 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
       .select("file_name, document_type, extracted_summary, extraction_status, created_at")
       .eq("customer_profile_id", sub.customer_profile_id)
       .order("created_at", { ascending: true })
-      .limit(20);
+      .limit(40);
     if (files?.length) {
       filesBlock = files.map((f: any, i: number) => {
         const status = f.extraction_status || "unknown";
-        const summary = (f.extracted_summary || "").slice(0, 400);
+        const summary = (f.extracted_summary || "").slice(0, 1500);
         return `[${i + 1}] ${f.file_name}${f.document_type ? ` (${f.document_type})` : ""} — extraction: ${status}${summary ? `\n   Summary: ${summary}` : ""}`;
       }).join("\n");
     }
   }
+
 
   // Any explicit document checklist tracked on the submission.
   const { data: docReqs } = await svc
