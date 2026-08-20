@@ -76,7 +76,7 @@ export const guides: Guide[] = [
     kicker: "The Buyer's Edition",
     title: "Cemetery Plots for Sale in",
     titleAccent: "Texas",
-    dek: "Buy plots, niches and crypts across Texas for typically 30–50% below cemetery retail — verified resale inventory, in-person showings and 0% pre-need financing.",
+    dek: "Buy plots, niches and crypts across Texas for typically 30–50% below cemetery retail — verified resale inventory, in-person showings and 0% interest pre-need financing over 24 months.",
     status: "live",
     meta: "10 chapters · 8 min read",
     panel: "bg-[hsl(16_50%_58%)]",
