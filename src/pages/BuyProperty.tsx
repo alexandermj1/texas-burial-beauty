@@ -226,6 +226,7 @@ const BuyProperty = () => {
       `Property type: ${typeLabel}`,
       `Timeline: ${timelineLabel}`,
       `Budget: ${budgetLabel}`,
+      `Plots wanted: ${selections.quantity || "1"}`,
       `Region: ${selections.region || "—"}`,
       selections.cemetery ? `Cemetery: ${selections.cemetery}` : null,
       `Preferred contact: ${prefLabel}`,
@@ -603,6 +604,7 @@ const BuyProperty = () => {
                       <div className="flex justify-between gap-3"><span className="text-muted-foreground">Type</span><span className="text-foreground font-medium text-right">{propertyTypes.find(t => t.id === selections.propertyType)?.label || "—"}</span></div>
                       <div className="flex justify-between gap-3"><span className="text-muted-foreground">Timeline</span><span className="text-foreground font-medium text-right">{timelines.find(t => t.id === selections.timeline)?.label || "—"}</span></div>
                       <div className="flex justify-between gap-3"><span className="text-muted-foreground">Budget</span><span className="text-foreground font-medium text-right">{budgets.find(b => b.id === selections.budget)?.label || "—"}</span></div>
+                      <div className="flex justify-between gap-3"><span className="text-muted-foreground">Plots</span><span className="text-foreground font-medium text-right">{selections.quantity || "1"}</span></div>
                       <div className="flex justify-between gap-3"><span className="text-muted-foreground">Location</span><span className="text-foreground font-medium text-right truncate max-w-[60%]">{selections.cemetery || selections.region || "—"}</span></div>
                     </div>
                   </div>
