@@ -449,10 +449,11 @@ const TOOLS = [
     type: "function",
     function: {
       name: "get_submission_context",
-      description: "Returns THIS specific customer's submission: what they told us on the form (cemetery, property, ownership, timeline), the current pipeline state (quote sent/accepted, payment, listing agreement, POA), the document checklist, and AI-extracted summaries of any documents they've already uploaded (e.g. their deed). Call this when the reply should reference the customer's own situation — what they submitted, what documents we already have from them, whether we've quoted them, whether they've signed, etc. Prefer calling this ONCE early rather than guessing.",
+      description: "DEPRECATED — this customer's full file is already included in the user message. Do not call it; re-read the file instead.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
+
 ];
 
 async function runTool(name: string, args: any, ctx: { submissionId?: string }): Promise<string> {
