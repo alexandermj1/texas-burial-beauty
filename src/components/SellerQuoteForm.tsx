@@ -215,8 +215,8 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     const sections: { chapter: string; title: React.ReactNode; helper: string; body: React.ReactNode; validate?: () => string | null }[] = [
       {
         chapter: "About you",
-        title: <>First — what should we <span className="italic font-medium text-primary">call you?</span></>,
-        helper: "Just your name for now. We'll ask about the plot in a moment.",
+        title: <>Let's start with your <span className="italic font-medium text-primary">name.</span></>,
+        helper: "Just your name for now — we'll ask about the plot in a moment.",
         validate: () => (!form.name.trim() ? "Please enter your name." : null),
         body: (
           <input
