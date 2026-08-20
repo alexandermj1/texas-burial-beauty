@@ -733,7 +733,50 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eKind = isMobile ? "all" : kindFilter;
   const eStage = isMobile ? "all" : stageFilter;
   const eSellerView = !isMobile && isSellerView;
+
+  // ---- Potential plot match -------------------------------------------------
+  // When a SELLER submission reaches "quote accepted" at a cemetery, any pre-need
+  // BUYER who inquired about that same cemetery becomes actionable: we now have
+  // inventory for them. Those buyers get pulled into "Needs reply" with a
+  // "Potential Plot Match" tag.
+  const plotMatchMap = useMemo(() => {
+    const inventory = new Map<string, string>(); // canon cemetery -> accepted date
+    for (const s of submissions) {
+      if (resolveKind(s.customer_kind, s.source) !== "seller") continue;
+      if ((s as any).quote_response !== "accepted") continue;
+      const canon = _canon(s.cemetery || "");
+      if (!canon) continue;
+      const at = (s as any).quote_responded_at || s.created_at;
+      const prev = inventory.get(canon);
+      if (!prev || new Date(at).getTime() > new Date(prev).getTime()) inventory.set(canon, at);
+    }
+    const out: Record<string, { cemetery: string; at: string }> = {};
+    if (inventory.size === 0) return out;
+    const preneedRx = /pre\s*-?\s*need/i;
+    for (const s of submissions) {
+      if (resolveKind(s.customer_kind, s.source) !== "buyer") continue;
+      const timelineText = [(s as any).timeline, s.details, s.message].filter(Boolean).join(" ");
+      if (!preneedRx.test(timelineText)) continue;
+      const canon = _canon(s.cemetery || "");
+      if (!canon) continue;
+      const at = inventory.get(canon);
+      if (!at) continue;
+      out[s.id] = { cemetery: s.cemetery || "", at };
+    }
+    return out;
+  }, [submissions]);
+
+  // Needs-reply set including buyers surfaced by a fresh plot match.
+  const awaitingAll = useMemo(() => {
+    const m: Record<string, string> = { ...awaitingMap };
+    for (const [sid, info] of Object.entries(plotMatchMap)) {
+      if (!m[sid] || new Date(info.at).getTime() > new Date(m[sid]).getTime()) m[sid] = info.at;
+    }
+    return m;
+  }, [awaitingMap, plotMatchMap]);
+
   const filtered = useMemo(() => {
+
     const matches = submissions.filter(s => {
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (regionFilter === "texas" && cemeteryCanon && !cemeteriesOpen) {
