@@ -395,7 +395,7 @@ const BuyProperty = () => {
                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-3 mb-4">
                   <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   <p className="text-xs sm:text-sm text-foreground leading-snug">
-                    <strong>Planning ahead?</strong> Pre-need buyers get our best prices plus <strong>interest-free financing</strong> — 20% down, 0% interest.
+                    <strong>Planning ahead?</strong> Pre-need buyers save <strong>around 40% off cemetery retail</strong> and can spread the cost over <strong>24 months at 0% interest</strong>.
                   </p>
                 </div>
                 <div className="grid sm:grid-cols-3 gap-3">

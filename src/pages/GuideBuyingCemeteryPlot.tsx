@@ -66,7 +66,7 @@ const faqs = [
   },
   {
     q: "Do you offer financing on cemetery plots?",
-    a: "For pre-need (planning-ahead) purchases we offer our best pricing plus financing — as little as 20% down with 0% interest. At-need purchases are handled as quickly as possible to avoid delaying a burial.",
+    a: "Yes. Pre-need (planning-ahead) buyers can spread the cost over 24 months at 0% interest — no interest, no finance charges — on top of our best pricing, which is typically around 40% below what the cemetery charges for a comparable space. At-need purchases are handled as quickly as possible to avoid delaying a burial.",
   },
   {
     q: "Is buying through a broker safer than Craigslist or a marketplace?",
@@ -74,7 +74,7 @@ const faqs = [
   },
   {
     q: "What's the difference between buying at-need and pre-need?",
-    a: "At-need means buying now because a death has occurred; we move quickly to complete the transfer. Pre-need means planning ahead, which unlocks our best pricing and financing and spares your family the decision later.",
+    a: "At-need means buying now because a death has occurred; we move quickly to complete the transfer. Pre-need means planning ahead, which unlocks our best pricing — around 40% off cemetery retail — plus 0% interest financing over 24 months, and spares your family the decision later.",
   },
 ];
 
@@ -86,7 +86,7 @@ const jsonLd: Record<string, unknown>[] = [
     "@context": "https://schema.org",
     "@type": "Article",
     headline: "Cemetery Plots for Sale in Texas",
-    description: "Buy cemetery plots, niches and crypts across Texas for 30–50% below cemetery prices — verified resale inventory, in-person showings and 0% pre-need financing.",
+    description: "Buy cemetery plots, niches and crypts across Texas for 30–50% below cemetery prices — verified resale inventory, in-person showings and 0% interest pre-need financing over 24 months.",
     mainEntityOfPage: FULL,
     url: FULL,
     inLanguage: "en-US",
@@ -144,7 +144,7 @@ const GuideBuyingCemeteryPlot = () => (
   <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
       title="Cemetery Plots for Sale in Texas | Up to 50% Off Retail"
-      description="Buy cemetery plots, niches & crypts across Texas for 30–50% below cemetery prices. Verified resale inventory, in-person showings & 0% pre-need financing."
+      description="Buy cemetery plots, niches & crypts across Texas for 30–50% below cemetery prices. Verified resale inventory, in-person showings & 24-month 0% pre-need financing."
       path={PATH}
       type="article"
       jsonLd={jsonLd}
@@ -301,10 +301,10 @@ const GuideBuyingCemeteryPlot = () => (
 
         <Section id="timing" eyebrow="At-need or pre-need" title="Buying now for a loss, or planning ahead">
           <p><strong>Buying at-need (a loved one has passed).</strong> When time is short and emotions are high, the last thing a family needs is a complicated, uncertain purchase. Because we know each cemetery's process and work directly with their offices, we can move quickly — finding an appropriate plot and completing the transfer as fast as possible, so the burial isn't held up.</p>
-          <p><strong>Buying pre-need (planning ahead).</strong> Planning early is the single best way to save and to spare your family a difficult decision later. Pre-need buyers get our <strong>best pricing</strong>, plus the option to spread the cost: <strong>as little as 20% down and 0% interest financing</strong>. You lock in today's resale price, pay over time with no interest, and take that worry off the table for good.</p>
+          <p><strong>Buying pre-need (planning ahead).</strong> Planning early is the single best way to save and to spare your family a difficult decision later. Pre-need buyers get our <strong>best pricing</strong>, plus the option to spread the cost over <strong>24 months at 0% interest</strong> — no interest and no finance charges. Pre-need pricing typically lands <strong>around 40% below what the cemetery charges</strong> for a comparable space, so you lock in today's resale price, pay over time with no interest, and take that worry off the table for good.</p>
           <ul className="space-y-3">
             <li><strong>At-need:</strong> fast, guided, transfer completed as quickly as the cemetery allows.</li>
-            <li><strong>Pre-need:</strong> best pricing, 20% down, 0% interest financing, no pressure.</li>
+            <li><strong>Pre-need:</strong> around 40% off cemetery retail, 0% interest financing over 24 months, no pressure.</li>
           </ul>
         </Section>
 
