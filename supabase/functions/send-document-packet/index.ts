@@ -55,6 +55,11 @@ Deno.serve(async (req) => {
     const poaUrl: string | null = body?.poa_url ?? null;
     const poaFor: string | null = body?.poa_for ?? null;
     const poas = poasIn.length ? poasIn : (poaUrl ? [{ name: poaFor, url: poaUrl }] : []);
+    // Any other paper we prepared for them (affidavit of heirship, custom
+    // contracts) is attached as a finished PDF alongside the POAs.
+    const extraDocs: { label?: string | null; path?: string | null }[] =
+      Array.isArray(body?.docs) ? body.docs : [];
+
 
     const previewOnly: boolean = body?.preview === true;
     if (!submissionId || !packetUrl) {
