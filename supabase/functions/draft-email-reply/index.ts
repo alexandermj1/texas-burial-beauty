@@ -524,13 +524,11 @@ Never present a final document checklist before the questionnaire is completed a
 
 ${HOUSE_RULES_LEARNED}
 
-TOOLS — use sparingly to keep costs down:
-- Only call a tool when the customer's question or the admin's instructions actually require that specific information.
-- Do NOT call tools "just in case". If the reply doesn't need contract details, don't fetch them.
-- When the reply should be specific to this customer (their cemetery, their documents, their quote status, whether they've already sent us the deed, what they answered in the family tree), call get_submission_context ONCE early — it's a single cheap call that tells you what we already know about them, including the ownership questionnaire answers and the people identified on it.
-- For "what documents do you need" or "who has to sign" questions, call get_ownership_authority_guide (and get_required_documents_reference if useful) AFTER get_submission_context, so your answer reflects what the customer has already provided (paid, LA signed, deed uploaded, POA signed, etc.) rather than asking for it again.
-- For "what happens next / how does this work" questions, call get_process_flow.
-- Never call more than 3 tools for one reply unless clearly necessary.
+TOOLS — the customer's full file is ALREADY provided below; use tools only for anything it doesn't cover:
+- THIS CUSTOMER'S FILE (their form message, property, ownership, questionnaire answers, checklist, uploaded document summaries) is included in the user message. Read every line of it before writing. Do NOT call get_submission_context — you already have it.
+- Never write anything that contradicts, ignores, or re-asks for something already in that file. If they already told us something (owner deceased, co-owners, section/space numbers, deed uploaded), acknowledge it instead of asking again.
+- Only call a tool when the customer's question or the admin's instructions require reference material you don't have (process detail, contract/POA terms, pricing, cemetery lookup, ownership authority guide).
+- Do NOT call tools "just in case". Never call more than 3 tools for one reply.
 - After you have what you need, write the final reply as plain text — no tool calls in the final message.
 `.trim();
 
@@ -541,10 +539,21 @@ TOOLS — use sparingly to keep costs down:
         }).join("\n\n---\n\n")
       : (customerLastMessage ? `[1] CUSTOMER\n${customerLastMessage}` : "(no prior thread supplied)");
 
+    // Always preload the customer's full submission file — the model used to
+    // skip the tool call and reply generically, ignoring what the seller told us.
+    let contextBlock = "(no submission linked to this draft)";
+    if (submissionId) {
+      try { contextBlock = await getSubmissionContext(String(submissionId)); }
+      catch (e) { contextBlock = `(could not load submission context: ${(e as Error).message})`; }
+    }
+
     const userMsg = `
 RECIPIENT: ${recipientName || "(unknown)"} <${recipientEmail || "unknown"}>
 ADMIN (sender name for signature): ${adminName || "Texas Cemetery Brokers"}
 SUBJECT LINE (context only, do not repeat inside body): ${subject || "(none)"}
+
+THIS CUSTOMER'S FILE — everything they have given us so far. Read all of it and use it:
+${contextBlock}
 
 PRIOR THREAD (oldest → newest):
 ${threadBlock}
@@ -552,8 +561,9 @@ ${threadBlock}
 ADMIN INSTRUCTIONS FOR THIS REPLY:
 ${instructions?.trim() || "(none — write a natural, helpful reply to the customer's last message)"}
 
-Write the reply. Call tools ONLY if you need specific facts you don't already have.
+Before writing, silently check the file above for: what they asked for, what they already told us, what documents we already hold, and where they are in the process. Never ask for information already in the file. Write the reply. Call tools ONLY for reference facts not in the file.
 `.trim();
+
 
     const messages: any[] = [
       { role: "system", content: system },
