@@ -327,9 +327,15 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
     `FAMILY TREE / OWNERSHIP QUESTIONNAIRE ("confirming the deed")`,
     treeBlock,
     ``,
-    `CUSTOMER FORM MESSAGE`,
-    fmt(sub.message) === "—" ? "(none)" : String(sub.message).slice(0, 800),
-    sub.details ? `\nDetails: ${String(sub.details).slice(0, 400)}` : "",
+    `CUSTOMER FORM MESSAGE (verbatim — read it all)`,
+    fmt(sub.message) === "—" ? "(none)" : String(sub.message).slice(0, 6000),
+    sub.details
+      ? `\nFORM DETAILS (verbatim):\n${typeof sub.details === "object" ? JSON.stringify(sub.details, null, 1).slice(0, 6000) : String(sub.details).slice(0, 6000)}`
+      : "",
+    (sub as any).admin_notes ? `\nINTERNAL BROKER NOTES (do not quote to the customer):\n${String((sub as any).admin_notes).slice(0, 2000)}` : "",
+    (sub as any).seller_attachments
+      ? `\nSELLER ATTACHMENTS ON THE FORM:\n${(typeof (sub as any).seller_attachments === "object" ? JSON.stringify((sub as any).seller_attachments) : String((sub as any).seller_attachments)).slice(0, 1500)}`
+      : "",
     ``,
     `DOCUMENT CHECKLIST`,
     reqsBlock,
@@ -337,6 +343,7 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
     `ATTACHED DOCUMENTS (AI-extracted summaries)`,
     filesBlock,
   ].filter(Boolean).join("\n");
+
 }
 
 // Recent real corrections brokers made to AI drafts — live house knowledge.
