@@ -50,6 +50,14 @@ const HOME_FAQ_JSONLD = {
     },
     {
       "@type": "Question",
+      name: "Do you offer financing on cemetery property?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. Families planning ahead (pre-need) can spread the cost over 24 months at 0% interest — no interest and no finance charges.",
+      },
+    },
+    {
+      "@type": "Question",
       name: "Are there upfront fees to sell my cemetery plot?",
       acceptedAnswer: {
         "@type": "Answer",
@@ -123,6 +131,10 @@ const Index = () => {
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base font-light text-muted-foreground sm:text-lg">
                 Recently listed properties at below-market prices across Texas — Dallas, Houston & beyond.
+              </p>
+              <p className="mx-auto mt-3 max-w-xl text-sm font-light text-muted-foreground">
+                Planning ahead? Pre-need families can spread the cost over{" "}
+                <span className="font-medium text-foreground">24 months at 0% interest</span> — no interest, no finance charges.
               </p>
             </div>
 
