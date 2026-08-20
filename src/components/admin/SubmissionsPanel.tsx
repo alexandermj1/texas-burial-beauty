@@ -686,6 +686,31 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     return 1;
   };
 
+  // Duplicate submissions from the same email are merged into one visible card, so
+  // the stage must be resolved across the WHOLE group — otherwise an older, un-quoted
+  // duplicate can keep someone sitting in "Awaiting quote" after they were quoted.
+  const groupBest = useMemo(() => {
+    const best = new Map<string, Submission>();
+    for (const s of submissions) {
+      const key = (s.email || "").trim().toLowerCase();
+      if (!key || UNMERGED_IDS.has(s.id)) continue;
+      const cur = best.get(key);
+      if (!cur || stageStep(s) > stageStep(cur)) best.set(key, s);
+    }
+    return best;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissions, docsEmails]);
+
+  // The submission that defines the group's stage (itself when un-merged).
+  const stageSource = (s: Submission): Submission => {
+    const key = (s.email || "").trim().toLowerCase();
+    if (!key || UNMERGED_IDS.has(s.id)) return s;
+    return groupBest.get(key) || s;
+  };
+  const effStep = (s: Submission) => stageStep(stageSource(s));
+
+
+
 
 
 
