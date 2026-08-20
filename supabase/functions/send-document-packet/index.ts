@@ -111,10 +111,13 @@ Deno.serve(async (req) => {
           <p style="margin:0 0 22px;text-align:center;font-size:13px;color:#6b7280;">
             Everything you need to know is on that page — just click the button above.
           </p>
-          ${listHtml ? `
-          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a6d3b;margin-bottom:6px;">In short, we need</div>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${listHtml}</table>` : `
-          <p style="margin:0;font-size:14px;color:#4a5568;">Nothing is outstanding right now — we'll email you the moment something is needed.</p>`}
+          ${attachCount ? `
+          <p style="margin:0 0 22px;font-size:14px;color:#4a5568;line-height:1.7;">
+            We've also attached ${attachCount === 1 ? 'a document' : `${attachCount} documents`} to this email that we've
+            already prepared and filled in for you — please print, sign where indicated (before a notary where the page says so)
+            and send back to us.
+          </p>` : ''}
+
           <p style="margin:26px 0 0;font-size:13px;color:#4a5568;">
             If the button doesn't work, copy this link into your browser:<br/>
             <span style="color:#1f2a37;word-break:break-all;">${esc(packetUrl)}</span>
