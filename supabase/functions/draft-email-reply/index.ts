@@ -248,11 +248,12 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
   const treeDoneAt = ans?.sellerConfirmedAt ?? ans?.seller_confirmed_at ?? null;
   const answerLines = Object.entries(ans)
     .filter(([k, v]) => v != null && v !== "" && !/^(sentAt|sent_at|sellerConfirmedAt|seller_confirmed_at|token)$/.test(k))
-    .slice(0, 40)
-    .map(([k, v]) => `- ${k}: ${typeof v === "object" ? JSON.stringify(v).slice(0, 200) : String(v).slice(0, 200)}`);
-  const rosterLines = roster.slice(0, 20).map((p: any) =>
-    `- ${p?.name ?? "(unnamed)"}${p?.role ? ` — ${p.role}` : ""}${p?.relation ? ` (${p.relation})` : ""}${p?.deceased ? " — DECEASED" : ""}${p?.signer ? " — must sign" : ""}`
+    .slice(0, 120)
+    .map(([k, v]) => `- ${k}: ${typeof v === "object" ? JSON.stringify(v).slice(0, 1200) : String(v).slice(0, 1200)}`);
+  const rosterLines = roster.slice(0, 60).map((p: any) =>
+    `- ${p?.name ?? "(unnamed)"}${p?.role ? ` — ${p.role}` : ""}${p?.relation ? ` (${p.relation})` : ""}${p?.deceased ? " — DECEASED" : ""}${p?.signer ? " — must sign" : ""}${p?.notes ? ` — notes: ${String(p.notes).slice(0, 300)}` : ""}`
   );
+
   const treeBlock = [
     `- Questionnaire sent: ${treeSentAt ? String(treeSentAt).slice(0, 10) : "no"}   Completed by seller: ${treeDoneAt ? String(treeDoneAt).slice(0, 10) : "no"}`,
     `- Reviewed by a broker: ${(sub as any).ownership_reviewed_at ? String((sub as any).ownership_reviewed_at).slice(0, 10) : "no — the exact document list is NOT final yet"}`,
