@@ -249,8 +249,14 @@ export function buildLogic(state, setS, accent0, CRM) {
 
     L.inheritors().forEach(h => {
       const hs = s.heirSpouse[h.id] || {};
-      if (hs.has === 'yes' && (hs.n || '').trim())
-        add(hs.n, 'Husband or wife of ' + h.n.trim() + ', who inherits \u2014 holds a right of interment and must consent', { must: true });
+      if (hs.has === 'yes' && (hs.n || '').trim()) {
+        const hsDead = hs.alive === 'deceased';
+        add(hs.n,
+          hsDead
+            ? 'Husband or wife of ' + h.n.trim() + ' \u00b7 has died \u2014 no consent needed from them'
+            : 'Husband or wife of ' + h.n.trim() + ', who inherits \u2014 holds a right of interment and must sign a consent',
+          hsDead ? { dead: true } : { must: true });
+      }
     });
 
     return order.map(k => map[k]);
