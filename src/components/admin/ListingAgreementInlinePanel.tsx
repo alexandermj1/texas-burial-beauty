@@ -34,6 +34,9 @@ interface Props {
   /** Hide the tier picker — used inside the quote wizard, where the tier is
    *  only known once the seller accepts and picks one. */
   hideListingOption?: boolean;
+  /** Guaranteed net per space, passed straight from the quote wizard so the
+   *  agreement matches the quote without re-typing it. */
+  netPerPlot?: number;
   onGenerated: (html: string, meta: { signToken: string; signUrl: string }) => void;
 }
 
@@ -71,7 +74,7 @@ const Field = ({
 const inputCls =
   "w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
-export default function ListingAgreementInlinePanel({ seller, hasGenerated, hideListingOption, onGenerated }: Props) {
+export default function ListingAgreementInlinePanel({ seller, hasGenerated, hideListingOption, netPerPlot, onGenerated }: Props) {
   const { toast } = useToast();
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -111,7 +114,9 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
       setPlotCount(String(plots));
       const quote = Number(row.quote_amount) || 0;
       const listTotal = Number(row.list_price) || 0;
-      const per = quote > 0 ? quote : listTotal > 0 ? Math.round(listTotal / plots) : 0;
+      const per = Number(netPerPlot) > 0
+        ? Number(netPerPlot)
+        : quote > 0 ? quote : listTotal > 0 ? Math.round(listTotal / plots) : 0;
       setPerPlot(per > 0 ? String(per) : "");
 
       const tier = String(row.listing_tier ?? row.listing_option ?? "").toLowerCase();
@@ -148,7 +153,12 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
     return () => {
       cancelled = true;
     };
-  }, [seller.id, seller.name, seller.spaces, seller.email, seller.cemetery]);
+  }, [seller.id, seller.name, seller.spaces, seller.email, seller.cemetery, netPerPlot]);
+
+  // Keep in step with the quote above while the broker edits it.
+  useEffect(() => {
+    if (Number(netPerPlot) > 0) setPerPlot(String(Math.round(Number(netPerPlot))));
+  }, [netPerPlot]);
 
   const plots = Math.max(1, Number(plotCount) || 1);
   // Per-space price is the source of truth; the contract total is derived from it.

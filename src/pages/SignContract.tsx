@@ -100,12 +100,15 @@ type SellerFields = {
   email: string;
   plot_description: string;
   listing_option: string;
+  /** Only used by the "Set your own price" package — the seller's own floor. */
+  authorized_min_per_plot: string;
 };
 
 const listingOptions = [
   { id: "Starter", tagline: "Essential listing on our marketplace with standard exposure." },
   { id: "Pro", tagline: "Wider marketing, faster time-to-buyer." },
   { id: "Featured", tagline: "Full marketing package with priority placement." },
+  { id: "Set your own price", tagline: "Everything in Featured, and you set the minimum price." },
 ] as const;
 
 export default function SignContract() {
@@ -122,6 +125,7 @@ export default function SignContract() {
   const [fields, setFields] = useState<SellerFields>({
     seller_name: "", address: "", city_state_zip: "",
     phone: "", email: "", plot_description: "", listing_option: "Starter",
+    authorized_min_per_plot: "",
   });
   // Fields the admin already filled in on the contract — the seller sees them
   // as read-only so they cannot alter details we've verified (name, plots,
@@ -130,6 +134,7 @@ export default function SignContract() {
   const [locked, setLocked] = useState<Record<keyof SellerFields, boolean>>({
     seller_name: false, address: false, city_state_zip: false,
     phone: false, email: false, plot_description: false, listing_option: false,
+    authorized_min_per_plot: false,
   });
   const [refreshing, setRefreshing] = useState(false);
 
@@ -243,6 +248,7 @@ export default function SignContract() {
           email: fd.email ?? "",
           plot_description: fd.plot_description ?? "",
           listing_option: fd.listing_option ?? "Starter",
+          authorized_min_per_plot: fd.authorized_min_per_plot != null ? String(fd.authorized_min_per_plot) : "",
         };
         setFields(next);
         // Lock anything the admin pre-filled. Mailing address + city/state/zip
@@ -255,6 +261,7 @@ export default function SignContract() {
           email: !!next.email.trim(),
           plot_description: !!next.plot_description.trim(),
           listing_option: !!fd.listing_option,
+          authorized_min_per_plot: false,
         });
         setDone(data.already_signed);
       } catch (e) {
@@ -273,6 +280,26 @@ export default function SignContract() {
     return () => clearTimeout(t);
   }, [done, info?.kind, submissionId, navigate]);
 
+  const ownPrice = /own price/i.test(fields.listing_option);
+  const plotsOnContract = Math.max(
+    1,
+    Number(((info?.fill_data ?? {}) as Record<string, unknown>).plot_count) || 1,
+  );
+
+  /** What we actually post to the function: the seller's own price only counts
+   *  on the "Set your own price" package, and it drives the contract total. */
+  const outboundFields = () => {
+    const out: Record<string, unknown> = { ...fields };
+    const per = Number(fields.authorized_min_per_plot) || 0;
+    if (ownPrice && per > 0) {
+      out.authorized_min_per_plot = per;
+      out.authorized_min_total = per * plotsOnContract;
+    } else {
+      delete out.authorized_min_per_plot;
+    }
+    return out;
+  };
+
   const setField = (k: keyof SellerFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFields((f) => ({ ...f, [k]: e.target.value }));
 
@@ -282,7 +309,7 @@ export default function SignContract() {
       const res = await fetch(FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
-        body: JSON.stringify({ action: "refresh", token, fields }),
+        body: JSON.stringify({ action: "refresh", token, fields: outboundFields() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not update contract");
@@ -304,7 +331,7 @@ export default function SignContract() {
 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, loading, done]);
+  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, fields.authorized_min_per_plot, loading, done]);
 
   const submit = async () => {
     if (!fields.seller_name.trim()) return toast.error("Enter your full legal name");
@@ -314,6 +341,8 @@ export default function SignContract() {
     if (!fields.email.trim()) return toast.error("Enter your email");
     if (!fields.plot_description.trim()) return toast.error("Enter the plot description (section / block / spaces)");
     if (!fields.listing_option) return toast.error("Choose a listing option");
+    if (ownPrice && !(Number(fields.authorized_min_per_plot) > 0))
+      return toast.error("Enter your own minimum price per space");
     if (!initials.trim() || initials.trim().length < 2) return toast.error("Enter your initials (2+ letters)");
     if (info?.kind === "listing_agreement" && sectionInitials.some((v) => !v))
       return toast.error("Please initial each highlighted section of the agreement");
@@ -325,7 +354,7 @@ export default function SignContract() {
       await fetch(FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
-        body: JSON.stringify({ action: "refresh", token, fields }),
+        body: JSON.stringify({ action: "refresh", token, fields: outboundFields() }),
       });
 
       const res = await fetch(FN_URL, {
@@ -501,6 +530,30 @@ export default function SignContract() {
                       );
                     })}
                   </div>
+                  {ownPrice && (
+                    <div className="rounded-xl border border-[#8a6d3b]/40 bg-[#8a6d3b]/5 p-4">
+                      <Label>
+                        Your own minimum price per space
+                        <span className="text-[10px] uppercase tracking-widest text-[#8a6d3b] ml-2">Set your own price</span>
+                      </Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={fields.authorized_min_per_plot}
+                        onChange={setField("authorized_min_per_plot")}
+                        placeholder="e.g. 5200"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        This replaces our suggested figure in the agreement. Across {plotsOnContract} space
+                        {plotsOnContract === 1 ? "" : "s"} that is an authorized minimum of{" "}
+                        <strong className="text-foreground">
+                          {(((Number(fields.authorized_min_per_plot) || 0) * plotsOnContract) || 0).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
+                        </strong>
+                        . We will never sell below it.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -919,7 +972,7 @@ export default function SignContract() {
                   >
                     {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                     {info?.kind === "listing_agreement"
-                      ? "Submit & complete family tree"
+                      ? "Sign & complete last step (family tree)"
                       : "Sign & submit"}
                   </Button>
                 </div>
