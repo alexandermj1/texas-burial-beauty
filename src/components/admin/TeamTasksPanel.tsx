@@ -309,11 +309,18 @@ const TeamTasksPanel = () => {
         <p className="text-xs text-muted-foreground">Loading list…</p>
       ) : (
         <>
-          <ul className="space-y-2">
-            {open.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">Nothing on the list right now.</p>
-            ) : open.map(row)}
-          </ul>
+          {open.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">Nothing on the list right now.</p>
+          ) : (
+            groupTasks(open).map((g) => (
+              <div key={g.label} className="space-y-2">
+                <p className={`text-[10px] uppercase tracking-[0.16em] font-semibold ${g.tone}`}>
+                  {g.label} <span className="text-muted-foreground font-normal">({g.items.length})</span>
+                </p>
+                <ul className="space-y-2">{g.items.map(row)}</ul>
+              </div>
+            ))
+          )}
 
           {done.length > 0 && (
             <div className="pt-2">
@@ -329,8 +336,32 @@ const TeamTasksPanel = () => {
           )}
         </>
       )}
+
+      {confirmTask && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm" onClick={() => setConfirmTask(null)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div>
+              <h3 className="font-display text-lg text-foreground">Mark this as done?</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                It will move off the open list and be recorded as completed by {myName} on {new Date().toLocaleDateString()}.
+              </p>
+            </div>
+            <p className="text-sm text-foreground bg-muted/40 rounded-lg px-3 py-2">{confirmTask.title}</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setConfirmTask(null)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Not yet</button>
+              <button
+                onClick={() => completeTask(confirmTask)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium bg-emerald-600 text-white"
+              >
+                <Check className="w-3.5 h-3.5" /> Yes, it's done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default TeamTasksPanel;
