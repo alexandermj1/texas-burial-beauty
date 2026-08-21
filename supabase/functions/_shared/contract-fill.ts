@@ -111,11 +111,11 @@ function buildLaOverlays(page1: PDFPage, page2: PDFPage, font: PDFFont, bold: PD
   const opt = (data.listing_option ?? '').toLowerCase();
   if (opt.includes('starter') || opt === 'option 1') checkBox(page2, LA_P2.optStarter.x, LA_P2.optStarter.y, bold);
   else if (opt.includes('pro') || opt === 'option 2') checkBox(page2, LA_P2.optPro.x, LA_P2.optPro.y, bold);
-  else if (opt.includes('featured') || opt.includes('own price') || opt.includes('own_price') || opt.includes('set your') || opt === 'option 3' || opt === 'option 4') {
+  else if (opt.includes('featured') || opt.includes('own price') || opt.includes('own_price') || opt.includes('set your') || opt.includes('set_your') || opt === 'option 3' || opt === 'option 4') {
     checkBox(page2, LA_P2.optFeatured.x, LA_P2.optFeatured.y, bold);
     // The template only prints three packages; the $499 "Set your own price"
     // tier is Featured plus seller-set pricing, so note it beside the box.
-    if (opt.includes('own') || opt.includes('set your')) {
+    if (opt.includes('own') || opt.includes('set your') || opt.includes('set_your')) {
       stamp(page2, '+ Set Your Own Price ($499)', LA_P2.optFeatured.x + 22, LA_P2.optFeatured.y + 1, bold, 9);
     }
   }
