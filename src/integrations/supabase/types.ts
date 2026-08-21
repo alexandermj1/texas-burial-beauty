@@ -2161,6 +2161,60 @@ export type Database = {
         }
         Relationships: []
       }
+      team_tasks: {
+        Row: {
+          assigned_name: string | null
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          detail: string | null
+          done: boolean
+          done_at: string | null
+          done_by_name: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_name?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          detail?: string | null
+          done?: boolean
+          done_at?: string | null
+          done_by_name?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_name?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          detail?: string | null
+          done?: boolean
+          done_at?: string | null
+          done_by_name?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       texas_cemeteries: {
         Row: {
           address: string | null

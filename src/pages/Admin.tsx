@@ -9,6 +9,7 @@ import InventoryRequestsPanel from "@/components/admin/InventoryRequestsPanel";
 import CaliforniaInventoryPanel from "@/components/admin/CaliforniaInventoryPanel";
 import EmailMarketingPanel from "@/components/admin/EmailMarketingPanel";
 import TexasMapPanel from "@/components/admin/TexasMapPanel";
+import TeamTasksPanel from "@/components/admin/TeamTasksPanel";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -68,7 +69,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -425,6 +426,7 @@ const Admin = () => {
   const allTabs: { key: typeof tab; label: string; Icon: any; count?: number }[] = [
     { key: "submissions", label: "Submissions", Icon: Inbox, count: submissions.filter(s => !s.handled).length },
     { key: "inbox", label: "Gmail Inbox", Icon: Mail },
+    { key: "tasks", label: "Team List", Icon: ClipboardList },
     { key: "listings", label: "Listings", Icon: Building2, count: listings.length },
     { key: "reservations", label: "Reservations", Icon: CalendarDays, count: reservations.filter(r => r.status === "active").length },
     { key: "sales", label: "Sales", Icon: DollarSign, count: sales.length },
@@ -443,7 +445,7 @@ const Admin = () => {
 
   // Staff users only get Submissions and Map — even if they also carry the
   // admin role for backend access. isStaff drives UI limits.
-  const staffAllowed: Array<typeof tab> = ["submissions", "map"];
+  const staffAllowed: Array<typeof tab> = ["submissions", "map", "tasks"];
   const uiRestricted = isStaff;
   const tabsConfig = uiRestricted ? allTabs.filter(t => staffAllowed.includes(t.key)) : allTabs;
 
@@ -458,7 +460,7 @@ const Admin = () => {
     tab === "listings" ? "Search listings..." :
     "Search anything...";
 
-  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && tab !== "email_marketing" && tab !== "map" && tab !== "activity_monitor";
+  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && tab !== "email_marketing" && tab !== "map" && tab !== "activity_monitor" && tab !== "tasks";
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-sand-light/60 via-background to-sage-light/40 dark:from-background dark:via-background dark:to-background">
@@ -922,6 +924,7 @@ const Admin = () => {
           })()}
 
 
+          {tab === "tasks" && <TeamTasksPanel />}
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}
           {tab === "accounting" && <AccountingPanel />}
