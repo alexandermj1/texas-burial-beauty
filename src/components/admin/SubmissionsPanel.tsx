@@ -2488,6 +2488,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2 flex items-center gap-3 flex-wrap xl:flex-nowrap">
         <div className="flex items-center gap-1.5 flex-wrap shrink-0">
           <button
+            onClick={() => setArchivedView(v => !v)}
+            title={archivedView ? "Back to the live pipeline" : "View archived submissions"}
+            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+              archivedView
+                ? "bg-amber-500 text-white border-amber-500"
+                : "bg-card text-muted-foreground border-border hover:text-foreground"
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            {archivedView ? "Back to pipeline" : `Archive${archivedCount ? ` (${archivedCount})` : ""}`}
+          </button>
+          <button
             onClick={() => setListCollapsed(v => !v)}
             title={listCollapsed ? "Show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
             className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
