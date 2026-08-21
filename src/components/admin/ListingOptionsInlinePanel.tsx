@@ -514,6 +514,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
                 spaces: String(countNum),
                 space_numbers: seller.space_numbers ?? null,
               }}
+              hideListingOption
               hasGenerated={!!agreementEmailHtml}
               onGenerated={async (html) => {
                 setAgreementEmailHtml(html);
