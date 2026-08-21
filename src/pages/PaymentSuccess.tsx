@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Seo from "@/components/Seo";
@@ -12,6 +12,8 @@ interface Summary {
   amountCents?: number | null;
   currency?: string | null;
   productName?: string | null;
+  kind?: string | null;
+  signUrl?: string | null;
 }
 
 const fmt = (cents?: number | null, currency = "usd") =>
@@ -26,34 +28,43 @@ export default function PaymentSuccess() {
   const sessionId = params.get("session_id");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!sessionId) { setLoading(false); return; }
     let cancelled = false;
-    const load = async () => {
+    let tries = 0;
+
+    const fetchSummary = async (): Promise<Summary | null> => {
       try {
-        const { data } = await supabase.functions.invoke("get-payment-summary", {
-          method: "GET" as any,
-          body: undefined,
-          headers: {},
-          // supabase-js doesn't support GET query params directly; fetch manually.
-        } as any);
-        if (!cancelled && data) setSummary(data as Summary);
-      } catch { /* fall through */ }
-      // Fallback direct fetch (query param based)
-      try {
-        const url = `${(supabase as any).functionsUrl || `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1`}/get-payment-summary?session_id=${encodeURIComponent(sessionId)}`;
-        const res = await fetch(url, {
-          headers: { apikey: (supabase as any).supabaseKey || "", Authorization: `Bearer ${(supabase as any).supabaseKey || ""}` },
+        const base = `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1`;
+        const key = (supabase as any).supabaseKey || "";
+        const res = await fetch(`${base}/get-payment-summary?session_id=${encodeURIComponent(sessionId)}`, {
+          headers: { apikey: key, Authorization: `Bearer ${key}` },
         });
-        const json = await res.json();
-        if (!cancelled) setSummary(json);
-      } catch { /* ignore */ }
-      if (!cancelled) setLoading(false);
+        return (await res.json()) as Summary;
+      } catch {
+        return null;
+      }
     };
-    void load();
+
+    const poll = async () => {
+      const data = await fetchSummary();
+      if (cancelled) return;
+      if (data) setSummary(data);
+      setLoading(false);
+      // The signing page is prepared the moment the payment lands. Give the
+      // webhook a few seconds, then carry the seller straight there.
+      if (data?.signUrl) {
+        setTimeout(() => { if (!cancelled) navigate(data.signUrl!); }, 2500);
+        return;
+      }
+      if (tries++ < 6) setTimeout(poll, 2500);
+    };
+
+    void poll();
     return () => { cancelled = true; };
-  }, [sessionId]);
+  }, [sessionId, navigate]);
 
   const greetingName = firstName(summary?.recipientName);
 
@@ -107,12 +118,27 @@ export default function PaymentSuccess() {
         {sessionId && (
           <p className="text-[11px] text-muted-foreground/70 mb-6">Confirmation ID: {sessionId.slice(-12)}</p>
         )}
-        <Link
-          to="/"
-          className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
-        >
-          Return home
-        </Link>
+        {summary?.signUrl ? (
+          <div className="space-y-3">
+            <p className="text-sm text-foreground">
+              One more step — your Exclusive Sales Agreement is ready to sign now.
+            </p>
+            <Link
+              to={summary.signUrl}
+              className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
+            >
+              Continue to your agreement →
+            </Link>
+            <p className="text-[11px] text-muted-foreground/70">Taking you there automatically…</p>
+          </div>
+        ) : (
+          <Link
+            to="/"
+            className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
+          >
+            Return home
+          </Link>
+        )}
       </div>
     </main>
     </>
