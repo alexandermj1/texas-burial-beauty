@@ -52,6 +52,22 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const [deedOwners, setDeedOwners] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
+  // Pre-fill the deed owners from whatever we already hold on the submission.
+  useEffect(() => {
+    let cancelled = false;
+    setDeedOwners("");
+    (async () => {
+      const { data } = await supabase
+        .from("contact_submissions")
+        .select("deed_owner_names, name")
+        .eq("id", seller.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const row = (data as any) || {};
+      setDeedOwners(String(row.deed_owner_names || row.name || seller.name || "").trim());
+    })();
+    return () => { cancelled = true; };
+  }, [seller.id, seller.name]);
 
   useEffect(() => {
     setPlotCount(String(parseSpaces(seller.spaces)));
