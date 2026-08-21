@@ -1,6 +1,7 @@
 /// <reference types="google.maps" />
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cemeteryCanon } from "@/lib/cemeteryCanon";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, MapPin, Plus, Trash2, Route, RefreshCw, X, Search, Phone, Globe, ArrowRight, Navigation } from "lucide-react";
 
@@ -45,13 +46,7 @@ function colorForCounty(county: string | null | undefined): string {
 
 // Simple canonicalizer that mirrors the DB's canonical_cemetery function loosely
 function canon(s: string | null | undefined): string {
-  if (!s) return "";
-  return s.toLowerCase()
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\b(cemetery|memorial park|memorial|mortuary|mausoleum|association|assoc|funeral home|park|gardens?)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return cemeteryCanon(s);
 }
 
 function haversineMi(lat1: number, lng1: number, lat2: number, lng2: number) {
