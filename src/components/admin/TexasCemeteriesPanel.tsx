@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Building2, Plus, ChevronDown, ChevronRight, Save, X, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { cemeteryCanon } from "@/lib/cemeteryCanon";
 import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
 import type { CemeteryDocRules } from "@/lib/ownershipRules";
@@ -80,8 +81,10 @@ const countBadge: Record<Tier, string> = {
   t0:   "bg-muted text-muted-foreground border-border/60",
 };
 
-const canonical = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+// One shared key for the whole product (mirrors the database's
+// canonical_cemetery helper) so directory rows, submission counts and the
+// profile editor all agree on what counts as the same cemetery.
+const canonical = (s: string) => cemeteryCanon(s);
 
 const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectCemetery, onRefresh, standalone = false, hideProfileEditor = false, searchQuery = "" }: Props) => {
   const [rows, setRows] = useState<TexasCemetery[]>([]);
@@ -236,6 +239,16 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       .select("id")
       .single();
     if (error) {
+      // A variant spelling collides with the existing row for this cemetery
+      // (the DB keeps one row per canonical name). Open that row instead.
+      if ((error as any).code === "23505" || /duplicate key/i.test(error.message || "")) {
+        const { data: all } = await supabase.from("texas_cemeteries" as any).select("*");
+        const existing = ((all as any[]) || []).find((r) => canonical(r.name) === stat.canon);
+        if (existing) {
+          setRows((prev) => (prev.some((r) => r.id === existing.id) ? prev : [...prev, existing]));
+          return existing.id as string;
+        }
+      }
       toast({ title: "Couldn't open profile", description: error.message, variant: "destructive" });
       return null;
     }
@@ -272,6 +285,16 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       .select("id")
       .single();
     if (error) {
+      if ((error as any).code === "23505" || /duplicate key/i.test(error.message || "")) {
+        const { data: all } = await supabase.from("texas_cemeteries" as any).select("*");
+        const existing = ((all as any[]) || []).find((r) => canonical(r.name) === canonical(name.trim()));
+        if (existing) {
+          toast({ title: "Already in the directory", description: `Opening "${existing.name}".` });
+          await load();
+          setOpenId(existing.id as string);
+          return;
+        }
+      }
       toast({ title: "Couldn't add", description: error.message, variant: "destructive" });
       return;
     }
