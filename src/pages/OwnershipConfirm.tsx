@@ -998,7 +998,7 @@ const OwnershipConfirm = () => {
                                   <div style={{"display": "flex", "flexWrap": "wrap", "gap": "11px", "alignItems": "center"}}>
                                     <div style={{"flex": "1", "minWidth": "140px"}}>
                                       <div style={{"fontSize": "16px", "fontWeight": "500", "letterSpacing": "-0.011em", "color": "#1d1d1f"}}>
-                                        {h.name}
+                                        {h.question}
                                       </div>
                                       <div style={{"marginTop": "1px", "fontSize": "12.5px", "fontWeight": "300", "color": "#9a9aa2"}}>
                                         {h.rel}
@@ -1015,7 +1015,25 @@ const OwnershipConfirm = () => {
                                     </div>
                                   </div>
                                   {h.yes ? (<React.Fragment>
-                                    <input value={h.spouseName ?? ""} onChange={h.setSpouse} placeholder="Their husband or wife's full name" style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx20" />
+                                    <input value={h.spouseName ?? ""} onChange={h.setSpouse} placeholder={h.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx20" />
+                                    <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": "#4a6b54"}}>
+                                      {h.pair}
+                                    </div>
+                                    <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "9px"}}>
+                                      <div style={{"fontSize": "13.5px", "fontWeight": "400", "color": h.aliveNeeded ? "#a8654c" : "#6e6e73"}}>
+                                        Is that spouse still living?
+                                      </div>
+                                      <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
+                                        {(h.aliveSeg || []).map((o: any, ia: number) => (
+                                          <div key={ia} onClick={o.pick} style={{"padding": "7px 11px", "borderRadius": "8px", "fontSize": "13.5px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`}}>
+                                            {o.label}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "300", "lineHeight": "1.5", "color": h.aliveNeeded ? "#a8654c" : "#9a9aa2"}}>
+                                      {h.aliveNote}
+                                    </div>
                                   </React.Fragment>) : null}
                                 </div>
                               </React.Fragment>
