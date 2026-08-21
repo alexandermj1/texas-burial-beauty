@@ -355,7 +355,7 @@ export function buildLogic(state, setS, accent0, CRM) {
     });
     L.inheritors().forEach(h => {
       const hs = s.heirSpouse[h.id] || {};
-      if (hs.has === 'yes' && (hs.n || '').trim()) add('Spousal consent from ' + hs.n.trim(), 'Signed by the husband or wife of ' + h.n.trim() + ', who inherits a share.');
+      if (hs.has === 'yes' && (hs.n || '').trim() && hs.alive !== 'deceased') add('Spousal consent from ' + hs.n.trim(), 'Signed by the husband or wife of ' + h.n.trim() + ', who inherits a share.');
     });
     if (s.spaces.some(x => x.used === 'yes')) add('The cemetery\u2019s interment record', 'We request this ourselves, but tell us anything you know about the burial.');
     add('The cemetery\u2019s transfer packet', 'We prepare and file it. The transfer is recorded within three business days.', true);
