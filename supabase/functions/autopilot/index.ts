@@ -32,7 +32,7 @@ async function callFn(name: string, body: unknown): Promise<Record<string, unkno
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SERVICE_KEY}`,
-      apikey: ANON_KEY,
+      apikey: SERVICE_KEY,
     },
     body: JSON.stringify(body),
   });

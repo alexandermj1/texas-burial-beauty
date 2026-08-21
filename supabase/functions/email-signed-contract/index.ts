@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         Authorization: req.headers.get('Authorization') ?? '',
-        apikey: Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        apikey: (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '') || (Deno.env.get('SUPABASE_ANON_KEY') ?? ''),
       },
       body: JSON.stringify({
         action: 'send',
