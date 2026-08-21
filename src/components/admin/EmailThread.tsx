@@ -173,7 +173,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
         <p className="text-xs text-muted-foreground">No emails found for this customer yet.</p>
       ) : (
         <ul className="space-y-2">
-          {emails.map((e) => {
+          {[...emails].reverse().map((e) => {
             const kindOf = (m: EmailRow) =>
               isOutgoing(m.from_email)
                 ? classifyEmailKind(m.subject, `${m.body_html || ""} ${(m.body_text || "")} ${m.snippet || ""}`)
