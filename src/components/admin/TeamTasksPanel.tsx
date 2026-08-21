@@ -30,6 +30,23 @@ const PRIORITIES = [
   { key: "high", label: "Priority", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40" },
 ];
 
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+/** Traditional to-do grouping: overdue first, then today, upcoming, then undated. */
+export const groupTasks = (items: Task[]) => {
+  const t = todayStr();
+  const buckets = [
+    { label: "Overdue", tone: "text-rose-600 dark:text-rose-400", items: items.filter((x) => x.due_date && x.due_date < t) },
+    { label: "Today", tone: "text-primary", items: items.filter((x) => x.due_date === t) },
+    { label: "Upcoming", tone: "text-foreground", items: items.filter((x) => x.due_date && x.due_date > t) },
+    { label: "No due date", tone: "text-muted-foreground", items: items.filter((x) => !x.due_date) },
+  ];
+  const rank = (x: Task) => (x.priority === "high" ? 0 : 1);
+  buckets.forEach((b) => b.items.sort((a, c) => rank(a) - rank(c) || (a.due_date || "").localeCompare(c.due_date || "")));
+  return buckets.filter((b) => b.items.length > 0);
+};
+
 const TeamTasksPanel = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -213,7 +230,7 @@ const TeamTasksPanel = () => {
                   )}
                   <span className="text-[10px] text-muted-foreground">
                     {t.done
-                      ? `Done${t.done_by_name ? ` by ${t.done_by_name}` : ""}`
+                      ? `Completed${t.done_by_name ? ` by ${t.done_by_name}` : ""}${t.done_at ? ` · ${new Date(t.done_at).toLocaleDateString()}` : ""}`
                       : `Added by ${t.created_by_name || "team"}`}
                   </span>
                 </div>
