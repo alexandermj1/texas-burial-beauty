@@ -6,7 +6,14 @@ import { CheckCircle2, Users } from "lucide-react";
 
 type Deed = { id: string; n: string; st: string };
 type Kid = { id: string; n: string; st: string; of?: string[]; kids?: { id: string; n: string }[] };
-type YesNo = { has?: string; n?: string };
+type YesNo = { has?: string; n?: string; alive?: string };
+
+const spouseValue = (sp: { has?: string; n?: string; alive?: string }, of: string) => {
+  if (sp.has !== "yes") return sp.has === "no" ? "No" : sp.has ? "Not sure" : "—";
+  const who = (sp.n || "").trim() || "name not given";
+  const alive = sp.alive === "deceased" ? "has died" : sp.alive === "living" ? "living — must sign" : "living status not given";
+  return `${who} — husband/wife of ${of} (${alive})`;
+};
 
 export type V2State = {
   rel?: string; relOther?: string; selfIs?: string; youName?: string;
@@ -93,7 +100,7 @@ const SellerAnswersSummary = ({
                   )}
                   <Row
                     label={d.st === "deceased" ? "Spouse (not on the deed)" : "Spouse not on the deed"}
-                    value={`${yn(sp.has)}${sp.n ? ` — ${sp.n}` : ""}`}
+                    value={spouseValue(sp, d.n)}
                   />
                   {d.st === "deceased" && (
                     <>
@@ -134,7 +141,7 @@ const SellerAnswersSummary = ({
                   </p>
                   {k.st !== "deceased" && (
                     <>
-                      <Row label="Married" value={`${yn(hs.has)}${hs.n ? ` — ${hs.n}` : ""}`} />
+                      <Row label="Married" value={spouseValue(hs, k.n || "this heir")} />
                       {(k.kids ?? []).filter((g) => (g.n || "").trim()).map((g) => (
                         <Row key={g.id} label="Their child" value={g.n} />
                       ))}
@@ -150,7 +157,7 @@ const SellerAnswersSummary = ({
                           <Row
                             key={g.id}
                             label="Grandchild — steps into their share"
-                            value={`${g.n}${v2.heirSpouse?.[g.id]?.has === "yes" ? ` (spouse: ${v2.heirSpouse[g.id].n || "yes"})` : ""}`}
+                            value={`${g.n}${v2.heirSpouse?.[g.id]?.has === "yes" ? ` · ${spouseValue(v2.heirSpouse[g.id], g.n)}` : ""}`}
                           />
                         ))
                       )}

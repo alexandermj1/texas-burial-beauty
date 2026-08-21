@@ -162,7 +162,7 @@ export function buildLogic(state, setS, accent0, CRM) {
   done5: () => {
     return L.named().every(d => {
       const sp = L.sp(d.id);
-      return sp && sp.has && (sp.has !== 'yes' || (sp.n || '').trim());
+      return sp && sp.has && (sp.has !== 'yes' || ((sp.n || '').trim() && !!sp.alive));
     });
   },
   done6: () => { return L.gone().every(d => !!state.will[d.id]); },
@@ -184,7 +184,7 @@ export function buildLogic(state, setS, accent0, CRM) {
   done8: () => {
     return L.inheritors().every(h => {
       const hs = state.heirSpouse[h.id];
-      return hs && hs.has && (hs.has !== 'yes' || (hs.n || '').trim());
+      return hs && hs.has && (hs.has !== 'yes' || ((hs.n || '').trim() && !!hs.alive));
     });
   },
 
@@ -220,7 +220,14 @@ export function buildLogic(state, setS, accent0, CRM) {
       }
       if (isYou) add(d.n, 'This is you, our point of contact', {});
       const sp = L.sp(d.id);
-      if (sp.has === 'yes' && (sp.n || '').trim()) add(sp.n, 'Legal spouse of ' + d.n + ', not on the deed \u2014 holds a right of interment and must consent', { must: true });
+      if (sp.has === 'yes' && (sp.n || '').trim()) {
+        const spDead = sp.alive === 'deceased';
+        add(sp.n,
+          spDead
+            ? 'Husband or wife of ' + d.n + ' \u00b7 has died \u2014 no consent needed from them'
+            : 'Husband or wife of ' + d.n + ', not on the deed \u2014 holds a right of interment and must sign a consent',
+          spDead ? { dead: true } : { must: true });
+      }
     });
 
     L.gone().forEach(d => {
@@ -242,8 +249,14 @@ export function buildLogic(state, setS, accent0, CRM) {
 
     L.inheritors().forEach(h => {
       const hs = s.heirSpouse[h.id] || {};
-      if (hs.has === 'yes' && (hs.n || '').trim())
-        add(hs.n, 'Husband or wife of ' + h.n.trim() + ', who inherits \u2014 holds a right of interment and must consent', { must: true });
+      if (hs.has === 'yes' && (hs.n || '').trim()) {
+        const hsDead = hs.alive === 'deceased';
+        add(hs.n,
+          hsDead
+            ? 'Husband or wife of ' + h.n.trim() + ' \u00b7 has died \u2014 no consent needed from them'
+            : 'Husband or wife of ' + h.n.trim() + ', who inherits \u2014 holds a right of interment and must sign a consent',
+          hsDead ? { dead: true } : { must: true });
+      }
     });
 
     return order.map(k => map[k]);
@@ -335,14 +348,14 @@ export function buildLogic(state, setS, accent0, CRM) {
     });
     L.named().forEach(d => {
       const sp = L.sp(d.id);
-      if (sp.has === 'yes') add('Spousal consent from ' + (sp.n || 'their spouse'), 'Signed by the husband or wife of ' + d.n + '. We send it already drawn up.');
+      if (sp.has === 'yes' && sp.alive !== 'deceased') add('Spousal consent from ' + (sp.n || 'their spouse'), 'Signed by the husband or wife of ' + d.n + '. We send it already drawn up.');
     });
     s.kids.forEach(k => {
       if (k.st === 'deceased' && k.n.trim()) add('Death certificate for ' + k.n.trim(), 'It is what lets their children step into the share.');
     });
     L.inheritors().forEach(h => {
       const hs = s.heirSpouse[h.id] || {};
-      if (hs.has === 'yes' && (hs.n || '').trim()) add('Spousal consent from ' + hs.n.trim(), 'Signed by the husband or wife of ' + h.n.trim() + ', who inherits a share.');
+      if (hs.has === 'yes' && (hs.n || '').trim() && hs.alive !== 'deceased') add('Spousal consent from ' + hs.n.trim(), 'Signed by the husband or wife of ' + h.n.trim() + ', who inherits a share.');
     });
     if (s.spaces.some(x => x.used === 'yes')) add('The cemetery\u2019s interment record', 'We request this ourselves, but tell us anything you know about the burial.');
     add('The cemetery\u2019s transfer packet', 'We prepare and file it. The transfer is recorded within three business days.', true);
@@ -469,8 +482,9 @@ export function buildLogic(state, setS, accent0, CRM) {
         avFg: d.st === 'deceased' ? '#9a9aa2' : (d.st === 'living' && d.n.trim() ? acc : '#b7b7bf'),
         marriedYes: sp.has === 'yes',
         marriedAsk: !!d.n.trim() && !!d.st && !L.coupleYes(d.id) && !(L.coupleAsk() && !s.couple),
-        marriedLabel: d.st === 'deceased' ? 'Was married?' : 'Married?',
+        marriedLabel: (d.st === 'deceased' ? 'Was ' : 'Is ') + (d.n.trim() || 'this owner') + ' married?',
         spouseName: sp.n || '',
+        spousePlaceholder: 'Full legal name of ' + (d.n.trim() || 'this owner') + '\u2019s husband or wife',
         marriedSeg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
         setSpouseName: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); },
         seg: L.seg(d.st, [['living', 'Still living'], ['deceased', 'Has died']], v => setS(st => {
@@ -532,9 +546,24 @@ export function buildLogic(state, setS, accent0, CRM) {
       show5: d4,
       spouseRows: L.named().filter(d => !L.coupleYes(d.id)).map(d => {
         const sp = L.sp(d.id);
+        const who = d.n.trim() || 'this owner';
+        const past = d.st === 'deceased';
         return {
           name: d.n, status: d.st === 'deceased' ? 'Has died' : 'Living',
+          question: past ? 'Was ' + who + ' married?' : 'Is ' + who + ' married?',
           yes: sp.has === 'yes', unknown: sp.has === 'unknown', spouseName: sp.n || '',
+          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife',
+          pair: (sp.n || '').trim()
+            ? (sp.n || '').trim() + ' \u2014 husband or wife of ' + who
+            : 'We record this person as the husband or wife of ' + who + '.',
+          aliveAsk: sp.has === 'yes',
+          aliveSeg: L.seg(sp.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('spouse', d.id, { alive: v })),
+          aliveNeeded: sp.has === 'yes' && !sp.alive,
+          aliveNote: sp.alive === 'living'
+            ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
+            : sp.alive === 'deceased'
+              ? 'Nothing to sign from them. We may ask for a death certificate later.'
+              : 'Tell us whether they are still living \u2014 only a living spouse signs.',
           seg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
           setSpouse: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); }
         };
@@ -612,8 +641,22 @@ export function buildLogic(state, setS, accent0, CRM) {
       show8: d7 && L.inheritors().length > 0,
       heirSpouseRows: L.inheritors().map(h => {
         const hs = s.heirSpouse[h.id] || {};
+        const who = h.n.trim() || 'this person';
         return {
           name: h.n.trim(), rel: h.rel, yes: hs.has === 'yes', spouseName: hs.n || '',
+          question: 'Is ' + who + ' married?',
+          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife',
+          pair: (hs.n || '').trim()
+            ? (hs.n || '').trim() + ' \u2014 husband or wife of ' + who
+            : 'We record this person as the husband or wife of ' + who + '.',
+          aliveAsk: hs.has === 'yes',
+          aliveSeg: L.seg(hs.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('heirSpouse', h.id, { alive: v })),
+          aliveNeeded: hs.has === 'yes' && !hs.alive,
+          aliveNote: hs.alive === 'living'
+            ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
+            : hs.alive === 'deceased'
+              ? 'Nothing to sign from them. We may ask for a death certificate later.'
+              : 'Tell us whether they are still living \u2014 only a living spouse signs.',
           seg: L.seg(hs.has, [['no', 'Not married'], ['yes', 'Married'], ['unknown', "Don't know"]], v => L.patch('heirSpouse', h.id, { has: v })),
           setSpouse: ev => { const v = ev.target.value; L.patch('heirSpouse', h.id, { n: v }); }
         };
@@ -623,13 +666,21 @@ export function buildLogic(state, setS, accent0, CRM) {
       contactsTitle: signers.length === 1 ? 'One person needs a power of attorney' : signers.length + ' people need a power of attorney',
       contacts: alive.map(c => {
         const st = s.contacts[c.key] || {};
+        const needAddr = c.must && !(st.addr || '').trim();
         return {
           name: c.name || 'Name still needed', roles: c.roles,
           nameFg: c.blank ? '#7d3a28' : '#1d1d1f',
           tag: c.must ? 'Must sign' : 'For contact only',
           tagBg: c.must ? '#eef1ea' : '#f0f0f3',
           tagFg: c.must ? acc : '#86868b',
-          bd: c.must ? '#e0e6dd' : '#ececf0',
+          bd: needAddr ? '#f2ddd5' : (c.must ? '#e0e6dd' : '#ececf0'),
+          needAddr,
+          addrLabel: c.must
+            ? 'Postal address \u2014 required, this is where their power of attorney is posted'
+            : 'Postal address, if you have it',
+          addrPlaceholder: c.must
+            ? 'Street, city, state and ZIP for ' + (c.name || 'this person')
+            : 'Postal address',
           addr: st.addr || '', email: st.email || '', phone: st.phone || '',
           setAddr: ev => { const v = ev.target.value; L.patch('contacts', c.key, { addr: v }); },
           setEmail: ev => { const v = ev.target.value; L.patch('contacts', c.key, { email: v }); },
