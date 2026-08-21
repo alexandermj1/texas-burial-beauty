@@ -1065,7 +1065,10 @@ const OwnershipConfirm = () => {
                                   </React.Fragment>
                                 ))}
                               </div>
-                              <textarea value={c.addr ?? ""} onChange={c.setAddr} placeholder="Postal address" style={{"width": "100%", "marginTop": "13px", "minHeight": "72px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "lineHeight": "1.5", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "resize": "vertical"}} className="dcx21" />
+                              <div style={{"marginTop": "13px", "fontSize": "12.5px", "fontWeight": "500", "color": c.needAddr ? "#a8654c" : "#6e6e73"}}>
+                                {c.addrLabel}
+                              </div>
+                              <textarea value={c.addr ?? ""} onChange={c.setAddr} placeholder={c.addrPlaceholder} style={{"width": "100%", "marginTop": "6px", "minHeight": "72px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "lineHeight": "1.5", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${c.needAddr ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "resize": "vertical"}} className="dcx21" />
                               <div style={{"display": "flex", "flexWrap": "wrap", "gap": "9px", "marginTop": "9px"}}>
                                 <input value={c.email ?? ""} onChange={c.setEmail} placeholder="Email, if you have it" style={{"flex": "1", "minWidth": "170px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none"}} className="dcx22" />
                                 <input value={c.phone ?? ""} onChange={c.setPhone} placeholder="Phone" style={{"flex": "1", "minWidth": "140px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none"}} className="dcx23" />
