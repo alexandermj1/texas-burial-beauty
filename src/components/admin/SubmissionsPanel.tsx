@@ -825,6 +825,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
 
     const matches = submissions.filter(s => {
+      // Archived submissions live in their own view and never appear in the pipeline.
+      if (archivedView !== !!s.archived_at) return false;
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (regionFilter === "texas" && cemeteryCanon && !cemeteriesOpen) {
         // Exact match only — a submission only belongs to the clicked cemetery
