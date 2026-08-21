@@ -32,7 +32,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 
-import { Megaphone, UserPlus, Building2 } from "lucide-react";
+import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
