@@ -45,6 +45,7 @@ const TeamTasksPanel = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDetail, setEditDetail] = useState("");
+  const [confirmTask, setConfirmTask] = useState<Task | null>(null);
 
   const myName = cleanDisplayName(user?.user_metadata?.full_name) || user?.email?.split("@")[0] || "Someone";
 
