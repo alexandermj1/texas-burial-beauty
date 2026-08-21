@@ -157,7 +157,7 @@ const SellerAnswersSummary = ({
                           <Row
                             key={g.id}
                             label="Grandchild — steps into their share"
-                            value={`${g.n}${v2.heirSpouse?.[g.id]?.has === "yes" ? ` (spouse: ${v2.heirSpouse[g.id].n || "yes"})` : ""}`}
+                            value={`${g.n}${v2.heirSpouse?.[g.id]?.has === "yes" ? ` · ${spouseValue(v2.heirSpouse[g.id], g.n)}` : ""}`}
                           />
                         ))
                       )}
