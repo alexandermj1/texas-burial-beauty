@@ -642,7 +642,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
                 <Eye className="w-3 h-3" /> Preview their page
               </button>
               <button
-                type="button" onClick={generate} disabled={!canGenerate || busy}
+                type="button" onClick={() => generate(false)} disabled={!canGenerate || busy}
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
               >
                 {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : hasGenerated ? <RefreshCw className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
