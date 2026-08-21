@@ -162,7 +162,7 @@ export function buildLogic(state, setS, accent0, CRM) {
   done5: () => {
     return L.named().every(d => {
       const sp = L.sp(d.id);
-      return sp && sp.has && (sp.has !== 'yes' || (sp.n || '').trim());
+      return sp && sp.has && (sp.has !== 'yes' || ((sp.n || '').trim() && !!sp.alive));
     });
   },
   done6: () => { return L.gone().every(d => !!state.will[d.id]); },
