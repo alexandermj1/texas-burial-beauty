@@ -470,7 +470,7 @@ const OwnershipConfirm = () => {
                       Who is named on the most current deed?
                     </h3>
                     <p style={{"margin": "8px 0 0 0", "fontSize": "15.5px", "fontWeight": "300", "lineHeight": "1.55", "color": "#6e6e73", "textWrap": "pretty"}}>
-                      Everyone printed on the certificate of ownership, exactly as it is written. Include anyone who has since died, and mark them so.
+                      Everyone printed on the certificate of ownership, exactly as it is written. For each person, please tick either <strong style={{"fontWeight": "600", "color": "#3a3a3f"}}>Still living</strong> or <strong style={{"fontWeight": "600", "color": "#3a3a3f"}}>Has died</strong>, and answer the married question — we cannot continue until both are chosen.
                     </p>
                     <div style={{"display": "flex", "flexDirection": "column", "gap": "8px", "marginTop": "20px"}}>
                       {(V.deedRows || []).map((d: any, i0: number) => (
