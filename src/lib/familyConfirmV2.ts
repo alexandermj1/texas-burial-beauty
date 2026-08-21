@@ -348,7 +348,7 @@ export function buildLogic(state, setS, accent0, CRM) {
     });
     L.named().forEach(d => {
       const sp = L.sp(d.id);
-      if (sp.has === 'yes') add('Spousal consent from ' + (sp.n || 'their spouse'), 'Signed by the husband or wife of ' + d.n + '. We send it already drawn up.');
+      if (sp.has === 'yes' && sp.alive !== 'deceased') add('Spousal consent from ' + (sp.n || 'their spouse'), 'Signed by the husband or wife of ' + d.n + '. We send it already drawn up.');
     });
     s.kids.forEach(k => {
       if (k.st === 'deceased' && k.n.trim()) add('Death certificate for ' + k.n.trim(), 'It is what lets their children step into the share.');
