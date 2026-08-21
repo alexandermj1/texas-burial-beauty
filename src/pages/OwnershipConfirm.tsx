@@ -754,10 +754,10 @@ const OwnershipConfirm = () => {
                               <div style={{"display": "flex", "flexWrap": "wrap", "gap": "11px", "alignItems": "center"}}>
                                 <div style={{"flex": "1", "minWidth": "140px"}}>
                                   <div style={{"fontSize": "16px", "fontWeight": "500", "letterSpacing": "-0.011em", "color": "#1d1d1f"}}>
-                                    {s.name}
+                                    {s.question}
                                   </div>
                                   <div style={{"marginTop": "1px", "fontSize": "12.5px", "fontWeight": "300", "color": "#9a9aa2"}}>
-                                    {s.status}
+                                    {s.name} · {s.status}
                                   </div>
                                 </div>
                                 <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
@@ -771,7 +771,25 @@ const OwnershipConfirm = () => {
                                 </div>
                               </div>
                               {s.yes ? (<React.Fragment>
-                                <input value={s.spouseName ?? ""} onChange={s.setSpouse} placeholder="Their spouse's full name" style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx9" />
+                                <input value={s.spouseName ?? ""} onChange={s.setSpouse} placeholder={s.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx9" />
+                                <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": "#4a6b54"}}>
+                                  {s.pair}
+                                </div>
+                                <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "9px"}}>
+                                  <div style={{"fontSize": "13.5px", "fontWeight": "400", "color": s.aliveNeeded ? "#a8654c" : "#6e6e73"}}>
+                                    Is that spouse still living?
+                                  </div>
+                                  <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
+                                    {(s.aliveSeg || []).map((o: any, ib: number) => (
+                                      <div key={ib} onClick={o.pick} style={{"padding": "7px 11px", "borderRadius": "8px", "fontSize": "13.5px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`}}>
+                                        {o.label}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "300", "lineHeight": "1.5", "color": s.aliveNeeded ? "#a8654c" : "#9a9aa2"}}>
+                                  {s.aliveNote}
+                                </div>
                               </React.Fragment>) : null}
                               {s.unknown ? (<React.Fragment>
                                 <div style={{"marginTop": "11px", "fontSize": "13.5px", "fontWeight": "300", "lineHeight": "1.5", "color": "#9a9aa2", "animation": "fade .3s both"}}>
