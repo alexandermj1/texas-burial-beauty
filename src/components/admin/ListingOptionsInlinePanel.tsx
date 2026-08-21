@@ -133,7 +133,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const countNum = Math.max(1, Number(plotCount) || 1);
   const feeNum = Number(transferFee) || 0;
   const total = nppNum * countNum;
-  const canGenerate = nppNum > 0 && countNum > 0;
+  const deedOwnersClean = deedOwners.trim();
+  const canGenerate = nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1;
 
   const generate = async () => {
     if (!canGenerate || busy) return;
@@ -150,14 +151,40 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       // Persist the retail + quote amount so the purple "quoted (pending)"
       // pill can render on the submission card. quote_sent_at is stamped
       // separately by the composer once the email actually sends.
+      //
+      // The `autopilot` block locks in exactly what the listing agreement must
+      // print if the seller accepts — the agreement and the family tree then go
+      // out automatically without anyone re-keying these numbers.
       try {
         if (seller.id) {
+          const { data: current } = await supabase
+            .from("contact_submissions")
+            .select("ownership_answers")
+            .eq("id", seller.id)
+            .maybeSingle();
+          const answers = ((current as any)?.ownership_answers ?? {}) as Record<string, unknown>;
           await supabase
             .from("contact_submissions")
             .update({
               cemetery_retail: retailNum > 0 ? retailNum : null,
               quote_amount: nppNum > 0 ? nppNum : null,
               transfer_fee_amount: feeNum > 0 ? feeNum : null,
+              plot_count: countNum,
+              list_price: salesNum > 0 ? salesNum * countNum : null,
+              deed_owner_names: deedOwnersClean,
+              ownership_answers: {
+                ...answers,
+                autopilot: {
+                  ...((answers as any).autopilot ?? {}),
+                  preparedAt: new Date().toISOString(),
+                  netPerPlot: nppNum,
+                  plotCount: countNum,
+                  authorizedMinTotal: total,
+                  salesPricePerPlot: salesNum || null,
+                  transferFee: feeNum || null,
+                  deedOwnerNames: deedOwnersClean,
+                },
+              },
             } as any)
             .eq("id", seller.id);
         }
@@ -166,7 +193,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       }
       toast({
         title: hasGenerated ? "Quote regenerated" : "Quote inserted",
-        description: "Offer + Starter/Pro/Featured pay buttons added to the email.",
+        description: "If they accept, the listing agreement then the family tree send automatically.",
       });
     } catch (e: any) {
       toast({ title: "Couldn't generate", description: String(e?.message ?? e), variant: "destructive" });
