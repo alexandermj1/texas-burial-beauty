@@ -48,7 +48,16 @@ async function callFn(name: string, body: unknown): Promise<Record<string, unkno
 type Sub = Record<string, any>;
 
 /** Merge sibling duplicates the same way generate-contract does, so a value
- *  captured on one row of a merged seller is never missed. */
+ *  captured on one row of a merged seller is never missed.
+ *  IMPORTANT: only descriptive fields are borrowed. Milestone timestamps and
+ *  status columns stay on this row — otherwise an old submission that was
+ *  already signed would make the chain think this one is finished. */
+const MERGEABLE = new Set([
+  'name', 'phone', 'cemetery', 'cemetery_city', 'property_type', 'spaces', 'section', 'lawn',
+  'space_numbers', 'plot_count', 'deed_owner_names', 'state', 'relationship_to_owner',
+  'ownership_type', 'purchase_info', 'cemetery_retail', 'customer_profile_id',
+]);
+
 async function loadSubmission(id: string): Promise<Sub | null> {
   const { data: sub } = await svc.from('contact_submissions').select('*').eq('id', id).maybeSingle();
   if (!sub) return null;
@@ -57,6 +66,7 @@ async function loadSubmission(id: string): Promise<Sub | null> {
     for (const s of sibs ?? []) {
       if ((s as Sub).id === sub.id) continue;
       for (const [k, v] of Object.entries(s as Sub)) {
+        if (!MERGEABLE.has(k)) continue;
         if ((sub as Sub)[k] == null || (sub as Sub)[k] === '') (sub as Sub)[k] = v;
       }
     }
