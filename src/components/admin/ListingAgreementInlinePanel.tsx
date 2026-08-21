@@ -150,8 +150,9 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
   }, [seller.id, seller.name, seller.spaces, seller.email, seller.cemetery]);
 
   const plots = Math.max(1, Number(plotCount) || 1);
-  const total = Number(netTotal) || 0;
-  const effectivePerPlot = perPlotTouched && perPlot ? Number(perPlot) : total > 0 ? Math.round(total / plots) : 0;
+  // Per-space price is the source of truth; the contract total is derived from it.
+  const effectivePerPlot = Number(perPlot) || 0;
+  const total = effectivePerPlot > 0 ? effectivePerPlot * plots : 0;
   const canGenerate = total > 0 && !busy && !loading;
 
   const generate = async () => {
