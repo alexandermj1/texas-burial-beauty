@@ -338,11 +338,10 @@ const OwnershipConfirm = () => {
   const L = buildLogic(state, setS, ACCENT, CRM);
   const V: any = L.renderVals();
 
-  // Sending is the one thing the model leaves to us: it writes the answers and
-  // the roster of signers back to the file, and tells the office.
-  const modelSend = V.send;
-  V.send = () => {
-    modelSend();
+  // Writing the answers (and the roster of signers) back to the file is ours to
+  // do. It runs both when the seller reaches the review screen and when they
+  // press send, so the office is told even if they never click the second button.
+  const saveFinished = (sent: boolean) => {
     const people = (L.people() as any[])
       .filter((p) => (p.name || "").trim())
       .map((p, i) => ({
@@ -364,9 +363,21 @@ const OwnershipConfirm = () => {
         action: "save",
         submission_id: submissionId,
         finished: true,
-        answers: { v2: { ...state, sent: true }, people, sellerNotes: state.note },
+        answers: { v2: { ...state, submitted: true, sent }, people, sellerNotes: state.note },
       },
     });
+  };
+
+  const modelSubmit = V.submit;
+  V.submit = () => {
+    modelSubmit();
+    saveFinished(false);
+  };
+
+  const modelSend = V.send;
+  V.send = () => {
+    modelSend();
+    saveFinished(true);
   };
 
   return (
