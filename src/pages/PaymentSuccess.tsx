@@ -37,12 +37,11 @@ export default function PaymentSuccess() {
 
     const fetchSummary = async (): Promise<Summary | null> => {
       try {
-        const base = `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1`;
-        const key = (supabase as any).supabaseKey || "";
-        const res = await fetch(`${base}/get-payment-summary?session_id=${encodeURIComponent(sessionId)}`, {
-          headers: { apikey: key, Authorization: `Bearer ${key}` },
+        const { data, error } = await supabase.functions.invoke("get-payment-summary", {
+          body: { session_id: sessionId },
         });
-        return (await res.json()) as Summary;
+        if (error) return null;
+        return data as Summary;
       } catch {
         return null;
       }
