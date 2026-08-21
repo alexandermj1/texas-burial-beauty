@@ -21,7 +21,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
-import FamilyTreeInlinePanel from "./FamilyTreeInlinePanel";
+import {
+  buildFamilyTreeBlock,
+  defaultFamilyTreeHelpNote,
+  defaultFamilyTreeParagraphs,
+} from "@/lib/buildFamilyTreeBlock";
+import { properFirstName } from "@/lib/properCase";
+import { cleanDisplayName } from "@/lib/displayName";
 import {
   buildListingOptionsBlock,
   parseSpaces,
@@ -31,7 +37,10 @@ import {
 interface Props {
   seller: SellerForBlock;
   onGenerated: (html: string) => void;
+  /** Insert the quote block and send the email in one click. */
+  onGeneratedAndSend?: (html: string) => void | Promise<void>;
   hasGenerated: boolean;
+  sending?: boolean;
 }
 
 const fmtUsd = (n: number) =>
@@ -59,7 +68,7 @@ const STEPS = [
   { key: 3, label: "Family tree", icon: Network },
 ] as const;
 
-export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGenerated }: Props) {
+export default function ListingOptionsInlinePanel({ seller, onGenerated, onGeneratedAndSend, hasGenerated, sending }: Props) {
   const { toast } = useToast();
   const defaultSpaces = parseSpaces(seller.spaces);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -83,6 +92,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   // the very same builders the standalone buttons use, so nothing differs.
   const [agreementEmailHtml, setAgreementEmailHtml] = useState<string>("");
   const [familyTreeEmailHtml, setFamilyTreeEmailHtml] = useState<string>("");
+  // Deed images the seller uploaded with the form — shown so the roster can be
+  // checked against the actual document.
+  const [deedFiles, setDeedFiles] = useState<{ name: string; url: string; isImage: boolean }[]>([]);
 
   // Pre-fill everything we already hold on the submission.
   useEffect(() => {
@@ -92,7 +104,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
-        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, cemetery_city, ownership_roster")
+        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, cemetery_city, ownership_roster, seller_attachments")
         .eq("id", seller.id)
         .maybeSingle();
       if (cancelled) return;
@@ -116,6 +128,25 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
             ? names.split(/\s*(?:&|and|,)\s*/i).filter(Boolean).map((n) => ({ name: n, deceased: false }))
             : [],
       );
+
+      // Signed URLs for the uploaded deed so it can be eyeballed here.
+      const atts = Array.isArray(row.seller_attachments) ? row.seller_attachments : [];
+      const signed = await Promise.all(
+        atts.slice(0, 6).map(async (f: any) => {
+          const path = String(f?.path ?? "");
+          if (!path) return null;
+          const { data: sd } = await supabase.storage.from("customer-files").createSignedUrl(path, 3600);
+          if (!sd?.signedUrl) return null;
+          const type = String(f?.type ?? "");
+          return {
+            name: String(f?.name ?? "Attachment"),
+            url: sd.signedUrl,
+            isImage: type.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(String(f?.name ?? "")),
+          };
+        }),
+      );
+      if (cancelled) return;
+      setDeedFiles(signed.filter(Boolean) as { name: string; url: string; isImage: boolean }[]);
     })();
     return () => { cancelled = true; };
   }, [seller.id, seller.name, seller.section, seller.lawn, seller.spaces, seller.space_numbers]);
