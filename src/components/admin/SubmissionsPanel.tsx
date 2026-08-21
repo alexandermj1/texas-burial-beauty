@@ -1015,7 +1015,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   }, [selected, cemeteryListSubs, cemeteriesOpen, cemeteryCanon]);
 
   // Record a view for this admin when they open a submission
-  useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); setEditCemeteryInline(false); }, [selected?.id, myId]);
+  useEffect(() => { if (selected?.id) recordView(selected.id); setExpandedCemetery(false); setEditCemeteryInline(false); setDrawerOpen(false); }, [selected?.id, myId]);
 
   // Auto-link / auto-create a customer profile for the selected submission so files
   // & documents are always visible. Every submission IS the profile — the admin
