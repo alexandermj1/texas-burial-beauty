@@ -340,18 +340,20 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         transferFee: feeNum,
         environment: getPaymentsEnvironment(),
       });
-      if (sendNow && onGeneratedAndSend) await onGeneratedAndSend(html);
-      else onGenerated(html);
-      // Persist the retail + quote amount so the purple "quoted (pending)"
-      // pill can render on the submission card. quote_sent_at is stamped
-      // separately by the composer once the email actually sends.
+      // Persist the retail + quote amount (and the prepared family-tree email)
+      // before anything goes out, so the automated chain has it all.
       try {
-        if (seller.id) await savePrepWith({ familyTreeEmailHtml: treeHtml });
+        if (seller.id) {
+          await savePrep();
+          await savePrepWith({ familyTreeEmailHtml: treeHtml });
+        }
       } catch (err) {
         console.warn("Could not save quote fields to submission", err);
       }
+      if (sendNow && onGeneratedAndSend) await onGeneratedAndSend(html);
+      else onGenerated(html);
       toast({
-        title: hasGenerated ? "Quote regenerated" : "Quote inserted",
+        title: sendNow ? "Quote sent" : hasGenerated ? "Quote regenerated" : "Quote inserted",
         description: "Accepting takes them straight to the agreement, then to the family tree.",
       });
     } catch (e: any) {
