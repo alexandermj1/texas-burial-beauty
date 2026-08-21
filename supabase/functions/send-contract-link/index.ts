@@ -2,6 +2,7 @@
 // signing link. Marks the contract as "sent" (sent_at timestamp) so the panel status
 // reflects it. Also updates any prior sent_at when re-sending.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+import { isInternalCall } from '../_shared/internal-auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,8 +25,9 @@ Deno.serve(async (req) => {
     const asUser = createClient(SUPABASE_URL, SERVICE_KEY, {
       global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     });
-    const { data: userData } = await asUser.auth.getUser();
-    if (!userData.user) {
+    const internal = isInternalCall(req);
+    const { data: userData } = internal ? { data: { user: null } } : await asUser.auth.getUser();
+    if (!internal && !userData.user) {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders });
     }
 

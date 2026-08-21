@@ -7,6 +7,7 @@ import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
 import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
 import { contactFor, nameKey } from '../_shared/questionnaire-contacts.ts';
 import { formatPlotDescription } from '../_shared/plot-description.ts';
+import { isInternalCall } from '../_shared/internal-auth.ts';
 
 
 const KINDS = ['listing_agreement', 'poa', 'affidavit_heirship', 'spousal_consent'] as const;
@@ -283,7 +284,7 @@ Deno.serve(async (req) => {
         : new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
       fill_data: fill,
       filled_pdf_path: path,
-      created_by: userData.user.id,
+      created_by: userData.user?.id ?? null,
       principal_key: principalKey,
     };
 
