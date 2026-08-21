@@ -14,14 +14,20 @@
 // everything downstream is prepared and reviewed before the seller sees it.
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Eye, ArrowRight, ArrowLeft, Plus, X } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Eye, ArrowRight, ArrowLeft, Plus, X, Send } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
-import FamilyTreeInlinePanel from "./FamilyTreeInlinePanel";
+import {
+  buildFamilyTreeBlock,
+  defaultFamilyTreeHelpNote,
+  defaultFamilyTreeParagraphs,
+} from "@/lib/buildFamilyTreeBlock";
+import { properFirstName } from "@/lib/properCase";
+import { cleanDisplayName } from "@/lib/displayName";
 import {
   buildListingOptionsBlock,
   parseSpaces,
@@ -31,7 +37,10 @@ import {
 interface Props {
   seller: SellerForBlock;
   onGenerated: (html: string) => void;
+  /** Insert the quote block and send the email in one click. */
+  onGeneratedAndSend?: (html: string) => void | Promise<void>;
   hasGenerated: boolean;
+  sending?: boolean;
 }
 
 const fmtUsd = (n: number) =>
@@ -59,7 +68,7 @@ const STEPS = [
   { key: 3, label: "Family tree", icon: Network },
 ] as const;
 
-export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGenerated }: Props) {
+export default function ListingOptionsInlinePanel({ seller, onGenerated, onGeneratedAndSend, hasGenerated, sending }: Props) {
   const { toast } = useToast();
   const defaultSpaces = parseSpaces(seller.spaces);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -83,6 +92,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   // the very same builders the standalone buttons use, so nothing differs.
   const [agreementEmailHtml, setAgreementEmailHtml] = useState<string>("");
   const [familyTreeEmailHtml, setFamilyTreeEmailHtml] = useState<string>("");
+  // Deed images the seller uploaded with the form — shown so the roster can be
+  // checked against the actual document.
+  const [deedFiles, setDeedFiles] = useState<{ name: string; url: string; isImage: boolean }[]>([]);
 
   // Pre-fill everything we already hold on the submission.
   useEffect(() => {
@@ -92,7 +104,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
-        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, cemetery_city, ownership_roster")
+        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, cemetery_city, ownership_roster, seller_attachments")
         .eq("id", seller.id)
         .maybeSingle();
       if (cancelled) return;
@@ -116,6 +128,25 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
             ? names.split(/\s*(?:&|and|,)\s*/i).filter(Boolean).map((n) => ({ name: n, deceased: false }))
             : [],
       );
+
+      // Signed URLs for the uploaded deed so it can be eyeballed here.
+      const atts = Array.isArray(row.seller_attachments) ? row.seller_attachments : [];
+      const signed = await Promise.all(
+        atts.slice(0, 6).map(async (f: any) => {
+          const path = String(f?.path ?? "");
+          if (!path) return null;
+          const { data: sd } = await supabase.storage.from("customer-files").createSignedUrl(path, 3600);
+          if (!sd?.signedUrl) return null;
+          const type = String(f?.type ?? "");
+          return {
+            name: String(f?.name ?? "Attachment"),
+            url: sd.signedUrl,
+            isImage: type.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(String(f?.name ?? "")),
+          };
+        }),
+      );
+      if (cancelled) return;
+      setDeedFiles(signed.filter(Boolean) as { name: string; url: string; isImage: boolean }[]);
     })();
     return () => { cancelled = true; };
   }, [seller.id, seller.name, seller.section, seller.lawn, seller.spaces, seller.space_numbers]);
@@ -287,10 +318,21 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
     window.open(`/confirm?s=${seller.id}`, "_blank", "noopener");
   };
 
-  const generate = async () => {
+  const generate = async (sendNow = false) => {
     if (!canGenerate || busy) return;
     setBusy(true);
     try {
+      // The family-tree email is standard copy — build it from the roster we
+      // just confirmed so the broker never has to write it.
+      const firstName = properFirstName(cleanDisplayName(seller.name || "")) || "there";
+      const treeHtml = buildFamilyTreeBlock({
+        submissionId: seller.id,
+        cemetery: properCase(seller.cemetery || ""),
+        paragraphs: defaultFamilyTreeParagraphs(firstName, properCase(seller.cemetery || "")),
+        ctaLabel: "Confirm your details →",
+        helpNote: defaultFamilyTreeHelpNote,
+      });
+      setFamilyTreeEmailHtml(treeHtml);
       const html = await buildListingOptionsBlock({
         seller,
         netPerPlot: nppNum,
@@ -298,17 +340,20 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
         transferFee: feeNum,
         environment: getPaymentsEnvironment(),
       });
-      onGenerated(html);
-      // Persist the retail + quote amount so the purple "quoted (pending)"
-      // pill can render on the submission card. quote_sent_at is stamped
-      // separately by the composer once the email actually sends.
+      // Persist the retail + quote amount (and the prepared family-tree email)
+      // before anything goes out, so the automated chain has it all.
       try {
-        if (seller.id) await savePrep();
+        if (seller.id) {
+          await savePrep();
+          await savePrepWith({ familyTreeEmailHtml: treeHtml });
+        }
       } catch (err) {
         console.warn("Could not save quote fields to submission", err);
       }
+      if (sendNow && onGeneratedAndSend) await onGeneratedAndSend(html);
+      else onGenerated(html);
       toast({
-        title: hasGenerated ? "Quote regenerated" : "Quote inserted",
+        title: sendNow ? "Quote sent" : hasGenerated ? "Quote regenerated" : "Quote inserted",
         description: "Accepting takes them straight to the agreement, then to the family tree.",
       });
     } catch (e: any) {
@@ -483,6 +528,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
                 spaces: String(countNum),
                 space_numbers: seller.space_numbers ?? null,
               }}
+              hideListingOption
               hasGenerated={!!agreementEmailHtml}
               onGenerated={async (html) => {
                 setAgreementEmailHtml(html);
@@ -523,10 +569,37 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       {step === 3 && (
         <>
           <p className="text-[11px] text-muted-foreground">
-            The seller's questions are built from this roster. Type the names exactly as the deed reads and tick anyone
-            who has died — they go straight to this page after signing.
+            Check the names below against the deed they uploaded. That's all the family-tree email needs — the seller
+            answers the rest themselves after signing.
           </p>
+
+          {deedFiles.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {deedFiles.map((f) => (
+                <a
+                  key={f.url}
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 rounded-md border border-border/60 bg-background overflow-hidden hover:border-primary/50"
+                  title={f.name}
+                >
+                  {f.isImage ? (
+                    <img src={f.url} alt={`Deed uploaded by the seller: ${f.name}`} className="h-32 w-auto object-contain" />
+                  ) : (
+                    <span className="flex items-center gap-1.5 px-3 py-6 text-[11px] text-foreground">
+                      <Eye className="w-3 h-3" /> {f.name}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground italic">No deed was uploaded with the form.</p>
+          )}
+
           <div className="space-y-1.5">
+            <label className={labelCls}>Names on the deed</label>
             {roster.map((r, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
@@ -536,15 +609,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
                   }
                   placeholder="Name as it appears on the deed" className={inputCls}
                 />
-                <label className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
-                  <input
-                    type="checkbox" checked={!!r.deceased}
-                    onChange={(e) =>
-                      setRoster((prev) => prev.map((p, j) => (j === i ? { ...p, deceased: e.target.checked } : p)))
-                    }
-                  />
-                  Deceased
-                </label>
                 <button
                   type="button"
                   onClick={() => setRoster((prev) => prev.filter((_, j) => j !== i))}
@@ -562,23 +626,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
               <Plus className="w-3 h-3" /> Add a name from the deed
             </button>
           </div>
-          <div className="rounded-md border border-border/60 bg-background/60 p-2">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-              The family-tree email they'll receive after signing
-            </p>
-            <FamilyTreeInlinePanel
-              seller={{ id: seller.id, name: seller.name, cemetery: seller.cemetery }}
-              hasGenerated={!!familyTreeEmailHtml}
-              onGenerated={async (html) => {
-                setFamilyTreeEmailHtml(html);
-                await savePrepWith({ familyTreeEmailHtml: html });
-                toast({
-                  title: "Family tree email prepared",
-                  description: "Sent automatically once the listing agreement is signed.",
-                });
-              }}
-            />
-          </div>
+
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <button
               type="button" onClick={() => setStep(2)}
@@ -594,18 +642,21 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
                 <Eye className="w-3 h-3" /> Preview their page
               </button>
               <button
-                type="button" onClick={generate} disabled={!canGenerate || busy}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                type="button" onClick={() => generate(false)} disabled={!canGenerate || busy}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
               >
-                {busy ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : hasGenerated ? (
-                  <RefreshCw className="w-3 h-3" />
-                ) : (
-                  <Sparkles className="w-3 h-3" />
-                )}
-                {busy ? "Generating…" : hasGenerated ? "Regenerate quote" : "Insert quote email"}
+                {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : hasGenerated ? <RefreshCw className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                {busy ? "Preparing…" : hasGenerated ? "Regenerate quote" : "Insert quote email"}
               </button>
+              {onGeneratedAndSend && (
+                <button
+                  type="button" onClick={() => generate(true)} disabled={!canGenerate || busy || !!sending}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  {busy || sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                  {sending ? "Sending…" : "Send quote email"}
+                </button>
+              )}
             </div>
           </div>
         </>

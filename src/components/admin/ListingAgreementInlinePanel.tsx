@@ -31,6 +31,9 @@ interface Seller {
 interface Props {
   seller: Seller;
   hasGenerated: boolean;
+  /** Hide the tier picker — used inside the quote wizard, where the tier is
+   *  only known once the seller accepts and picks one. */
+  hideListingOption?: boolean;
   onGenerated: (html: string, meta: { signToken: string; signUrl: string }) => void;
 }
 
@@ -68,7 +71,7 @@ const Field = ({
 const inputCls =
   "w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
-export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGenerated }: Props) {
+export default function ListingAgreementInlinePanel({ seller, hasGenerated, hideListingOption, onGenerated }: Props) {
   const { toast } = useToast();
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -176,7 +179,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
           plot_description: clean(plotDescription),
           authorized_min_total: total,
           authorized_min_per_plot: effectivePerPlot || undefined,
-          listing_option: listingOption,
+          ...(hideListingOption ? {} : { listing_option: listingOption }),
         },
       });
       onGenerated(res.html, { signToken: res.signToken, signUrl: res.signUrl });
@@ -236,6 +239,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
       </div>
 
       {/* Listing option the seller paid for — ticks the matching box on page 2. */}
+      {!hideListingOption && (
       <div>
         <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
           Listing option the seller selected
@@ -266,6 +270,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
           </p>
         )}
       </div>
+      )}
 
       {showAll && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-1 border-t border-border/50">
@@ -328,7 +333,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
         <p className="text-[11px] text-muted-foreground">
           {total > 0 ? (
             <>
-              {listingOption} · authorized minimum {fmtUsd(total)} across {plots} space{plots === 1 ? "" : "s"}
+              {hideListingOption ? "Tier set on acceptance" : listingOption} · authorized minimum {fmtUsd(total)} across {plots} space{plots === 1 ? "" : "s"}
               {effectivePerPlot ? <> ({fmtUsd(effectivePerPlot)} each)</> : null} · {cemetery || "cemetery"}
             </>
           ) : (

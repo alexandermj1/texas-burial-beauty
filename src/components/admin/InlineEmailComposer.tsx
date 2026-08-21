@@ -417,14 +417,34 @@ const InlineEmailComposer = ({
   };
 
 
-  const send = async () => {
-    const plain = htmlToText(html);
+  /** Insert (or replace) the quote block and return the resulting HTML. */
+  const insertQuoteBlock = (blockHtml: string) => {
+    const current = editorRef.current?.getHtml() ?? html;
+    const stripped = current.replace(
+      /<div data-listing-options="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
+      "",
+    );
+    editorRef.current?.setHtml(stripped);
+    editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+    const next = editorRef.current?.getHtml() ?? blockHtml;
+    setHtml(next);
+    setBodyTouched(true);
+    setListingBlockInserted(true);
+    setSubject(quoteSubjectFor(sellerContext?.cemetery));
+    return next;
+  };
+
+  // `htmlOverride` lets a panel insert a block and send it in the same click
+  // (React state updates are async, so the fresh HTML is passed straight in).
+  const send = async (htmlOverride?: unknown) => {
+    const outHtml = typeof htmlOverride === "string" && htmlOverride ? htmlOverride : html;
+    const plain = htmlToText(outHtml);
     if (!plain.trim()) {
       toast({ title: "Message is empty", variant: "destructive" });
       return;
     }
     setSending(true);
-    const normalizedHtml = normalizeComposerHtmlForEmail(html);
+    const normalizedHtml = normalizeComposerHtmlForEmail(outHtml);
     // Quote emails (listing-options block already includes brand header/footer)
     // ship without the extra masthead shell to avoid double branding.
     const hasListingBlock = /data-listing-options="1"/.test(normalizedHtml);
@@ -465,7 +485,7 @@ const InlineEmailComposer = ({
     // "Quoted" pipeline stage / gets the quoted tag.
     try {
       const isQuoteSend =
-        (listingBlockInserted || activeTemplateId === "seller_listing_options") &&
+        (hasListingBlock || listingBlockInserted || activeTemplateId === "seller_listing_options") &&
         sellerContext?.id;
       if (isQuoteSend) {
         await supabase
@@ -791,21 +811,11 @@ const InlineEmailComposer = ({
         <ListingOptionsInlinePanel
           seller={sellerContext}
           hasGenerated={listingBlockInserted}
-          onGenerated={(blockHtml) => {
-            // Remove any previously inserted block so regeneration replaces
-            // rather than duplicates.
-            const current = editorRef.current?.getHtml() ?? html;
-            const stripped = current.replace(
-              /<div data-listing-options="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
-              "",
-            );
-            editorRef.current?.setHtml(stripped);
-            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
-            const next = editorRef.current?.getHtml() ?? blockHtml;
-            setHtml(next);
-            setBodyTouched(true);
-            setListingBlockInserted(true);
-            setSubject(quoteSubjectFor(sellerContext?.cemetery));
+          sending={sending}
+          onGenerated={(blockHtml) => insertQuoteBlock(blockHtml)}
+          onGeneratedAndSend={async (blockHtml) => {
+            const next = insertQuoteBlock(blockHtml);
+            await send(next);
           }}
         />
       )}
