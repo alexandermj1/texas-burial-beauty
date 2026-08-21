@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Building2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { cemeteryCanon } from "@/lib/cemeteryCanon";
 
 interface Props {
   open: boolean;
@@ -16,16 +17,8 @@ interface Props {
   onSaved?: () => void;
 }
 
-// Match the canonicalizer used in TexasMapPanel so counts stay in sync.
-const _canon = (s: string | null | undefined) => {
-  if (!s) return "";
-  return s.toLowerCase()
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\b(cemetery|memorial park|memorial|mortuary|mausoleum|association|assoc|funeral home|park|gardens?)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-};
+// Shared canonicaliser (mirrors the database) so name variants collapse.
+const _canon = (s: string | null | undefined) => cemeteryCanon(s);
 
 const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, customerOriginal, onSaved }: Props) => {
   const [rows, setRows] = useState<Array<{ id: string; name: string; city: string | null }>>([]);
