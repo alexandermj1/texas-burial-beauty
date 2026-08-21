@@ -137,8 +137,10 @@ async function notifyAdmins(title: string, message: string, submissionId: string
 const TIER_LABEL: Record<string, string> = {
   starter: "Starter",
   pro: "Pro",
-  custom_plus: "Custom Plus",
+  custom_plus: "Featured",
+  featured: "Featured",
   set_your_price: "Set Your Own Price",
+  set_your_own_price: "Set Your Own Price",
 };
 
 function receiptBlock(tx: any, itemLabel: string, cardBrand?: string, cardLast4?: string) {

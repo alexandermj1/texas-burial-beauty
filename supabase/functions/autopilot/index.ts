@@ -68,7 +68,8 @@ const TIER_LABEL: Record<string, string> = {
   starter: 'Starter',
   pro: 'Pro',
   featured: 'Featured',
-  custom_plus: 'Set your own price',
+  custom_plus: 'Featured',
+  set_your_price: 'Set your own price',
   set_your_own_price: 'Set your own price',
 };
 
