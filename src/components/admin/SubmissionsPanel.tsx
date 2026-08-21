@@ -51,7 +51,10 @@ const UNMERGED_IDS = new Set<string>([]);
 const _canon = (s: string) => cemeteryCanon(s);
 
 const TX_CEMETERY_NAMES = new Set(bayCemeteries.map(c => _canon(c.name)));
-const TX_CITIES = new Set(bayCemeteries.map(c => _canon(c.city)));
+// City names must NOT be run through the cemetery canonicaliser (it strips
+// words like "Garden"/"Memorial" that appear in real city names).
+const _plainCanon = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+const TX_CITIES = new Set(bayCemeteries.map(c => _plainCanon(c.city)));
 
 // Volume-based tint — mirrors TexasCemeteriesPanel so submissions and the
 // directory panel speak the same visual language.
