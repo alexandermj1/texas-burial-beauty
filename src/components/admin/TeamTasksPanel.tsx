@@ -116,17 +116,31 @@ const TeamTasksPanel = () => {
     load();
   };
 
-  const toggleDone = async (t: Task) => {
+  // Completing is a deliberate act: the checkbox asks for confirmation first,
+  // then the item leaves the open list and is stamped with who/when.
+  const completeTask = async (t: Task) => {
     await supabase
       .from("team_tasks" as any)
-      .update({
-        done: !t.done,
-        done_at: !t.done ? new Date().toISOString() : null,
-        done_by_name: !t.done ? myName : null,
-      })
+      .update({ done: true, done_at: new Date().toISOString(), done_by_name: myName })
+      .eq("id", t.id);
+    setConfirmTask(null);
+    toast({ title: "Marked complete", description: `${t.title} · ${new Date().toLocaleString()}` });
+    load();
+  };
+
+  const reopenTask = async (t: Task) => {
+    await supabase
+      .from("team_tasks" as any)
+      .update({ done: false, done_at: null, done_by_name: null })
       .eq("id", t.id);
     load();
   };
+
+  const toggleDone = async (t: Task) => {
+    if (t.done) return reopenTask(t);
+    setConfirmTask(t);
+  };
+
 
   const saveEdit = async (id: string) => {
     if (!editTitle.trim()) return;
