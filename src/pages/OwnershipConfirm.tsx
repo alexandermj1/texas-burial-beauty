@@ -407,7 +407,7 @@ const OwnershipConfirm = () => {
               For the {V.family} family
             </div>
             <h1 style={{"margin": "12px 0 0 0", "fontSize": "clamp(28px,5.2vw,42px)", "lineHeight": "1.1", "color": "#1d1d1f", "textWrap": "balance"}}>
-              Confirming the ownership of the deed.
+              Last step before broker review.
             </h1>
             <p style={{"margin": "14px auto 0 auto", "maxWidth": "34em", "fontSize": "clamp(15px,3vw,16.5px)", "lineHeight": "1.5", "fontWeight": "300", "color": "#4c4c54", "textWrap": "pretty"}}>
               A few short questions so the paperwork is exactly right. Your answers tell us who legally has a say — the family tree builds itself as you go.
