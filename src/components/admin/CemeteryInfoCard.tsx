@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CemeteryFiles from "./CemeteryFiles";
+import { cemeteryCanon } from "@/lib/cemeteryCanon";
 
 
 interface SectionEntry {
@@ -46,8 +47,7 @@ interface Props {
   onClear: () => void;
 }
 
-const canonicalize = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+const canonicalize = (s: string) => cemeteryCanon(s);
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const fmtDate = (iso: string) => {
@@ -97,12 +97,25 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
       .select("*")
       .single();
     if (error) {
+      // The database keeps one row per canonical cemetery name, so a variant
+      // spelling ("Sparkman/Hillcrest") collides with the existing profile
+      // ("Sparkman-Hillcrest Memorial Park"). Open that profile instead of
+      // failing — that is the row the admin actually wants to edit.
+      if ((error as any).code === "23505" || /duplicate key/i.test(error.message || "")) {
+        const { data: all } = await supabase.from("texas_cemeteries" as any).select("*");
+        const existing = ((all as any[]) || []).find((r) => canonicalize(r.name) === canon);
+        if (existing) {
+          setProfile(existing as any);
+          return existing as any;
+        }
+      }
       toast({ title: "Couldn't create profile", description: error.message, variant: "destructive" });
       return null;
     }
     setProfile(data as any);
     return data as any;
   };
+
 
   const startEdit = async () => {
     const p = await ensureProfile();

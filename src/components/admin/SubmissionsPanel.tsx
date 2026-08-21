@@ -38,16 +38,23 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
 import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
+import { cemeteryCanon } from "@/lib/cemeteryCanon";
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
 // Submissions staff have explicitly un-merged: they always show as their own row
 // even when another submission shares the same email address.
 const UNMERGED_IDS = new Set<string>([]);
 
-const _canon = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+// Shared with the cemetery profile card + re-match dialog and mirrors the
+// database canonicaliser, so name variants ("Sparkman/Hillcrest" vs
+// "Sparkman-Hillcrest Memorial Park") group into one cemetery.
+const _canon = (s: string) => cemeteryCanon(s);
 
 const TX_CEMETERY_NAMES = new Set(bayCemeteries.map(c => _canon(c.name)));
-const TX_CITIES = new Set(bayCemeteries.map(c => _canon(c.city)));
+// City names must NOT be run through the cemetery canonicaliser (it strips
+// words like "Garden"/"Memorial" that appear in real city names).
+const _plainCanon = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+const TX_CITIES = new Set(bayCemeteries.map(c => _plainCanon(c.city)));
 
 // Volume-based tint — mirrors TexasCemeteriesPanel so submissions and the
 // directory panel speak the same visual language.

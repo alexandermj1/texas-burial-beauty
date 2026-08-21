@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Building2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { cemeteryCanon } from "@/lib/cemeteryCanon";
 
 interface Props {
   open: boolean;
@@ -16,16 +17,8 @@ interface Props {
   onSaved?: () => void;
 }
 
-// Match the canonicalizer used in TexasMapPanel so counts stay in sync.
-const _canon = (s: string | null | undefined) => {
-  if (!s) return "";
-  return s.toLowerCase()
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\b(cemetery|memorial park|memorial|mortuary|mausoleum|association|assoc|funeral home|park|gardens?)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-};
+// Shared canonicaliser (mirrors the database) so name variants collapse.
+const _canon = (s: string | null | undefined) => cemeteryCanon(s);
 
 const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, customerOriginal, onSaved }: Props) => {
   const [rows, setRows] = useState<Array<{ id: string; name: string; city: string | null }>>([]);
@@ -46,22 +39,22 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
       const cems = ((cemsRes.data as any[]) || []).map(r => ({ id: r.id, name: r.name, city: r.city }));
       setRows(cems);
 
-      // Exact-match counts only: submissions whose `cemetery` field equals a cemetery's
-      // name (case-insensitive). No fuzzy/broad matching - a submission only counts for
-      // a cemetery if the seller picked it or an admin reassigned it there.
+      // Counts are grouped by the canonical cemetery key (same rule as the
+      // submissions list), so spelling variants of the same cemetery are
+      // counted together instead of splitting into separate buckets.
       const subMap = new Map<string, number>();
       for (const s of (subsRes.data as any[]) || []) {
-        const k = String(s.cemetery || "").trim().toLowerCase();
+        const k = _canon(s.cemetery);
         if (!k) continue;
         subMap.set(k, (subMap.get(k) || 0) + 1);
       }
 
       const counts = new Map<string, number>();
       cems.forEach((c) => {
-        const key = String(c.name || "").trim().toLowerCase();
-        const n = subMap.get(key) || 0;
+        const n = subMap.get(_canon(c.name)) || 0;
         if (n > 0) counts.set(c.id, n);
       });
+
 
       setCountsByCemId(counts);
       setLoading(false);
