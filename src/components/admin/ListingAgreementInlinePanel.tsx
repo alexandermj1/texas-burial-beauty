@@ -109,9 +109,9 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
       const plots = parseCount(row.plot_count ?? row.spaces ?? seller.spaces);
       setPlotCount(String(plots));
       const quote = Number(row.quote_amount) || 0;
-      const total = quote > 0 ? quote * plots : Number(row.list_price) || 0;
-      setNetTotal(total > 0 ? String(total) : "");
-      setPerPlot(total > 0 ? String(Math.round(total / plots)) : "");
+      const listTotal = Number(row.list_price) || 0;
+      const per = quote > 0 ? quote : listTotal > 0 ? Math.round(listTotal / plots) : 0;
+      setPerPlot(per > 0 ? String(per) : "");
 
       const tier = String(row.listing_tier ?? row.listing_option ?? "").toLowerCase();
       const match = LISTING_OPTIONS.find(
