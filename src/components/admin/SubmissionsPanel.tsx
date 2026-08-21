@@ -913,7 +913,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+
+  const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
