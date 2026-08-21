@@ -336,6 +336,35 @@ const OwnershipConfirm = () => {
     });
   }, [state?.submitted]);
 
+  // If they told us at the start that they are a son or daughter, they are one
+  // of the children who inherits — so they belong on the family tree without
+  // having to add themselves, and we must ask about their spouse too.
+  useEffect(() => {
+    if (!state || state.rel !== "Son or daughter" || state.selfKidAdded) return;
+    const nm = (state.youName ?? "").trim();
+    if (!nm) return;
+    const estates = (state.deed ?? []).filter(
+      (d: any) =>
+        (d.n ?? "").trim() &&
+        d.st === "deceased" &&
+        !((state.will ?? {})[d.id] === "yes" && ((state.taker ?? {})[d.id] ?? "").trim()),
+    );
+    if (!estates.length) return;
+    const key = nameKey(nm);
+    if ((state.kids ?? []).some((k: any) => key && nameKey(k.n) === key)) {
+      setS({ selfKidAdded: true });
+      return;
+    }
+    setS((s: any) => ({
+      kids: (s.kids ?? []).concat([
+        { id: "k" + s.kseq, n: nm, st: "living", of: estates.map((d: any) => d.id), kids: [] },
+      ]),
+      kseq: s.kseq + 1,
+      selfKidAdded: true,
+    }));
+  }, [state, setS]);
+
+
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: "#fbfbfd", display: "grid", placeItems: "center", color: "#86868b" }}>
