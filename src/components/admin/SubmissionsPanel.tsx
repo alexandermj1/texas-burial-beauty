@@ -3099,7 +3099,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
-      <div data-tour="detail-panel" className={`lg:col-span-7 lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
+      <div data-tour="detail-panel" className={`${listCollapsed ? "lg:col-span-12" : "lg:col-span-7"} lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
+        {!isMobile && listCollapsed && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-card/80 backdrop-blur-md border border-border/60 text-foreground hover:bg-muted/60 transition-colors shadow-sm"
+            >
+              <PanelLeftOpen className="w-3.5 h-3.5" />
+              Submissions
+              <span className="text-[10px] leading-none px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold border border-border">
+                {filtered.length}
+              </span>
+            </button>
+            <span className="text-[11px] text-muted-foreground">Focus mode — full-width detail</span>
+          </div>
+        )}
         {cemeteryCanon && cemeteryLabel && (
           <>
             {cemeteriesOpen && (
