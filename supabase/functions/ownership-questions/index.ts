@@ -10,6 +10,7 @@
 //   preview — admin-only, returns the exact email HTML without sending
 //   send    — admin-only, emails the seller the link through the info@ mailbox
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { isInternalCall } from "../_shared/internal-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
