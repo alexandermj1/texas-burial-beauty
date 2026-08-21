@@ -13,6 +13,24 @@ const corsHeaders = {
 
 const BodySchema = z.object({ transactionId: z.string().uuid() });
 
+/** Kick the next automated step (listing agreement / family tree). */
+async function runAutopilot(submissionId: string, step: string) {
+  try {
+    const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/autopilot`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      },
+      body: JSON.stringify({ submission_id: submissionId, step }),
+    });
+    console.log("autopilot", step, res.status, await res.text());
+  } catch (e) {
+    console.error("autopilot call failed", step, e);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -137,6 +155,9 @@ Deno.serve(async (req) => {
           })));
         }
       } catch (e) { console.error("Starter admin notify failed", e); }
+
+      // Accepted quote -> send the listing agreement straight away.
+      await runAutopilot(tx.submission_id, "listing_agreement");
     }
 
     return new Response(JSON.stringify({

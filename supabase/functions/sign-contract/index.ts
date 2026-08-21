@@ -106,6 +106,24 @@ function todayFormatted(): string {
   return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+/** Kick the next automated step (listing agreement / family tree). */
+async function runAutopilot(submissionId: string, step: string) {
+  try {
+    const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/autopilot`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      },
+      body: JSON.stringify({ submission_id: submissionId, step }),
+    });
+    console.log("autopilot", step, res.status, await res.text());
+  } catch (e) {
+    console.error("autopilot call failed", step, e);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   const url = new URL(req.url);
@@ -874,6 +892,9 @@ Deno.serve(async (req) => {
     }
     if (c.kind === 'poa') patch.poa_signed_at = nowIso;
     await svc.from('contact_submissions').update(patch).eq('id', c.submission_id);
+
+    // Listing agreement signed -> send the family tree questionnaire next.
+    if (c.kind === 'listing_agreement') await runAutopilot(c.submission_id, 'family_tree');
 
     const { data: allContracts } = await svc
       .from('contracts').select('kind,status,notarized_at,signed_at').eq('submission_id', c.submission_id);
