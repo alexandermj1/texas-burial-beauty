@@ -20,6 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import { formatPlotDescription } from "@/lib/plotDescription";
+import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
+import FamilyTreeInlinePanel from "./FamilyTreeInlinePanel";
 import {
   buildListingOptionsBlock,
   parseSpaces,
@@ -77,6 +79,10 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  // The exact emails the seller will receive after they accept — prepared with
+  // the very same builders the standalone buttons use, so nothing differs.
+  const [agreementEmailHtml, setAgreementEmailHtml] = useState<string>("");
+  const [familyTreeEmailHtml, setFamilyTreeEmailHtml] = useState<string>("");
 
   // Pre-fill everything we already hold on the submission.
   useEffect(() => {
@@ -193,8 +199,10 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       deedOwnerNames: deedOwnersClean,
       plotDescription: plotDescription.trim() || null,
       countyState: countyState.trim() || null,
+      agreementEmailHtml: agreementEmailHtml || null,
+      familyTreeEmailHtml: familyTreeEmailHtml || null,
     }),
-    [nppNum, countNum, total, salesNum, feeNum, deedOwnersClean, plotDescription, countyState],
+    [nppNum, countNum, total, salesNum, feeNum, deedOwnersClean, plotDescription, countyState, agreementEmailHtml, familyTreeEmailHtml],
   );
 
   /** Save everything the later automated steps depend on. */
@@ -218,6 +226,25 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
         ownership_answers: {
           ...answers,
           autopilot: { ...((answers as any).autopilot ?? {}), ...prepBlock },
+        },
+      } as any)
+      .eq("id", seller.id);
+  };
+
+  /** Save prep plus an immediate patch (state updates are async). */
+  const savePrepWith = async (patch: Record<string, unknown>) => {
+    const { data: current } = await supabase
+      .from("contact_submissions")
+      .select("ownership_answers")
+      .eq("id", seller.id)
+      .maybeSingle();
+    const answers = ((current as any)?.ownership_answers ?? {}) as Record<string, unknown>;
+    await supabase
+      .from("contact_submissions")
+      .update({
+        ownership_answers: {
+          ...answers,
+          autopilot: { ...((answers as any).autopilot ?? {}), ...prepBlock, ...patch },
         },
       } as any)
       .eq("id", seller.id);
@@ -441,6 +468,32 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
               quote email — it is written into the agreement automatically.
             </div>
           </div>
+          <div className="rounded-md border border-border/60 bg-background/60 p-2">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+              The agreement email they'll receive on acceptance
+            </p>
+            <ListingAgreementInlinePanel
+              seller={{
+                id: seller.id,
+                name: deedOwnersClean || seller.name,
+                email: seller.email,
+                cemetery: seller.cemetery,
+                section: seller.section,
+                property_type: seller.property_type,
+                spaces: String(countNum),
+                space_numbers: seller.space_numbers ?? null,
+              }}
+              hasGenerated={!!agreementEmailHtml}
+              onGenerated={async (html) => {
+                setAgreementEmailHtml(html);
+                await savePrepWith({ agreementEmailHtml: html });
+                toast({
+                  title: "Agreement email prepared",
+                  description: "This exact email is sent automatically the moment they accept.",
+                });
+              }}
+            />
+          </div>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <button
               type="button" onClick={() => setStep(1)}
@@ -508,6 +561,23 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
             >
               <Plus className="w-3 h-3" /> Add a name from the deed
             </button>
+          </div>
+          <div className="rounded-md border border-border/60 bg-background/60 p-2">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+              The family-tree email they'll receive after signing
+            </p>
+            <FamilyTreeInlinePanel
+              seller={{ id: seller.id, name: seller.name, cemetery: seller.cemetery }}
+              hasGenerated={!!familyTreeEmailHtml}
+              onGenerated={async (html) => {
+                setFamilyTreeEmailHtml(html);
+                await savePrepWith({ familyTreeEmailHtml: html });
+                toast({
+                  title: "Family tree email prepared",
+                  description: "Sent automatically once the listing agreement is signed.",
+                });
+              }}
+            />
           </div>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <button
