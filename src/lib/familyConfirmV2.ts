@@ -640,8 +640,22 @@ export function buildLogic(state, setS, accent0, CRM) {
       show8: d7 && L.inheritors().length > 0,
       heirSpouseRows: L.inheritors().map(h => {
         const hs = s.heirSpouse[h.id] || {};
+        const who = h.n.trim() || 'this person';
         return {
           name: h.n.trim(), rel: h.rel, yes: hs.has === 'yes', spouseName: hs.n || '',
+          question: 'Is ' + who + ' married?',
+          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife',
+          pair: (hs.n || '').trim()
+            ? (hs.n || '').trim() + ' \u2014 husband or wife of ' + who
+            : 'We record this person as the husband or wife of ' + who + '.',
+          aliveAsk: hs.has === 'yes',
+          aliveSeg: L.seg(hs.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('heirSpouse', h.id, { alive: v })),
+          aliveNeeded: hs.has === 'yes' && !hs.alive,
+          aliveNote: hs.alive === 'living'
+            ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
+            : hs.alive === 'deceased'
+              ? 'Nothing to sign from them. We may ask for a death certificate later.'
+              : 'Tell us whether they are still living \u2014 only a living spouse signs.',
           seg: L.seg(hs.has, [['no', 'Not married'], ['yes', 'Married'], ['unknown', "Don't know"]], v => L.patch('heirSpouse', h.id, { has: v })),
           setSpouse: ev => { const v = ev.target.value; L.patch('heirSpouse', h.id, { n: v }); }
         };
@@ -651,13 +665,21 @@ export function buildLogic(state, setS, accent0, CRM) {
       contactsTitle: signers.length === 1 ? 'One person needs a power of attorney' : signers.length + ' people need a power of attorney',
       contacts: alive.map(c => {
         const st = s.contacts[c.key] || {};
+        const needAddr = c.must && !(st.addr || '').trim();
         return {
           name: c.name || 'Name still needed', roles: c.roles,
           nameFg: c.blank ? '#7d3a28' : '#1d1d1f',
           tag: c.must ? 'Must sign' : 'For contact only',
           tagBg: c.must ? '#eef1ea' : '#f0f0f3',
           tagFg: c.must ? acc : '#86868b',
-          bd: c.must ? '#e0e6dd' : '#ececf0',
+          bd: needAddr ? '#f2ddd5' : (c.must ? '#e0e6dd' : '#ececf0'),
+          needAddr,
+          addrLabel: c.must
+            ? 'Postal address \u2014 required, this is where their power of attorney is posted'
+            : 'Postal address, if you have it',
+          addrPlaceholder: c.must
+            ? 'Street, city, state and ZIP for ' + (c.name || 'this person')
+            : 'Postal address',
           addr: st.addr || '', email: st.email || '', phone: st.phone || '',
           setAddr: ev => { const v = ev.target.value; L.patch('contacts', c.key, { addr: v }); },
           setEmail: ev => { const v = ev.target.value; L.patch('contacts', c.key, { email: v }); },
