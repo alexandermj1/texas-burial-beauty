@@ -220,7 +220,14 @@ export function buildLogic(state, setS, accent0, CRM) {
       }
       if (isYou) add(d.n, 'This is you, our point of contact', {});
       const sp = L.sp(d.id);
-      if (sp.has === 'yes' && (sp.n || '').trim()) add(sp.n, 'Legal spouse of ' + d.n + ', not on the deed \u2014 holds a right of interment and must consent', { must: true });
+      if (sp.has === 'yes' && (sp.n || '').trim()) {
+        const spDead = sp.alive === 'deceased';
+        add(sp.n,
+          spDead
+            ? 'Husband or wife of ' + d.n + ' \u00b7 has died \u2014 no consent needed from them'
+            : 'Husband or wife of ' + d.n + ', not on the deed \u2014 holds a right of interment and must sign a consent',
+          spDead ? { dead: true } : { must: true });
+      }
     });
 
     L.gone().forEach(d => {
