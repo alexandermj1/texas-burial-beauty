@@ -46,7 +46,12 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const [salesTouched, setSalesTouched] = useState(false);
   const [plotCount, setPlotCount] = useState<string>(String(defaultSpaces));
   const [transferFee, setTransferFee] = useState<string>(() => feeString(seller.transfer_fee_amount));
+  // Names exactly as they appear on the deed. Confirmed here, at quote time,
+  // because acceptance now automatically produces the listing agreement (and
+  // then the family tree) with no chance to correct them in between.
+  const [deedOwners, setDeedOwners] = useState<string>("");
   const [busy, setBusy] = useState(false);
+
 
   useEffect(() => {
     setPlotCount(String(parseSpaces(seller.spaces)));
