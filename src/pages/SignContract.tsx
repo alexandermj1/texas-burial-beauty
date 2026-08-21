@@ -276,8 +276,7 @@ export default function SignContract() {
   // tree questions instead of waiting on an email.
   useEffect(() => {
     if (!done || info?.kind !== "listing_agreement" || !submissionId) return;
-    const t = setTimeout(() => navigate(`/confirm?s=${submissionId}`), 600);
-    return () => clearTimeout(t);
+    navigate(`/confirm?s=${submissionId}`, { replace: true });
   }, [done, info?.kind, submissionId, navigate]);
 
   const ownPrice = /own price/i.test(fields.listing_option);
