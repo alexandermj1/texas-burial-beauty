@@ -81,15 +81,21 @@ async function stampAutopilot(sub: Sub, patch: Record<string, unknown>) {
 }
 
 /** Step 1 — generate the listing agreement from the accepted quote and email it. */
-async function sendListingAgreement(sub: Sub, force: boolean) {
+async function sendListingAgreement(sub: Sub, force: boolean, email = true) {
   if (!sub.email) return { step: 'listing_agreement', status: 'skipped', reason: 'no email' };
-  if (sub.la_signed_at && !force) return { step: 'listing_agreement', status: 'skipped', reason: 'already signed' };
 
   const { data: existing } = await svc.from('contracts')
-    .select('id, status, sent_at, signed_at')
+    .select('id, status, sent_at, signed_at, sign_token')
     .eq('submission_id', sub.id).eq('kind', 'listing_agreement').maybeSingle();
+
+  const existingUrl = existing?.sign_token ? `${PUBLIC_SITE_URL}/sign/${existing.sign_token}` : null;
+  if (sub.la_signed_at && !force) {
+    return { step: 'listing_agreement', status: 'skipped', reason: 'already signed', sign_url: existingUrl, contract_id: existing?.id ?? null };
+  }
   if (!force && existing?.sent_at) {
-    return { step: 'listing_agreement', status: 'skipped', reason: 'already sent', contract_id: existing.id };
+    // Already prepared and emailed — hand back the same link so the seller can
+    // be carried straight to it on the website instead of hunting their inbox.
+    return { step: 'listing_agreement', status: 'ready', reason: 'already sent', contract_id: existing.id, sign_url: existingUrl };
   }
 
   const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
@@ -123,14 +129,15 @@ async function sendListingAgreement(sub: Sub, force: boolean) {
   const contractId = (gen.contract_id as string | null) ?? existing?.id ?? null;
   if (!signToken || !contractId) throw new Error('contract generated without a signing link');
 
-  await callFn('send-contract-link', {
-    contract_id: contractId,
-    sign_url: `${PUBLIC_SITE_URL}/sign/${signToken}`,
-    to: sub.email,
-  });
+  const signUrl = `${PUBLIC_SITE_URL}/sign/${signToken}`;
+  if (email) {
+    // The seller is normally carried straight to this page on the website; the
+    // email is the belt-and-braces copy so the link is always in their inbox.
+    await callFn('send-contract-link', { contract_id: contractId, sign_url: signUrl, to: sub.email });
+  }
 
   await stampAutopilot(sub, { listingAgreementSentAt: new Date().toISOString(), listingOption, authorizedMinTotal: total });
-  return { step: 'listing_agreement', status: 'sent', contract_id: contractId, total, listingOption };
+  return { step: 'listing_agreement', status: 'sent', contract_id: contractId, total, listingOption, sign_url: signUrl };
 }
 
 /** Step 2 — the moment the agreement is signed, send the family tree. */
@@ -143,14 +150,14 @@ async function sendFamilyTree(sub: Sub, force: boolean) {
   await callFn('ownership-questions', { action: 'send', submission_id: sub.id, to: sub.email });
   const fresh = await loadSubmission(sub.id);
   await stampAutopilot(fresh ?? sub, { familyTreeSentAt: new Date().toISOString() });
-  return { step: 'family_tree', status: 'sent' };
+  return { step: 'family_tree', status: 'sent', next_url: `${PUBLIC_SITE_URL}/confirm?s=${sub.id}` };
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { submission_id, step = 'listing_agreement', force = false } = await req.json();
+    const { submission_id, step = 'listing_agreement', force = false, email = true } = await req.json();
     if (!submission_id || typeof submission_id !== 'string') return json({ error: 'submission_id required' }, 400);
     if (!['listing_agreement', 'family_tree'].includes(step)) return json({ error: 'unknown step' }, 400);
 
@@ -171,7 +178,7 @@ Deno.serve(async (req) => {
 
     const result = step === 'family_tree'
       ? await sendFamilyTree(sub, force === true)
-      : await sendListingAgreement(sub, force === true);
+      : await sendListingAgreement(sub, force === true, email !== false);
 
     return json({ ok: true, ...result });
   } catch (err) {
