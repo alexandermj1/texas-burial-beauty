@@ -309,18 +309,8 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
               className={inputCls}
             />
           </Field>
-          <Field label="Authorized minimum per space" hint="Defaults to total ÷ spaces.">
-            <input
-              type="number"
-              min="0"
-              step="50"
-              value={perPlotTouched ? perPlot : effectivePerPlot ? String(effectivePerPlot) : ""}
-              onChange={(e) => {
-                setPerPlotTouched(true);
-                setPerPlot(e.target.value);
-              }}
-              className={inputCls}
-            />
+          <Field label="Authorized minimum total" hint="Per space × spaces — printed on the agreement.">
+            <input type="text" readOnly value={total > 0 ? fmtUsd(total) : "—"} className={`${inputCls} bg-muted/50`} />
           </Field>
           <div className="col-span-2 md:col-span-3">
             <Field label="Property description" hint="Section / lawn / space numbers printed on page 1.">
