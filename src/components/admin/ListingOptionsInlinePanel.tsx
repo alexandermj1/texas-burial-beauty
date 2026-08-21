@@ -529,6 +529,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
                 space_numbers: seller.space_numbers ?? null,
               }}
               hideListingOption
+              netPerPlot={nppNum}
               hasGenerated={!!agreementEmailHtml}
               onGenerated={async (html) => {
                 setAgreementEmailHtml(html);
