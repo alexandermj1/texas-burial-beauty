@@ -1,18 +1,25 @@
-// Inline "Quote (with pay buttons)" builder that lives inside the composer
-// (no dialog, no overlay). Admin enters the cemetery's retail price per plot;
-// the quote (guaranteed net proceeds) is auto-calculated at 42% of retail
-// rounded to the nearest $100, and the sales price is 67% of retail rounded
-// to the nearest $100. Both may be overridden manually. Clicking
-// "Generate quote email" inserts the full offer + Starter/Pro/Featured cards
-// and persists the retail + quote amount to the submission so the purple
-// "quoted (pending)" tag appears on the submission card.
+// Inline "Quote (with pay buttons)" builder that lives inside the composer.
+//
+// It is now a three-step walkthrough, because acceptance carries the seller
+// straight on to the agreement and then the family tree with no chance to
+// correct anything in between:
+//
+//   1. Quote        — retail, net/plot, sales price, plots, transfer fee.
+//   2. Agreement    — the exact wording the listing agreement will print,
+//                     with a real draft PDF preview.
+//   3. Family tree  — the deed roster the seller's questions are built from,
+//                     with a live preview of their page.
+//
+// Only at the end of step 3 is the quote email inserted into the composer, so
+// everything downstream is prepared and reviewed before the seller sees it.
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Sparkles, RefreshCw } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Eye, ArrowRight, ArrowLeft, Plus, X } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
+import { formatPlotDescription } from "@/lib/plotDescription";
 import {
   buildListingOptionsBlock,
   parseSpaces,
@@ -36,9 +43,24 @@ const feeString = (raw: number | string | null | undefined) => {
   return Number.isFinite(n) ? String(n) : "395";
 };
 
+const inputCls =
+  "w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+const labelCls =
+  "text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block";
+
+type RosterEntry = { name: string; deceased?: boolean };
+
+const STEPS = [
+  { key: 1, label: "Quote", icon: Sparkles },
+  { key: 2, label: "Listing agreement", icon: FileSignature },
+  { key: 3, label: "Family tree", icon: Network },
+] as const;
+
 export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGenerated }: Props) {
   const { toast } = useToast();
   const defaultSpaces = parseSpaces(seller.spaces);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [retail, setRetail] = useState<string>("");
   const [netPerPlot, setNetPerPlot] = useState<string>("");
   const [salesPrice, setSalesPrice] = useState<string>("");
@@ -50,26 +72,50 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   // because acceptance now automatically produces the listing agreement (and
   // then the family tree) with no chance to correct them in between.
   const [deedOwners, setDeedOwners] = useState<string>("");
+  const [plotDescription, setPlotDescription] = useState<string>("");
+  const [countyState, setCountyState] = useState<string>("");
+  const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [busy, setBusy] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
-  // Pre-fill the deed owners from whatever we already hold on the submission.
+  // Pre-fill everything we already hold on the submission.
   useEffect(() => {
     let cancelled = false;
     setDeedOwners("");
+    setRoster([]);
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
-        .select("deed_owner_names, name")
+        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, cemetery_city, ownership_roster")
         .eq("id", seller.id)
         .maybeSingle();
       if (cancelled) return;
       const row = (data as any) || {};
-      setDeedOwners(String(row.deed_owner_names || row.name || seller.name || "").trim());
+      const names = String(row.deed_owner_names || row.name || seller.name || "").trim();
+      setDeedOwners(names);
+      setPlotDescription(
+        formatPlotDescription({
+          section: row.section ?? seller.section,
+          lawn: row.lawn ?? seller.lawn,
+          spaces: row.spaces ?? seller.spaces,
+          space_numbers: row.space_numbers ?? seller.space_numbers,
+        }),
+      );
+      setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
+      const existing = Array.isArray(row.ownership_roster) ? (row.ownership_roster as RosterEntry[]) : [];
+      setRoster(
+        existing.length
+          ? existing.map((p) => ({ name: String(p.name ?? ""), deceased: !!p.deceased }))
+          : names
+            ? names.split(/\s*(?:&|and|,)\s*/i).filter(Boolean).map((n) => ({ name: n, deceased: false }))
+            : [],
+      );
     })();
     return () => { cancelled = true; };
-  }, [seller.id, seller.name]);
+  }, [seller.id, seller.name, seller.section, seller.lawn, seller.spaces, seller.space_numbers]);
 
   useEffect(() => {
+    setStep(1);
     setPlotCount(String(parseSpaces(seller.spaces)));
     setRetail("");
     setNetPerPlot("");
@@ -136,6 +182,84 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const deedOwnersClean = deedOwners.trim();
   const canGenerate = nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1;
 
+  const prepBlock = useMemo(
+    () => ({
+      preparedAt: new Date().toISOString(),
+      netPerPlot: nppNum,
+      plotCount: countNum,
+      authorizedMinTotal: total,
+      salesPricePerPlot: salesNum || null,
+      transferFee: feeNum || null,
+      deedOwnerNames: deedOwnersClean,
+      plotDescription: plotDescription.trim() || null,
+      countyState: countyState.trim() || null,
+    }),
+    [nppNum, countNum, total, salesNum, feeNum, deedOwnersClean, plotDescription, countyState],
+  );
+
+  /** Save everything the later automated steps depend on. */
+  const savePrep = async () => {
+    const { data: current } = await supabase
+      .from("contact_submissions")
+      .select("ownership_answers")
+      .eq("id", seller.id)
+      .maybeSingle();
+    const answers = ((current as any)?.ownership_answers ?? {}) as Record<string, unknown>;
+    await supabase
+      .from("contact_submissions")
+      .update({
+        cemetery_retail: retailNum > 0 ? retailNum : null,
+        quote_amount: nppNum > 0 ? nppNum : null,
+        transfer_fee_amount: feeNum > 0 ? feeNum : null,
+        plot_count: countNum,
+        list_price: salesNum > 0 ? salesNum * countNum : null,
+        deed_owner_names: deedOwnersClean,
+        ownership_roster: roster.filter((r) => r.name.trim()) as never,
+        ownership_answers: {
+          ...answers,
+          autopilot: { ...((answers as any).autopilot ?? {}), ...prepBlock },
+        },
+      } as any)
+      .eq("id", seller.id);
+  };
+
+  /** Build a real draft of the listing agreement and open it. */
+  const previewAgreement = async () => {
+    if (previewing) return;
+    setPreviewing(true);
+    try {
+      await savePrep();
+      const { data, error } = await supabase.functions.invoke("generate-contract", {
+        body: {
+          submission_id: seller.id,
+          kind: "listing_agreement",
+          overrides: {
+            plot_count: countNum,
+            authorized_min_total: total,
+            authorized_min_per_plot: nppNum,
+            co_owner_name: deedOwnersClean,
+            plot_description: plotDescription.trim() || undefined,
+            county_state: countyState.trim() || undefined,
+          },
+        },
+      });
+      if (error) throw error;
+      const url = (data as any)?.pdf_url;
+      if (!url) throw new Error("No preview returned");
+      window.open(url, "_blank", "noopener");
+      toast({ title: "Draft agreement ready", description: "Opened in a new tab — nothing has been sent." });
+    } catch (e: any) {
+      toast({ title: "Couldn't build the draft", description: String(e?.message ?? e), variant: "destructive" });
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+  const previewFamilyTree = async () => {
+    await savePrep();
+    window.open(`/confirm?s=${seller.id}`, "_blank", "noopener");
+  };
+
   const generate = async () => {
     if (!canGenerate || busy) return;
     setBusy(true);
@@ -151,49 +275,14 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       // Persist the retail + quote amount so the purple "quoted (pending)"
       // pill can render on the submission card. quote_sent_at is stamped
       // separately by the composer once the email actually sends.
-      //
-      // The `autopilot` block locks in exactly what the listing agreement must
-      // print if the seller accepts — the agreement and the family tree then go
-      // out automatically without anyone re-keying these numbers.
       try {
-        if (seller.id) {
-          const { data: current } = await supabase
-            .from("contact_submissions")
-            .select("ownership_answers")
-            .eq("id", seller.id)
-            .maybeSingle();
-          const answers = ((current as any)?.ownership_answers ?? {}) as Record<string, unknown>;
-          await supabase
-            .from("contact_submissions")
-            .update({
-              cemetery_retail: retailNum > 0 ? retailNum : null,
-              quote_amount: nppNum > 0 ? nppNum : null,
-              transfer_fee_amount: feeNum > 0 ? feeNum : null,
-              plot_count: countNum,
-              list_price: salesNum > 0 ? salesNum * countNum : null,
-              deed_owner_names: deedOwnersClean,
-              ownership_answers: {
-                ...answers,
-                autopilot: {
-                  ...((answers as any).autopilot ?? {}),
-                  preparedAt: new Date().toISOString(),
-                  netPerPlot: nppNum,
-                  plotCount: countNum,
-                  authorizedMinTotal: total,
-                  salesPricePerPlot: salesNum || null,
-                  transferFee: feeNum || null,
-                  deedOwnerNames: deedOwnersClean,
-                },
-              },
-            } as any)
-            .eq("id", seller.id);
-        }
+        if (seller.id) await savePrep();
       } catch (err) {
         console.warn("Could not save quote fields to submission", err);
       }
       toast({
         title: hasGenerated ? "Quote regenerated" : "Quote inserted",
-        description: "If they accept, the listing agreement then the family tree send automatically.",
+        description: "Accepting takes them straight to the agreement, then to the family tree.",
       });
     } catch (e: any) {
       toast({ title: "Couldn't generate", description: String(e?.message ?? e), variant: "destructive" });
@@ -204,132 +293,253 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
 
   return (
     <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-3">
-      <div className="flex items-center gap-1.5">
-        <Sparkles className="w-3.5 h-3.5 text-primary" />
-        <p className="text-[10px] uppercase tracking-[0.18em] text-primary font-semibold">
-          Quote details for {properCase(seller.name || "Seller")}
-        </p>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        <div>
-          <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
-            Retail / plot (USD)
-          </label>
-          <input
-            type="number"
-            min="0"
-            step="50"
-            value={retail}
-            onChange={(e) => handleRetailChange(e.target.value)}
-            placeholder="e.g. 6000"
-            className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-          <p className="text-[9px] text-muted-foreground mt-1">Cemetery retail. Auto-fills the two below.</p>
-        </div>
-        <div>
-          <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
-            Quote (net) / plot
-          </label>
-          <input
-            type="number"
-            min="0"
-            step="50"
-            value={netPerPlot}
-            onChange={(e) => { setNetPerPlot(e.target.value); setNetTouched(true); }}
-            placeholder="42% of retail"
-            className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-          <p className="text-[9px] text-muted-foreground mt-1">42% of retail, rounded to $100.</p>
-        </div>
-        <div>
-          <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
-            Sales price / plot
-          </label>
-          <input
-            type="number"
-            min="0"
-            step="50"
-            value={salesPrice}
-            onChange={(e) => { setSalesPrice(e.target.value); setSalesTouched(true); }}
-            placeholder="67% of retail"
-            className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-          <p className="text-[9px] text-muted-foreground mt-1">67% of retail, rounded to $100.</p>
-        </div>
-        <div>
-          <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
-            # of plots
-          </label>
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={plotCount}
-            onChange={(e) => setPlotCount(e.target.value)}
-            className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-        </div>
-        <div>
-          <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
-            Transfer fee (USD)
-          </label>
-          <input
-            type="number"
-            min="0"
-            step="5"
-            value={transferFee}
-            onChange={(e) => setTransferFee(e.target.value)}
-            className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-        </div>
-      </div>
-      <div>
-        <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
-          Names on the deed (required)
-        </label>
-        <input
-          type="text"
-          value={deedOwners}
-          onChange={(e) => setDeedOwners(e.target.value)}
-          placeholder="e.g. John A. Smith & Mary Smith"
-          className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-        <p className="text-[9px] text-muted-foreground mt-1">
-          Confirm these now — if the seller accepts, the listing agreement is generated and emailed
-          automatically, and the family tree follows the moment they sign it.
-        </p>
-      </div>
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <p className="text-[11px] text-muted-foreground">
-          {canGenerate ? (
-            <>
-              {fmtUsd(nppNum)} × {countNum} plot{countNum === 1 ? "" : "s"} ={" "}
-              <span className="text-foreground font-semibold">{fmtUsd(total)}</span> guaranteed net
-              {salesNum > 0 ? <> · list at {fmtUsd(salesNum)}/plot</> : null}
-              {feeNum > 0 ? <> · {fmtUsd(feeNum)} buyer-paid transfer fee</> : null}
-            </>
-          ) : nppNum > 0 && !deedOwnersClean ? (
-            "Add the names exactly as they appear on the deed before generating the quote."
-          ) : (
-            "Enter the retail price per plot — the quote and sales price will auto-calculate."
-          )}
-        </p>
-        <button
-          type="button"
-          onClick={generate}
-          disabled={!canGenerate || busy}
-          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
-        >
-          {busy ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
-          ) : hasGenerated ? (
-            <RefreshCw className="w-3 h-3" />
-          ) : (
-            <Sparkles className="w-3 h-3" />
-          )}
-          {busy ? "Generating…" : hasGenerated ? "Regenerate quote" : "Generate quote email"}
-        </button>
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-primary" />
+          <p className="text-[10px] uppercase tracking-[0.18em] text-primary font-semibold">
+            Prepare the whole run for {properCase(seller.name || "Seller")}
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          {STEPS.map((s) => {
+            const Icon = s.icon;
+            const active = step === s.key;
+            const doneStep = step > s.key;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setStep(s.key as 1 | 2 | 3)}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : doneStep
+                      ? "bg-primary/15 text-primary"
+                      : "bg-background text-muted-foreground border border-border/60"
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                {s.key}. {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {step === 1 && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div>
+              <label className={labelCls}>Retail / plot (USD)</label>
+              <input
+                type="number" min="0" step="50" value={retail}
+                onChange={(e) => handleRetailChange(e.target.value)}
+                placeholder="e.g. 6000" className={inputCls}
+              />
+              <p className="text-[9px] text-muted-foreground mt-1">Cemetery retail. Auto-fills the two below.</p>
+            </div>
+            <div>
+              <label className={labelCls}>Quote (net) / plot</label>
+              <input
+                type="number" min="0" step="50" value={netPerPlot}
+                onChange={(e) => { setNetPerPlot(e.target.value); setNetTouched(true); }}
+                placeholder="42% of retail" className={inputCls}
+              />
+              <p className="text-[9px] text-muted-foreground mt-1">42% of retail, rounded to $100.</p>
+            </div>
+            <div>
+              <label className={labelCls}>Sales price / plot</label>
+              <input
+                type="number" min="0" step="50" value={salesPrice}
+                onChange={(e) => { setSalesPrice(e.target.value); setSalesTouched(true); }}
+                placeholder="67% of retail" className={inputCls}
+              />
+              <p className="text-[9px] text-muted-foreground mt-1">67% of retail, rounded to $100.</p>
+            </div>
+            <div>
+              <label className={labelCls}># of plots</label>
+              <input
+                type="number" min="1" step="1" value={plotCount}
+                onChange={(e) => setPlotCount(e.target.value)} className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Transfer fee (USD)</label>
+              <input
+                type="number" min="0" step="5" value={transferFee}
+                onChange={(e) => setTransferFee(e.target.value)} className={inputCls}
+              />
+            </div>
+          </div>
+          <div>
+            <label className={labelCls}>Names on the deed (required)</label>
+            <input
+              type="text" value={deedOwners}
+              onChange={(e) => setDeedOwners(e.target.value)}
+              placeholder="e.g. John A. Smith & Mary Smith" className={inputCls}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-[11px] text-muted-foreground">
+              {canGenerate ? (
+                <>
+                  {fmtUsd(nppNum)} × {countNum} plot{countNum === 1 ? "" : "s"} ={" "}
+                  <span className="text-foreground font-semibold">{fmtUsd(total)}</span> guaranteed net
+                  {salesNum > 0 ? <> · list at {fmtUsd(salesNum)}/plot</> : null}
+                  {feeNum > 0 ? <> · {fmtUsd(feeNum)} buyer-paid transfer fee</> : null}
+                </>
+              ) : nppNum > 0 && !deedOwnersClean ? (
+                "Add the names exactly as they appear on the deed before continuing."
+              ) : (
+                "Enter the retail price per plot — the quote and sales price will auto-calculate."
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              disabled={!canGenerate}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              Next: agreement <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <p className="text-[11px] text-muted-foreground">
+            This is exactly what the listing agreement will print the moment they accept. Preview the real PDF before
+            the quote goes out — nothing is sent from here.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="md:col-span-2">
+              <label className={labelCls}>Plot description</label>
+              <input
+                type="text" value={plotDescription}
+                onChange={(e) => setPlotDescription(e.target.value)}
+                placeholder="Section / lawn / spaces" className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>County, state</label>
+              <input
+                type="text" value={countyState}
+                onChange={(e) => setCountyState(e.target.value)}
+                placeholder="e.g. Dallas, TX" className={inputCls}
+              />
+            </div>
+          </div>
+          <div className="rounded-md bg-background/70 border border-border/60 p-2.5 text-[11px] text-muted-foreground space-y-1">
+            <div><span className="text-foreground font-medium">Seller / deed:</span> {deedOwnersClean || "—"}</div>
+            <div>
+              <span className="text-foreground font-medium">Authorized minimum:</span> {fmtUsd(nppNum)} per space ·{" "}
+              {fmtUsd(total)} total for {countNum} space{countNum === 1 ? "" : "s"}
+            </div>
+            <div>
+              <span className="text-foreground font-medium">Listing option:</span> whichever tier they choose in the
+              quote email — it is written into the agreement automatically.
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <button
+              type="button" onClick={() => setStep(1)}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border/60 hover:bg-background"
+            >
+              <ArrowLeft className="w-3 h-3" /> Back
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button" onClick={previewAgreement} disabled={previewing}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
+              >
+                {previewing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
+                {previewing ? "Building…" : "Preview draft PDF"}
+              </button>
+              <button
+                type="button" onClick={() => setStep(3)}
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+              >
+                Next: family tree <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <p className="text-[11px] text-muted-foreground">
+            The seller's questions are built from this roster. Type the names exactly as the deed reads and tick anyone
+            who has died — they go straight to this page after signing.
+          </p>
+          <div className="space-y-1.5">
+            {roster.map((r, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text" value={r.name}
+                  onChange={(e) =>
+                    setRoster((prev) => prev.map((p, j) => (j === i ? { ...p, name: e.target.value } : p)))
+                  }
+                  placeholder="Name as it appears on the deed" className={inputCls}
+                />
+                <label className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
+                  <input
+                    type="checkbox" checked={!!r.deceased}
+                    onChange={(e) =>
+                      setRoster((prev) => prev.map((p, j) => (j === i ? { ...p, deceased: e.target.checked } : p)))
+                    }
+                  />
+                  Deceased
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setRoster((prev) => prev.filter((_, j) => j !== i))}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setRoster((prev) => [...prev, { name: "", deceased: false }])}
+              className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+            >
+              <Plus className="w-3 h-3" /> Add a name from the deed
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <button
+              type="button" onClick={() => setStep(2)}
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border/60 hover:bg-background"
+            >
+              <ArrowLeft className="w-3 h-3" /> Back
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button" onClick={previewFamilyTree}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10"
+              >
+                <Eye className="w-3 h-3" /> Preview their page
+              </button>
+              <button
+                type="button" onClick={generate} disabled={!canGenerate || busy}
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              >
+                {busy ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : hasGenerated ? (
+                  <RefreshCw className="w-3 h-3" />
+                ) : (
+                  <Sparkles className="w-3 h-3" />
+                )}
+                {busy ? "Generating…" : hasGenerated ? "Regenerate quote" : "Insert quote email"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
