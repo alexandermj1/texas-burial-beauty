@@ -10,6 +10,7 @@ import CaliforniaInventoryPanel from "@/components/admin/CaliforniaInventoryPane
 import EmailMarketingPanel from "@/components/admin/EmailMarketingPanel";
 import TexasMapPanel from "@/components/admin/TexasMapPanel";
 import TeamTasksPanel from "@/components/admin/TeamTasksPanel";
+import TeamTasksStartup from "@/components/admin/TeamTasksStartup";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -924,6 +925,7 @@ const Admin = () => {
           })()}
 
 
+          <TeamTasksStartup onOpenList={() => setTab("tasks")} />
           {tab === "tasks" && <TeamTasksPanel />}
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}

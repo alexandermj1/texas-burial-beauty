@@ -30,6 +30,23 @@ const PRIORITIES = [
   { key: "high", label: "Priority", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40" },
 ];
 
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+/** Traditional to-do grouping: overdue first, then today, upcoming, then undated. */
+export const groupTasks = (items: Task[]) => {
+  const t = todayStr();
+  const buckets = [
+    { label: "Overdue", tone: "text-rose-600 dark:text-rose-400", items: items.filter((x) => x.due_date && x.due_date < t) },
+    { label: "Today", tone: "text-primary", items: items.filter((x) => x.due_date === t) },
+    { label: "Upcoming", tone: "text-foreground", items: items.filter((x) => x.due_date && x.due_date > t) },
+    { label: "No due date", tone: "text-muted-foreground", items: items.filter((x) => !x.due_date) },
+  ];
+  const rank = (x: Task) => (x.priority === "high" ? 0 : 1);
+  buckets.forEach((b) => b.items.sort((a, c) => rank(a) - rank(c) || (a.due_date || "").localeCompare(c.due_date || "")));
+  return buckets.filter((b) => b.items.length > 0);
+};
+
 const TeamTasksPanel = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -45,6 +62,7 @@ const TeamTasksPanel = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDetail, setEditDetail] = useState("");
+  const [confirmTask, setConfirmTask] = useState<Task | null>(null);
 
   const myName = cleanDisplayName(user?.user_metadata?.full_name) || user?.email?.split("@")[0] || "Someone";
 
@@ -116,17 +134,31 @@ const TeamTasksPanel = () => {
     load();
   };
 
-  const toggleDone = async (t: Task) => {
+  // Completing is a deliberate act: the checkbox asks for confirmation first,
+  // then the item leaves the open list and is stamped with who/when.
+  const completeTask = async (t: Task) => {
     await supabase
       .from("team_tasks" as any)
-      .update({
-        done: !t.done,
-        done_at: !t.done ? new Date().toISOString() : null,
-        done_by_name: !t.done ? myName : null,
-      })
+      .update({ done: true, done_at: new Date().toISOString(), done_by_name: myName })
+      .eq("id", t.id);
+    setConfirmTask(null);
+    toast({ title: "Marked complete", description: `${t.title} · ${new Date().toLocaleString()}` });
+    load();
+  };
+
+  const reopenTask = async (t: Task) => {
+    await supabase
+      .from("team_tasks" as any)
+      .update({ done: false, done_at: null, done_by_name: null })
       .eq("id", t.id);
     load();
   };
+
+  const toggleDone = async (t: Task) => {
+    if (t.done) return reopenTask(t);
+    setConfirmTask(t);
+  };
+
 
   const saveEdit = async (id: string) => {
     if (!editTitle.trim()) return;
@@ -198,7 +230,7 @@ const TeamTasksPanel = () => {
                   )}
                   <span className="text-[10px] text-muted-foreground">
                     {t.done
-                      ? `Done${t.done_by_name ? ` by ${t.done_by_name}` : ""}`
+                      ? `Completed${t.done_by_name ? ` by ${t.done_by_name}` : ""}${t.done_at ? ` · ${new Date(t.done_at).toLocaleDateString()}` : ""}`
                       : `Added by ${t.created_by_name || "team"}`}
                   </span>
                 </div>
@@ -294,11 +326,18 @@ const TeamTasksPanel = () => {
         <p className="text-xs text-muted-foreground">Loading list…</p>
       ) : (
         <>
-          <ul className="space-y-2">
-            {open.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">Nothing on the list right now.</p>
-            ) : open.map(row)}
-          </ul>
+          {open.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">Nothing on the list right now.</p>
+          ) : (
+            groupTasks(open).map((g) => (
+              <div key={g.label} className="space-y-2">
+                <p className={`text-[10px] uppercase tracking-[0.16em] font-semibold ${g.tone}`}>
+                  {g.label} <span className="text-muted-foreground font-normal">({g.items.length})</span>
+                </p>
+                <ul className="space-y-2">{g.items.map(row)}</ul>
+              </div>
+            ))
+          )}
 
           {done.length > 0 && (
             <div className="pt-2">
@@ -314,8 +353,32 @@ const TeamTasksPanel = () => {
           )}
         </>
       )}
+
+      {confirmTask && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm" onClick={() => setConfirmTask(null)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div>
+              <h3 className="font-display text-lg text-foreground">Mark this as done?</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                It will move off the open list and be recorded as completed by {myName} on {new Date().toLocaleDateString()}.
+              </p>
+            </div>
+            <p className="text-sm text-foreground bg-muted/40 rounded-lg px-3 py-2">{confirmTask.title}</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setConfirmTask(null)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Not yet</button>
+              <button
+                onClick={() => completeTask(confirmTask)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium bg-emerald-600 text-white"
+              >
+                <Check className="w-3.5 h-3.5" /> Yes, it's done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default TeamTasksPanel;
