@@ -269,7 +269,7 @@ export default function SignContract() {
   // tree questions instead of waiting on an email.
   useEffect(() => {
     if (!done || info?.kind !== "listing_agreement" || !submissionId) return;
-    const t = setTimeout(() => navigate(`/confirm?s=${submissionId}`), 6000);
+    const t = setTimeout(() => navigate(`/confirm?s=${submissionId}`), 2500);
     return () => clearTimeout(t);
   }, [done, info?.kind, submissionId, navigate]);
 
@@ -666,14 +666,14 @@ export default function SignContract() {
 
               {info?.kind === "listing_agreement" && submissionId && (
                 <Card className="p-8 md:p-10 text-center bg-white border-[#1f2a37]/20">
-                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Last step</div>
-                  <h3 className="text-xl font-serif text-[#1f2a37] mb-2">Confirm who holds the right to sell</h3>
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Final step before broker review &amp; documents</div>
+                  <h3 className="text-xl font-serif text-[#1f2a37] mb-2">Complete your family tree</h3>
                   <p className="text-sm text-muted-foreground max-w-xl mx-auto mb-6">
                     A few short questions — about three minutes — so the cemetery can approve the transfer without delay.
                     You can do it right now, no email needed.
                   </p>
                   <Button asChild className="bg-[#1f2a37] hover:bg-[#111827] text-white">
-                    <a href={`/confirm?s=${submissionId}`}>Continue to your questions →</a>
+                    <a href={`/confirm?s=${submissionId}`}>Complete family tree →</a>
                   </Button>
                   <p className="text-[11px] text-muted-foreground/70 mt-4">Taking you there automatically…</p>
                 </Card>
@@ -906,7 +906,9 @@ export default function SignContract() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
                   <p className="text-[11px] text-muted-foreground max-w-sm">
                     {allFilled
-                      ? <>A fully signed PDF will be emailed to you the moment you click <em>Sign &amp; submit</em>.</>
+                      ? (info?.kind === "listing_agreement"
+                          ? <>A fully signed PDF is emailed to you straight away, then we take you to the family tree — the final step before broker review and documents.</>
+                          : <>A fully signed PDF will be emailed to you the moment you click <em>Sign &amp; submit</em>.</>)
                       : <>Please complete every field in Step 1 before signing.</>}
                   </p>
                   <Button
@@ -916,7 +918,9 @@ export default function SignContract() {
                     className="bg-[#1f2a37] hover:bg-[#111827] text-white px-8 h-12"
                   >
                     {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Sign &amp; submit
+                    {info?.kind === "listing_agreement"
+                      ? "Submit & complete family tree"
+                      : "Sign & submit"}
                   </Button>
                 </div>
               );

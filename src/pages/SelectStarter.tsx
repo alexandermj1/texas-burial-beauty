@@ -36,7 +36,7 @@ export default function SelectStarter() {
         // Straight on to the agreement — no inbox round-trip.
         if (r?.signUrl) {
           const path = r.signUrl.replace(/^https?:\/\/[^/]+/, "");
-          setTimeout(() => navigate(path), 2000);
+          setTimeout(() => navigate(path), 1200);
         }
       }
     } catch (e: any) {
@@ -80,13 +80,13 @@ export default function SelectStarter() {
             </p>
             <p className="text-muted-foreground">
               {state?.signUrl
-                ? "Your Exclusive Sales Agreement is ready — we're taking you there now."
+                ? "Your Exclusive Sales Agreement is ready — taking you there now…"
                 : "Our next step is to send your Exclusive Sales Agreement to sign. Watch your inbox — it will arrive shortly."}
             </p>
           </div>
         ) : (
           <p className="text-muted-foreground mb-6">
-            Click below to confirm you would like to move forward with the <strong className="text-foreground">Starter listing</strong> option ($0 upfront). We'll then send your Exclusive Sales Agreement to sign.
+            Confirm the <strong className="text-foreground">Starter listing</strong> option ($0 upfront) and we'll take you straight to your Exclusive Sales Agreement to sign — no waiting on email.
           </p>
         )}
 
@@ -110,7 +110,7 @@ export default function SelectStarter() {
             disabled={loading}
             className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-60"
           >
-            {loading ? "Activating…" : "Confirm Starter listing"}
+            {loading ? "Opening your agreement…" : "Confirm and continue to your contract"}
           </button>
         )}
       </div>
