@@ -269,11 +269,29 @@ const OwnershipConfirm = () => {
         deed: (st.deed ?? []).map((d: any) => (dead.has(nameKey(d.n)) ? { ...d, st: "deceased" } : d)),
       });
       const saved = (p.answers as any)?.v2;
+      // The intake form already told us how they are related and what they are
+      // called — carry it straight into step two instead of asking twice.
+      const seedRelation = (st: any) => {
+        const raw = (p.relationship_to_owner ?? "").toLowerCase();
+        const rel = /son|daughter|child/.test(raw) && !/in.?law/.test(raw)
+          ? "Son or daughter"
+          : /spouse|husband|wife|widow/.test(raw)
+            ? "Husband or wife"
+            : /grandchild|grandson|granddaughter/.test(raw)
+              ? "Grandchild"
+              : "";
+        return {
+          ...st,
+          rel: st.rel || rel,
+          youName: st.youName || (rel ? (p.seller_name ?? "").trim() : ""),
+        };
+      };
       setState(
         saved && Array.isArray(saved.deed) && saved.deed.length
           ? saved
-          : seedDeaths(initialState(crm)),
+          : seedRelation(seedDeaths(initialState(crm))),
       );
+
 
       setLoading(false);
     })();
@@ -317,6 +335,35 @@ const OwnershipConfirm = () => {
       if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
     });
   }, [state?.submitted]);
+
+  // If they told us at the start that they are a son or daughter, they are one
+  // of the children who inherits — so they belong on the family tree without
+  // having to add themselves, and we must ask about their spouse too.
+  useEffect(() => {
+    if (!state || state.rel !== "Son or daughter" || state.selfKidAdded) return;
+    const nm = (state.youName ?? "").trim();
+    if (!nm) return;
+    const estates = (state.deed ?? []).filter(
+      (d: any) =>
+        (d.n ?? "").trim() &&
+        d.st === "deceased" &&
+        !((state.will ?? {})[d.id] === "yes" && ((state.taker ?? {})[d.id] ?? "").trim()),
+    );
+    if (!estates.length) return;
+    const key = nameKey(nm);
+    if ((state.kids ?? []).some((k: any) => key && nameKey(k.n) === key)) {
+      setS({ selfKidAdded: true });
+      return;
+    }
+    setS((s: any) => ({
+      kids: (s.kids ?? []).concat([
+        { id: "k" + s.kseq, n: nm, st: "living", of: estates.map((d: any) => d.id), kids: [] },
+      ]),
+      kseq: s.kseq + 1,
+      selfKidAdded: true,
+    }));
+  }, [state, setS]);
+
 
   if (loading) {
     return (
