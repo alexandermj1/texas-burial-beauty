@@ -132,10 +132,21 @@ async function sendListingAgreement(sub: Sub, force: boolean, email = true) {
   if (!signToken || !contractId) throw new Error('contract generated without a signing link');
 
   const signUrl = `${PUBLIC_SITE_URL}/sign/${signToken}`;
+  // If the broker prepared the agreement email in the quote wizard, send that
+  // exact copy — with every signing link rewritten to this contract's token.
+  const preparedHtml = typeof prepared.agreementEmailHtml === 'string' && prepared.agreementEmailHtml.length > 40
+    ? String(prepared.agreementEmailHtml).replace(/https?:\/\/[^"'\s<>]*\/sign\/[A-Za-z0-9_-]+/g, signUrl)
+    : null;
   if (email) {
     // The seller is normally carried straight to this page on the website; the
     // email is the belt-and-braces copy so the link is always in their inbox.
-    await callFn('send-contract-link', { contract_id: contractId, sign_url: signUrl, to: sub.email });
+    await callFn('send-contract-link', {
+      contract_id: contractId,
+      sign_url: signUrl,
+      to: sub.email,
+      ...(preparedHtml ? { html_override: preparedHtml } : {}),
+      ...(prepared.agreementEmailSubject ? { subject_override: String(prepared.agreementEmailSubject) } : {}),
+    });
   }
 
   await stampAutopilot(sub, { listingAgreementSentAt: new Date().toISOString(), listingOption, authorizedMinTotal: total });
@@ -149,7 +160,15 @@ async function sendFamilyTree(sub: Sub, force: boolean) {
   if (!force && answers.sellerConfirmedAt) return { step: 'family_tree', status: 'skipped', reason: 'already completed' };
   if (!force && answers.questionsSentAt) return { step: 'family_tree', status: 'skipped', reason: 'already sent' };
 
-  await callFn('ownership-questions', { action: 'send', submission_id: sub.id, to: sub.email });
+  const prepared = (answers.autopilot ?? {}) as Record<string, any>;
+  const treeHtml = typeof prepared.familyTreeEmailHtml === 'string' && prepared.familyTreeEmailHtml.length > 40
+    ? String(prepared.familyTreeEmailHtml) : null;
+  await callFn('ownership-questions', {
+    action: 'send',
+    submission_id: sub.id,
+    to: sub.email,
+    ...(treeHtml ? { html_override: treeHtml } : {}),
+  });
   const fresh = await loadSubmission(sub.id);
   await stampAutopilot(fresh ?? sub, { familyTreeSentAt: new Date().toISOString() });
   return { step: 'family_tree', status: 'sent', next_url: `${PUBLIC_SITE_URL}/confirm?s=${sub.id}` };
