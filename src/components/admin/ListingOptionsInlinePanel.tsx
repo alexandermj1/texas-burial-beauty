@@ -14,7 +14,7 @@
 // everything downstream is prepared and reviewed before the seller sees it.
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Eye, ArrowRight, ArrowLeft, Plus, X } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Eye, ArrowRight, ArrowLeft, Plus, X, Send } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -318,10 +318,21 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     window.open(`/confirm?s=${seller.id}`, "_blank", "noopener");
   };
 
-  const generate = async () => {
+  const generate = async (sendNow = false) => {
     if (!canGenerate || busy) return;
     setBusy(true);
     try {
+      // The family-tree email is standard copy — build it from the roster we
+      // just confirmed so the broker never has to write it.
+      const firstName = properFirstName(cleanDisplayName(seller.name || "")) || "there";
+      const treeHtml = buildFamilyTreeBlock({
+        submissionId: seller.id,
+        cemetery: properCase(seller.cemetery || ""),
+        paragraphs: defaultFamilyTreeParagraphs(firstName, properCase(seller.cemetery || "")),
+        ctaLabel: "Confirm your details →",
+        helpNote: defaultFamilyTreeHelpNote,
+      });
+      setFamilyTreeEmailHtml(treeHtml);
       const html = await buildListingOptionsBlock({
         seller,
         netPerPlot: nppNum,
@@ -329,12 +340,13 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         transferFee: feeNum,
         environment: getPaymentsEnvironment(),
       });
-      onGenerated(html);
+      if (sendNow && onGeneratedAndSend) await onGeneratedAndSend(html);
+      else onGenerated(html);
       // Persist the retail + quote amount so the purple "quoted (pending)"
       // pill can render on the submission card. quote_sent_at is stamped
       // separately by the composer once the email actually sends.
       try {
-        if (seller.id) await savePrep();
+        if (seller.id) await savePrepWith({ familyTreeEmailHtml: treeHtml });
       } catch (err) {
         console.warn("Could not save quote fields to submission", err);
       }
