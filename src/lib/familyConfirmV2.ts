@@ -35,7 +35,7 @@ export function nameKey(n) {
 export function initialState(CRM) {
   return {
     rel: '', relOther: '', selfIs: '', youName: '',
-    deed: (CRM.deed || []).map((n, i) => ({ id: 'd' + i, n: n, st: 'living' })),
+    deed: (CRM.deed || []).map((n, i) => ({ id: 'd' + i, n: n, st: '' })),
     seq: (CRM.deed || []).length, kseq: 0,
     couple: '', poa: {}, spouse: {}, will: {}, taker: {},
     kids: [], noKids: {}, heirSpouse: {},
@@ -66,7 +66,7 @@ export function buildLogic(state, setS, accent0, CRM) {
     return a && a === b ? named.map(d => d.id) : [];
   },
   coupleAsk: () => { return L.coupleIds().length === 2; },
-  coupleVal: () => { return state.couple || (L.coupleAsk() ? 'yes' : ''); },
+  coupleVal: () => { return state.couple || ''; },
   coupleYes: (id) => { return L.coupleVal() === 'yes' && L.coupleIds().indexOf(id) >= 0; },
   // The effective spouse answer for a deed owner: married-to-each-other means
   // there is no off-deed spouse to consent.
@@ -136,7 +136,15 @@ export function buildLogic(state, setS, accent0, CRM) {
     });
   },
 
-  done1: () => { return L.named().length > 0; },
+  done1: () => {
+    const named = L.named();
+    if (!named.length) return false;
+    // Every owner must be explicitly ticked living or died — no silent default.
+    if (!named.every(d => d.st === 'living' || d.st === 'deceased')) return false;
+    // And if the two names look like a couple, that question must be answered too.
+    if (L.coupleAsk() && !state.couple) return false;
+    return true;
+  },
   done2: () => {
     const s = state;
     if (!s.rel) return false;
@@ -456,16 +464,16 @@ export function buildLogic(state, setS, accent0, CRM) {
         return {
         name: d.n, initials: initials(d.n),
         cardBg: d.st === 'deceased' ? '#fafafa' : '#ffffff',
-        cardBd: d.st === 'deceased' ? '#e6e6eb' : '#ececf0',
-        avBg: d.st === 'deceased' ? '#f2f2f5' : (d.n.trim() ? '#eef1ea' : '#f5f5f7'),
-        avFg: d.st === 'deceased' ? '#9a9aa2' : (d.n.trim() ? acc : '#b7b7bf'),
+        cardBd: d.st === 'deceased' ? '#e6e6eb' : (!d.st && d.n.trim() ? '#e6c3b4' : '#ececf0'),
+        avBg: d.st === 'deceased' ? '#f2f2f5' : (d.st === 'living' && d.n.trim() ? '#eef1ea' : '#f5f5f7'),
+        avFg: d.st === 'deceased' ? '#9a9aa2' : (d.st === 'living' && d.n.trim() ? acc : '#b7b7bf'),
         marriedYes: sp.has === 'yes',
-        marriedAsk: !!d.n.trim() && !L.coupleYes(d.id),
+        marriedAsk: !!d.n.trim() && !!d.st && !L.coupleYes(d.id) && !(L.coupleAsk() && !s.couple),
         marriedLabel: d.st === 'deceased' ? 'Was married?' : 'Married?',
         spouseName: sp.n || '',
         marriedSeg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
         setSpouseName: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); },
-        seg: L.seg(d.st, [['living', 'Living'], ['deceased', 'Has died']], v => setS(st => {
+        seg: L.seg(d.st, [['living', 'Still living'], ['deceased', 'Has died']], v => setS(st => {
           const l = st.deed.slice(); l[i] = Object.assign({}, l[i], { st: v }); return { deed: l };
         })),
         setName: ev => { const v = ev.target.value; setS(st => { const l = st.deed.slice(); l[i] = Object.assign({}, l[i], { n: v }); return { deed: l }; }); },
@@ -476,7 +484,7 @@ export function buildLogic(state, setS, accent0, CRM) {
       coupleNames: L.coupleIds().length === 2 ? L.named().map(d => d.n.trim()).join(' and ') : '',
       coupleSeg: L.seg(L.coupleVal(), [['yes', 'Yes'], ['no', 'No'], ['unknown', "Don't know"]], v => setS({ couple: v })),
 
-      addDeed: () => setS(st => ({ deed: st.deed.concat([{ id: 'd' + st.seq, n: '', st: 'living' }]), seq: st.seq + 1 })),
+      addDeed: () => setS(st => ({ deed: st.deed.concat([{ id: 'd' + st.seq, n: '', st: '' }]), seq: st.seq + 1 })),
 
       show2: d1,
       relOpts: REL.map(r => ({
