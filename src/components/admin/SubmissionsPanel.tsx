@@ -1285,13 +1285,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const renderSubmissionDetail = (selected: Submission) => {
     const kind = resolveKind(selected.customer_kind, selected.source);
     const bayerStage = kind === "seller" ? deriveBayerStage(selected as any) : null;
-    return (
-          <motion.div
-            key={selected.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
-          >
+    const focusSplit = !isMobile && listCollapsed;
+    const headBlock = (<>
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
@@ -1725,6 +1720,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
 
+    </>);
+    const emailBlock = (<>
             {/* Email chain — Texas submissions (Bayer shows it inside CustomerJourney) */}
             {subRegion(selected) === "texas" && (() => {
               const kind = resolveKind(selected.customer_kind, selected.source);
@@ -1795,6 +1792,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 />
               );
             })()}
+    </>);
+    const tailBlock = (<>
 
             {/* Contact actions */}
             <div className="flex flex-wrap gap-2">
@@ -2408,6 +2407,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 )}
 
               </>
+            )}
+    </>);
+    return (
+          <motion.div
+            key={selected.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
+          >
+            {focusSplit ? (
+              <div className="grid grid-cols-12 gap-6 items-start">
+                <div className="col-span-12 xl:col-span-7 min-w-0 space-y-5">{headBlock}{tailBlock}</div>
+                <div className="col-span-12 xl:col-span-5 min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-5">{emailBlock}</div>
+              </div>
+            ) : (
+              <>{headBlock}{emailBlock}{tailBlock}</>
             )}
           </motion.div>
     );
