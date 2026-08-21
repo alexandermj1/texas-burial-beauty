@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -113,6 +113,8 @@ export interface Submission {
   closed_outcome?: string | null;
   inquiry_channel?: string | null;
   handled_by_name?: string | null;
+  archived_at?: string | null;
+  archived_by?: string | null;
 }
 
 interface Props {
@@ -278,6 +280,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Family tree (ownership questionnaire) filters: link sent vs seller finished.
   const [ftSentFilter, setFtSentFilter] = useState<boolean>(false);
   const [ftDoneFilter, setFtDoneFilter] = useState<boolean>(false);
+  // Archive: archived submissions are hidden from every pipeline view until this is on.
+  const [archivedView, setArchivedView] = useState<boolean>(false);
 
   // Draft for the editable accepted-price field (per submission). Keyed by submission id.
   const [acceptedPriceDraft, setAcceptedPriceDraft] = useState<Record<string, string>>({});
@@ -821,6 +825,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const filtered = useMemo(() => {
 
     const matches = submissions.filter(s => {
+      // Archived submissions live in their own view and never appear in the pipeline.
+      if (archivedView !== !!s.archived_at) return false;
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (regionFilter === "texas" && cemeteryCanon && !cemeteriesOpen) {
         // Exact match only — a submission only belongs to the clicked cemetery
@@ -907,7 +913,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+
+  const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
   // Map lowercased email → all submission ids that share it, oldest → newest. Used
   // to show a "+N earlier submissions" chip on the merged card so nothing is lost.
@@ -2340,6 +2348,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                       </div>
                       <button
+                        onClick={guard(selected.archived_at ? "Unarchive submission" : "Archive submission", async () => {
+                          const archiving = !selected.archived_at;
+                          await onUpdate(selected.id, {
+                            archived_at: archiving ? new Date().toISOString() : null,
+                            archived_by: archiving ? (adminName || "admin") : null,
+                          } as any);
+                          toast({ title: archiving ? "Moved to archive" : "Restored to pipeline" });
+                        })}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-500/10 rounded-full transition-colors"
+                        title={selected.archived_at ? "Move this submission back into the live pipeline" : "Archive — hides it from the pipeline but keeps everything"}
+                      >
+                        {selected.archived_at ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                        {selected.archived_at ? "Unarchive" : "Archive"}
+                      </button>
+                      <button
                         onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}
                         className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
                         title="Move to trash — you can restore it later from Recently deleted"
@@ -2479,6 +2502,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2 flex items-center gap-3 flex-wrap xl:flex-nowrap">
         <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+          <button
+            onClick={() => setArchivedView(v => !v)}
+            title={archivedView ? "Back to the live pipeline" : "View archived submissions"}
+            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+              archivedView
+                ? "bg-amber-500 text-white border-amber-500"
+                : "bg-card text-muted-foreground border-border hover:text-foreground"
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            {archivedView ? "Back to pipeline" : `Archive${archivedCount ? ` (${archivedCount})` : ""}`}
+          </button>
           <button
             onClick={() => setListCollapsed(v => !v)}
             title={listCollapsed ? "Show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}

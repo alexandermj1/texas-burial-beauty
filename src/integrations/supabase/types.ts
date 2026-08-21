@@ -429,6 +429,8 @@ export type Database = {
           ai_summary: string | null
           ai_summary_at: string | null
           ai_summary_key: string | null
+          archived_at: string | null
+          archived_by: string | null
           authorization_confirmed: boolean | null
           authorization_notes: string | null
           bayer_entry_id: string | null
@@ -546,6 +548,8 @@ export type Database = {
           ai_summary?: string | null
           ai_summary_at?: string | null
           ai_summary_key?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
           bayer_entry_id?: string | null
@@ -663,6 +667,8 @@ export type Database = {
           ai_summary?: string | null
           ai_summary_at?: string | null
           ai_summary_key?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           authorization_confirmed?: boolean | null
           authorization_notes?: string | null
           bayer_entry_id?: string | null
