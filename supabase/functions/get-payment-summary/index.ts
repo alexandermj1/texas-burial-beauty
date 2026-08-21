@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     );
     const { data } = await supabase
       .from("payment_transactions")
-      .select("recipient_name, recipient_email, description, amount_cents, currency, kind, status, metadata")
+      .select("recipient_name, recipient_email, description, amount_cents, currency, kind, status, metadata, submission_id")
       .eq("stripe_session_id", parsed.data.session_id)
       .maybeSingle();
 
@@ -33,8 +33,41 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ found: false }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // For a listing fee we carry the seller straight on to their agreement
+    // instead of making them wait for (and hunt for) the email.
+    let signUrl: string | null = null;
+    if (data.kind === "listing_fee" && data.submission_id) {
+      const { data: c } = await supabase
+        .from("contracts")
+        .select("sign_token, signed_at")
+        .eq("submission_id", data.submission_id)
+        .eq("kind", "listing_agreement")
+        .maybeSingle();
+      if (c?.sign_token && !c.signed_at) {
+        signUrl = `/sign/${c.sign_token}`;
+      } else if (!c && data.status === "paid") {
+        // The webhook may not have run yet — prepare it now, same code path.
+        try {
+          const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/autopilot`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+            },
+            body: JSON.stringify({ submission_id: data.submission_id, step: "listing_agreement" }),
+          });
+          const out = await res.json();
+          const full = String(out?.sign_url ?? "");
+          const m = full.match(/\/sign\/[A-Za-z0-9]+$/);
+          if (m) signUrl = m[0];
+        } catch (e) { console.error("autopilot prepare failed", e); }
+      }
+    }
+
     return new Response(JSON.stringify({
       found: true,
+      signUrl,
       recipientName: data.recipient_name,
       recipientEmail: data.recipient_email,
       description: data.description,
