@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders });
     }
 
-    const { contract_id, sign_url, to: overrideTo } = await req.json();
+    const { contract_id, sign_url, to: overrideTo, html_override, subject_override } = await req.json();
     if (!contract_id || !sign_url) {
       return new Response(JSON.stringify({ error: 'missing contract_id or sign_url' }), { status: 400, headers: corsHeaders });
     }
@@ -144,6 +144,10 @@ Deno.serve(async (req) => {
       ? `Your ${docName}${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — confirm address to receive notary packet`
       : `Your Listing Agreement${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — ready to sign`;
 
+    // Broker-prepared copy (from the quote wizard) wins over the default template.
+    const outHtml = typeof html_override === 'string' && html_override.trim().length > 40 ? html_override : html;
+    const outSubject = typeof subject_override === 'string' && subject_override.trim() ? subject_override.trim() : subject;
+
     // Send from the real info@texascemeterybrokers.com mailbox through Gmail.
     // Sellers reply to (and trust) that address, and Gmail-to-inbox delivery is
     // far more reliable than a separate contracts@ sending domain — several
@@ -171,9 +175,9 @@ Deno.serve(async (req) => {
         action: 'send',
         to,
         bcc: 'info@texascemeterybrokers.com',
-        subject,
+        subject: outSubject,
         body: plain,
-        htmlBody: html,
+        htmlBody: outHtml,
         submissionId: c.submission_id ?? undefined,
         ...(realThread?.gmail_thread_id ? { threadId: realThread.gmail_thread_id } : {}),
         ...(realThread?.gmail_message_id ? { inReplyToGmailId: realThread.gmail_message_id } : {}),
@@ -197,8 +201,8 @@ Deno.serve(async (req) => {
           reply_to: 'info@texascemeterybrokers.com',
           to: [to],
           bcc: ['info@texascemeterybrokers.com'],
-          subject,
-          html,
+          subject: outSubject,
+          html: outHtml,
         }),
       });
       if (!res.ok) throw new Error(`Could not send the contract email (Gmail: ${gmailText}; Resend: ${res.status} ${await res.text()})`);
@@ -218,12 +222,12 @@ Deno.serve(async (req) => {
         from_email: 'info@texascemeterybrokers.com',
         from_name: 'Texas Cemetery Brokers',
         to_email: to,
-        subject,
+        subject: outSubject,
         snippet: isPoa
           ? `${docName} sent for signature / notarization.`
           : 'Listing Agreement sent for signature.',
         body_text: plain,
-        body_html: html,
+        body_html: outHtml,
         received_at: new Date().toISOString(),
         matched_submission_id: c.submission_id ?? null,
         is_read: true,
