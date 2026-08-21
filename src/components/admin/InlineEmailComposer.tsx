@@ -468,7 +468,7 @@ const InlineEmailComposer = ({
     // "Quoted" pipeline stage / gets the quoted tag.
     try {
       const isQuoteSend =
-        (listingBlockInserted || activeTemplateId === "seller_listing_options") &&
+        (hasListingBlock || listingBlockInserted || activeTemplateId === "seller_listing_options") &&
         sellerContext?.id;
       if (isQuoteSend) {
         await supabase
