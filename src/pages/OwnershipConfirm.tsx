@@ -552,7 +552,7 @@ const OwnershipConfirm = () => {
                                 ))}
                               </div>
                               {d.marriedYes ? (
-                                <input value={d.spouseName ?? ""} onChange={d.setSpouseName} placeholder="Husband or wife's full name" style={{"flex": "1", "minWidth": "180px", "padding": "8px 12px", "fontSize": "15px", "color": "#1d1d1f", "background": "#fafafc", "border": "1px solid #ececf0", "borderRadius": "10px", "outline": "none"}} className="dcx5" />
+                                <input value={d.spouseName ?? ""} onChange={d.setSpouseName} placeholder={d.spousePlaceholder} style={{"flex": "1", "minWidth": "180px", "padding": "8px 12px", "fontSize": "15px", "color": "#1d1d1f", "background": "#fafafc", "border": "1px solid #ececf0", "borderRadius": "10px", "outline": "none"}} className="dcx5" />
                               ) : null}
                             </div>
                            ) : null}
