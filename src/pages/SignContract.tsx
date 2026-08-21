@@ -276,7 +276,7 @@ export default function SignContract() {
   // tree questions instead of waiting on an email.
   useEffect(() => {
     if (!done || info?.kind !== "listing_agreement" || !submissionId) return;
-    const t = setTimeout(() => navigate(`/confirm?s=${submissionId}`), 2500);
+    const t = setTimeout(() => navigate(`/confirm?s=${submissionId}`), 600);
     return () => clearTimeout(t);
   }, [done, info?.kind, submissionId, navigate]);
 
@@ -732,6 +732,7 @@ export default function SignContract() {
                 </Card>
               )}
 
+              {info?.kind !== "listing_agreement" && (
               <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-8">
                 <div className="text-center">
                   <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Two last things</div>
@@ -805,6 +806,7 @@ export default function SignContract() {
                   email <a href="mailto:info@texascemeterybrokers.com" className="underline text-[#1f2a37]">info@texascemeterybrokers.com</a>.
                 </p>
               </Card>
+              )}
             </div>
           )
         ) : isNotaryDoc ? (
