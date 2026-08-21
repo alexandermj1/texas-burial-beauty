@@ -2348,6 +2348,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                       </div>
                       <button
+                        onClick={guard(selected.archived_at ? "Unarchive submission" : "Archive submission", async () => {
+                          const archiving = !selected.archived_at;
+                          await onUpdate(selected.id, {
+                            archived_at: archiving ? new Date().toISOString() : null,
+                            archived_by: archiving ? (adminName || "admin") : null,
+                          } as any);
+                          toast({ title: archiving ? "Moved to archive" : "Restored to pipeline" });
+                        })}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-500/10 rounded-full transition-colors"
+                        title={selected.archived_at ? "Move this submission back into the live pipeline" : "Archive — hides it from the pipeline but keeps everything"}
+                      >
+                        {selected.archived_at ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                        {selected.archived_at ? "Unarchive" : "Archive"}
+                      </button>
+                      <button
                         onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}
                         className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
                         title="Move to trash — you can restore it later from Recently deleted"
