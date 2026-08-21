@@ -14,7 +14,7 @@ const corsHeaders = {
 const BodySchema = z.object({ transactionId: z.string().uuid() });
 
 /** Kick the next automated step (listing agreement / family tree). */
-async function runAutopilot(submissionId: string, step: string) {
+async function runAutopilot(submissionId: string, step: string): Promise<Record<string, any>> {
   try {
     const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/autopilot`, {
       method: "POST",
@@ -25,9 +25,12 @@ async function runAutopilot(submissionId: string, step: string) {
       },
       body: JSON.stringify({ submission_id: submissionId, step }),
     });
-    console.log("autopilot", step, res.status, await res.text());
+    const text = await res.text();
+    console.log("autopilot", step, res.status, text);
+    try { return JSON.parse(text); } catch { return {}; }
   } catch (e) {
     console.error("autopilot call failed", step, e);
+    return {};
   }
 }
 
@@ -69,6 +72,7 @@ Deno.serve(async (req) => {
     }
 
     const alreadyActive = tx.status === "paid";
+    let auto: Record<string, any> = {};
     const nowIso = new Date().toISOString();
 
     // Look up cemetery/name for the confirmation UI + emails.
@@ -156,13 +160,17 @@ Deno.serve(async (req) => {
         }
       } catch (e) { console.error("Starter admin notify failed", e); }
 
-      // Accepted quote -> send the listing agreement straight away.
-      await runAutopilot(tx.submission_id, "listing_agreement");
+      // Accepted quote -> prepare the listing agreement straight away.
+      auto = await runAutopilot(tx.submission_id, "listing_agreement");
+    } else {
+      // Returning to an already-activated link: hand back the same signing page.
+      auto = await runAutopilot(tx.submission_id, "listing_agreement");
     }
 
     return new Response(JSON.stringify({
       ok: true,
       alreadyActive,
+      signUrl: (auto?.sign_url as string) ?? null,
       recipientName: tx.recipient_name,
       recipientEmail: tx.recipient_email,
       cemetery: submission?.cemetery ?? null,
