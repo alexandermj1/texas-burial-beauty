@@ -1471,18 +1471,41 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           return (
                             <button
                               key={t.key}
-                              onClick={() => onUpdate(selected.id, (active
-                                ? { listing_tier: null, listing_option: null }
-                                : {
-                                    listing_tier: t.key,
-                                    listing_option: t.key,
-                                    // Choosing a listing option means they accepted the quote
-                                    quote_response: "accepted",
-                                    quote_responded_at: (selected as any).quote_responded_at || new Date().toISOString(),
-                                    quote_sent_at: (selected as any).quote_sent_at || new Date().toISOString(),
-                                    accepted_quote_amount:
-                                      (selected as any).accepted_quote_amount ?? (selected as any).quote_amount ?? null,
-                                  }) as any)}
+                              onClick={async () => {
+                                await onUpdate(selected.id, (active
+                                  ? { listing_tier: null, listing_option: null }
+                                  : {
+                                      listing_tier: t.key,
+                                      listing_option: t.key,
+                                      // Choosing a listing option means they accepted the quote
+                                      quote_response: "accepted",
+                                      quote_responded_at: (selected as any).quote_responded_at || new Date().toISOString(),
+                                      quote_sent_at: (selected as any).quote_sent_at || new Date().toISOString(),
+                                      accepted_quote_amount:
+                                        (selected as any).accepted_quote_amount ?? (selected as any).quote_amount ?? null,
+                                    }) as any);
+                                if (active) return;
+                                // Accepted -> the listing agreement goes out automatically.
+                                try {
+                                  const { data, error } = await supabase.functions.invoke("autopilot", {
+                                    body: { submission_id: selected.id, step: "listing_agreement" },
+                                  });
+                                  const status = (data as any)?.status;
+                                  if (error) throw error;
+                                  toast({
+                                    title: status === "sent" ? "Listing agreement sent" : "Listing agreement not sent",
+                                    description: status === "sent"
+                                      ? "The seller has been emailed their agreement to sign."
+                                      : `Skipped — ${(data as any)?.reason ?? "already handled"}.`,
+                                  });
+                                } catch (e: any) {
+                                  toast({
+                                    title: "Couldn't send the listing agreement",
+                                    description: String(e?.message ?? e),
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                                 active
                                   ? "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300"

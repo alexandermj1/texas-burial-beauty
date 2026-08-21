@@ -10,6 +10,7 @@
 //   preview — admin-only, returns the exact email HTML without sending
 //   send    — admin-only, emails the seller the link through the info@ mailbox
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { isInternalCall } from "../_shared/internal-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -189,8 +190,9 @@ Deno.serve(async (req) => {
     const asUser = createClient(SUPABASE_URL, SERVICE_KEY, {
       global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
     });
-    const { data: userData } = await asUser.auth.getUser();
-    if (!userData.user) return json({ error: "unauthorized" }, 401);
+    const internal = isInternalCall(req);
+    const { data: userData } = internal ? { data: { user: null } } : await asUser.auth.getUser();
+    if (!internal && !userData.user) return json({ error: "unauthorized" }, 401);
 
     const link = `${PUBLIC_SITE_URL}/confirm?s=${submissionId}`;
     const firstName = (sub.name ?? "").trim().split(/\s+/)[0] || "there";

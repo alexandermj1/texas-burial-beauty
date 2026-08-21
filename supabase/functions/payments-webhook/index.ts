@@ -163,9 +163,31 @@ function receiptBlock(tx: any, itemLabel: string, cardBrand?: string, cardLast4?
     </table>`;
 }
 
+
+/** Kick the next automated step (listing agreement / family tree). */
+async function runAutopilot(submissionId: string, step: string) {
+  try {
+    const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/autopilot`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      },
+      body: JSON.stringify({ submission_id: submissionId, step }),
+    });
+    console.log("autopilot", step, res.status, await res.text());
+  } catch (e) {
+    console.error("autopilot call failed", step, e);
+  }
+}
+
 async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: string) {
   const tier = tx.metadata?.listing_tier || "pro";
   if (tx.submission_id) {
+    const { data: sub } = await db().from("contact_submissions")
+      .select("quote_amount, accepted_quote_amount").eq("id", tx.submission_id).maybeSingle();
+    const accepted = Number((sub as any)?.accepted_quote_amount ?? (sub as any)?.quote_amount) || 0;
     await db().from("contact_submissions").update({
       listing_tier: tier,
       listing_paid_at: new Date().toISOString(),
@@ -173,6 +195,7 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
       // Paying the listing fee implies the seller accepted our quote.
       quote_response: "accepted",
       quote_responded_at: new Date().toISOString(),
+      ...(accepted > 0 ? { accepted_quote_amount: accepted } : {}),
     }).eq("id", tx.submission_id);
   }
   const firstName = (tx.recipient_name || "").split(" ")[0] || "there";
@@ -191,6 +214,9 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
     `${tx.recipient_name || tx.recipient_email} paid ${fmt(tx.amount_cents)} (${tierLabel}).`,
     tx.submission_id,
   );
+
+  // Accepted quote -> send the listing agreement straight away.
+  if (tx.submission_id) await runAutopilot(tx.submission_id, "listing_agreement");
 }
 
 async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: string) {

@@ -4,6 +4,7 @@
 // Lovable connector gateway — no Gmail tab needed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { isInternalCall } from "../_shared/internal-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -202,15 +203,20 @@ Deno.serve(async (req) => {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableKey) return json({ error: "LOVABLE_API_KEY missing" }, 500);
 
-    const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const { data: { user }, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !user) return json({ error: "Unauthorized" }, 401);
-    const { data: roles } = await userClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .in("role", ["admin", "staff"]);
-    if (!roles?.length) return json({ error: "Admin or staff only" }, 403);
+    // Server-to-server calls (autopilot, scheduled jobs) present the
+    // service-role key and skip the interactive admin/staff check.
+    const internal = isInternalCall(req);
+    if (!internal) {
+      const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+      const { data: { user }, error: userErr } = await userClient.auth.getUser();
+      if (userErr || !user) return json({ error: "Unauthorized" }, 401);
+      const { data: roles } = await userClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["admin", "staff"]);
+      if (!roles?.length) return json({ error: "Admin or staff only" }, 403);
+    }
 
     const gmailKey = await resolveGmailKey(lovableKey);
     if (!gmailKey) return json({ error: `No Gmail connector linked for ${TARGET_MAILBOX}` }, 500);

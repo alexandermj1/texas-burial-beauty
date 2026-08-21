@@ -46,7 +46,28 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const [salesTouched, setSalesTouched] = useState(false);
   const [plotCount, setPlotCount] = useState<string>(String(defaultSpaces));
   const [transferFee, setTransferFee] = useState<string>(() => feeString(seller.transfer_fee_amount));
+  // Names exactly as they appear on the deed. Confirmed here, at quote time,
+  // because acceptance now automatically produces the listing agreement (and
+  // then the family tree) with no chance to correct them in between.
+  const [deedOwners, setDeedOwners] = useState<string>("");
   const [busy, setBusy] = useState(false);
+
+  // Pre-fill the deed owners from whatever we already hold on the submission.
+  useEffect(() => {
+    let cancelled = false;
+    setDeedOwners("");
+    (async () => {
+      const { data } = await supabase
+        .from("contact_submissions")
+        .select("deed_owner_names, name")
+        .eq("id", seller.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const row = (data as any) || {};
+      setDeedOwners(String(row.deed_owner_names || row.name || seller.name || "").trim());
+    })();
+    return () => { cancelled = true; };
+  }, [seller.id, seller.name]);
 
   useEffect(() => {
     setPlotCount(String(parseSpaces(seller.spaces)));
@@ -112,7 +133,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
   const countNum = Math.max(1, Number(plotCount) || 1);
   const feeNum = Number(transferFee) || 0;
   const total = nppNum * countNum;
-  const canGenerate = nppNum > 0 && countNum > 0;
+  const deedOwnersClean = deedOwners.trim();
+  const canGenerate = nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1;
 
   const generate = async () => {
     if (!canGenerate || busy) return;
@@ -129,14 +151,40 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       // Persist the retail + quote amount so the purple "quoted (pending)"
       // pill can render on the submission card. quote_sent_at is stamped
       // separately by the composer once the email actually sends.
+      //
+      // The `autopilot` block locks in exactly what the listing agreement must
+      // print if the seller accepts — the agreement and the family tree then go
+      // out automatically without anyone re-keying these numbers.
       try {
         if (seller.id) {
+          const { data: current } = await supabase
+            .from("contact_submissions")
+            .select("ownership_answers")
+            .eq("id", seller.id)
+            .maybeSingle();
+          const answers = ((current as any)?.ownership_answers ?? {}) as Record<string, unknown>;
           await supabase
             .from("contact_submissions")
             .update({
               cemetery_retail: retailNum > 0 ? retailNum : null,
               quote_amount: nppNum > 0 ? nppNum : null,
               transfer_fee_amount: feeNum > 0 ? feeNum : null,
+              plot_count: countNum,
+              list_price: salesNum > 0 ? salesNum * countNum : null,
+              deed_owner_names: deedOwnersClean,
+              ownership_answers: {
+                ...answers,
+                autopilot: {
+                  ...((answers as any).autopilot ?? {}),
+                  preparedAt: new Date().toISOString(),
+                  netPerPlot: nppNum,
+                  plotCount: countNum,
+                  authorizedMinTotal: total,
+                  salesPricePerPlot: salesNum || null,
+                  transferFee: feeNum || null,
+                  deedOwnerNames: deedOwnersClean,
+                },
+              },
             } as any)
             .eq("id", seller.id);
         }
@@ -145,7 +193,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
       }
       toast({
         title: hasGenerated ? "Quote regenerated" : "Quote inserted",
-        description: "Offer + Starter/Pro/Featured pay buttons added to the email.",
+        description: "If they accept, the listing agreement then the family tree send automatically.",
       });
     } catch (e: any) {
       toast({ title: "Couldn't generate", description: String(e?.message ?? e), variant: "destructive" });
@@ -235,6 +283,22 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
           />
         </div>
       </div>
+      <div>
+        <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
+          Names on the deed (required)
+        </label>
+        <input
+          type="text"
+          value={deedOwners}
+          onChange={(e) => setDeedOwners(e.target.value)}
+          placeholder="e.g. John A. Smith & Mary Smith"
+          className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        <p className="text-[9px] text-muted-foreground mt-1">
+          Confirm these now — if the seller accepts, the listing agreement is generated and emailed
+          automatically, and the family tree follows the moment they sign it.
+        </p>
+      </div>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-[11px] text-muted-foreground">
           {canGenerate ? (
@@ -244,6 +308,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
               {salesNum > 0 ? <> · list at {fmtUsd(salesNum)}/plot</> : null}
               {feeNum > 0 ? <> · {fmtUsd(feeNum)} buyer-paid transfer fee</> : null}
             </>
+          ) : nppNum > 0 && !deedOwnersClean ? (
+            "Add the names exactly as they appear on the deed before generating the quote."
           ) : (
             "Enter the retail price per plot — the quote and sales price will auto-calculate."
           )}
