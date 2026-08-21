@@ -2724,7 +2724,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           Stage info is still visible per-row via the inline stage badge, and inside the detail view's pipeline panel. */}
 
 
-      <div data-tour="submissions-list" className={`lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden ${isMobile ? "" : "max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto"} lg:order-none`}>
+      {!isMobile && listCollapsed && drawerOpen && (
+        <div
+          onClick={() => setDrawerOpen(false)}
+          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-[2px] animate-in fade-in duration-200"
+        />
+      )}
+      <div
+        data-tour="submissions-list"
+        className={
+          isMobile
+            ? "bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden"
+            : listCollapsed
+              ? `fixed left-4 top-20 bottom-4 z-50 w-[min(420px,90vw)] bg-card/95 backdrop-blur-xl rounded-2xl border border-border/60 shadow-2xl ring-1 ring-primary/5 overflow-y-auto transition-all duration-300 ease-out ${
+                  drawerOpen ? "translate-x-0 opacity-100" : "-translate-x-[115%] opacity-0 pointer-events-none"
+                }`
+              : "lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto lg:order-none"
+        }
+      >
+
         {regionFilter === "texas" && cemeteryLabel && (
           <div className="flex items-center justify-between gap-2 px-4 py-2 bg-[hsl(var(--status-nodocs-soft))] border-b border-[hsl(var(--status-nodocs-border))] text-xs">
             <span className="text-[hsl(var(--status-nodocs-fg))]">
