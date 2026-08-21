@@ -85,7 +85,9 @@ Deno.serve(async (req) => {
       }).select().single();
       if (pendErr) console.error("Failed to insert pending Starter tx:", pendErr);
 
-      const origin = req.headers.get("origin") || "https://texascemeterybrokers.com";
+      // Always the live public site: the admin may be sending from a preview origin,
+    // and those links fail with "access denied" for the seller.
+    const origin = "https://www.texascemeterybrokers.com";
       const selectUrl = pendingTx?.id ? `${origin}/select-starter?tx=${pendingTx.id}` : null;
 
       return new Response(JSON.stringify({ url: selectUrl, free: true, transactionId: pendingTx?.id }), {
@@ -114,7 +116,9 @@ Deno.serve(async (req) => {
 
     const stripe = createStripeClient(env);
 
-    const origin = req.headers.get("origin") || "https://texascemeterybrokers.com";
+    // Always the live public site: the admin may be sending from a preview origin,
+    // and those links fail with "access denied" for the seller.
+    const origin = "https://www.texascemeterybrokers.com";
 
     // Two different Stripe flows depending on the kind of payment:
     //  - listing_fee / plot_sale (from the quote email) → Checkout Session.
