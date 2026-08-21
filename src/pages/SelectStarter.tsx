@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,6 +9,7 @@ interface Result {
   recipientName?: string | null;
   recipientEmail?: string | null;
   cemetery?: string | null;
+  signUrl?: string | null;
   error?: string;
 }
 
@@ -17,6 +18,7 @@ export default function SelectStarter() {
   const tx = params.get("tx");
   const [state, setState] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => { document.title = "Confirm Starter listing — Texas Cemetery Brokers"; }, []);
 
@@ -28,7 +30,15 @@ export default function SelectStarter() {
         body: { transactionId: tx },
       });
       if (error) setState({ error: String(error.message || error) });
-      else setState(data as Result);
+      else {
+        const r = data as Result;
+        setState(r);
+        // Straight on to the agreement — no inbox round-trip.
+        if (r?.signUrl) {
+          const path = r.signUrl.replace(/^https?:\/\/[^/]+/, "");
+          setTimeout(() => navigate(path), 2000);
+        }
+      }
     } catch (e: any) {
       setState({ error: String(e?.message ?? e) });
     } finally {
@@ -69,7 +79,9 @@ export default function SelectStarter() {
               {state?.alreadyActive ? " (Already recorded — no changes made.)" : ""}
             </p>
             <p className="text-muted-foreground">
-              Our next step is to send your Exclusive Sales Agreement to sign. Watch your inbox — it will arrive shortly.
+              {state?.signUrl
+                ? "Your Exclusive Sales Agreement is ready — we're taking you there now."
+                : "Our next step is to send your Exclusive Sales Agreement to sign. Watch your inbox — it will arrive shortly."}
             </p>
           </div>
         ) : (
@@ -78,7 +90,14 @@ export default function SelectStarter() {
           </p>
         )}
 
-        {done || isErr ? (
+        {done && state?.signUrl ? (
+          <Link
+            to={state.signUrl.replace(/^https?:\/\/[^/]+/, "")}
+            className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
+          >
+            Continue to your agreement →
+          </Link>
+        ) : done || isErr ? (
           <Link
             to="/"
             className="inline-block px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition"
