@@ -484,6 +484,7 @@ export function buildLogic(state, setS, accent0, CRM) {
         marriedAsk: !!d.n.trim() && !!d.st && !L.coupleYes(d.id) && !(L.coupleAsk() && !s.couple),
         marriedLabel: (d.st === 'deceased' ? 'Was ' : 'Is ') + (d.n.trim() || 'this owner') + ' married?',
         spouseName: sp.n || '',
+        spousePlaceholder: 'Full legal name of ' + (d.n.trim() || 'this owner') + '\u2019s husband or wife',
         marriedSeg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
         setSpouseName: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); },
         seg: L.seg(d.st, [['living', 'Still living'], ['deceased', 'Has died']], v => setS(st => {
