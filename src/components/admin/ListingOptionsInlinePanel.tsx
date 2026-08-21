@@ -283,6 +283,22 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
           />
         </div>
       </div>
+      <div>
+        <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block">
+          Names on the deed (required)
+        </label>
+        <input
+          type="text"
+          value={deedOwners}
+          onChange={(e) => setDeedOwners(e.target.value)}
+          placeholder="e.g. John A. Smith & Mary Smith"
+          className="w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        <p className="text-[9px] text-muted-foreground mt-1">
+          Confirm these now — if the seller accepts, the listing agreement is generated and emailed
+          automatically, and the family tree follows the moment they sign it.
+        </p>
+      </div>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-[11px] text-muted-foreground">
           {canGenerate ? (
@@ -292,6 +308,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, hasGene
               {salesNum > 0 ? <> · list at {fmtUsd(salesNum)}/plot</> : null}
               {feeNum > 0 ? <> · {fmtUsd(feeNum)} buyer-paid transfer fee</> : null}
             </>
+          ) : nppNum > 0 && !deedOwnersClean ? (
+            "Add the names exactly as they appear on the deed before generating the quote."
           ) : (
             "Enter the retail price per plot — the quote and sales price will auto-calculate."
           )}
