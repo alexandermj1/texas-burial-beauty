@@ -122,6 +122,8 @@ async function sendListingAgreement(sub: Sub, force: boolean, email = true) {
       authorized_min_per_plot: perPlot || Math.round(total / plots),
       listing_option: listingOption,
       ...(prepared.deedOwnerNames ? { co_owner_name: prepared.deedOwnerNames } : {}),
+      ...(prepared.plotDescription ? { plot_description: prepared.plotDescription } : {}),
+      ...(prepared.countyState ? { county_state: prepared.countyState } : {}),
     },
   });
 
