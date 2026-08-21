@@ -77,7 +77,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
   // Headline fields
   const [sellerName, setSellerName] = useState<string>(seller.name ?? "");
   const [plotCount, setPlotCount] = useState<string>(String(parseCount(seller.spaces)));
-  const [netTotal, setNetTotal] = useState<string>("");
   const [listingOption, setListingOption] = useState<string>("Starter");
 
   // Everything else on the agreement
@@ -90,7 +89,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
   const [countyState, setCountyState] = useState("");
   const [plotDescription, setPlotDescription] = useState("");
   const [perPlot, setPerPlot] = useState("");
-  const [perPlotTouched, setPerPlotTouched] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
