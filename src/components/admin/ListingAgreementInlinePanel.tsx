@@ -223,14 +223,14 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
             className={inputCls}
           />
         </Field>
-        <Field label="Guaranteed net (total)" hint="Authorized minimum on the agreement.">
+        <Field label="Guaranteed net per space" hint={`× ${plots} space${plots === 1 ? "" : "s"} = ${total > 0 ? fmtUsd(total) : "—"} total`}>
           <input
             type="number"
             min="0"
-            step="100"
-            value={netTotal}
-            onChange={(e) => setNetTotal(e.target.value)}
-            placeholder={loading ? "Loading…" : "e.g. 53000"}
+            step="50"
+            value={perPlot}
+            onChange={(e) => setPerPlot(e.target.value)}
+            placeholder={loading ? "Loading…" : "e.g. 2650"}
             className={inputCls}
           />
         </Field>
