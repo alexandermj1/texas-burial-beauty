@@ -2321,17 +2321,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   return (
                     <div data-tour="actions-bar" className="flex items-center justify-between pt-2 border-t border-border/50 flex-wrap gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {showQuoteBtn && (kind === "seller" ? (
-                          !selected.quote_sent_at && (
-                            <button
-                              onClick={guard("Send seller quote", () => setQuoteOpen(true))}
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                              Send seller quote
-                            </button>
-                          )
-                        ) : (
+                        {showQuoteBtn && (kind === "seller" ? null : (
                           <button
                             onClick={guard("Send available plots", () => setPlotCardsOpen(true))}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
