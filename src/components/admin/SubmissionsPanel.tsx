@@ -202,6 +202,17 @@ const ftState = (s: any): { sentAt: string | null; doneAt: string | null } => {
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries }: Props) => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Focus mode: collapse the submissions list into a slide-over drawer so the
+  // detail view gets the full width (submissions have grown a lot of content).
+  const [listCollapsed, setListCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("tcb-submissions-focus") === "1";
+  });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("tcb-submissions-focus", listCollapsed ? "1" : "0");
+    if (!listCollapsed) setDrawerOpen(false);
+  }, [listCollapsed]);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
