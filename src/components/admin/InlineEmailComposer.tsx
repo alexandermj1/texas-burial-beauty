@@ -417,14 +417,17 @@ const InlineEmailComposer = ({
   };
 
 
-  const send = async () => {
-    const plain = htmlToText(html);
+  // `htmlOverride` lets a panel insert a block and send it in the same click
+  // (React state updates are async, so the fresh HTML is passed straight in).
+  const send = async (htmlOverride?: unknown) => {
+    const outHtml = typeof htmlOverride === "string" && htmlOverride ? htmlOverride : html;
+    const plain = htmlToText(outHtml);
     if (!plain.trim()) {
       toast({ title: "Message is empty", variant: "destructive" });
       return;
     }
     setSending(true);
-    const normalizedHtml = normalizeComposerHtmlForEmail(html);
+    const normalizedHtml = normalizeComposerHtmlForEmail(outHtml);
     // Quote emails (listing-options block already includes brand header/footer)
     // ship without the extra masthead shell to avoid double branding.
     const hasListingBlock = /data-listing-options="1"/.test(normalizedHtml);
