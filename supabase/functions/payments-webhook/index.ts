@@ -172,7 +172,7 @@ async function runAutopilot(submissionId: string, step: string) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        apikey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       },
       body: JSON.stringify({ submission_id: submissionId, step }),
     });

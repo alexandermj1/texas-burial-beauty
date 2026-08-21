@@ -269,7 +269,12 @@ Deno.serve(async (req) => {
 </body></html>`;
 
     const to = body?.to || sub.email;
-    if (action === "preview") return json({ ok: true, preview: true, to, subject, html });
+    // The quote wizard can prepare the exact wording ahead of time; when it
+    // does, that copy is sent verbatim instead of the default template.
+    const htmlOverride = typeof body?.html_override === "string" && body.html_override.trim().length > 40
+      ? String(body.html_override) : null;
+    const outHtml = htmlOverride ?? html;
+    if (action === "preview") return json({ ok: true, preview: true, to, subject, html: outHtml });
 
     if (action === "send") {
       if (!to) return json({ error: "no recipient email" }, 400);
@@ -290,10 +295,10 @@ Deno.serve(async (req) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: req.headers.get("Authorization") ?? "",
-          apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          apikey: (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "") || (Deno.env.get("SUPABASE_ANON_KEY") ?? ""),
         },
         body: JSON.stringify({
-          action: "send", to, subject, body: plain, htmlBody: html,
+          action: "send", to, subject, body: plain, htmlBody: outHtml,
           submissionId,
           ...(realThread?.gmail_thread_id ? { threadId: realThread.gmail_thread_id } : {}),
           ...(realThread?.gmail_message_id ? { inReplyToGmailId: realThread.gmail_message_id } : {}),
