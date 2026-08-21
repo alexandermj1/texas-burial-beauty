@@ -108,6 +108,7 @@ const listingOptions = [
   { id: "Starter", tagline: "Essential listing on our marketplace with standard exposure." },
   { id: "Pro", tagline: "Wider marketing, faster time-to-buyer." },
   { id: "Featured", tagline: "Full marketing package with priority placement." },
+  { id: "Set your own price", tagline: "Everything in Featured, and you set the minimum price." },
 ] as const;
 
 export default function SignContract() {
@@ -340,6 +341,8 @@ export default function SignContract() {
     if (!fields.email.trim()) return toast.error("Enter your email");
     if (!fields.plot_description.trim()) return toast.error("Enter the plot description (section / block / spaces)");
     if (!fields.listing_option) return toast.error("Choose a listing option");
+    if (ownPrice && !(Number(fields.authorized_min_per_plot) > 0))
+      return toast.error("Enter your own minimum price per space");
     if (!initials.trim() || initials.trim().length < 2) return toast.error("Enter your initials (2+ letters)");
     if (info?.kind === "listing_agreement" && sectionInitials.some((v) => !v))
       return toast.error("Please initial each highlighted section of the agreement");
