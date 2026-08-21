@@ -45,11 +45,12 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization') ?? '';
     const svc = createClient(SUPABASE_URL, SERVICE_KEY);
+    const internal = isInternalCall(req);
     const asUser = createClient(SUPABASE_URL, SERVICE_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: userData } = await asUser.auth.getUser();
-    if (!userData.user) {
+    const { data: userData } = internal ? { data: { user: null } } : await asUser.auth.getUser();
+    if (!internal && !userData.user) {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders });
     }
 
