@@ -794,21 +794,11 @@ const InlineEmailComposer = ({
         <ListingOptionsInlinePanel
           seller={sellerContext}
           hasGenerated={listingBlockInserted}
-          onGenerated={(blockHtml) => {
-            // Remove any previously inserted block so regeneration replaces
-            // rather than duplicates.
-            const current = editorRef.current?.getHtml() ?? html;
-            const stripped = current.replace(
-              /<div data-listing-options="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
-              "",
-            );
-            editorRef.current?.setHtml(stripped);
-            editorRef.current?.insertHtmlBeforeSignature(blockHtml);
-            const next = editorRef.current?.getHtml() ?? blockHtml;
-            setHtml(next);
-            setBodyTouched(true);
-            setListingBlockInserted(true);
-            setSubject(quoteSubjectFor(sellerContext?.cemetery));
+          sending={sending}
+          onGenerated={(blockHtml) => insertQuoteBlock(blockHtml)}
+          onGeneratedAndSend={async (blockHtml) => {
+            const next = insertQuoteBlock(blockHtml);
+            await send(next);
           }}
         />
       )}
