@@ -722,7 +722,7 @@ export default function SignContract() {
               </Card>
 
 
-              {info?.kind !== "listing_agreement" && (
+              {!!info && (
               <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-8">
                 <div className="text-center">
                   <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Two last things</div>
