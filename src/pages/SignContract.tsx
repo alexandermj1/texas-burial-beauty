@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,6 +115,7 @@ export default function SignContract() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const navigate = useNavigate();
   /** Finished notary-ready PDF, returned when the document is completed. */
   const [finalPdfUrl, setFinalPdfUrl] = useState<string | null>(null);
 
@@ -263,6 +264,14 @@ export default function SignContract() {
       }
     })();
   }, [token]);
+
+  // Carry the seller straight from a signed listing agreement into the family
+  // tree questions instead of waiting on an email.
+  useEffect(() => {
+    if (!done || info?.kind !== "listing_agreement" || !submissionId) return;
+    const t = setTimeout(() => navigate(`/confirm?s=${submissionId}`), 6000);
+    return () => clearTimeout(t);
+  }, [done, info?.kind, submissionId, navigate]);
 
   const setField = (k: keyof SellerFields) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFields((f) => ({ ...f, [k]: e.target.value }));
@@ -654,6 +663,21 @@ export default function SignContract() {
                   A copy has been emailed to you. Texas Cemetery Brokers will countersign and send you the fully executed document shortly.
                 </p>
               </Card>
+
+              {info?.kind === "listing_agreement" && submissionId && (
+                <Card className="p-8 md:p-10 text-center bg-white border-[#1f2a37]/20">
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Last step</div>
+                  <h3 className="text-xl font-serif text-[#1f2a37] mb-2">Confirm who holds the right to sell</h3>
+                  <p className="text-sm text-muted-foreground max-w-xl mx-auto mb-6">
+                    A few short questions — about three minutes — so the cemetery can approve the transfer without delay.
+                    You can do it right now, no email needed.
+                  </p>
+                  <Button asChild className="bg-[#1f2a37] hover:bg-[#111827] text-white">
+                    <a href={`/confirm?s=${submissionId}`}>Continue to your questions →</a>
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground/70 mt-4">Taking you there automatically…</p>
+                </Card>
+              )}
 
               <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-8">
                 <div className="text-center">
