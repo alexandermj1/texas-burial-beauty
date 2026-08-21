@@ -280,6 +280,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Family tree (ownership questionnaire) filters: link sent vs seller finished.
   const [ftSentFilter, setFtSentFilter] = useState<boolean>(false);
   const [ftDoneFilter, setFtDoneFilter] = useState<boolean>(false);
+  // Archive: archived submissions are hidden from every pipeline view until this is on.
+  const [archivedView, setArchivedView] = useState<boolean>(false);
 
   // Draft for the editable accepted-price field (per submission). Keyed by submission id.
   const [acceptedPriceDraft, setAcceptedPriceDraft] = useState<Record<string, string>>({});
