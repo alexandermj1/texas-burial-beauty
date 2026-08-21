@@ -100,7 +100,7 @@ const SellerAnswersSummary = ({
                   )}
                   <Row
                     label={d.st === "deceased" ? "Spouse (not on the deed)" : "Spouse not on the deed"}
-                    value={`${yn(sp.has)}${sp.n ? ` — ${sp.n}` : ""}`}
+                    value={spouseValue(sp, d.n)}
                   />
                   {d.st === "deceased" && (
                     <>
