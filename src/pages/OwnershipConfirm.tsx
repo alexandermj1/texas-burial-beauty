@@ -1242,35 +1242,6 @@ const OwnershipConfirm = () => {
                   ))}
                 </div>
               </div>
-              <div style={{"background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "clamp(22px,4vw,32px) clamp(18px,3.6vw,32px)", "marginTop": "12px"}}>
-                <h3 style={{"margin": "0 0 3px 0", "fontSize": "21px", "fontWeight": "600", "letterSpacing": "-0.019em"}}>
-                  Documents we will likely need
-                </h3>
-                <p style={{"margin": "0 0 6px 0", "fontSize": "15px", "fontWeight": "300", "color": "#6e6e73"}}>
-                  Please do not send anything yet. A senior broker reviews your answers and then emails you the official list, with a secure link where you can upload each document.
-                </p>
-                {(V.docs || []).map((d: any, i29: number) => (
-                  <React.Fragment key={i29}>
-                    <div style={{"display": "flex", "gap": "15px", "padding": "16px 0", "borderTop": "1px solid #ececf0"}}>
-                      <div style={{"flex": "none", "width": "21px", "height": "21px", "marginTop": "1px", "borderRadius": "6px", "border": `1.5px solid ${d.boxBd}`, "background": `${d.boxBg}`}}>
-                      </div>
-                      <div style={{"flex": "1", "minWidth": "0"}}>
-                        <div style={{"fontSize": "16px", "fontWeight": "500", "letterSpacing": "-0.011em", "color": "#1d1d1f"}}>
-                          {d.name}
-                        </div>
-                        <div style={{"marginTop": "3px", "fontSize": "14.5px", "fontWeight": "300", "lineHeight": "1.5", "color": "#6e6e73", "textWrap": "pretty"}}>
-                          {d.why}
-                        </div>
-                        {d.have ? (<React.Fragment>
-                          <div style={{"marginTop": "5px", "fontSize": "13px", "fontWeight": "500", "color": `${V.accent}`}}>
-                            Already on file
-                          </div>
-                        </React.Fragment>) : null}
-                      </div>
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
               {V.hasFlags ? (<React.Fragment>
                 <div style={{"background": "#fdf6f3", "borderRadius": "20px", "border": "1px solid #f2ddd5", "padding": "clamp(22px,4vw,32px) clamp(18px,3.6vw,32px)", "marginTop": "12px"}}>
                   <h3 style={{"margin": "0 0 3px 0", "fontSize": "21px", "fontWeight": "600", "letterSpacing": "-0.019em", "color": "#7d3a28"}}>
