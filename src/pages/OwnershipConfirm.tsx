@@ -269,11 +269,29 @@ const OwnershipConfirm = () => {
         deed: (st.deed ?? []).map((d: any) => (dead.has(nameKey(d.n)) ? { ...d, st: "deceased" } : d)),
       });
       const saved = (p.answers as any)?.v2;
+      // The intake form already told us how they are related and what they are
+      // called — carry it straight into step two instead of asking twice.
+      const seedRelation = (st: any) => {
+        const raw = (p.relationship_to_owner ?? "").toLowerCase();
+        const rel = /son|daughter|child/.test(raw) && !/in.?law/.test(raw)
+          ? "Son or daughter"
+          : /spouse|husband|wife|widow/.test(raw)
+            ? "Husband or wife"
+            : /grandchild|grandson|granddaughter/.test(raw)
+              ? "Grandchild"
+              : "";
+        return {
+          ...st,
+          rel: st.rel || rel,
+          youName: st.youName || (rel ? (p.seller_name ?? "").trim() : ""),
+        };
+      };
       setState(
         saved && Array.isArray(saved.deed) && saved.deed.length
           ? saved
-          : seedDeaths(initialState(crm)),
+          : seedRelation(seedDeaths(initialState(crm))),
       );
+
 
       setLoading(false);
     })();
