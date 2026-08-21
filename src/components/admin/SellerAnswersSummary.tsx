@@ -141,7 +141,7 @@ const SellerAnswersSummary = ({
                   </p>
                   {k.st !== "deceased" && (
                     <>
-                      <Row label="Married" value={`${yn(hs.has)}${hs.n ? ` — ${hs.n}` : ""}`} />
+                      <Row label="Married" value={spouseValue(hs, k.n || "this heir")} />
                       {(k.kids ?? []).filter((g) => (g.n || "").trim()).map((g) => (
                         <Row key={g.id} label="Their child" value={g.n} />
                       ))}
