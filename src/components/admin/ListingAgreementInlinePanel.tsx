@@ -77,7 +77,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
   // Headline fields
   const [sellerName, setSellerName] = useState<string>(seller.name ?? "");
   const [plotCount, setPlotCount] = useState<string>(String(parseCount(seller.spaces)));
-  const [netTotal, setNetTotal] = useState<string>("");
   const [listingOption, setListingOption] = useState<string>("Starter");
 
   // Everything else on the agreement
@@ -90,7 +89,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
   const [countyState, setCountyState] = useState("");
   const [plotDescription, setPlotDescription] = useState("");
   const [perPlot, setPerPlot] = useState("");
-  const [perPlotTouched, setPerPlotTouched] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,9 +107,9 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
       const plots = parseCount(row.plot_count ?? row.spaces ?? seller.spaces);
       setPlotCount(String(plots));
       const quote = Number(row.quote_amount) || 0;
-      const total = quote > 0 ? quote * plots : Number(row.list_price) || 0;
-      setNetTotal(total > 0 ? String(total) : "");
-      setPerPlot(total > 0 ? String(Math.round(total / plots)) : "");
+      const listTotal = Number(row.list_price) || 0;
+      const per = quote > 0 ? quote : listTotal > 0 ? Math.round(listTotal / plots) : 0;
+      setPerPlot(per > 0 ? String(per) : "");
 
       const tier = String(row.listing_tier ?? row.listing_option ?? "").toLowerCase();
       const match = LISTING_OPTIONS.find(
@@ -150,8 +148,9 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
   }, [seller.id, seller.name, seller.spaces, seller.email, seller.cemetery]);
 
   const plots = Math.max(1, Number(plotCount) || 1);
-  const total = Number(netTotal) || 0;
-  const effectivePerPlot = perPlotTouched && perPlot ? Number(perPlot) : total > 0 ? Math.round(total / plots) : 0;
+  // Per-space price is the source of truth; the contract total is derived from it.
+  const effectivePerPlot = Number(perPlot) || 0;
+  const total = effectivePerPlot > 0 ? effectivePerPlot * plots : 0;
   const canGenerate = total > 0 && !busy && !loading;
 
   const generate = async () => {
@@ -223,14 +222,14 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
             className={inputCls}
           />
         </Field>
-        <Field label="Guaranteed net (total)" hint="Authorized minimum on the agreement.">
+        <Field label="Guaranteed net per space" hint={`× ${plots} space${plots === 1 ? "" : "s"} = ${total > 0 ? fmtUsd(total) : "—"} total`}>
           <input
             type="number"
             min="0"
-            step="100"
-            value={netTotal}
-            onChange={(e) => setNetTotal(e.target.value)}
-            placeholder={loading ? "Loading…" : "e.g. 53000"}
+            step="50"
+            value={perPlot}
+            onChange={(e) => setPerPlot(e.target.value)}
+            placeholder={loading ? "Loading…" : "e.g. 2650"}
             className={inputCls}
           />
         </Field>
@@ -309,18 +308,8 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, onGe
               className={inputCls}
             />
           </Field>
-          <Field label="Authorized minimum per space" hint="Defaults to total ÷ spaces.">
-            <input
-              type="number"
-              min="0"
-              step="50"
-              value={perPlotTouched ? perPlot : effectivePerPlot ? String(effectivePerPlot) : ""}
-              onChange={(e) => {
-                setPerPlotTouched(true);
-                setPerPlot(e.target.value);
-              }}
-              className={inputCls}
-            />
+          <Field label="Authorized minimum total" hint="Per space × spaces — printed on the agreement.">
+            <input type="text" readOnly value={total > 0 ? fmtUsd(total) : "—"} className={`${inputCls} bg-muted/50`} />
           </Field>
           <div className="col-span-2 md:col-span-3">
             <Field label="Property description" hint="Section / lawn / space numbers printed on page 1.">
