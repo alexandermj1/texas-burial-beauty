@@ -555,10 +555,37 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       {step === 3 && (
         <>
           <p className="text-[11px] text-muted-foreground">
-            The seller's questions are built from this roster. Type the names exactly as the deed reads and tick anyone
-            who has died — they go straight to this page after signing.
+            Check the names below against the deed they uploaded. That's all the family-tree email needs — the seller
+            answers the rest themselves after signing.
           </p>
+
+          {deedFiles.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {deedFiles.map((f) => (
+                <a
+                  key={f.url}
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 rounded-md border border-border/60 bg-background overflow-hidden hover:border-primary/50"
+                  title={f.name}
+                >
+                  {f.isImage ? (
+                    <img src={f.url} alt={`Deed uploaded by the seller: ${f.name}`} className="h-32 w-auto object-contain" />
+                  ) : (
+                    <span className="flex items-center gap-1.5 px-3 py-6 text-[11px] text-foreground">
+                      <Eye className="w-3 h-3" /> {f.name}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground italic">No deed was uploaded with the form.</p>
+          )}
+
           <div className="space-y-1.5">
+            <label className={labelCls}>Names on the deed</label>
             {roster.map((r, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
@@ -568,15 +595,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
                   }
                   placeholder="Name as it appears on the deed" className={inputCls}
                 />
-                <label className="inline-flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
-                  <input
-                    type="checkbox" checked={!!r.deceased}
-                    onChange={(e) =>
-                      setRoster((prev) => prev.map((p, j) => (j === i ? { ...p, deceased: e.target.checked } : p)))
-                    }
-                  />
-                  Deceased
-                </label>
                 <button
                   type="button"
                   onClick={() => setRoster((prev) => prev.filter((_, j) => j !== i))}
@@ -594,23 +612,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               <Plus className="w-3 h-3" /> Add a name from the deed
             </button>
           </div>
-          <div className="rounded-md border border-border/60 bg-background/60 p-2">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-              The family-tree email they'll receive after signing
-            </p>
-            <FamilyTreeInlinePanel
-              seller={{ id: seller.id, name: seller.name, cemetery: seller.cemetery }}
-              hasGenerated={!!familyTreeEmailHtml}
-              onGenerated={async (html) => {
-                setFamilyTreeEmailHtml(html);
-                await savePrepWith({ familyTreeEmailHtml: html });
-                toast({
-                  title: "Family tree email prepared",
-                  description: "Sent automatically once the listing agreement is signed.",
-                });
-              }}
-            />
-          </div>
+
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <button
               type="button" onClick={() => setStep(2)}
@@ -627,17 +629,20 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               </button>
               <button
                 type="button" onClick={generate} disabled={!canGenerate || busy}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
               >
-                {busy ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : hasGenerated ? (
-                  <RefreshCw className="w-3 h-3" />
-                ) : (
-                  <Sparkles className="w-3 h-3" />
-                )}
-                {busy ? "Generating…" : hasGenerated ? "Regenerate quote" : "Insert quote email"}
+                {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : hasGenerated ? <RefreshCw className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                {busy ? "Preparing…" : hasGenerated ? "Regenerate quote" : "Insert quote email"}
               </button>
+              {onGeneratedAndSend && (
+                <button
+                  type="button" onClick={() => generate(true)} disabled={!canGenerate || busy || !!sending}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  {busy || sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                  {sending ? "Sending…" : "Send quote email"}
+                </button>
+              )}
             </div>
           </div>
         </>
