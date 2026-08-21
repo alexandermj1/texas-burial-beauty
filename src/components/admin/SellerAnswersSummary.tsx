@@ -6,7 +6,14 @@ import { CheckCircle2, Users } from "lucide-react";
 
 type Deed = { id: string; n: string; st: string };
 type Kid = { id: string; n: string; st: string; of?: string[]; kids?: { id: string; n: string }[] };
-type YesNo = { has?: string; n?: string };
+type YesNo = { has?: string; n?: string; alive?: string };
+
+const spouseValue = (sp: { has?: string; n?: string; alive?: string }, of: string) => {
+  if (sp.has !== "yes") return sp.has === "no" ? "No" : sp.has ? "Not sure" : "—";
+  const who = (sp.n || "").trim() || "name not given";
+  const alive = sp.alive === "deceased" ? "has died" : sp.alive === "living" ? "living — must sign" : "living status not given";
+  return `${who} — husband/wife of ${of} (${alive})`;
+};
 
 export type V2State = {
   rel?: string; relOther?: string; selfIs?: string; youName?: string;
