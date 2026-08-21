@@ -276,8 +276,7 @@ export default function SignContract() {
   // tree questions instead of waiting on an email.
   useEffect(() => {
     if (!done || info?.kind !== "listing_agreement" || !submissionId) return;
-    const t = setTimeout(() => navigate(`/confirm?s=${submissionId}`), 600);
-    return () => clearTimeout(t);
+    navigate(`/confirm?s=${submissionId}`, { replace: true });
   }, [done, info?.kind, submissionId, navigate]);
 
   const ownPrice = /own price/i.test(fields.listing_option);
@@ -707,6 +706,11 @@ export default function SignContract() {
                 </p>
               </div>
             </Card>
+          ) : info?.kind === "listing_agreement" ? (
+            <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
+              <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
+              <h2 className="text-2xl font-serif text-emerald-900">Signature recorded — taking you to the family tree…</h2>
+            </Card>
           ) : (
             <div className="space-y-6">
               <Card className="p-10 text-center border-emerald-300 bg-emerald-50">
@@ -717,22 +721,8 @@ export default function SignContract() {
                 </p>
               </Card>
 
-              {info?.kind === "listing_agreement" && submissionId && (
-                <Card className="p-8 md:p-10 text-center bg-white border-[#1f2a37]/20">
-                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Final step before broker review &amp; documents</div>
-                  <h3 className="text-xl font-serif text-[#1f2a37] mb-2">Complete your family tree</h3>
-                  <p className="text-sm text-muted-foreground max-w-xl mx-auto mb-6">
-                    A few short questions — about three minutes — so the cemetery can approve the transfer without delay.
-                    You can do it right now, no email needed.
-                  </p>
-                  <Button asChild className="bg-[#1f2a37] hover:bg-[#111827] text-white">
-                    <a href={`/confirm?s=${submissionId}`}>Complete family tree →</a>
-                  </Button>
-                  <p className="text-[11px] text-muted-foreground/70 mt-4">Taking you there automatically…</p>
-                </Card>
-              )}
 
-              {info?.kind !== "listing_agreement" && (
+              {!!info && (
               <Card className="p-8 md:p-10 bg-white border-border/70 shadow-sm space-y-8">
                 <div className="text-center">
                   <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a6d3b] mb-2">Two last things</div>
