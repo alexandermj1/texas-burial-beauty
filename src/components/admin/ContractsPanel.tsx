@@ -12,6 +12,12 @@ import {
   ScrollText, Shield, Mail, PenLine, Send, X,
 } from "lucide-react";
 
+/** Seller-facing links must always point at the live site, never the admin's
+ *  preview origin (those return "access denied" for the seller). */
+const PUBLIC_LINK_ORIGIN = /localhost|127\.0\.0\.1|texascemeterybrokers\.com/.test(window.location.origin)
+  ? window.location.origin
+  : "https://www.texascemeterybrokers.com";
+
 
 type Contract = {
   id: string;
@@ -176,7 +182,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
       if (error) throw error;
       toast.success(`${KIND_LABEL[editKind]} generated with your edits`);
       if (editKind === "listing_agreement" && data?.sign_token) {
-        const link = `${window.location.origin}/sign/${data.sign_token}`;
+        const link = `${PUBLIC_LINK_ORIGIN}/sign/${data.sign_token}`;
         await navigator.clipboard.writeText(link).catch(() => {});
         toast.message("Signing link copied to clipboard", { description: link });
       }
@@ -192,7 +198,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
 
   const copySignLink = async (c: Contract) => {
     if (!c.sign_token) return;
-    const link = `${window.location.origin}/sign/${c.sign_token}`;
+    const link = `${PUBLIC_LINK_ORIGIN}/sign/${c.sign_token}`;
     await navigator.clipboard.writeText(link);
     toast.success("Signing link copied");
   };
@@ -201,7 +207,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
     if (!c.sign_token) return;
     setBusy(c.id);
     try {
-      const link = `${window.location.origin}/sign/${c.sign_token}`;
+      const link = `${PUBLIC_LINK_ORIGIN}/sign/${c.sign_token}`;
       const { data, error } = await supabase.functions.invoke("send-contract-link", {
         body: { contract_id: c.id, sign_url: link },
       });
