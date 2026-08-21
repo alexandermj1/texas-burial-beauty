@@ -15,7 +15,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const url = new URL(req.url);
-    const parsed = QuerySchema.safeParse({ session_id: url.searchParams.get("session_id") });
+    let sessionId = url.searchParams.get("session_id");
+    if (!sessionId && req.method === "POST") {
+      try { sessionId = (await req.json())?.session_id ?? null; } catch { /* ignore */ }
+    }
+    const parsed = QuerySchema.safeParse({ session_id: sessionId });
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: "invalid session_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
