@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CemeteryFiles from "./CemeteryFiles";
+import { cemeteryCanon } from "@/lib/cemeteryCanon";
 
 
 interface SectionEntry {
@@ -46,8 +47,7 @@ interface Props {
   onClear: () => void;
 }
 
-const canonicalize = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+const canonicalize = (s: string) => cemeteryCanon(s);
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const fmtDate = (iso: string) => {
