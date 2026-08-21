@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, Send, MessageSquare, Users, Check } from "lucide-react";
+import { X, Send, MessageSquare, Users, Check, ListTodo } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { cleanDisplayName } from "@/lib/displayName";
+import TeamTasksPanel from "./TeamTasksPanel";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   /** Optionally pre-select a single recipient user ID when opening. */
   prefillTo?: string | null;
+  /** Open straight onto the shared team list instead of the message form. */
+  initialView?: "message" | "tasks";
 }
 
 interface Teammate {
@@ -21,7 +24,8 @@ interface Teammate {
 
 // Send a direct message (or team-wide broadcast) that lands in the recipient's
 // notification bell. Pick one or more teammates, or "Everyone".
-const BroadcastDialog = ({ open, onClose, prefillTo }: Props) => {
+const BroadcastDialog = ({ open, onClose, prefillTo, initialView = "message" }: Props) => {
+  const [view, setView] = useState<"message" | "tasks">(initialView);
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -32,6 +36,7 @@ const BroadcastDialog = ({ open, onClose, prefillTo }: Props) => {
 
   useEffect(() => {
     if (!open) return;
+    setView(initialView);
     setTitle("");
     setBody("");
     setEveryone(false);
@@ -53,7 +58,7 @@ const BroadcastDialog = ({ open, onClose, prefillTo }: Props) => {
         setSelected(new Set());
       }
     })();
-  }, [open, user?.id, prefillTo]);
+  }, [open, user?.id, prefillTo, initialView]);
 
   const myName = cleanDisplayName(user?.user_metadata?.full_name) || user?.email?.split("@")[0] || "Someone";
 
@@ -97,18 +102,35 @@ const BroadcastDialog = ({ open, onClose, prefillTo }: Props) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        className={`bg-card border border-border rounded-2xl w-full ${view === "tasks" ? "max-w-2xl" : "max-w-lg"} p-6 space-y-4 max-h-[90vh] overflow-y-auto`}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="w-9 h-9 rounded-full bg-primary/15 text-primary flex items-center justify-center"><MessageSquare className="w-4 h-4" /></span>
             <div>
-              <h3 className="font-display text-lg text-foreground">Message a teammate</h3>
-              <p className="text-[11px] text-muted-foreground">Lands in their notification bell instantly.</p>
+              <h3 className="font-display text-lg text-foreground">{view === "tasks" ? "Team list" : "Message a teammate"}</h3>
+              <p className="text-[11px] text-muted-foreground">{view === "tasks" ? "One shared to-do list for the whole team." : "Lands in their notification bell instantly."}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setView(view === "tasks" ? "message" : "tasks")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-colors ${
+                view === "tasks" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:border-primary/50"
+              }`}
+            >
+              {view === "tasks" ? <MessageSquare className="w-3 h-3" /> : <ListTodo className="w-3 h-3" />}
+              {view === "tasks" ? "Message" : "Team list"}
+            </button>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+          </div>
         </div>
+
+        {view === "tasks" ? (
+          <TeamTasksPanel />
+        ) : (
+        <>
 
         <div>
           <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground mb-2">To</p>
@@ -165,6 +187,8 @@ const BroadcastDialog = ({ open, onClose, prefillTo }: Props) => {
             {sending ? "Sending..." : recipients.length > 0 ? `Send to ${recipients.length}` : "Pick a recipient"}
           </button>
         </div>
+        </>
+        )}
       </motion.div>
     </div>
   );
