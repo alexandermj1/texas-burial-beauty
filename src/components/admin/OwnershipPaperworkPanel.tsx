@@ -16,8 +16,8 @@ import { openFileViewer } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
-import {
 import { softDelete } from "@/lib/softDelete";
+import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
   canIssueJointPoa, isDeceasedPerson, mailsByDefault,
