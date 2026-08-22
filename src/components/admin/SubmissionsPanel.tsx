@@ -816,10 +816,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (!canon) continue;
       const at = inventory.get(canon);
       if (!at) continue;
+      const atMs = new Date(at).getTime();
+      // Cleared once we've emailed this buyer back after the match appeared, or
+      // once an admin dismissed it. A NEW inbound email puts them back in
+      // "Needs reply" through the normal awaitingMap path.
+      const repliedAt = lastOutgoingMap[s.id];
+      if (repliedAt && new Date(repliedAt).getTime() >= atMs) continue;
+      const dismissedAt = (s as any).reply_dismissed_at;
+      if (dismissedAt && new Date(dismissedAt).getTime() >= atMs) continue;
       out[s.id] = { cemetery: s.cemetery || "", at };
     }
     return out;
-  }, [submissions]);
+  }, [submissions, lastOutgoingMap]);
 
   // Needs-reply set including buyers surfaced by a fresh plot match.
   const awaitingAll = useMemo(() => {
