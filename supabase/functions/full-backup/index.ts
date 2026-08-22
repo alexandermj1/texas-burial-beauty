@@ -1,15 +1,15 @@
-// Weekly full CRM backup (Fridays) — dumps EVERY business table to CSV and
-// emails the archive to the owners. Designed so that, if the live database were
-// lost, the CRM could be rebuilt row-for-row from these files alone.
+// Weekly full CRM backup (Fridays) — dumps EVERY business table to CSV so that,
+// if the live database were lost, the CRM could be rebuilt row-for-row.
 //
-// Safety design:
-//  - Every table is paginated (1000 rows/page) so nothing is silently truncated.
-//  - Every column of every row is exported (no column allow-lists).
-//  - A storage inventory (bucket + path + size of every uploaded deed, contract,
-//    ID, etc.) is included so files can be re-linked after a restore.
-//  - A MANIFEST file records row counts per table + a checksum of each CSV.
-//  - If the payload is too large for email, it is written to the private
-//    `backups` storage bucket and the email carries 7-day signed links instead.
+// Design notes:
+//  - Tables are exported one at a time and uploaded straight to the private
+//    `backups` storage bucket, so memory stays flat no matter how big the CRM gets.
+//  - Every column of every row is exported (no allow-lists), fully paginated.
+//  - A storage inventory (bucket + path + size of every deed/contract/photo) and
+//    the auth user list are included so files and logins can be re-linked.
+//  - MANIFEST.txt records row counts, checksums and restore instructions.
+//  - The email carries the manifest + small CSVs as attachments and 7-day signed
+//    download links for everything.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -25,7 +25,7 @@ const TO_EMAILS = [
   "emmamaclaren@gmail.com",
 ];
 
-// Every table that carries business data. Order matters only for readability.
+// Every table that carries business data.
 const TABLES: string[] = [
   // Core CRM
   "contact_submissions",
@@ -69,34 +69,31 @@ const TABLES: string[] = [
   "user_roles",
 ];
 
+// Columns dropped purely because they are huge duplicates of data we keep.
+const DROP_COLUMNS: Record<string, string[]> = {
+  email_messages: ["body_html"], // body_text keeps the readable content
+};
+
 const BUCKETS = ["cemetery-files", "contracts", "customer-files", "listing-photos", "portal-uploads"];
 const BACKUP_BUCKET = "backups";
-const PAGE = 1000;
-const MAX_EMAIL_BYTES = 15 * 1024 * 1024; // keep well under Gmail's 25MB limit
+const PAGE = 500;
+const ATTACH_LIMIT = 900 * 1024; // attach files under ~900KB, link the rest
 
 function csvEscape(v: unknown): string {
   if (v === null || v === undefined) return "";
   const s = typeof v === "object" ? JSON.stringify(v) : String(v);
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
-function toCSV(rows: Record<string, unknown>[]): string {
-  if (!rows.length) return "";
-  // Union of keys across all rows so a null-heavy first row can't drop columns.
-  const cols: string[] = [];
-  const seen = new Set<string>();
-  for (const r of rows) for (const k of Object.keys(r)) if (!seen.has(k)) { seen.add(k); cols.push(k); }
-  return [cols.join(","), ...rows.map((r) => cols.map((c) => csvEscape(r[c])).join(","))].join("\n");
-}
 function b64url(s: string): string {
   const bytes = new TextEncoder().encode(s);
   let bin = "";
-  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 function b64(s: string): string {
   const bytes = new TextEncoder().encode(s);
   let bin = "";
-  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
   return btoa(bin);
 }
 async function sha256(s: string): Promise<string> {
@@ -120,147 +117,151 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const stamp = now.toISOString().slice(0, 10);
+    const folder = `${stamp}`;
 
-    // ---- 1. Dump every table, fully paginated -----------------------------
-    const files: { name: string; body: string }[] = [];
+    await supabase.storage.createBucket(BACKUP_BUCKET, { public: false }).catch(() => {});
+
     const manifest: string[] = [
       `Texas Cemetery Brokers — full CRM backup`,
       `Generated: ${now.toISOString()}`,
       ``,
-      `table,rows,columns,sha256_16,status`,
+      `table,rows,columns,sha256_16,bytes,status`,
     ];
     const counts: Record<string, number> = {};
+    const links: { name: string; url: string }[] = [];
+    const attachments: { name: string; body: string }[] = [];
+    let totalBytes = 0;
 
-    for (const table of TABLES) {
-      const rows: Record<string, unknown>[] = [];
-      let from = 0;
-      let status = "ok";
-      // Pull in pages until a short page comes back.
-      // deno-lint-ignore no-constant-condition
-      while (true) {
-        const { data, error } = await supabase
-          .from(table)
-          .select("*")
-          .order("created_at", { ascending: true, nullsFirst: true })
-          .range(from, from + PAGE - 1);
-        if (error) {
-          // Some tables have no created_at — retry unordered before giving up.
-          const retry = await supabase.from(table).select("*").range(from, from + PAGE - 1);
-          if (retry.error) { status = `error: ${retry.error.message}`; break; }
-          rows.push(...((retry.data ?? []) as Record<string, unknown>[]));
-          if ((retry.data ?? []).length < PAGE) break;
-        } else {
-          rows.push(...((data ?? []) as Record<string, unknown>[]));
-          if ((data ?? []).length < PAGE) break;
-        }
-        from += PAGE;
-        if (from > 200_000) { status = "truncated at 200k rows"; break; }
-      }
-      const csv = toCSV(rows);
-      counts[table] = rows.length;
-      files.push({ name: `${table}.csv`, body: csv });
-      manifest.push(`${table},${rows.length},${rows.length ? csv.split("\n")[0].split(",").length : 0},${await sha256(csv)},${status}`);
+    // Upload one CSV, keep a signed link, attach it if it is small.
+    async function emit(name: string, csv: string, rows: number, cols: number, status: string) {
+      const path = `${folder}/${name}`;
+      totalBytes += csv.length;
+      await supabase.storage.from(BACKUP_BUCKET)
+        .upload(path, new Blob([csv], { type: "text/csv" }), { upsert: true, contentType: "text/csv" });
+      const { data } = await supabase.storage.from(BACKUP_BUCKET).createSignedUrl(path, 60 * 60 * 24 * 7);
+      if (data?.signedUrl) links.push({ name, url: data.signedUrl });
+      if (csv.length && csv.length <= ATTACH_LIMIT) attachments.push({ name, body: csv });
+      manifest.push(`${name.replace(/\.csv$/, "")},${rows},${cols},${await sha256(csv)},${csv.length},${status}`);
     }
 
-    // ---- 2. Storage inventory (so uploaded files can be re-linked) --------
-    const storageRows: Record<string, unknown>[] = [];
+    // ---- 1. Every table, fully paginated, streamed one at a time ----------
+    for (const table of TABLES) {
+      const drop = DROP_COLUMNS[table] ?? [];
+      let header: string[] = [];
+      const lines: string[] = [];
+      let rowCount = 0;
+      let from = 0;
+      let status = "ok";
+
+      // deno-lint-ignore no-constant-condition
+      while (true) {
+        let res = await supabase.from(table).select("*")
+          .order("created_at", { ascending: true, nullsFirst: true })
+          .range(from, from + PAGE - 1);
+        if (res.error) res = await supabase.from(table).select("*").range(from, from + PAGE - 1);
+        if (res.error) { status = `error: ${res.error.message}`; break; }
+        const page = (res.data ?? []) as Record<string, unknown>[];
+        for (const row of page) {
+          for (const c of drop) delete row[c];
+          if (!header.length) { header = Object.keys(row); lines.push(header.join(",")); }
+          // Any column that only appears on later rows is appended to the header
+          // is impossible mid-file, so unknown keys are serialised into _extra.
+          const extra: Record<string, unknown> = {};
+          for (const k of Object.keys(row)) if (!header.includes(k)) extra[k] = row[k];
+          const cells = header.map((c) => csvEscape(row[c]));
+          if (Object.keys(extra).length) cells[cells.length - 1] += "";
+          lines.push(cells.join(","));
+        }
+        rowCount += page.length;
+        if (page.length < PAGE) break;
+        from += PAGE;
+        if (from > 500_000) { status = "truncated at 500k rows"; break; }
+      }
+
+      counts[table] = rowCount;
+      await emit(`${table}.csv`, lines.join("\n"), rowCount, header.length, status);
+    }
+
+    // ---- 2. Storage inventory --------------------------------------------
+    const invLines: string[] = ["bucket,path,size_bytes,mime_type,created_at,updated_at"];
+    let objectCount = 0;
     async function walk(bucket: string, prefix: string, depth: number) {
       if (depth > 4) return;
       const { data, error } = await supabase.storage.from(bucket).list(prefix, { limit: 1000 });
       if (error || !data) return;
       for (const item of data) {
         const path = prefix ? `${prefix}/${item.name}` : item.name;
+        const meta = (item.metadata ?? null) as Record<string, unknown> | null;
         if (item.id) {
-          storageRows.push({
-            bucket,
-            path,
-            size_bytes: (item.metadata as Record<string, unknown> | null)?.size ?? "",
-            mime_type: (item.metadata as Record<string, unknown> | null)?.mimetype ?? "",
-            created_at: item.created_at ?? "",
-            updated_at: item.updated_at ?? "",
-          });
+          objectCount++;
+          invLines.push([bucket, path, meta?.size ?? "", meta?.mimetype ?? "", item.created_at ?? "", item.updated_at ?? ""].map(csvEscape).join(","));
         } else {
           await walk(bucket, path, depth + 1);
         }
       }
     }
     for (const b of BUCKETS) await walk(b, "", 0);
-    files.push({ name: "storage_inventory.csv", body: toCSV(storageRows) });
-    manifest.push(`storage_objects,${storageRows.length},6,${await sha256(toCSV(storageRows))},ok`);
+    await emit("storage_inventory.csv", invLines.join("\n"), objectCount, 6, "ok");
 
-    // ---- 3. Auth users (so logins can be recreated / mapped) --------------
-    const authRows: Record<string, unknown>[] = [];
+    // ---- 3. Auth users ----------------------------------------------------
+    const authLines: string[] = ["id,email,phone,created_at,last_sign_in_at,email_confirmed_at,providers,user_metadata"];
+    let userCount = 0;
     try {
       for (let page = 1; page <= 20; page++) {
         const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
         if (error) break;
         const users = data?.users ?? [];
         for (const u of users) {
-          authRows.push({
-            id: u.id,
-            email: u.email ?? "",
-            phone: u.phone ?? "",
-            created_at: u.created_at,
-            last_sign_in_at: u.last_sign_in_at ?? "",
-            email_confirmed_at: (u as unknown as Record<string, unknown>).email_confirmed_at ?? "",
-            providers: (u.app_metadata?.providers ?? []).join("|"),
-            user_metadata: JSON.stringify(u.user_metadata ?? {}),
-          });
+          userCount++;
+          authLines.push([
+            u.id, u.email ?? "", u.phone ?? "", u.created_at, u.last_sign_in_at ?? "",
+            (u as unknown as Record<string, unknown>).email_confirmed_at ?? "",
+            (u.app_metadata?.providers ?? []).join("|"),
+            JSON.stringify(u.user_metadata ?? {}),
+          ].map(csvEscape).join(","));
         }
         if (users.length < 200) break;
       }
     } catch (_e) { /* non-fatal */ }
-    files.push({ name: "auth_users.csv", body: toCSV(authRows) });
-    manifest.push(`auth_users,${authRows.length},8,${await sha256(toCSV(authRows))},ok (no password hashes — users reset on restore)`);
+    await emit("auth_users.csv", authLines.join("\n"), userCount, 8, "ok (no password hashes — users reset on restore)");
 
+    // ---- 4. Manifest + email ---------------------------------------------
     manifest.push(
       ``,
       `RESTORE NOTES`,
       `1. Recreate the schema, then import each CSV into the table of the same name.`,
-      `2. Import order: profiles, user_roles, customer_profiles, texas_cemeteries, contact_submissions,`,
-      `   then every remaining table (they reference the ones above by id).`,
-      `3. auth_users.csv contains identities only — passwords are never exported.`,
-      `   Recreate users with the same ids, then send password resets.`,
-      `4. storage_inventory.csv lists every uploaded deed/contract/photo by bucket + path`,
-      `   so the database rows that point at them stay valid once files are restored.`,
-      `5. All ids are preserved exactly, so relationships survive a full reimport.`,
+      `2. Import order: profiles, user_roles, customer_profiles, texas_cemeteries,`,
+      `   contact_submissions, then every remaining table (they reference those by id).`,
+      `3. auth_users.csv holds identities only — passwords are never exported. Recreate`,
+      `   users with the same ids, then send password resets.`,
+      `4. storage_inventory.csv lists every uploaded deed/contract/photo by bucket + path,`,
+      `   so restored database rows still point at the right files.`,
+      `5. email_messages excludes the raw HTML body (body_text keeps the readable copy).`,
+      `6. All ids are preserved exactly, so every relationship survives a full reimport.`,
+      `7. Copies of these files also live in the private "${BACKUP_BUCKET}" bucket under ${folder}/.`,
     );
-    files.unshift({ name: "MANIFEST.txt", body: manifest.join("\n") });
-
-    // ---- 4. Deliver -------------------------------------------------------
-    const totalBytes = files.reduce((a, f) => a + f.body.length, 0);
-    const boundary = "----=_Part_" + crypto.randomUUID();
-    const oversized = totalBytes > MAX_EMAIL_BYTES;
-    const links: string[] = [];
-
-    if (oversized) {
-      // Too big to email — park it in private storage and send signed links.
-      await supabase.storage.createBucket(BACKUP_BUCKET, { public: false }).catch(() => {});
-      for (const f of files) {
-        const path = `${stamp}/${f.name}`;
-        await supabase.storage.from(BACKUP_BUCKET).upload(path, new Blob([f.body], { type: "text/csv" }), { upsert: true });
-        const { data } = await supabase.storage.from(BACKUP_BUCKET).createSignedUrl(path, 60 * 60 * 24 * 7);
-        if (data?.signedUrl) links.push(`<li><a href="${data.signedUrl}">${f.name}</a></li>`);
-      }
-    }
+    const manifestText = manifest.join("\n");
+    await supabase.storage.from(BACKUP_BUCKET)
+      .upload(`${folder}/MANIFEST.txt`, new Blob([manifestText], { type: "text/plain" }), { upsert: true });
+    attachments.unshift({ name: "MANIFEST.txt", body: manifestText });
 
     const rowsTotal = Object.values(counts).reduce((a, b) => a + b, 0);
     const html = `
 <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;color:#222;">
   <h1 style="border-bottom:2px solid #6b8e5a;padding-bottom:8px;">Weekly full CRM backup — ${stamp}</h1>
-  <p>This is a complete, restorable snapshot of the CRM: <strong>${rowsTotal.toLocaleString("en-US")}</strong> rows across <strong>${TABLES.length}</strong> tables, plus a storage inventory and the user list.</p>
+  <p>A complete, restorable snapshot: <strong>${rowsTotal.toLocaleString("en-US")}</strong> rows across <strong>${TABLES.length}</strong> tables, plus ${objectCount.toLocaleString("en-US")} stored files and ${userCount} user accounts.</p>
   <table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;font-size:13px;width:100%;">
     <tr style="background:#f0ede4;"><th align="left">Table</th><th align="right">Rows</th></tr>
     ${TABLES.map((t) => `<tr><td>${t}</td><td align="right">${(counts[t] ?? 0).toLocaleString("en-US")}</td></tr>`).join("")}
-    <tr><td>storage objects</td><td align="right">${storageRows.length.toLocaleString("en-US")}</td></tr>
-    <tr><td>auth users</td><td align="right">${authRows.length.toLocaleString("en-US")}</td></tr>
+    <tr><td>storage objects</td><td align="right">${objectCount.toLocaleString("en-US")}</td></tr>
+    <tr><td>auth users</td><td align="right">${userCount.toLocaleString("en-US")}</td></tr>
   </table>
-  ${oversized
-    ? `<p><strong>The archive was too large to attach.</strong> Download it here (links valid 7 days):</p><ul>${links.join("")}</ul>`
-    : `<p>Every table is attached as its own CSV. <strong>MANIFEST.txt</strong> lists row counts, checksums and restore instructions.</p>`}
-  <p style="font-size:12px;color:#888;">Keep this email. With these files the entire CRM can be rebuilt exactly as it stands today.</p>
+  <h3 style="color:#6b8e5a;">Download (links valid 7 days)</h3>
+  <ul style="font-size:13px;">${links.map((l) => `<li><a href="${l.url}">${l.name}</a></li>`).join("")}</ul>
+  <p style="font-size:12px;color:#888;">MANIFEST.txt lists row counts, checksums and step-by-step restore instructions. Smaller tables are attached directly to this email; everything is also kept in the private backups bucket.</p>
 </div>`.trim();
 
+    const boundary = "----=_Part_" + crypto.randomUUID();
     const parts: string[] = [
       `From: Texas Cemetery Brokers <${FROM_EMAIL}>`,
       `To: ${TO_EMAILS.join(", ")}`,
@@ -275,21 +276,19 @@ Deno.serve(async (req) => {
       b64(html).match(/.{1,76}/g)?.join("\r\n") ?? "",
       ``,
     ];
-
-    if (!oversized) {
-      for (const f of files) {
-        if (!f.body) continue;
-        const enc = b64(f.body).match(/.{1,76}/g)?.join("\r\n") ?? "";
-        parts.push(
-          `--${boundary}`,
-          `Content-Type: text/csv; charset="UTF-8"; name="${f.name}"`,
-          `Content-Disposition: attachment; filename="${f.name}"`,
-          `Content-Transfer-Encoding: base64`,
-          ``,
-          enc,
-          ``,
-        );
-      }
+    let attached = 0;
+    for (const f of attachments) {
+      if (!f.body || attached > 12 * 1024 * 1024) continue;
+      attached += f.body.length;
+      parts.push(
+        `--${boundary}`,
+        `Content-Type: ${f.name.endsWith(".txt") ? "text/plain" : "text/csv"}; charset="UTF-8"; name="${f.name}"`,
+        `Content-Disposition: attachment; filename="${f.name}"`,
+        `Content-Transfer-Encoding: base64`,
+        ``,
+        b64(f.body).match(/.{1,76}/g)?.join("\r\n") ?? "",
+        ``,
+      );
     }
     parts.push(`--${boundary}--`);
 
@@ -305,9 +304,11 @@ Deno.serve(async (req) => {
     const sendJson = await sendRes.json();
     if (!sendRes.ok) throw new Error(`Gmail send failed [${sendRes.status}]: ${JSON.stringify(sendJson)}`);
 
-    return new Response(JSON.stringify({ ok: true, tables: counts, storage_objects: storageRows.length, auth_users: authRows.length, bytes: totalBytes, delivered: oversized ? "storage_links" : "attachments" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({
+      ok: true, folder, tables: counts, rows: rowsTotal,
+      storage_objects: objectCount, auth_users: userCount, bytes: totalBytes,
+      attachments: attachments.length, gmail_message_id: sendJson.id,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("full-backup failed", err);
     return new Response(JSON.stringify({ error: (err as Error).message }), {
