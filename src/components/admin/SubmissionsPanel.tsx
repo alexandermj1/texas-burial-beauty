@@ -542,8 +542,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
 
       const nextLastInteraction: Record<string, string> = {};
-      for (const [sid, info] of latestPerSub.entries()) nextLastInteraction[sid] = info.received_at;
+      const nextLastOutgoing: Record<string, string> = {};
+      for (const [sid, info] of latestPerSub.entries()) {
+        nextLastInteraction[sid] = info.received_at;
+        if (info.outgoing) nextLastOutgoing[sid] = info.received_at;
+      }
       setLastInteractionMap(nextLastInteraction);
+      setLastOutgoingMap(nextLastOutgoing);
       const nextAwaiting: Record<string, string> = {};
 
       const nextFollowup: Record<string, { since: string; phrase: string }> = {};
