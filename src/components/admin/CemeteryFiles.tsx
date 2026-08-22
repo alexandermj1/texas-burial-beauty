@@ -47,7 +47,7 @@ export default function CemeteryFiles({ cemeteryId, cemeteryName }: { cemeteryId
     setLoading(true);
     const { data, error } = await supabase
       .from("cemetery_files" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("cemetery_id", cemeteryId)
       .order("created_at", { ascending: false });
     if (!error && data) setFiles(data as any);

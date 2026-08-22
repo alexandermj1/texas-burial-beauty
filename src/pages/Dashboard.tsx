@@ -41,7 +41,7 @@ const Dashboard = () => {
   const fetchListings = async () => {
     const { data, error } = await supabase
       .from("listings")
-      .select("id, cemetery, city, plot_type, section, spaces, status, created_at")
+      .select("id, cemetery, city, plot_type, section, spaces, status, created_at").is("deleted_at", null)
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
 

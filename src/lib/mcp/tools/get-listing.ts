@@ -18,7 +18,7 @@ export default defineTool({
     );
     const { data, error } = await supabase
       .from("listings")
-      .select("id, cemetery, city, plot_type, section, spaces, asking_price, description, status, photos")
+      .select("id, cemetery, city, plot_type, section, spaces, asking_price, description, status, photos").is("deleted_at", null)
       .eq("id", id)
       .eq("status", "active")
       .maybeSingle();

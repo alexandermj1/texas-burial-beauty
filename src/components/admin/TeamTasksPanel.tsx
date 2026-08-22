@@ -70,7 +70,7 @@ const TeamTasksPanel = () => {
   const load = async () => {
     const { data } = await supabase
       .from("team_tasks" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .order("done", { ascending: true })
       .order("created_at", { ascending: false });
     setTasks(((data as any[]) || []) as Task[]);

@@ -208,7 +208,7 @@ export const Properties2Browser = () => {
     (async () => {
       const { data } = await supabase
         .from("listings")
-        .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, profit")
+        .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, profit").is("deleted_at", null)
         .in("status", ["active", "available"])
         .order("created_at", { ascending: false })
         .limit(200);

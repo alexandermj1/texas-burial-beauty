@@ -35,7 +35,7 @@ const TeamTasksStartup = ({ onOpenList }: { onOpenList: () => void }) => {
     (async () => {
       const { data } = await supabase
         .from("team_tasks" as any)
-        .select("id, title, detail, assigned_to, assigned_name, created_by_name, due_date, priority")
+        .select("id, title, detail, assigned_to, assigned_name, created_by_name, due_date, priority").is("deleted_at", null)
         .eq("done", false)
         .or(`assigned_to.eq.${user.id},assigned_to.is.null`)
         .order("due_date", { ascending: true, nullsFirst: false });

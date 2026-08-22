@@ -69,7 +69,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     setLoading(true);
     const { data, error } = await supabase
       .from("customer_files" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("customer_profile_id", customerId)
       .order("created_at", { ascending: false });
     if (!error && data) setFiles(data as any);

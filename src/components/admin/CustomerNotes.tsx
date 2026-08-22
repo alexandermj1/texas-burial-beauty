@@ -126,7 +126,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     (async () => {
       const { data } = await supabase
         .from("customer_notes" as any)
-        .select("*")
+        .select("*").is("deleted_at", null)
         .eq(scopeColumn, scopeId)
         .order("created_at", { ascending: false });
       if (!cancelled && data) setNotes(data as any);
@@ -224,7 +224,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       parent_note_id: parentId,
     };
     insertPayload[scopeColumn] = scopeId;
-    const { data, error } = await supabase.from("customer_notes" as any).insert(insertPayload).select().single();
+    const { data, error } = await supabase.from("customer_notes" as any).insert(insertPayload).select().is("deleted_at", null).single();
     if (error) {
       toast({ title: "Could not save note", description: error.message, variant: "destructive" });
       setDraft(body);

@@ -241,7 +241,7 @@ export default function ActivityMonitorPanel() {
         .limit(500),
       supabase
         .from("customer_notes" as any)
-        .select("id, body, author_name, author_user_id, created_at, submission_id, customer_profile_id")
+        .select("id, body, author_name, author_user_id, created_at, submission_id, customer_profile_id").is("deleted_at", null)
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(500),

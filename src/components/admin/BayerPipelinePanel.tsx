@@ -125,7 +125,7 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
 
   const refresh = async () => {
     const [p, r] = await Promise.all([
-      supabase.from("poa_records" as any).select("*").eq("submission_id", submission.id).order("created_at"),
+      supabase.from("poa_records" as any).select("*").is("deleted_at", null).eq("submission_id", submission.id).order("created_at"),
       supabase.from("quote_revisions" as any).select("*").eq("submission_id", submission.id).order("created_at", { ascending: false }),
     ]);
     if (p.data) setPoas(p.data as any);

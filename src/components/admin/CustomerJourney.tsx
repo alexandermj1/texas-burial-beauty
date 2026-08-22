@@ -123,7 +123,7 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
       orParts.push(`to_email.ilike.%${addr}%`);
     }
     const [d, r, e] = await Promise.all([
-      supabase.from("submission_documents" as any).select("*")
+      supabase.from("submission_documents" as any).select("*").is("deleted_at", null)
         .eq("submission_id", submission.id).order("created_at", { ascending: true }),
       supabase.from("reminder_log" as any).select("*")
         .eq("submission_id", submission.id).order("sent_at", { ascending: false }),

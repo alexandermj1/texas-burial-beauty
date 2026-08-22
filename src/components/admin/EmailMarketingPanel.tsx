@@ -156,7 +156,7 @@ const AudiencePanel = ({ brand }: { brand: MarketingBrand }) => {
     setLoading(true);
     const { data } = await supabase
       .from("marketing_contacts" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("brand", brand)
       .order("created_at", { ascending: false })
       .limit(2000);
@@ -338,7 +338,7 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
     (async () => {
       const { count } = await supabase
         .from("marketing_contacts" as any)
-        .select("id", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true }).is("deleted_at", null)
         .eq("brand", brand)
         .is("unsubscribed_at", null)
         .is("bounced_at", null)
@@ -348,7 +348,7 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
     (async () => {
       const { data } = await supabase
         .from("marketing_contacts" as any)
-        .select("*")
+        .select("*").is("deleted_at", null)
         .eq("brand", brand)
         .is("unsubscribed_at", null)
         .is("bounced_at", null)

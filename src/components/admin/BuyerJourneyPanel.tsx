@@ -35,7 +35,7 @@ const BuyerJourneyPanel = ({ submission, onOpenSend }: { submission: Submission;
     setLoading(true);
     const { data } = await supabase
       .from("buyer_recommendations" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("submission_id", submission.id)
       .order("sent_at", { ascending: false });
     if (data) setRecs(data as any);

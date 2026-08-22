@@ -94,7 +94,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
     setLoading(true);
     const [c, a, subs] = await Promise.all([
       supabase.from("texas_cemeteries").select("id,name,city,address,county,latitude,longitude,contact_phone,website,description").order("name"),
-      supabase.from("agent_locations" as any).select("*").order("name"),
+      supabase.from("agent_locations" as any).select("*").is("deleted_at", null).order("name"),
       supabase.from("contact_submissions").select("cemetery").not("cemetery", "is", null),
     ]);
     if (c.data) setCemeteries(c.data as any);
