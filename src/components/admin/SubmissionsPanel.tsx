@@ -945,14 +945,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   // Texas-only: count submissions per canonical cemetery name for the "N other submissions" chip.
   const texasCemeteryCounts = useMemo(() => {
-    const m = new Map<string, number>();
+    // Count distinct people (same email = one merged card), not raw rows, so the
+    // badge matches what "View submissions at this cemetery" actually lists.
+    const people = new Map<string, Set<string>>();
     for (const s of texasSubmissions) {
       const k = _canon(s.cemetery || "");
       if (!k) continue;
-      m.set(k, (m.get(k) || 0) + 1);
+      const person = (s.email || "").trim().toLowerCase() || `id:${s.id}`;
+      if (!people.has(k)) people.set(k, new Set());
+      people.get(k)!.add(person);
     }
+    const m = new Map<string, number>();
+    for (const [k, set] of people) m.set(k, set.size);
     return m;
   }, [texasSubmissions]);
+
 
   // Texas cemetery directory profiles, keyed by canonical name. Used to enrich the
   // selected submission's cemetery box with our known transfer fee / contact /
@@ -3118,7 +3125,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               key={cemeteryCanon}
               canon={cemeteryCanon}
               displayName={cemeteryLabel}
-              submissionCount={texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon).length}
+              submissionCount={texasCemeteryCounts.get(cemeteryCanon) || 0}
               onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
             />
           </>

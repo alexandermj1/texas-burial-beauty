@@ -818,22 +818,26 @@ const Admin = () => {
             const q = searchQuery.trim().toLowerCase();
             let matchedCem: { canon: string; name: string; count: number } | null = null;
             if (q.length >= 3) {
-              const tally = new Map<string, { name: string; count: number }>();
+              // Count distinct people — duplicate submissions from one email merge
+              // into a single card in the list, so they must count once here too.
+              const tally = new Map<string, { name: string; people: Set<string> }>();
               for (const s of submissions as any[]) {
                 const cem = (s.cemetery || "").trim();
                 if (!cem) continue;
                 if (!cem.toLowerCase().includes(q)) continue;
                 const c = canonize(cem);
+                const person = (s.email || "").trim().toLowerCase() || `id:${s.id}`;
                 const cur = tally.get(c);
-                if (cur) cur.count += 1;
-                else tally.set(c, { name: cem, count: 1 });
+                if (cur) cur.people.add(person);
+                else tally.set(c, { name: cem, people: new Set([person]) });
               }
               let best: { canon: string; name: string; count: number } | null = null;
               for (const [canon, v] of tally) {
-                if (!best || v.count > best.count) best = { canon, name: v.name, count: v.count };
+                if (!best || v.people.size > best.count) best = { canon, name: v.name, count: v.people.size };
               }
               matchedCem = best;
             }
+
             const submissionsPanel = (
             <SubmissionsPanel
               submissions={submissions}
@@ -947,8 +951,13 @@ const Admin = () => {
             const canonize = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
             const texasSubs = submissions.filter((s: any) => s.inquiry_channel !== "bayer_sell_a_plot");
             const selectedCount = cemSelected
-              ? texasSubs.filter((s: any) => canonize(s.cemetery || "") === cemSelected.canon).length
+              ? new Set(
+                  texasSubs
+                    .filter((s: any) => canonize(s.cemetery || "") === cemSelected.canon)
+                    .map((s: any) => (s.email || "").trim().toLowerCase() || `id:${s.id}`),
+                ).size
               : 0;
+
             return (
               <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-5 items-start">
                 <div className="min-w-0">

@@ -123,6 +123,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       cities: Set<string>;
       directoryId: string | null;
       sample?: Submission;
+      /** Distinct customers (same email = one person) so the count matches the merged submissions list. */
+      people: Set<string>;
     };
     const map = new Map<string, Stat>();
     for (const r of rows) {
@@ -138,8 +140,11 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
         latestAt: 0,
         cities: new Set(r.city ? [r.city] : []),
         directoryId: r.id,
+        people: new Set(),
       });
     }
+    // Same merge key as the submissions list: duplicates from one email count once.
+    const personKey = (s: Submission) => (s.email || "").trim().toLowerCase() || `id:${s.id}`;
     for (const s of texasSubmissions) {
       const name = (s.cemetery || "").trim();
       if (!name) continue;
@@ -148,7 +153,8 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
       const ts = new Date(s.created_at).getTime();
       const existing = map.get(c);
       if (existing) {
-        existing.count += 1;
+        existing.people.add(personKey(s));
+        existing.count = existing.people.size;
         if (ts > existing.latestAt) existing.latestAt = ts;
         const city = (s as any).cemetery_city || s.region;
         if (city) existing.cities.add(String(city));
@@ -161,11 +167,13 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
           cities: new Set((s as any).cemetery_city ? [(s as any).cemetery_city] : []),
           directoryId: null,
           sample: s,
+          people: new Set([personKey(s)]),
         });
       }
     }
     return Array.from(map.values());
   }, [rows, texasSubmissions]);
+
 
   const filteredStats = useMemo(() => {
     const q = (searchQuery || "").trim().toLowerCase();
