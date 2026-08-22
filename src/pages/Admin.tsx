@@ -951,8 +951,13 @@ const Admin = () => {
             const canonize = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
             const texasSubs = submissions.filter((s: any) => s.inquiry_channel !== "bayer_sell_a_plot");
             const selectedCount = cemSelected
-              ? texasSubs.filter((s: any) => canonize(s.cemetery || "") === cemSelected.canon).length
+              ? new Set(
+                  texasSubs
+                    .filter((s: any) => canonize(s.cemetery || "") === cemSelected.canon)
+                    .map((s: any) => (s.email || "").trim().toLowerCase() || `id:${s.id}`),
+                ).size
               : 0;
+
             return (
               <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-5 items-start">
                 <div className="min-w-0">
