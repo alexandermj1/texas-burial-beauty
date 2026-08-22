@@ -406,9 +406,11 @@ Deno.serve(async (req) => {
         const { data: mirrors } = await supabase.from("customer_files")
           .select("id, file_path").eq("customer_profile_id", sub.customer_profile_id)
           .like("notes", `%source:${path}%`);
-        const mirrorPaths = (mirrors ?? []).map((f) => f.file_path).filter(Boolean);
-        if (mirrorPaths.length) await supabase.storage.from("customer-files").remove(mirrorPaths);
-        if ((mirrors ?? []).length) await supabase.from("customer_files").delete().in("id", mirrors!.map((f) => f.id));
+        if ((mirrors ?? []).length) {
+          await supabase.from("customer_files")
+            .update({ deleted_at: new Date().toISOString(), deleted_by: "seller-packet" })
+            .in("id", mirrors!.map((f) => f.id));
+        }
       }
 
       const { data: remainingFiles } = await supabase.storage.from("portal-uploads")

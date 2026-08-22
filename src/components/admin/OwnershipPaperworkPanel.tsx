@@ -17,6 +17,7 @@ import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import {
+import { softDelete } from "@/lib/softDelete";
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
   canIssueJointPoa, isDeceasedPerson, mailsByDefault,
@@ -766,7 +767,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
            && (supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
        });
       if (stale.length) {
-        await supabase.from("submission_documents").delete().in("id", stale.map((s) => s.id));
+        await softDelete("submission_documents", stale.map((s) => s.id));
       }
       if (!silent) toast.success("Paperwork checklist updated");
       await load();
@@ -1390,7 +1391,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     } as OwnershipAnswers);
     const live = await fetchLiveRows();
     const match = live.filter((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r)).map((x) => x.id);
-    if (match.length) await supabase.from("submission_documents").delete().in("id", match);
+    if (match.length) await softDelete("submission_documents", match);
     // A prepared POA / affidavit lives in `contracts`, not the checklist. Void it
     // too, otherwise the seller's page keeps offering the document we dropped.
     await voidPreparedFor(r);
@@ -1421,7 +1422,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const removeExtraDoc = async (id: string) => {
     const gone = (answers.extraDocs ?? []).find((d) => d.id === id);
     await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
-    await supabase.from("submission_documents").delete()
+    await supabase.from("submission_documents")
+      .update({ deleted_at: new Date().toISOString() } as any)
       .eq("submission_id", submissionId).eq("doc_code", `X-${id}`);
     // Hand-added POAs and affidavits also have a prepared PDF behind them.
     if (gone && gone.kind && gone.kind !== "custom") {

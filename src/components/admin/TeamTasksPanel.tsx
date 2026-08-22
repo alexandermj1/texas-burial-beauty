@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { cleanDisplayName } from "@/lib/displayName";
+import { softDelete } from "@/lib/softDelete";
 
 interface Task {
   id: string;
@@ -171,7 +172,7 @@ const TeamTasksPanel = () => {
   };
 
   const remove = async (id: string) => {
-    await supabase.from("team_tasks" as any).delete().eq("id", id);
+    await softDelete("team_tasks", id);
     load();
   };
 

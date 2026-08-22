@@ -9,6 +9,7 @@ import { Send, Pencil, Trash2, Reply, X, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { cleanDisplayName } from "@/lib/displayName";
+import { softDelete } from "@/lib/softDelete";
 
 interface Note {
   id: string;
@@ -276,7 +277,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
 
   const deleteNote = async (id: string) => {
     if (!confirm("Delete this note?")) return;
-    await supabase.from("customer_notes" as any).delete().eq("id", id);
+    await softDelete("customer_notes", id);
   };
 
   // Presence excluding self

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import type { Submission } from "./SubmissionsPanel";
+import { softDelete } from "@/lib/softDelete";
 
 export type BayerStage =
   | "initial_inquiry"
@@ -158,7 +159,7 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
     refresh();
   };
   const removePoa = async (id: string) => {
-    await supabase.from("poa_records" as any).delete().eq("id", id);
+    await softDelete("poa_records", id);
     refresh();
   };
 

@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cleanDisplayName } from "@/lib/displayName";
 import { openFileViewer } from "@/lib/fileViewer";
 import { Paperclip, Upload, Trash2, Download, FileText, Loader2, Image as ImageIcon, FileQuestion, Sparkles, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { softDelete } from "@/lib/softDelete";
 
 interface CustomerFileRow {
   id: string;
@@ -202,13 +203,12 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
   };
 
   const deleteFile = async (row: CustomerFileRow) => {
-    if (!confirm(`Delete ${row.file_name}? This cannot be undone.`)) return;
-    const { error: rmErr } = await supabase.storage.from("customer-files").remove([row.file_path]);
+    if (!confirm(`Hide ${row.file_name}? The file is kept in the archive and can be restored.`)) return;
+    const { error: rmErr } = await softDelete("customer_files", row.id);
     if (rmErr) {
-      toast({ title: "Storage delete failed", description: rmErr.message, variant: "destructive" });
+      toast({ title: "Could not hide file", description: rmErr.message, variant: "destructive" });
       return;
     }
-    await supabase.from("customer_files" as any).delete().eq("id", row.id);
     const actorName = cleanDisplayName(user?.user_metadata?.full_name) || (user?.email?.split("@")[0]) || "admin";
     await supabase.from("customer_activity_log" as any).insert({
       customer_profile_id: customerId,
