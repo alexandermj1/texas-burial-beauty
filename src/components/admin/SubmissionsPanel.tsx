@@ -3125,7 +3125,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               key={cemeteryCanon}
               canon={cemeteryCanon}
               displayName={cemeteryLabel}
-              submissionCount={texasSubmissions.filter((s: any) => _canon(s.cemetery || "") === cemeteryCanon).length}
+              submissionCount={texasCemeteryCounts.get(cemeteryCanon) || 0}
               onClear={() => { setCemeteryCanon(null); setCemeteryLabel(null); }}
             />
           </>
