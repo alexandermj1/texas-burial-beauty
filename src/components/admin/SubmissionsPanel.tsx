@@ -241,6 +241,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [awaitingMap, setAwaitingMap] = useState<Record<string, string>>({});
   // Timestamp of the most recent interaction (latest email either direction).
   const [lastInteractionMap, setLastInteractionMap] = useState<Record<string, string>>({});
+  // Latest OUTGOING message per submission — used to clear "Potential plot match"
+  // once we've actually emailed that buyer back.
+  const [lastOutgoingMap, setLastOutgoingMap] = useState<Record<string, string>>({});
   // AI "where is this up to" summaries, keyed by submission id.
   const [summaryMap, setSummaryMap] = useState<Record<string, string>>({});
   const [expandedSummaries, setExpandedSummaries] = useState<Record<string, boolean>>({});
