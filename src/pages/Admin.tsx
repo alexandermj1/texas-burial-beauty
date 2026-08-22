@@ -227,7 +227,7 @@ const Admin = () => {
       supabase.from("sales" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false }),
     ]);
-    if (listingsRes.data) setListings(listingsRes.data as any);
+    if (listingsRes.data) setListings((listingsRes.data as any[]).filter((l) => !l.deleted_at) as any);
     if (salesRes.data) setSales(salesRes.data as any);
     if (submissionsRes.data) setSubmissions(submissionsRes.data as any);
     if (reservationsRes.data) {
