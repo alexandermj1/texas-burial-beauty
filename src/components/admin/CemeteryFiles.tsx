@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cleanDisplayName } from "@/lib/displayName";
 import { openFileViewer } from "@/lib/fileViewer";
 import { Paperclip, Upload, Trash2, Download, Loader2, FileText, Image as ImageIcon } from "lucide-react";
+import { softDelete } from "@/lib/softDelete";
 
 interface CemeteryFileRow {
   id: string;
@@ -46,7 +47,7 @@ export default function CemeteryFiles({ cemeteryId, cemeteryName }: { cemeteryId
     setLoading(true);
     const { data, error } = await supabase
       .from("cemetery_files" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("cemetery_id", cemeteryId)
       .order("created_at", { ascending: false });
     if (!error && data) setFiles(data as any);
@@ -137,14 +138,13 @@ export default function CemeteryFiles({ cemeteryId, cemeteryName }: { cemeteryId
   };
 
   const deleteFile = async (row: CemeteryFileRow) => {
-    if (!confirm(`Delete "${row.label || row.file_name}"? This cannot be undone.`)) return;
-    const { error: rmErr } = await supabase.storage.from("cemetery-files").remove([row.file_path]);
+    if (!confirm(`Hide "${row.label || row.file_name}"? The file is kept in the archive and can be restored.`)) return;
+    const { error: rmErr } = await softDelete("cemetery_files", row.id);
     if (rmErr) {
-      toast({ title: "Storage delete failed", description: rmErr.message, variant: "destructive" });
+      toast({ title: "Could not hide file", description: rmErr.message, variant: "destructive" });
       return;
     }
-    await supabase.from("cemetery_files" as any).delete().eq("id", row.id);
-    toast({ title: "File deleted" });
+    toast({ title: "File hidden" });
     fetchFiles();
   };
 

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import type { Submission } from "./SubmissionsPanel";
+import { softDelete } from "@/lib/softDelete";
 
 interface Recommendation {
   id: string;
@@ -34,7 +35,7 @@ const BuyerJourneyPanel = ({ submission, onOpenSend }: { submission: Submission;
     setLoading(true);
     const { data } = await supabase
       .from("buyer_recommendations" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("submission_id", submission.id)
       .order("sent_at", { ascending: false });
     if (data) setRecs(data as any);
@@ -60,7 +61,7 @@ const BuyerJourneyPanel = ({ submission, onOpenSend }: { submission: Submission;
   };
 
   const removeRec = async (id: string) => {
-    const { error } = await supabase.from("buyer_recommendations" as any).delete().eq("id", id);
+    const { error } = await softDelete("buyer_recommendations", id);
     if (error) toast({ title: "Failed", description: error.message, variant: "destructive" });
     else fetchRecs();
   };

@@ -16,6 +16,7 @@ import { openFileViewer } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
+import { softDelete } from "@/lib/softDelete";
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
@@ -244,7 +245,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       supabase.from("contact_submissions")
         .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
-        .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
+        .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls").is("deleted_at", null)
         .eq("submission_id", submissionId),
       supabase.from("contracts")
         .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token, principal_key")
@@ -270,7 +271,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const profileId = (sub as { customer_profile_id?: string } | null)?.customer_profile_id;
     if (profileId) {
       const { data: cf } = await supabase.from("customer_files")
-        .select("file_name, file_path, document_type, extracted_data, extracted_summary").eq("customer_profile_id", profileId);
+        .select("file_name, file_path, document_type, extracted_data, extracted_summary").is("deleted_at", null).eq("customer_profile_id", profileId);
       for (const f of cf ?? []) {
         if (!collected.some((c) => c.path === f.file_path)) {
           collected.push({
@@ -692,7 +693,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** The live checklist rows, keyed the same way the DB's unique item index is. */
   const fetchLiveRows = async (): Promise<DocRow[]> => {
     const { data } = await supabase.from("submission_documents")
-      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls")
+      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls").is("deleted_at", null)
       .eq("submission_id", submissionId);
     return (data ?? []) as DocRow[];
   };
@@ -766,7 +767,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
            && (supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
        });
       if (stale.length) {
-        await supabase.from("submission_documents").delete().in("id", stale.map((s) => s.id));
+        await softDelete("submission_documents", stale.map((s) => s.id));
       }
       if (!silent) toast.success("Paperwork checklist updated");
       await load();
@@ -1079,7 +1080,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const profileId = s.customer_profile_id as string | undefined;
     if (!profileId) return [];
     const { data: cfiles } = await supabase.from("customer_files")
-      .select("file_name, document_type, extracted_data")
+      .select("file_name, document_type, extracted_data").is("deleted_at", null)
       .eq("customer_profile_id", profileId).limit(40);
     const out: { text: string; source: string }[] = [];
     const seen = new Set<string>();
@@ -1143,7 +1144,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const [{ data: cfiles }, { data: mails }] = await Promise.all([
       profileId
         ? supabase.from("customer_files")
-            .select("file_name, document_type, extracted_data").eq("customer_profile_id", profileId).limit(40)
+            .select("file_name, document_type, extracted_data").is("deleted_at", null).eq("customer_profile_id", profileId).limit(40)
         : Promise.resolve({ data: [] as Record<string, unknown>[] }),
       supabase.from("email_messages")
         .select("from_name, from_email, body_text").eq("matched_submission_id", submissionId)
@@ -1390,7 +1391,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     } as OwnershipAnswers);
     const live = await fetchLiveRows();
     const match = live.filter((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r)).map((x) => x.id);
-    if (match.length) await supabase.from("submission_documents").delete().in("id", match);
+    if (match.length) await softDelete("submission_documents", match);
     // A prepared POA / affidavit lives in `contracts`, not the checklist. Void it
     // too, otherwise the seller's page keeps offering the document we dropped.
     await voidPreparedFor(r);
@@ -1421,7 +1422,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const removeExtraDoc = async (id: string) => {
     const gone = (answers.extraDocs ?? []).find((d) => d.id === id);
     await persistAnswers({ ...answers, extraDocs: (answers.extraDocs ?? []).filter((d) => d.id !== id) });
-    await supabase.from("submission_documents").delete()
+    await supabase.from("submission_documents")
+      .update({ deleted_at: new Date().toISOString() } as any)
       .eq("submission_id", submissionId).eq("doc_code", `X-${id}`);
     // Hand-added POAs and affidavits also have a prepared PDF behind them.
     if (gone && gone.kind && gone.kind !== "custom") {

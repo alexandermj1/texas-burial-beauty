@@ -20,7 +20,7 @@ export default defineTool({
     );
     let q = supabase
       .from("listings")
-      .select("id, cemetery, city, plot_type, section, spaces, status")
+      .select("id, cemetery, city, plot_type, section, spaces, status").is("deleted_at", null)
       .eq("status", "active")
       .limit(limit ?? 20);
     if (query && query.trim()) {

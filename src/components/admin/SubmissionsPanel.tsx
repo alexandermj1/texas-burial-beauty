@@ -663,7 +663,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (profileIds.length === 0) { setDocsEmails(new Set()); return; }
       const { data: files } = await supabase
         .from("customer_files" as any)
-        .select("customer_profile_id")
+        .select("customer_profile_id").is("deleted_at", null)
         .in("customer_profile_id", profileIds);
       if (cancelled || !files) return;
       const withFiles = new Set<string>();
@@ -1108,7 +1108,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (profileIds.length === 0) return;
       const { data: files } = await supabase
         .from("customer_files" as any)
-        .select("file_name, extracted_data, extracted_summary")
+        .select("file_name, extracted_data, extracted_summary").is("deleted_at", null)
         .in("customer_profile_id", profileIds);
 
       if (cancelled || !files) return;

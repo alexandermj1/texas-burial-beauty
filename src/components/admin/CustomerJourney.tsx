@@ -17,6 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import { isOutgoing } from "@/lib/emailReply";
+import { softDelete } from "@/lib/softDelete";
 
 interface SubmissionDoc {
   id: string;
@@ -122,7 +123,7 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
       orParts.push(`to_email.ilike.%${addr}%`);
     }
     const [d, r, e] = await Promise.all([
-      supabase.from("submission_documents" as any).select("*")
+      supabase.from("submission_documents" as any).select("*").is("deleted_at", null)
         .eq("submission_id", submission.id).order("created_at", { ascending: true }),
       supabase.from("reminder_log" as any).select("*")
         .eq("submission_id", submission.id).order("sent_at", { ascending: false }),
@@ -189,7 +190,7 @@ const CustomerJourney = ({ submission, onSubmissionPatched }: Props) => {
   };
 
   const removeDoc = async (id: string) => {
-    const { error } = await supabase.from("submission_documents" as any).delete().eq("id", id);
+    const { error } = await softDelete("submission_documents", id);
     if (error) toast({ title: "Failed", description: error.message, variant: "destructive" });
     else fetchAll();
   };

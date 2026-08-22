@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Submission } from "./SubmissionsPanel";
 import type { CemeteryDocRules } from "@/lib/ownershipRules";
 import { refreshCemeteryRegistry, regionForCity } from "@/hooks/useCemeteryRegistry";
+import { softDelete } from "@/lib/softDelete";
 
 
 interface TexasCemetery {
@@ -372,10 +373,7 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
             if (mergeErr) throw mergeErr;
           }
         }
-        const { error } = await supabase
-          .from("texas_cemeteries" as any)
-          .delete()
-          .eq("id", source.directoryId);
+        const { error } = await softDelete("texas_cemeteries", source.directoryId);
         if (error) throw error;
       }
       toast({

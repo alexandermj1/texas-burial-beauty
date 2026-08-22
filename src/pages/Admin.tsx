@@ -33,6 +33,7 @@ import BroadcastDialog from "@/components/admin/BroadcastDialog";
 import { MessageSquare } from "lucide-react";
 
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import { softDelete } from "@/lib/softDelete";
 
 interface AdminListing {
   id: string;
@@ -226,7 +227,7 @@ const Admin = () => {
       supabase.from("sales" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false }),
     ]);
-    if (listingsRes.data) setListings(listingsRes.data as any);
+    if (listingsRes.data) setListings((listingsRes.data as any[]).filter((l) => !l.deleted_at) as any);
     if (salesRes.data) setSales(salesRes.data as any);
     if (submissionsRes.data) setSubmissions(submissionsRes.data as any);
     if (reservationsRes.data) {
@@ -283,7 +284,7 @@ const Admin = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this listing?")) return;
-    const { error } = await supabase.from("listings").delete().eq("id", id);
+    const { error } = await softDelete("listings", id);
     if (!error) {
       setListings(prev => prev.filter(l => l.id !== id));
       toast({ title: "Deleted" });

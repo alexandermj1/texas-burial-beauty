@@ -9,6 +9,7 @@ import { Send, Pencil, Trash2, Reply, X, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { cleanDisplayName } from "@/lib/displayName";
+import { softDelete } from "@/lib/softDelete";
 
 interface Note {
   id: string;
@@ -125,7 +126,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     (async () => {
       const { data } = await supabase
         .from("customer_notes" as any)
-        .select("*")
+        .select("*").is("deleted_at", null)
         .eq(scopeColumn, scopeId)
         .order("created_at", { ascending: false });
       if (!cancelled && data) setNotes(data as any);
@@ -223,7 +224,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       parent_note_id: parentId,
     };
     insertPayload[scopeColumn] = scopeId;
-    const { data, error } = await supabase.from("customer_notes" as any).insert(insertPayload).select().single();
+    const { data, error } = await supabase.from("customer_notes" as any).insert(insertPayload).select().is("deleted_at", null).single();
     if (error) {
       toast({ title: "Could not save note", description: error.message, variant: "destructive" });
       setDraft(body);
@@ -276,7 +277,7 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
 
   const deleteNote = async (id: string) => {
     if (!confirm("Delete this note?")) return;
-    await supabase.from("customer_notes" as any).delete().eq("id", id);
+    await softDelete("customer_notes", id);
   };
 
   // Presence excluding self

@@ -24,7 +24,7 @@ var search_listings_default = defineTool({
       process.env.SUPABASE_PUBLISHABLE_KEY,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
-    let q = supabase.from("listings").select("id, cemetery, city, plot_type, section, spaces, status").eq("status", "active").limit(limit ?? 20);
+    let q = supabase.from("listings").select("id, cemetery, city, plot_type, section, spaces, status").is("deleted_at", null).eq("status", "active").limit(limit ?? 20);
     if (query && query.trim()) {
       const term = `%${query.trim()}%`;
       q = q.or(`cemetery.ilike.${term},city.ilike.${term},plot_type.ilike.${term}`);
@@ -58,7 +58,7 @@ var get_listing_default = defineTool2({
       process.env.SUPABASE_PUBLISHABLE_KEY,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
-    const { data, error } = await supabase.from("listings").select("id, cemetery, city, plot_type, section, spaces, asking_price, description, status, photos").eq("id", id).eq("status", "active").maybeSingle();
+    const { data, error } = await supabase.from("listings").select("id, cemetery, city, plot_type, section, spaces, asking_price, description, status, photos").is("deleted_at", null).eq("id", id).eq("status", "active").maybeSingle();
     if (error) {
       return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
     }

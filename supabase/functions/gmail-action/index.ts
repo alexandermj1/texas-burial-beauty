@@ -402,7 +402,9 @@ Deno.serve(async (req) => {
         const text = await r.text();
         return json({ error: r.status === 429 ? friendlyGmailRateLimit(text) : `Trash failed: ${r.status} ${text}`, rateLimited: r.status === 429 }, 200);
       }
-      await admin.from("email_messages").delete().eq("gmail_message_id", input.messageId);
+      await admin.from("email_messages")
+        .update({ deleted_at: new Date().toISOString(), deleted_by: "gmail-trash" })
+        .eq("gmail_message_id", input.messageId);
       return json({ ok: true });
     }
 

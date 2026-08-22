@@ -210,7 +210,7 @@ const Properties = () => {
       const cols = "id, cemetery, city, plot_type, section, spaces, asking_price, photos, description, contact_name, contact_phone, contact_email";
       const { data } = await supabase
         .from("listings")
-        .select(cols)
+        .select(cols).is("deleted_at", null)
         .eq("status", "active")
         .order("created_at", { ascending: false });
       if (data) setDbListings(data as any);

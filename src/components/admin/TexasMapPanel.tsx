@@ -16,6 +16,7 @@ type Agent = { id: string; name: string; role: string | null; city: string | nul
 type Selected = { kind: "cemetery" | "agent"; id: string; name: string; lat: number; lng: number };
 
 import { loadGoogleMaps, brandMapStyles } from "@/lib/googleMaps";
+import { softDelete } from "@/lib/softDelete";
 
 
 function fmtDuration(sec: number) {
@@ -93,7 +94,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
     setLoading(true);
     const [c, a, subs] = await Promise.all([
       supabase.from("texas_cemeteries").select("id,name,city,address,county,latitude,longitude,contact_phone,website,description").order("name"),
-      supabase.from("agent_locations" as any).select("*").order("name"),
+      supabase.from("agent_locations" as any).select("*").is("deleted_at", null).order("name"),
       supabase.from("contact_submissions").select("cemetery").not("cemetery", "is", null),
     ]);
     if (c.data) setCemeteries(c.data as any);
@@ -318,7 +319,7 @@ export default function TexasMapPanel({ onViewSubmissions }: Props) {
 
   const deleteAgent = async (id: string) => {
     if (!confirm("Delete this agent location?")) return;
-    const { error } = await supabase.from("agent_locations" as any).delete().eq("id", id);
+    const { error } = await softDelete("agent_locations", id);
     if (error) { toast({ title: "Delete failed", description: error.message, variant: "destructive" }); return; }
     fetchAll();
   };

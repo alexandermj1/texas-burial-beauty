@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import { softDelete } from "@/lib/softDelete";
 
 interface Listing {
   id: string;
@@ -40,7 +41,7 @@ const Dashboard = () => {
   const fetchListings = async () => {
     const { data, error } = await supabase
       .from("listings")
-      .select("id, cemetery, city, plot_type, section, spaces, status, created_at")
+      .select("id, cemetery, city, plot_type, section, spaces, status, created_at").is("deleted_at", null)
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
 
@@ -50,7 +51,7 @@ const Dashboard = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this listing?")) return;
-    const { error } = await supabase.from("listings").delete().eq("id", id);
+    const { error } = await softDelete("listings", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {

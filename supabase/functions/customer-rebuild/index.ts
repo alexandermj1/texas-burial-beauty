@@ -133,7 +133,9 @@ Deno.serve(async (req) => {
     }
 
     // Wipe + reinsert (small dataset; safe approach for full rebuild)
-    await supabase.from("customer_profiles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabase.from("customer_profiles")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: "customer-rebuild" })
+      .is("deleted_at", null);
 
     let createdCount = 0;
     let linkedSubs = 0;

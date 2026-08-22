@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BRAND_UI, MARKETING_TEMPLATES, type MarketingBrand } from "@/lib/marketingBrands";
 import BayerPurchaseOfferPanel from "./BayerPurchaseOfferPanel";
 import BayerGuaranteeOfferPanel from "./BayerGuaranteeOfferPanel";
+import { softDelete } from "@/lib/softDelete";
 
 interface Contact {
   id: string;
@@ -155,7 +156,7 @@ const AudiencePanel = ({ brand }: { brand: MarketingBrand }) => {
     setLoading(true);
     const { data } = await supabase
       .from("marketing_contacts" as any)
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("brand", brand)
       .order("created_at", { ascending: false })
       .limit(2000);
@@ -202,7 +203,7 @@ const AudiencePanel = ({ brand }: { brand: MarketingBrand }) => {
   };
 
   const remove = async (id: string) => {
-    await supabase.from("marketing_contacts" as any).delete().eq("id", id);
+    await softDelete("marketing_contacts", id);
     setContacts((p) => p.filter((c) => c.id !== id));
   };
 
@@ -337,7 +338,7 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
     (async () => {
       const { count } = await supabase
         .from("marketing_contacts" as any)
-        .select("id", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true }).is("deleted_at", null)
         .eq("brand", brand)
         .is("unsubscribed_at", null)
         .is("bounced_at", null)
@@ -347,7 +348,7 @@ const ComposePanel = ({ brand }: { brand: MarketingBrand }) => {
     (async () => {
       const { data } = await supabase
         .from("marketing_contacts" as any)
-        .select("*")
+        .select("*").is("deleted_at", null)
         .eq("brand", brand)
         .is("unsubscribed_at", null)
         .is("bounced_at", null)

@@ -44,7 +44,7 @@ const CreateListing = () => {
   const loadListing = async () => {
     const { data, error } = await supabase
       .from("listings")
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("id", id!)
       .eq("user_id", user!.id)
       .single();

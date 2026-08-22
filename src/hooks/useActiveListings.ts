@@ -26,7 +26,7 @@ export const useActiveListings = () => {
     (async () => {
       const { data } = await supabase
         .from("listings")
-        .select("id, cemetery, city, plot_type, section, spaces, asking_price, description, status, photos")
+        .select("id, cemetery, city, plot_type, section, spaces, asking_price, description, status, photos").is("deleted_at", null)
         .eq("status", "active")
         .order("created_at", { ascending: false });
       if (mounted) {
