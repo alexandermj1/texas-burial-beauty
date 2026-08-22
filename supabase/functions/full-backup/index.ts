@@ -164,13 +164,7 @@ Deno.serve(async (req) => {
         for (const row of page) {
           for (const c of drop) delete row[c];
           if (!header.length) { header = Object.keys(row); lines.push(header.join(",")); }
-          // Any column that only appears on later rows is appended to the header
-          // is impossible mid-file, so unknown keys are serialised into _extra.
-          const extra: Record<string, unknown> = {};
-          for (const k of Object.keys(row)) if (!header.includes(k)) extra[k] = row[k];
-          const cells = header.map((c) => csvEscape(row[c]));
-          if (Object.keys(extra).length) cells[cells.length - 1] += "";
-          lines.push(cells.join(","));
+          lines.push(header.map((c) => csvEscape(row[c])).join(","));
         }
         rowCount += page.length;
         if (page.length < PAGE) break;
