@@ -99,17 +99,25 @@ const HeroSection = () => {
       {/* Background video — sharp (top half stays crisp), parallax shifts it down on scroll */}
       <motion.div className="absolute inset-0 w-full h-full" style={{ scale: videoScale, y: videoY }}>
         <video
+          ref={videoRef}
           src="/videos/hero-trees.mp4"
           autoPlay
           muted
+          defaultMuted
           loop
           playsInline
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
           preload="auto"
-          // @ts-expect-error - fetchpriority is valid HTML attr
+          // @ts-expect-error - non-standard iOS attrs
+          webkit-playsinline="true"
+          x5-playsinline="true"
           fetchpriority="high"
           aria-hidden="true"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover pointer-events-none [&::-webkit-media-controls]:hidden [&::-webkit-media-controls-start-playback-button]:hidden [&::-webkit-media-controls-play-button]:hidden"
         />
+
       </motion.div>
 
       <div className="absolute inset-0 bg-foreground/30 pointer-events-none" />
