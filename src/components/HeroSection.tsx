@@ -43,8 +43,42 @@ const useTypewriter = (phrases: string[], active: boolean) => {
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const inView = useInView(sectionRef, { margin: "0px 0px -20% 0px" });
   const typed = useTypewriter(TYPED_PHRASES, inView);
+
+  // iOS/Safari can refuse the initial autoplay (low power mode, first paint race)
+  // and then paints its native play button. Keep retrying, and resume on any
+  // user interaction or when the tab becomes visible again.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    const tryPlay = () => {
+      const p = el.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    };
+
+    tryPlay();
+    const t = window.setTimeout(tryPlay, 400);
+    el.addEventListener("loadeddata", tryPlay);
+    el.addEventListener("canplay", tryPlay);
+    document.addEventListener("visibilitychange", tryPlay);
+    window.addEventListener("touchstart", tryPlay, { passive: true });
+    window.addEventListener("pointerdown", tryPlay);
+    window.addEventListener("scroll", tryPlay, { passive: true });
+
+    return () => {
+      clearTimeout(t);
+      el.removeEventListener("loadeddata", tryPlay);
+      el.removeEventListener("canplay", tryPlay);
+      document.removeEventListener("visibilitychange", tryPlay);
+      window.removeEventListener("touchstart", tryPlay);
+      window.removeEventListener("pointerdown", tryPlay);
+      window.removeEventListener("scroll", tryPlay);
+    };
+  }, []);
+
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -65,17 +99,26 @@ const HeroSection = () => {
       {/* Background video — sharp (top half stays crisp), parallax shifts it down on scroll */}
       <motion.div className="absolute inset-0 w-full h-full" style={{ scale: videoScale, y: videoY }}>
         <video
+          ref={videoRef}
           src="/videos/hero-trees.mp4"
           autoPlay
           muted
           loop
           playsInline
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
           preload="auto"
-          // @ts-expect-error - fetchpriority is valid HTML attr
-          fetchpriority="high"
+          {...({
+            "webkit-playsinline": "true",
+            "x5-playsinline": "true",
+            fetchpriority: "high",
+          } as Record<string, string>)}
+
           aria-hidden="true"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover pointer-events-none [&::-webkit-media-controls]:hidden [&::-webkit-media-controls-start-playback-button]:hidden [&::-webkit-media-controls-play-button]:hidden"
         />
+
       </motion.div>
 
       <div className="absolute inset-0 bg-foreground/30 pointer-events-none" />
