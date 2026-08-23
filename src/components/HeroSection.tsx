@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import heroVideo from "@/assets/hero-trees-v5.mp4.asset.json";
+import heroVideo from "@/assets/hero-trees-v6.mp4.asset.json";
 
 // Phrases that follow "Cemetery property,". Cycled via typewriter.
 const TYPED_PHRASES = [
@@ -61,18 +61,27 @@ const HeroSection = () => {
     };
 
     tryPlay();
-    const t = window.setTimeout(tryPlay, 400);
+    // iOS sometimes ignores the first few attempts (low power mode / decode race).
+    // Poll for a couple of seconds, then stop.
+    let ticks = 0;
+    const iv = window.setInterval(() => {
+      ticks += 1;
+      if (el.paused) tryPlay();
+      if (ticks > 12 || !el.paused) window.clearInterval(iv);
+    }, 250);
     el.addEventListener("loadeddata", tryPlay);
     el.addEventListener("canplay", tryPlay);
+    el.addEventListener("pause", tryPlay);
     document.addEventListener("visibilitychange", tryPlay);
     window.addEventListener("touchstart", tryPlay, { passive: true });
     window.addEventListener("pointerdown", tryPlay);
     window.addEventListener("scroll", tryPlay, { passive: true });
 
     return () => {
-      clearTimeout(t);
+      clearInterval(iv);
       el.removeEventListener("loadeddata", tryPlay);
       el.removeEventListener("canplay", tryPlay);
+      el.removeEventListener("pause", tryPlay);
       document.removeEventListener("visibilitychange", tryPlay);
       window.removeEventListener("touchstart", tryPlay);
       window.removeEventListener("pointerdown", tryPlay);
@@ -122,11 +131,11 @@ const HeroSection = () => {
 
       </motion.div>
 
-      <div className="absolute inset-0 bg-foreground/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-foreground/15 pointer-events-none" />
       {/* Top gradient — keeps the navbar readable without dimming the whole frame */}
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/60 via-foreground/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/65 via-foreground/30 to-transparent pointer-events-none" />
       {/* Bottom gradient — shade behind headline + Buy/Sell row */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/65 via-foreground/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent pointer-events-none" />
       {/* Parallax merge — fades into the page background as the user scrolls, blending hero into next section */}
       <motion.div
         style={{ opacity: mergeOpacity }}
@@ -175,7 +184,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 1.05 }}
-          className="mt-5 inline-flex items-center gap-2.5 rounded-full border border-primary-foreground/40 bg-primary-foreground/10 px-5 py-2.5 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20 transition-all"
+          className="mt-5 hidden sm:inline-flex items-center gap-2.5 rounded-full border border-primary-foreground/40 bg-primary-foreground/10 px-5 py-2.5 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20 transition-all"
         >
           <Phone className="w-4 h-4" />
           <span className="text-sm font-medium">Prefer to talk? Call (214) 230-4740</span>
