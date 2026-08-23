@@ -131,11 +131,11 @@ const HeroSection = () => {
 
       </motion.div>
 
-      <div className="absolute inset-0 bg-foreground/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-foreground/15 pointer-events-none" />
       {/* Top gradient — keeps the navbar readable without dimming the whole frame */}
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/60 via-foreground/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/65 via-foreground/30 to-transparent pointer-events-none" />
       {/* Bottom gradient — shade behind headline + Buy/Sell row */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/65 via-foreground/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent pointer-events-none" />
       {/* Parallax merge — fades into the page background as the user scrolls, blending hero into next section */}
       <motion.div
         style={{ opacity: mergeOpacity }}
@@ -184,7 +184,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 1.05 }}
-          className="mt-5 inline-flex items-center gap-2.5 rounded-full border border-primary-foreground/40 bg-primary-foreground/10 px-5 py-2.5 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20 transition-all"
+          className="mt-5 hidden sm:inline-flex items-center gap-2.5 rounded-full border border-primary-foreground/40 bg-primary-foreground/10 px-5 py-2.5 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20 transition-all"
         >
           <Phone className="w-4 h-4" />
           <span className="text-sm font-medium">Prefer to talk? Call (214) 230-4740</span>
