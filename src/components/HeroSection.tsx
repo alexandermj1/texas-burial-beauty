@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import heroVideo from "@/assets/hero-trees-v5.mp4.asset.json";
+import heroVideo from "@/assets/hero-trees-v6.mp4.asset.json";
 
 // Phrases that follow "Cemetery property,". Cycled via typewriter.
 const TYPED_PHRASES = [
@@ -61,18 +61,27 @@ const HeroSection = () => {
     };
 
     tryPlay();
-    const t = window.setTimeout(tryPlay, 400);
+    // iOS sometimes ignores the first few attempts (low power mode / decode race).
+    // Poll for a couple of seconds, then stop.
+    let ticks = 0;
+    const iv = window.setInterval(() => {
+      ticks += 1;
+      if (el.paused) tryPlay();
+      if (ticks > 12 || !el.paused) window.clearInterval(iv);
+    }, 250);
     el.addEventListener("loadeddata", tryPlay);
     el.addEventListener("canplay", tryPlay);
+    el.addEventListener("pause", tryPlay);
     document.addEventListener("visibilitychange", tryPlay);
     window.addEventListener("touchstart", tryPlay, { passive: true });
     window.addEventListener("pointerdown", tryPlay);
     window.addEventListener("scroll", tryPlay, { passive: true });
 
     return () => {
-      clearTimeout(t);
+      clearInterval(iv);
       el.removeEventListener("loadeddata", tryPlay);
       el.removeEventListener("canplay", tryPlay);
+      el.removeEventListener("pause", tryPlay);
       document.removeEventListener("visibilitychange", tryPlay);
       window.removeEventListener("touchstart", tryPlay);
       window.removeEventListener("pointerdown", tryPlay);
