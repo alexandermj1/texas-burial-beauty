@@ -1705,6 +1705,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
+            {/* Potential plot match — manual clear */}
+            {plotMatchMap[selected.id] && (
+              <div className="bg-card rounded-xl border border-fuchsia-300/60 dark:border-fuchsia-800 p-3 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] uppercase tracking-wide text-fuchsia-700 dark:text-fuchsia-300 mr-1 inline-flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Potential plot match
+                </span>
+                <span className="text-xs text-muted-foreground flex-1 min-w-[10rem]">
+                  Inventory came up at {plotMatchMap[selected.id].cemetery || "their cemetery"}.
+                </span>
+                <button
+                  onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
+                  title="Removes the Potential Plot Match tag and Needs reply. It returns only if this buyer emails again or new inventory appears."
+                >
+                  <CheckCircle className="w-3.5 h-3.5" /> Remove from plot match
+                </button>
+              </div>
+            )}
+
+
             {/* Reply state + custom tag — Texas only */}
             {subRegion(selected) === "texas" && (() => {
               const isAwaiting = !!awaitingMap[selected.id];
