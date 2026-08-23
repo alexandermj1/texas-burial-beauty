@@ -100,7 +100,7 @@ const HeroSection = () => {
       <motion.div className="absolute inset-0 w-full h-full" style={{ scale: videoScale, y: videoY }}>
         <video
           ref={videoRef}
-          src="/videos/hero-trees.mp4"
+          src="/videos/hero-trees-v2.mp4"
           autoPlay
           muted
           loop
