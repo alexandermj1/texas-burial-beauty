@@ -100,7 +100,7 @@ const HeroSection = () => {
       <motion.div className="absolute inset-0 w-full h-full" style={{ scale: videoScale, y: videoY }}>
         <video
           ref={videoRef}
-          src="/videos/hero-trees-v2.mp4"
+          src="/videos/hero-trees-v3.mp4"
           autoPlay
           muted
           loop
@@ -121,11 +121,11 @@ const HeroSection = () => {
 
       </motion.div>
 
-      <div className="absolute inset-0 bg-foreground/30 pointer-events-none" />
-      {/* Top gradient — strong, tall, opaque at the very top so the navbar always reads */}
-      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/80 via-foreground/50 to-transparent pointer-events-none" />
-      {/* Bottom gradient — deep shade behind headline + Buy/Sell row */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/80 via-foreground/45 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-foreground/10 pointer-events-none" />
+      {/* Top gradient — keeps the navbar readable without dimming the whole frame */}
+      <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/60 via-foreground/25 to-transparent pointer-events-none" />
+      {/* Bottom gradient — shade behind headline + Buy/Sell row */}
+      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-foreground/65 via-foreground/25 to-transparent pointer-events-none" />
       {/* Parallax merge — fades into the page background as the user scrolls, blending hero into next section */}
       <motion.div
         style={{ opacity: mergeOpacity }}
