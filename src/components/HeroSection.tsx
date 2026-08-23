@@ -100,7 +100,7 @@ const HeroSection = () => {
       <motion.div className="absolute inset-0 w-full h-full" style={{ scale: videoScale, y: videoY }}>
         <video
           ref={videoRef}
-          src="/videos/hero-trees-v3.mp4"
+          src="/videos/hero-trees-v4-web.mp4"
           autoPlay
           muted
           loop
@@ -121,7 +121,7 @@ const HeroSection = () => {
 
       </motion.div>
 
-      <div className="absolute inset-0 bg-foreground/10 pointer-events-none" />
+      <div className="absolute inset-0 bg-foreground/5 pointer-events-none" />
       {/* Top gradient — keeps the navbar readable without dimming the whole frame */}
       <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-foreground/60 via-foreground/25 to-transparent pointer-events-none" />
       {/* Bottom gradient — shade behind headline + Buy/Sell row */}
