@@ -2,7 +2,6 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowUpRight, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import heroTreesV4 from "@/assets/hero-trees-v4.mp4.asset.json";
 
 // Phrases that follow "Cemetery property,". Cycled via typewriter.
 const TYPED_PHRASES = [
@@ -101,7 +100,7 @@ const HeroSection = () => {
       <motion.div className="absolute inset-0 w-full h-full" style={{ scale: videoScale, y: videoY }}>
         <video
           ref={videoRef}
-          src={heroTreesV4.url}
+          src="/videos/hero-trees-v4-web.mp4"
           autoPlay
           muted
           loop
