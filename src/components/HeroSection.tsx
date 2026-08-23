@@ -103,17 +103,18 @@ const HeroSection = () => {
           src="/videos/hero-trees.mp4"
           autoPlay
           muted
-          defaultMuted
           loop
           playsInline
           controls={false}
           disablePictureInPicture
           disableRemotePlayback
           preload="auto"
-          // @ts-expect-error - non-standard iOS attrs
-          webkit-playsinline="true"
-          x5-playsinline="true"
-          fetchpriority="high"
+          {...({
+            "webkit-playsinline": "true",
+            "x5-playsinline": "true",
+            fetchpriority: "high",
+          } as Record<string, string>)}
+
           aria-hidden="true"
           className="w-full h-full object-cover pointer-events-none [&::-webkit-media-controls]:hidden [&::-webkit-media-controls-start-playback-button]:hidden [&::-webkit-media-controls-play-button]:hidden"
         />
