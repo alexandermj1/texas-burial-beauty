@@ -1356,7 +1356,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     } as OwnershipAnswers;
     await persistAnswers(nextAnswers);
     setNewDoc({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
-    setAddDocOpen(false);
+    // Plain "send us this" documents usually come in batches, so the dialog
+    // stays open (fields cleared) until the broker closes it themselves.
+    if (kind !== "custom") setAddDocOpen(false);
+
     // Anything we prepare ourselves goes straight into the field check, so the
     // broker fills it in there and then instead of hunting for an Edit button.
     if (kind !== "custom") {
