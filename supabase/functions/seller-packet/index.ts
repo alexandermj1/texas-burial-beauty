@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
         .from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, why, needs_notary, issued_by_us, file_url, file_urls, sort_order")
         .eq("submission_id", submissionId)
+        .is("deleted_at", null)
         .order("sort_order", { ascending: true });
 
       const visible = (docs ?? []).filter((d) => {
@@ -293,6 +294,7 @@ Deno.serve(async (req) => {
         .from("submission_documents")
         .select("label, doc_code, person_name")
         .eq("id", docId)
+        .is("deleted_at", null)
         .eq("submission_id", submissionId)
         .maybeSingle();
 
@@ -357,7 +359,8 @@ Deno.serve(async (req) => {
       const { data: remaining } = await supabase
         .from("submission_documents")
         .select("id, status, manual_override, required_state")
-        .eq("submission_id", submissionId);
+        .eq("submission_id", submissionId)
+        .is("deleted_at", null);
       const outstanding = (remaining ?? []).filter((d: Record<string, string | null>) => {
         const state = d.manual_override ?? d.required_state;
         return d.status !== "received" && state !== "received" && state !== "not_required" && state !== "waived";
@@ -433,7 +436,7 @@ Deno.serve(async (req) => {
             notarized_pdf_path: null, notarized_at: null, signed_at: null, status: "draft",
           }).eq("id", poa.id);
           const { data: poaDocs } = await supabase.from("submission_documents")
-            .select("id, person_name").eq("submission_id", submissionId).eq("doc_code", "D21");
+            .select("id, person_name").eq("submission_id", submissionId).eq("doc_code", "D21").is("deleted_at", null);
           const key = personKeyOf(signerName);
           const scoped = key
             ? (poaDocs ?? []).filter((d) => personKeyOf((d as { person_name?: string }).person_name) === key)
@@ -515,7 +518,8 @@ Deno.serve(async (req) => {
         .from("submission_documents")
         .select("id, file_urls, person_name")
         .eq("submission_id", submissionId)
-        .eq("doc_code", "D21");
+        .eq("doc_code", "D21")
+        .is("deleted_at", null);
       const targetKey = personKeyOf(signerName);
       const scoped = targetKey
         ? (poaDocs ?? []).filter((d) => personKeyOf((d as { person_name?: string }).person_name) === targetKey)

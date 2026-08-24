@@ -94,7 +94,8 @@ Deno.serve(async (req) => {
       const { data: docs } = await svc
         .from("submission_documents")
         .select("file_urls, file_url")
-        .eq("submission_id", submissionId);
+        .eq("submission_id", submissionId)
+        .is("deleted_at", null);
       for (const d of (docs ?? []) as { file_urls?: string[] | null; file_url?: string | null }[]) {
         for (const p of [...(d.file_urls ?? []), ...(d.file_url ? [d.file_url] : [])]) {
           if (p) await addSigned("portal-uploads", p, p.split("/").pop()!);

@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       supabase.from("customer_notes").select("body, created_at")
         .eq("submission_id", submission_id).order("created_at").limit(30),
       supabase.from("submission_documents").select("label, status, doc_code")
-        .eq("submission_id", submission_id).limit(60),
+        .eq("submission_id", submission_id).is("deleted_at", null).limit(60),
     ]);
 
     // Everything the seller has physically sent us, read by the extractor.

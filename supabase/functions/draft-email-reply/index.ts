@@ -287,6 +287,7 @@ async function getSubmissionContext(submissionId: string): Promise<string> {
     .from("submission_documents")
     .select("label, document_type, status, received_at")
     .eq("submission_id", submissionId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
   const reqsBlock = docReqs?.length
     ? docReqs.map((d: any) => `- ${d.label} [${d.status}${d.received_at ? `, received ${d.received_at.slice(0,10)}` : ""}]`).join("\n")
