@@ -163,9 +163,10 @@ export function buildLogic(state, setS, accent0, CRM) {
     return L.named().every(d => {
       const sp = L.sp(d.id);
       if (!sp || !sp.has) return false;
-      // The owner answering for themselves cannot say "don't know" about their
-      // own marriage — we need it to draw up the consent.
-      if (sp.has === 'unknown') return !(state.rel === SELF && state.selfIs === d.id);
+      // Nobody may leave a marriage unresolved: "don't know" is no longer an
+      // option anywhere, because a missing spouse means a missing consent and
+      // a missing POA, which stops the transfer at the cemetery.
+      if (sp.has === 'unknown') return false;
       if (sp.has !== 'yes') return true;
       const n = (sp.n || '').trim();
       if (!n) return false;
@@ -194,6 +195,7 @@ export function buildLogic(state, setS, accent0, CRM) {
     return L.inheritors().every(h => {
       const hs = state.heirSpouse[h.id];
       if (!hs || !hs.has) return false;
+      if (hs.has === 'unknown') return false;
       if (hs.has !== 'yes') return true;
       const n = (hs.n || '').trim();
       if (!n || !hs.alive) return false;
@@ -502,7 +504,7 @@ export function buildLogic(state, setS, accent0, CRM) {
         marriedLabel: (d.st === 'deceased' ? 'Was ' : 'Is ') + (d.n.trim() || 'this owner') + ' married?',
         spouseName: sp.n || '',
         spousePlaceholder: 'Full legal name of ' + (d.n.trim() || 'this owner') + '\u2019s husband or wife',
-        marriedSeg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
+        marriedSeg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes']], v => L.patch('spouse', d.id, { has: v })),
         setSpouseName: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); },
         seg: L.seg(d.st, [['living', 'Still living'], ['deceased', 'Has died']], v => setS(st => {
           const l = st.deed.slice(); l[i] = Object.assign({}, l[i], { st: v }); return { deed: l };
@@ -590,9 +592,7 @@ export function buildLogic(state, setS, accent0, CRM) {
             : sp.alive === 'deceased'
               ? 'Nothing to sign from them. We may ask for a death certificate later.'
               : 'Tell us whether they are still living \u2014 only a living spouse signs.',
-          seg: L.seg(sp.has, isSelf
-            ? [['no', 'No'], ['yes', 'Yes']]
-            : [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
+          seg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes']], v => L.patch('spouse', d.id, { has: v })),
           setSpouse: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); }
         };
       }),
@@ -692,7 +692,7 @@ export function buildLogic(state, setS, accent0, CRM) {
             : hs.alive === 'deceased'
               ? 'Nothing to sign from them. We may ask for a death certificate later.'
               : 'Tell us whether they are still living \u2014 only a living spouse signs.',
-          seg: L.seg(hs.has, [['no', 'Not married'], ['yes', 'Married'], ['unknown', "Don't know"]], v => L.patch('heirSpouse', h.id, { has: v })),
+          seg: L.seg(hs.has, [['no', 'Not married'], ['yes', 'Married']], v => L.patch('heirSpouse', h.id, { has: v })),
           setSpouse: ev => { const v = ev.target.value; L.patch('heirSpouse', h.id, { n: v }); }
         };
       }),
