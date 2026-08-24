@@ -110,8 +110,26 @@ const Admin = () => {
     if (refreshingInbox) return;
     setRefreshingInbox(true);
     try {
-      const { data, error } = await supabase.functions.invoke("sync-inbox", { body: { maxResults: 25, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 } });
+      // Pass 1: incoming mail only. The default query also includes our Sent
+      // folder, and because we send a lot of mail the newest 25 messages were
+      // often all outgoing — real customer replies fell outside the window and
+      // only appeared later on a bigger sync. Restricting to the inbox here
+      // guarantees new customer email is always picked up.
+      const { data, error } = await supabase.functions.invoke("sync-inbox", {
+        body: { query: "in:inbox -in:draft", maxResults: 100, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 },
+      });
       if (error) { toast({ title: "Sync failed", description: error.message, variant: "destructive" }); }
+
+      // Pass 2: a small sweep of everything (incl. Sent) so "replied" tracking
+      // stays accurate. Failures here are not worth interrupting the admin.
+      let sentPass: any = null;
+      if (!(data as any)?.rateLimited) {
+        const { data: d2 } = await supabase.functions.invoke("sync-inbox", {
+          body: { maxResults: 40, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 },
+        });
+        sentPass = d2;
+      }
+
       const res = await supabase.from("contact_submissions" as any).select("*").is("deleted_at", null).order("created_at", { ascending: false });
       if (res.data) setSubmissions(res.data as any);
 
@@ -120,12 +138,18 @@ const Admin = () => {
         return;
       }
 
-      const newCount = (data as any)?.bayer_imported ?? 0;
-      toast({ title: "Refreshed", description: newCount > 0 ? `${newCount} new submission${newCount === 1 ? "" : "s"} imported.` : "Up to date." });
+      const newEmails = ((data as any)?.newly_synced ?? 0) + ((sentPass as any)?.newly_synced ?? 0);
+      const newCount = ((data as any)?.bayer_imported ?? 0) + ((sentPass as any)?.bayer_imported ?? 0);
+      const bits = [
+        newEmails > 0 ? `${newEmails} new email${newEmails === 1 ? "" : "s"}` : null,
+        newCount > 0 ? `${newCount} new submission${newCount === 1 ? "" : "s"}` : null,
+      ].filter(Boolean);
+      toast({ title: "Refreshed", description: bits.length ? bits.join(" · ") : "Up to date." });
     } finally {
       setRefreshingInbox(false);
     }
   };
+
 
   useEffect(() => {
     const onScroll = () => setNavHiddenMobile(window.scrollY > 20);
