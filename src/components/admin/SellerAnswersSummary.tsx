@@ -9,10 +9,15 @@ type Kid = { id: string; n: string; st: string; of?: string[]; kids?: { id: stri
 type YesNo = { has?: string; n?: string; alive?: string };
 
 const spouseValue = (sp: { has?: string; n?: string; alive?: string }, of: string) => {
-  if (sp.has !== "yes") return sp.has === "no" ? "No" : sp.has ? "Not sure" : "—";
+  if (!sp.has) return "Not answered";
+  if (sp.has === "no") return `No spouse — ${of} is not married`;
+  if (sp.has !== "yes") return "They did not know";
   const who = (sp.n || "").trim() || "name not given";
-  const alive = sp.alive === "deceased" ? "has died" : sp.alive === "living" ? "living — must sign" : "living status not given";
-  return `${who} — husband/wife of ${of} (${alive})`;
+  const alive =
+    sp.alive === "deceased" ? "deceased — nothing to sign"
+    : sp.alive === "living" ? "living — must sign a consent"
+    : "living status not answered";
+  return `Married to ${who} (${alive})`;
 };
 
 export type V2State = {
@@ -59,6 +64,46 @@ const SellerAnswersSummary = ({
   const nameOf = (id: string) => deed.find((d) => d.id === id)?.n || "";
   const kids = (v2.kids ?? []).filter((k) => (k.n || "").trim() || (k.kids ?? []).some((g) => g.n.trim()));
   const spaces = v2.spaces ?? [];
+
+  // One plain-English line per person, so the office never has to guess who is
+  // married to whom or whether that spouse is alive.
+  type Marriage = { person: string; text: string; flag: boolean };
+  const marriages: Marriage[] = [];
+  const pushMarriage = (person: string, sp?: YesNo) => {
+    const s = sp ?? {};
+    const who = (s.n || "").trim();
+    if (!s.has) {
+      marriages.push({ person, text: "Marriage question not answered", flag: true });
+    } else if (s.has === "no") {
+      marriages.push({ person, text: "Not married — no spousal consent needed", flag: false });
+    } else if (s.has !== "yes") {
+      marriages.push({ person, text: "They did not know — we must check marriage records", flag: true });
+    } else if (!who) {
+      marriages.push({ person, text: "Married, but the spouse was never named", flag: true });
+    } else if (s.alive === "living") {
+      marriages.push({ person, text: `Married to ${who} — living, must sign a consent and POA`, flag: false });
+    } else if (s.alive === "deceased") {
+      marriages.push({ person, text: `Married to ${who} — deceased, nothing to sign`, flag: false });
+    } else {
+      marriages.push({ person, text: `Married to ${who} — living status not answered`, flag: true });
+    }
+  };
+  if (v2.couple === "yes" && deed.length === 2) {
+    marriages.push({
+      person: `${deed[0].n} & ${deed[1].n}`,
+      text: "Married to each other — both are on the deed, so no extra consent",
+      flag: false,
+    });
+  } else {
+    deed.forEach((d) => pushMarriage(`${d.n} (on the deed)`, v2.spouse?.[d.id]));
+  }
+  (v2.kids ?? []).forEach((k) => {
+    if ((k.n || "").trim() && k.st !== "deceased") pushMarriage(`${k.n} (inherits)`, v2.heirSpouse?.[k.id]);
+    (k.kids ?? []).forEach((g) => {
+      if ((g.n || "").trim()) pushMarriage(`${g.n} (inherits)`, v2.heirSpouse?.[g.id]);
+    });
+  });
+
 
   return (
     <div className="space-y-3">
@@ -123,6 +168,23 @@ const SellerAnswersSummary = ({
           </div>
         </Block>
       )}
+
+      {marriages.length > 0 && (
+        <Block title="Marriages — who is married to whom">
+          <div className="space-y-1">
+            {marriages.map((m, i) => (
+              <div key={i} className="flex items-start justify-between gap-3 py-1 border-b border-border/40 last:border-0">
+                <span className="text-[11px] text-foreground shrink-0 font-medium">{m.person}</span>
+                <span className={`text-[11px] text-right ${m.flag ? "text-amber-700" : "text-muted-foreground"}`}>
+                  {m.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Block>
+      )}
+
+
 
       {kids.length > 0 && (
         <Block title="Their family">

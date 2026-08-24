@@ -517,7 +517,7 @@ const OwnershipConfirm = () => {
                       Who is named on the most current deed?
                     </h3>
                     <p style={{"margin": "8px 0 0 0", "fontSize": "15.5px", "fontWeight": "300", "lineHeight": "1.55", "color": "#6e6e73", "textWrap": "pretty"}}>
-                      Everyone printed on the certificate of ownership, exactly as it is written. For each person, please tick either <strong style={{"fontWeight": "600", "color": "#3a3a3f"}}>Still living</strong> or <strong style={{"fontWeight": "600", "color": "#3a3a3f"}}>Has died</strong>, and answer the married question — we cannot continue until both are chosen.
+                      Everyone printed on the certificate of ownership, exactly as it is written. For each person, please tick either <strong style={{"fontWeight": "600", "color": "#3a3a3f"}}>Still living</strong> or <strong style={{"fontWeight": "600", "color": "#3a3a3f"}}>Has died</strong> — we cannot continue until one is chosen. We ask about husbands and wives in a later step.
                     </p>
                     <div style={{"display": "flex", "flexDirection": "column", "gap": "8px", "marginTop": "20px"}}>
                       {(V.deedRows || []).map((d: any, i0: number) => (
@@ -771,13 +771,13 @@ const OwnershipConfirm = () => {
                                 </div>
                               </div>
                               {s.yes ? (<React.Fragment>
-                                <input value={s.spouseName ?? ""} onChange={s.setSpouse} placeholder={s.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx9" />
-                                <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": "#4a6b54"}}>
-                                  {s.pair}
+                                <input value={s.spouseName ?? ""} onChange={s.setSpouse} placeholder={s.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${s.clash ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx9" />
+                                <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": s.clash ? "#a8654c" : "#4a6b54"}}>
+                                  {s.clash ? s.clashNote : s.pair}
                                 </div>
                                 <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "9px"}}>
                                   <div style={{"fontSize": "13.5px", "fontWeight": "400", "color": s.aliveNeeded ? "#a8654c" : "#6e6e73"}}>
-                                    Is that spouse still living?
+                                    {s.aliveLabel}
                                   </div>
                                   <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
                                     {(s.aliveSeg || []).map((o: any, ib: number) => (
@@ -1033,13 +1033,13 @@ const OwnershipConfirm = () => {
                                     </div>
                                   </div>
                                   {h.yes ? (<React.Fragment>
-                                    <input value={h.spouseName ?? ""} onChange={h.setSpouse} placeholder={h.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx20" />
-                                    <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": "#4a6b54"}}>
-                                      {h.pair}
+                                    <input value={h.spouseName ?? ""} onChange={h.setSpouse} placeholder={h.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${h.clash ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx20" />
+                                    <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": h.clash ? "#a8654c" : "#4a6b54"}}>
+                                      {h.clash ? h.clashNote : h.pair}
                                     </div>
                                     <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "9px"}}>
                                       <div style={{"fontSize": "13.5px", "fontWeight": "400", "color": h.aliveNeeded ? "#a8654c" : "#6e6e73"}}>
-                                        Is that spouse still living?
+                                        {h.aliveLabel}
                                       </div>
                                       <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
                                         {(h.aliveSeg || []).map((o: any, ia: number) => (

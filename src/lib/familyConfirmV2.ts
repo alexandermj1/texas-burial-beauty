@@ -162,7 +162,16 @@ export function buildLogic(state, setS, accent0, CRM) {
   done5: () => {
     return L.named().every(d => {
       const sp = L.sp(d.id);
-      return sp && sp.has && (sp.has !== 'yes' || ((sp.n || '').trim() && !!sp.alive));
+      if (!sp || !sp.has) return false;
+      // The owner answering for themselves cannot say "don't know" about their
+      // own marriage — we need it to draw up the consent.
+      if (sp.has === 'unknown') return !(state.rel === SELF && state.selfIs === d.id);
+      if (sp.has !== 'yes') return true;
+      const n = (sp.n || '').trim();
+      if (!n) return false;
+      if (!sp.alive) return false;
+      if (nameKey(n) === nameKey(d.n)) return false; // cannot be their own spouse
+      return true;
     });
   },
   done6: () => { return L.gone().every(d => !!state.will[d.id]); },
@@ -184,7 +193,12 @@ export function buildLogic(state, setS, accent0, CRM) {
   done8: () => {
     return L.inheritors().every(h => {
       const hs = state.heirSpouse[h.id];
-      return hs && hs.has && (hs.has !== 'yes' || ((hs.n || '').trim() && !!hs.alive));
+      if (!hs || !hs.has) return false;
+      if (hs.has !== 'yes') return true;
+      const n = (hs.n || '').trim();
+      if (!n || !hs.alive) return false;
+      if (nameKey(n) === nameKey(h.n)) return false;
+      return true;
     });
   },
 
@@ -481,7 +495,10 @@ export function buildLogic(state, setS, accent0, CRM) {
         avBg: d.st === 'deceased' ? '#f2f2f5' : (d.st === 'living' && d.n.trim() ? '#eef1ea' : '#f5f5f7'),
         avFg: d.st === 'deceased' ? '#9a9aa2' : (d.st === 'living' && d.n.trim() ? acc : '#b7b7bf'),
         marriedYes: sp.has === 'yes',
-        marriedAsk: !!d.n.trim() && !!d.st && !L.coupleYes(d.id) && !(L.coupleAsk() && !s.couple),
+        // The marriage question lives in its own step (step 5), where we also
+        // capture the spouse's name and whether they are living. Asking it here
+        // as well produced half-answered, contradictory records.
+        marriedAsk: false,
         marriedLabel: (d.st === 'deceased' ? 'Was ' : 'Is ') + (d.n.trim() || 'this owner') + ' married?',
         spouseName: sp.n || '',
         spousePlaceholder: 'Full legal name of ' + (d.n.trim() || 'this owner') + '\u2019s husband or wife',
@@ -548,23 +565,34 @@ export function buildLogic(state, setS, accent0, CRM) {
         const sp = L.sp(d.id);
         const who = d.n.trim() || 'this owner';
         const past = d.st === 'deceased';
+        const typed = (sp.n || '').trim();
+        const clash = !!typed && nameKey(typed) === nameKey(d.n);
+        // Someone answering about their own marriage has to give a real answer.
+        const isSelf = s.rel === SELF && s.selfIs === d.id;
         return {
           name: d.n, status: d.st === 'deceased' ? 'Has died' : 'Living',
           question: past ? 'Was ' + who + ' married?' : 'Is ' + who + ' married?',
           yes: sp.has === 'yes', unknown: sp.has === 'unknown', spouseName: sp.n || '',
-          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife',
-          pair: (sp.n || '').trim()
-            ? (sp.n || '').trim() + ' \u2014 husband or wife of ' + who
-            : 'We record this person as the husband or wife of ' + who + '.',
+          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife \u2014 not ' + who,
+          clash,
+          clashNote: clash
+            ? 'That is the same name as ' + who + '. Please type the name of their husband or wife instead.'
+            : '',
+          pair: typed
+            ? typed + ' is the ' + (past ? 'husband or wife' : 'husband or wife') + ' of ' + who
+            : 'Whoever you name here is recorded as the husband or wife of ' + who + '.',
           aliveAsk: sp.has === 'yes',
           aliveSeg: L.seg(sp.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('spouse', d.id, { alive: v })),
           aliveNeeded: sp.has === 'yes' && !sp.alive,
+          aliveLabel: typed ? 'Is ' + typed + ' still living?' : 'Is that spouse still living?',
           aliveNote: sp.alive === 'living'
             ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
             : sp.alive === 'deceased'
               ? 'Nothing to sign from them. We may ask for a death certificate later.'
               : 'Tell us whether they are still living \u2014 only a living spouse signs.',
-          seg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
+          seg: L.seg(sp.has, isSelf
+            ? [['no', 'No'], ['yes', 'Yes']]
+            : [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
           setSpouse: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); }
         };
       }),
@@ -642,16 +670,23 @@ export function buildLogic(state, setS, accent0, CRM) {
       heirSpouseRows: L.inheritors().map(h => {
         const hs = s.heirSpouse[h.id] || {};
         const who = h.n.trim() || 'this person';
+        const typed = (hs.n || '').trim();
+        const clash = !!typed && nameKey(typed) === nameKey(h.n);
         return {
           name: h.n.trim(), rel: h.rel, yes: hs.has === 'yes', spouseName: hs.n || '',
           question: 'Is ' + who + ' married?',
-          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife',
-          pair: (hs.n || '').trim()
-            ? (hs.n || '').trim() + ' \u2014 husband or wife of ' + who
-            : 'We record this person as the husband or wife of ' + who + '.',
+          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife \u2014 not ' + who,
+          clash,
+          clashNote: clash
+            ? 'That is the same name as ' + who + '. Please type the name of their husband or wife instead.'
+            : '',
+          pair: typed
+            ? typed + ' is the husband or wife of ' + who
+            : 'Whoever you name here is recorded as the husband or wife of ' + who + '.',
           aliveAsk: hs.has === 'yes',
           aliveSeg: L.seg(hs.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('heirSpouse', h.id, { alive: v })),
           aliveNeeded: hs.has === 'yes' && !hs.alive,
+          aliveLabel: typed ? 'Is ' + typed + ' still living?' : 'Is that spouse still living?',
           aliveNote: hs.alive === 'living'
             ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
             : hs.alive === 'deceased'
