@@ -565,23 +565,34 @@ export function buildLogic(state, setS, accent0, CRM) {
         const sp = L.sp(d.id);
         const who = d.n.trim() || 'this owner';
         const past = d.st === 'deceased';
+        const typed = (sp.n || '').trim();
+        const clash = !!typed && nameKey(typed) === nameKey(d.n);
+        // Someone answering about their own marriage has to give a real answer.
+        const isSelf = s.rel === SELF && s.selfIs === d.id;
         return {
           name: d.n, status: d.st === 'deceased' ? 'Has died' : 'Living',
           question: past ? 'Was ' + who + ' married?' : 'Is ' + who + ' married?',
           yes: sp.has === 'yes', unknown: sp.has === 'unknown', spouseName: sp.n || '',
-          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife',
-          pair: (sp.n || '').trim()
-            ? (sp.n || '').trim() + ' \u2014 husband or wife of ' + who
-            : 'We record this person as the husband or wife of ' + who + '.',
+          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife \u2014 not ' + who,
+          clash,
+          clashNote: clash
+            ? 'That is the same name as ' + who + '. Please type the name of their husband or wife instead.'
+            : '',
+          pair: typed
+            ? typed + ' is the ' + (past ? 'husband or wife' : 'husband or wife') + ' of ' + who
+            : 'Whoever you name here is recorded as the husband or wife of ' + who + '.',
           aliveAsk: sp.has === 'yes',
           aliveSeg: L.seg(sp.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('spouse', d.id, { alive: v })),
           aliveNeeded: sp.has === 'yes' && !sp.alive,
+          aliveLabel: typed ? 'Is ' + typed + ' still living?' : 'Is that spouse still living?',
           aliveNote: sp.alive === 'living'
             ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
             : sp.alive === 'deceased'
               ? 'Nothing to sign from them. We may ask for a death certificate later.'
               : 'Tell us whether they are still living \u2014 only a living spouse signs.',
-          seg: L.seg(sp.has, [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
+          seg: L.seg(sp.has, isSelf
+            ? [['no', 'No'], ['yes', 'Yes']]
+            : [['no', 'No'], ['yes', 'Yes'], ['unknown', "Don't know"]], v => L.patch('spouse', d.id, { has: v })),
           setSpouse: ev => { const v = ev.target.value; L.patch('spouse', d.id, { n: v }); }
         };
       }),
