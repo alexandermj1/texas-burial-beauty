@@ -771,13 +771,13 @@ const OwnershipConfirm = () => {
                                 </div>
                               </div>
                               {s.yes ? (<React.Fragment>
-                                <input value={s.spouseName ?? ""} onChange={s.setSpouse} placeholder={s.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx9" />
-                                <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": "#4a6b54"}}>
-                                  {s.pair}
+                                <input value={s.spouseName ?? ""} onChange={s.setSpouse} placeholder={s.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${s.clash ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx9" />
+                                <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": s.clash ? "#a8654c" : "#4a6b54"}}>
+                                  {s.clash ? s.clashNote : s.pair}
                                 </div>
                                 <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "9px"}}>
                                   <div style={{"fontSize": "13.5px", "fontWeight": "400", "color": s.aliveNeeded ? "#a8654c" : "#6e6e73"}}>
-                                    Is that spouse still living?
+                                    {s.aliveLabel}
                                   </div>
                                   <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
                                     {(s.aliveSeg || []).map((o: any, ib: number) => (
