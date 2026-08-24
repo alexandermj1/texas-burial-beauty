@@ -65,6 +65,46 @@ const SellerAnswersSummary = ({
   const kids = (v2.kids ?? []).filter((k) => (k.n || "").trim() || (k.kids ?? []).some((g) => g.n.trim()));
   const spaces = v2.spaces ?? [];
 
+  // One plain-English line per person, so the office never has to guess who is
+  // married to whom or whether that spouse is alive.
+  type Marriage = { person: string; text: string; flag: boolean };
+  const marriages: Marriage[] = [];
+  const pushMarriage = (person: string, sp?: YesNo) => {
+    const s = sp ?? {};
+    const who = (s.n || "").trim();
+    if (!s.has) {
+      marriages.push({ person, text: "Marriage question not answered", flag: true });
+    } else if (s.has === "no") {
+      marriages.push({ person, text: "Not married — no spousal consent needed", flag: false });
+    } else if (s.has !== "yes") {
+      marriages.push({ person, text: "They did not know — we must check marriage records", flag: true });
+    } else if (!who) {
+      marriages.push({ person, text: "Married, but the spouse was never named", flag: true });
+    } else if (s.alive === "living") {
+      marriages.push({ person, text: `Married to ${who} — living, must sign a consent and POA`, flag: false });
+    } else if (s.alive === "deceased") {
+      marriages.push({ person, text: `Married to ${who} — deceased, nothing to sign`, flag: false });
+    } else {
+      marriages.push({ person, text: `Married to ${who} — living status not answered`, flag: true });
+    }
+  };
+  if (v2.couple === "yes" && deed.length === 2) {
+    marriages.push({
+      person: `${deed[0].n} & ${deed[1].n}`,
+      text: "Married to each other — both are on the deed, so no extra consent",
+      flag: false,
+    });
+  } else {
+    deed.forEach((d) => pushMarriage(`${d.n} (on the deed)`, v2.spouse?.[d.id]));
+  }
+  (v2.kids ?? []).forEach((k) => {
+    if ((k.n || "").trim() && k.st !== "deceased") pushMarriage(`${k.n} (inherits)`, v2.heirSpouse?.[k.id]);
+    (k.kids ?? []).forEach((g) => {
+      if ((g.n || "").trim()) pushMarriage(`${g.n} (inherits)`, v2.heirSpouse?.[g.id]);
+    });
+  });
+
+
   return (
     <div className="space-y-3">
       {deedNames && deedNames.trim() && (
