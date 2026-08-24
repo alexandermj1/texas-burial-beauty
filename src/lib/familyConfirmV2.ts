@@ -569,8 +569,6 @@ export function buildLogic(state, setS, accent0, CRM) {
         const past = d.st === 'deceased';
         const typed = (sp.n || '').trim();
         const clash = !!typed && nameKey(typed) === nameKey(d.n);
-        // Someone answering about their own marriage has to give a real answer.
-        const isSelf = s.rel === SELF && s.selfIs === d.id;
         return {
           name: d.n, status: d.st === 'deceased' ? 'Has died' : 'Living',
           question: past ? 'Was ' + who + ' married?' : 'Is ' + who + ' married?',
