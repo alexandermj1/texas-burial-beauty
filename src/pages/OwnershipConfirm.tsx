@@ -1033,13 +1033,13 @@ const OwnershipConfirm = () => {
                                     </div>
                                   </div>
                                   {h.yes ? (<React.Fragment>
-                                    <input value={h.spouseName ?? ""} onChange={h.setSpouse} placeholder={h.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx20" />
-                                    <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": "#4a6b54"}}>
-                                      {h.pair}
+                                    <input value={h.spouseName ?? ""} onChange={h.setSpouse} placeholder={h.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${h.clash ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx20" />
+                                    <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": h.clash ? "#a8654c" : "#4a6b54"}}>
+                                      {h.clash ? h.clashNote : h.pair}
                                     </div>
                                     <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "9px"}}>
                                       <div style={{"fontSize": "13.5px", "fontWeight": "400", "color": h.aliveNeeded ? "#a8654c" : "#6e6e73"}}>
-                                        Is that spouse still living?
+                                        {h.aliveLabel}
                                       </div>
                                       <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
                                         {(h.aliveSeg || []).map((o: any, ia: number) => (
