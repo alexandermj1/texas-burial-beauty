@@ -769,6 +769,34 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (stale.length) {
         await softDelete("submission_documents", stale.map((s) => s.id));
       }
+
+      // A prepared POA lives in `contracts`, and the seller's page offers every
+      // non-void one of them. If the rules no longer call for that person's POA
+      // (they were marked deceased, say) the checklist row goes but the prepared
+      // contract used to stay — which is why sellers kept being asked to notarise
+      // a POA the broker could no longer even see. Void those too.
+      const wantedPoaPeople = new Set(
+        requirements.filter((r) => r.code === "D21")
+          .flatMap((r) => [r.personName, ...(r.jointNames ?? [])])
+          .filter(Boolean)
+          .map((n) => personKey(n as string)),
+      );
+      if (wantedPoaPeople.size) {
+        const { data: poaContracts } = await supabase.from("contracts")
+          .select("id, principal_key, signature_name, fill_data, signed_at, notarized_at, status")
+          .eq("submission_id", submissionId).eq("kind", "poa").neq("status", "void");
+        for (const c of (poaContracts ?? []) as Record<string, unknown>[]) {
+          if (c.signed_at || c.notarized_at) continue; // never touch executed paper
+          const names = String(
+            (c.fill_data as Record<string, unknown> | null)?.seller_name
+            ?? c.signature_name ?? c.principal_key ?? "",
+          ).split(/\s*&\s*|\s+and\s+/i).map((n) => personKey(n)).filter(Boolean);
+          if (!names.length) continue;
+          if (names.some((n) => wantedPoaPeople.has(n))) continue;
+          await supabase.from("contracts").update({ status: "void" }).eq("id", c.id as string);
+        }
+      }
+
       if (!silent) toast.success("Paperwork checklist updated");
       await load();
     } catch (e) {
