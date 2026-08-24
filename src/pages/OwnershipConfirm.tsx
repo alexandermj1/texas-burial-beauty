@@ -1407,8 +1407,8 @@ const OwnershipConfirm = () => {
               </div>
               <div style={{"marginTop": "4px", "fontSize": "15px", "fontWeight": "300", "lineHeight": "1.6", "color": "#6e6e73"}}>
                 Call us at
-                <a href="tel:+18175550140">
-                  (817) 555-0140
+<a href="tel:+12142304740">
+                  (214) 230-4740
                 </a>
                 , Monday to Friday, 9 to 5 Central. We can fill this in with you over the phone.
               </div>
