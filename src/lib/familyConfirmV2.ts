@@ -162,7 +162,16 @@ export function buildLogic(state, setS, accent0, CRM) {
   done5: () => {
     return L.named().every(d => {
       const sp = L.sp(d.id);
-      return sp && sp.has && (sp.has !== 'yes' || ((sp.n || '').trim() && !!sp.alive));
+      if (!sp || !sp.has) return false;
+      // The owner answering for themselves cannot say "don't know" about their
+      // own marriage — we need it to draw up the consent.
+      if (sp.has === 'unknown') return !(state.rel === SELF && state.selfIs === d.id);
+      if (sp.has !== 'yes') return true;
+      const n = (sp.n || '').trim();
+      if (!n) return false;
+      if (!sp.alive) return false;
+      if (nameKey(n) === nameKey(d.n)) return false; // cannot be their own spouse
+      return true;
     });
   },
   done6: () => { return L.gone().every(d => !!state.will[d.id]); },
