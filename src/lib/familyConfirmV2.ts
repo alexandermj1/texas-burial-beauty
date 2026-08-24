@@ -670,16 +670,23 @@ export function buildLogic(state, setS, accent0, CRM) {
       heirSpouseRows: L.inheritors().map(h => {
         const hs = s.heirSpouse[h.id] || {};
         const who = h.n.trim() || 'this person';
+        const typed = (hs.n || '').trim();
+        const clash = !!typed && nameKey(typed) === nameKey(h.n);
         return {
           name: h.n.trim(), rel: h.rel, yes: hs.has === 'yes', spouseName: hs.n || '',
           question: 'Is ' + who + ' married?',
-          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife',
-          pair: (hs.n || '').trim()
-            ? (hs.n || '').trim() + ' \u2014 husband or wife of ' + who
-            : 'We record this person as the husband or wife of ' + who + '.',
+          placeholder: 'Full legal name of ' + who + '\u2019s husband or wife \u2014 not ' + who,
+          clash,
+          clashNote: clash
+            ? 'That is the same name as ' + who + '. Please type the name of their husband or wife instead.'
+            : '',
+          pair: typed
+            ? typed + ' is the husband or wife of ' + who
+            : 'Whoever you name here is recorded as the husband or wife of ' + who + '.',
           aliveAsk: hs.has === 'yes',
           aliveSeg: L.seg(hs.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('heirSpouse', h.id, { alive: v })),
           aliveNeeded: hs.has === 'yes' && !hs.alive,
+          aliveLabel: typed ? 'Is ' + typed + ' still living?' : 'Is that spouse still living?',
           aliveNote: hs.alive === 'living'
             ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
             : hs.alive === 'deceased'
