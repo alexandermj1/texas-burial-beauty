@@ -1356,7 +1356,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     } as OwnershipAnswers;
     await persistAnswers(nextAnswers);
     setNewDoc({ kind: "custom", label: "", why: "", person: "", person2: "", needsNotary: false });
-    setAddDocOpen(false);
+    // Plain "send us this" documents usually come in batches, so the dialog
+    // stays open (fields cleared) until the broker closes it themselves.
+    if (kind !== "custom") setAddDocOpen(false);
+
     // Anything we prepare ourselves goes straight into the field check, so the
     // broker fills it in there and then instead of hunting for an Edit button.
     if (kind !== "custom") {
@@ -2030,8 +2033,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       {/* ── Add a one-off document ── */}
       <Dialog open={addDocOpen} onOpenChange={setAddDocOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[90dvh] flex flex-col overflow-hidden">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-base">
               <Plus className="w-4 h-4" /> Add a document to this request
             </DialogTitle>
@@ -2039,7 +2042,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               It joins the checklist, the seller's upload page and the next document request email.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 overflow-y-auto -mx-1 px-1 pb-1">
+
             <div>
               <Label className="text-xs">What kind of document?</Label>
               <div className="mt-1 grid grid-cols-2 gap-1.5">
@@ -2126,12 +2130,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setAddDocOpen(false)}>Cancel</Button>
+          <DialogFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border pt-3 mt-1 bg-background">
+            <Button variant="ghost" size="sm" onClick={() => setAddDocOpen(false)}>Close</Button>
             <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void addExtraDoc()}>
               Add it
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
