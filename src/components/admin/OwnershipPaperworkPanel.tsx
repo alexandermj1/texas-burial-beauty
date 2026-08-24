@@ -2030,8 +2030,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       {/* ── Add a one-off document ── */}
       <Dialog open={addDocOpen} onOpenChange={setAddDocOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[90dvh] flex flex-col overflow-hidden">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-base">
               <Plus className="w-4 h-4" /> Add a document to this request
             </DialogTitle>
@@ -2039,7 +2039,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               It joins the checklist, the seller's upload page and the next document request email.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 overflow-y-auto -mx-1 px-1 pb-1">
+
             <div>
               <Label className="text-xs">What kind of document?</Label>
               <div className="mt-1 grid grid-cols-2 gap-1.5">
