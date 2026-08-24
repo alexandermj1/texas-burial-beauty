@@ -169,6 +169,23 @@ const SellerAnswersSummary = ({
         </Block>
       )}
 
+      {marriages.length > 0 && (
+        <Block title="Marriages — who is married to whom">
+          <div className="space-y-1">
+            {marriages.map((m, i) => (
+              <div key={i} className="flex items-start justify-between gap-3 py-1 border-b border-border/40 last:border-0">
+                <span className="text-[11px] text-foreground shrink-0 font-medium">{m.person}</span>
+                <span className={`text-[11px] text-right ${m.flag ? "text-amber-700" : "text-muted-foreground"}`}>
+                  {m.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Block>
+      )}
+
+
+
       {kids.length > 0 && (
         <Block title="Their family">
           <div className="space-y-2">
