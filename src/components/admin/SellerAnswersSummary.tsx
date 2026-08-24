@@ -9,10 +9,15 @@ type Kid = { id: string; n: string; st: string; of?: string[]; kids?: { id: stri
 type YesNo = { has?: string; n?: string; alive?: string };
 
 const spouseValue = (sp: { has?: string; n?: string; alive?: string }, of: string) => {
-  if (sp.has !== "yes") return sp.has === "no" ? "No" : sp.has ? "Not sure" : "—";
+  if (!sp.has) return "Not answered";
+  if (sp.has === "no") return `No spouse — ${of} is not married`;
+  if (sp.has !== "yes") return "They did not know";
   const who = (sp.n || "").trim() || "name not given";
-  const alive = sp.alive === "deceased" ? "has died" : sp.alive === "living" ? "living — must sign" : "living status not given";
-  return `${who} — husband/wife of ${of} (${alive})`;
+  const alive =
+    sp.alive === "deceased" ? "deceased — nothing to sign"
+    : sp.alive === "living" ? "living — must sign a consent"
+    : "living status not answered";
+  return `Married to ${who} (${alive})`;
 };
 
 export type V2State = {
