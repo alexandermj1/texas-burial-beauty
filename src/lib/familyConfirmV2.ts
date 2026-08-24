@@ -193,7 +193,12 @@ export function buildLogic(state, setS, accent0, CRM) {
   done8: () => {
     return L.inheritors().every(h => {
       const hs = state.heirSpouse[h.id];
-      return hs && hs.has && (hs.has !== 'yes' || ((hs.n || '').trim() && !!hs.alive));
+      if (!hs || !hs.has) return false;
+      if (hs.has !== 'yes') return true;
+      const n = (hs.n || '').trim();
+      if (!n || !hs.alive) return false;
+      if (nameKey(n) === nameKey(h.n)) return false;
+      return true;
     });
   },
 
