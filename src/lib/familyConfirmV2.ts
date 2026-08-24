@@ -495,7 +495,10 @@ export function buildLogic(state, setS, accent0, CRM) {
         avBg: d.st === 'deceased' ? '#f2f2f5' : (d.st === 'living' && d.n.trim() ? '#eef1ea' : '#f5f5f7'),
         avFg: d.st === 'deceased' ? '#9a9aa2' : (d.st === 'living' && d.n.trim() ? acc : '#b7b7bf'),
         marriedYes: sp.has === 'yes',
-        marriedAsk: !!d.n.trim() && !!d.st && !L.coupleYes(d.id) && !(L.coupleAsk() && !s.couple),
+        // The marriage question lives in its own step (step 5), where we also
+        // capture the spouse's name and whether they are living. Asking it here
+        // as well produced half-answered, contradictory records.
+        marriedAsk: false,
         marriedLabel: (d.st === 'deceased' ? 'Was ' : 'Is ') + (d.n.trim() || 'this owner') + ' married?',
         spouseName: sp.n || '',
         spousePlaceholder: 'Full legal name of ' + (d.n.trim() || 'this owner') + '\u2019s husband or wife',
