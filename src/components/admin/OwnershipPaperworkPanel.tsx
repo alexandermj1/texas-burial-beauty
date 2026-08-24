@@ -2127,12 +2127,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setAddDocOpen(false)}>Cancel</Button>
+          <DialogFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border pt-3 mt-1 bg-background">
+            <Button variant="ghost" size="sm" onClick={() => setAddDocOpen(false)}>Close</Button>
             <Button size="sm" className="bg-[#1f2a37] hover:bg-[#111827] text-white" onClick={() => void addExtraDoc()}>
               Add it
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
