@@ -225,6 +225,30 @@ const Admin = () => {
     };
   }, [user, hasAccess]);
 
+  // Quiet background inbox pull every 2 minutes while the CRM is open, so new
+  // customer email lands on its own instead of waiting for someone to press
+  // Refresh inbox. It is deliberately light: inbox only, no attachment or
+  // thread backfill, and it pauses while the tab is hidden so Gmail quota is
+  // preserved. Heavy backfills still only happen on the explicit buttons.
+  useEffect(() => {
+    if (!user || !hasAccess) return;
+    let running = false;
+    const pull = async () => {
+      if (running || document.visibilityState !== "visible" || refreshingInbox) return;
+      running = true;
+      try {
+        await supabase.functions.invoke("sync-inbox", {
+          body: { query: "in:inbox -in:draft", maxResults: 50, attachmentBackfillLimit: 0, threadBackfillLimit: 0, maxThreadsPerSync: 0 },
+        });
+      } catch { /* quota / network hiccups are non-fatal here */ }
+      running = false;
+    };
+    void pull();
+    const interval = setInterval(pull, 120000);
+    return () => clearInterval(interval);
+  }, [user, hasAccess]);
+
+
 
   // Honor deep links like /admin?tab=submissions&submission=<id> (e.g. notification clicks)
   useEffect(() => {
