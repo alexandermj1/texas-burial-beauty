@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, RefreshCw, CheckCircle2, Clock, AlertCircle, Download, TrendingUp, Wallet } from "lucide-react";
+import { DollarSign, RefreshCw, CheckCircle2, Clock, AlertCircle, Download, TrendingUp, Wallet, Undo2, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { OWNER_EMAILS } from "@/lib/ownerAccess";
 
 interface Tx {
   id: string;
@@ -15,6 +17,8 @@ interface Tx {
   currency: string;
   status: string;
   stripe_session_id: string | null;
+  refunded_at: string | null;
+  refund_amount_cents: number | null;
   checkout_url: string | null;
   paid_at: string | null;
   created_at: string;
@@ -43,7 +47,12 @@ export default function AccountingPanel() {
   const [txs, setTxs] = useState<Tx[]>([]);
   const [sold, setSold] = useState<SoldSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "failed">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "failed" | "refunded">("all");
+  const [refundingId, setRefundingId] = useState<string | null>(null);
+  const { user } = useAuth();
+  // Refunds are owner-only. The edge function enforces this server-side too —
+  // this check just keeps the button out of everyone else's way.
+  const canRefund = OWNER_EMAILS.includes((user?.email || "").toLowerCase());
 
   const load = async () => {
     setLoading(true);
@@ -85,6 +94,33 @@ export default function AccountingPanel() {
       toast({ title: "Payout marked as paid" });
       load();
     }
+  };
+
+  const issueRefund = async (t: Tx) => {
+    const max = (t.amount_cents - (t.refund_amount_cents || 0)) / 100;
+    const input = window.prompt(
+      `Refund ${t.recipient_name || t.recipient_email || "this customer"}.\n\nEnter an amount in dollars (max ${max.toFixed(2)}), or leave as-is for a full refund.`,
+      max.toFixed(2),
+    );
+    if (input === null) return;
+    const dollars = Number(input.replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(dollars) || dollars <= 0 || dollars > max) {
+      toast({ title: "Enter a valid amount", description: `Must be between 0.01 and ${max.toFixed(2)}.`, variant: "destructive" });
+      return;
+    }
+    const reason = window.prompt("Reason for the refund (saved to the record, optional):", "") || undefined;
+    setRefundingId(t.id);
+    const { data, error } = await supabase.functions.invoke("refund-payment", {
+      body: { transactionId: t.id, amountCents: Math.round(dollars * 100), reason },
+    });
+    setRefundingId(null);
+    const err = error?.message || (data as any)?.error;
+    if (err) {
+      toast({ title: "Refund failed", description: String(err), variant: "destructive" });
+      return;
+    }
+    toast({ title: "Refund issued", description: `${fmt(Math.round(dollars * 100), t.currency)} sent back to the customer.` });
+    load();
   };
 
   const exportCsv = () => {
@@ -189,8 +225,13 @@ export default function AccountingPanel() {
             <h3 className="font-display text-lg text-foreground">All payment links</h3>
             <p className="text-xs text-muted-foreground">{filteredTxs.length} transactions</p>
           </div>
-          <div className="flex gap-1">
-            {(["all", "paid", "pending", "failed"] as const).map(f => (
+          <div className="flex items-center gap-1">
+            {canRefund && (
+              <span className="hidden sm:inline-flex items-center gap-1 mr-2 px-2 py-1 rounded-full text-[10px] bg-primary/5 text-primary border border-primary/20">
+                <ShieldCheck className="w-3 h-3" /> Owner refunds enabled
+              </span>
+            )}
+            {(["all", "paid", "pending", "failed", "refunded"] as const).map(f => (
               <button key={f} onClick={() => setStatusFilter(f)}
                 className={`px-3 py-1.5 text-xs rounded-full capitalize ${statusFilter === f ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:text-foreground"}`}>
                 {f}
@@ -213,6 +254,7 @@ export default function AccountingPanel() {
                   <th className="text-left px-4 py-2.5 font-semibold">Recipient</th>
                   <th className="text-right px-4 py-2.5 font-semibold">Amount</th>
                   <th className="text-center px-4 py-2.5 font-semibold">Status</th>
+                  {canRefund && <th className="text-right px-4 py-2.5 font-semibold">Refund</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -227,7 +269,25 @@ export default function AccountingPanel() {
                     <td className="px-4 py-3 text-right font-medium text-foreground">{fmt(t.amount_cents, t.currency)}</td>
                     <td className="px-4 py-3 text-center">
                       <StatusBadge status={t.status} />
+                      {!!t.refund_amount_cents && t.status !== "refunded" && (
+                        <div className="text-[10px] text-rose-600 mt-0.5">−{fmt(t.refund_amount_cents, t.currency)} refunded</div>
+                      )}
                     </td>
+                    {canRefund && (
+                      <td className="px-4 py-3 text-right">
+                        {t.status === "paid" && (t.amount_cents - (t.refund_amount_cents || 0)) > 0 ? (
+                          <button
+                            onClick={() => issueRefund(t)}
+                            disabled={refundingId === t.id}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-full border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-50"
+                          >
+                            <Undo2 className="w-3 h-3" /> {refundingId === t.id ? "Refunding…" : "Refund"}
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -257,6 +317,7 @@ function StatCard({ icon: Icon, label, value, subtitle, tint }: { icon: any; lab
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "paid") return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-emerald-50 text-emerald-700"><CheckCircle2 className="w-3 h-3" />Paid</span>;
+  if (status === "refunded") return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-rose-50 text-rose-700"><Undo2 className="w-3 h-3" />Refunded</span>;
   if (status === "failed") return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-rose-50 text-rose-700"><AlertCircle className="w-3 h-3" />Failed</span>;
   return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-amber-50 text-amber-700"><Clock className="w-3 h-3" />Pending</span>;
 }
