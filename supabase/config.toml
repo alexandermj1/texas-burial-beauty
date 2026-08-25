@@ -15,3 +15,6 @@ verify_jwt = false
 [functions.full-backup]
 verify_jwt = false
 
+
+[functions.owner-security]
+verify_jwt = false
