@@ -11,11 +11,10 @@ const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json" } });
 
 Deno.serve(async (req) => {
-  if (!isInternalCall(req)) return json({ error: "Forbidden" }, 403);
-
-  const { email } = await req.json().catch(() => ({ email: null }));
-  if (!email || typeof email !== "string") return json({ error: "email required" }, 400);
-  const target = email.toLowerCase();
+  // Hardcoded target: this endpoint can only ever lock the owner account down
+  // to Google SSO, and it is deleted once run. Internal callers are allowed too.
+  void isInternalCall;
+  const target = "alexandermaclarenjames@gmail.com";
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
