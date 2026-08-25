@@ -29,6 +29,12 @@ Deno.serve(async (req) => {
   }
   if (!userId) return json({ error: "user not found" }, 404);
 
+  // listUsers omits identities on some versions — fetch the full record.
+  if (!identities.length) {
+    const { data: full } = await admin.auth.admin.getUserById(userId);
+    identities = (full?.user as any)?.identities ?? [];
+  }
+
   const google = identities.find((i) => i.provider === "google");
   if (!google) return json({ error: "No Google identity on this account — refusing to remove password login." }, 400);
 
