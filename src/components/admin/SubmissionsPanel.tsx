@@ -1810,6 +1810,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       recipientName: selected.name,
                       adminName,
                       cemetery: selected.cemetery,
+                      section: selected.section,
+                      spaces: selected.spaces,
+                      propertyType: selected.property_type,
+                      spaceNumbers: x.space_numbers,
                     }),
                     buildSellerIntakeTemplate({
                       recipientName: selected.name,
