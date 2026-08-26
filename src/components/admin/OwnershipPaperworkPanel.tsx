@@ -1238,7 +1238,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
-  const generateDoc = async (r: Requirement, overrideFields?: DocFields, silent = false) => {
+  const generateDoc = async (
+    r: Requirement,
+    overrideFields?: DocFields,
+    silent = false,
+    supersedeId?: string | null,
+  ) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     setGenFailed((s) => { const n = new Set(s); n.delete(reqKey(r)); return n; });
@@ -1268,6 +1273,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             ...(r.personName ? { seller_name: r.personName } : {}),
             ...(r.jointNames ? { joint_names: r.jointNames } : {}),
           };
+      // Revising an existing copy: the old version is retired server-side so the
+      // seller's page can never keep showing it.
+      if (supersedeId) overrides.supersede_contract_id = supersedeId;
       const { data, error } = await supabase.functions.invoke("generate-contract", {
         body: { submission_id: submissionId, kind: r.contractKind, overrides },
       });
@@ -1277,15 +1285,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setDocEdit(null);
       // Show it as ready immediately — no waiting on a full panel reload.
       if (res?.contract) {
-        setContracts((prev) => [...prev.filter((c) => c.id !== res.contract!.id), res.contract!]);
+        setContracts((prev) => [
+          ...prev.filter((c) => c.id !== res.contract!.id && c.id !== supersedeId),
+          res.contract!,
+        ]);
       }
       if (!silent) {
         // Show the filled PDF inline so it can be checked line by line.
         if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
-        toast.success(`${r.label} ready`, {
-          description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
+        toast.success(`${r.label} updated`, {
+          description: supersedeId
+            ? "The seller's document page now shows this revised version — the old copy has been retired."
+            : res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
         });
       }
+
       void setRowState(r, "issued").then(() => load());
     } catch (e) {
       setGenFailed((s) => new Set(s).add(reqKey(r)));
