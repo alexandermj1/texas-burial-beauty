@@ -359,15 +359,19 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   // The seller's page writes straight into submission_documents — listen so the
   // checklist ticks itself the moment a file lands, with no manual refresh.
+  // Debounced: a single delete fires several row events, and reloading on each
+  // one is what made the list shuffle under the cursor.
   useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
     const ch = supabase
       .channel(`docs-${submissionId}`)
       .on("postgres_changes",
         { event: "*", schema: "public", table: "submission_documents", filter: `submission_id=eq.${submissionId}` },
-        () => { void load(); })
+        () => { if (t) clearTimeout(t); t = setTimeout(() => { void load(); }, 600); })
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => { if (t) clearTimeout(t); void supabase.removeChannel(ch); };
   }, [submissionId, load]);
+
 
   const path = questionPath(answers);
   const prog = progress(answers);
