@@ -131,7 +131,22 @@ Thank you for reaching out to Texas Cemetery Brokers about selling your cemetery
 
 ${ask}${closing}${signature(i.adminName)}`;
 
-  return { id: "seller_intake", label: "Seller intake (asks for missing info)", body };
+  return { id: "seller_intake", label: "Seller (no deed)", body };
+};
+
+// Seller acknowledgement when the deed was already supplied with the inquiry.
+export const buildSellerDeedTemplate = (i: SellerInput): EmailTemplate => {
+  const cemetery = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
+  const body = `Dear ${first(i.recipientName)},
+
+Thank you for reaching out to us. I have received your message and the copy of your deed for the burial plot${cemetery}, and I appreciate you providing that paperwork so promptly.
+
+I am currently reviewing the information you shared. Our team will follow up with you as soon as possible regarding a suggested sales price and the next steps for your listing.
+
+We appreciate your patience while we look into this for you.
+
+${signature(i.adminName)}`;
+  return { id: "seller_deed", label: "Seller (deed)", body };
 };
 
 interface BuyerInput {
