@@ -2398,10 +2398,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <Button variant="ghost" size="sm" onClick={() => setDocEdit(null)}>Cancel</Button>
             <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
               disabled={!docEdit || docEdit.loading || !!busy}
-              onClick={() => docEdit && void generateDoc(docEdit.r, docEdit.fields)}>
+              onClick={() => docEdit && void generateDoc(
+                docEdit.r, docEdit.fields, false, docEdit.locked ? null : docEdit.existingId ?? null)}>
               {busy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-              Generate &amp; preview
+              {docEdit?.existingId && !docEdit?.locked ? "Save revision & update seller page" : "Generate & preview"}
             </Button>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
