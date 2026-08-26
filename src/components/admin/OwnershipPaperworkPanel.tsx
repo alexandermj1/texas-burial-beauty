@@ -244,8 +244,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
+  const didLoad = useRef(false);
   const load = useCallback(async () => {
-    setLoading(true);
+    // Only the very first fetch swaps the panel for a spinner. Later refreshes
+    // (deletes, realtime pings) patch state in place so the list never jumps.
+    if (!didLoad.current) setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
         .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at").eq("id", submissionId).maybeSingle(),
@@ -317,7 +320,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const { data } = await supabase.storage.from(f.bucket).createSignedUrl(f.path, 60 * 30);
       if (data?.signedUrl) previews[f.path] = data.signedUrl;
     }));
-    setThumbs(previews);
+    setThumbs((prev) => ({ ...prev, ...previews }));
 
     if (cemetery) {
       const { data: cem } = await supabase.from("texas_cemeteries")
@@ -326,6 +329,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setCemName((cem as { name?: string } | null)?.name ?? null);
     }
     setLoading(false);
+    didLoad.current = true;
   }, [submissionId, cemetery]);
 
   /**
@@ -355,15 +359,19 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   // The seller's page writes straight into submission_documents — listen so the
   // checklist ticks itself the moment a file lands, with no manual refresh.
+  // Debounced: a single delete fires several row events, and reloading on each
+  // one is what made the list shuffle under the cursor.
   useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
     const ch = supabase
       .channel(`docs-${submissionId}`)
       .on("postgres_changes",
         { event: "*", schema: "public", table: "submission_documents", filter: `submission_id=eq.${submissionId}` },
-        () => { void load(); })
+        () => { if (t) clearTimeout(t); t = setTimeout(() => { void load(); }, 600); })
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => { if (t) clearTimeout(t); void supabase.removeChannel(ch); };
   }, [submissionId, load]);
+
 
   const path = questionPath(answers);
   const prog = progress(answers);
