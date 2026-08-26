@@ -244,8 +244,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
+  const didLoad = useRef(false);
   const load = useCallback(async () => {
-    setLoading(true);
+    // Only the very first fetch swaps the panel for a spinner. Later refreshes
+    // (deletes, realtime pings) patch state in place so the list never jumps.
+    if (!didLoad.current) setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
       supabase.from("contact_submissions")
         .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at").eq("id", submissionId).maybeSingle(),
