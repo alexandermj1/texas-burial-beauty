@@ -235,7 +235,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     nameHints?: { name: string; source: string }[];
     /** Plot descriptions exactly as printed on the deed / certificate. */
     plotHints?: { text: string; source: string }[];
+    /** The already-prepared copy being revised — it is replaced when we save. */
+    existingId?: string | null;
+    /** True when that copy has already been signed or notarised. */
+    locked?: boolean;
   }>(null);
+
 
 
 
