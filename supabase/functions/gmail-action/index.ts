@@ -29,7 +29,7 @@ const SendSchema = z.object({
     filename: z.string().max(200),
     mimeType: z.string().max(120).optional(),
     contentBase64: z.string().max(20000000),
-  })).max(10).optional(),
+  })).max(30).optional(),
 
   threadId: z.string().max(200).optional(),
   inReplyToGmailId: z.string().max(200).optional(),
