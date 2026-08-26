@@ -1064,10 +1064,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .eq("id", submissionId).maybeSingle();
       const s = (sub ?? {}) as Record<string, unknown>;
       const str = (v: unknown) => (v == null ? "" : String(v));
-      // A previously prepared copy is the best starting point — keep the admin's earlier edits.
-      const prior = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void")
-        .map((c) => (c.fill_data ?? {}) as Record<string, unknown>)
-        .find((f) => !r.personName || String(f.seller_name ?? "").toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()));
+      // The copy already prepared for these people is the starting point, so an
+      // edit is a true revision of that document — it keeps the admin's earlier
+      // corrections and replaces the old version everywhere (including on the
+      // seller's page) when it is saved.
+      const wantedKeys = [r.jointNames?.[0], r.jointNames?.[1], r.personName]
+        .filter(Boolean).map((n) => String(n).toLowerCase().split(" ")[0]);
+      const live = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void");
+      const existing =
+        live.find((c) => {
+          const f = (c.fill_data ?? {}) as Record<string, unknown>;
+          const name = `${String(f.seller_name ?? "")} ${c.signature_name ?? ""}`.toLowerCase();
+          return wantedKeys.length ? wantedKeys.some((k) => name.includes(k)) : true;
+        }) ?? (wantedKeys.length ? undefined : live[0]);
+      const prior = (existing?.fill_data ?? undefined) as Record<string, unknown> | undefined;
+      const locked = !!(existing && ["signed", "notarized", "completed"].includes(String(existing.status)));
       const nameHints = await collectNameSpellings(s, r);
       const plotHints = await collectDeedPlots(s);
       setDocEdit((cur) => cur && cur.r === r ? {
@@ -1075,6 +1086,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         loading: false,
         nameHints,
         plotHints,
+        existingId: existing?.id ?? null,
+        locked,
+
         fields: (() => {
           const principal = r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "";
           // The seller already gave us their mailing address in the family
