@@ -137,9 +137,20 @@ ${ask}${closing}${signature(i.adminName)}`;
 // Seller acknowledgement when the deed was already supplied with the inquiry.
 export const buildSellerDeedTemplate = (i: SellerInput): EmailTemplate => {
   const cemetery = i.cemetery ? ` at ${cem(i.cemetery)}` : "";
+  // Describe what they actually submitted: count + type, plus section / space numbers.
+  const count = (i.spaces || "").trim();
+  const type = (i.propertyType || "").trim().toLowerCase();
+  const noun = type || "burial plot";
+  const plural = count && !/^1\b|^one\b/i.test(count) && !/s$/.test(noun) ? `${noun}s` : noun;
+  const what = count ? `${count} ${plural}` : noun;
+  const where: string[] = [];
+  if (i.section?.trim()) where.push(`${i.section.trim()}`);
+  if (i.spaceNumbers?.trim()) where.push(`space${/[,&/-]|\band\b/i.test(i.spaceNumbers) ? "s" : ""} ${i.spaceNumbers.trim()}`);
+  const detail = where.length ? ` (${where.join(", ")})` : "";
+
   const body = `Dear ${first(i.recipientName)},
 
-Thank you for reaching out to us. I have received your message and the copy of your deed for the burial plot${cemetery}, and I appreciate you providing that paperwork so promptly.
+Thank you for reaching out to us. I have received your message and the copy of your deed for the ${what}${cemetery}${detail}, and I appreciate you providing that paperwork so promptly.
 
 I am currently reviewing the information you shared. Our team will follow up with you as soon as possible regarding a suggested sales price and the next steps for your listing.
 
