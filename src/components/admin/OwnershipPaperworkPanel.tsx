@@ -320,7 +320,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const { data } = await supabase.storage.from(f.bucket).createSignedUrl(f.path, 60 * 30);
       if (data?.signedUrl) previews[f.path] = data.signedUrl;
     }));
-    setThumbs(previews);
+    setThumbs((prev) => ({ ...prev, ...previews }));
 
     if (cemetery) {
       const { data: cem } = await supabase.from("texas_cemeteries")
