@@ -329,6 +329,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setCemName((cem as { name?: string } | null)?.name ?? null);
     }
     setLoading(false);
+    didLoad.current = true;
   }, [submissionId, cemetery]);
 
   /**
