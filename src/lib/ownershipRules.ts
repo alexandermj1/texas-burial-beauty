@@ -794,7 +794,9 @@ export function computeRequirements(
     add({ code: "D2", label: "Photo ID for every person signing", why: "One clear government photo ID for each person who will sign." });
   }
   const signers = namedRoster.filter((p) => p.role !== "witness");
-  const joint = canIssueJointPoa(a) && a.jointPoa === "yes" ? signers : null;
+  // Two living spouses / co-owners get ONE joint POA by default — a broker can
+  // still force two separate documents by setting jointPoa to "no".
+  const joint = canIssueJointPoa(a) && a.jointPoa !== "no" ? signers : null;
 
   if (joint) {
     // Texas law lets two principals execute one instrument, each signature
