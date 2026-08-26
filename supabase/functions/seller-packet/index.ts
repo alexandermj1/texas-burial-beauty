@@ -143,8 +143,29 @@ Deno.serve(async (req) => {
         const { data } = await supabase.storage.from("contracts").createSignedUrl(path, 60 * 60 * 24);
         return data?.signedUrl ?? null;
       };
+      // Only ever show the newest prepared copy for each signer. If a document
+      // was revised (name corrected, two POAs merged into one joint POA), the
+      // older copy must never stay on the seller's page next to the new one.
+      const poaRowList = (poaRows ?? []).slice();
+      const namesOf = (r: Record<string, unknown>) => {
+        const fill = (r.fill_data ?? {}) as Record<string, unknown>;
+        const joint = Array.isArray(fill.joint_names) ? fill.joint_names as string[] : [];
+        const raw = joint.length
+          ? joint
+          : String(fill.seller_name ?? r.signature_name ?? r.principal_key ?? "").split("&");
+        return raw.map((n) => personKeyOf(n)).filter(Boolean);
+      };
+      const freshPoaRows = poaRowList.filter((row, i) => {
+        const mine = namesOf(row as Record<string, unknown>);
+        if (!mine.length) return true;
+        // A later row covering any of the same people supersedes this one.
+        return !poaRowList.slice(i + 1).some((later) =>
+          namesOf(later as Record<string, unknown>).some((k) => mine.includes(k)));
+      });
+
       const poas = [];
-      for (const row of poaRows ?? []) {
+      for (const row of freshPoaRows) {
+
         const r = row as Record<string, unknown>;
         const fill = (r.fill_data ?? {}) as Record<string, unknown>;
         const signer = String(fill.seller_name ?? r.signature_name ?? "").trim();
