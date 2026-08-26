@@ -235,7 +235,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     nameHints?: { name: string; source: string }[];
     /** Plot descriptions exactly as printed on the deed / certificate. */
     plotHints?: { text: string; source: string }[];
+    /** The already-prepared copy being revised — it is replaced when we save. */
+    existingId?: string | null;
+    /** True when that copy has already been signed or notarised. */
+    locked?: boolean;
   }>(null);
+
 
 
 
@@ -1059,10 +1064,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         .eq("id", submissionId).maybeSingle();
       const s = (sub ?? {}) as Record<string, unknown>;
       const str = (v: unknown) => (v == null ? "" : String(v));
-      // A previously prepared copy is the best starting point — keep the admin's earlier edits.
-      const prior = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void")
-        .map((c) => (c.fill_data ?? {}) as Record<string, unknown>)
-        .find((f) => !r.personName || String(f.seller_name ?? "").toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()));
+      // The copy already prepared for these people is the starting point, so an
+      // edit is a true revision of that document — it keeps the admin's earlier
+      // corrections and replaces the old version everywhere (including on the
+      // seller's page) when it is saved.
+      const wantedKeys = [r.jointNames?.[0], r.jointNames?.[1], r.personName]
+        .filter(Boolean).map((n) => String(n).toLowerCase().split(" ")[0]);
+      const live = contracts.filter((c) => c.kind === r.contractKind && c.status !== "void");
+      const existing =
+        live.find((c) => {
+          const f = (c.fill_data ?? {}) as Record<string, unknown>;
+          const name = `${String(f.seller_name ?? "")} ${c.signature_name ?? ""}`.toLowerCase();
+          return wantedKeys.length ? wantedKeys.some((k) => name.includes(k)) : true;
+        }) ?? (wantedKeys.length ? undefined : live[0]);
+      const prior = (existing?.fill_data ?? undefined) as Record<string, unknown> | undefined;
+      const locked = !!(existing && ["signed", "notarized", "completed"].includes(String(existing.status)));
       const nameHints = await collectNameSpellings(s, r);
       const plotHints = await collectDeedPlots(s);
       setDocEdit((cur) => cur && cur.r === r ? {
@@ -1070,6 +1086,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         loading: false,
         nameHints,
         plotHints,
+        existingId: existing?.id ?? null,
+        locked,
+
         fields: (() => {
           const principal = r.jointNames?.[0] ?? r.personName ?? str(prior?.seller_name) ?? str(s.name) ?? "";
           // The seller already gave us their mailing address in the family
@@ -1219,7 +1238,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
-  const generateDoc = async (r: Requirement, overrideFields?: DocFields, silent = false) => {
+  const generateDoc = async (
+    r: Requirement,
+    overrideFields?: DocFields,
+    silent = false,
+    supersedeId?: string | null,
+  ) => {
     if (!r.contractKind) return;
     setBusy(reqKey(r));
     setGenFailed((s) => { const n = new Set(s); n.delete(reqKey(r)); return n; });
@@ -1249,6 +1273,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             ...(r.personName ? { seller_name: r.personName } : {}),
             ...(r.jointNames ? { joint_names: r.jointNames } : {}),
           };
+      // Revising an existing copy: the old version is retired server-side so the
+      // seller's page can never keep showing it.
+      if (supersedeId) overrides.supersede_contract_id = supersedeId;
       const { data, error } = await supabase.functions.invoke("generate-contract", {
         body: { submission_id: submissionId, kind: r.contractKind, overrides },
       });
@@ -1258,15 +1285,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setDocEdit(null);
       // Show it as ready immediately — no waiting on a full panel reload.
       if (res?.contract) {
-        setContracts((prev) => [...prev.filter((c) => c.id !== res.contract!.id), res.contract!]);
+        setContracts((prev) => [
+          ...prev.filter((c) => c.id !== res.contract!.id && c.id !== supersedeId),
+          res.contract!,
+        ]);
       }
       if (!silent) {
         // Show the filled PDF inline so it can be checked line by line.
         if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
-        toast.success(`${r.label} ready`, {
-          description: res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
+        toast.success(`${r.label} updated`, {
+          description: supersedeId
+            ? "The seller's document page now shows this revised version — the old copy has been retired."
+            : res?.pdf_url ? "Opened below so you can check every field." : "Open the contract to review it.",
         });
       }
+
       void setRowState(r, "issued").then(() => load());
     } catch (e) {
       setGenFailed((s) => new Set(s).add(reqKey(r)));
@@ -2212,10 +2245,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               <FileSignature className="w-4 h-4" /> Check or edit the {docEdit?.r.label ?? "document"}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {docEdit?.r.jointNames?.length
-                ? "Joint document — both principals appear on the same instrument and each gets their own notary block."
-                : "Check every blank before it is generated. Nothing is sent to the seller yet."}
+              {docEdit?.locked
+                ? "This copy has already been signed or notarised — saving prepares a fresh version and leaves the signed one untouched."
+                : docEdit?.existingId
+                  ? "Revising the copy already prepared. When you save, the seller's document page updates to this new version straight away and the old one is retired."
+                  : docEdit?.r.jointNames?.length
+                    ? "Joint document — both principals appear on the same instrument and each gets their own notary block."
+                    : "Check every blank before it is generated. Nothing is sent to the seller yet."}
             </DialogDescription>
+
           </DialogHeader>
           {docEdit?.loading || !docEdit ? (
             <div className="py-10 grid place-items-center text-muted-foreground text-sm">
@@ -2360,10 +2398,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <Button variant="ghost" size="sm" onClick={() => setDocEdit(null)}>Cancel</Button>
             <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
               disabled={!docEdit || docEdit.loading || !!busy}
-              onClick={() => docEdit && void generateDoc(docEdit.r, docEdit.fields)}>
+              onClick={() => docEdit && void generateDoc(
+                docEdit.r, docEdit.fields, false, docEdit.locked ? null : docEdit.existingId ?? null)}>
               {busy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileSignature className="w-3.5 h-3.5 mr-1" />}
-              Generate &amp; preview
+              {docEdit?.existingId && !docEdit?.locked ? "Save revision & update seller page" : "Generate & preview"}
             </Button>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -295,6 +295,52 @@ Deno.serve(async (req) => {
       .single();
     if (insErr) throw insErr;
 
+    // ---- Supersede older copies of the same document -------------------
+    // Editing a prepared document (fixing a name, merging two POAs into one
+    // joint POA, correcting the plot description) used to leave the previous
+    // version live, so the seller's document page kept showing the old PDF.
+    // Any earlier, unsigned copy of the same kind that covers one of the same
+    // people — or the exact row the admin was editing — is voided here.
+    try {
+      const newKeys = new Set(
+        (kind === 'poa' && Array.isArray((fill as Record<string, unknown>).joint_names)
+          ? ((fill as Record<string, unknown>).joint_names as string[])
+          : [fill.seller_name])
+          .map((n) => nameKey(n)).filter(Boolean),
+      );
+      const supersedeId = typeof overrides.supersede_contract_id === 'string'
+        ? overrides.supersede_contract_id
+        : null;
+
+      const { data: siblings } = await svc.from('contracts')
+        .select('id, status, principal_key, fill_data, signed_at, notarized_at, completed_at')
+        .eq('submission_id', submission_id)
+        .eq('kind', kind);
+
+      const staleIds = (siblings ?? []).filter((c) => {
+        const cid = c.id as string;
+        if (cid === (inserted?.id as string)) return false;
+        if (['signed', 'notarized', 'completed', 'void'].includes(String(c.status))) return false;
+        if (c.signed_at || c.notarized_at || c.completed_at) return false;
+        if (supersedeId && cid === supersedeId) return true;
+        const f = (c.fill_data ?? {}) as Record<string, unknown>;
+        const theirs = [
+          ...(Array.isArray(f.joint_names) ? f.joint_names as string[] : []),
+          String(f.seller_name ?? ''),
+          String(c.principal_key ?? ''),
+        ].map((n) => nameKey(n)).filter(Boolean);
+        return theirs.some((k) => newKeys.has(k));
+      }).map((c) => c.id as string);
+
+      if (staleIds.length) {
+        await svc.from('contracts').update({ status: 'void' }).in('id', staleIds);
+      }
+    } catch (e) {
+      console.error('supersede older contracts failed', e);
+    }
+
+
+
 
     const { data: signedUrl } = await svc.storage.from('contracts').createSignedUrl(path, 60 * 60 * 24);
 
