@@ -192,7 +192,18 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
           ...(hideListingOption ? {} : { listing_option: listingOption }),
         },
       });
+      // Keep the submission's deed owner names in sync so the family tree
+      // (sent automatically once this agreement is signed) starts from the
+      // same names we just put on the contract.
+      const deedNames = clean(coOwnerName);
+      if (deedNames) {
+        await supabase
+          .from("contact_submissions")
+          .update({ deed_owner_names: deedNames })
+          .eq("id", seller.id);
+      }
       onGenerated(res.html, { signToken: res.signToken, signUrl: res.signUrl });
+
       toast({
         title: hasGenerated ? "Agreement regenerated" : "Listing agreement inserted",
         description: "Preview the email, then send it down the thread.",
