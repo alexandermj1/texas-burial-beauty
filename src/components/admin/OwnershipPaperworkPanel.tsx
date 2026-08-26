@@ -2245,10 +2245,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               <FileSignature className="w-4 h-4" /> Check or edit the {docEdit?.r.label ?? "document"}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {docEdit?.r.jointNames?.length
-                ? "Joint document — both principals appear on the same instrument and each gets their own notary block."
-                : "Check every blank before it is generated. Nothing is sent to the seller yet."}
+              {docEdit?.locked
+                ? "This copy has already been signed or notarised — saving prepares a fresh version and leaves the signed one untouched."
+                : docEdit?.existingId
+                  ? "Revising the copy already prepared. When you save, the seller's document page updates to this new version straight away and the old one is retired."
+                  : docEdit?.r.jointNames?.length
+                    ? "Joint document — both principals appear on the same instrument and each gets their own notary block."
+                    : "Check every blank before it is generated. Nothing is sent to the seller yet."}
             </DialogDescription>
+
           </DialogHeader>
           {docEdit?.loading || !docEdit ? (
             <div className="py-10 grid place-items-center text-muted-foreground text-sm">
