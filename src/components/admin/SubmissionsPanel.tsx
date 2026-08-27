@@ -7,7 +7,6 @@ import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
-import BuyersBoard from "./BuyersBoard";
 import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
 import EmailThread from "./EmailThread";
@@ -226,9 +225,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
-  // Sellers move through a pipeline; buyers just need matching to inventory, so
-  // they get their own workspace rather than being squeezed into the same list.
-  const [view, setView] = useState<"pipeline" | "buyers">("pipeline");
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
   // Bayer pipeline is temporarily hidden — submissions panel is Texas-only for now.
   // Keep the state + setter so the rest of the code (cemetery directory, filters,
@@ -2520,53 +2516,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     );
   };
 
-  const buyerCount = submissions.filter(
-    s => resolveKind(s.customer_kind, s.source) === "buyer" && !(s as any).deleted_at && !(s as any).archived_at,
-  ).length;
-
-  const viewTabs = (
-    <div className="lg:col-span-12 flex items-center gap-1.5">
-      {([
-        { key: "pipeline" as const, label: "Sellers pipeline" },
-        { key: "buyers" as const, label: `Buyers (${buyerCount})` },
-      ]).map(t => (
-        <button
-          key={t.key}
-          onClick={() => setView(t.key)}
-          className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
-            view === t.key
-              ? "bg-foreground text-background border-foreground"
-              : "bg-card text-muted-foreground border-border hover:text-foreground"
-          }`}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-
-  if (view === "buyers") {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {viewTabs}
-        <BuyersBoard
-          submissions={submissions as any[]}
-          adminName={adminName}
-          onOpenSubmission={(id) => {
-            setView("pipeline");
-            setKindFilter("all");
-            setArchivedView(false);
-            setSelectedId(id);
-            requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
-          }}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      {viewTabs}
       {/* Region tabs hidden — Texas-only view. Bayer code is preserved above. */}
       {false && (
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
