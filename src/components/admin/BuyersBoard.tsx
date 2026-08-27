@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Search, MapPin, Mail, Phone, Users, Sparkles, ArrowRight, Loader2,
+  Search, MapPin, Mail, Phone, Users, Sparkles, ArrowRight,
   Building2, Clock, DollarSign, Send, ExternalLink, Navigation,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
