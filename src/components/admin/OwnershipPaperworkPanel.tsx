@@ -1979,7 +1979,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             </div>
           ) : null}
 
-          {/* ── The family tree, with each person's paperwork on their card ── */}
+          {/* ── The family tree map is hidden for now (kept for later) ── */}
+          {SHOW_FAMILY_TREE_MAP ? (
           <div className="border rounded-lg p-3 bg-background/60 space-y-2.5">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold flex items-center gap-1.5">
@@ -2007,6 +2008,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               }}
             />
           </div>
+          ) : null}
 
 
 
