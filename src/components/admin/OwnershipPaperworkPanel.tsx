@@ -16,6 +16,8 @@ import { openFileViewer } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import FamilyTreeMap from "./FamilyTreeMap";
+// Family tree diagram is parked for now — flip to true to bring it back.
+const SHOW_FAMILY_TREE_MAP = false;
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import {
