@@ -1974,6 +1974,37 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             </div>
           ) : null}
 
+          {/* ── The family tree, with each person's paperwork on their card ── */}
+          <div className="border rounded-lg p-3 bg-background/60 space-y-2.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-xs font-semibold flex items-center gap-1.5">
+                <Network className="w-3.5 h-3.5 text-muted-foreground" /> Family tree · who needs what
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Click a document to check or edit it · “+” adds one to that person
+              </span>
+            </div>
+            <FamilyTreeMap
+              answers={answers}
+              people={(answers.people ?? []).length ? (answers.people as RosterPerson[]) : roster}
+              requirements={personRequirements}
+              stateOf={(r) => stateByKey[reqDbKey(r)] ?? (r.review ? "maybe" : "needed")}
+              onDocClick={(r) => {
+                if (r.contractKind) { void openDocEditor(r); return; }
+                setExpanded((e) => ({ ...e, [reqKey(r)]: true }));
+                requestAnimationFrame(() => {
+                  document.getElementById(anchorId(r))?.scrollIntoView({ behavior: "smooth", block: "center" });
+                });
+              }}
+              onAddDoc={(name) => {
+                setNewDoc({ kind: "custom", label: "", why: "", person: name, person2: "", needsNotary: false });
+                setAddDocOpen(true);
+              }}
+            />
+          </div>
+
+
+
 
 
           {/* ── Listing agreement sits on its own, above the paperwork ── */}
