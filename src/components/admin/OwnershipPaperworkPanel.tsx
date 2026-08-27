@@ -82,6 +82,8 @@ const personKey = (n?: string | null) => {
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
 };
 const reqDbKey = (r: Requirement) => `${r.code}::${personKey(r.personName)}`;
+/** Stable DOM id so the family tree can jump straight to a checklist row. */
+const anchorId = (r: Requirement) => `req-${reqKey(r).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
 
 type DocRow = {
   id: string;
