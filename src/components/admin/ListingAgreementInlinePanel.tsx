@@ -10,7 +10,7 @@
 // the submission / questionnaire.
 
 import { useEffect, useState } from "react";
-import { Loader2, FileSignature, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, FileSignature, RefreshCw, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
