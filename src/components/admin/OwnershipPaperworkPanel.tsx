@@ -1573,6 +1573,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
+  /** Everything tied to a named person — what the family tree draws. */
+  const personRequirements = documentRequirements.filter(
+    (r) => !!r.personName || !!r.jointNames?.length,
+  );
   const general = documentRequirements.filter((r) => !r.personName);
   // Match names the same way everywhere else in this panel. Exact string
   // matching caused hand-added rows with a middle name/initial variation to be
