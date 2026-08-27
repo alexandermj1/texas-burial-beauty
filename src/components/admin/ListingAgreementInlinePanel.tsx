@@ -10,7 +10,7 @@
 // the submission / questionnaire.
 
 import { useEffect, useState } from "react";
-import { Loader2, FileSignature, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, FileSignature, RefreshCw, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,6 +95,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
   const [countyState, setCountyState] = useState("");
   const [plotDescription, setPlotDescription] = useState("");
   const [perPlot, setPerPlot] = useState("");
+  const [signUrl, setSignUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -202,6 +203,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
           .update({ deed_owner_names: deedNames })
           .eq("id", seller.id);
       }
+      setSignUrl(res.signUrl ?? null);
       onGenerated(res.html, { signToken: res.signToken, signUrl: res.signUrl });
 
       toast({
@@ -361,6 +363,18 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
             "Enter the guaranteed net total the seller accepted."
           )}
         </p>
+        <div className="flex items-center gap-2">
+        {signUrl ? (
+          <a
+            href={signUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted"
+          >
+            <ExternalLink className="w-3 h-3" />
+            Open seller page
+          </a>
+        ) : null}
         <button
           type="button"
           onClick={generate}
@@ -370,6 +384,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
           {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : hasGenerated ? <RefreshCw className="w-3 h-3" /> : <FileSignature className="w-3 h-3" />}
           {busy ? "Generating…" : hasGenerated ? "Regenerate agreement" : "Generate agreement"}
         </button>
+        </div>
       </div>
     </div>
   );
