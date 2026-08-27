@@ -385,6 +385,14 @@ const InlineEmailComposer = ({
   const applyTemplate = (id: string) => {
     if (id === "__blank__") {
       setActiveTemplateId(null);
+      // Wipe the body back to just the greeting + signature — a template that
+      // was loaded earlier must not linger in the editor.
+      const greet = `Dear ${firstName(recipientName)},`;
+      const nameBlock = adminName ? `${adminName}\nCemetery Salesperson\n` : "";
+      const sig = `Best regards,\n\n${nameBlock}Texas Cemetery Brokers\nwww.texascemeterybrokers.com`;
+      const blank = textToHtml(`${greet}\n\n\n\n${sig}`);
+      setHtml(blank);
+      editorRef.current?.setHtml(blank);
       setBodyTouched(false);
       setListingBlockInserted(false);
       setLaBlockInserted(false);
