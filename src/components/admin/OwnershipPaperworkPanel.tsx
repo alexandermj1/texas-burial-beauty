@@ -9,12 +9,13 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X, Check,
+  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X, Check, Network,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { openFileViewer } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
+import FamilyTreeMap from "./FamilyTreeMap";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import {
@@ -82,6 +83,8 @@ const personKey = (n?: string | null) => {
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
 };
 const reqDbKey = (r: Requirement) => `${r.code}::${personKey(r.personName)}`;
+/** Stable DOM id so the family tree can jump straight to a checklist row. */
+const anchorId = (r: Requirement) => `req-${reqKey(r).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
 
 type DocRow = {
   id: string;
@@ -1570,6 +1573,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
+  /** Everything tied to a named person — what the family tree draws. */
+  const personRequirements = documentRequirements.filter(
+    (r) => !!r.personName || !!r.jointNames?.length,
+  );
   const general = documentRequirements.filter((r) => !r.personName);
   // Match names the same way everywhere else in this panel. Exact string
   // matching caused hand-added rows with a middle name/initial variation to be
@@ -1669,7 +1676,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const isOpen = !!expanded[key];
     const supplied = ["received", "notarized", "complete"].includes(s);
     return (
-      <div className={`border rounded-md px-3 py-2 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
+      <div id={anchorId(r)} className={`border rounded-md px-3 py-2 scroll-mt-24 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
         <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -1971,6 +1978,37 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               />
             </div>
           ) : null}
+
+          {/* ── The family tree, with each person's paperwork on their card ── */}
+          <div className="border rounded-lg p-3 bg-background/60 space-y-2.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-xs font-semibold flex items-center gap-1.5">
+                <Network className="w-3.5 h-3.5 text-muted-foreground" /> Family tree · who needs what
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Click a document to check or edit it · “+” adds one to that person
+              </span>
+            </div>
+            <FamilyTreeMap
+              answers={answers}
+              people={(answers.people ?? []).length ? (answers.people as RosterPerson[]) : roster}
+              requirements={personRequirements}
+              stateOf={(r) => stateByKey[reqDbKey(r)] ?? (r.review ? "maybe" : "needed")}
+              onDocClick={(r) => {
+                if (r.contractKind) { void openDocEditor(r); return; }
+                setExpanded((e) => ({ ...e, [reqKey(r)]: true }));
+                requestAnimationFrame(() => {
+                  document.getElementById(anchorId(r))?.scrollIntoView({ behavior: "smooth", block: "center" });
+                });
+              }}
+              onAddDoc={(name) => {
+                setNewDoc({ kind: "custom", label: "", why: "", person: name, person2: "", needsNotary: false });
+                setAddDocOpen(true);
+              }}
+            />
+          </div>
+
+
 
 
 
