@@ -1669,7 +1669,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const isOpen = !!expanded[key];
     const supplied = ["received", "notarized", "complete"].includes(s);
     return (
-      <div className={`border rounded-md px-3 py-2 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
+      <div id={anchorId(r)} className={`border rounded-md px-3 py-2 scroll-mt-24 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
         <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
