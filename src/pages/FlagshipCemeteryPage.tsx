@@ -248,9 +248,15 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       <Navbar forceScrolled />
 
       {/* ============ HERO ============ */}
-      <section className="relative pt-28 md:pt-32 pb-12 md:pb-16 overflow-hidden border-b border-border/60">
+      <section
+        className={`relative overflow-hidden border-b border-border/60 ${
+          heroPhoto ? "pt-24 md:pt-28 pb-0" : "pt-28 md:pt-32 pb-12 md:pb-16"
+        }`}
+      >
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
-          <img src={imgMountains} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.14]" />
+          {heroPhoto ? null : (
+            <img src={imgMountains} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.14]" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-b from-background/78 via-background/68 to-background" />
           <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-sage-light/60 blur-3xl" />
           <div className="absolute top-16 right-0 w-[380px] h-[380px] rounded-full bg-terracotta-light/25 blur-3xl" />
@@ -275,24 +281,59 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
           </Link>
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            {/* Editorial masthead line, in the style of our guides */}
-            <div className="flex items-center gap-4 mb-6 max-w-4xl">
-              <span className="text-[11px] tracking-[0.3em] uppercase text-primary font-medium shrink-0">
-                {cemetery.city}, Texas
-              </span>
-              <span className="h-px flex-1 bg-border" />
-              <span className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground shrink-0 hidden sm:inline">
-                {cemetery.tagline}
-              </span>
-            </div>
-            <h1 className="font-display text-[42px] leading-[0.98] md:text-6xl lg:text-[82px] text-foreground tracking-tight mb-5 max-w-4xl">
-              {cemetery.seo.h1}
-              <span className="block text-muted-foreground italic font-normal text-2xl md:text-4xl lg:text-[46px] mt-3">
-                plots for sale, prices &amp; transfers.
-              </span>
-            </h1>
-            <span className="block w-20 h-[3px] bg-primary/70 rounded-full mb-6" />
+            {heroPhoto ? (
+              /* Photo-led masthead: name and place sit on the image, everything else below it */
+              <figure className="relative rounded-[28px] md:rounded-[36px] overflow-hidden border border-border/70 shadow-soft">
+                <img
+                  src={heroPhoto.src}
+                  alt={heroPhoto.alt}
+                  width={1920}
+                  height={1271}
+                  className="w-full h-[400px] sm:h-[460px] md:h-[560px] lg:h-[620px] object-cover"
+                />
+                {/* Grade: warm shade at the base so the display type stays legible */}
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/88 via-foreground/35 to-foreground/10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-foreground/45 via-transparent to-transparent" />
+                <figcaption className="absolute inset-x-0 bottom-0 p-6 sm:p-8 md:p-12">
+                  <div className="flex items-center gap-4 mb-4 md:mb-5 max-w-3xl">
+                    <span className="text-[10px] sm:text-[11px] tracking-[0.3em] uppercase text-background font-medium shrink-0">
+                      {cemetery.city}, Texas
+                    </span>
+                    <span className="h-px flex-1 bg-background/40" />
+                  </div>
+                  <h1 className="font-display text-[34px] leading-[1.0] sm:text-5xl md:text-6xl lg:text-[76px] text-background tracking-tight drop-shadow-[0_2px_18px_rgba(0,0,0,0.45)] max-w-4xl">
+                    {cemetery.seo.h1}
+                    <span className="block text-background/85 italic font-normal text-xl sm:text-2xl md:text-3xl lg:text-[42px] mt-2 md:mt-3">
+                      plots for sale, prices &amp; transfers.
+                    </span>
+                  </h1>
+                </figcaption>
+              </figure>
+            ) : (
+              <>
+                {/* Editorial masthead line, in the style of our guides */}
+                <div className="flex items-center gap-4 mb-6 max-w-4xl">
+                  <span className="text-[11px] tracking-[0.3em] uppercase text-primary font-medium shrink-0">
+                    {cemetery.city}, Texas
+                  </span>
+                  <span className="h-px flex-1 bg-border" />
+                  <span className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground shrink-0 hidden sm:inline">
+                    {cemetery.tagline}
+                  </span>
+                </div>
+                <h1 className="font-display text-[42px] leading-[0.98] md:text-6xl lg:text-[82px] text-foreground tracking-tight mb-5 max-w-4xl">
+                  {cemetery.seo.h1}
+                  <span className="block text-muted-foreground italic font-normal text-2xl md:text-4xl lg:text-[46px] mt-3">
+                    plots for sale, prices &amp; transfers.
+                  </span>
+                </h1>
+              </>
+            )}
+            <span className={`block w-20 h-[3px] bg-primary/70 rounded-full mb-6 ${heroPhoto ? "mt-8 md:mt-10" : ""}`} />
 
+            {heroPhoto && (
+              <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-4">{cemetery.tagline}</p>
+            )}
 
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-2xl mb-7 flex items-start gap-2">
               <MapPin className="w-4 h-4 mt-1.5 text-primary shrink-0" />
@@ -341,9 +382,11 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
                 {liveCount} {liveCount === 1 ? "space" : "listings"} currently available at {cemetery.name}
               </p>
             )}
+            {heroPhoto && <div className="h-12 md:h-16" />}
           </motion.div>
         </div>
       </section>
+
 
       {/* Anchor nav — jump to any part of the page */}
       <nav className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-b border-border/50">
