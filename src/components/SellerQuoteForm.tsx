@@ -550,24 +550,17 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     >
       {!compact && (
         <>
-          {/* Layered botanical background */}
           <div
             aria-hidden
-            className="absolute inset-0 opacity-[0.18] pointer-events-none"
-            style={{
-              backgroundImage:
-                "radial-gradient(hsl(var(--terracotta) / 0.4) 1px, transparent 1px)",
-              backgroundSize: "30px 30px",
-            }}
+            className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-[hsl(var(--sage-light))]/50 to-transparent pointer-events-none"
           />
           <div
             aria-hidden
-            className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-[hsl(var(--sage-light))]/70 to-transparent pointer-events-none"
+            className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/20 to-transparent pointer-events-none"
           />
-          <div
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/30 to-transparent pointer-events-none"
-          />
+        </>
+      )}
+
 
 
       <div className={compact ? "" : "relative container mx-auto px-6"}>
