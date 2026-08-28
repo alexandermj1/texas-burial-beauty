@@ -11,7 +11,6 @@ import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
 import CemeteryPlanMap from "@/components/cemetery/CemeteryPlanMap";
 import { planMapFor } from "@/components/cemetery/cemeteryPlanMaps";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
-import { metroRegions } from "@/data/metroRegions";
 
 import { flagshipBySlug, money, type FlagshipCemetery } from "@/data/flagshipCemeteries";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -458,7 +457,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
               Every Dallas–Fort Worth cemetery we broker.
             </h2>
             <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
-              <MetroCemeteryMap regions={metroRegions} metro="Dallas–Fort Worth" fullBleed={false} compact hideTitle />
+              <MetroCemeteryMap regions={["Dallas–Fort Worth"]} metro="Dallas–Fort Worth" fullBleed={false} searchable compact hideTitle />
             </div>
           </section>
         </div>
