@@ -38,6 +38,8 @@ import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import { RESTLAND_MAPS as RESTLAND_MAP_DOWNLOADS } from "@/components/cemetery/restlandMaps";
 import { photoEssayFor } from "@/data/cemeteryPhotos";
+import { heroPhotoFor } from "@/data/cemeteryHeroPhotos";
+
 import CemeteryPhotoEssay from "@/components/cemetery/CemeteryPhotoEssay";
 
 const SITE = "https://texascemeterybrokers.com";
