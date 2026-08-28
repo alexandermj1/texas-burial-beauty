@@ -132,33 +132,37 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
 
                   {/* Full-bleed mega-panel flowing out of the bar */}
                   <div className="absolute left-0 right-0 top-full opacity-0 invisible -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-300 ease-out z-50">
-                    <div className="relative w-full border-y border-border bg-background shadow-hover">
+                    <div className={`relative w-full border-y shadow-hover ${dark ? "border-[hsl(var(--gold)/0.25)] bg-[hsl(var(--ink-deep))]" : "border-border bg-background"}`}>
                       {/* Top gradient accent line */}
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sage via-terracotta/60 to-sage" />
+                      <div className={`absolute inset-x-0 top-0 h-1 ${dark ? "bg-gradient-to-r from-[hsl(var(--gold)/0.2)] via-[hsl(var(--gold))] to-[hsl(var(--gold)/0.2)]" : "bg-gradient-to-r from-sage via-terracotta/60 to-sage"}`} />
                       {/* Subtle warm texture */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-sage/3 via-transparent to-terracotta/3 pointer-events-none" />
+                      {!dark && <div className="absolute inset-0 bg-gradient-to-b from-sage/3 via-transparent to-terracotta/3 pointer-events-none" />}
                       <div className="relative container mx-auto px-6 py-8 grid grid-cols-12 gap-8">
                         {/* Featured */}
                         <Link
                           to="/cemeteries"
-                          className="group/f col-span-12 lg:col-span-4 flex items-start gap-4 rounded-[1.5rem] bg-gradient-sage hover:bg-sage-light transition-colors p-5 border border-sage/10"
+                          className={`group/f col-span-12 lg:col-span-4 flex items-start gap-4 rounded-[1.5rem] transition-colors p-5 border ${
+                            dark
+                              ? "border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink))] hover:bg-[hsl(var(--gold)/0.1)]"
+                              : "bg-gradient-sage hover:bg-sage-light border-sage/10"
+                          }`}
                         >
-                          <span className="shrink-0 w-11 h-11 rounded-2xl bg-sage text-primary-foreground flex items-center justify-center shadow-soft">
+                          <span className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center shadow-soft ${dark ? "bg-[hsl(var(--gold))] text-[hsl(var(--ink))]" : "bg-sage text-primary-foreground"}`}>
                             <Trees className="w-5 h-5" strokeWidth={1.75} />
                           </span>
                           <span className="min-w-0">
-                            <span className="flex items-center gap-1.5 font-display text-lg text-foreground leading-tight">
+                            <span className={`flex items-center gap-1.5 font-display text-lg leading-tight ${dark ? "text-[hsl(var(--parchment))]" : "text-foreground"}`}>
                               Texas cemetery directory
-                              <ArrowRight className="w-4 h-4 text-sage -translate-x-1 opacity-0 group-hover/f:opacity-100 group-hover/f:translate-x-0 transition-all" />
+                              <ArrowRight className={`w-4 h-4 -translate-x-1 opacity-0 group-hover/f:opacity-100 group-hover/f:translate-x-0 transition-all ${dark ? "text-[hsl(var(--gold))]" : "text-sage"}`} />
                             </span>
-                            <span className="block text-xs text-muted-foreground mt-1">
+                            <span className={`block text-xs mt-1 ${dark ? "text-[hsl(var(--parchment)/0.6)]" : "text-muted-foreground"}`}>
                               All 95 cemeteries — fees, contacts and availability
                             </span>
                           </span>
                         </Link>
 
                         <div className="col-span-12 lg:col-span-5">
-                          <p className="pb-3 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                          <p className={`pb-3 text-[10px] uppercase tracking-[0.24em] ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
                             Plots by metro
                           </p>
                           <div className="grid grid-cols-2 xl:grid-cols-3 gap-1.5">
@@ -166,9 +170,13 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
                               <Link
                                 key={c.to}
                                 to={c.to}
-                                className="group/i flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/70 transition-colors"
+                                className={`group/i flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors ${
+                                  dark
+                                    ? "text-[hsl(var(--parchment)/0.8)] hover:text-[hsl(var(--parchment))] hover:bg-[hsl(var(--gold)/0.12)]"
+                                    : "text-foreground/80 hover:text-foreground hover:bg-muted/70"
+                                }`}
                               >
-                                <span className="w-1.5 h-1.5 rounded-full bg-sage/40 group-hover/i:bg-terracotta transition-colors shrink-0" />
+                                <span className={`w-1.5 h-1.5 rounded-full transition-colors shrink-0 ${dark ? "bg-[hsl(var(--gold)/0.4)] group-hover/i:bg-[hsl(var(--gold))]" : "bg-sage/40 group-hover/i:bg-terracotta"}`} />
                                 <span className="truncate">{c.label}</span>
                               </Link>
                             ))}
