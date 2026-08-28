@@ -569,7 +569,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
                 <figure
                   key={p.src}
                   className={`group relative overflow-hidden rounded-[24px] border border-border bg-card ${
-                    i === 0 ? "md:col-span-2" : ""
+                    i === 0 ? "md:col-span-2" : i === 2 ? "md:col-span-3" : ""
                   }`}
                 >
                   <img
@@ -578,7 +578,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
                     loading="lazy"
                     width={1600}
                     height={1200}
-                    className="w-full h-[240px] md:h-[340px] object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    className={`w-full object-cover ${i === 2 ? "h-[220px] md:h-[300px]" : "h-[240px] md:h-[340px]"} transition-transform duration-700 group-hover:scale-[1.04]`}
                   />
                   <figcaption className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-foreground/85 to-transparent">
                     <span className="text-background text-sm leading-snug">{p.caption}</span>
