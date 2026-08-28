@@ -255,10 +255,18 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
               />
               <figcaption className="mt-3 text-sm text-[hsl(var(--parchment)/0.6)]">{strip.caption}</figcaption>
             </figure>
+          </article>
+        </div>
+      </div>
 
-            <section className="mt-12 rounded-[14px] border border-[hsl(var(--gold)/0.26)] p-7 md:p-9">
+      {/* ============ FULL WIDTH: everything below the rail ============ */}
+      <div className="container mx-auto max-w-[1440px] px-0">
+        <div>
+          {/* ---------- Local notes ---------- */}
+          <section className="px-6 md:px-10 pt-12">
+            <div className="rounded-[14px] border border-[hsl(var(--gold)/0.26)] p-7 md:p-9">
               <p className={eyebrow}>Local notes</p>
-              <ul className="mt-5 space-y-5">
+              <ul className="mt-5 grid md:grid-cols-2 gap-x-10 gap-y-5">
                 {cemetery.localNotes.map((n) => (
                   <li key={n} className="flex gap-4 text-[hsl(var(--parchment)/0.84)] leading-relaxed">
                     <span className="mt-2 h-px w-6 shrink-0 bg-[hsl(var(--gold))]" aria-hidden />
@@ -266,8 +274,8 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
                   </li>
                 ))}
               </ul>
-            </section>
-          </article>
+            </div>
+          </section>
 
           {/* ---------- Prices ---------- */}
           <section id="prices" className="scroll-mt-28 px-6 md:px-10 pt-16">
@@ -484,7 +492,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
             <h2 className="mt-4 mb-6 max-w-3xl font-display text-[clamp(1.8rem,2.6vw,2.4rem)] leading-tight text-[hsl(var(--parchment))]">
               Every Dallas–Fort Worth cemetery we broker.
             </h2>
-            <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
+            <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-5">
               <MetroCemeteryMap regions={["Dallas–Fort Worth"]} metro="Dallas–Fort Worth" fullBleed={false} searchable compact hideTitle />
             </div>
           </section>
