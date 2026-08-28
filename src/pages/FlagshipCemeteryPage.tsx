@@ -125,10 +125,13 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const path = `/cemeteries/${cemetery.slug}`;
   const isRestland = cemetery.slug.startsWith("restland");
   const [active, setActive] = useState<string>("");
+  const navLinks = isRestland
+    ? [...NAV.slice(0, 2), { href: "#grounds", label: "Photos" }, ...NAV.slice(2)]
+    : NAV;
 
   // Scroll-spy so the jump bar always shows where you are on the page.
   useEffect(() => {
-    const ids = NAV.map((n) => n.href.slice(1));
+    const ids = navLinks.map((n) => n.href.slice(1));
     const els = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el));
@@ -325,7 +328,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
             Jump to
           </span>
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-            {NAV.map((l) => {
+            {navLinks.map((l) => {
               const isActive = active === l.href.slice(1);
               return (
                 <a
