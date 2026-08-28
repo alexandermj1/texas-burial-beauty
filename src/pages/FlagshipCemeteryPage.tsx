@@ -416,32 +416,43 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
 
       {/* ============ MAP ============ */}
       <section id="map" className="py-12 md:py-16 scroll-mt-32">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-7">
+        <div className="container mx-auto px-6 grid lg:grid-cols-[1fr_1.15fr] gap-8 lg:gap-12 items-center">
+          <div className="max-w-xl">
             <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Find it</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06]">
+            <h2 className="font-display text-3xl md:text-[42px] text-foreground leading-[1.06] mb-4">
               {cemetery.name} on the map.
             </h2>
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              The satellite view shows the drives, gardens and entrance so you can orient yourself before you visit.
+              Ask us for the exact section and we'll mark it for you.
+            </p>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <Link
+                to={`/buy?cemetery=${encodeURIComponent(cemetery.name)}`}
+                className="inline-flex items-center gap-1.5 text-foreground font-medium hover:text-primary transition-colors"
+              >
+                See spaces here <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <a
+                href={cemetery.website}
+                target="_blank"
+                rel="noopener nofollow noreferrer"
+                className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+              >
+                Official {cemetery.name} site <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </div>
           <CemeteryLocationMap
             name={cemetery.name}
             address={cemetery.address}
             lat={cemetery.lat}
             lng={cemetery.lng}
-            note="Switch to satellite to see the gardens, drives and entrance before you visit. Ask us for the exact section location and we'll mark it for you."
+            heightClass="h-[240px] md:h-[300px]"
           />
-          <div className="mt-4 flex flex-wrap gap-3 text-sm">
-            <a
-              href={cemetery.website}
-              target="_blank"
-              rel="noopener nofollow noreferrer"
-              className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
-            >
-              Official {cemetery.name} site <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
         </div>
       </section>
+
 
       {/* ============ DFW COVERAGE MAP ============ */}
       <section
