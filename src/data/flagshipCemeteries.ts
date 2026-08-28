@@ -429,6 +429,76 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       h1: "Laurel Land Memorial Park, Dallas",
     },
   },
+  {
+    slug: "rest-haven-memorial-park",
+    name: "Rest Haven Memorial Park",
+    alsoKnownAs: [
+      "Rest Haven Cemetery Rockwall",
+      "Resthaven Rockwall",
+      "Rest Haven Funeral Home & Memorial Park",
+    ],
+    city: "Rockwall",
+    region: DFW,
+    address: "2500 State Highway 66 East, Rockwall, TX 75087",
+    lat: 32.9386229,
+    lng: -96.4252855,
+    website: "https://www.resthavenfuneral.com/",
+    transferFee: 300,
+    operator: "Rest Haven Funeral Homes (locally owned)",
+    tagline: "Rockwall County's own memorial park, east of Lake Ray Hubbard",
+    intro: [
+      "Rest Haven on State Highway 66 is the memorial park most Rockwall County families think of first. It sits minutes east of Lake Ray Hubbard and serves Rockwall, Heath, Royse City, Fate and the eastern edge of Garland, and because it is locally owned rather than part of a national group, the office is unusually easy to deal with when a transfer needs doing.",
+      "Property here is described by named garden, lot and space — Garden of Devotion is the one families ask for most. Singles are common, and the cemetery allows the second right of interment on an existing space to be purchased at roughly half price, which changes the maths for anyone weighing a resale space against a counter purchase.",
+    ],
+    facts: [
+      { label: "City", value: "Rockwall (State Highway 66)" },
+      { label: "Operator", value: "Locally owned" },
+      { label: "Transfer fee", value: "$300 per space" },
+      { label: "Paperwork", value: "Original deed required" },
+    ],
+    sections: [
+      { name: "Garden of Devotion", kind: "Ground", tier: "premium", note: "The garden families ask for by name; sold as singles by lot and space." },
+      { name: "Established lawn sections", kind: "Ground", tier: "standard", note: "Level, flat-marker ground with regular resale availability." },
+      { name: "Cremation garden", kind: "Niche", tier: "value", note: "Niche and urn ground — the most affordable option on the property." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [6500, 8500], resale: [3200, 5200] },
+      { type: "Companion / two spaces", retail: [12000, 16000], resale: [6000, 10000] },
+      { type: "Second right of interment", retail: [3200, 4500], resale: [1800, 3200] },
+      { type: "Cremation niche or urn space", retail: [2500, 5500], resale: [1400, 3200] },
+    ],
+    localNotes: [
+      "The transfer fee here is $300 per space — confirmed directly with the cemetery office and among the lowest in the metroplex.",
+      "Rest Haven requires original documents, not copies: the original deed and original death certificates where an owner has passed away. Our power of attorney form is accepted.",
+      "Spaces are sold as singles, and a second right of interment on a space you already own can normally be added for about half the price of a new space.",
+      "Bring the garden, lot and space line from your deed (for example Garden of Devotion, Lot 86, Space D) and we can value it the same day without a site visit.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Rest Haven in Rockwall?",
+        a: "Single spaces at the cemetery counter sit in the mid to high thousands depending on the garden. Resale spaces at Rest Haven typically trade for roughly half of counter pricing, and we quote a precise figure once we know the garden, lot and space.",
+      },
+      {
+        q: "What is the transfer fee at Rest Haven Memorial Park?",
+        a: "$300 per space, paid to the cemetery to record the change of ownership. It is one of the lowest transfer fees in Dallas–Fort Worth, and we confirm the live figure in writing before anyone signs.",
+      },
+      {
+        q: "What paperwork does Rest Haven need to transfer a plot?",
+        a: "The cemetery asks for the original deed and, where the owner has died, original death certificates. If you are acting for an estate or another family member, a signed power of attorney is accepted. We assemble the whole file for you.",
+      },
+      {
+        q: "Can I sell just one space at Rest Haven?",
+        a: "Yes. Spaces here are sold individually, so releasing one or two out of a family holding is straightforward and we handle the deed split with the cemetery office.",
+      },
+    ],
+    nearby: ["restland-memorial-park", "laurel-land-memorial-park-dallas"],
+    seo: {
+      title: "Rest Haven Rockwall Plots for Sale | Prices & $300 Transfer",
+      description:
+        "Rest Haven Memorial Park, Rockwall TX — cemetery plots and cremation spaces for sale. Resale price ranges, the $300 per-space transfer fee, paperwork and free valuations.",
+      h1: "Rest Haven Memorial Park, Rockwall",
+    },
+  },
 ];
 
 export const flagshipBySlug = (slug: string | undefined) =>
