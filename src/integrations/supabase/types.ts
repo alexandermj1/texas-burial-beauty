@@ -463,6 +463,78 @@ export type Database = {
           },
         ]
       }
+      cemetery_photos: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          cemetery_name: string | null
+          cemetery_slug: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          folder_name: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          match_distance_m: number | null
+          match_method: string | null
+          mime_type: string | null
+          status: string
+          taken_at: string | null
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          cemetery_name?: string | null
+          cemetery_slug?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          folder_name?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          match_distance_m?: number | null
+          match_method?: string | null
+          mime_type?: string | null
+          status?: string
+          taken_at?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          cemetery_name?: string | null
+          cemetery_slug?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          folder_name?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          match_distance_m?: number | null
+          match_method?: string | null
+          mime_type?: string | null
+          status?: string
+          taken_at?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           acceptance_channel: string | null

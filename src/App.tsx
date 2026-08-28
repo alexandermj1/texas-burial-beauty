@@ -26,6 +26,7 @@ const PropertyTypes = lazy(() => import("./pages/PropertyTypes"));
 const Blog = lazy(() => import("./pages/Blog"));
 const Team = lazy(() => import("./pages/Team"));
 const Admin = lazy(() => import("./pages/Admin"));
+const PhotoLibrary = lazy(() => import("./pages/admin/PhotoLibrary"));
 const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 const Home2 = lazy(() => import("./pages/Home2"));
 const Partners = lazy(() => import("./pages/Partners"));
@@ -85,7 +86,8 @@ const App = () => (
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<Blog />} />
                 <Route path="/team" element={<Team />} />
-                <Route path="/admin" element={<Admin />} />
+<Route path="/admin" element={<Admin />} />
+                <Route path="/admin/photos" element={<PhotoLibrary />} />
                 <Route path="/agent" element={<AgentDashboard />} />
                 <Route path="/partners" element={<Partners />} />
                 <Route path="/cemeteries" element={<CemeteryDirectory />} />
