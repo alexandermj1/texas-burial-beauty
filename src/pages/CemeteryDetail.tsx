@@ -165,6 +165,18 @@ const CemeteryDetail = () => {
     );
   }
 
+  if (flagship && flagship.slug === "restland-memorial-park") {
+    return (
+      <DossierCemeteryPage
+        cemetery={flagship}
+        hero={RESTLAND_HERO}
+        strip={RESTLAND_STRIP}
+        photos={RESTLAND_PHOTOS}
+      />
+    );
+  }
+
+
   // Our five highest-demand DFW cemeteries get a purpose-built, deeper page.
   if (flagship) return <FlagshipCemeteryPage cemetery={flagship} />;
 
