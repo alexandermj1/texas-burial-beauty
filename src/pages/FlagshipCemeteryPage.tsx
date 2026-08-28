@@ -657,22 +657,41 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       </section>
 
       {/* ============ FAQ ============ */}
-      <section id="faq" className="py-12 md:py-16 bg-sand-light/40 border-y border-border/60 scroll-mt-32">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <div className="mb-8">
-            <Sparkles className="w-5 h-5 text-primary mb-3" />
-            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Questions we get</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06]">
-              {cemetery.name}, answered.
+      <section id="faq" className="relative py-14 md:py-20 bg-sand-light/40 border-y border-border/60 scroll-mt-32 overflow-hidden">
+        <img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute -left-24 bottom-0 w-[22rem] opacity-[0.10] -rotate-12 pointer-events-none"
+        />
+        <div className="container mx-auto px-6 relative grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-16 items-start">
+          <div className="lg:sticky lg:top-36">
+            <div className="flex items-center gap-3 mb-4">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium">Questions we get</span>
+            </div>
+            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.04] mb-4">
+              {cemetery.name}, <span className="italic text-muted-foreground">answered.</span>
             </h2>
+            <p className="text-muted-foreground leading-relaxed mb-6 max-w-md">
+              The questions families actually ask us about buying, selling and transferring property here.
+            </p>
+            <a
+              href="tel:+12142304740"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-foreground text-background text-sm font-medium hover:bg-primary transition-colors"
+            >
+              Ask us directly — (214) 230-4740
+            </a>
           </div>
-          <div>
-            {cemetery.faqs.map((f) => (
-              <FaqItem key={f.q} q={f.q} a={f.a} />
+
+          <div className="space-y-3">
+            {cemetery.faqs.map((f, i) => (
+              <FaqItem key={f.q} q={f.q} a={f.a} index={i} defaultOpen={i === 0} />
             ))}
           </div>
         </div>
       </section>
+
 
       {/* ============ NEARBY ============ */}
       <section className="py-14">
