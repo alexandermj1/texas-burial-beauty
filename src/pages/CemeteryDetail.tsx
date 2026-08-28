@@ -25,6 +25,8 @@ import { flagshipBySlug } from "@/data/flagshipCemeteries";
 import DossierCemeteryPage from "@/pages/DossierCemeteryPage";
 import { SPARKMAN_HERO, SPARKMAN_STRIP, SPARKMAN_PHOTOS } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO, BLUEBONNET_STRIP, BLUEBONNET_PHOTOS } from "@/data/bluebonnetPhotos";
+import { RESTLAND_HERO, RESTLAND_STRIP, RESTLAND_PHOTOS } from "@/data/restlandDossierPhotos";
+
 import FlagshipCemeteryPage from "@/pages/FlagshipCemeteryPage";
 
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
@@ -164,6 +166,18 @@ const CemeteryDetail = () => {
       />
     );
   }
+
+  if (flagship && flagship.slug === "restland-memorial-park") {
+    return (
+      <DossierCemeteryPage
+        cemetery={flagship}
+        hero={RESTLAND_HERO}
+        strip={RESTLAND_STRIP}
+        photos={RESTLAND_PHOTOS}
+      />
+    );
+  }
+
 
   // Our five highest-demand DFW cemeteries get a purpose-built, deeper page.
   if (flagship) return <FlagshipCemeteryPage cemetery={flagship} />;

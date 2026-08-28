@@ -9,6 +9,8 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
 import CemeteryPlanMap from "@/components/cemetery/CemeteryPlanMap";
+import DossierBuyerForm from "@/components/cemetery/DossierBuyerForm";
+import RestlandGardenMap from "@/components/cemetery/RestlandGardenMap";
 import { planMapFor } from "@/components/cemetery/cemeteryPlanMaps";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 
@@ -22,6 +24,7 @@ const SITE = "https://texascemeterybrokers.com";
 const NAV = [
   { href: "#market", label: "The market here" },
   { href: "#prices", label: "Prices" },
+  { href: "#buy", label: "Buy a space" },
   { href: "#valuation", label: "Free valuation" },
   { href: "#grounds", label: "Photographs" },
   { href: "#sections", label: "Section plan" },
@@ -29,6 +32,7 @@ const NAV = [
   { href: "#transfer", label: "Transfer & fees" },
   { href: "#faq", label: "FAQ" },
 ];
+
 
 const STEPS = [
   { n: "01", t: "Deed check", b: "We read your deed, confirm the section and space and verify who is legally able to sell." },
@@ -340,6 +344,13 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
             </p>
           </section>
 
+          {/* ---------- Buyer enquiry ---------- */}
+          <section id="buy" className="scroll-mt-28 px-6 md:px-10 pt-16">
+            <DossierBuyerForm cemeteryName={cemetery.name} region={cemetery.region} />
+          </section>
+
+
+
           {/* ---------- Free valuation (dark, editorial) ---------- */}
           <section id="valuation" className="scroll-mt-28 px-6 md:px-10 pt-16">
             <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-10 items-start">
@@ -413,8 +424,18 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
       {/* ================= FULL WIDTH: MAPS ================= */}
       <div className="container mx-auto max-w-[1440px] px-0">
         <div>
+          {/* ---------- Restland's own garden plans + directory ---------- */}
+          {cemetery.slug === "restland-memorial-park" && (
+            <section id="sections" className="scroll-mt-28 px-6 md:px-10 pt-20">
+              <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-6">
+                <RestlandGardenMap />
+              </div>
+            </section>
+          )}
+
           {/* ---------- Section plan + map ---------- */}
           <div className="grid xl:grid-cols-2 gap-10 px-6 md:px-10 pt-20">
+
             {planMap && (
               <section id="sections" className="scroll-mt-28">
                 <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
