@@ -22,11 +22,11 @@ const SITE = "https://texascemeterybrokers.com";
 const NAV = [
   { href: "#market", label: "The market here" },
   { href: "#prices", label: "Prices" },
+  { href: "#valuation", label: "Free valuation" },
   { href: "#grounds", label: "Photographs" },
   { href: "#sections", label: "Section plan" },
   { href: "#map", label: "Map" },
   { href: "#transfer", label: "Transfer & fees" },
-  { href: "#valuation", label: "Free valuation" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -332,6 +332,32 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
             </p>
           </section>
 
+          {/* ---------- Free valuation (dark, editorial) ---------- */}
+          <section id="valuation" className="scroll-mt-28 px-6 md:px-10 pt-16">
+            <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-10 items-start">
+              <div>
+                <p className={eyebrow}>Free valuation</p>
+                <h2 className="mt-4 font-display text-[clamp(1.8rem,2.8vw,2.5rem)] leading-tight text-[hsl(var(--parchment))]">
+                  What is your space at {cemetery.name} worth?
+                </h2>
+                <p className="mt-4 text-[hsl(var(--parchment)/0.78)] leading-relaxed font-light">
+                  Free and no obligation. A few short questions and we come back with a figure, usually within one
+                  business day. No up-front cost, and you only pay when the sale closes.
+                </p>
+                <a
+                  href="tel:+12142304740"
+                  className={`${ghostBtn} mt-6 px-5 py-3 text-[15px] gap-2.5`}
+                >
+                  <Phone className="w-4 h-4 text-[hsl(var(--gold))]" />
+                  (214) 230-4740
+                </a>
+              </div>
+              <div className="rounded-[16px] bg-[hsl(var(--parchment))] p-5 md:p-7">
+                <SellerQuoteForm defaultCemetery={cemetery.name} editorial />
+              </div>
+            </div>
+          </section>
+
           {/* ---------- Photographs ---------- */}
           <section id="grounds" className="scroll-mt-28 px-6 md:px-10 pt-16">
             <p className={eyebrow}>Photographed on the grounds</p>
@@ -373,8 +399,14 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
             </p>
           </section>
 
+        </div>
+      </div>
+
+      {/* ================= FULL WIDTH: MAPS ================= */}
+      <div className="container mx-auto max-w-[1440px] px-0">
+        <div>
           {/* ---------- Section plan + map ---------- */}
-          <div className="grid xl:grid-cols-2 gap-10 px-6 md:px-10 pt-16">
+          <div className="grid xl:grid-cols-2 gap-10 px-6 md:px-10 pt-20">
             {planMap && (
               <section id="sections" className="scroll-mt-28">
                 <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
@@ -494,27 +526,6 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
             </div>
           </div>
 
-          {/* Valuation */}
-          <div id="valuation" className="scroll-mt-28 mt-16 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-10 items-start">
-            <div>
-              <p className="text-[11px] tracking-[0.3em] uppercase text-primary font-medium">Free valuation</p>
-              <h2 className="mt-4 font-display text-[clamp(1.8rem,2.8vw,2.5rem)] leading-tight text-foreground">
-                What is your space at {cemetery.name} worth?
-              </h2>
-              <p className="mt-4 text-muted-foreground leading-relaxed max-w-xl">
-                Free and no obligation. A few short questions and we come back with a figure, usually within one
-                business day. No up-front cost, and you only pay when the sale closes.
-              </p>
-              <a
-                href="tel:+12142304740"
-                className="mt-6 inline-flex items-center gap-2.5 rounded-full border border-border bg-background px-5 py-3 text-foreground hover:border-primary transition-colors"
-              >
-                <Phone className="w-4 h-4 text-primary" />
-                <span className="font-medium">(214) 230-4740</span>
-              </a>
-            </div>
-            <SellerQuoteForm defaultCemetery={cemetery.name} editorial />
-          </div>
         </div>
       </section>
 
