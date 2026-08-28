@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -85,6 +85,27 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const liveCount = countFor(cemetery.name);
   const path = `/cemeteries/${cemetery.slug}`;
   const isRestland = cemetery.slug.startsWith("restland");
+  const [active, setActive] = useState<string>("");
+
+  // Scroll-spy so the jump bar always shows where you are on the page.
+  useEffect(() => {
+    const ids = NAV.map((n) => n.href.slice(1));
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (!els.length) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: "-140px 0px -60% 0px", threshold: 0 },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [isRestland]);
 
 
   const nearby = cemetery.nearby
