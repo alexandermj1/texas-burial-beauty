@@ -7,11 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { validateEmail } from "@/lib/emailValidation";
-import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
-import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
-import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
@@ -600,9 +595,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
         {/* Card wrapper with offset decorative layer for stand-out */}
         <div className="max-w-4xl mx-auto relative">
           {/* Decorative offset glows */}
-          <div aria-hidden className="hidden md:block absolute -inset-4 rounded-[2.25rem] bg-gradient-to-br from-primary/20 via-accent/10 to-terracotta/15 blur-2xl opacity-80 -z-10" />
-          <div aria-hidden className="hidden md:block absolute -bottom-6 -right-6 w-40 h-40 rounded-full bg-accent/15 blur-3xl -z-10" />
-          <div aria-hidden className="hidden md:block absolute -top-6 -left-6 w-40 h-40 rounded-full bg-primary/15 blur-3xl -z-10" />
+          <div aria-hidden className="hidden md:block absolute -inset-3 rounded-[2.25rem] border border-primary/15 -z-10" />
 
           <motion.form
             onSubmit={(e) => e.preventDefault()}
@@ -616,7 +609,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="relative bg-background/95 backdrop-blur-md rounded-[2rem] border border-border/70 shadow-2xl shadow-foreground/10 overflow-hidden ring-1 ring-foreground/5"
+            className="relative bg-background/95 backdrop-blur-md rounded-[2rem] border border-border/70 shadow-xl shadow-foreground/5 overflow-hidden ring-1 ring-foreground/5"
           >
 
 
