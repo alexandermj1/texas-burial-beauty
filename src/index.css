@@ -36,6 +36,13 @@
 
     --radius: 0.75rem;
 
+    /* Editorial "dossier" palette — deep ink + gold, used by flagship
+       cemetery dossier pages. */
+    --ink: 213 28% 17%;
+    --ink-deep: 209 27% 13%;
+    --gold: 39 42% 74%;
+    --parchment: 40 38% 95%;
+
     --sage: 145 25% 36%;
     --sage-light: 145 20% 92%;
     --terracotta: 16 50% 58%;
