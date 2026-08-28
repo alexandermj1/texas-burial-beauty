@@ -24,6 +24,7 @@ import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
 import { flagshipBySlug } from "@/data/flagshipCemeteries";
 import DossierCemeteryPage from "@/pages/DossierCemeteryPage";
 import { SPARKMAN_HERO, SPARKMAN_STRIP, SPARKMAN_PHOTOS } from "@/data/sparkmanPhotos";
+import { BLUEBONNET_HERO, BLUEBONNET_STRIP, BLUEBONNET_PHOTOS } from "@/data/bluebonnetPhotos";
 import FlagshipCemeteryPage from "@/pages/FlagshipCemeteryPage";
 
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
@@ -141,7 +142,7 @@ const CemeteryDetail = () => {
   const flagship = flagshipBySlug(slug);
   const cemetery = slug ? findCemeteryBySlug(slug) : undefined;
 
-  // Sparkman-Hillcrest uses the deeper "dossier" editorial layout.
+  // Our deepest photo-led cemeteries use the "dossier" editorial layout.
   if (flagship && flagship.slug === "sparkman-hillcrest-memorial-park") {
     return (
       <DossierCemeteryPage
@@ -149,6 +150,17 @@ const CemeteryDetail = () => {
         hero={SPARKMAN_HERO}
         strip={SPARKMAN_STRIP}
         photos={SPARKMAN_PHOTOS}
+      />
+    );
+  }
+
+  if (flagship && flagship.slug === "bluebonnet-hills-memorial-park") {
+    return (
+      <DossierCemeteryPage
+        cemetery={flagship}
+        hero={BLUEBONNET_HERO}
+        strip={BLUEBONNET_STRIP}
+        photos={BLUEBONNET_PHOTOS}
       />
     );
   }
