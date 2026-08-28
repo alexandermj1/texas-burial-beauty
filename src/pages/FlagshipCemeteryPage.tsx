@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -85,6 +85,27 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const liveCount = countFor(cemetery.name);
   const path = `/cemeteries/${cemetery.slug}`;
   const isRestland = cemetery.slug.startsWith("restland");
+  const [active, setActive] = useState<string>("");
+
+  // Scroll-spy so the jump bar always shows where you are on the page.
+  useEffect(() => {
+    const ids = NAV.map((n) => n.href.slice(1));
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (!els.length) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: "-140px 0px -60% 0px", threshold: 0 },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [isRestland]);
 
 
   const nearby = cemetery.nearby
@@ -163,10 +184,20 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       {/* ============ HERO ============ */}
       <section className="relative pt-28 md:pt-32 pb-12 md:pb-16 overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
-          <img src={imgMountains} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.16]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/75 via-background/65 to-background" />
+          <img src={imgMountains} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.14]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/78 via-background/68 to-background" />
           <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-sage-light/60 blur-3xl" />
           <div className="absolute top-16 right-0 w-[380px] h-[380px] rounded-full bg-terracotta-light/25 blur-3xl" />
+          <img
+            src={hibiscusCoral.url}
+            alt=""
+            className="hidden lg:block absolute -right-16 top-14 w-[26rem] opacity-[0.16] rotate-[8deg]"
+          />
+          <img
+            src={pinkBranch.url}
+            alt=""
+            className="hidden lg:block absolute right-[22rem] -top-10 w-[16rem] opacity-[0.10] -rotate-12"
+          />
         </div>
 
         <div className="container mx-auto px-6 relative">
@@ -178,15 +209,24 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
           </Link>
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-4">
-              {cemetery.city}, Texas · {cemetery.tagline}
-            </p>
-            <h1 className="font-display text-[40px] leading-[1.03] md:text-6xl lg:text-[76px] text-foreground tracking-tight mb-5 max-w-4xl">
+            {/* Editorial masthead line, in the style of our guides */}
+            <div className="flex items-center gap-4 mb-6 max-w-4xl">
+              <span className="text-[11px] tracking-[0.3em] uppercase text-primary font-medium shrink-0">
+                {cemetery.city}, Texas
+              </span>
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground shrink-0 hidden sm:inline">
+                {cemetery.tagline}
+              </span>
+            </div>
+            <h1 className="font-display text-[42px] leading-[0.98] md:text-6xl lg:text-[82px] text-foreground tracking-tight mb-5 max-w-4xl">
               {cemetery.seo.h1}
-              <span className="block text-muted-foreground italic font-normal text-2xl md:text-4xl lg:text-[44px] mt-3">
+              <span className="block text-muted-foreground italic font-normal text-2xl md:text-4xl lg:text-[46px] mt-3">
                 plots for sale, prices &amp; transfers.
               </span>
             </h1>
+            <span className="block w-20 h-[3px] bg-primary/70 rounded-full mb-6" />
+
 
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-2xl mb-7 flex items-start gap-2">
               <MapPin className="w-4 h-4 mt-1.5 text-primary shrink-0" />
@@ -239,20 +279,33 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
-      {/* Anchor nav */}
-      <nav className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-6 py-3 flex gap-2 overflow-x-auto no-scrollbar">
-          {NAV.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              {l.label}
-            </a>
-          ))}
+      {/* Anchor nav — jump to any part of the page */}
+      <nav className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-b border-border/50">
+        <div className="container mx-auto px-6 py-2.5 flex items-center gap-3">
+          <span className="hidden md:inline shrink-0 text-[10px] tracking-[0.28em] uppercase text-muted-foreground pr-2 border-r border-border">
+            Jump to
+          </span>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+            {NAV.map((l) => {
+              const isActive = active === l.href.slice(1);
+              return (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {l.label}
+                </a>
+              );
+            })}
+          </div>
         </div>
       </nav>
+
 
       {/* ============ INTRO ============ */}
       <section className="py-12 md:py-16">
@@ -416,32 +469,43 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
 
       {/* ============ MAP ============ */}
       <section id="map" className="py-12 md:py-16 scroll-mt-32">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-7">
+        <div className="container mx-auto px-6 grid lg:grid-cols-[1fr_1.15fr] gap-8 lg:gap-12 items-center">
+          <div className="max-w-xl">
             <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Find it</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06]">
+            <h2 className="font-display text-3xl md:text-[42px] text-foreground leading-[1.06] mb-4">
               {cemetery.name} on the map.
             </h2>
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              The satellite view shows the drives, gardens and entrance so you can orient yourself before you visit.
+              Ask us for the exact section and we'll mark it for you.
+            </p>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <Link
+                to={`/buy?cemetery=${encodeURIComponent(cemetery.name)}`}
+                className="inline-flex items-center gap-1.5 text-foreground font-medium hover:text-primary transition-colors"
+              >
+                See spaces here <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <a
+                href={cemetery.website}
+                target="_blank"
+                rel="noopener nofollow noreferrer"
+                className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+              >
+                Official {cemetery.name} site <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </div>
           <CemeteryLocationMap
             name={cemetery.name}
             address={cemetery.address}
             lat={cemetery.lat}
             lng={cemetery.lng}
-            note="Switch to satellite to see the gardens, drives and entrance before you visit. Ask us for the exact section location and we'll mark it for you."
+            heightClass="h-[240px] md:h-[300px]"
           />
-          <div className="mt-4 flex flex-wrap gap-3 text-sm">
-            <a
-              href={cemetery.website}
-              target="_blank"
-              rel="noopener nofollow noreferrer"
-              className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
-            >
-              Official {cemetery.name} site <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
         </div>
       </section>
+
 
       {/* ============ DFW COVERAGE MAP ============ */}
       <section

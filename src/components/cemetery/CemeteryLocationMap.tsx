@@ -10,7 +10,10 @@ interface Props {
   lng: number;
   /** Optional caption under the map. */
   note?: string;
+  /** Tailwind height classes for the map canvas. */
+  heightClass?: string;
 }
+
 
 const ACCENT = "#c1704a";
 
@@ -30,7 +33,7 @@ const markerIcon = () =>
  * useful here — families use it to orient themselves to gardens and entrances
  * before they visit.
  */
-const CemeteryLocationMap = ({ name, address, lat, lng, note }: Props) => {
+const CemeteryLocationMap = ({ name, address, lat, lng, note, heightClass = "h-[300px] md:h-[440px]" }: Props) => {
   const el = useRef<HTMLDivElement | null>(null);
   const map = useRef<L.Map | null>(null);
   const streetLayer = useRef<L.TileLayer | null>(null);
@@ -80,7 +83,7 @@ const CemeteryLocationMap = ({ name, address, lat, lng, note }: Props) => {
   return (
     <div className="rounded-[28px] overflow-hidden border border-border bg-card">
       <div className="relative">
-        <div ref={el} className="h-[300px] md:h-[440px] w-full z-0" aria-label={`Map of ${name}`} />
+        <div ref={el} className={`${heightClass} w-full z-0`} aria-label={`Map of ${name}`} />
 
         <button
           type="button"
