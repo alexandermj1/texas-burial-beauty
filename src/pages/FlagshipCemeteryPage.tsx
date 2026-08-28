@@ -211,7 +211,40 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         acceptedAnswer: { "@type": "Answer", text: f.a },
       })),
     },
+    // Image + map assets, so Google can index the photography and the garden plans.
+    ...(isRestland
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "ImageGallery",
+            name: `${cemetery.name} photos — historic gardens and section maps`,
+            about: cemetery.name,
+            associatedMedia: [
+              ...RESTLAND_PHOTOS.map((p) => ({
+                "@type": "ImageObject",
+                contentUrl: `${SITE}${p.src}`,
+                caption: p.caption,
+                description: p.alt,
+                creditText: "Texas Cemetery Brokers",
+                license: `${SITE}/privacy`,
+                acquireLicensePage: `${SITE}${path}`,
+                contentLocation: { "@type": "Place", name: cemetery.name, address: cemetery.address },
+              })),
+              ...RESTLAND_MAP_DOWNLOADS.map((m) => ({
+                "@type": "ImageObject",
+                contentUrl: `${SITE}${m.src}`,
+                caption: m.caption,
+                description: m.alt,
+                creditText: "Texas Cemetery Brokers",
+                encodingFormat: "image/png",
+                acquireLicensePage: `${SITE}${path}`,
+              })),
+            ],
+          },
+        ]
+      : []),
   ];
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
