@@ -288,7 +288,35 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-3xl border border-border bg-card">
+          {/* Mobile: stacked cards (a horizontal table is unreadable on a phone) */}
+          <div className="md:hidden space-y-3">
+            {cemetery.pricing.map((p) => {
+              const pct = Math.round((1 - (p.resale[0] + p.resale[1]) / (p.retail[0] + p.retail[1])) * 100);
+              return (
+                <div key={p.type} className="rounded-3xl border border-border bg-card p-5">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <h3 className="font-display text-lg text-foreground leading-tight">{p.type}</h3>
+                    <span className="shrink-0 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                      ~{pct}% less
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground mb-1">Cemetery retail</p>
+                      <p className="text-sm text-muted-foreground line-through decoration-terracotta/50">{range(p.retail)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] tracking-[0.18em] uppercase text-primary mb-1">Typical resale</p>
+                      <p className="font-display text-lg text-foreground">{range(p.resale)}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto rounded-3xl border border-border bg-card">
+
             <table className="w-full text-left border-collapse min-w-[560px]">
               <caption className="sr-only">
                 Estimated cemetery retail and resale prices by property type at {cemetery.name}
