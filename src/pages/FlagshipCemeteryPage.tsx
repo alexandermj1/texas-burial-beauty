@@ -483,6 +483,54 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
+      {/* ============ HISTORIC GROUNDS PHOTOS (Restland) ============ */}
+      {isRestland && (
+        <section id="grounds" className="py-14 md:py-20 scroll-mt-32">
+          <div className="container mx-auto px-6">
+            <div className="grid lg:grid-cols-[0.85fr_1.15fr] gap-8 lg:gap-14 items-end mb-8">
+              <div>
+                <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">
+                  The historic grounds
+                </p>
+                <h2 className="font-display text-3xl md:text-[46px] text-foreground leading-[1.04] mb-4">
+                  Inside Restland's oldest gardens.
+                </h2>
+                <span className="block w-16 h-[3px] bg-primary/70 rounded-full" />
+              </div>
+              <p className="text-muted-foreground leading-relaxed max-w-xl">
+                The original section of Restland Memorial Park sits under mature live oaks off Greenville Avenue — upright
+                monuments, family estates and cast-metal lane signs that predate most of the park. Photographed by our
+                brokers on the ground in Dallas. These closed gardens rarely release new inventory; almost everything that
+                changes hands here is a family resale.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+              {RESTLAND_PHOTOS.map((p, i) => (
+                <figure
+                  key={p.src}
+                  className={`group relative overflow-hidden rounded-[24px] border border-border bg-card ${
+                    i === 0 ? "md:col-span-2" : ""
+                  }`}
+                >
+                  <img
+                    src={p.src}
+                    alt={p.alt}
+                    loading="lazy"
+                    width={1600}
+                    height={1200}
+                    className="w-full h-[240px] md:h-[340px] object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                  <figcaption className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-foreground/85 to-transparent">
+                    <span className="text-background text-sm leading-snug">{p.caption}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
 
       {/* ============ MAP ============ */}
       <section id="map" className="py-12 md:py-16 scroll-mt-32">
