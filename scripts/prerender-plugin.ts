@@ -88,15 +88,21 @@ function renderRouteHtml(shell: string, meta: RouteMeta): string {
 
 function cemeteryRoutes(): RouteMeta[] {
   return bayCemeteries.map((c) => {
+    const slug = slugify(c.name);
+    const flagship = FLAGSHIP_CEMETERIES.find((f) => f.slug === slug);
+    if (flagship) {
+      return { path: `/cemeteries/${slug}`, title: flagship.seo.title, description: flagship.seo.description };
+    }
     const title = `${c.name} | Cemetery Plots in ${c.city}, TX`;
     const description = `Cemetery plots, niches and crypts available at ${c.name} in ${c.city}, Texas. Below-market resale through trusted brokers.`;
     return {
-      path: `/cemeteries/${slugify(c.name)}`,
+      path: `/cemeteries/${slug}`,
       title,
       description,
     };
   });
 }
+
 
 export default function prerenderRoutes(): Plugin {
   return {

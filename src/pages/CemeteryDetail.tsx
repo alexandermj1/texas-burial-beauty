@@ -21,6 +21,9 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
 import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
+import { flagshipBySlug } from "@/data/flagshipCemeteries";
+import FlagshipCemeteryPage from "@/pages/FlagshipCemeteryPage";
+
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
 import cemPhoto1 from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
 import cemPhoto2 from "@/assets/cemeteries/cemetery-grounds-2.jpg.asset.json";
@@ -133,10 +136,16 @@ const sellingSteps = [
 const CemeteryDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { pathname } = useLocation();
+  const flagship = flagshipBySlug(slug);
   const cemetery = slug ? findCemeteryBySlug(slug) : undefined;
+
+  // Our five highest-demand DFW cemeteries get a purpose-built, deeper page.
+  if (flagship) return <FlagshipCemeteryPage cemetery={flagship} />;
 
   // Avoid hijacking navigation while this page is exiting a transition.
   if (!cemetery) return pathname.startsWith("/cemeteries/") ? <Navigate to="/cemeteries" replace /> : null;
+
+
 
 
   const related = bayCemeteries
