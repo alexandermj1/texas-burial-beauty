@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 
 /**
- * Cast-bronze garden marker — the little arched lane signs staked at the head
- * of each garden. Two galvanised posts, a bevelled arched plaque with raised
- * serif letters, a hairline rule and a small ground shadow.
+ * Cast-metal garden lane marker, drawn from the real signs staked through
+ * Restland Memorial Park: a dark bronze rectangular plaque with a small peaked
+ * crest, raised white letters and a slim galvanised post.
  */
 const GardenSignMarker = ({
   label,
@@ -15,8 +15,8 @@ const GardenSignMarker = ({
   className?: string;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 12, rotate: -1.6 }}
-    whileInView={{ opacity: 1, y: 0, rotate: -0.8 }}
+    initial={{ opacity: 0, y: 12, rotate: -1.4 }}
+    whileInView={{ opacity: 1, y: 0, rotate: -0.7 }}
     viewport={{ once: true, margin: "-60px" }}
     transition={{ duration: 0.55, ease: "easeOut" }}
     aria-hidden
@@ -25,70 +25,71 @@ const GardenSignMarker = ({
     } ${className}`}
   >
     <svg
-      width="188"
-      height="88"
-      viewBox="0 0 188 88"
+      width="220"
+      height="96"
+      viewBox="0 0 220 96"
       fill="none"
-      className="overflow-visible drop-shadow-[0_10px_16px_hsl(var(--foreground)/0.18)]"
+      className="overflow-visible drop-shadow-[0_10px_16px_hsl(var(--foreground)/0.16)]"
     >
       <defs>
-        <linearGradient id="gsm-plaque" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="gsm-plate" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="hsl(var(--stone))" />
-          <stop offset="42%" stopColor="hsl(var(--foreground))" />
-          <stop offset="100%" stopColor="hsl(var(--stone))" />
+          <stop offset="38%" stopColor="hsl(25 22% 22%)" />
+          <stop offset="100%" stopColor="hsl(25 18% 16%)" />
         </linearGradient>
-        <linearGradient id="gsm-post" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="hsl(var(--muted-foreground)/0.35)" />
-          <stop offset="45%" stopColor="hsl(var(--muted-foreground)/0.85)" />
-          <stop offset="100%" stopColor="hsl(var(--muted-foreground)/0.3)" />
+        <linearGradient id="gsm-pole" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="hsl(var(--muted-foreground)/0.3)" />
+          <stop offset="42%" stopColor="hsl(var(--muted-foreground)/0.85)" />
+          <stop offset="100%" stopColor="hsl(var(--muted-foreground)/0.28)" />
         </linearGradient>
       </defs>
 
-      {/* Posts */}
-      <rect x="26" y="40" width="5" height="40" rx="2" fill="url(#gsm-post)" />
-      <rect x="157" y="40" width="5" height="40" rx="2" fill="url(#gsm-post)" />
-      {/* Post finials */}
-      <circle cx="28.5" cy="39" r="3.2" fill="hsl(var(--muted-foreground)/0.8)" />
-      <circle cx="159.5" cy="39" r="3.2" fill="hsl(var(--muted-foreground)/0.8)" />
+      {/* Post + collar */}
+      <rect x="106" y="44" width="8" height="46" rx="3" fill="url(#gsm-pole)" />
+      <rect x="102" y="44" width="16" height="7" rx="2.5" fill="hsl(var(--muted-foreground)/0.75)" />
 
-      {/* Arched plaque */}
-      <path
-        d="M14 46V26C14 12.7 32.4 4 94 4s80 8.7 80 22v20z"
-        fill="url(#gsm-plaque)"
-        stroke="hsl(var(--foreground)/0.55)"
-        strokeWidth="1.2"
-      />
-      {/* Bevel highlight + inner keyline */}
-      <path
-        d="M18.5 42V27c0-11.3 17.6-19 75.5-19s75.5 7.7 75.5 19v15"
-        fill="none"
-        stroke="hsl(var(--background)/0.22)"
+      {/* Peaked crest above the plate */}
+      <path d="M99 14l11-9 11 9z" fill="hsl(25 20% 19%)" />
+
+      {/* Plate */}
+      <rect
+        x="10"
+        y="13"
+        width="200"
+        height="34"
+        rx="4"
+        fill="url(#gsm-plate)"
+        stroke="hsl(25 15% 10%/0.6)"
         strokeWidth="1"
       />
-      <path
-        d="M23 40.5V28.5C23 19 40 13 94 13s71 6 71 15.5v12"
+      {/* Raised outer keyline */}
+      <rect
+        x="15"
+        y="18"
+        width="190"
+        height="24"
+        rx="2.5"
         fill="none"
-        stroke="hsl(var(--background)/0.28)"
-        strokeWidth="0.8"
-        strokeDasharray="2 3"
+        stroke="hsl(0 0% 100%/0.55)"
+        strokeWidth="1.6"
       />
 
       {/* Raised letters */}
       <text
-        x="94"
-        y="34"
+        x="110"
+        y="35"
         textAnchor="middle"
-        className="font-display"
-        fill="hsl(var(--background)/0.96)"
-        fontSize="14"
-        letterSpacing="4.2"
+        fill="hsl(0 0% 100%/0.94)"
+        fontSize="15"
+        fontWeight="700"
+        letterSpacing="3.4"
+        style={{ fontFamily: "inherit" }}
       >
         {label.toUpperCase()}
       </text>
 
-      {/* Ground line + shadow */}
-      <ellipse cx="94" cy="82" rx="72" ry="4" fill="hsl(var(--foreground)/0.07)" />
-      <path d="M20 80h148" stroke="hsl(var(--border))" strokeWidth="1.2" strokeLinecap="round" />
+      {/* Ground */}
+      <ellipse cx="110" cy="91" rx="34" ry="4" fill="hsl(var(--foreground)/0.08)" />
     </svg>
   </motion.div>
 );
