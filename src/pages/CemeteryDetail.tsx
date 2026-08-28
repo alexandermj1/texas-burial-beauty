@@ -22,6 +22,8 @@ import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
 import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
 import { flagshipBySlug } from "@/data/flagshipCemeteries";
+import DossierCemeteryPage from "@/pages/DossierCemeteryPage";
+import { SPARKMAN_HERO, SPARKMAN_STRIP, SPARKMAN_PHOTOS } from "@/data/sparkmanPhotos";
 import FlagshipCemeteryPage from "@/pages/FlagshipCemeteryPage";
 
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
@@ -138,6 +140,18 @@ const CemeteryDetail = () => {
   const { pathname } = useLocation();
   const flagship = flagshipBySlug(slug);
   const cemetery = slug ? findCemeteryBySlug(slug) : undefined;
+
+  // Sparkman-Hillcrest uses the deeper "dossier" editorial layout.
+  if (flagship && flagship.slug === "sparkman-hillcrest-memorial-park") {
+    return (
+      <DossierCemeteryPage
+        cemetery={flagship}
+        hero={SPARKMAN_HERO}
+        strip={SPARKMAN_STRIP}
+        photos={SPARKMAN_PHOTOS}
+      />
+    );
+  }
 
   // Our five highest-demand DFW cemeteries get a purpose-built, deeper page.
   if (flagship) return <FlagshipCemeteryPage cemetery={flagship} />;
