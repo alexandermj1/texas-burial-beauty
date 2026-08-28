@@ -32,28 +32,30 @@ const PlotValueCalculator = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const barPct = Math.max(18, 100 - result.pct);
 
   return (
-    <div className="rounded-[28px] border border-border bg-card overflow-hidden shadow-sm">
+    <div className="rounded-[28px] border border-border bg-[hsl(40_36%_97%)] overflow-hidden">
       {/* Header */}
-      <div className="px-6 md:px-8 pt-7 pb-5 border-b border-border/70 bg-gradient-to-br from-sage-light/60 to-transparent">
-        <div className="flex items-center gap-2 mb-2">
-          <Calculator className="w-4 h-4 text-primary" />
-          <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium">
+      <div className="px-6 md:px-10 pt-9 md:pt-11 pb-7 border-b border-border/60">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="h-px w-8 bg-primary/60" />
+          <p className="text-[10px] tracking-[0.34em] uppercase text-primary font-medium">
             {cemetery.city} value estimator
           </p>
         </div>
-        <h3 className="font-display text-2xl md:text-3xl text-foreground leading-tight">
+        <h3 className="font-display text-[30px] md:text-[46px] text-foreground leading-[1.04] max-w-2xl">
           What is a space at {cemetery.name} worth?
         </h3>
 
-        <div className="mt-5 inline-flex p-1 rounded-full bg-background border border-border">
+        <div className="mt-7 inline-flex gap-7 border-b border-border/70">
           {(["buy", "sell"] as const).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => setMode(m)}
               aria-pressed={mode === m}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                mode === m ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+              className={`pb-3 -mb-px text-[11px] tracking-[0.22em] uppercase transition-colors border-b ${
+                mode === m
+                  ? "text-foreground border-primary"
+                  : "text-muted-foreground border-transparent hover:text-foreground"
               }`}
             >
               {m === "buy" ? "I'm buying" : "I'm selling"}
@@ -61,6 +63,7 @@ const PlotValueCalculator = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
           ))}
         </div>
       </div>
+
 
       <div className="p-6 md:p-8 grid lg:grid-cols-[1fr_1fr] gap-8">
         {/* Inputs */}
