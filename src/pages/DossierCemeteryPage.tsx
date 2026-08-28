@@ -43,9 +43,12 @@ const STEPS = [
 
 interface Props {
   cemetery: FlagshipCemetery;
-  hero: { src: string; alt: string };
-  strip: DossierPhoto;
-  photos: DossierPhoto[];
+  /** Optional original hero photograph. Falls back to a stock grounds frame. */
+  hero?: { src: string; alt: string };
+  /** Optional wide frame inside the article. */
+  strip?: DossierPhoto;
+  /** Optional photo essay. Omitted entirely when we have no original photography. */
+  photos?: DossierPhoto[];
 }
 
 /**
@@ -53,11 +56,29 @@ interface Props {
  * a standing contents rail and a print-style price ledger. Built for the
  * flagship cemeteries where we want to own the search result.
  */
-const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
+const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   const path = `/cemeteries/${cemetery.slug}`;
   const planMap = planMapFor(cemetery.slug);
   const [active, setActive] = useState("market");
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [stuck, setStuck] = useState(false);
+
+  const heroImage = hero ?? { src: fallbackHero.url, alt: `Memorial grounds at ${cemetery.name} in ${cemetery.city}, Texas` };
+  const nav = NAV.filter((n) => (n.href === "#grounds" ? photos.length > 0 : true));
+
+  // Reading progress + sticky bar
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      setProgress(max > 0 ? Math.min(1, h.scrollTop / max) : 0);
+      setStuck(h.scrollTop > 620);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const els = NAV.map((n) => document.getElementById(n.href.slice(1))).filter(
