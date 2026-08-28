@@ -505,6 +505,379 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       h1: "Rest Haven Memorial Park, Rockwall",
     },
   },
+  // ---------------------------------------------------------------------
+  // Houston and Austin — the next five parks by inquiry volume in our book.
+  // We hold no original photography at these yet, so their pages omit the
+  // photo essay and use an unidentifiable frame from our Texas archive.
+  // ---------------------------------------------------------------------
+  {
+    slug: "cook-walden-capital-parks-funeral-home-cemetery",
+    name: "Cook-Walden Capital Parks Funeral Home & Cemetery",
+    alsoKnownAs: [
+      "Cook Walden Capital Parks",
+      "Capital Parks Cemetery",
+      "Capital Parks Pflugerville",
+      "Cook-Walden Pflugerville",
+    ],
+    city: "Pflugerville",
+    region: "Austin",
+    address: "14501 N Interstate Hwy 35, Pflugerville, TX 78660",
+    lat: 30.4367151,
+    lng: -97.6653103,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 695,
+    operator: "Dignity Memorial",
+    tagline: "Greater Austin's busiest resale market, on the I-35 corridor",
+    intro: [
+      "Cook-Walden Capital Parks sits on the frontage of Interstate 35 in Pflugerville, ten minutes north of the Austin city line and convenient to Round Rock, Wells Branch, Hutto and North Austin. It is the cemetery Austin-area families contact us about more than any other, largely because so many people bought here in the 1980s and 1990s and have since moved away from Central Texas.",
+      "Property is described by lettered section and named garden — Section Q Garden of Ascension, Section K, Section D, the Masonic Garden in Section L and the Garden of the Apostles are the ones we see most on deeds. Counter pricing for a single space clusters just under $11,000, which is why resale is where most Austin buyers end up.",
+    ],
+    facts: [
+      { label: "City", value: "Pflugerville (I-35, north Austin)" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$695 per space" },
+      { label: "Paperwork", value: "Quitclaim form · remote e-sign" },
+    ],
+    sections: [
+      { name: "Section Q — Garden of Ascension", kind: "Ground", tier: "premium", note: "Established feature garden; deeds here usually include the endowment care." },
+      { name: "Garden of the Apostles", kind: "Ground", tier: "premium", note: "Sold as singles; a second interment right can normally be added for about half the space price." },
+      { name: "Section L — Masonic Garden", kind: "Ground", tier: "standard", note: "Flat markers only in this section, per the cemetery office." },
+      { name: "Section K", kind: "Ground", tier: "standard", note: "Lettered lawn section; groups of four adjoining spaces come up here regularly." },
+      { name: "Section D", kind: "Ground", tier: "standard", note: "Open lawn near the older part of the park; steady supply of singles." },
+      { name: "Section J", kind: "Ground", tier: "value", note: "Quieter lawn section, generally the most accessible pricing on the property." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [9500, 11500], resale: [4200, 6500] },
+      { type: "Companion / two spaces", retail: [19000, 23000], resale: [8500, 13000] },
+      { type: "Second right of interment", retail: [4800, 6000], resale: [2500, 4000] },
+      { type: "Cremation niche or urn space", retail: [3000, 7000], resale: [1600, 4000] },
+    ],
+    localNotes: [
+      "The transfer fee here is $695 per space, and the cemetery has told us it can be applied toward additional services with the funeral home. We confirm the live figure in writing before either side commits.",
+      "Capital Parks uses its own quitclaim form and accepts remote transfers with e-signature — you do not need to travel to Pflugerville to sell a space here.",
+      "Section L is the Masonic Garden and permits flat markers only. If an upright memorial matters to your family, check the section rules before you buy.",
+      "Singles in several gardens can be converted to a double by purchasing the second right of interment, usually at about half the price of the space itself.",
+      "Read the section, lot and space line straight off your deed (for example Section Q, Garden of Ascension, 229-B) and we can value it the same day.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Cook-Walden Capital Parks in Pflugerville?",
+        a: "Counter pricing for a single burial space at Capital Parks sits around the ten to eleven thousand dollar mark depending on the section. Resale spaces typically trade for roughly half of that, which is where most Austin-area buyers save. We quote a precise figure once we know the section, lot and space.",
+      },
+      {
+        q: "What is the transfer fee at Capital Parks?",
+        a: "$695 per space, paid to the cemetery to record the change of ownership. The office has told us the fee can be credited toward other services with the funeral home, and we always confirm the current amount in writing before anyone signs.",
+      },
+      {
+        q: "Can I sell my Capital Parks plot if I no longer live in Austin?",
+        a: "Yes. The cemetery uses its own quitclaim form, accepts e-signature and will process the transfer remotely, so sellers who have moved out of Central Texas can complete the whole sale by email.",
+      },
+      {
+        q: "Are there cemetery plots for sale in Austin without a long wait?",
+        a: "Resale is usually the fastest route in Greater Austin. Capital Parks and the other Cook-Walden properties are busy, and mature sections sell out at the counter long before demand does — buying from a current owner avoids that queue entirely.",
+      },
+    ],
+    nearby: [],
+    seo: {
+      title: "Cook-Walden Capital Parks Plots for Sale | Austin & Pflugerville",
+      description:
+        "Cemetery plots for sale at Cook-Walden Capital Parks, Pflugerville TX. Resale prices vs cemetery retail, the $695 transfer fee, remote paperwork and free valuations for Austin owners.",
+      h1: "Cook-Walden Capital Parks, Pflugerville",
+    },
+  },
+  {
+    slug: "forest-park-lawndale",
+    name: "Forest Park Lawndale",
+    alsoKnownAs: [
+      "Forest Park Lawndale Cemetery",
+      "Forest Park Lawndale Houston",
+      "Lawndale Cemetery Houston",
+    ],
+    city: "Houston",
+    region: "Greater Houston",
+    address: "6900 Lawndale St, Houston, TX 77023",
+    lat: 29.7175,
+    lng: -95.3106,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 1295,
+    operator: "Dignity Memorial",
+    tagline: "One of the largest cemeteries in Texas, east of downtown Houston",
+    intro: [
+      "Forest Park Lawndale on Lawndale Street is one of the largest cemeteries in Texas, with more than 125,000 interments across a park that has served east and southeast Houston for over a century. It is minutes from the East End, Gulfgate, Pasadena and the Loop, and it generates a steady stream of both buyer and seller inquiries for us.",
+      "Deeds here read by numbered section or named garden — Section 29, Section 31, Oak Hill Section 22 and the Garden of Gethsemani are the ones we see most often. Counter pricing for a grave in the established sections now runs close to $20,000, so almost every family we place here buys from a current owner instead.",
+    ],
+    facts: [
+      { label: "City", value: "Houston (East End, Lawndale St)" },
+      { label: "Size", value: "125,000+ interments" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$1,295 per space" },
+    ],
+    sections: [
+      { name: "Garden of Gethsemani", kind: "Ground", tier: "premium", note: "Named feature garden; lots here come up mainly through resale." },
+      { name: "Oak Hill (Section 22)", kind: "Ground", tier: "premium", note: "Mature oak-shaded section on the older side of the park." },
+      { name: "Section 29", kind: "Ground", tier: "standard", note: "Multi-space lots are common here, and commodities are often transferable with the deed." },
+      { name: "Section 31", kind: "Ground", tier: "standard", note: "Established lawn section; three and six-space family holdings are typical." },
+      { name: "Mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Indoor and garden crypt buildings across the property; tier changes the price sharply." },
+      { name: "Cremation gardens & niches", kind: "Niche", tier: "value", note: "The most accessible pricing on the property for cremated remains." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [16000, 20000], resale: [6500, 11000] },
+      { type: "Companion / two spaces", retail: [32000, 40000], resale: [13000, 21000] },
+      { type: "Lawn crypt (double depth)", retail: [18000, 26000], resale: [8000, 15000] },
+      { type: "Mausoleum crypt", retail: [14000, 30000], resale: [7000, 17000] },
+      { type: "Cremation niche", retail: [3500, 9000], resale: [1900, 5000] },
+    ],
+    localNotes: [
+      "The transfer fee at Forest Park Lawndale is $1,295 per space. We confirm it in writing with the office before either side commits and tell you plainly who is expected to pay it.",
+      "This is a very large, very old park. Bring the section, lot and space line from your deed — walking Lawndale looking for a family lot without it is a long afternoon.",
+      "Some Section 29 deeds carry transferable commodities such as vaults or opening and closing credits. Those add real value to a resale, and we check for them before we price anything.",
+      "Counter pricing is not uniform. Named gardens and the older oak sections sit at the top of the range while newer lawn ground can be meaningfully less for the same rights.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Forest Park Lawndale?",
+        a: "A single grave at the cemetery counter now runs to roughly the high teens of thousands in the established sections. Resale spaces at Forest Park Lawndale typically trade for around half of that. We quote a real figure once we know the section, lot and space on your deed.",
+      },
+      {
+        q: "What is the transfer fee at Forest Park Lawndale?",
+        a: "$1,295 per space, paid to the cemetery to record the change of ownership. It is separate from the purchase price and from opening and closing charges, and we confirm the live figure in writing before anyone signs.",
+      },
+      {
+        q: "Can you still buy plots at Forest Park Lawndale in Houston?",
+        a: "Yes. The park is large and still selling, but the mature sections and named gardens that families usually want are effectively closed at the counter. Buying from a current owner is the route into those areas, and it is the market we broker.",
+      },
+      {
+        q: "How do I sell an inherited cemetery plot in Houston?",
+        a: "We check the deed, confirm who has the legal right to sell, value the space against what property in that section actually trades for, market it at no up-front cost and file the transfer with the cemetery. You pay only when the sale closes.",
+      },
+    ],
+    nearby: ["forest-park-westheimer", "brookside-memorial-park", "memorial-oaks-cemetery"],
+    seo: {
+      title: "Forest Park Lawndale Plots for Sale | Houston Prices & Transfer",
+      description:
+        "Cemetery plots, crypts and niches for sale at Forest Park Lawndale, Houston TX. Resale prices vs cemetery retail, the $1,295 transfer fee, paperwork and free valuations.",
+      h1: "Forest Park Lawndale, Houston",
+    },
+  },
+  {
+    slug: "forest-park-westheimer",
+    name: "Forest Park Westheimer",
+    alsoKnownAs: [
+      "Forest Park Westheimer Cemetery",
+      "Westheimer Cemetery Houston",
+      "Forest Park West Houston",
+    ],
+    city: "Houston",
+    region: "Greater Houston",
+    address: "12800 Westheimer Rd, Houston, TX 77077",
+    lat: 29.7376,
+    lng: -95.6317,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 995,
+    operator: "Dignity Memorial",
+    tagline: "West Houston's Energy Corridor memorial park",
+    intro: [
+      "Forest Park Westheimer sits on Westheimer Road in west Houston, serving the Energy Corridor, Memorial, Briargrove, Alief and the closer Katy suburbs. It is the west-side park families ask us for by name, and the mix of ground spaces and lawn crypts here makes it one of the more varied resale markets in Harris County.",
+      "Deeds read by numbered section — 304, 411 and 412-E come up constantly in our book. What is unusual here is the spread: a plot in one section can be a third of the price of a lawn crypt a few hundred yards away, so the section line on your deed matters more than at most Houston cemeteries.",
+    ],
+    facts: [
+      { label: "City", value: "Houston (Energy Corridor)" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$995 per space" },
+      { label: "Property types", value: "Ground, lawn crypts, niches" },
+    ],
+    sections: [
+      { name: "Section 412-E — lawn crypts", kind: "Lawn crypt", tier: "premium", note: "Pre-installed double-depth crypts; the top of the counter range on this property." },
+      { name: "Section 411", kind: "Ground", tier: "standard", note: "Singles in ground; the second right of interment here can be bought at about a quarter of retail." },
+      { name: "Section 304", kind: "Ground", tier: "value", note: "Older lawn section where two adjoining spaces are common — the most accessible pricing here." },
+      { name: "Garden and mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Crypt tier drives the price; eye level carries a clear premium." },
+      { name: "Cremation niches", kind: "Niche", tier: "value", note: "Niche walls and urn gardens for cremated remains." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [8000, 12000], resale: [3800, 6500] },
+      { type: "Companion / two spaces", retail: [16000, 22000], resale: [7500, 12500] },
+      { type: "Lawn crypt (double depth)", retail: [17000, 21000], resale: [8000, 13000] },
+      { type: "Second right of interment", retail: [2500, 4000], resale: [1500, 2800] },
+      { type: "Cremation niche", retail: [3200, 8000], resale: [1800, 4500] },
+    ],
+    localNotes: [
+      "The transfer fee at Forest Park Westheimer is $995 per space. We confirm it with the office in writing before either side commits.",
+      "In Section 411 the cemetery has quoted the second interment right at about 25% of retail — worth knowing if you own a single and want to make it a companion space rather than buying another plot.",
+      "Lawn crypts and ground spaces are priced very differently here. Check whether your deed says crypt or space before assuming a value; we read it for you if you are not sure.",
+      "West Houston buyers regularly compare this park with Memorial Oaks on the Katy Freeway. We broker both, and we will tell you honestly which has the better inventory this month.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Forest Park Westheimer?",
+        a: "Counter pricing ranges widely by section — a single space in an older section sits in the high single-digit thousands, while a lawn crypt in Section 412-E is around twenty thousand. Resale property here typically trades for roughly half of counter pricing.",
+      },
+      {
+        q: "What is the transfer fee at Forest Park Westheimer?",
+        a: "$995 per space, paid to the cemetery to record the change of ownership. It sits outside the purchase price and outside opening and closing costs, and we confirm the live figure in writing before anyone signs.",
+      },
+      {
+        q: "What is a lawn crypt and is it worth more at resale?",
+        a: "A lawn crypt is a pre-installed double-depth burial vault under the lawn, which lets two people be buried in one space. Because the vault is already paid for, crypts usually resell for more than a plain ground space in the same park.",
+      },
+      {
+        q: "Where can I buy cemetery plots in west Houston?",
+        a: "Forest Park Westheimer and Memorial Oaks are the two west-side parks we place most buyers into. We hold verified resale inventory at both and can usually match a family to a section within weeks rather than months.",
+      },
+    ],
+    nearby: ["memorial-oaks-cemetery", "forest-park-lawndale", "brookside-memorial-park"],
+    seo: {
+      title: "Forest Park Westheimer Plots for Sale | West Houston Prices",
+      description:
+        "Cemetery plots, lawn crypts and niches for sale at Forest Park Westheimer, Houston TX. Resale prices vs retail, the $995 transfer fee, section notes and free valuations.",
+      h1: "Forest Park Westheimer, Houston",
+    },
+  },
+  {
+    slug: "brookside-memorial-park",
+    name: "Brookside Memorial Park",
+    alsoKnownAs: [
+      "Brookside Cemetery Houston",
+      "Brookside Memorial Park Eastex",
+      "Brookside Funeral Home & Cemetery",
+    ],
+    city: "Houston",
+    region: "Greater Houston",
+    address: "13747 Eastex Fwy, Houston, TX 77039",
+    lat: 29.933,
+    lng: -95.335,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 1295,
+    operator: "Dignity Memorial",
+    tagline: "Northeast Houston's memorial park on the Eastex Freeway",
+    intro: [
+      "Brookside Memorial Park runs along the Eastex Freeway in northeast Houston, serving Aldine, Humble, Greenspoint, Kingwood and the north Beltway suburbs. It is one of the busiest parks in our Houston book on both sides of the market: plenty of families looking to buy near a relative, and plenty of owners who bought years ago and no longer live in Harris County.",
+      "Property here is described by named garden or numbered section — the Garden of the Courts, the Easter Garden, Oaklawn and the Garden of Faith are the names we see most on deeds. Counter pricing for a single space generally runs between about $10,000 and $18,000, while private resale spaces at Brookside have consistently traded in the four to eight thousand dollar range.",
+    ],
+    facts: [
+      { label: "City", value: "Houston (Eastex Fwy, northeast)" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$1,295 per space" },
+      { label: "Paperwork", value: "Cemetery quitclaim · remote OK" },
+    ],
+    sections: [
+      { name: "Garden of the Courts", kind: "Ground", tier: "premium", note: "Feature garden; deeds here often include the endowment care." },
+      { name: "The Easter Garden", kind: "Ground", tier: "premium", note: "Established garden in Section 42, usually sold as adjoining pairs." },
+      { name: "Oaklawn", kind: "Ground", tier: "premium", note: "Mature shaded section on the older side of the park." },
+      { name: "Garden of Faith", kind: "Ground", tier: "standard", note: "Singles that can be converted to a companion space by buying the second interment right." },
+      { name: "Section 49", kind: "Ground", tier: "value", note: "Newer lawn ground; the most accessible counter pricing on the property." },
+      { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "Niche walls for cremated remains, well below the cost of ground burial." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [10000, 18000], resale: [4000, 8000] },
+      { type: "Companion / two spaces", retail: [18000, 30000], resale: [8000, 15000] },
+      { type: "Second right of interment", retail: [5000, 8500], resale: [2500, 5000] },
+      { type: "Cremation niche", retail: [3000, 8000], resale: [1700, 4500] },
+    ],
+    localNotes: [
+      "We have confirmed the transfer fee directly with the Brookside office at $1,295 per space. A higher figure has been quoted to us once and never repeated, so we always re-confirm in writing before either side commits.",
+      "Brookside uses its own quitclaim form and can complete transfers remotely — useful for the many owners here who have moved away from Houston.",
+      "Singles in the Garden of Faith and several other gardens can be converted to companion spaces by purchasing the second interment right, usually at about half the cost of the space.",
+      "Some deeds include endowment care or transferable commodities. We check for them before we price anything, because they change what a buyer will pay.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Brookside Memorial Park in Houston?",
+        a: "Direct from the cemetery, single spaces generally run from about $10,000, with doubles up toward $18,000. Private resale spaces at Brookside have consistently traded in the four to eight thousand dollar range per plot, which is the market we broker.",
+      },
+      {
+        q: "What is the transfer fee at Brookside Memorial Park?",
+        a: "$1,295 per space, confirmed directly with the cemetery office. It is paid to the cemetery to record the change of ownership, and we put the current figure in writing before anyone signs.",
+      },
+      {
+        q: "Can I sell a Brookside plot from out of state?",
+        a: "Yes. The cemetery uses its own quitclaim form and will process the transfer remotely, so owners who have left Houston can complete a sale without travelling. We prepare and route every document.",
+      },
+      {
+        q: "How long does it take to sell a cemetery plot at Brookside?",
+        a: "It depends on the garden and the price, but northeast Houston is an active market and we hold buyers waiting for this park. Once a buyer is matched, the cemetery paperwork itself usually takes a few weeks.",
+      },
+    ],
+    nearby: ["forest-park-lawndale", "memorial-oaks-cemetery", "forest-park-westheimer"],
+    seo: {
+      title: "Brookside Memorial Park Plots for Sale | Houston Prices & Fees",
+      description:
+        "Cemetery plots for sale at Brookside Memorial Park, Houston TX. Resale prices from around $4,000, the $1,295 transfer fee, remote quitclaim paperwork and free valuations.",
+      h1: "Brookside Memorial Park, Houston",
+    },
+  },
+  {
+    slug: "memorial-oaks-cemetery",
+    name: "Memorial Oaks Cemetery",
+    alsoKnownAs: [
+      "Memorial Oaks Cemetery Houston",
+      "Memorial Oaks Katy Freeway",
+      "Memorial Oaks Funeral Home & Cemetery",
+    ],
+    city: "Houston",
+    region: "Greater Houston",
+    address: "13001 Katy Fwy, Houston, TX 77079",
+    lat: 29.7859,
+    lng: -95.5837,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 995,
+    operator: "Dignity Memorial",
+    tagline: "The Katy Freeway memorial park — Houston's premium west-side ground",
+    intro: [
+      "Memorial Oaks sits on the Katy Freeway at Eldridge, in the middle of the Memorial and Energy Corridor neighbourhoods. It is the most expensive park in our Houston book by some distance: single spaces at the counter have been quoted to us at around $20,000, and the park's location on I-10 keeps demand high year-round.",
+      "That pricing is exactly why resale matters here. Families who want to be near a relative at Memorial Oaks are often looking at a five-figure counter quote for one space, while a resale space in the same section can cost a fraction of it. Deeds read by numbered section, lot and space — Section 8 and the 500s come up most often in our transactions.",
+    ],
+    facts: [
+      { label: "City", value: "Houston (Katy Fwy at Eldridge)" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$995 per space" },
+      { label: "Counter pricing", value: "Among Houston's highest" },
+    ],
+    sections: [
+      { name: "Section 8", kind: "Ground", tier: "premium", note: "Established lawn section; singles here have been quoted at around $20,000 at the counter." },
+      { name: "Section 501 and the 500s", kind: "Ground", tier: "premium", note: "Family holdings of multiple spaces with niches are common in this part of the park." },
+      { name: "Garden and mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Crypt tier and building drive the price; eye level costs the most." },
+      { name: "Lawn crypts", kind: "Lawn crypt", tier: "premium", note: "Pre-installed double-depth vaults — two interments in a single space." },
+      { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "The most accessible option on an otherwise expensive property." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [16000, 22000], resale: [7000, 12000] },
+      { type: "Companion / two spaces", retail: [30000, 42000], resale: [13000, 22000] },
+      { type: "Second right of interment", retail: [6000, 8000], resale: [3000, 5500] },
+      { type: "Mausoleum crypt", retail: [15000, 32000], resale: [7500, 18000] },
+      { type: "Cremation niche", retail: [4000, 10000], resale: [2200, 5500] },
+    ],
+    localNotes: [
+      "Memorial Oaks carries some of the highest counter pricing we record in Houston — singles in Section 8 have been quoted to us at about $20,000. Resale is where families here actually save.",
+      "The transfer fee is $995 per space, paid to the cemetery to record the change of ownership. We confirm the live figure in writing before either side commits.",
+      "The cemetery has quoted the second interment right on an existing space at around 35% of retail in some sections, which can be cheaper than buying an additional space.",
+      "Bring the section, lot and space line from your deed (for example Section 8, Lot 38, Spaces 11 and 12) and we can value your property the same day, with no site visit.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Memorial Oaks in Houston?",
+        a: "Memorial Oaks is one of the most expensive cemeteries in Houston. Single spaces have been quoted at the counter at around $20,000, while resale spaces in the same sections typically trade for a fraction of that. We give you a precise figure once we know the section, lot and space.",
+      },
+      {
+        q: "What is the transfer fee at Memorial Oaks Cemetery?",
+        a: "$995 per space, paid to the cemetery to record the change of ownership. It is separate from the purchase price and from opening and closing charges, and we confirm the current figure in writing before anyone signs.",
+      },
+      {
+        q: "Is it cheaper to add a second interment right than buy another plot?",
+        a: "Often, yes. The cemetery has quoted the second right of interment at roughly a third of retail in some sections, which allows two burials in one space. We check what your specific section allows before recommending it.",
+      },
+      {
+        q: "How do I sell a cemetery plot at Memorial Oaks?",
+        a: "Send us the deed. We confirm who is legally able to sell, value the space against real transactions in that section, market it at no up-front cost and handle the cemetery transfer. You are paid the net once the sale closes.",
+      },
+    ],
+    nearby: ["forest-park-westheimer", "forest-park-lawndale", "brookside-memorial-park"],
+    seo: {
+      title: "Memorial Oaks Cemetery Plots for Sale | Katy Freeway Houston",
+      description:
+        "Cemetery plots, crypts and niches for sale at Memorial Oaks Cemetery on the Katy Freeway, Houston TX. Resale prices against $20,000 counter pricing, the $995 transfer fee and free valuations.",
+      h1: "Memorial Oaks Cemetery, Houston",
+    },
+  },
 ];
 
 export const flagshipBySlug = (slug: string | undefined) =>
