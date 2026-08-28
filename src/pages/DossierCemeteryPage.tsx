@@ -64,9 +64,26 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const [stuck, setStuck] = useState(false);
+  // Once the visitor starts the valuation form we drop the explainer column
+  // and give the form the whole box.
+  const [formStarted, setFormStarted] = useState(false);
+
+  // Metro the cemetery belongs to — drives the coverage map, breadcrumbs and hub links.
+  const metro =
+    cemetery.region === "Greater Houston"
+      ? { label: "Houston", regions: ["Greater Houston"], hub: "/cemetery-plots-for-sale-houston" }
+      : cemetery.region === "Austin"
+        ? { label: "Austin", regions: ["Austin", "Central Texas"], hub: "/cemetery-plots-for-sale-austin" }
+        : { label: "Dallas–Fort Worth", regions: ["Dallas–Fort Worth"], hub: "/cemetery-plots-for-sale-dallas" };
 
   const heroImage = hero ?? { src: fallbackHero.url, alt: `Memorial grounds at ${cemetery.name} in ${cemetery.city}, Texas` };
-  const nav = NAV.filter((n) => (n.href === "#grounds" ? photos.length > 0 : true));
+  const hasSectionPlan = Boolean(planMap) || cemetery.slug === "restland-memorial-park";
+  const nav = NAV.filter((n) => {
+    if (n.href === "#grounds") return photos.length > 0;
+    if (n.href === "#sections") return hasSectionPlan;
+    return true;
+  });
+
 
   // Reading progress + sticky bar
   useEffect(() => {
@@ -151,7 +168,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
         { "@type": "ListItem", position: 2, name: "Cemeteries", item: `${SITE}/cemeteries` },
-        { "@type": "ListItem", position: 3, name: "Dallas–Fort Worth", item: `${SITE}/cemetery-plots-for-sale-dallas` },
+        { "@type": "ListItem", position: 3, name: metro.label, item: `${SITE}${metro.hub}` },
         { "@type": "ListItem", position: 4, name: cemetery.name, item: `${SITE}${path}` },
       ],
     },
@@ -430,26 +447,32 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
 
           {/* ---------- Free valuation (dark, editorial) ---------- */}
           <section id="valuation" className="scroll-mt-28 px-6 md:px-10 pt-16">
-            <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-10 items-start">
-              <div>
-                <p className={eyebrow}>Free valuation</p>
-                <h2 className="mt-4 font-display text-[clamp(1.8rem,2.8vw,2.5rem)] leading-tight text-[hsl(var(--parchment))]">
-                  What is your space at {cemetery.name} worth?
-                </h2>
-                <p className="mt-4 text-[hsl(var(--parchment)/0.78)] leading-relaxed font-light">
-                  Free and no obligation. A few short questions and we come back with a figure, usually within one
-                  business day. No up-front cost, and you only pay when the sale closes.
-                </p>
-                <a
-                  href="tel:+12142304740"
-                  className={`${ghostBtn} mt-6 px-5 py-3 text-[15px] gap-2.5`}
-                >
-                  <Phone className="w-4 h-4 text-[hsl(var(--gold))]" />
-                  (214) 230-4740
-                </a>
-              </div>
+            <div
+              className={`rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid gap-10 items-start transition-all duration-500 ${
+                formStarted ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]"
+              }`}
+            >
+              {!formStarted && (
+                <div>
+                  <p className={eyebrow}>Free valuation</p>
+                  <h2 className="mt-4 font-display text-[clamp(1.8rem,2.8vw,2.5rem)] leading-tight text-[hsl(var(--parchment))]">
+                    What is your space at {cemetery.name} worth?
+                  </h2>
+                  <p className="mt-4 text-[hsl(var(--parchment)/0.78)] leading-relaxed font-light">
+                    Free and no obligation. A few short questions and we come back with a figure, usually within one
+                    business day. No up-front cost, and you only pay when the sale closes.
+                  </p>
+                  <a
+                    href="tel:+12142304740"
+                    className={`${ghostBtn} mt-6 px-5 py-3 text-[15px] gap-2.5`}
+                  >
+                    <Phone className="w-4 h-4 text-[hsl(var(--gold))]" />
+                    (214) 230-4740
+                  </a>
+                </div>
+              )}
               <div className="rounded-[16px] bg-[hsl(var(--parchment))] p-5 md:p-7">
-                <SellerQuoteForm defaultCemetery={cemetery.name} editorial />
+                <SellerQuoteForm defaultCemetery={cemetery.name} editorial onEngage={setFormStarted} />
               </div>
             </div>
           </section>
@@ -576,10 +599,10 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
                     ))}
                   </div>
                   <Link
-                    to="/cemetery-plots-for-sale-dallas"
+                    to={metro.hub}
                     className="mt-4 inline-block text-sm text-[hsl(var(--gold))] hover:text-[hsl(var(--parchment))]"
                   >
-                    All Dallas–Fort Worth cemeteries →
+                    All {metro.label} cemeteries →
                   </Link>
                 </div>
               )}
@@ -590,10 +613,10 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
           <section className="px-6 md:px-10 pt-16">
             <p className={eyebrow}>Across the metroplex</p>
             <h2 className="mt-4 mb-6 max-w-3xl font-display text-[clamp(1.8rem,2.6vw,2.4rem)] leading-tight text-[hsl(var(--parchment))]">
-              Every Dallas–Fort Worth cemetery we broker.
+              Every {metro.label} cemetery we broker.
             </h2>
             <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-5">
-              <MetroCemeteryMap regions={["Dallas–Fort Worth"]} metro="Dallas–Fort Worth" fullBleed={false} searchable compact hideTitle />
+              <MetroCemeteryMap regions={metro.regions} metro={metro.label} fullBleed={false} searchable compact hideTitle />
             </div>
           </section>
         </div>

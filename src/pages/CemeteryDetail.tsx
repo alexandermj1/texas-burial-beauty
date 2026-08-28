@@ -22,6 +22,7 @@ import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
 import { findCemeteryBySlug, slugify } from "@/lib/cemeterySlug";
 import { flagshipBySlug } from "@/data/flagshipCemeteries";
+import { archiveHeroFor } from "@/data/archiveHeroes";
 import DossierCemeteryPage from "@/pages/DossierCemeteryPage";
 import { SPARKMAN_HERO, SPARKMAN_STRIP, SPARKMAN_PHOTOS } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO, BLUEBONNET_STRIP, BLUEBONNET_PHOTOS } from "@/data/bluebonnetPhotos";
@@ -162,7 +163,10 @@ const CemeteryDetail = () => {
       "laurel-land-memorial-park-fort-worth": { hero: LAUREL_LAND_HERO, strip: LAUREL_LAND_STRIP, photos: LAUREL_LAND_PHOTOS },
     };
     const m = media[flagship.slug];
-    return <DossierCemeteryPage cemetery={flagship} hero={m?.hero} strip={m?.strip} photos={m?.photos} />;
+    // No original photography yet: fall back to an unidentifiable archive frame
+    // for the hero and omit the photo essay entirely.
+    const hero = m?.hero ?? archiveHeroFor(flagship.slug);
+    return <DossierCemeteryPage cemetery={flagship} hero={hero} strip={m?.strip} photos={m?.photos} />;
   }
 
   // Laurel Land Dallas keeps the older flagship layout for now.
