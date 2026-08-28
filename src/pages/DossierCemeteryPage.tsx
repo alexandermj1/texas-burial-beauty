@@ -9,6 +9,8 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
 import CemeteryPlanMap from "@/components/cemetery/CemeteryPlanMap";
+import DossierBuyerForm from "@/components/cemetery/DossierBuyerForm";
+import RestlandGardenMap from "@/components/cemetery/RestlandGardenMap";
 import { planMapFor } from "@/components/cemetery/cemeteryPlanMaps";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 
@@ -22,6 +24,7 @@ const SITE = "https://texascemeterybrokers.com";
 const NAV = [
   { href: "#market", label: "The market here" },
   { href: "#prices", label: "Prices" },
+  { href: "#buy", label: "Buy a space" },
   { href: "#valuation", label: "Free valuation" },
   { href: "#grounds", label: "Photographs" },
   { href: "#sections", label: "Section plan" },
@@ -29,6 +32,7 @@ const NAV = [
   { href: "#transfer", label: "Transfer & fees" },
   { href: "#faq", label: "FAQ" },
 ];
+
 
 const STEPS = [
   { n: "01", t: "Deed check", b: "We read your deed, confirm the section and space and verify who is legally able to sell." },
