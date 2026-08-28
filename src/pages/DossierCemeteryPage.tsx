@@ -97,7 +97,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [cemetery.slug, nav]);
+  }, [cemetery.slug, photos.length]);
 
   const nearby = cemetery.nearby
     .map((s) => flagshipBySlug(s) ?? bayCemeteries.find((c) => slugify(c.name) === s))
@@ -163,7 +163,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       "@type": "ImageGallery",
       name: `${cemetery.name} photographs — mausoleum, chapels and gardens`,
       about: cemetery.name,
-      associatedMedia: [strip, ...photos].map((p) => ({
+      associatedMedia: [...(strip ? [strip] : []), ...photos].map((p) => ({
         "@type": "ImageObject",
         contentUrl: `${SITE}${p.src}`,
         caption: p.caption,
@@ -189,7 +189,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       {/* ================= HERO ================= */}
       <section className="relative min-h-[560px] md:min-h-[640px] flex items-center">
         <div className="absolute inset-0">
-          <img src={hero.src} alt={hero.alt} className="w-full h-full object-cover" />
+          <img src={heroImage.src} alt={heroImage.alt} className="w-full h-full object-cover" />
         </div>
         <div
           aria-hidden
