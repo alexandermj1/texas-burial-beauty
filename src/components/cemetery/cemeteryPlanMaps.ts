@@ -36,7 +36,17 @@ export const CEMETERY_PLAN_MAPS: Record<string, CemeteryPlanMap> = {
     downloadName: "bluebonnet-hills-memorial-park-section-map.png",
     tone: "sepia-[.14] saturate-[.88] contrast-[1.03]",
   },
+  "rest-haven-memorial-park": {
+    src: restHavenMap.url,
+    alt: "Section map of Rest Haven Memorial Park & Funeral Home in Rockwall, Texas, showing the Garden of Devotion, Garden of Inspiration, The Meadow, Field of Honor, the mausoleums and the cremation gardens",
+    caption: "Rest Haven Memorial Park & Funeral Home section map — Rockwall, Texas",
+    blurb:
+      "The full grounds plan for Rest Haven Rockwall, from the Highway 66 frontage and funeral home through the named gardens to The Meadow, the mausoleums and Sunset Lake.",
+    downloadName: "rest-haven-memorial-park-rockwall-section-map.png",
+    tone: "sepia-[.14] saturate-[.88] contrast-[1.03]",
+  },
 };
+
 
 export const planMapFor = (slug: string): CemeteryPlanMap | undefined =>
   CEMETERY_PLAN_MAPS[slug];
