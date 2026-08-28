@@ -65,59 +65,63 @@ const PlotValueCalculator = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       </div>
 
 
-      <div className="p-6 md:p-8 grid lg:grid-cols-[1fr_1fr] gap-8">
+      <div className="p-6 md:p-10 grid lg:grid-cols-[1fr_1fr] gap-9 lg:gap-14">
         {/* Inputs */}
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-3">Property type</p>
-          <div className="flex flex-wrap gap-2 mb-7">
+          <p className="text-[10px] tracking-[0.28em] uppercase text-muted-foreground mb-4">Property type</p>
+          <div className="flex flex-col mb-9 border-t border-border/60">
             {cemetery.pricing.map((p, i) => (
               <button
                 key={p.type}
                 type="button"
                 onClick={() => setTypeIdx(i)}
                 aria-pressed={i === typeIdx}
-                className={`px-4 py-2.5 rounded-full text-sm border transition-all ${
-                  i === typeIdx
-                    ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border text-muted-foreground hover:border-primary/40"
+                className={`group flex items-center justify-between gap-4 py-3.5 text-left border-b border-border/60 transition-colors ${
+                  i === typeIdx ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {p.type}
+                <span className={`text-[15px] ${i === typeIdx ? "font-medium" : ""}`}>{p.type}</span>
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 transition-all ${
+                    i === typeIdx ? "bg-primary scale-100" : "bg-border scale-75 group-hover:bg-primary/40"
+                  }`}
+                />
               </button>
             ))}
           </div>
 
-          <p className="text-xs font-medium text-muted-foreground mb-3">How many spaces?</p>
-          <div className="flex items-center gap-4">
+          <p className="text-[10px] tracking-[0.28em] uppercase text-muted-foreground mb-4">How many spaces?</p>
+          <div className="flex items-center gap-5">
             <button
               type="button"
               onClick={() => setSpaces((s) => Math.max(1, s - 1))}
               aria-label="Fewer spaces"
-              className="w-11 h-11 rounded-full border border-border flex items-center justify-center hover:border-primary transition-colors"
+              className="w-11 h-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-foreground transition-colors"
             >
               <Minus className="w-4 h-4" />
             </button>
-            <span className="font-display text-4xl text-foreground w-14 text-center tabular-nums">{spaces}</span>
+            <span className="font-display text-5xl text-foreground w-16 text-center tabular-nums">{spaces}</span>
             <button
               type="button"
               onClick={() => setSpaces((s) => Math.min(12, s + 1))}
               aria-label="More spaces"
-              className="w-11 h-11 rounded-full border border-border flex items-center justify-center hover:border-primary transition-colors"
+              className="w-11 h-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-foreground transition-colors"
             >
               <Plus className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="mt-7 flex items-start gap-2.5 rounded-2xl bg-muted/50 border border-border/60 p-4">
+          <div className="mt-9 pt-5 border-t border-border/60 flex items-start gap-3">
             <Receipt className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground leading-relaxed">
               {cemetery.name} records a transfer fee of{" "}
-              <strong className="text-foreground">{money(cemetery.transferFee)} per space</strong> —{" "}
+              <strong className="text-foreground font-medium">{money(cemetery.transferFee)} per space</strong> —{" "}
               {money(cemetery.transferFee * spaces)} for {spaces} {spaces === 1 ? "space" : "spaces"}. Paid to the
               cemetery to record the deed change, confirmed in writing before anyone commits.
             </p>
           </div>
         </div>
+
 
         {/* Result */}
         <div className="rounded-3xl bg-foreground text-background p-6 md:p-7 flex flex-col">
