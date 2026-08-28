@@ -156,6 +156,8 @@ const CemeteryDetail = () => {
       "sparkman-hillcrest-memorial-park": { hero: SPARKMAN_HERO, strip: SPARKMAN_STRIP, photos: SPARKMAN_PHOTOS },
       "bluebonnet-hills-memorial-park": { hero: BLUEBONNET_HERO, strip: BLUEBONNET_STRIP, photos: BLUEBONNET_PHOTOS },
       "restland-memorial-park": { hero: RESTLAND_HERO, strip: RESTLAND_STRIP, photos: RESTLAND_PHOTOS },
+      "rest-haven-memorial-park": { hero: RESTHAVEN_HERO, strip: RESTHAVEN_STRIP, photos: RESTHAVEN_PHOTOS },
+      "laurel-land-memorial-park-fort-worth": { hero: LAUREL_LAND_HERO, strip: LAUREL_LAND_STRIP, photos: LAUREL_LAND_PHOTOS },
     };
     const m = media[flagship.slug];
     return <DossierCemeteryPage cemetery={flagship} hero={m?.hero} strip={m?.strip} photos={m?.photos} />;
