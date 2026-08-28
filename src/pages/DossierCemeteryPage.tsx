@@ -163,7 +163,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
         { "@type": "ListItem", position: 2, name: "Cemeteries", item: `${SITE}/cemeteries` },
-        { "@type": "ListItem", position: 3, name: "Dallas–Fort Worth", item: `${SITE}/cemetery-plots-for-sale-dallas` },
+        { "@type": "ListItem", position: 3, name: metro.label, item: `${SITE}${metro.hub}` },
         { "@type": "ListItem", position: 4, name: cemetery.name, item: `${SITE}${path}` },
       ],
     },
@@ -588,10 +588,10 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
                     ))}
                   </div>
                   <Link
-                    to="/cemetery-plots-for-sale-dallas"
+                    to={metro.hub}
                     className="mt-4 inline-block text-sm text-[hsl(var(--gold))] hover:text-[hsl(var(--parchment))]"
                   >
-                    All Dallas–Fort Worth cemeteries →
+                    All {metro.label} cemeteries →
                   </Link>
                 </div>
               )}
@@ -602,10 +602,10 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
           <section className="px-6 md:px-10 pt-16">
             <p className={eyebrow}>Across the metroplex</p>
             <h2 className="mt-4 mb-6 max-w-3xl font-display text-[clamp(1.8rem,2.6vw,2.4rem)] leading-tight text-[hsl(var(--parchment))]">
-              Every Dallas–Fort Worth cemetery we broker.
+              Every {metro.label} cemetery we broker.
             </h2>
             <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-5">
-              <MetroCemeteryMap regions={["Dallas–Fort Worth"]} metro="Dallas–Fort Worth" fullBleed={false} searchable compact hideTitle />
+              <MetroCemeteryMap regions={metro.regions} metro={metro.label} fullBleed={false} searchable compact hideTitle />
             </div>
           </section>
         </div>
