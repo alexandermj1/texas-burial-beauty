@@ -3,6 +3,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { STATIC_ROUTES, type RouteMeta } from "./route-meta";
 import { bayCemeteries } from "../src/data/cemeteries";
+import { FLAGSHIP_CEMETERIES } from "../src/data/flagshipCemeteries";
+
 
 const slugify = (name: string): string =>
   name
