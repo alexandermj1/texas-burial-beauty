@@ -216,7 +216,7 @@ const RestlandGardenMap = () => {
             <img
               src={current.src}
               alt={current.alt}
-              className="max-w-none w-[1600px] h-auto mix-blend-multiply"
+              className={`max-w-none w-[1600px] h-auto mix-blend-multiply ${current.tone}`}
               onClick={(e) => e.stopPropagation()}
             />
           </div>
