@@ -239,20 +239,33 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
-      {/* Anchor nav */}
-      <nav className="sticky top-[68px] z-30 bg-background/90 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-6 py-3 flex gap-2 overflow-x-auto no-scrollbar">
-          {NAV.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              {l.label}
-            </a>
-          ))}
+      {/* Anchor nav — jump to any part of the page */}
+      <nav className="sticky top-[68px] z-30 bg-background/92 backdrop-blur-xl border-b border-border/50">
+        <div className="container mx-auto px-6 py-2.5 flex items-center gap-3">
+          <span className="hidden md:inline shrink-0 text-[10px] tracking-[0.28em] uppercase text-muted-foreground pr-2 border-r border-border">
+            Jump to
+          </span>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+            {NAV.map((l) => {
+              const isActive = active === l.href.slice(1);
+              return (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {l.label}
+                </a>
+              );
+            })}
+          </div>
         </div>
       </nav>
+
 
       {/* ============ INTRO ============ */}
       <section className="py-12 md:py-16">
