@@ -443,6 +443,38 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
+      {/* ============ DFW COVERAGE MAP ============ */}
+      <section
+        id="nearby-map"
+        className="relative py-12 md:py-16 bg-gradient-warm border-y border-border/60 scroll-mt-32 overflow-hidden"
+      >
+        <img
+          src={bananaLeaf.url}
+          alt=""
+          aria-hidden
+          className="hidden md:block absolute -left-52 bottom-0 w-[26rem] opacity-[0.09] -rotate-12 pointer-events-none select-none"
+        />
+        <div className="relative container mx-auto px-6">
+          <div className="max-w-3xl mb-7">
+            <GardenSignMarker label="Coverage" className="mb-5" />
+            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Nearby cemeteries</p>
+            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-3">
+              Every cemetery we broker around {cemetery.city}.
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Search by name or city, tap a pin for transfer fees and showing availability, or open directions.
+            </p>
+          </div>
+          <MetroCemeteryMap
+            regions={["Dallas–Fort Worth"]}
+            metro="Dallas–Fort Worth"
+            searchable
+            hideTitle
+            compact
+          />
+        </div>
+      </section>
+
       {/* ============ TRANSFER & FEES ============ */}
       <section id="transfer" className="py-14 md:py-20 bg-foreground text-background scroll-mt-32">
         <div className="container mx-auto px-6">
