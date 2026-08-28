@@ -35,8 +35,31 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import { RESTLAND_MAPS as RESTLAND_MAP_DOWNLOADS } from "@/components/cemetery/restlandMaps";
+import restlandOaks from "@/assets/restland/historic-oaks.png.asset.json";
+import restlandMonuments from "@/assets/restland/historic-monuments.png.asset.json";
+import restlandSign from "@/assets/restland/memories-sign.png.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
+
+/** Broker photography of the original, historic section of Restland Memorial Park. */
+const RESTLAND_PHOTOS = [
+  {
+    src: restlandOaks.url,
+    alt: "Upright granite monuments under mature live oaks in the historic section of Restland Memorial Park, Dallas, Texas",
+    caption: "Upright monuments under the original live oaks, historic section",
+  },
+  {
+    src: restlandSign.url,
+    alt: "Cast-metal 'Memories' garden lane sign in the historic section of Restland Memorial Park, Dallas, Texas",
+    caption: "The cast-metal lane signs that name each garden",
+  },
+  {
+    src: restlandMonuments.url,
+    alt: "Family monuments and memorial benches in an older garden at Restland Memorial Park on Greenville Avenue, Dallas",
+    caption: "Family estates and upright memorials off Greenville Avenue",
+  },
+] as const;
 
 const NAV = [
   { href: "#prices", label: "Prices" },
@@ -48,20 +71,33 @@ const NAV = [
   { href: "#faq", label: "FAQ" },
 ];
 
-const FaqItem = ({ q, a }: { q: string; a: string }) => {
-  const [open, setOpen] = useState(false);
+const FaqItem = ({ q, a, index, defaultOpen = false }: { q: string; a: string; index: number; defaultOpen?: boolean }) => {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-border/70">
+    <div
+      className={`rounded-[22px] border transition-colors ${
+        open ? "border-primary/40 bg-background shadow-soft" : "border-border/70 bg-background/60 hover:border-primary/30"
+      }`}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full flex items-start justify-between gap-6 text-left py-5 group"
+        className="w-full flex items-start gap-4 md:gap-5 text-left p-5 md:p-6 group"
       >
-        <h3 className="font-display text-lg md:text-xl text-foreground group-hover:text-primary transition-colors">
+        <span
+          className={`shrink-0 mt-0.5 w-8 h-8 rounded-full grid place-items-center text-[11px] font-medium tracking-wider transition-colors ${
+            open ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:text-foreground"
+          }`}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <h3 className="flex-1 font-display text-lg md:text-[22px] leading-snug text-foreground group-hover:text-primary transition-colors">
           {q}
         </h3>
-        <ChevronDown className={`w-5 h-5 text-muted-foreground shrink-0 mt-1 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`w-5 h-5 text-muted-foreground shrink-0 mt-1.5 transition-transform ${open ? "rotate-180 text-primary" : ""}`}
+        />
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -72,7 +108,10 @@ const FaqItem = ({ q, a }: { q: string; a: string }) => {
             transition={{ duration: 0.28 }}
             className="overflow-hidden"
           >
-            <p className="text-muted-foreground leading-relaxed pb-6 max-w-3xl">{a}</p>
+            <div className="px-5 md:px-6 pb-6 md:pl-[4.6rem]">
+              <span className="block w-10 h-px bg-primary/40 mb-4" />
+              <p className="text-muted-foreground leading-relaxed max-w-3xl">{a}</p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -80,16 +119,20 @@ const FaqItem = ({ q, a }: { q: string; a: string }) => {
   );
 };
 
+
 const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const { countFor } = useActiveListings();
   const liveCount = countFor(cemetery.name);
   const path = `/cemeteries/${cemetery.slug}`;
   const isRestland = cemetery.slug.startsWith("restland");
   const [active, setActive] = useState<string>("");
+  const navLinks = isRestland
+    ? [...NAV.slice(0, 2), { href: "#grounds", label: "Photos" }, ...NAV.slice(2)]
+    : NAV;
 
   // Scroll-spy so the jump bar always shows where you are on the page.
   useEffect(() => {
-    const ids = NAV.map((n) => n.href.slice(1));
+    const ids = navLinks.map((n) => n.href.slice(1));
     const els = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el));
@@ -169,7 +212,40 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         acceptedAnswer: { "@type": "Answer", text: f.a },
       })),
     },
+    // Image + map assets, so Google can index the photography and the garden plans.
+    ...(isRestland
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "ImageGallery",
+            name: `${cemetery.name} photos — historic gardens and section maps`,
+            about: cemetery.name,
+            associatedMedia: [
+              ...RESTLAND_PHOTOS.map((p) => ({
+                "@type": "ImageObject",
+                contentUrl: `${SITE}${p.src}`,
+                caption: p.caption,
+                description: p.alt,
+                creditText: "Texas Cemetery Brokers",
+                license: `${SITE}/privacy`,
+                acquireLicensePage: `${SITE}${path}`,
+                contentLocation: { "@type": "Place", name: cemetery.name, address: cemetery.address },
+              })),
+              ...RESTLAND_MAP_DOWNLOADS.map((m) => ({
+                "@type": "ImageObject",
+                contentUrl: `${SITE}${m.src}`,
+                caption: m.caption,
+                description: m.alt,
+                creditText: "Texas Cemetery Brokers",
+                encodingFormat: "image/png",
+                acquireLicensePage: `${SITE}${path}`,
+              })),
+            ],
+          },
+        ]
+      : []),
   ];
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
@@ -286,7 +362,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
             Jump to
           </span>
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-            {NAV.map((l) => {
+            {navLinks.map((l) => {
               const isActive = active === l.href.slice(1);
               return (
                 <a
@@ -466,6 +542,54 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
+      {/* ============ HISTORIC GROUNDS PHOTOS (Restland) ============ */}
+      {isRestland && (
+        <section id="grounds" className="py-14 md:py-20 scroll-mt-32">
+          <div className="container mx-auto px-6">
+            <div className="grid lg:grid-cols-[0.85fr_1.15fr] gap-8 lg:gap-14 items-end mb-8">
+              <div>
+                <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">
+                  The historic grounds
+                </p>
+                <h2 className="font-display text-3xl md:text-[46px] text-foreground leading-[1.04] mb-4">
+                  Inside Restland's oldest gardens.
+                </h2>
+                <span className="block w-16 h-[3px] bg-primary/70 rounded-full" />
+              </div>
+              <p className="text-muted-foreground leading-relaxed max-w-xl">
+                The original section of Restland Memorial Park sits under mature live oaks off Greenville Avenue — upright
+                monuments, family estates and cast-metal lane signs that predate most of the park. Photographed by our
+                brokers on the ground in Dallas. These closed gardens rarely release new inventory; almost everything that
+                changes hands here is a family resale.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+              {RESTLAND_PHOTOS.map((p, i) => (
+                <figure
+                  key={p.src}
+                  className={`group relative overflow-hidden rounded-[24px] border border-border bg-card ${
+                    i === 0 ? "md:col-span-2" : i === 2 ? "md:col-span-3" : ""
+                  }`}
+                >
+                  <img
+                    src={p.src}
+                    alt={p.alt}
+                    loading="lazy"
+                    width={1600}
+                    height={1200}
+                    className={`w-full object-cover ${i === 2 ? "h-[220px] md:h-[300px]" : "h-[240px] md:h-[340px]"} transition-transform duration-700 group-hover:scale-[1.04]`}
+                  />
+                  <figcaption className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-foreground/85 to-transparent">
+                    <span className="text-background text-sm leading-snug">{p.caption}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
 
       {/* ============ MAP ============ */}
       <section id="map" className="py-12 md:py-16 scroll-mt-32">
@@ -640,22 +764,41 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       </section>
 
       {/* ============ FAQ ============ */}
-      <section id="faq" className="py-12 md:py-16 bg-sand-light/40 border-y border-border/60 scroll-mt-32">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <div className="mb-8">
-            <Sparkles className="w-5 h-5 text-primary mb-3" />
-            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Questions we get</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06]">
-              {cemetery.name}, answered.
+      <section id="faq" className="relative py-14 md:py-20 bg-sand-light/40 border-y border-border/60 scroll-mt-32 overflow-hidden">
+        <img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute -left-24 bottom-0 w-[22rem] opacity-[0.10] -rotate-12 pointer-events-none"
+        />
+        <div className="container mx-auto px-6 relative grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-16 items-start">
+          <div className="lg:sticky lg:top-36">
+            <div className="flex items-center gap-3 mb-4">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium">Questions we get</span>
+            </div>
+            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.04] mb-4">
+              {cemetery.name}, <span className="italic text-muted-foreground">answered.</span>
             </h2>
+            <p className="text-muted-foreground leading-relaxed mb-6 max-w-md">
+              The questions families actually ask us about buying, selling and transferring property here.
+            </p>
+            <a
+              href="tel:+12142304740"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-foreground text-background text-sm font-medium hover:bg-primary transition-colors"
+            >
+              Ask us directly — (214) 230-4740
+            </a>
           </div>
-          <div>
-            {cemetery.faqs.map((f) => (
-              <FaqItem key={f.q} q={f.q} a={f.a} />
+
+          <div className="space-y-3">
+            {cemetery.faqs.map((f, i) => (
+              <FaqItem key={f.q} q={f.q} a={f.a} index={i} defaultOpen={i === 0} />
             ))}
           </div>
         </div>
       </section>
+
 
       {/* ============ NEARBY ============ */}
       <section className="py-14">
