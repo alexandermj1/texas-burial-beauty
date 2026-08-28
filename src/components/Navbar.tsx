@@ -226,11 +226,11 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
       {/* Mobile menu panel — rendered outside nav to avoid stacking issues */}
       {menuOpen && (
         <div
-          className="md:hidden fixed inset-x-0 top-[68px] bottom-0 z-40 bg-background overflow-y-auto animate-fade-in"
+          className={`md:hidden fixed inset-x-0 top-[68px] bottom-0 z-40 overflow-y-auto animate-fade-in ${dark ? "bg-[hsl(var(--ink))]" : "bg-background"}`}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-accent/5 pointer-events-none" />
+          {!dark && <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-accent/5 pointer-events-none" />}
           <div className="relative px-6 pt-6 pb-10 flex flex-col gap-6 min-h-full">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">
+            <p className={`text-[11px] uppercase tracking-[0.18em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
               Menu
             </p>
 
@@ -244,38 +244,50 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
                       to={link.to}
                       onClick={() => setMenuOpen(false)}
                       className={`group flex items-center gap-4 rounded-2xl border px-4 py-3.5 transition-all ${
-                        active
-                          ? "border-primary/30 bg-primary/5 shadow-sm"
-                          : "border-border/60 bg-card/40 hover:border-primary/20 hover:bg-primary/5 active:scale-[0.98]"
+                        dark
+                          ? active
+                            ? "border-[hsl(var(--gold)/0.5)] bg-[hsl(var(--gold)/0.12)]"
+                            : "border-[hsl(var(--gold)/0.2)] bg-[hsl(var(--ink-deep)/0.6)] hover:border-[hsl(var(--gold)/0.45)] active:scale-[0.98]"
+                          : active
+                            ? "border-primary/30 bg-primary/5 shadow-sm"
+                            : "border-border/60 bg-card/40 hover:border-primary/20 hover:bg-primary/5 active:scale-[0.98]"
                       }`}
                     >
                       <span
                         className={`flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-colors ${
-                          active
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground group-hover:bg-primary group-hover:text-primary-foreground"
+                          dark
+                            ? active
+                              ? "bg-[hsl(var(--gold))] text-[hsl(var(--ink))]"
+                              : "bg-[hsl(var(--ink-deep))] text-[hsl(var(--parchment))] group-hover:bg-[hsl(var(--gold))] group-hover:text-[hsl(var(--ink))]"
+                            : active
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-foreground group-hover:bg-primary group-hover:text-primary-foreground"
                         }`}
                       >
                         <Icon className="w-5 h-5" strokeWidth={1.75} />
                       </span>
                       <span className="flex flex-col flex-1 min-w-0">
-                        <span className={`text-base leading-tight ${active ? "text-foreground font-semibold" : "text-foreground font-medium"}`}>
+                        <span className={`text-base leading-tight ${dark ? "text-[hsl(var(--parchment))]" : "text-foreground"} ${active ? "font-semibold" : "font-medium"}`}>
                           {link.label}
                         </span>
-                        <span className="text-xs text-muted-foreground mt-0.5 truncate">
+                        <span className={`text-xs mt-0.5 truncate ${dark ? "text-[hsl(var(--parchment)/0.55)]" : "text-muted-foreground"}`}>
                           {link.desc}
                         </span>
                       </span>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+                      <ArrowRight className={`w-4 h-4 group-hover:translate-x-0.5 transition-all shrink-0 ${dark ? "text-[hsl(var(--parchment)/0.5)] group-hover:text-[hsl(var(--gold))]" : "text-muted-foreground/60 group-hover:text-primary"}`} />
                     </Link>
                     {link.to === "/cemeteries" && (
-                      <div className="mt-2 ml-3 pl-4 border-l border-border/60 flex flex-wrap gap-2">
+                      <div className={`mt-2 ml-3 pl-4 border-l flex flex-wrap gap-2 ${dark ? "border-[hsl(var(--gold)/0.25)]" : "border-border/60"}`}>
                         {cityLinks.map(c => (
                           <Link
                             key={c.to}
                             to={c.to}
                             onClick={() => setMenuOpen(false)}
-                            className="px-3 py-1.5 rounded-full border border-border/70 bg-card/50 text-xs text-foreground/75 active:scale-95 transition-all"
+                            className={`px-3 py-1.5 rounded-full border text-xs active:scale-95 transition-all ${
+                              dark
+                                ? "border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.6)] text-[hsl(var(--parchment)/0.8)]"
+                                : "border-border/70 bg-card/50 text-foreground/75"
+                            }`}
                           >
                             {c.label}
                           </Link>
@@ -288,23 +300,29 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
             </ul>
 
 
-            <div className="mt-auto pt-6 border-t border-border/60 flex flex-col gap-3">
+            <div className={`mt-auto pt-6 border-t flex flex-col gap-3 ${dark ? "border-[hsl(var(--gold)/0.25)]" : "border-border/60"}`}>
               <Link
                 to="/contact"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3.5 font-medium shadow-soft hover:shadow-hover transition-shadow"
+                className={`flex items-center justify-center gap-2 rounded-full px-6 py-3.5 font-medium shadow-soft hover:shadow-hover transition-shadow ${
+                  dark ? "bg-[hsl(var(--gold))] text-[hsl(var(--ink))]" : "bg-primary text-primary-foreground"
+                }`}
               >
                 <Mail className="w-4 h-4" />
                 Get in touch
               </Link>
               <a
                 href="tel:+12142304740"
-                className="flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm text-foreground hover:bg-muted transition-colors"
+                className={`flex items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm transition-colors ${
+                  dark
+                    ? "border-[hsl(var(--gold)/0.4)] text-[hsl(var(--parchment))] hover:bg-[hsl(var(--gold)/0.12)]"
+                    : "border-border text-foreground hover:bg-muted"
+                }`}
               >
                 <Phone className="w-4 h-4" />
                 Call (214) 230-4740
               </a>
-              <p className="text-center text-[11px] text-muted-foreground mt-2">
+              <p className={`text-center text-[11px] mt-2 ${dark ? "text-[hsl(var(--parchment)/0.5)]" : "text-muted-foreground"}`}>
                 Texas Cemetery Brokers
               </p>
             </div>
