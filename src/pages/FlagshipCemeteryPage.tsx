@@ -40,10 +40,11 @@ const SITE = "https://texascemeterybrokers.com";
 
 const NAV = [
   { href: "#prices", label: "Prices" },
-  { href: "#estimator", label: "Estimator" },
   { href: "#sections", label: "Sections" },
   { href: "#map", label: "Map" },
+  { href: "#nearby-map", label: "Dallas map" },
   { href: "#transfer", label: "Transfer & fees" },
+  { href: "#valuation", label: "Free valuation" },
   { href: "#faq", label: "FAQ" },
 ];
 
