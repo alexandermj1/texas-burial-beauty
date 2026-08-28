@@ -44,13 +44,28 @@ const steps = [
   { id: 3, label: "Documents", icon: Paperclip },
 ] as const;
 
-const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = false }: { defaultCemetery?: string; compact?: boolean; editorial?: boolean } = {}) => {
+const SellerQuoteForm = ({
+  defaultCemetery = "",
+  compact = false,
+  editorial = false,
+  onEngage,
+}: {
+  defaultCemetery?: string;
+  compact?: boolean;
+  editorial?: boolean;
+  /** Fires once the visitor moves past the first step, so hosts can give the form more room. */
+  onEngage?: (started: boolean) => void;
+} = {}) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    onEngage?.(step > 0);
+  }, [step, onEngage]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Stable id so all uploads land under one submission folder even before save.
   const [intakeId] = useState(() => crypto.randomUUID());
