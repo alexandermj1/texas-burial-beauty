@@ -442,26 +442,32 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
 
           {/* ---------- Free valuation (dark, editorial) ---------- */}
           <section id="valuation" className="scroll-mt-28 px-6 md:px-10 pt-16">
-            <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-10 items-start">
-              <div>
-                <p className={eyebrow}>Free valuation</p>
-                <h2 className="mt-4 font-display text-[clamp(1.8rem,2.8vw,2.5rem)] leading-tight text-[hsl(var(--parchment))]">
-                  What is your space at {cemetery.name} worth?
-                </h2>
-                <p className="mt-4 text-[hsl(var(--parchment)/0.78)] leading-relaxed font-light">
-                  Free and no obligation. A few short questions and we come back with a figure, usually within one
-                  business day. No up-front cost, and you only pay when the sale closes.
-                </p>
-                <a
-                  href="tel:+12142304740"
-                  className={`${ghostBtn} mt-6 px-5 py-3 text-[15px] gap-2.5`}
-                >
-                  <Phone className="w-4 h-4 text-[hsl(var(--gold))]" />
-                  (214) 230-4740
-                </a>
-              </div>
+            <div
+              className={`rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid gap-10 items-start transition-all duration-500 ${
+                formStarted ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]"
+              }`}
+            >
+              {!formStarted && (
+                <div>
+                  <p className={eyebrow}>Free valuation</p>
+                  <h2 className="mt-4 font-display text-[clamp(1.8rem,2.8vw,2.5rem)] leading-tight text-[hsl(var(--parchment))]">
+                    What is your space at {cemetery.name} worth?
+                  </h2>
+                  <p className="mt-4 text-[hsl(var(--parchment)/0.78)] leading-relaxed font-light">
+                    Free and no obligation. A few short questions and we come back with a figure, usually within one
+                    business day. No up-front cost, and you only pay when the sale closes.
+                  </p>
+                  <a
+                    href="tel:+12142304740"
+                    className={`${ghostBtn} mt-6 px-5 py-3 text-[15px] gap-2.5`}
+                  >
+                    <Phone className="w-4 h-4 text-[hsl(var(--gold))]" />
+                    (214) 230-4740
+                  </a>
+                </div>
+              )}
               <div className="rounded-[16px] bg-[hsl(var(--parchment))] p-5 md:p-7">
-                <SellerQuoteForm defaultCemetery={cemetery.name} editorial />
+                <SellerQuoteForm defaultCemetery={cemetery.name} editorial onEngage={setFormStarted} />
               </div>
             </div>
           </section>
