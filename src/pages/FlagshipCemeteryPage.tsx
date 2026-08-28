@@ -184,10 +184,20 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       {/* ============ HERO ============ */}
       <section className="relative pt-28 md:pt-32 pb-12 md:pb-16 overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
-          <img src={imgMountains} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.16]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/75 via-background/65 to-background" />
+          <img src={imgMountains} alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.14]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/78 via-background/68 to-background" />
           <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-sage-light/60 blur-3xl" />
           <div className="absolute top-16 right-0 w-[380px] h-[380px] rounded-full bg-terracotta-light/25 blur-3xl" />
+          <img
+            src={hibiscusCoral.url}
+            alt=""
+            className="hidden lg:block absolute -right-16 top-14 w-[26rem] opacity-[0.16] rotate-[8deg]"
+          />
+          <img
+            src={pinkBranch.url}
+            alt=""
+            className="hidden lg:block absolute right-[22rem] -top-10 w-[16rem] opacity-[0.10] -rotate-12"
+          />
         </div>
 
         <div className="container mx-auto px-6 relative">
@@ -199,15 +209,24 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
           </Link>
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-4">
-              {cemetery.city}, Texas · {cemetery.tagline}
-            </p>
-            <h1 className="font-display text-[40px] leading-[1.03] md:text-6xl lg:text-[76px] text-foreground tracking-tight mb-5 max-w-4xl">
+            {/* Editorial masthead line, in the style of our guides */}
+            <div className="flex items-center gap-4 mb-6 max-w-4xl">
+              <span className="text-[11px] tracking-[0.3em] uppercase text-primary font-medium shrink-0">
+                {cemetery.city}, Texas
+              </span>
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground shrink-0 hidden sm:inline">
+                {cemetery.tagline}
+              </span>
+            </div>
+            <h1 className="font-display text-[42px] leading-[0.98] md:text-6xl lg:text-[82px] text-foreground tracking-tight mb-5 max-w-4xl">
               {cemetery.seo.h1}
-              <span className="block text-muted-foreground italic font-normal text-2xl md:text-4xl lg:text-[44px] mt-3">
+              <span className="block text-muted-foreground italic font-normal text-2xl md:text-4xl lg:text-[46px] mt-3">
                 plots for sale, prices &amp; transfers.
               </span>
             </h1>
+            <span className="block w-20 h-[3px] bg-primary/70 rounded-full mb-6" />
+
 
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-2xl mb-7 flex items-start gap-2">
               <MapPin className="w-4 h-4 mt-1.5 text-primary shrink-0" />
