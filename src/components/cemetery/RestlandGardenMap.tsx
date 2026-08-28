@@ -108,9 +108,73 @@ const RestlandGardenMap = () => {
           src={current.src}
           alt={current.alt}
           loading="lazy"
-          className="w-full h-auto block mix-blend-multiply"
+          className={`w-full h-auto block mix-blend-multiply ${current.tone}`}
         />
       </button>
+
+      {/* Garden directory */}
+      <div className="px-6 md:px-8 py-8 border-t border-border/60">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+          <div>
+            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-2">
+              Section index
+            </p>
+            <h4 className="font-display text-xl md:text-2xl text-foreground leading-tight">
+              All {RESTLAND_GARDENS.length} gardens & sections
+            </h4>
+            <p className="text-xs text-muted-foreground mt-1.5 max-w-md leading-relaxed">
+              Indented entries are sub-sections — usually a cryptorium or court inside the parent garden.
+            </p>
+          </div>
+          <label className="relative w-full md:w-72 shrink-0">
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search a garden…"
+              aria-label="Search Restland gardens"
+              className="w-full pl-11 pr-4 py-3 rounded-full border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+            />
+          </label>
+        </div>
+
+        {groups.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No garden matches “{query}”.</p>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-8">
+            {groups.map(([letter, items]) => (
+              <div key={letter} className="break-inside-avoid mb-6">
+                <div className="flex items-baseline gap-3 mb-2 pb-1.5 border-b border-border/70">
+                  <span className="font-display text-lg text-primary leading-none">{letter}</span>
+                  <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                    {items.length}
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {items.map((g) => (
+                    <li key={g.name}>
+                      <span className="text-sm text-foreground leading-snug">{g.name}</span>
+                      {g.note && (
+                        <span className="text-xs text-muted-foreground"> — {g.note}</span>
+                      )}
+                      {g.children && (
+                        <ul className="mt-0.5 ml-3 pl-3 border-l border-border/70 space-y-0.5">
+                          {g.children.map((c) => (
+                            <li key={c} className="text-xs text-muted-foreground leading-snug">
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
 
       <div className="px-6 md:px-8 py-6 border-t border-border/60 flex flex-col lg:flex-row gap-5 justify-between lg:items-center">
         <p className="text-[11px] text-muted-foreground max-w-md leading-relaxed">
