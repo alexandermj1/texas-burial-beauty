@@ -91,7 +91,24 @@ const RestlandGardenMap = () => {
           className={`w-full h-auto block mix-blend-multiply ${current.tone}`}
         />
       </button>
-      <p className="-mt-2 pb-5 text-center text-[11px] text-muted-foreground">Tap the plan to enlarge</p>
+      <div className="-mt-2 pb-6 px-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <p className="text-[11px] text-muted-foreground">Tap the plan to enlarge</p>
+        <span className="hidden sm:block w-px h-4 bg-border" />
+        <div className="flex flex-wrap justify-center gap-2">
+          {HALVES.map((h) => (
+            <a
+              key={h.id}
+              href={h.src}
+              download={h.downloadName}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-background text-xs font-medium text-foreground hover:border-primary transition-colors"
+            >
+              <Download className="w-3.5 h-3.5 text-primary" />
+              Download {h.label.toLowerCase()} map (PNG)
+            </a>
+          ))}
+        </div>
+      </div>
+
 
 
       {/* Garden directory */}
