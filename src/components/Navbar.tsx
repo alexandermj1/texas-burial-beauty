@@ -3,7 +3,7 @@ import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, Ar
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
-const Navbar = ({ forceScrolled = false }: { forceScrolled?: boolean }) => {
+const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boolean; dark?: boolean }) => {
   const computeScrolled = () =>
     forceScrolled || (typeof window !== "undefined" && window.scrollY > 40);
   const [scrolled, setScrolled] = useState(computeScrolled);
