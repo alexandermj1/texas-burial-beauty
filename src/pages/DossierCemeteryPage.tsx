@@ -190,7 +190,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   return (
     <div className="min-h-screen bg-[hsl(var(--ink))] flex flex-col [&>footer]:mt-auto">
       <Seo title={cemetery.seo.title} description={cemetery.seo.description} path={path} jsonLd={jsonLd} />
-      <Navbar forceScrolled />
+      <Navbar forceScrolled dark />
 
       {/* Reading progress */}
       <div
