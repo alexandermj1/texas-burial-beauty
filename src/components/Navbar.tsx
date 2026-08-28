@@ -194,9 +194,11 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
             <a
               href="tel:+12142304740"
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                solid
-                  ? "bg-primary text-primary-foreground hover:opacity-90"
-                  : "bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/30 hover:bg-primary-foreground/20 backdrop-blur-sm"
+                dark
+                  ? "bg-[hsl(var(--gold))] text-[hsl(var(--ink))] hover:bg-[hsl(var(--parchment))]"
+                  : solid
+                    ? "bg-primary text-primary-foreground hover:opacity-90"
+                    : "bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/30 hover:bg-primary-foreground/20 backdrop-blur-sm"
               }`}
             >
               <Phone className="w-3.5 h-3.5" />
@@ -209,9 +211,11 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             className={`md:hidden inline-flex items-center justify-center w-11 h-11 rounded-full border transition-colors ${
-              (scrolled || menuOpen)
-                ? "text-foreground border-border hover:bg-muted"
-                : "text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
+              dark
+                ? "text-[hsl(var(--parchment))] border-[hsl(var(--gold)/0.4)] hover:bg-[hsl(var(--gold)/0.12)]"
+                : (scrolled || menuOpen)
+                  ? "text-foreground border-border hover:bg-muted"
+                  : "text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
             }`}
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
