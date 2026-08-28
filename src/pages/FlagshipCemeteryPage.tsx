@@ -109,11 +109,13 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const isRestland = cemetery.slug.startsWith("restland");
   const planMap = planMapFor(cemetery.slug);
   const hasSectionMap = isRestland || Boolean(planMap);
+  const photoEssay = photoEssayFor(cemetery.slug);
   const [active, setActive] = useState<string>("");
   const baseNav = hasSectionMap ? NAV : NAV.filter((n) => n.href !== "#sections");
-  const navLinks = isRestland
+  const navLinks = photoEssay
     ? [...baseNav.slice(0, 2), { href: "#grounds", label: "Photos" }, ...baseNav.slice(2)]
     : baseNav;
+
 
   // Scroll-spy so the jump bar always shows where you are on the page.
   useEffect(() => {
