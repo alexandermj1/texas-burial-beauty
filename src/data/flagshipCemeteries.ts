@@ -224,7 +224,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       "https://www.dignitymemorial.com/funeral-homes/texas/colleyville/bluebonnet-hills-funeral-home/9650",
     transferFee: 595,
     operator: "Dignity Memorial (SCI)",
-    tagline: "The Mid-Cities' most-requested memorial park",
+    tagline: "A lakeside memorial park in the Mid-Cities",
     intro: [
       "Bluebonnet Hills on Colleyville Boulevard is one of the prettiest memorial parks in the Mid-Cities. The grounds are built around a spring-fed lake with a fountain at its centre, and the walkways, clipped hedges and memorial benches follow the water the whole way round — it feels closer to a park than a cemetery.",
       "The funeral home sits right at the entrance, which families here appreciate: the service, the reception and the grounds are all in one place, a few minutes from Grapevine, Southlake, Bedford and Hurst. Beyond the lake the park opens into wide, level lawns, a colonnade of lawn crypts, a cremation garden with granite niche walls and named gardens marked by cast-metal signs.",
@@ -265,8 +265,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
 
       },
       {
-        q: "Which gardens at Bluebonnet Hills come up for resale most often?",
-        a: "Tranquility, Devotion, Remembrance and Serenity are the gardens we see move most, along with double-depth lawn crypts in the Court of Prayer and Court of Fidelity. Tell us the garden you want and we will watch for it.",
+        q: "Which parts of Bluebonnet Hills can I buy into?",
+        a: "Spaces come up across the named gardens — Tranquility, Devotion, Remembrance, Serenity, Rainbow and Columns — as well as the double-depth lawn crypts in the Court of Prayer and Court of Fidelity and niches in the cremation garden. Tell us the garden you have in mind and we will watch for it.",
+
       },
       {
         q: "What is the transfer fee at Bluebonnet Hills Memorial Park?",
