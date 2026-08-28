@@ -542,19 +542,25 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       {/* ============ VALUATION FORM ============ */}
       <section
         id="valuation"
-        className="relative py-14 md:py-20 bg-[hsl(var(--sand-light))] border-y border-border/60 scroll-mt-32 overflow-hidden"
+        className="relative py-14 md:py-20 bg-sand-light border-y border-border/60 scroll-mt-32 overflow-hidden"
       >
         <img
           src={hibiscusCoral.url}
           alt=""
           aria-hidden
-          className="hidden md:block absolute right-[5%] top-12 w-20 lg:w-28 opacity-80 rotate-6 pointer-events-none select-none drop-shadow-md"
+          className="hidden md:block absolute right-6 lg:right-16 top-10 w-28 lg:w-40 opacity-90 rotate-6 pointer-events-none select-none"
+        />
+        <img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute right-[14%] top-40 w-32 opacity-30 rotate-[18deg] pointer-events-none select-none"
         />
         <img
           src={plumeriaCluster.url}
           alt=""
           aria-hidden
-          className="hidden lg:block absolute -left-24 bottom-6 w-52 opacity-50 -rotate-12 pointer-events-none select-none"
+          className="hidden lg:block absolute -left-20 bottom-6 w-56 opacity-50 -rotate-12 pointer-events-none select-none"
         />
         <div className="relative container mx-auto px-6">
           <div className="max-w-3xl mb-9">
