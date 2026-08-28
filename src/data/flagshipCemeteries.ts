@@ -74,7 +74,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     lng: -96.7405344,
     website: "https://restlandfuneralhome.com",
     transferFee: 1495,
-    operator: "Dignity Memorial (SCI)",
+    operator: "Independently operated memorial park",
     tagline: "The most-requested cemetery in North Texas",
     intro: [
       "Restland Memorial Park on Greenville Avenue is the single most-requested cemetery in our entire Texas book — it generates more buyer and seller inquiries than any other park in the state. That demand cuts both ways: buyers face long waits and premium counter pricing in the established gardens, and owners who bought decades ago are usually holding property worth far more than they paid.",
@@ -82,30 +82,30 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
     facts: [
       { label: "City", value: "Dallas (Richardson line)" },
-      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Gardens mapped", value: "90+ named gardens" },
       { label: "Transfer fee", value: "$1,495 per space" },
       { label: "Resale demand", value: "Exceptional — #1 in Texas" },
     ],
     sections: [
-      { name: "Veterans / Veterans II", kind: "Veteran", tier: "standard", note: "Flag-honour sections; consistently the most requested ground at Restland." },
       { name: "Garden of the Last Supper", kind: "Ground", tier: "premium", note: "Feature garden with statuary — mature, and effectively closed at the counter." },
       { name: "Garden of Ascension", kind: "Ground", tier: "premium", note: "Established feature garden; resale only for most lots." },
       { name: "Chapel Garden II", kind: "Mausoleum", tier: "premium", note: "Indoor and garden crypts by tier — eye-level tiers carry a premium." },
-      { name: "Fountainview", kind: "Ground", tier: "premium", note: "Water-feature garden, popular for family groupings of four." },
-      { name: "Valley View", kind: "Ground", tier: "standard", note: "Larger open lawn area; the easiest place to find contiguous spaces." },
+      { name: "Fountain View", kind: "Ground", tier: "premium", note: "Water-feature garden, popular for family groupings of four." },
+      { name: "Valley View", kind: "Ground", tier: "value", note: "Larger open lawn area; counter pricing here sits well below the feature gardens." },
+      { name: "Islamic Garden", kind: "Ground", tier: "value", note: "Faith-designated garden near the north drive; the most accessible counter pricing on the property." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [6500, 12000], resale: [3500, 7500] },
-      { type: "Companion / two spaces", retail: [12000, 22000], resale: [6500, 13000] },
-      { type: "Lawn crypt (double depth)", retail: [12000, 20000], resale: [7000, 13000] },
-      { type: "Mausoleum crypt", retail: [14000, 30000], resale: [8000, 18000] },
-      { type: "Cremation niche", retail: [4000, 9000], resale: [2200, 5500] },
+      { type: "Single burial space", retail: [10000, 18000], resale: [4500, 9500] },
+      { type: "Companion / two spaces", retail: [20000, 34000], resale: [9000, 18000] },
+      { type: "Lawn crypt (double depth)", retail: [16000, 26000], resale: [8000, 15000] },
+      { type: "Mausoleum crypt", retail: [13000, 30000], resale: [7000, 18000] },
+      { type: "Cremation niche", retail: [3500, 9000], resale: [2000, 5500] },
     ],
     localNotes: [
       "Restland charges the highest transfer fee we record anywhere in DFW — $1,495 per space. We confirm the current figure in writing before either side commits, and we tell you plainly who is expected to pay it.",
-      "Feature gardens such as the Last Supper, Ascension and Fountainview are mature. If someone tells you these are 'sold out', that is true at the counter — it is not true on the resale market.",
-      "Veterans and Veterans II spaces move faster than anything else here. Sellers holding veteran ground should expect strong interest; buyers should be ready to decide quickly.",
-      "Restland spans a very large site. Ask us for the section location before you visit — walking the wrong end of Greenville Avenue in July is nobody's idea of a good morning.",
+      "Counter pricing is not flat across the park. The feature gardens along the Greenville Avenue side sit near the top of the range, while faith-designated and open-lawn gardens can be thousands less for identical ground.",
+      "Feature gardens such as the Last Supper, Ascension and Fountain View are mature. If someone tells you these are 'sold out', that is true at the counter — it is not true on the resale market.",
+      "Restland spans a very large site. Use the garden map on this page to find your section before you visit — walking the wrong end of Greenville Avenue in July is nobody's idea of a good morning.",
     ],
     faqs: [
       {
@@ -114,7 +114,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "How much are cemetery plots at Restland in Dallas?",
-        a: "At the counter, single spaces at Restland generally run in the $6,500–$12,000 range depending on the garden, with mausoleum crypts higher. Resale spaces typically trade between roughly $3,500 and $7,500 for ground, which is where most families save. These are estimates — we quote a real number once we know the garden, lot and space.",
+        a: "Counter pricing at Restland varies a great deal by garden — a single space in an established feature garden sits in the mid-teens of thousands, while quieter open-lawn and faith gardens are meaningfully less. Resale spaces typically trade at roughly half of counter pricing, which is where most families save. We quote a real number once we know the garden, lot and space.",
       },
       {
         q: "What is the transfer fee at Restland Memorial Park?",
@@ -129,6 +129,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
         a: "No. Restland Funeral Home & Cemetery in Plano on East Park Boulevard is a separate location from the main Restland Memorial Park on Greenville Avenue in Dallas. Deeds are not interchangeable between them, so check which one your paperwork names — we can look it up for you.",
       },
     ],
+
     nearby: ["sparkman-hillcrest-memorial-park", "grove-hill-memorial-park", "laurel-land-memorial-park-dallas"],
     seo: {
       title: "Restland Cemetery Plots for Sale, Dallas | Prices & Fees",
@@ -162,27 +163,29 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { label: "Resale demand", value: "Very high — premium pricing" },
     ],
     sections: [
-      { name: "Garden estates & feature gardens", kind: "Ground", tier: "premium", note: "The highest-value ground on the property; almost exclusively resale." },
+      { name: "Providence Monument Garden", kind: "Ground", tier: "premium", note: "Upright-monument garden — the most expensive ground we transact on the property." },
+      { name: "Garden of Roses", kind: "Ground", tier: "premium", note: "Feature garden held almost entirely by families; counter availability is rare." },
       { name: "Mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Interior and exterior crypts — tier height drives the price materially." },
       { name: "Cremation gardens & niches", kind: "Niche", tier: "standard", note: "The fastest-growing category here and the most affordable way in." },
-      { name: "Established lawn sections", kind: "Ground", tier: "standard", note: "Mature lawns where families most often hold two to four contiguous spaces." },
+      { name: "Established lawn sections", kind: "Ground", tier: "standard", note: "Mature lawns holding two to four contiguous spaces." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [9000, 20000], resale: [5000, 13000] },
-      { type: "Companion / two spaces", retail: [18000, 38000], resale: [9500, 24000] },
+      { type: "Single burial space", retail: [12000, 26000], resale: [6000, 15000] },
+      { type: "Companion / two spaces", retail: [24000, 50000], resale: [12000, 28000] },
       { type: "Mausoleum crypt", retail: [18000, 45000], resale: [10000, 28000] },
       { type: "Cremation niche", retail: [5000, 12000], resale: [2800, 7000] },
     ],
     localNotes: [
-      "Sparkman-Hillcrest carries the highest ground prices we see in Dallas. If you inherited spaces here, do not assume they are worth what the family paid — the difference is frequently five figures.",
+      "Sparkman-Hillcrest carries the highest ground prices we see in Dallas — monument gardens here transact at multiples of what the same square footage costs elsewhere in the metroplex. If you inherited spaces, do not assume they are worth what the family paid.",
       "The transfer fee on file is $595 per space, materially cheaper than Restland. That matters when you are comparing two options across the city.",
       "Buyers who cannot reach Sparkman-Hillcrest pricing often land well at Restland or Grove Hill for a similar section quality — we will say so rather than push you into a stretch.",
     ],
     faqs: [
       {
         q: "How much does a plot cost at Sparkman-Hillcrest?",
-        a: "Counter pricing at Sparkman-Hillcrest is the highest in Dallas — commonly $9,000–$20,000 for a single ground space, and higher again for mausoleum crypts. Resale spaces typically trade roughly $5,000–$13,000. We give you a precise figure once we know the garden and space.",
+        a: "Counter pricing at Sparkman-Hillcrest is the highest in Dallas — feature and monument gardens reach the mid-twenties of thousands for a single space, with mausoleum crypts higher again. Resale spaces trade for a substantial discount to that. We give you a precise figure once we know the garden and space.",
       },
+
       {
         q: "Are there plots available at Sparkman-Hillcrest?",
         a: "The best locations are held by families rather than the cemetery, so availability changes week to week. Tell us the garden or general area you want and we will search both active inventory and our private owner network at Sparkman-Hillcrest.",
@@ -238,17 +241,18 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Garden of Remembrance", kind: "Ground", tier: "standard", note: "Mature lawn — a common source of family holdings of four." },
       { name: "Garden of Serenity", kind: "Ground", tier: "standard", note: "Quieter garden with steady availability." },
       { name: "Garden of the Rainbow", kind: "Ground", tier: "value", note: "Good value ground for single spaces." },
-      { name: "Garden of Columns", kind: "Mausoleum", tier: "premium", note: "Column mausoleum crypts; tier and column position set the price." },
-      { name: "Court of Prayer / Court of Fidelity", kind: "Lawn crypt", tier: "standard", note: "Double-depth lawn crypts by tier and row — two interments in one footprint." },
+      { name: "Garden of Columns", kind: "Ground", tier: "premium", note: "Single grave spaces in this lawn carry the highest counter pricing at Bluebonnet Hills." },
+      { name: "Court of Prayer / Court of Fidelity", kind: "Lawn crypt", tier: "value", note: "Double-depth lawn crypts by tier and row — two interments in one footprint, and the best value here." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [5500, 11000], resale: [3000, 6500] },
-      { type: "Companion / two spaces", retail: [11000, 20000], resale: [5500, 11500] },
-      { type: "Lawn crypt (double depth)", retail: [10000, 18000], resale: [6000, 11000] },
+      { type: "Single burial space", retail: [6000, 14000], resale: [3200, 7500] },
+      { type: "Companion / two spaces", retail: [12000, 26000], resale: [6000, 14000] },
+      { type: "Lawn crypt (double depth)", retail: [4500, 12000], resale: [2600, 7000] },
       { type: "Mausoleum crypt", retail: [12000, 26000], resale: [7000, 15000] },
       { type: "Cremation niche", retail: [3500, 8000], resale: [2000, 4800] },
     ],
     localNotes: [
+      "Counter pricing swings widely by lawn here — a single grave space in the Columns garden can cost several times a lawn crypt tier in the Court of Fidelity. Tell us the garden and we will tell you where it sits.",
       "Double-depth lawn crypts in the Court of Prayer and Court of Fidelity are described by tier and row rather than lot and space. Have that line from your deed to hand — it changes the value.",
       "Mid-Cities buyers frequently consider Bluebonnet Hills and Moore Memorial Gardens in Arlington side by side. We will tell you honestly which one fits your budget and timing.",
       "The transfer fee on file is $595 per space, and we confirm it with the cemetery before anyone signs.",
@@ -256,7 +260,8 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Bluebonnet Hills in Colleyville?",
-        a: "Counter pricing generally runs $5,500–$11,000 for a single ground space depending on the garden. Resale spaces at Bluebonnet Hills typically trade around $3,000–$6,500, with lawn crypts and mausoleum crypts higher. We quote precisely once we know the garden.",
+        a: "It depends heavily on the lawn. Premium garden ground reaches the low teens of thousands at the counter, while lawn crypt tiers in the courts are a fraction of that. Resale spaces typically trade at roughly half of counter pricing. We quote precisely once we know the garden.",
+
       },
       {
         q: "Which gardens at Bluebonnet Hills come up for resale most often?",
@@ -312,13 +317,14 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Numbered sections (3, 17, 36, 42)", kind: "Ground", tier: "value", note: "Older numbered lawns; best value per space at Laurel Land." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [4500, 9000], resale: [2400, 5200] },
-      { type: "Companion / two spaces", retail: [9000, 16000], resale: [4500, 9000] },
-      { type: "Veteran crypt", retail: [9000, 18000], resale: [5000, 11000] },
+      { type: "Single burial space", retail: [4800, 7500], resale: [2500, 4500] },
+      { type: "Companion / two spaces", retail: [9500, 15000], resale: [5000, 9000] },
+      { type: "Veteran crypt", retail: [11000, 15000], resale: [6000, 9500] },
       { type: "Mausoleum crypt", retail: [11000, 22000], resale: [6000, 13000] },
       { type: "Cremation niche", retail: [3000, 7000], resale: [1800, 4200] },
     ],
     localNotes: [
+      "Ground pricing here is unusually consistent across the numbered sections and named gardens, which makes valuations quick and disputes rare. Crypts in the Court of Liberty sit in a much higher band.",
       "Veteran property here is described by crypt and block (for example Court of Liberty, Crypt 48, Block C). Bring that line and we can value it the same day.",
       "Check your deed carefully: Laurel Land Fort Worth on Crowley Road and Laurel Land Dallas on R.L. Thornton are different cemeteries. A deed for one cannot be used at the other.",
       "Transfer fee on file is $595 per space, and both Laurel Land parks share the same figure.",
@@ -326,8 +332,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Laurel Land Fort Worth?",
-        a: "Counter pricing generally sits around $4,500–$9,000 for a single ground space. Resale spaces typically trade around $2,400–$5,200, which makes Laurel Land Fort Worth one of the better-value established parks in the metroplex.",
+        a: "Ground spaces here sit in the mid-thousands at the counter, with veteran crypts several times higher. Resale ground typically trades at roughly half of counter pricing, which makes Laurel Land Fort Worth one of the better-value established parks in the metroplex.",
       },
+
       {
         q: "Is Laurel Land Fort Worth the same as Laurel Land Dallas?",
         a: "No. They are two separate cemeteries — Crowley Road in Fort Worth and R.L. Thornton Freeway in Dallas — with separate records and separate inventory. Send us your deed and we will confirm which park you own in.",
@@ -381,12 +388,14 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Babyland (Section 49)", kind: "Infant", tier: "value", note: "Infant and child section; handled with particular care." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [4500, 9500], resale: [2500, 5500] },
-      { type: "Companion / two spaces", retail: [9000, 17000], resale: [4800, 9500] },
+      { type: "Single burial space", retail: [5000, 7500], resale: [2600, 4500] },
+      { type: "Companion / two spaces", retail: [10000, 15000], resale: [5200, 9000] },
+      { type: "Lawn crypt (double depth)", retail: [10000, 14000], resale: [5500, 8500] },
       { type: "Mausoleum crypt", retail: [11000, 24000], resale: [6000, 14000] },
       { type: "Cremation niche", retail: [3000, 7500], resale: [1800, 4500] },
     ],
     localNotes: [
+      "Entry-level sections here are flat-monument only, which keeps counter pricing low and consistent; double-depth crypts in the Court of Inspiration sit roughly twice as high.",
       "Most Laurel Land Dallas property is described by section, lot and space (for example Section 51, Lot 69, Space 6). That one line lets us value it accurately without a site visit.",
       "Family holdings of four are the norm here. Selling two and keeping two is completely permitted and we handle the deed split.",
       "Transfer fee on file is $595 per space, confirmed with the cemetery before closing.",
@@ -394,8 +403,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much do plots cost at Laurel Land Memorial Park in Dallas?",
-        a: "Counter pricing generally runs $4,500–$9,500 for a single ground space depending on the section. Resale spaces typically trade around $2,500–$5,500. Mausoleum crypts in the Court of Inspiration run considerably higher.",
+        a: "Ground spaces sit in the mid-thousands at the counter depending on the section, and double-depth crypts in the Court of Inspiration run roughly double that. Resale spaces typically trade at around half of counter pricing.",
       },
+
       {
         q: "Which Laurel Land does my deed refer to?",
         a: "Look for the address. Laurel Land Memorial Park Dallas is on the R.L. Thornton Freeway; Laurel Land Fort Worth is on Crowley Road. If the deed is unclear, send it to us and we will confirm it with the cemetery.",

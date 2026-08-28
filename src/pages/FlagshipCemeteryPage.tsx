@@ -22,6 +22,8 @@ import SellerQuoteForm from "@/components/SellerQuoteForm";
 import PlotValueCalculator from "@/components/cemetery/PlotValueCalculator";
 import SectionExplorer from "@/components/cemetery/SectionExplorer";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
+import RestlandGardenMap from "@/components/cemetery/RestlandGardenMap";
+
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { flagshipBySlug, money, range, type FlagshipCemetery } from "@/data/flagshipCemeteries";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -75,6 +77,8 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const { countFor } = useActiveListings();
   const liveCount = countFor(cemetery.name);
   const path = `/cemeteries/${cemetery.slug}`;
+  const isRestland = cemetery.slug.startsWith("restland");
+
 
   const nearby = cemetery.nearby
     .map((s) => flagshipBySlug(s) ?? bayCemeteries.find((c) => slugify(c.name) === s))
@@ -380,7 +384,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
           <div className="max-w-3xl mb-8">
             <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Gardens &amp; sections</p>
             <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-4">
-              Where families actually want to be.
+              The gardens at {cemetery.name}.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               These are the gardens, courts and sections at {cemetery.name} that come up most often on the deeds and
@@ -388,8 +392,15 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
             </p>
           </div>
           <SectionExplorer cemetery={cemetery} />
+
+          {isRestland && (
+            <div className="mt-10 md:mt-14">
+              <RestlandGardenMap />
+            </div>
+          )}
         </div>
       </section>
+
 
       {/* ============ MAP ============ */}
       <section id="map" className="py-12 md:py-16 scroll-mt-32">
