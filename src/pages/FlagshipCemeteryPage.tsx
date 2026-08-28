@@ -75,6 +75,8 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const { countFor } = useActiveListings();
   const liveCount = countFor(cemetery.name);
   const path = `/cemeteries/${cemetery.slug}`;
+  const isRestland = cemetery.slug.startsWith("restland");
+
 
   const nearby = cemetery.nearby
     .map((s) => flagshipBySlug(s) ?? bayCemeteries.find((c) => slugify(c.name) === s))
