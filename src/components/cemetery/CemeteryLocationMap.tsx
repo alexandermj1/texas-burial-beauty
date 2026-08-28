@@ -10,7 +10,10 @@ interface Props {
   lng: number;
   /** Optional caption under the map. */
   note?: string;
+  /** Tailwind height classes for the map canvas. */
+  heightClass?: string;
 }
+
 
 const ACCENT = "#c1704a";
 
