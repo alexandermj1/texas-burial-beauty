@@ -101,16 +101,17 @@ const RestlandGardenMap = () => {
       <button
         type="button"
         onClick={() => setZoom(true)}
-        className="block w-full bg-[hsl(40_36%_97%)] cursor-zoom-in"
+        className="block w-full bg-[hsl(40_36%_97%)] cursor-zoom-in px-4 py-5 md:px-8 md:py-7"
         aria-label="Enlarge Restland map"
       >
         <img
           src={current.src}
           alt={current.alt}
           loading="lazy"
-          className={`w-full h-auto block mix-blend-multiply ${current.tone}`}
+          className={`w-full max-w-2xl mx-auto h-auto block mix-blend-multiply ${current.tone}`}
         />
       </button>
+      <p className="-mt-2 pb-4 text-center text-[11px] text-muted-foreground">Tap the plan to enlarge</p>
 
       {/* Garden directory */}
       <div className="px-6 md:px-8 py-8 border-t border-border/60">

@@ -19,25 +19,32 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
-import PlotValueCalculator from "@/components/cemetery/PlotValueCalculator";
 import SectionExplorer from "@/components/cemetery/SectionExplorer";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
 import RestlandGardenMap from "@/components/cemetery/RestlandGardenMap";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+import GardenSignMarker from "@/components/cemetery/GardenSignMarker";
 
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { flagshipBySlug, money, range, type FlagshipCemetery } from "@/data/flagshipCemeteries";
 import { bayCemeteries } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
 
 const NAV = [
   { href: "#prices", label: "Prices" },
-  { href: "#estimator", label: "Estimator" },
   { href: "#sections", label: "Sections" },
   { href: "#map", label: "Map" },
+  { href: "#nearby-map", label: "Dallas map" },
   { href: "#transfer", label: "Transfer & fees" },
+  { href: "#valuation", label: "Free valuation" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -371,32 +378,37 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
-      {/* ============ ESTIMATOR ============ */}
-      <section id="estimator" className="py-12 md:py-16 scroll-mt-32">
-        <div className="container mx-auto px-6 max-w-5xl">
-          <PlotValueCalculator cemetery={cemetery} />
-        </div>
-      </section>
-
       {/* ============ SECTIONS ============ */}
-      <section id="sections" className="py-12 md:py-16 bg-card/40 border-y border-border/60 scroll-mt-32">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-8">
-            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Gardens &amp; sections</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-4">
-              The gardens at {cemetery.name}.
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              These are the gardens, courts and sections at {cemetery.name} that come up most often on the deeds and
-              requests we handle. Open one to see what it means for price and availability.
-            </p>
-          </div>
-          <SectionExplorer cemetery={cemetery} />
+      <section id="sections" className="relative py-12 md:py-16 bg-card/40 border-y border-border/60 scroll-mt-32 overflow-hidden">
+        <img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute -right-40 top-10 w-[24rem] opacity-[0.09] rotate-6 pointer-events-none select-none"
+        />
+        <div className="relative container mx-auto px-6">
+          {!isRestland && (
+            <>
+              <div className="max-w-3xl mb-8">
+                <GardenSignMarker label="Gardens" className="mb-5" />
+                <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Gardens &amp; sections</p>
+                <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-4">
+                  The gardens at {cemetery.name}.
+                </h2>
+                <p className="text-muted-foreground leading-relaxed">
+                  These are the gardens, courts and sections at {cemetery.name} that come up most often on the deeds and
+                  requests we handle. Open one to see what it means for price and availability.
+                </p>
+              </div>
+              <SectionExplorer cemetery={cemetery} />
+            </>
+          )}
 
           {isRestland && (
-            <div className="mt-10 md:mt-14">
+            <>
+              <GardenSignMarker label="Section maps" className="mb-6" />
               <RestlandGardenMap />
-            </div>
+            </>
           )}
         </div>
       </section>
@@ -431,23 +443,62 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
+      {/* ============ DFW COVERAGE MAP ============ */}
+      <section
+        id="nearby-map"
+        className="relative py-12 md:py-16 bg-gradient-warm border-y border-border/60 scroll-mt-32 overflow-hidden"
+      >
+        <img
+          src={bananaLeaf.url}
+          alt=""
+          aria-hidden
+          className="hidden md:block absolute -left-52 bottom-0 w-[26rem] opacity-[0.09] -rotate-12 pointer-events-none select-none"
+        />
+        <div className="relative container mx-auto px-6">
+          <div className="max-w-3xl mb-7">
+            <GardenSignMarker label="Coverage" className="mb-5" />
+            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Nearby cemeteries</p>
+            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-3">
+              Every cemetery we broker around {cemetery.city}.
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Search by name or city, tap a pin for transfer fees and showing availability, or open directions.
+            </p>
+          </div>
+          <MetroCemeteryMap
+            regions={["Dallas–Fort Worth"]}
+            metro="Dallas–Fort Worth"
+            searchable
+            hideTitle
+            compact
+          />
+        </div>
+      </section>
+
       {/* ============ TRANSFER & FEES ============ */}
-      <section id="transfer" className="py-14 md:py-20 bg-foreground text-background scroll-mt-32">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-12">
+      <section id="transfer" className="relative py-14 md:py-20 scroll-mt-32 overflow-hidden">
+        <img
+          src={pinkBranch.url}
+          alt=""
+          aria-hidden
+          className="hidden md:block absolute right-[3%] top-16 w-24 lg:w-32 opacity-40 -rotate-6 pointer-events-none select-none"
+        />
+        <div className="relative container mx-auto px-6">
+          <div className="max-w-3xl mb-10 md:mb-14">
+            <GardenSignMarker label="Transfers" className="mb-5" />
             <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-4">Transfer &amp; paperwork</p>
-            <h2 className="font-display text-3xl md:text-5xl leading-[1.05] mb-5">
+            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.05] mb-5">
               The part everyone worries about,
               <br />
-              <em className="italic font-normal opacity-70">handled for you.</em>
+              <em className="italic font-normal text-muted-foreground">handled for you.</em>
             </h2>
-            <p className="text-background/70 text-lg leading-relaxed">
+            <p className="text-muted-foreground text-lg leading-relaxed">
               {cemetery.name} records a transfer fee of {money(cemetery.transferFee)} per space. We confirm the live
               figure with the cemetery in writing, tell you who is paying it, and file the paperwork ourselves.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-px bg-background/10 rounded-3xl overflow-hidden border border-background/10">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-9 border-t border-border/70 pt-9">
             {[
               { icon: Receipt, n: "01", t: "Deed check", b: "We read your deed, confirm the section and lot and verify who is legally able to sell." },
               { icon: ShieldCheck, n: "02", t: "Buyer screening", b: "Funds verified before anything is signed. No cash-in-the-parking-lot arrangements." },
@@ -460,19 +511,18 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="bg-foreground p-6 md:p-7"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="font-display text-3xl text-primary">{s.n}</span>
-                  <s.icon className="w-5 h-5 text-background/60" />
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="font-display text-3xl text-primary italic">{s.n}</span>
+                  <s.icon className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <h3 className="font-display text-lg mb-2">{s.t}</h3>
-                <p className="text-sm text-background/70 leading-relaxed">{s.b}</p>
+                <h3 className="font-display text-lg text-foreground mb-2">{s.t}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.b}</p>
               </motion.div>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-wrap gap-3">
+          <div className="mt-11 flex flex-wrap gap-3">
             <Link
               to={`/sell?cemetery=${encodeURIComponent(cemetery.name)}`}
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity"
@@ -481,7 +531,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
             </Link>
             <a
               href="tel:+12142304740"
-              className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/10 border border-background/20 font-medium rounded-full text-sm hover:bg-background/20 transition-colors"
+              className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-medium rounded-full text-sm hover:border-primary transition-colors"
             >
               <Phone className="w-4 h-4" /> (214) 230-4740
             </a>
@@ -490,9 +540,38 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       </section>
 
       {/* ============ VALUATION FORM ============ */}
-      <section id="valuation" className="py-12 md:py-16 scroll-mt-32">
-        <div className="container mx-auto px-6">
-          <SellerQuoteForm compact defaultCemetery={cemetery.name} />
+      <section
+        id="valuation"
+        className="relative py-14 md:py-20 bg-sand-light border-y border-border/60 scroll-mt-32 overflow-hidden"
+      >
+        <img
+          src={hibiscusCoral.url}
+          alt=""
+          aria-hidden
+          className="hidden md:block absolute right-6 lg:right-16 top-10 w-28 lg:w-40 opacity-90 rotate-6 pointer-events-none select-none"
+        />
+        <img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute right-[14%] top-40 w-32 opacity-30 rotate-[18deg] pointer-events-none select-none"
+        />
+        <img
+          src={plumeriaCluster.url}
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute -left-20 bottom-6 w-56 opacity-50 -rotate-12 pointer-events-none select-none"
+        />
+        <div className="relative container mx-auto px-6">
+          <div className="max-w-3xl mb-9">
+            <GardenSignMarker label="Valuation" className="mb-5" />
+            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Free, no obligation</p>
+            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.05]">
+              What is your space at {cemetery.name}{" "}
+              <em className="italic font-normal text-primary">worth?</em>
+            </h2>
+          </div>
+          <SellerQuoteForm editorial defaultCemetery={cemetery.name} />
         </div>
       </section>
 
