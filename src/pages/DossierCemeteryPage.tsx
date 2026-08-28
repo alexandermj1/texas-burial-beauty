@@ -18,6 +18,7 @@ import { flagshipBySlug, money, type FlagshipCemetery } from "@/data/flagshipCem
 import { bayCemeteries } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 import type { DossierPhoto } from "@/data/sparkmanPhotos";
+import fallbackHero from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
 
@@ -81,7 +82,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   }, []);
 
   useEffect(() => {
-    const els = NAV.map((n) => document.getElementById(n.href.slice(1))).filter(
+    const els = nav.map((n) => document.getElementById(n.href.slice(1))).filter(
       (el): el is HTMLElement => Boolean(el),
     );
     if (!els.length) return;
@@ -96,7 +97,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [cemetery.slug]);
+  }, [cemetery.slug, nav]);
 
   const nearby = cemetery.nearby
     .map((s) => flagshipBySlug(s) ?? bayCemeteries.find((c) => slugify(c.name) === s))
@@ -226,7 +227,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
         <aside className="hidden lg:block px-8 py-14 border-r border-[hsl(var(--gold)/0.22)] self-start sticky top-20">
           <p className={eyebrow}>Contents</p>
           <nav className="flex flex-col mt-5" aria-label="On this page">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <a
                 key={n.href}
                 href={n.href}
