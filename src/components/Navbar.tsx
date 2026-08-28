@@ -53,19 +53,31 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
 
   const solid = scrolled || menuOpen || megaOpen;
 
+  // Dark "dossier" theme — ink/gold editorial pages
+  const dkBar = solid
+    ? "bg-[hsl(var(--ink-deep)/0.95)] backdrop-blur-lg border-b border-[hsl(var(--gold)/0.25)]"
+    : "bg-transparent";
+  const dkBrand = "text-[hsl(var(--parchment))]";
+  const dkLink = (isActive: boolean) =>
+    isActive
+      ? "text-[hsl(var(--parchment))] font-medium"
+      : "text-[hsl(var(--parchment)/0.65)] hover:text-[hsl(var(--gold))]";
+
   return (
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,backdrop-filter,box-shadow,border-color] duration-300 ${
-          solid
-            ? `bg-background/95 backdrop-blur-lg ${megaOpen && !menuOpen ? "" : "shadow-soft"} border-b border-border`
-            : "bg-transparent"
+          dark
+            ? dkBar
+            : solid
+              ? `bg-background/95 backdrop-blur-lg ${megaOpen && !menuOpen ? "" : "shadow-soft"} border-b border-border`
+              : "bg-transparent"
         }`}
       >
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 whitespace-nowrap shrink-0">
             <img src={hibiscusLogo.url} alt="" width={32} height={32} className="w-8 h-8 object-contain" />
-            <span className={`font-display text-lg sm:text-2xl transition-colors duration-300 ${solid ? "text-foreground" : "text-primary-foreground"}`}>
+            <span className={`font-display text-lg sm:text-2xl transition-colors duration-300 ${dark ? dkBrand : solid ? "text-foreground" : "text-primary-foreground"}`}>
               Texas Cemetery Brokers
             </span>
           </Link>
@@ -74,9 +86,11 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
             {links.map(link => {
               const isActive = location.pathname === link.to;
               const cls = `text-sm transition-colors duration-300 ${
-                isActive
-                  ? solid ? "text-foreground font-medium" : "text-primary-foreground font-medium"
-                  : solid ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
+                dark
+                  ? dkLink(isActive)
+                  : isActive
+                    ? solid ? "text-foreground font-medium" : "text-primary-foreground font-medium"
+                    : solid ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
               }`;
 
               if (link.to !== "/cemeteries") {
