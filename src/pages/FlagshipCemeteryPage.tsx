@@ -35,8 +35,30 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import restlandOaks from "@/assets/restland/historic-oaks.png.asset.json";
+import restlandMonuments from "@/assets/restland/historic-monuments.png.asset.json";
+import restlandSign from "@/assets/restland/memories-sign.png.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
+
+/** Broker photography of the original, historic section of Restland Memorial Park. */
+const RESTLAND_PHOTOS = [
+  {
+    src: restlandOaks.url,
+    alt: "Upright granite monuments under mature live oaks in the historic section of Restland Memorial Park, Dallas, Texas",
+    caption: "Upright monuments under the original live oaks, historic section",
+  },
+  {
+    src: restlandSign.url,
+    alt: "Cast-metal 'Memories' garden lane sign in the historic section of Restland Memorial Park, Dallas, Texas",
+    caption: "The cast-metal lane signs that name each garden",
+  },
+  {
+    src: restlandMonuments.url,
+    alt: "Family monuments and memorial benches in an older garden at Restland Memorial Park on Greenville Avenue, Dallas",
+    caption: "Family estates and upright memorials off Greenville Avenue",
+  },
+] as const;
 
 const NAV = [
   { href: "#prices", label: "Prices" },
