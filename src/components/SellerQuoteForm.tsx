@@ -569,59 +569,6 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
             className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/30 to-transparent pointer-events-none"
           />
 
-          {/* Botanical illustrations */}
-          <motion.img
-            src={bananaLeaf.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, x: -40, rotate: -20 }}
-            whileInView={{ opacity: 0.45, x: 0, rotate: -14 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.4, ease: "easeOut" }}
-            className="hidden md:block absolute -left-44 top-20 w-[28rem] pointer-events-none select-none"
-          />
-          <motion.img
-            src={palmFan.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, x: 40, rotate: 12 }}
-            whileInView={{ opacity: 0.35, x: 0, rotate: 8 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.4, ease: "easeOut" }}
-            className="hidden lg:block absolute -right-32 bottom-16 w-[24rem] pointer-events-none select-none"
-          />
-          <motion.img
-            src={hibiscusCoral.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, y: -20, rotate: 18 }}
-            whileInView={{ opacity: 0.9, y: 0, rotate: 12 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, delay: 0.2 }}
-            className="hidden md:block absolute right-6 lg:right-24 top-8 w-44 lg:w-56 pointer-events-none select-none"
-          />
-          <motion.img
-            src={pinkBranch.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 0.65, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, delay: 0.3 }}
-            className="hidden md:block absolute left-8 bottom-8 w-40 lg:w-52 pointer-events-none select-none -rotate-6"
-          />
-          <motion.img
-            src={plumeriaCluster.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 0.7, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
-            className="md:hidden absolute -right-10 top-4 w-36 pointer-events-none select-none"
-          />
-        </>
-      )}
 
       <div className={compact ? "" : "relative container mx-auto px-6"}>
         {/* Centered intro */}
