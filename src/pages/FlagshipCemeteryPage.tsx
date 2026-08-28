@@ -200,15 +200,15 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       })),
     },
     // Image + map assets, so Google can index the photography and the garden plans.
-    ...(isRestland
+    ...(photoEssay
       ? [
           {
             "@context": "https://schema.org",
             "@type": "ImageGallery",
-            name: `${cemetery.name} photos — historic gardens and section maps`,
+            name: `${cemetery.name} photos — gardens, sections and grounds`,
             about: cemetery.name,
             associatedMedia: [
-              ...RESTLAND_PHOTOS.map((p) => ({
+              ...photoEssay.photos.map((p) => ({
                 "@type": "ImageObject",
                 contentUrl: `${SITE}${p.src}`,
                 caption: p.caption,
@@ -218,20 +218,23 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
                 acquireLicensePage: `${SITE}${path}`,
                 contentLocation: { "@type": "Place", name: cemetery.name, address: cemetery.address },
               })),
-              ...RESTLAND_MAP_DOWNLOADS.map((m) => ({
-                "@type": "ImageObject",
-                contentUrl: `${SITE}${m.src}`,
-                caption: m.caption,
-                description: m.alt,
-                creditText: "Texas Cemetery Brokers",
-                encodingFormat: "image/png",
-                acquireLicensePage: `${SITE}${path}`,
-              })),
+              ...(isRestland
+                ? RESTLAND_MAP_DOWNLOADS.map((m) => ({
+                    "@type": "ImageObject",
+                    contentUrl: `${SITE}${m.src}`,
+                    caption: m.caption,
+                    description: m.alt,
+                    creditText: "Texas Cemetery Brokers",
+                    encodingFormat: "image/png",
+                    acquireLicensePage: `${SITE}${path}`,
+                  }))
+                : []),
             ],
           },
         ]
       : []),
   ];
+
 
 
   return (
