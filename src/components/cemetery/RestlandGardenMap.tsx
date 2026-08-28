@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BellRing, Maximize2, X } from "lucide-react";
+import { ArrowRight, BellRing, Maximize2, Search, X } from "lucide-react";
 
 import westMap from "@/assets/restland-map-west.png.asset.json";
 import eastMap from "@/assets/restland-map-east.png.asset.json";
+import { RESTLAND_GARDENS } from "./restlandGardens";
 
 /**
  * Restland Memorial Park garden plan, redrawn in the Texas Cemetery Brokers
@@ -19,6 +20,7 @@ const HALVES = [
       "Whispering Waters, Abbey Estates, Good Shepherd, Trinity and the United Jewish Cemeteries — the older, more established side of the park.",
     src: westMap.url,
     alt: "Map of the west grounds at Restland Memorial Park, Dallas, showing Whispering Waters, Abbey Estates, Good Shepherd, Trinity and the surrounding gardens",
+    tone: "sepia-[.06] saturate-[.92] contrast-[1.02]",
   },
   {
     id: "east",
@@ -27,13 +29,32 @@ const HALVES = [
       "Chapel Gardens, Ascension, Devotion, Rose Garden and the Veteran's gardens along the Greenville Avenue frontage.",
     src: eastMap.url,
     alt: "Map of the east grounds at Restland Memorial Park, Dallas, showing Chapel Gardens, Ascension, Devotion, Rose Garden and the Veteran's gardens",
+    tone: "sepia-[.22] saturate-[.8] contrast-[1.04] brightness-[.99]",
   },
 ] as const;
 
 const RestlandGardenMap = () => {
   const [half, setHalf] = useState<(typeof HALVES)[number]["id"]>("west");
   const [zoom, setZoom] = useState(false);
+  const [query, setQuery] = useState("");
   const current = HALVES.find((h) => h.id === half)!;
+
+  const groups = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const matched = RESTLAND_GARDENS.filter(
+      (g) =>
+        !q ||
+        g.name.toLowerCase().includes(q) ||
+        g.children?.some((c) => c.toLowerCase().includes(q)),
+    );
+    const map = new Map<string, typeof matched>();
+    matched.forEach((g) => {
+      const letter = g.name[0].toUpperCase();
+      map.set(letter, [...(map.get(letter) ?? []), g]);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [query]);
+
 
   return (
     <div className="rounded-[28px] border border-border bg-[hsl(40_36%_97%)] overflow-hidden">
@@ -87,9 +108,73 @@ const RestlandGardenMap = () => {
           src={current.src}
           alt={current.alt}
           loading="lazy"
-          className="w-full h-auto block mix-blend-multiply"
+          className={`w-full h-auto block mix-blend-multiply ${current.tone}`}
         />
       </button>
+
+      {/* Garden directory */}
+      <div className="px-6 md:px-8 py-8 border-t border-border/60">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+          <div>
+            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-2">
+              Section index
+            </p>
+            <h4 className="font-display text-xl md:text-2xl text-foreground leading-tight">
+              All {RESTLAND_GARDENS.length} gardens & sections
+            </h4>
+            <p className="text-xs text-muted-foreground mt-1.5 max-w-md leading-relaxed">
+              Indented entries are sub-sections — usually a cryptorium or court inside the parent garden.
+            </p>
+          </div>
+          <label className="relative w-full md:w-72 shrink-0">
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search a garden…"
+              aria-label="Search Restland gardens"
+              className="w-full pl-11 pr-4 py-3 rounded-full border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+            />
+          </label>
+        </div>
+
+        {groups.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No garden matches “{query}”.</p>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-8">
+            {groups.map(([letter, items]) => (
+              <div key={letter} className="break-inside-avoid mb-6">
+                <div className="flex items-baseline gap-3 mb-2 pb-1.5 border-b border-border/70">
+                  <span className="font-display text-lg text-primary leading-none">{letter}</span>
+                  <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                    {items.length}
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {items.map((g) => (
+                    <li key={g.name}>
+                      <span className="text-sm text-foreground leading-snug">{g.name}</span>
+                      {g.note && (
+                        <span className="text-xs text-muted-foreground"> — {g.note}</span>
+                      )}
+                      {g.children && (
+                        <ul className="mt-0.5 ml-3 pl-3 border-l border-border/70 space-y-0.5">
+                          {g.children.map((c) => (
+                            <li key={c} className="text-xs text-muted-foreground leading-snug">
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
 
       <div className="px-6 md:px-8 py-6 border-t border-border/60 flex flex-col lg:flex-row gap-5 justify-between lg:items-center">
         <p className="text-[11px] text-muted-foreground max-w-md leading-relaxed">
@@ -131,7 +216,7 @@ const RestlandGardenMap = () => {
             <img
               src={current.src}
               alt={current.alt}
-              className="max-w-none w-[1600px] h-auto mix-blend-multiply"
+              className={`max-w-none w-[1600px] h-auto mix-blend-multiply ${current.tone}`}
               onClick={(e) => e.stopPropagation()}
             />
           </div>
