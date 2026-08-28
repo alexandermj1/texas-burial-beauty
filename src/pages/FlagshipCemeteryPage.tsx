@@ -48,20 +48,33 @@ const NAV = [
   { href: "#faq", label: "FAQ" },
 ];
 
-const FaqItem = ({ q, a }: { q: string; a: string }) => {
-  const [open, setOpen] = useState(false);
+const FaqItem = ({ q, a, index, defaultOpen = false }: { q: string; a: string; index: number; defaultOpen?: boolean }) => {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-border/70">
+    <div
+      className={`rounded-[22px] border transition-colors ${
+        open ? "border-primary/40 bg-background shadow-soft" : "border-border/70 bg-background/60 hover:border-primary/30"
+      }`}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full flex items-start justify-between gap-6 text-left py-5 group"
+        className="w-full flex items-start gap-4 md:gap-5 text-left p-5 md:p-6 group"
       >
-        <h3 className="font-display text-lg md:text-xl text-foreground group-hover:text-primary transition-colors">
+        <span
+          className={`shrink-0 mt-0.5 w-8 h-8 rounded-full grid place-items-center text-[11px] font-medium tracking-wider transition-colors ${
+            open ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:text-foreground"
+          }`}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <h3 className="flex-1 font-display text-lg md:text-[22px] leading-snug text-foreground group-hover:text-primary transition-colors">
           {q}
         </h3>
-        <ChevronDown className={`w-5 h-5 text-muted-foreground shrink-0 mt-1 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`w-5 h-5 text-muted-foreground shrink-0 mt-1.5 transition-transform ${open ? "rotate-180 text-primary" : ""}`}
+        />
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -72,13 +85,17 @@ const FaqItem = ({ q, a }: { q: string; a: string }) => {
             transition={{ duration: 0.28 }}
             className="overflow-hidden"
           >
-            <p className="text-muted-foreground leading-relaxed pb-6 max-w-3xl">{a}</p>
+            <div className="px-5 md:px-6 pb-6 md:pl-[4.6rem]">
+              <span className="block w-10 h-px bg-primary/40 mb-4" />
+              <p className="text-muted-foreground leading-relaxed max-w-3xl">{a}</p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
 };
+
 
 const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const { countFor } = useActiveListings();
