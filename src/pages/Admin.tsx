@@ -535,8 +535,14 @@ const Admin = () => {
                 </button>
                 <div className="hidden md:flex items-center gap-2 shrink-0 pr-1">
                   <span className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-accent shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
-                  <h1 className="font-display text-lg tracking-tight text-foreground">Admin</h1>
-                </div>
+                   <h1 className="font-display text-lg tracking-tight text-foreground">Admin</h1>
+                 </div>
+                 <button
+                   onClick={() => navigate("/admin/photos")}
+                   className="inline-flex shrink-0 items-center gap-1.5 px-2.5 md:px-3 py-2 rounded-full bg-background/60 border border-border/70 text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+                 >
+                   Photos
+                 </button>
                 <div className="order-last w-full md:order-none md:w-auto md:flex-1 flex justify-center">
                   <div data-tour="search-bar" className="relative w-full max-w-2xl lg:max-w-3xl group">
                     <div className="pointer-events-none absolute -inset-px rounded-full bg-gradient-to-r from-primary/20 via-transparent to-accent/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity" />
