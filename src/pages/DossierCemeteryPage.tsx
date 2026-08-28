@@ -344,6 +344,13 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
             </p>
           </section>
 
+          {/* ---------- Buyer enquiry ---------- */}
+          <section id="buy" className="scroll-mt-28 px-6 md:px-10 pt-16">
+            <DossierBuyerForm cemeteryName={cemetery.name} region={cemetery.region} />
+          </section>
+
+
+
           {/* ---------- Free valuation (dark, editorial) ---------- */}
           <section id="valuation" className="scroll-mt-28 px-6 md:px-10 pt-16">
             <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-10 items-start">
