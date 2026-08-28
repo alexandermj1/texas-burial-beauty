@@ -181,7 +181,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
               {cemetery.seo.h1}
             </h1>
             <p className="mt-6 max-w-xl text-lg md:text-xl leading-relaxed text-[hsl(var(--parchment)/0.88)] font-light">
-              Plots, crypts and niches for sale in {cemetery.city}, Texas — {cemetery.tagline.toLowerCase()}.
+              Plots, crypts and niches for sale in {cemetery.city}, Texas — {cemetery.tagline}.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to={`/listings?cemetery=${cemetery.slug}`} className={goldBtn}>
@@ -377,10 +377,6 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
           <div className="grid xl:grid-cols-2 gap-10 px-6 md:px-10 pt-16">
             {planMap && (
               <section id="sections" className="scroll-mt-28">
-                <p className={eyebrow}>Section plan</p>
-                <h2 className="mt-4 mb-6 font-display text-[clamp(1.8rem,2.6vw,2.4rem)] leading-tight text-[hsl(var(--parchment))]">
-                  {cemetery.name}, mapped.
-                </h2>
                 <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
                   <CemeteryPlanMap cemeteryName={cemetery.name} map={planMap} />
                 </div>
