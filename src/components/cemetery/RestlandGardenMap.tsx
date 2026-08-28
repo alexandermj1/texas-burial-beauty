@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BellRing, Maximize2, X } from "lucide-react";
+import { ArrowRight, BellRing, Maximize2, Search, X } from "lucide-react";
 
 import westMap from "@/assets/restland-map-west.png.asset.json";
 import eastMap from "@/assets/restland-map-east.png.asset.json";
+import { RESTLAND_GARDENS } from "./restlandGardens";
 
 /**
  * Restland Memorial Park garden plan, redrawn in the Texas Cemetery Brokers
@@ -19,6 +20,7 @@ const HALVES = [
       "Whispering Waters, Abbey Estates, Good Shepherd, Trinity and the United Jewish Cemeteries — the older, more established side of the park.",
     src: westMap.url,
     alt: "Map of the west grounds at Restland Memorial Park, Dallas, showing Whispering Waters, Abbey Estates, Good Shepherd, Trinity and the surrounding gardens",
+    tone: "sepia-[.06] saturate-[.92] contrast-[1.02]",
   },
   {
     id: "east",
@@ -27,13 +29,32 @@ const HALVES = [
       "Chapel Gardens, Ascension, Devotion, Rose Garden and the Veteran's gardens along the Greenville Avenue frontage.",
     src: eastMap.url,
     alt: "Map of the east grounds at Restland Memorial Park, Dallas, showing Chapel Gardens, Ascension, Devotion, Rose Garden and the Veteran's gardens",
+    tone: "sepia-[.22] saturate-[.8] contrast-[1.04] brightness-[.99]",
   },
 ] as const;
 
 const RestlandGardenMap = () => {
   const [half, setHalf] = useState<(typeof HALVES)[number]["id"]>("west");
   const [zoom, setZoom] = useState(false);
+  const [query, setQuery] = useState("");
   const current = HALVES.find((h) => h.id === half)!;
+
+  const groups = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const matched = RESTLAND_GARDENS.filter(
+      (g) =>
+        !q ||
+        g.name.toLowerCase().includes(q) ||
+        g.children?.some((c) => c.toLowerCase().includes(q)),
+    );
+    const map = new Map<string, typeof matched>();
+    matched.forEach((g) => {
+      const letter = g.name[0].toUpperCase();
+      map.set(letter, [...(map.get(letter) ?? []), g]);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [query]);
+
 
   return (
     <div className="rounded-[28px] border border-border bg-[hsl(40_36%_97%)] overflow-hidden">
