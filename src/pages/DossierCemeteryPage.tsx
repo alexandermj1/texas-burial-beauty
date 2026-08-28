@@ -424,8 +424,18 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
       {/* ================= FULL WIDTH: MAPS ================= */}
       <div className="container mx-auto max-w-[1440px] px-0">
         <div>
+          {/* ---------- Restland's own garden plans + directory ---------- */}
+          {cemetery.slug === "restland-memorial-park" && (
+            <section id="sections" className="scroll-mt-28 px-6 md:px-10 pt-20">
+              <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-6">
+                <RestlandGardenMap />
+              </div>
+            </section>
+          )}
+
           {/* ---------- Section plan + map ---------- */}
           <div className="grid xl:grid-cols-2 gap-10 px-6 md:px-10 pt-20">
+
             {planMap && (
               <section id="sections" className="scroll-mt-28">
                 <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
