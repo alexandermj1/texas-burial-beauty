@@ -378,32 +378,37 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
-      {/* ============ ESTIMATOR ============ */}
-      <section id="estimator" className="py-12 md:py-16 scroll-mt-32">
-        <div className="container mx-auto px-6 max-w-5xl">
-          <PlotValueCalculator cemetery={cemetery} />
-        </div>
-      </section>
-
       {/* ============ SECTIONS ============ */}
-      <section id="sections" className="py-12 md:py-16 bg-card/40 border-y border-border/60 scroll-mt-32">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-8">
-            <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Gardens &amp; sections</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-4">
-              The gardens at {cemetery.name}.
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              These are the gardens, courts and sections at {cemetery.name} that come up most often on the deeds and
-              requests we handle. Open one to see what it means for price and availability.
-            </p>
-          </div>
-          <SectionExplorer cemetery={cemetery} />
+      <section id="sections" className="relative py-12 md:py-16 bg-card/40 border-y border-border/60 scroll-mt-32 overflow-hidden">
+        <img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          className="hidden lg:block absolute -right-40 top-10 w-[24rem] opacity-[0.09] rotate-6 pointer-events-none select-none"
+        />
+        <div className="relative container mx-auto px-6">
+          {!isRestland && (
+            <>
+              <div className="max-w-3xl mb-8">
+                <GardenSignMarker label="Gardens" className="mb-5" />
+                <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Gardens &amp; sections</p>
+                <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-4">
+                  The gardens at {cemetery.name}.
+                </h2>
+                <p className="text-muted-foreground leading-relaxed">
+                  These are the gardens, courts and sections at {cemetery.name} that come up most often on the deeds and
+                  requests we handle. Open one to see what it means for price and availability.
+                </p>
+              </div>
+              <SectionExplorer cemetery={cemetery} />
+            </>
+          )}
 
           {isRestland && (
-            <div className="mt-10 md:mt-14">
+            <>
+              <GardenSignMarker label="Section maps" className="mb-6" />
               <RestlandGardenMap />
-            </div>
+            </>
           )}
         </div>
       </section>
