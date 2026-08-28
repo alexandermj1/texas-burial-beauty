@@ -144,6 +144,11 @@ const CemeteryDetail = () => {
   const flagship = flagshipBySlug(slug);
   const cemetery = slug ? findCemeteryBySlug(slug) : undefined;
 
+  // Duplicate registry name for the Rockwall park — send it to the canonical page.
+  if (slug === "rest-haven-cemetery-rockwall") {
+    return <Navigate to="/cemeteries/rest-haven-memorial-park" replace />;
+  }
+
   // Every cemetery we have rebuilt uses the "dossier" editorial layout.
   // Photography is optional — pages without original photos simply omit the essay.
   if (flagship && flagship.slug !== "laurel-land-memorial-park-dallas") {
