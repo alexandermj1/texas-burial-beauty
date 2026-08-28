@@ -144,42 +144,24 @@ const CemeteryDetail = () => {
   const flagship = flagshipBySlug(slug);
   const cemetery = slug ? findCemeteryBySlug(slug) : undefined;
 
-  // Our deepest photo-led cemeteries use the "dossier" editorial layout.
-  if (flagship && flagship.slug === "sparkman-hillcrest-memorial-park") {
-    return (
-      <DossierCemeteryPage
-        cemetery={flagship}
-        hero={SPARKMAN_HERO}
-        strip={SPARKMAN_STRIP}
-        photos={SPARKMAN_PHOTOS}
-      />
-    );
+  // Duplicate registry name for the Rockwall park — send it to the canonical page.
+  if (slug === "rest-haven-cemetery-rockwall") {
+    return <Navigate to="/cemeteries/rest-haven-memorial-park" replace />;
   }
 
-  if (flagship && flagship.slug === "bluebonnet-hills-memorial-park") {
-    return (
-      <DossierCemeteryPage
-        cemetery={flagship}
-        hero={BLUEBONNET_HERO}
-        strip={BLUEBONNET_STRIP}
-        photos={BLUEBONNET_PHOTOS}
-      />
-    );
+  // Every cemetery we have rebuilt uses the "dossier" editorial layout.
+  // Photography is optional — pages without original photos simply omit the essay.
+  if (flagship && flagship.slug !== "laurel-land-memorial-park-dallas") {
+    const media: Record<string, { hero: typeof SPARKMAN_HERO; strip: typeof SPARKMAN_STRIP; photos: typeof SPARKMAN_PHOTOS }> = {
+      "sparkman-hillcrest-memorial-park": { hero: SPARKMAN_HERO, strip: SPARKMAN_STRIP, photos: SPARKMAN_PHOTOS },
+      "bluebonnet-hills-memorial-park": { hero: BLUEBONNET_HERO, strip: BLUEBONNET_STRIP, photos: BLUEBONNET_PHOTOS },
+      "restland-memorial-park": { hero: RESTLAND_HERO, strip: RESTLAND_STRIP, photos: RESTLAND_PHOTOS },
+    };
+    const m = media[flagship.slug];
+    return <DossierCemeteryPage cemetery={flagship} hero={m?.hero} strip={m?.strip} photos={m?.photos} />;
   }
 
-  if (flagship && flagship.slug === "restland-memorial-park") {
-    return (
-      <DossierCemeteryPage
-        cemetery={flagship}
-        hero={RESTLAND_HERO}
-        strip={RESTLAND_STRIP}
-        photos={RESTLAND_PHOTOS}
-      />
-    );
-  }
-
-
-  // Our five highest-demand DFW cemeteries get a purpose-built, deeper page.
+  // Laurel Land Dallas keeps the older flagship layout for now.
   if (flagship) return <FlagshipCemeteryPage cemetery={flagship} />;
 
   // Avoid hijacking navigation while this page is exiting a transition.

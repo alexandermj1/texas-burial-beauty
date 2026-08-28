@@ -18,6 +18,7 @@ import { flagshipBySlug, money, type FlagshipCemetery } from "@/data/flagshipCem
 import { bayCemeteries } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 import type { DossierPhoto } from "@/data/sparkmanPhotos";
+import fallbackHero from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
 
@@ -43,9 +44,12 @@ const STEPS = [
 
 interface Props {
   cemetery: FlagshipCemetery;
-  hero: { src: string; alt: string };
-  strip: DossierPhoto;
-  photos: DossierPhoto[];
+  /** Optional original hero photograph. Falls back to a stock grounds frame. */
+  hero?: { src: string; alt: string };
+  /** Optional wide frame inside the article. */
+  strip?: DossierPhoto;
+  /** Optional photo essay. Omitted entirely when we have no original photography. */
+  photos?: DossierPhoto[];
 }
 
 /**
@@ -53,14 +57,32 @@ interface Props {
  * a standing contents rail and a print-style price ledger. Built for the
  * flagship cemeteries where we want to own the search result.
  */
-const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
+const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   const path = `/cemeteries/${cemetery.slug}`;
   const planMap = planMapFor(cemetery.slug);
   const [active, setActive] = useState("market");
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [stuck, setStuck] = useState(false);
+
+  const heroImage = hero ?? { src: fallbackHero.url, alt: `Memorial grounds at ${cemetery.name} in ${cemetery.city}, Texas` };
+  const nav = NAV.filter((n) => (n.href === "#grounds" ? photos.length > 0 : true));
+
+  // Reading progress + sticky bar
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      setProgress(max > 0 ? Math.min(1, h.scrollTop / max) : 0);
+      setStuck(h.scrollTop > 620);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
-    const els = NAV.map((n) => document.getElementById(n.href.slice(1))).filter(
+    const els = nav.map((n) => document.getElementById(n.href.slice(1))).filter(
       (el): el is HTMLElement => Boolean(el),
     );
     if (!els.length) return;
@@ -75,11 +97,17 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [cemetery.slug]);
+  }, [cemetery.slug, photos.length]);
 
   const nearby = cemetery.nearby
     .map((s) => flagshipBySlug(s) ?? bayCemeteries.find((c) => slugify(c.name) === s))
     .filter(Boolean) as Array<{ name: string; city: string; slug?: string }>;
+
+  // Quick facts under the hero. We never lead with resale-demand language.
+  const factBand = [
+    ...cemetery.facts.filter((f) => !/demand/i.test(f.label) && !/demand/i.test(f.value)),
+    { label: "Spaces from", value: `${money(Math.min(...cemetery.pricing.map((p) => p.resale[0])))} resale` },
+  ].slice(0, 4);
 
   const saving = (r: [number, number], s: [number, number]) =>
     Math.round((1 - (s[0] + s[1]) / (r[0] + r[1])) * 100);
@@ -141,7 +169,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
       "@type": "ImageGallery",
       name: `${cemetery.name} photographs — mausoleum, chapels and gardens`,
       about: cemetery.name,
-      associatedMedia: [strip, ...photos].map((p) => ({
+      associatedMedia: [...(strip ? [strip] : []), ...photos].map((p) => ({
         "@type": "ImageObject",
         contentUrl: `${SITE}${p.src}`,
         caption: p.caption,
@@ -164,10 +192,37 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
       <Seo title={cemetery.seo.title} description={cemetery.seo.description} path={path} jsonLd={jsonLd} />
       <Navbar forceScrolled />
 
+      {/* Reading progress */}
+      <div
+        aria-hidden
+        className="fixed top-0 left-0 right-0 z-[60] h-[3px] bg-[hsl(var(--gold))] origin-left transition-transform duration-150"
+        style={{ transform: `scaleX(${progress})` }}
+      />
+
+      {/* Sticky context bar */}
+      <div
+        className={`fixed top-[64px] left-0 right-0 z-50 border-b border-[hsl(var(--gold)/0.28)] bg-[hsl(var(--ink-deep)/0.94)] backdrop-blur-md transition-all duration-300 ${
+          stuck ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="container mx-auto max-w-[1440px] px-6 md:px-10 py-2.5 flex items-center justify-between gap-4">
+          <p className="min-w-0 truncate text-[hsl(var(--parchment))] font-display text-base md:text-lg">
+            {cemetery.name}
+            <span className="hidden md:inline text-[hsl(var(--parchment)/0.6)] text-sm font-sans">
+              {" "}· {cemetery.city}, TX · {money(cemetery.transferFee)} transfer fee
+            </span>
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <a href="#buy" className={`${ghostBtn} px-4 py-2 text-[13px]`}>Buy</a>
+            <a href="#valuation" className={`${goldBtn} px-4 py-2 text-[13px]`}>Free valuation</a>
+          </div>
+        </div>
+      </div>
+
       {/* ================= HERO ================= */}
       <section className="relative min-h-[560px] md:min-h-[640px] flex items-center">
         <div className="absolute inset-0">
-          <img src={hero.src} alt={hero.alt} className="w-full h-full object-cover" />
+          <img src={heroImage.src} alt={heroImage.alt} className="w-full h-full object-cover" />
         </div>
         <div
           aria-hidden
@@ -199,13 +254,25 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
         </div>
       </section>
 
+      {/* ================= FACT BAND ================= */}
+      <div className="border-y border-[hsl(var(--gold)/0.24)] bg-[hsl(var(--ink-deep))]">
+        <dl className="container mx-auto max-w-[1440px] px-6 md:px-10 py-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {factBand.map((f) => (
+            <div key={f.label}>
+              <dt className={eyebrow}>{f.label}</dt>
+              <dd className="mt-2 text-[hsl(var(--parchment))] leading-snug">{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
       {/* ================= BODY: RAIL + ARTICLE ================= */}
       <div className="container mx-auto max-w-[1440px] px-0 grid lg:grid-cols-[288px_minmax(0,1fr)]">
         {/* Standing contents rail */}
         <aside className="hidden lg:block px-8 py-14 border-r border-[hsl(var(--gold)/0.22)] self-start sticky top-20">
           <p className={eyebrow}>Contents</p>
           <nav className="flex flex-col mt-5" aria-label="On this page">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <a
                 key={n.href}
                 href={n.href}
@@ -250,15 +317,17 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
               </p>
             ))}
 
-            <figure className="mt-10">
-              <img
-                src={strip.src}
-                alt={strip.alt}
-                loading="lazy"
-                className="w-full h-[240px] md:h-[420px] object-cover rounded-[14px]"
-              />
-              <figcaption className="mt-3 text-sm text-[hsl(var(--parchment)/0.6)]">{strip.caption}</figcaption>
-            </figure>
+            {strip && (
+              <figure className="mt-10">
+                <img
+                  src={strip.src}
+                  alt={strip.alt}
+                  loading="lazy"
+                  className="w-full h-[240px] md:h-[420px] object-cover rounded-[14px]"
+                />
+                <figcaption className="mt-3 text-sm text-[hsl(var(--parchment)/0.6)]">{strip.caption}</figcaption>
+              </figure>
+            )}
           </article>
         </div>
       </div>
@@ -331,7 +400,15 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
                         {money(p.resale[0])} – {money(p.resale[1])}
                       </td>
                       <td className="block md:table-cell md:p-4 text-[hsl(var(--gold))]">
-                        ~{saving(p.retail, p.resale)}%
+                        <span className="flex items-center gap-3">
+                          ~{saving(p.retail, p.resale)}%
+                          <span className="hidden md:block h-[3px] w-24 rounded-full bg-[hsl(var(--gold)/0.2)]" aria-hidden>
+                            <span
+                              className="block h-full rounded-full bg-[hsl(var(--gold))]"
+                              style={{ width: `${saving(p.retail, p.resale)}%` }}
+                            />
+                          </span>
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -378,6 +455,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
           </section>
 
           {/* ---------- Photographs ---------- */}
+          {photos.length > 0 && (
           <section id="grounds" className="scroll-mt-28 px-6 md:px-10 pt-16">
             <p className={eyebrow}>Photographed on the grounds</p>
             <h2 className="mt-4 mb-8 max-w-3xl font-display text-[clamp(2rem,3.4vw,2.9rem)] leading-[1.12] text-[hsl(var(--parchment))]">
@@ -417,6 +495,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
               Original photography of {cemetery.name} by Texas Cemetery Brokers. Tap any frame to enlarge.
             </p>
           </section>
+          )}
 
         </div>
       </div>
@@ -555,8 +634,27 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos }: Props) => {
             </div>
           </div>
 
+          {/* Byline / freshness signal */}
+          <div className="mt-14 border-t border-border pt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <span className="text-foreground font-medium">Texas Cemetery Brokers · licensed Texas brokerage</span>
+            <span>
+              Researched on the grounds at {cemetery.name}. Prices and the {money(cemetery.transferFee)} transfer fee are
+              reviewed quarterly, and whenever the cemetery changes its schedule.
+            </span>
+            <a href="tel:+12142304740" className="text-primary hover:underline">(214) 230-4740</a>
+          </div>
+
         </div>
       </section>
+
+      {/* Mobile action bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.96)] backdrop-blur-md px-4 py-3 flex gap-2">
+        <a href="tel:+12142304740" className={`${ghostBtn} flex-1 px-3 py-3 text-[14px]`}>
+          <Phone className="w-4 h-4 text-[hsl(var(--gold))]" /> Call
+        </a>
+        <a href="#valuation" className={`${goldBtn} flex-1 px-3 py-3 text-[14px]`}>Free valuation</a>
+      </div>
+      <div className="lg:hidden h-[76px]" aria-hidden />
 
       <Footer />
 
