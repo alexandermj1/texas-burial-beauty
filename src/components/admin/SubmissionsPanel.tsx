@@ -2602,14 +2602,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide" : "Cemeteries"}
           </button>
-          <button
-            data-tour="add-submission"
-            onClick={() => setAddOpen(true)}
-            className="px-2 py-1 rounded-full text-[11px] font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 transition-all inline-flex items-center gap-1.5"
-            title="Add a submission manually (e.g. info taken over the phone)"
-          >
-            <UserPlus className="w-3.5 h-3.5" /> Add
-          </button>
           {onRefresh && (
             <button
               onClick={async () => {
