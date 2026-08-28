@@ -26,6 +26,8 @@ import DossierCemeteryPage from "@/pages/DossierCemeteryPage";
 import { SPARKMAN_HERO, SPARKMAN_STRIP, SPARKMAN_PHOTOS } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO, BLUEBONNET_STRIP, BLUEBONNET_PHOTOS } from "@/data/bluebonnetPhotos";
 import { RESTLAND_HERO, RESTLAND_STRIP, RESTLAND_PHOTOS } from "@/data/restlandDossierPhotos";
+import { RESTHAVEN_HERO, RESTHAVEN_STRIP, RESTHAVEN_PHOTOS } from "@/data/resthavenPhotos";
+import { LAUREL_LAND_HERO, LAUREL_LAND_STRIP, LAUREL_LAND_PHOTOS } from "@/data/laurelLandPhotos";
 
 import FlagshipCemeteryPage from "@/pages/FlagshipCemeteryPage";
 
@@ -156,6 +158,8 @@ const CemeteryDetail = () => {
       "sparkman-hillcrest-memorial-park": { hero: SPARKMAN_HERO, strip: SPARKMAN_STRIP, photos: SPARKMAN_PHOTOS },
       "bluebonnet-hills-memorial-park": { hero: BLUEBONNET_HERO, strip: BLUEBONNET_STRIP, photos: BLUEBONNET_PHOTOS },
       "restland-memorial-park": { hero: RESTLAND_HERO, strip: RESTLAND_STRIP, photos: RESTLAND_PHOTOS },
+      "rest-haven-memorial-park": { hero: RESTHAVEN_HERO, strip: RESTHAVEN_STRIP, photos: RESTHAVEN_PHOTOS },
+      "laurel-land-memorial-park-fort-worth": { hero: LAUREL_LAND_HERO, strip: LAUREL_LAND_STRIP, photos: LAUREL_LAND_PHOTOS },
     };
     const m = media[flagship.slug];
     return <DossierCemeteryPage cemetery={flagship} hero={m?.hero} strip={m?.strip} photos={m?.photos} />;
