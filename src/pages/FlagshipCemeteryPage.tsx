@@ -19,16 +19,22 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
-import PlotValueCalculator from "@/components/cemetery/PlotValueCalculator";
 import SectionExplorer from "@/components/cemetery/SectionExplorer";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
 import RestlandGardenMap from "@/components/cemetery/RestlandGardenMap";
+import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+import GardenSignMarker from "@/components/cemetery/GardenSignMarker";
 
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { flagshipBySlug, money, range, type FlagshipCemetery } from "@/data/flagshipCemeteries";
 import { bayCemeteries } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const SITE = "https://texascemeterybrokers.com";
 
