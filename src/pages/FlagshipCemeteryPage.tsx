@@ -22,6 +22,8 @@ import SellerQuoteForm from "@/components/SellerQuoteForm";
 import PlotValueCalculator from "@/components/cemetery/PlotValueCalculator";
 import SectionExplorer from "@/components/cemetery/SectionExplorer";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
+import RestlandGardenMap from "@/components/cemetery/RestlandGardenMap";
+
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { flagshipBySlug, money, range, type FlagshipCemetery } from "@/data/flagshipCemeteries";
 import { bayCemeteries } from "@/data/cemeteries";
