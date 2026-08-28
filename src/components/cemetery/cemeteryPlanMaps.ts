@@ -1,5 +1,6 @@
 import sparkmanMap from "@/assets/sparkman-hillcrest-map.png.asset.json";
 import bluebonnetMap from "@/assets/bluebonnet-hills-map.png.asset.json";
+import restHavenMap from "@/assets/rest-haven-rockwall-map.png.asset.json";
 
 export type CemeteryPlanMap = {
   src: string;
