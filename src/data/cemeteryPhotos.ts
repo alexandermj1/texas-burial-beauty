@@ -60,15 +60,15 @@ const RESTLAND: CemeteryPhotoEssay = {
 
 const BLUEBONNET: CemeteryPhotoEssay = {
   eyebrow: "A walk through the park",
-  heading: "Bluebonnet Hills, garden by garden.",
+  heading: "Bluebonnet Hills, from the lake outward.",
   standfirst:
-    "Bluebonnet Hills Memorial Park runs along Harwood Road in Colleyville, on the Bedford–Hurst line: a flat, open lawn park built around a spring-fed lake, a colonnade of lawn crypts and a handful of named gardens marked by cast-metal signs. Walk it once and the geography makes sense — lakeside first, then Good Shepherd, Legacy and the Columns, with the cremation garden and its niche walls behind the crape myrtles.",
+    "Bluebonnet Hills Memorial Park is one of the loveliest grounds in the Mid-Cities. Everything turns around a spring-fed lake with a fountain at its centre, edged by clipped hedges, stone walkways and memorial benches, with the funeral home sitting right at the Colleyville Boulevard entrance. Walk out from the water and the park opens into wide, level lawns, a colonnade of lawn crypts, a cremation garden under a pergola, and named gardens marked by cast-metal signs.",
   credit: "Photographed on the grounds in Colleyville by Texas Cemetery Brokers",
   photos: [
     {
       src: bbLake.url,
       alt: "The fountain lake and lawn-crypt colonnade at Bluebonnet Hills Memorial Park in Colleyville, Texas",
-      caption: "The fountain lake, with the crypt colonnade on the far bank — the park's most requested view.",
+      caption: "The fountain lake, with the crypt colonnade on the far bank — the view the whole park is built around.",
       kicker: "The lake",
     },
     {
@@ -80,7 +80,7 @@ const BLUEBONNET: CemeteryPhotoEssay = {
     {
       src: bbShepherd.url,
       alt: "Cast-metal 'Garden of the Good Shepherd' section sign at Bluebonnet Hills Memorial Park in Colleyville, Texas",
-      caption: "Garden of the Good Shepherd — flat markers, mature shade, consistently the strongest resale demand.",
+      caption: "Garden of the Good Shepherd — flat markers under mature shade.",
       kicker: "Good Shepherd",
     },
     {
@@ -104,9 +104,10 @@ const BLUEBONNET: CemeteryPhotoEssay = {
     {
       src: bbCrypts.url,
       alt: "Lakeside lawn crypts and memorial benches overlooking the fountain lake at Bluebonnet Hills Memorial Park, Colleyville",
-      caption: "Lakeside lawn crypts and benches — the premium tier of the park.",
+      caption: "Lawn crypts and benches along the water's edge.",
       kicker: "Lakeside crypts",
     },
+
     {
       src: bbBenches.url,
       alt: "Memorial benches and estate markers in a landscaped garden at Bluebonnet Hills Memorial Park, Colleyville, Texas",
