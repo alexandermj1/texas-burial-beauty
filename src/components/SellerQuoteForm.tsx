@@ -7,11 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { validateEmail } from "@/lib/emailValidation";
-import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
-import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
-import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
@@ -550,78 +545,18 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
     >
       {!compact && (
         <>
-          {/* Layered botanical background */}
           <div
             aria-hidden
-            className="absolute inset-0 opacity-[0.18] pointer-events-none"
-            style={{
-              backgroundImage:
-                "radial-gradient(hsl(var(--terracotta) / 0.4) 1px, transparent 1px)",
-              backgroundSize: "30px 30px",
-            }}
+            className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-[hsl(var(--sage-light))]/50 to-transparent pointer-events-none"
           />
           <div
             aria-hidden
-            className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-[hsl(var(--sage-light))]/70 to-transparent pointer-events-none"
-          />
-          <div
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/30 to-transparent pointer-events-none"
-          />
-
-          {/* Botanical illustrations */}
-          <motion.img
-            src={bananaLeaf.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, x: -40, rotate: -20 }}
-            whileInView={{ opacity: 0.45, x: 0, rotate: -14 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.4, ease: "easeOut" }}
-            className="hidden md:block absolute -left-44 top-20 w-[28rem] pointer-events-none select-none"
-          />
-          <motion.img
-            src={palmFan.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, x: 40, rotate: 12 }}
-            whileInView={{ opacity: 0.35, x: 0, rotate: 8 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.4, ease: "easeOut" }}
-            className="hidden lg:block absolute -right-32 bottom-16 w-[24rem] pointer-events-none select-none"
-          />
-          <motion.img
-            src={hibiscusCoral.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, y: -20, rotate: 18 }}
-            whileInView={{ opacity: 0.9, y: 0, rotate: 12 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, delay: 0.2 }}
-            className="hidden md:block absolute right-6 lg:right-24 top-8 w-44 lg:w-56 pointer-events-none select-none"
-          />
-          <motion.img
-            src={pinkBranch.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 0.65, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, delay: 0.3 }}
-            className="hidden md:block absolute left-8 bottom-8 w-40 lg:w-52 pointer-events-none select-none -rotate-6"
-          />
-          <motion.img
-            src={plumeriaCluster.url}
-            alt=""
-            aria-hidden
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 0.7, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
-            className="md:hidden absolute -right-10 top-4 w-36 pointer-events-none select-none"
+            className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[hsl(var(--terracotta-light))]/20 to-transparent pointer-events-none"
           />
         </>
       )}
+
+
 
       <div className={compact ? "" : "relative container mx-auto px-6"}>
         {/* Centered intro */}
@@ -660,9 +595,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
         {/* Card wrapper with offset decorative layer for stand-out */}
         <div className="max-w-4xl mx-auto relative">
           {/* Decorative offset glows */}
-          <div aria-hidden className="hidden md:block absolute -inset-4 rounded-[2.25rem] bg-gradient-to-br from-primary/20 via-accent/10 to-terracotta/15 blur-2xl opacity-80 -z-10" />
-          <div aria-hidden className="hidden md:block absolute -bottom-6 -right-6 w-40 h-40 rounded-full bg-accent/15 blur-3xl -z-10" />
-          <div aria-hidden className="hidden md:block absolute -top-6 -left-6 w-40 h-40 rounded-full bg-primary/15 blur-3xl -z-10" />
+          <div aria-hidden className="hidden md:block absolute -inset-3 rounded-[2.25rem] border border-primary/15 -z-10" />
 
           <motion.form
             onSubmit={(e) => e.preventDefault()}
@@ -676,7 +609,7 @@ const SellerQuoteForm = ({ defaultCemetery = "", compact = false, editorial = fa
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="relative bg-background/95 backdrop-blur-md rounded-[2rem] border border-border/70 shadow-2xl shadow-foreground/10 overflow-hidden ring-1 ring-foreground/5"
+            className="relative bg-background/95 backdrop-blur-md rounded-[2rem] border border-border/70 shadow-xl shadow-foreground/5 overflow-hidden ring-1 ring-foreground/5"
           >
 
 

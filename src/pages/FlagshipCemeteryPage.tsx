@@ -19,9 +19,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
-import SectionExplorer from "@/components/cemetery/SectionExplorer";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
 import RestlandGardenMap from "@/components/cemetery/RestlandGardenMap";
+import CemeteryPlanMap from "@/components/cemetery/CemeteryPlanMap";
+import { planMapFor } from "@/components/cemetery/cemeteryPlanMaps";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GardenSignMarker from "@/components/cemetery/GardenSignMarker";
 
@@ -125,10 +126,13 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const liveCount = countFor(cemetery.name);
   const path = `/cemeteries/${cemetery.slug}`;
   const isRestland = cemetery.slug.startsWith("restland");
+  const planMap = planMapFor(cemetery.slug);
+  const hasSectionMap = isRestland || Boolean(planMap);
   const [active, setActive] = useState<string>("");
+  const baseNav = hasSectionMap ? NAV : NAV.filter((n) => n.href !== "#sections");
   const navLinks = isRestland
-    ? [...NAV.slice(0, 2), { href: "#grounds", label: "Photos" }, ...NAV.slice(2)]
-    : NAV;
+    ? [...baseNav.slice(0, 2), { href: "#grounds", label: "Photos" }, ...baseNav.slice(2)]
+    : baseNav;
 
   // Scroll-spy so the jump bar always shows where you are on the page.
   useEffect(() => {
@@ -148,7 +152,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [isRestland]);
+  }, [isRestland, hasSectionMap]);
 
 
   const nearby = cemetery.nearby
@@ -507,40 +511,19 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </div>
       </section>
 
-      {/* ============ SECTIONS ============ */}
-      <section id="sections" className="relative py-12 md:py-16 bg-card/40 border-y border-border/60 scroll-mt-32 overflow-hidden">
-        <img
-          src={palmFan.url}
-          alt=""
-          aria-hidden
-          className="hidden lg:block absolute -right-40 top-10 w-[24rem] opacity-[0.09] rotate-6 pointer-events-none select-none"
-        />
-        <div className="relative container mx-auto px-6">
-          {!isRestland && (
-            <>
-              <div className="max-w-3xl mb-8">
-                <GardenSignMarker label="Gardens" className="mb-5" />
-                <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">Gardens &amp; sections</p>
-                <h2 className="font-display text-3xl md:text-5xl text-foreground leading-[1.06] mb-4">
-                  The gardens at {cemetery.name}.
-                </h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  These are the gardens, courts and sections at {cemetery.name} that come up most often on the deeds and
-                  requests we handle. Open one to see what it means for price and availability.
-                </p>
-              </div>
-              <SectionExplorer cemetery={cemetery} />
-            </>
-          )}
-
-          {isRestland && (
-            <>
-              <GardenSignMarker label="Section maps" className="mb-6" />
+      {/* ============ SECTION MAPS ============ */}
+      {hasSectionMap && (
+        <section id="sections" className="relative py-12 md:py-16 bg-card/40 border-y border-border/60 scroll-mt-32 overflow-hidden">
+          <div className="relative container mx-auto px-6">
+            <GardenSignMarker label="Section maps" className="mb-6" />
+            {isRestland ? (
               <RestlandGardenMap />
-            </>
-          )}
-        </div>
-      </section>
+            ) : (
+              planMap && <CemeteryPlanMap cemeteryName={cemetery.name} map={planMap} />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ============ HISTORIC GROUNDS PHOTOS (Restland) ============ */}
       {isRestland && (
