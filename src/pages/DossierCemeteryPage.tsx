@@ -64,9 +64,21 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const [stuck, setStuck] = useState(false);
+  // Once the visitor starts the valuation form we drop the explainer column
+  // and give the form the whole box.
+  const [formStarted, setFormStarted] = useState(false);
+
+  // Metro the cemetery belongs to — drives the coverage map, breadcrumbs and hub links.
+  const metro =
+    cemetery.region === "Greater Houston"
+      ? { label: "Houston", regions: ["Greater Houston"], hub: "/cemetery-plots-for-sale-houston" }
+      : cemetery.region === "Austin"
+        ? { label: "Austin", regions: ["Austin", "Central Texas"], hub: "/cemetery-plots-for-sale-austin" }
+        : { label: "Dallas–Fort Worth", regions: ["Dallas–Fort Worth"], hub: "/cemetery-plots-for-sale-dallas" };
 
   const heroImage = hero ?? { src: fallbackHero.url, alt: `Memorial grounds at ${cemetery.name} in ${cemetery.city}, Texas` };
   const nav = NAV.filter((n) => (n.href === "#grounds" ? photos.length > 0 : true));
+
 
   // Reading progress + sticky bar
   useEffect(() => {
