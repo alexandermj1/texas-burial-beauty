@@ -110,6 +110,8 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const planMap = planMapFor(cemetery.slug);
   const hasSectionMap = isRestland || Boolean(planMap);
   const photoEssay = photoEssayFor(cemetery.slug);
+  const heroPhoto = heroPhotoFor(cemetery.slug);
+
   const [active, setActive] = useState<string>("");
   const baseNav = hasSectionMap ? NAV : NAV.filter((n) => n.href !== "#sections");
   const navLinks = photoEssay
