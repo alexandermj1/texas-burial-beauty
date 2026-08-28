@@ -37,30 +37,11 @@ import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import { RESTLAND_MAPS as RESTLAND_MAP_DOWNLOADS } from "@/components/cemetery/restlandMaps";
-import restlandOaks from "@/assets/restland/historic-oaks.png.asset.json";
-import restlandMonuments from "@/assets/restland/historic-monuments.png.asset.json";
-import restlandSign from "@/assets/restland/memories-sign.png.asset.json";
+import { photoEssayFor } from "@/data/cemeteryPhotos";
+import CemeteryPhotoEssay from "@/components/cemetery/CemeteryPhotoEssay";
 
 const SITE = "https://texascemeterybrokers.com";
 
-/** Broker photography of the original, historic section of Restland Memorial Park. */
-const RESTLAND_PHOTOS = [
-  {
-    src: restlandOaks.url,
-    alt: "Upright granite monuments under mature live oaks in the historic section of Restland Memorial Park, Dallas, Texas",
-    caption: "Upright monuments under the original live oaks, historic section",
-  },
-  {
-    src: restlandSign.url,
-    alt: "Cast-metal 'Memories' garden lane sign in the historic section of Restland Memorial Park, Dallas, Texas",
-    caption: "The cast-metal lane signs that name each garden",
-  },
-  {
-    src: restlandMonuments.url,
-    alt: "Family monuments and memorial benches in an older garden at Restland Memorial Park on Greenville Avenue, Dallas",
-    caption: "Family estates and upright memorials off Greenville Avenue",
-  },
-] as const;
 
 const NAV = [
   { href: "#prices", label: "Prices" },
@@ -128,11 +109,13 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
   const isRestland = cemetery.slug.startsWith("restland");
   const planMap = planMapFor(cemetery.slug);
   const hasSectionMap = isRestland || Boolean(planMap);
+  const photoEssay = photoEssayFor(cemetery.slug);
   const [active, setActive] = useState<string>("");
   const baseNav = hasSectionMap ? NAV : NAV.filter((n) => n.href !== "#sections");
-  const navLinks = isRestland
+  const navLinks = photoEssay
     ? [...baseNav.slice(0, 2), { href: "#grounds", label: "Photos" }, ...baseNav.slice(2)]
     : baseNav;
+
 
   // Scroll-spy so the jump bar always shows where you are on the page.
   useEffect(() => {
@@ -217,15 +200,15 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       })),
     },
     // Image + map assets, so Google can index the photography and the garden plans.
-    ...(isRestland
+    ...(photoEssay
       ? [
           {
             "@context": "https://schema.org",
             "@type": "ImageGallery",
-            name: `${cemetery.name} photos — historic gardens and section maps`,
+            name: `${cemetery.name} photos — gardens, sections and grounds`,
             about: cemetery.name,
             associatedMedia: [
-              ...RESTLAND_PHOTOS.map((p) => ({
+              ...photoEssay.photos.map((p) => ({
                 "@type": "ImageObject",
                 contentUrl: `${SITE}${p.src}`,
                 caption: p.caption,
@@ -235,20 +218,23 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
                 acquireLicensePage: `${SITE}${path}`,
                 contentLocation: { "@type": "Place", name: cemetery.name, address: cemetery.address },
               })),
-              ...RESTLAND_MAP_DOWNLOADS.map((m) => ({
-                "@type": "ImageObject",
-                contentUrl: `${SITE}${m.src}`,
-                caption: m.caption,
-                description: m.alt,
-                creditText: "Texas Cemetery Brokers",
-                encodingFormat: "image/png",
-                acquireLicensePage: `${SITE}${path}`,
-              })),
+              ...(isRestland
+                ? RESTLAND_MAP_DOWNLOADS.map((m) => ({
+                    "@type": "ImageObject",
+                    contentUrl: `${SITE}${m.src}`,
+                    caption: m.caption,
+                    description: m.alt,
+                    creditText: "Texas Cemetery Brokers",
+                    encodingFormat: "image/png",
+                    acquireLicensePage: `${SITE}${path}`,
+                  }))
+                : []),
             ],
           },
         ]
       : []),
   ];
+
 
 
   return (
@@ -525,53 +511,9 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         </section>
       )}
 
-      {/* ============ HISTORIC GROUNDS PHOTOS (Restland) ============ */}
-      {isRestland && (
-        <section id="grounds" className="py-14 md:py-20 scroll-mt-32">
-          <div className="container mx-auto px-6">
-            <div className="grid lg:grid-cols-[0.85fr_1.15fr] gap-8 lg:gap-14 items-end mb-8">
-              <div>
-                <p className="text-[11px] tracking-[0.28em] uppercase text-primary font-medium mb-3">
-                  The historic grounds
-                </p>
-                <h2 className="font-display text-3xl md:text-[46px] text-foreground leading-[1.04] mb-4">
-                  Inside Restland's oldest gardens.
-                </h2>
-                <span className="block w-16 h-[3px] bg-primary/70 rounded-full" />
-              </div>
-              <p className="text-muted-foreground leading-relaxed max-w-xl">
-                The original section of Restland Memorial Park sits under mature live oaks off Greenville Avenue — upright
-                monuments, family estates and cast-metal lane signs that predate most of the park. Photographed by our
-                brokers on the ground in Dallas. These closed gardens rarely release new inventory; almost everything that
-                changes hands here is a family resale.
-              </p>
-            </div>
+      {/* ============ PHOTO ESSAY (original broker photography) ============ */}
+      {photoEssay && <CemeteryPhotoEssay essay={photoEssay} cemeteryName={cemetery.name} />}
 
-            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
-              {RESTLAND_PHOTOS.map((p, i) => (
-                <figure
-                  key={p.src}
-                  className={`group relative overflow-hidden rounded-[24px] border border-border bg-card ${
-                    i === 0 ? "md:col-span-2" : i === 2 ? "md:col-span-3" : ""
-                  }`}
-                >
-                  <img
-                    src={p.src}
-                    alt={p.alt}
-                    loading="lazy"
-                    width={1600}
-                    height={1200}
-                    className={`w-full object-cover ${i === 2 ? "h-[220px] md:h-[300px]" : "h-[240px] md:h-[340px]"} transition-transform duration-700 group-hover:scale-[1.04]`}
-                  />
-                  <figcaption className="absolute inset-x-0 bottom-0 p-4 md:p-5 bg-gradient-to-t from-foreground/85 to-transparent">
-                    <span className="text-background text-sm leading-snug">{p.caption}</span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
 
       {/* ============ MAP ============ */}
