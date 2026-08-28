@@ -35,6 +35,7 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import { RESTLAND_MAPS as RESTLAND_MAP_DOWNLOADS } from "@/components/cemetery/restlandMaps";
 import restlandOaks from "@/assets/restland/historic-oaks.png.asset.json";
 import restlandMonuments from "@/assets/restland/historic-monuments.png.asset.json";
 import restlandSign from "@/assets/restland/memories-sign.png.asset.json";
