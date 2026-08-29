@@ -270,8 +270,8 @@ const BuyProperty = () => {
   return (
     <div className="min-h-svh bg-background flex flex-col">
       <Seo
-        title="Find a Cemetery Plot in Texas | Guided Buyer Concierge"
-        description="A clean 5-step concierge to help you buy the right cemetery plot in Texas — Dallas, Houston, Austin, San Antonio. Save 30–50% versus buying direct."
+        title="Buy a Cemetery Plot in Texas — Burial Plots 30–50% Below Cemetery Prices"
+        description="Looking for burial plots for sale in Texas? Our free buyer concierge matches you with privately resold cemetery plots, niches and crypts in Dallas, Houston, Austin & beyond — typically 30–50% below cemetery prices."
         path="/buy"
         jsonLd={[
           {
