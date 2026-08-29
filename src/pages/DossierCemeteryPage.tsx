@@ -206,8 +206,12 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
 
   return (
     <div className="min-h-screen bg-[hsl(var(--ink))] flex flex-col [&>footer]:mt-auto">
+      {/* Editorial ground: warm radial light, engraved hairline grid, paper grain, vignette */}
+      <div aria-hidden className="dossier-ground" />
+      <div aria-hidden className="dossier-vignette" />
       <Seo title={cemetery.seo.title} description={cemetery.seo.description} path={path} jsonLd={jsonLd} />
       <Navbar forceScrolled dark />
+
 
       {/* Reading progress */}
       <div
