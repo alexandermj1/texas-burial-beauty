@@ -77,17 +77,17 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     operator: "Independently operated memorial park",
     tagline: "The most-requested cemetery in North Texas",
     intro: [
-      "Restland Memorial Park on Greenville Avenue is the single most-requested cemetery in our entire Texas book — it generates more buyer and seller inquiries than any other park in the state. That demand cuts both ways: buyers face long waits and premium counter pricing in the established gardens, and owners who bought decades ago are usually holding property worth far more than they paid.",
+      "Restland Memorial Park on Greenville Avenue is one of the most frequently requested cemeteries in our Texas book, from families buying and from owners considering a sale. Many of its established gardens have been in place for decades, so families looking to be near a relative often ask us to help them find an owner willing to transfer a space nearby.",
       "Almost everything that changes hands in Restland's mature gardens now moves through resale. The cemetery office cannot sell you a new space next to a relative in a closed garden; another family has to be willing to release theirs. That is exactly the market we broker — and because we hold both sides, a Restland space is often matched within weeks rather than months.",
     ],
     facts: [
       { label: "City", value: "Dallas (Richardson line)" },
       { label: "Gardens mapped", value: "90+ named gardens" },
       { label: "Transfer fee", value: "$1,495 per space" },
-      { label: "Resale demand", value: "Exceptional — #1 in Texas" },
+      { label: "Family interest", value: "Consistently strong" },
     ],
     sections: [
-      { name: "Garden of the Last Supper", kind: "Ground", tier: "premium", note: "Feature garden with statuary — mature, and effectively closed at the counter." },
+      { name: "Garden of the Last Supper", kind: "Ground", tier: "premium", note: "Feature garden with statuary; long established, so availability is usually through an existing owner." },
       { name: "Garden of Ascension", kind: "Ground", tier: "premium", note: "Established feature garden; resale only for most lots." },
       { name: "Chapel Garden II", kind: "Mausoleum", tier: "premium", note: "Indoor and garden crypts by tier — eye-level tiers carry a premium." },
       { name: "Fountain View", kind: "Ground", tier: "premium", note: "Water-feature garden, popular for family groupings of four." },
@@ -104,17 +104,17 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     localNotes: [
       "Restland's transfer fee is $1,495 per space. We confirm the current figure in writing before either side commits, and we tell you plainly who is expected to pay it.",
       "Counter pricing is not flat across the park. The feature gardens along the Greenville Avenue side sit near the top of the range, while faith-designated and open-lawn gardens can be thousands less for identical ground.",
-      "Feature gardens such as the Last Supper, Ascension and Fountain View are mature. If someone tells you these are 'sold out', that is true at the counter — it is not true on the resale market.",
+      "Feature gardens such as the Last Supper, Ascension and Fountain View are long established. If the cemetery office has no inventory left in one of them, a transfer from a current owner is usually the way in.",
       "Restland spans a very large site. Use the garden map on this page to find your section before you visit — walking the wrong end of Greenville Avenue in July is nobody's idea of a good morning.",
     ],
     faqs: [
       {
         q: "Can you still buy plots at Restland Memorial Park?",
-        a: "Yes — but in the established gardens you are almost always buying from a current owner rather than from the cemetery. Restland's older feature gardens are effectively closed at the counter, so resale is the route in. We match buyers to verified Restland owners and handle the cemetery's transfer end to end.",
+        a: "Yes. In the newer areas the cemetery office sells directly; in the long-established gardens a space usually becomes available when a current owner transfers it. We match buyers to verified Restland owners and work with the cemetery office on the transfer from start to finish.",
       },
       {
         q: "How much are cemetery plots at Restland in Dallas?",
-        a: "Counter pricing at Restland varies a great deal by garden — a single space in an established feature garden sits in the mid-teens of thousands, while quieter open-lawn and faith gardens are meaningfully less. Resale spaces typically trade at roughly half of counter pricing, which is where most families save. We quote a real number once we know the garden, lot and space.",
+        a: "Counter pricing at Restland varies a great deal by garden — a single space in an established feature garden sits in the mid-teens of thousands, while quieter open-lawn and faith gardens are meaningfully less. Spaces transferred from an existing owner generally sit below current cemetery pricing. We quote a real number once we know the garden, lot and space.",
       },
       {
         q: "What is the transfer fee at Restland Memorial Park?",
@@ -154,13 +154,13 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     tagline: "Park Cities address, statement property",
     intro: [
       "Sparkman-Hillcrest sits on Northwest Highway beside the Park Cities, and it prices like it. It is the address North Dallas families ask for by name, and the one where the gap between what an owner paid in the 1970s and what the space is worth today is widest.",
-      "Because the desirable garden and mausoleum locations here rarely come back to the counter, resale is the practical market. For sellers that means genuinely strong pricing; for buyers it means a Park Cities interment at a number the cemetery office cannot offer you.",
+      "Many of the established gardens and mausoleum areas here have been held by families for years, so transfers between owners are a common route for buyers. For sellers that means steady interest; for buyers it can mean an option in a garden the office no longer has inventory in.",
     ],
     facts: [
       { label: "Location", value: "Northwest Hwy, North Dallas" },
       { label: "Operator", value: "Dignity Memorial" },
       { label: "Transfer fee", value: "$595 per space" },
-      { label: "Resale demand", value: "Very high — premium pricing" },
+      { label: "Family interest", value: "Strong across the park" },
     ],
     sections: [
       { name: "Providence Monument Garden", kind: "Ground", tier: "premium", note: "Upright-monument garden — the top of the range on this property." },
@@ -177,7 +177,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
     localNotes: [
       "Sparkman-Hillcrest sits at the upper end of the Dallas market, and the monument gardens in particular are valued well above ordinary lawn ground. If you inherited spaces, do not assume they are worth what the family paid.",
-      "The transfer fee on file is $595 per space, materially cheaper than Restland. That matters when you are comparing two options across the city.",
+      "The transfer fee on file is $595 per space. It is worth factoring in when you are weighing options across the city.",
       "Buyers who cannot reach Sparkman-Hillcrest pricing often land well at Restland or Grove Hill for a similar section quality — we will say so rather than push you into a stretch.",
     ],
     faqs: [
@@ -308,7 +308,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { label: "City", value: "Fort Worth (south)" },
       { label: "Operator", value: "Dignity Memorial" },
       { label: "Transfer fee", value: "$595 per space" },
-      { label: "Resale demand", value: "High — steady turnover" },
+      { label: "Family interest", value: "Steady year-round" },
     ],
     sections: [
       { name: "Garden of Peace", kind: "Ground", tier: "standard", note: "Frequently traded lawn; contiguous groups of three and four appear here." },
@@ -380,7 +380,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { label: "Location", value: "R.L. Thornton Fwy, south Dallas" },
       { label: "Operator", value: "Dignity Memorial" },
       { label: "Transfer fee", value: "$595 per space" },
-      { label: "Resale demand", value: "High — family lots common" },
+      { label: "Family interest", value: "Family lots common" },
     ],
     sections: [
       { name: "Good Shepherd", kind: "Ground", tier: "premium", note: "Named feature garden; groups of three and four appear here regularly." },
@@ -527,7 +527,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     website: "https://www.dignitymemorial.com",
     transferFee: 695,
     operator: "Dignity Memorial",
-    tagline: "Greater Austin's busiest resale market, on the I-35 corridor",
+    tagline: "An established Greater Austin park on the I-35 corridor",
     intro: [
       "Cook-Walden Capital Parks sits on the frontage of Interstate 35 in Pflugerville, ten minutes north of the Austin city line and convenient to Round Rock, Wells Branch, Hutto and North Austin. It is the cemetery Austin-area families contact us about more than any other, largely because so many people bought here in the 1980s and 1990s and have since moved away from Central Texas.",
       "Property is described by lettered section and named garden — Section Q Garden of Ascension, Section K, Section D, the Masonic Garden in Section L and the Garden of the Apostles are the ones we see most on deeds. The cemetery sells new property directly, and many families also buy from existing owners on the resale market — both routes are open, and we work alongside the cemetery office on the paperwork either way.",
@@ -853,7 +853,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     localNotes: [
       "Buying pre-need direct from Memorial Oaks? The cemetery offers interest-free financing on selected property for up to two years, so a family can spread the cost with no interest added.",
       "The transfer fee is $995 per space, paid to the cemetery to record the change of ownership. We confirm the live figure in writing before either side commits.",
-      "The cemetery has quoted the second interment right on an existing space at around 35% of retail in some sections, which can be cheaper than buying an additional space.",
+      "The cemetery has quoted the second interment right on an existing space at around 35% of the space price in some sections, which is worth asking the office about before adding another space.",
       "Bring the section, lot and space line from your deed (for example Section 8, Lot 38, Spaces 11 and 12) and we can value your property the same day, with no site visit.",
     ],
     faqs: [
