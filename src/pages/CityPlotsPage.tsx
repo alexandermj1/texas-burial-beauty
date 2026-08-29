@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+import FeaturedDallasCemeteries from "@/components/FeaturedDallasCemeteries";
 
 import { getCityPage, CITY_PAGES } from "./city-page-data";
 import dallasHeroArt from "@/assets/dallas-hero-illustration.png.asset.json";
@@ -363,6 +364,8 @@ const CityPlotsPage = () => {
 
 
         {/* Pricing */}
+        {data.slug === "dallas" && <FeaturedDallasCemeteries />}
+
         <Section id="pricing" eyebrow="What it costs" title={`Cemetery plot prices in ${data.city}`}>
           <p>
             A cemetery's counter price is not the market price. In {data.city} a single ground space bought new typically costs{" "}

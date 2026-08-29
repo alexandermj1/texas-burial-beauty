@@ -17,6 +17,7 @@ import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import StoryStrip from "@/components/StoryStrip";
 import HomeCemeteryMap from "@/components/HomeCemeteryMap";
+import FeaturedDallasCemeteries from "@/components/FeaturedDallasCemeteries";
 import featuredImg from "@/assets/story-featured.png";
 import cemeteriesImg from "@/assets/story-cemeteries.png";
 import propertyTypesImg from "@/assets/story-property-types.png";
@@ -159,6 +160,8 @@ const Index = () => {
       )}
 
       <HomeCemeteryMap />
+
+      <FeaturedDallasCemeteries variant="compact" />
 
       <StoryStrip
         img={featuredImg}
