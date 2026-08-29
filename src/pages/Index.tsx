@@ -175,6 +175,8 @@ const Index = () => {
       <AboutSeoSection />
       <BuyerPromoAnimation />
 
+      <FeaturedDallasCemeteries variant="compact" />
+
       <StoryStrip
         img={propertyTypesImg}
         eyebrow="Comparing"
