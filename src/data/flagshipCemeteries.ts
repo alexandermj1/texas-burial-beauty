@@ -102,7 +102,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { type: "Cremation niche", retail: [3500, 9000], resale: [2000, 5500] },
     ],
     localNotes: [
-      "Restland charges the highest transfer fee we record anywhere in DFW — $1,495 per space. We confirm the current figure in writing before either side commits, and we tell you plainly who is expected to pay it.",
+      "Restland's transfer fee is $1,495 per space. We confirm the current figure in writing before either side commits, and we tell you plainly who is expected to pay it.",
       "Counter pricing is not flat across the park. The feature gardens along the Greenville Avenue side sit near the top of the range, while faith-designated and open-lawn gardens can be thousands less for identical ground.",
       "Feature gardens such as the Last Supper, Ascension and Fountain View are mature. If someone tells you these are 'sold out', that is true at the counter — it is not true on the resale market.",
       "Restland spans a very large site. Use the garden map on this page to find your section before you visit — walking the wrong end of Greenville Avenue in July is nobody's idea of a good morning.",
@@ -118,11 +118,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "What is the transfer fee at Restland Memorial Park?",
-        a: "Restland's recorded transfer fee is $1,495 per space, the highest we hold on file in Dallas–Fort Worth. It is paid to the cemetery to record the change of ownership and is separate from the purchase price. We confirm the live figure with the cemetery before closing.",
+        a: "Restland's recorded transfer fee is $1,495 per space. It is paid to the cemetery to record the change of ownership and is separate from the purchase price. We confirm the live figure with the cemetery before closing.",
       },
       {
         q: "How do I sell a cemetery plot at Restland?",
-        a: "Send us the deed details — names on the deed, garden or section, lot and space. We give you a free valuation, usually within one business day, then list, market and screen buyers, take payment safely and file the transfer paperwork with Restland. Restland is our highest-demand cemetery, so time on market here is typically short.",
+        a: "Send us the deed details — names on the deed, garden or section, lot and space. We give you a free valuation, usually within one business day, then list, market and screen buyers, take payment safely and file the transfer paperwork with Restland. Restland is one of the most requested cemeteries in our book, so time on market here is typically short.",
       },
       {
         q: "Is Restland Memorial Park the same as Restland in Plano?",
@@ -163,7 +163,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { label: "Resale demand", value: "Very high — premium pricing" },
     ],
     sections: [
-      { name: "Providence Monument Garden", kind: "Ground", tier: "premium", note: "Upright-monument garden — the most expensive ground we transact on the property." },
+      { name: "Providence Monument Garden", kind: "Ground", tier: "premium", note: "Upright-monument garden — the top of the range on this property." },
       { name: "Garden of Roses", kind: "Ground", tier: "premium", note: "Feature garden held almost entirely by families; counter availability is rare." },
       { name: "Mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Interior and exterior crypts — tier height drives the price materially." },
       { name: "Cremation gardens & niches", kind: "Niche", tier: "standard", note: "The fastest-growing category here and the most affordable way in." },
@@ -176,14 +176,14 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { type: "Cremation niche", retail: [5000, 12000], resale: [2800, 7000] },
     ],
     localNotes: [
-      "Sparkman-Hillcrest carries the highest ground prices we see in Dallas — monument gardens here transact at multiples of what the same square footage costs elsewhere in the metroplex. If you inherited spaces, do not assume they are worth what the family paid.",
+      "Sparkman-Hillcrest sits at the upper end of the Dallas market, and the monument gardens in particular are valued well above ordinary lawn ground. If you inherited spaces, do not assume they are worth what the family paid.",
       "The transfer fee on file is $595 per space, materially cheaper than Restland. That matters when you are comparing two options across the city.",
       "Buyers who cannot reach Sparkman-Hillcrest pricing often land well at Restland or Grove Hill for a similar section quality — we will say so rather than push you into a stretch.",
     ],
     faqs: [
       {
         q: "How much does a plot cost at Sparkman-Hillcrest?",
-        a: "Counter pricing at Sparkman-Hillcrest is the highest in Dallas — feature and monument gardens reach the mid-twenties of thousands for a single space, with mausoleum crypts higher again. Resale spaces trade for a substantial discount to that. We give you a precise figure once we know the garden and space.",
+        a: "Sparkman-Hillcrest sits at the upper end of the Dallas market — feature and monument gardens reach the mid-twenties of thousands for a single space, with mausoleum crypts higher again. Resale spaces generally sit below that. We give you a precise figure once we know the garden and space.",
       },
 
       {
