@@ -261,7 +261,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Bluebonnet Hills in Colleyville?",
-        a: "It depends heavily on the lawn. Premium garden ground reaches the low teens of thousands at the counter, while lawn crypt tiers in the courts are a fraction of that. Resale spaces typically trade at roughly half of counter pricing. We quote precisely once we know the garden.",
+        a: "It depends heavily on the lawn. Premium garden ground reaches the low teens of thousands at the counter, while lawn crypt tiers in the courts are a fraction of that. Resale spaces typically trade meaningfully below counter pricing. We quote precisely once we know the garden.",
 
       },
       {
@@ -334,7 +334,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Laurel Land Fort Worth?",
-        a: "Ground spaces here sit in the mid-thousands at the counter, with veteran crypts several times higher. Resale ground typically trades at roughly half of counter pricing, which makes Laurel Land Fort Worth one of the better-value established parks in the metroplex.",
+        a: "Ground spaces here sit in the mid-thousands at the counter, with veteran crypts several times higher. Resale ground typically trades meaningfully below counter pricing, which makes Laurel Land Fort Worth one of the better-value established parks in the metroplex.",
       },
 
       {
@@ -405,7 +405,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much do plots cost at Laurel Land Memorial Park in Dallas?",
-        a: "Ground spaces sit in the mid-thousands at the counter depending on the section, and double-depth crypts in the Court of Inspiration run roughly double that. Resale spaces typically trade at around half of counter pricing.",
+        a: "Ground spaces sit in the mid-thousands at the counter depending on the section, and double-depth crypts in the Court of Inspiration run roughly double that. Resale spaces typically trade well below counter pricing.",
       },
 
       {
@@ -448,7 +448,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     tagline: "Rockwall County's memorial park, east of Lake Ray Hubbard",
     intro: [
       "Rest Haven on State Highway 66 is the memorial park most Rockwall County families think of first. It sits minutes east of Lake Ray Hubbard and serves Rockwall, Heath, Royse City, Fate and the eastern edge of Garland, with the funeral home, crematory and care centre all on the same grounds as the gardens.",
-      "Property here is described by named garden, lot and space — Garden of Devotion is the one families ask for most. Singles are common, and the cemetery allows the second right of interment on an existing space to be purchased at roughly half price, which changes the maths for anyone weighing a resale space against a counter purchase.",
+      "Property here is described by named garden, lot and space — Garden of Devotion is the one families ask for most. Singles are common, and the cemetery allows the second right of interment on an existing space to be purchased at a reduced price, which changes the maths for anyone weighing a resale space against a counter purchase.",
     ],
     facts: [
       { label: "City", value: "Rockwall (State Highway 66)" },
@@ -482,7 +482,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Rest Haven in Rockwall?",
-        a: "Single spaces at the cemetery counter sit in the mid to high thousands depending on the garden. Resale spaces at Rest Haven typically trade for roughly half of counter pricing, and we quote a precise figure once we know the garden, lot and space.",
+        a: "Single spaces at the cemetery counter sit in the mid to high thousands depending on the garden. Resale spaces at Rest Haven typically trade below counter pricing, and we quote a precise figure once we know the garden, lot and space.",
       },
       {
         q: "What is the transfer fee at Rest Haven Memorial Park?",
