@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
+
 
 const TEXAS_REGIONS = [
   "Dallas–Fort Worth",
@@ -116,7 +118,7 @@ const GuideSellingCemeteryPlot = () => (
       description="What your plot is worth today, the transfer steps Texas cemeteries require, and how to sell it without upfront fees. Free valuation in 24 hours."
       path="/sell-cemetery-plot-texas"
       type="article"
-      jsonLd={jsonLd}
+      jsonLd={[...jsonLd, guideGalleryJsonLd("https://texascemeterybrokers.com/sell-cemetery-plot-texas", "Texas cemeteries we serve")]}
     />
     <Navbar forceScrolled />
 
@@ -201,6 +203,8 @@ const GuideSellingCemeteryPlot = () => (
                 { href: "#process", t: "The process" },
                 { href: "#legal", t: "Legal side" },
                 { href: "#cities", t: "Coverage" },
+                { href: "#cemeteries", t: "Popular cemeteries" },
+
                 { href: "#faq", t: "FAQ" },
               ].map((c) => (
                 <a key={c.href} href={c.href} className="text-xs px-3 py-1.5 rounded-full bg-card border border-border/60 text-foreground/75 hover:border-primary/40 hover:text-primary transition-colors">
@@ -424,6 +428,21 @@ const GuideSellingCemeteryPlot = () => (
             Looking to buy instead? See our <Link to="/buy" className="text-primary underline-offset-4 hover:underline font-medium">cemetery plots for sale in Texas</Link>.
           </p>
         </section>
+
+        <GuideCemeteryGallery
+          eyebrow="Chapter 06b · Where we sell"
+          title={<>Cemeteries where we place <span className="italic text-primary">sellers' property</span></>}
+          intro="If you own property in one of these memorial parks, we almost certainly have buyers asking for it. Each cemetery page explains the sections and gardens, the cemetery's own transfer fee and paperwork, and what owners there can realistically expect."
+          footer={
+            <>
+              You can also <Link to="/cemeteries" className="text-primary underline-offset-4 hover:underline font-medium">browse every Texas cemetery we serve</Link>, read{" "}
+              <Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline font-medium">what cemetery plots cost in Texas</Link>, or{" "}
+              <Link to="/sell" className="text-primary underline-offset-4 hover:underline font-medium">request a free valuation</Link> for your own property.
+            </>
+          }
+        />
+
+
 
         {/* H2: FAQ */}
         <section id="faq" className="scroll-mt-24 mt-20">
