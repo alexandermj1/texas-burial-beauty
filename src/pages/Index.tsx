@@ -161,8 +161,6 @@ const Index = () => {
 
       <HomeCemeteryMap />
 
-      <FeaturedDallasCemeteries variant="compact" />
-
       <StoryStrip
         img={featuredImg}
         eyebrow="Browsing"
