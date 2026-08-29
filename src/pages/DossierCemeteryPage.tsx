@@ -205,7 +205,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
     "inline-flex items-center justify-center gap-2 rounded-[10px] border border-[hsl(var(--gold)/0.55)] px-7 py-4 text-[hsl(var(--parchment))] font-medium hover:bg-[hsl(var(--gold)/0.14)] hover:border-[hsl(var(--gold))] transition-colors";
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--ink))] flex flex-col [&>footer]:mt-auto">
+    <div className="min-h-screen flex flex-col [&>footer]:mt-auto">
       {/* Editorial ground: warm radial light, engraved hairline grid, paper grain, vignette */}
       <div aria-hidden className="dossier-ground" />
       <div aria-hidden className="dossier-vignette" />
