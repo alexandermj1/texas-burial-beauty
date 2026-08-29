@@ -77,6 +77,22 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
         : { label: "Dallas–Fort Worth", regions: ["Dallas–Fort Worth"], hub: "/cemetery-plots-for-sale-dallas" };
 
   const heroImage = hero ?? { src: fallbackHero.url, alt: `Memorial grounds at ${cemetery.name} in ${cemetery.city}, Texas` };
+
+  // Split the cemetery name into a lead line + italic gold second line, as in the
+  // reference dossier ("Bluebonnet Hills / *Memorial Park*").
+  const heroTitle = (() => {
+    const name = cemetery.name;
+    const suffix = name.match(/\s+(Memorial Park|Memorial Gardens|Funeral Home & Cemetery|Funeral Home and Cemetery|Cemetery)$/i);
+    if (suffix && suffix.index !== undefined && suffix.index > 0) {
+      return { lead: name.slice(0, suffix.index), rest: suffix[1] };
+    }
+    const words = name.split(" ");
+    if (words.length > 2) {
+      const cut = Math.ceil(words.length / 2);
+      return { lead: words.slice(0, cut).join(" "), rest: words.slice(cut).join(" ") };
+    }
+    return { lead: name, rest: "" };
+  })();
   const hasSectionPlan = Boolean(planMap) || cemetery.slug === "restland-memorial-park";
   const nav = NAV.filter((n) => {
     if (n.href === "#grounds") return photos.length > 0;
