@@ -73,9 +73,12 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   const metro =
     cemetery.region === "Greater Houston"
       ? { label: "Houston", regions: ["Greater Houston"], hub: "/cemetery-plots-for-sale-houston" }
+      : cemetery.region === "East Texas"
+        ? { label: "East Texas", regions: ["East Texas", "Greater Houston"], hub: "/cemetery-plots-for-sale-houston" }
       : cemetery.region === "Austin"
         ? { label: "Austin", regions: ["Austin", "Central Texas"], hub: "/cemetery-plots-for-sale-austin" }
         : { label: "Dallas–Fort Worth", regions: ["Dallas–Fort Worth"], hub: "/cemetery-plots-for-sale-dallas" };
+
 
   const heroImage = hero ?? { src: fallbackHero.url, alt: `Memorial grounds at ${cemetery.name} in ${cemetery.city}, Texas` };
 
