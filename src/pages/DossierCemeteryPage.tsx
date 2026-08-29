@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, MapPin, ArrowRight, X } from "lucide-react";
@@ -112,6 +112,20 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       const max = h.scrollHeight - h.clientHeight;
       setProgress(max > 0 ? Math.min(1, h.scrollTop / max) : 0);
       setStuck(h.scrollTop > 620);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Mobile action bar slides out of the way while reading down, returns on scroll up
+  const lastScrollY = useRef(0);
+  const [actionBarHidden, setActionBarHidden] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setActionBarHidden(y > lastScrollY.current + 4 && y > 400);
+      lastScrollY.current = y;
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
