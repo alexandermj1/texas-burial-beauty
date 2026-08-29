@@ -180,7 +180,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         width={1600}
                         height={1000}
                         loading="lazy"
-                        className="h-[260px] w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04] md:h-[420px]"
+                        className="h-[260px] w-full object-cover brightness-[1.12] contrast-[1.06] saturate-[1.28] sepia-[0.12] transition-transform duration-[900ms] ease-out group-hover:scale-[1.04] md:h-[420px]"
                       />
                     </Link>
                     <div className="mt-3 grid grid-cols-3 gap-3">
