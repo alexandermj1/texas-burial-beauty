@@ -379,6 +379,22 @@ const GuideBuyingCemeteryPlot = () => (
           <p className="mt-6">Wherever you're looking, we likely already have inventory or active sellers nearby. <Link to="/cemeteries" className="text-primary underline-offset-4 hover:underline font-medium">Browse every cemetery we serve →</Link></p>
         </Section>
 
+        <GuideCemeteryGallery
+          eyebrow="The parks families ask for"
+          title={<>Popular Texas cemeteries <span className="italic text-primary">buyers choose</span></>}
+          intro="These are the memorial parks we're asked about most often. Each page sets out the sections and gardens, what the cemetery charges to transfer a space, indicative resale ranges, plan maps and local guidance — useful before you decide where you want to be."
+          footer={
+            <>
+              Not sure which park is right? Compare <Link to="/cemetery-plots-for-sale-dallas" className="text-primary underline-offset-4 hover:underline font-medium">cemetery plots in Dallas</Link>,{" "}
+              <Link to="/cemetery-plots-for-sale-houston" className="text-primary underline-offset-4 hover:underline font-medium">Houston</Link> and{" "}
+              <Link to="/cemetery-plots-for-sale-austin" className="text-primary underline-offset-4 hover:underline font-medium">Austin</Link>, see{" "}
+              <Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline font-medium">what cemetery plots cost in Texas</Link>, or{" "}
+              <Link to="/buy" className="text-primary underline-offset-4 hover:underline font-medium">browse current listings</Link>.
+            </>
+          }
+        />
+
+
         {/* Four-step process */}
         <section className="my-16 scroll-mt-24">
           <Eyebrow>How buying works</Eyebrow>
