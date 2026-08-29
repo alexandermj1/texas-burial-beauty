@@ -114,7 +114,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
             {/* Editorial Archive: photo-forward cards with overlapping detail
                 thumbnails and tinted caption panels. Four regular cards, then
                 Sparkman/Hillcrest as a full-width closing spread. */}
-            <div className="grid gap-x-8 gap-y-14 md:grid-cols-2 md:gap-x-10">
+            <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 md:gap-x-10">
               {DALLAS_CEMETERY_PROFILES.slice(0, 4).map((c, i) => {
                 const accent = COMPACT_ACCENTS[i];
                 return (
@@ -127,12 +127,12 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                   >
                     <Link to={`/cemeteries/${c.slug}`} className="group block">
                       <div className="relative">
-                        <div className="aspect-[16/10] overflow-hidden rounded-[4px] bg-sand-light shadow-[0_18px_40px_-28px_hsl(var(--foreground)/0.5)]">
+                        <div className="aspect-[16/8] overflow-hidden rounded-[4px] bg-sand-light shadow-[0_14px_32px_-24px_hsl(var(--foreground)/0.5)]">
                           <img
                             src={c.hero.src}
                             alt={c.hero.alt}
                             width={800}
-                            height={500}
+                            height={400}
                             loading="lazy"
                             className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[900ms] ease-out group-hover:scale-[1.045]"
                           />
@@ -144,11 +144,11 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         </span>
 
                         {/* Overlapping detail thumbnails */}
-                        <div className={`absolute -bottom-4 flex gap-2 ${accent.thumbs}`}>
+                        <div className={`absolute -bottom-3.5 flex gap-1.5 ${accent.thumbs}`}>
                           {c.photos.map((p) => (
                             <figure
                               key={p.src}
-                              className="h-12 w-12 overflow-hidden rounded-[3px] border-2 border-background shadow-md sm:h-14 sm:w-14"
+                              className="h-10 w-10 overflow-hidden rounded-[3px] border-2 border-background shadow-md sm:h-11 sm:w-11"
                             >
                               <img
                                 src={p.src}
@@ -163,18 +163,18 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         </div>
                       </div>
 
-                      <div className={`mt-9 p-5 sm:p-6 ${accent.panel}`}>
-                        <span className={`text-[10px] font-semibold uppercase tracking-[0.25em] ${accent.kicker}`}>
+                      <div className={`mt-7 p-4 sm:p-5 ${accent.panel}`}>
+                        <span className={`text-[9px] font-semibold uppercase tracking-[0.25em] ${accent.kicker}`}>
                           {c.city}, Texas
                         </span>
-                        <h3 className="mt-2 mb-2.5 font-display text-2xl leading-tight text-foreground md:text-[26px]">
+                        <h3 className="mt-1.5 mb-2 font-display text-xl leading-tight text-foreground md:text-[22px]">
                           {c.name}
                         </h3>
-                        <p className="mb-4 max-w-sm text-sm font-light leading-relaxed text-muted-foreground">
+                        <p className="mb-3 max-w-sm text-[13px] font-light leading-relaxed text-muted-foreground line-clamp-2">
                           {c.standfirst}
                         </p>
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold transition-all duration-300 group-hover:gap-4">
-                          View profile <span className="h-px w-8 bg-gold" />
+                        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold transition-all duration-300 group-hover:gap-3.5">
+                          View profile <span className="h-px w-7 bg-gold" />
                         </div>
                       </div>
                     </Link>
@@ -199,7 +199,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                       className="group flex flex-col overflow-hidden rounded-[4px] bg-card shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.5)] md:flex-row"
                     >
                       <div className="relative md:w-3/5">
-                        <div className="aspect-[16/10] w-full overflow-hidden bg-sand-light md:aspect-auto md:h-full md:min-h-[360px]">
+                        <div className="aspect-[16/8] w-full overflow-hidden bg-sand-light md:aspect-auto md:h-full md:min-h-[240px]">
                           <img
                             src={c.hero.src}
                             alt={c.hero.alt}
@@ -209,11 +209,11 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                             className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[1000ms] ease-out group-hover:scale-[1.035]"
                           />
                         </div>
-                        <div className="absolute bottom-5 left-5 flex gap-2.5">
+                        <div className="absolute bottom-4 left-4 flex gap-2">
                           {c.photos.map((p) => (
                             <figure
                               key={p.src}
-                              className="h-14 w-14 overflow-hidden rounded-[3px] border-2 border-background shadow-lg sm:h-16 sm:w-16"
+                              className="h-11 w-11 overflow-hidden rounded-[3px] border-2 border-background shadow-lg sm:h-12 sm:w-12"
                             >
                               <img
                                 src={p.src}
@@ -227,18 +227,18 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                           ))}
                         </div>
                       </div>
-                      <div className="flex flex-col justify-center bg-terracotta-light/50 p-8 md:w-2/5 md:p-10 lg:p-14">
-                        <span className="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-terracotta">
+                      <div className="flex flex-col justify-center bg-terracotta-light/50 p-6 md:w-2/5 md:p-8 lg:p-10">
+                        <span className="mb-2.5 text-[9px] font-semibold uppercase tracking-[0.25em] text-terracotta">
                           {c.city}, Texas
                         </span>
-                        <h3 className="mb-4 font-display text-3xl leading-[1.12] text-foreground lg:text-4xl">
+                        <h3 className="mb-3 font-display text-2xl leading-[1.12] text-foreground lg:text-3xl">
                           {c.name}
                         </h3>
-                        <p className="mb-7 text-sm font-light leading-relaxed text-muted-foreground lg:text-[15px]">
+                        <p className="mb-5 text-[13px] font-light leading-relaxed text-muted-foreground lg:text-sm">
                           {c.standfirst}
                         </p>
-                        <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-gold transition-all duration-300 group-hover:gap-5">
-                          Explore full archive <span className="h-px w-10 bg-gold" />
+                        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-gold transition-all duration-300 group-hover:gap-4">
+                          Explore full archive <span className="h-px w-9 bg-gold" />
                         </div>
                       </div>
                     </Link>
@@ -246,7 +246,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                 );
               })()}
             </div>
-            <div className="mt-12 text-center">
+            <div className="mt-9 text-center">
               <Link
                 to="/cemetery-plots-for-sale-dallas"
                 className="inline-flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 transition-all hover:gap-3 hover:underline"
