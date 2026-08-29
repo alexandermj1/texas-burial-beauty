@@ -71,15 +71,17 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
             {/* Slim index cards: tight two-column ledger rows, thumbnail left,
                 details right — compact, dense, no orphan gaps. */}
             <div className="grid gap-3 sm:grid-cols-2">
-              {DALLAS_CEMETERY_PROFILES.map((c, i) => (
-                <motion.article
-                  key={c.slug}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
-                  className="group"
-                >
+              {DALLAS_CEMETERY_PROFILES.map((c, i) => {
+                const last = i === DALLAS_CEMETERY_PROFILES.length - 1;
+                return (
+                  <motion.article
+                    key={c.slug}
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
+                    className={`group ${last ? "sm:col-span-2" : ""}`}
+                  >
                   <Link
                     to={`/cemeteries/${c.slug}`}
                     className="flex h-full items-center gap-4 rounded-2xl border border-border/60 bg-card p-3 shadow-[0_10px_30px_-22px_hsl(var(--foreground)/0.35)] transition-colors duration-300 hover:border-primary/40"
