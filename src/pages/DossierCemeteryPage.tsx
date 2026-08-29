@@ -205,9 +205,13 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
     "inline-flex items-center justify-center gap-2 rounded-[10px] border border-[hsl(var(--gold)/0.55)] px-7 py-4 text-[hsl(var(--parchment))] font-medium hover:bg-[hsl(var(--gold)/0.14)] hover:border-[hsl(var(--gold))] transition-colors";
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--ink))] flex flex-col [&>footer]:mt-auto">
+    <div className="min-h-screen flex flex-col [&>footer]:mt-auto">
+      {/* Editorial ground: warm radial light, engraved hairline grid, paper grain, vignette */}
+      <div aria-hidden className="dossier-ground" />
+      <div aria-hidden className="dossier-vignette" />
       <Seo title={cemetery.seo.title} description={cemetery.seo.description} path={path} jsonLd={jsonLd} />
       <Navbar forceScrolled dark />
+
 
       {/* Reading progress */}
       <div
@@ -272,7 +276,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       </section>
 
       {/* ================= FACT BAND ================= */}
-      <div className="border-y border-[hsl(var(--gold)/0.24)] bg-[hsl(var(--ink-deep))]">
+      <div className="border-y border-[hsl(var(--gold)/0.24)] bg-[hsl(var(--ink-deep)/0.72)]">
         <dl className="container mx-auto max-w-[1440px] px-6 md:px-10 py-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
           {factBand.map((f) => (
             <div key={f.label}>
@@ -394,7 +398,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
             <div className="mt-8 overflow-hidden rounded-[14px] border border-[hsl(var(--gold)/0.26)]">
               <table className="w-full text-left border-collapse">
                 <thead className="hidden md:table-header-group">
-                  <tr className={`${eyebrow} bg-[hsl(var(--ink-deep))]`}>
+                  <tr className={`${eyebrow} bg-[hsl(var(--ink-deep)/0.72)]`}>
                     <th className="p-4 font-normal">Property type</th>
                     <th className="p-4 font-normal">Cemetery retail</th>
                     <th className="p-4 font-normal">Typical resale</th>
@@ -448,7 +452,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
           {/* ---------- Free valuation (dark, editorial) ---------- */}
           <section id="valuation" className="scroll-mt-28 px-6 md:px-10 pt-16">
             <div
-              className={`rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10 grid gap-10 items-start transition-all duration-500 ${
+              className={`rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.72)] p-7 md:p-10 grid gap-10 items-start transition-all duration-500 ${
                 formStarted ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]"
               }`}
             >
