@@ -306,9 +306,10 @@ const BuyProperty = () => {
               </Link>
             </div>
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl text-foreground leading-tight tracking-tight">
+          <h1 className="sr-only">Buy a cemetery plot in Texas — burial plots, niches and crypts at private resale prices</h1>
+          <h2 aria-hidden="true" className="font-display text-2xl sm:text-3xl lg:text-4xl text-foreground leading-tight tracking-tight">
             {titles[step]}
-          </h1>
+          </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-1.5 max-w-2xl">{subtitles[step]}</p>
 
           {/* Prominent savings banner — explains the real value of going through us */}
