@@ -88,10 +88,10 @@ export const guideGalleryJsonLd = (pageUrl: string, name: string) => ({
 const Card = ({ f, tall }: { f: GuideCemeteryFeature; tall?: boolean }) => (
   <Link
     to={`/cemeteries/${f.slug}`}
-    className="group relative block overflow-hidden rounded-3xl border border-border/60 bg-card shadow-soft"
+    className="group relative block h-full overflow-hidden rounded-3xl border border-border/60 bg-card shadow-soft"
   >
-    <figure className="m-0">
-      <div className={`relative overflow-hidden ${tall ? "aspect-[4/5] md:aspect-[3/4]" : "aspect-[4/3]"}`}>
+    <figure className="m-0 h-full">
+      <div className={`relative h-full overflow-hidden ${tall ? "min-h-[30rem] md:min-h-[38rem]" : "aspect-[4/3]"}`}>
         <img
           src={f.src}
           alt={f.alt}
