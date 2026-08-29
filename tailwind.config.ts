@@ -63,6 +63,7 @@ export default {
           DEFAULT: "hsl(var(--sand))",
           light: "hsl(var(--sand-light))",
         },
+        gold: "hsl(var(--gold))",
         stone: "hsl(var(--stone))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
