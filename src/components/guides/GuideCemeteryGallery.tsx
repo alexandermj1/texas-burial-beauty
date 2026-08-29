@@ -142,7 +142,7 @@ const GuideCemeteryGallery = ({ id = "cemeteries", eyebrow, title, intro, footer
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 mt-4 md:mt-5">
+      <div className="grid sm:grid-cols-2 gap-4 md:gap-5 mt-4 md:mt-5">
         {rest.slice(2).map((f) => (
           <Card key={f.slug} f={f} />
         ))}
