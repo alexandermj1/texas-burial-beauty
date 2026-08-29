@@ -25,6 +25,7 @@ const SITE = "https://texascemeterybrokers.com";
 const NAV = [
   { href: "#market", label: "The market here" },
   { href: "#prices", label: "Prices" },
+  { href: "#financing", label: "0% financing" },
   { href: "#buy", label: "Buy a space" },
   { href: "#valuation", label: "Free valuation" },
   { href: "#grounds", label: "Photographs" },
@@ -72,9 +73,12 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
   const metro =
     cemetery.region === "Greater Houston"
       ? { label: "Houston", regions: ["Greater Houston"], hub: "/cemetery-plots-for-sale-houston" }
+      : cemetery.region === "East Texas"
+        ? { label: "East Texas", regions: ["East Texas", "Greater Houston"], hub: "/cemetery-plots-for-sale-houston" }
       : cemetery.region === "Austin"
         ? { label: "Austin", regions: ["Austin", "Central Texas"], hub: "/cemetery-plots-for-sale-austin" }
         : { label: "Dallas–Fort Worth", regions: ["Dallas–Fort Worth"], hub: "/cemetery-plots-for-sale-dallas" };
+
 
   const heroImage = hero ?? { src: fallbackHero.url, alt: `Memorial grounds at ${cemetery.name} in ${cemetery.city}, Texas` };
 
@@ -482,6 +486,52 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
               Prices exclude the cemetery's {money(cemetery.transferFee)} per-space transfer fee, opening and closing
               charges and any memorial or marker costs.
             </p>
+          </section>
+
+          {/* ---------- 0% financing ---------- */}
+          <section id="financing" className="scroll-mt-28 px-6 md:px-10 pt-16">
+            <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.6)] p-7 md:p-10 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] items-start">
+              <div>
+                <p className={eyebrow}>Paying over time</p>
+                <h2 className="mt-4 font-display text-[clamp(1.8rem,2.8vw,2.5rem)] leading-tight text-[hsl(var(--parchment))]">
+                  0% financing on pre-need property, up to two years.
+                </h2>
+                <p className="mt-4 text-[hsl(var(--parchment)/0.8)] leading-relaxed font-light">
+                  Most families buying at {cemetery.name} are planning ahead rather than arranging a funeral today. On
+                  selected pre-need property we can spread the cost over up to 24 months at 0% — no interest and no
+                  finance charges added to the price you agree. You own the property outright once the balance is
+                  cleared and the deed is transferred.
+                </p>
+                <p className="mt-4 text-[hsl(var(--parchment)/0.7)] leading-relaxed font-light text-[15px]">
+                  Availability depends on the property and the section, so ask us before you commit and we will confirm
+                  the terms in writing. Where the cemetery office runs its own pre-need payment plan, we will tell you
+                  that too — whichever route suits the family better is the one we recommend.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <a href="#buy" className={`${ghostBtn} px-5 py-3 text-[15px] gap-2.5`}>
+                    Ask about a payment plan
+                    <ArrowRight className="w-4 h-4 text-[hsl(var(--gold))]" />
+                  </a>
+                  <a href="tel:+12142304740" className={`${ghostBtn} px-5 py-3 text-[15px] gap-2.5`}>
+                    <Phone className="w-4 h-4 text-[hsl(var(--gold))]" />
+                    (214) 230-4740
+                  </a>
+                </div>
+              </div>
+              <ul className="grid gap-4">
+                {[
+                  { t: "0% interest", b: "Nothing added to the agreed price over the term of the plan." },
+                  { t: "Up to 24 months", b: "Shorter terms are fine too — you choose what fits the household budget." },
+                  { t: "Pre-need only", b: "Plans apply to property bought ahead of need, on selected spaces at this cemetery." },
+                  { t: "Written terms", b: "Payment schedule, transfer fee and total cost set out before anything is signed." },
+                ].map((f) => (
+                  <li key={f.t} className="rounded-[14px] border border-[hsl(var(--gold)/0.22)] p-5">
+                    <p className="font-display text-xl text-[hsl(var(--parchment))]">{f.t}</p>
+                    <p className="mt-1.5 text-[15px] leading-relaxed text-[hsl(var(--parchment)/0.74)]">{f.b}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
 
           {/* ---------- Buyer enquiry ---------- */}

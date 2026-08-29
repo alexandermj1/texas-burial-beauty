@@ -882,7 +882,430 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       h1: "Memorial Oaks Cemetery, Houston",
     },
   },
+  {
+    slug: "mount-olivet-cemetery",
+    name: "Mount Olivet Cemetery",
+    alsoKnownAs: [
+      "Mount Olivet Fort Worth",
+      "Mt Olivet Cemetery Fort Worth",
+      "Greenwood Mount Olivet",
+    ],
+    city: "Fort Worth",
+    region: DFW,
+    address: "2301 N Sylvania Ave, Fort Worth, TX 76111",
+    lat: 32.7854,
+    lng: -97.312,
+    website: "https://mountolivetcemetery.com",
+    transferFee: 595,
+    operator: "Greenwood Mount Olivet (non-profit)",
+    tagline: "130 acres on the north side of Fort Worth",
+    intro: [
+      "Mount Olivet Cemetery covers about 130 acres off North Sylvania Avenue, north-east of downtown Fort Worth, and holds more than 70,000 burials. It is one of the older large grounds in Tarrant County: broad lawns, mature trees and long-established family lots, with a chapel and office on site.",
+      "The cemetery is run by Greenwood Mount Olivet, a non-profit that also operates Greenwood Cemetery about a thirteen-minute drive away. The two are separate grounds sharing staff and a website, so it is worth confirming which one a deed actually refers to before anything is bought or sold — we check that on every file.",
+      "Deeds here read by named garden, lot and space, with Everlasting Love among the names we see most often on submissions. The cemetery sells new property directly, and there is a steady resale market from families who have moved away from Fort Worth or whose plans have changed.",
+    ],
+    facts: [
+      { label: "City", value: "Fort Worth (N Sylvania Ave)" },
+      { label: "Grounds", value: "About 130 acres" },
+      { label: "Operator", value: "Greenwood Mount Olivet, non-profit" },
+      { label: "Transfer fee", value: "$595 per space" },
+    ],
+    sections: [
+      { name: "Everlasting Love", kind: "Ground", tier: "premium", note: "Named garden we see regularly on deeds; often sold as adjoining spaces in one lot." },
+      { name: "Established family lots", kind: "Ground", tier: "premium", note: "Older shaded lots of four or more spaces, usually only available through resale." },
+      { name: "Lawn sections", kind: "Ground", tier: "standard", note: "Flat-marker lawn ground across the newer parts of the property." },
+      { name: "Mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Level and location set the price — eye level costs the most." },
+      { name: "Cremation niches", kind: "Niche", tier: "value", note: "The most accessible option on the grounds for cremated remains." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [4500, 16000], resale: [3000, 9500] },
+      { type: "Companion / two spaces", retail: [8500, 28000], resale: [5500, 17500] },
+      { type: "Mausoleum crypt", retail: [9000, 32000], resale: [6000, 20000] },
+      { type: "Cremation niche", retail: [1750, 9500], resale: [1500, 6500] },
+    ],
+    localNotes: [
+      "Greenwood and Mount Olivet are two separate cemeteries under one non-profit organisation. Deeds sometimes say only \"Greenwood Mount Olivet\", so we confirm the grounds, garden and space number with the office before pricing anything.",
+      "The transfer fee we work to here is $595 per space. We re-confirm the current figure in writing with the office before either side commits.",
+      "Older family lots often carry more spaces than a family now needs. Selling the surplus and keeping the rest is common here and the office is used to processing it.",
+      "Buying ahead of need? Ask us about spreading the cost at 0% over up to two years on selected pre-need property.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Mount Olivet Cemetery in Fort Worth?",
+        a: "It depends on the garden and the property type. New property is available directly from the cemetery, and resale property from current owners generally sits below new pricing. Tell us the garden, lot and space and we will give you a real figure rather than a guess.",
+      },
+      {
+        q: "What is the transfer fee at Mount Olivet Cemetery?",
+        a: "$595 per space is the figure we work to. It is paid to the cemetery to record the change of ownership, and we confirm the current amount in writing before anyone signs.",
+      },
+      {
+        q: "Is Mount Olivet the same as Greenwood Cemetery in Fort Worth?",
+        a: "No. They are two distinct cemeteries run by the same non-profit, Greenwood Mount Olivet, about a thirteen-minute drive apart. They share staff and a website, which is why deeds can be ambiguous — we always verify which grounds a space is on.",
+      },
+      {
+        q: "Can I sell a Mount Olivet plot if I have moved out of state?",
+        a: "Yes. Most of the paperwork can be handled by post and email. We prepare the documents, route them for signature and file the transfer with the office on your behalf.",
+      },
+      {
+        q: "Can I pay for a pre-need space over time?",
+        a: "On selected pre-need property we can spread the cost over up to 24 months at 0% — no interest added. The cemetery office also runs its own pre-need plans, and we will point you to whichever suits the family better.",
+      },
+    ],
+    nearby: ["laurel-land-memorial-park-fort-worth", "bluebonnet-hills-memorial-park", "moore-memorial-gardens"],
+    seo: {
+      title: "Mount Olivet Cemetery Fort Worth | Plots for Sale, Prices & Fees",
+      description:
+        "Cemetery plots for sale at Mount Olivet Cemetery, Fort Worth TX. Price guidance by garden, the $595 transfer fee, remote paperwork and free valuations for owners.",
+      h1: "Mount Olivet Cemetery, Fort Worth",
+    },
+  },
+  {
+    slug: "grove-hill-memorial-park",
+    name: "Grove Hill Memorial Park",
+    alsoKnownAs: ["Grove Hill Cemetery Dallas", "Grove Hill Funeral Home & Memorial Park", "Grove Hill Samuell Blvd"],
+    city: "Dallas",
+    region: DFW,
+    address: "3920 Samuell Blvd, Dallas, TX 75228",
+    lat: 32.7962,
+    lng: -96.7178,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 595,
+    operator: "Dignity Memorial",
+    tagline: "East Dallas's historic memorial park on Samuell Boulevard",
+    intro: [
+      "Grove Hill Memorial Park sits on Samuell Boulevard in east Dallas, a few minutes from I-30 and Tenison Park. It is one of the city's long-established grounds, with older monument sections, later flat-marker gardens and a funeral home on the property.",
+      "Because it has been serving east Dallas, Casa View and Mesquite families for generations, a large share of the property here is already in private hands. That produces a steady flow of owners looking to sell alongside the sections the cemetery still offers new — currently the community garden areas.",
+      "Deeds read by named garden, lot and space. Highland Garden, Memory Land and the community gardens are the names that come up most often on the submissions we receive.",
+    ],
+    facts: [
+      { label: "City", value: "Dallas (Samuell Blvd, east)" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$595 per space" },
+      { label: "Opening & closing", value: "About $2,395, paid to the cemetery" },
+    ],
+    sections: [
+      { name: "Community Garden", kind: "Ground", tier: "premium", note: "The area the cemetery is actively selling new; flat-marker ground." },
+      { name: "Highland Garden", kind: "Ground", tier: "standard", note: "Established lawn garden; adjoining pairs are common here." },
+      { name: "Memory Land", kind: "Ground", tier: "standard", note: "Singles that can often be made double-depth by paying the cemetery's second-interment charge." },
+      { name: "Older monument sections", kind: "Ground", tier: "premium", note: "Upright-monument ground in the historic part of the park, resale only." },
+      { name: "Cremation niches", kind: "Niche", tier: "value", note: "Niche space for cremated remains, well below the cost of ground burial." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [5000, 15000], resale: [3000, 8500] },
+      { type: "Companion / two spaces", retail: [9000, 26000], resale: [5500, 15000] },
+      { type: "Second right of interment", retail: [2500, 8500], resale: [2000, 6000] },
+      { type: "Cremation niche", retail: [1750, 9000], resale: [1500, 6000] },
+    ],
+    localNotes: [
+      "Opening and closing at Grove Hill runs to roughly $2,395 and is paid to the cemetery at the time of interment. It is separate from the price of the space, so we always quote the two apart.",
+      "The transfer fee is $595 per space. We confirm it in writing with the office before either side commits.",
+      "Some Memory Land singles can be made double-depth by paying the cemetery's second-interment charge, plus a small additional amount at opening. Worth asking about if you need two spaces in one.",
+      "The cemetery is currently selling new property in the community garden areas; much of the rest of the park is served by families reselling space they no longer need.",
+      "Buying pre-need? Ask us about spreading the cost at 0% over up to two years on selected property.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Grove Hill Memorial Park in Dallas?",
+        a: "It varies by garden and property type. The cemetery sells new property in the community garden areas, and resale spaces from current owners generally sit below new pricing. Give us the garden and space number and we will price it properly.",
+      },
+      {
+        q: "What fees are there on top of the plot price at Grove Hill?",
+        a: "A $595 per-space transfer fee to record the change of ownership, opening and closing of about $2,395 at the time of interment, and any marker or memorial costs. We set all of it out in writing before you commit.",
+      },
+      {
+        q: "Can I sell a Grove Hill plot I no longer need?",
+        a: "Yes. East Dallas is an active market and we hold buyers looking for this park. We value the space, handle the marketing, screen the buyer and file the transfer with the cemetery office — there is no up-front cost to you.",
+      },
+      {
+        q: "Can a single space at Grove Hill hold two interments?",
+        a: "In several gardens, yes. The cemetery charges a second right of interment to make a space double-depth, and there is usually a small extra charge at opening. We confirm the current figures with the office for your specific space.",
+      },
+    ],
+    nearby: ["restland-memorial-park", "laurel-land-memorial-park-dallas", "sparkman-hillcrest-memorial-park"],
+    seo: {
+      title: "Grove Hill Memorial Park Dallas | Plots for Sale, Prices & Fees",
+      description:
+        "Cemetery plots for sale at Grove Hill Memorial Park, east Dallas TX. Price guidance by garden, the $595 transfer fee, opening and closing costs and free valuations.",
+      h1: "Grove Hill Memorial Park, Dallas",
+    },
+  },
+  {
+    slug: "moore-memorial-gardens",
+    name: "Moore Memorial Gardens",
+    alsoKnownAs: ["Moore Memorial Gardens Arlington", "Moore Funeral Home & Memorial Gardens", "Moore Cemetery Arlington"],
+    city: "Arlington",
+    region: DFW,
+    address: "1219 N Davis Dr, Arlington, TX 76012",
+    lat: 32.7548,
+    lng: -97.1226,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 595,
+    operator: "Dignity Memorial",
+    tagline: "Arlington's memorial gardens on North Davis Drive",
+    intro: [
+      "Moore Memorial Gardens sits on North Davis Drive in north Arlington, between downtown Arlington and the Lake Arlington side of the city, with a funeral home on the same property. It is the park most mid-cities families name first when they call us about Arlington, Pantego or Dalworthington Gardens.",
+      "The grounds are laid out as named gardens — the Garden of the Last Supper is the one we see most often on deeds — with flat markers, wide lawns and easy access from Highway 199 and I-30.",
+      "The cemetery continues to sell new property directly. Alongside that there is an active resale market here, largely from families who bought several spaces years ago and now need only one or two.",
+    ],
+    facts: [
+      { label: "City", value: "Arlington (N Davis Dr)" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$595 per space" },
+      { label: "Deed", value: "Original required; lost-deed affidavit accepted" },
+    ],
+    sections: [
+      { name: "Garden of the Last Supper", kind: "Ground", tier: "premium", note: "Feature garden; the name we see most on Arlington deeds." },
+      { name: "Established lawn gardens", kind: "Ground", tier: "standard", note: "Flat-marker ground across the mature part of the property." },
+      { name: "Newer sections", kind: "Ground", tier: "value", note: "The most accessible ground pricing at the park." },
+      { name: "Mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Building and crypt level determine the price." },
+      { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "Niche space for cremated remains, well below ground burial." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [4500, 14000], resale: [2750, 8500] },
+      { type: "Companion / two spaces", retail: [8000, 24000], resale: [5000, 14500] },
+      { type: "Mausoleum crypt", retail: [8500, 28000], resale: [5500, 17500] },
+      { type: "Cremation niche", retail: [1750, 9000], resale: [1500, 6000] },
+    ],
+    localNotes: [
+      "Moore requires the original deed for a transfer. A seller can send us a copy to get started, but the original has to reach the office before the transfer is recorded — we manage that step and track it.",
+      "If the deed has been lost, the cemetery accepts a lost-deed affidavit. We prepare it, get it notarised and file it with the transfer.",
+      "The transfer fee is $595 per space, confirmed with the office and put in writing before either side commits.",
+      "Buying ahead of need? Ask us about spreading the cost at 0% over up to two years on selected pre-need property.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Moore Memorial Gardens in Arlington?",
+        a: "It depends on the garden and the property type. New property is available directly from the cemetery, and resale property from current owners generally sits below new pricing. Tell us the garden and space and we will give you a real figure.",
+      },
+      {
+        q: "What is the transfer fee at Moore Memorial Gardens?",
+        a: "$595 per space, paid to the cemetery to record the change of ownership. We confirm the current figure in writing before anyone signs.",
+      },
+      {
+        q: "I have lost my deed — can I still sell?",
+        a: "Yes. Moore accepts a lost-deed affidavit in place of the original. We prepare it for you, arrange notarisation and file it alongside the transfer paperwork.",
+      },
+      {
+        q: "How long does a transfer take at Moore Memorial Gardens?",
+        a: "Once a buyer is matched and the original deed or affidavit is with the office, the cemetery side usually takes a few weeks. We stay on it and keep both parties updated.",
+      },
+    ],
+    nearby: ["bluebonnet-hills-memorial-park", "mount-olivet-cemetery", "laurel-land-memorial-park-fort-worth"],
+    seo: {
+      title: "Moore Memorial Gardens Arlington | Plots for Sale, Prices & Fees",
+      description:
+        "Cemetery plots for sale at Moore Memorial Gardens, Arlington TX. Price guidance by garden, the $595 transfer fee, lost-deed affidavits and free valuations for owners.",
+      h1: "Moore Memorial Gardens, Arlington",
+    },
+  },
+  {
+    slug: "forest-park-east",
+    name: "Forest Park East",
+    alsoKnownAs: ["Forest Park East Webster", "Forest Park East Funeral Home & Cemetery", "Forest Park East Gulf Freeway"],
+    city: "Webster",
+    region: "Greater Houston",
+    address: "21620 Gulf Fwy, Webster, TX 77598",
+    lat: 29.5216,
+    lng: -95.1176,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 995,
+    operator: "Dignity Memorial",
+    tagline: "The Gulf Freeway park serving Clear Lake and the Bay Area",
+    intro: [
+      "Forest Park East runs alongside the Gulf Freeway at Webster, the park most Clear Lake, League City, Friendswood, Pasadena and Bay Area families use. It is one of the busiest properties in our Houston book, with a funeral home, mausoleum buildings and lakeside grounds on the same site.",
+      "Property here is described by numbered section, lot and space, or by crypt number in the mausoleum — Section 213 and the Lakeview Mausoleum are names that come up regularly on the deeds we handle.",
+      "The cemetery sells new property directly. There is also a consistent resale market, much of it from families who bought while working in the Clear Lake area and have since moved elsewhere in Texas.",
+    ],
+    facts: [
+      { label: "City", value: "Webster (Gulf Fwy, Clear Lake)" },
+      { label: "Operator", value: "Dignity Memorial" },
+      { label: "Transfer fee", value: "$995 per space" },
+      { label: "Property types", value: "Ground, crypts, niches" },
+    ],
+    sections: [
+      { name: "Lakeview Mausoleum", kind: "Mausoleum", tier: "premium", note: "Crypt level sets the price; commodities on these deeds are often transferable." },
+      { name: "Section 213", kind: "Ground", tier: "premium", note: "Established ground; some lots here carry monument privilege." },
+      { name: "Monument-privilege lots", kind: "Ground", tier: "premium", note: "Upright memorials permitted, which buyers pay a premium for." },
+      { name: "Flat-marker lawn sections", kind: "Ground", tier: "standard", note: "The bulk of the grounds; the most commonly traded property here." },
+      { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "The most accessible option on the property for cremated remains." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [6000, 22000], resale: [4000, 13000] },
+      { type: "Companion / two spaces", retail: [11000, 36000], resale: [7500, 22000] },
+      { type: "Mausoleum crypt", retail: [9500, 34000], resale: [6500, 21000] },
+      { type: "Cremation niche", retail: [2000, 11000], resale: [1750, 7500] },
+    ],
+    localNotes: [
+      "Some Forest Park East deeds carry monument privilege — the right to place an upright memorial rather than a flat marker. It affects value, so we check for it before pricing.",
+      "Commodities such as vaults, markers and opening credits attached to Lakeview Mausoleum deeds are frequently transferable. We confirm with the office and, where they transfer, they form part of what a buyer is getting.",
+      "The transfer fee is $995 per space, confirmed with the office and put in writing before either side commits.",
+      "Buying pre-need? Ask us about spreading the cost at 0% over up to two years on selected property.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Forest Park East in Webster?",
+        a: "It depends on the section and property type — a flat-marker lawn space and a Lakeview Mausoleum crypt are very different figures. New property is available from the cemetery, and resale property generally sits below new pricing.",
+      },
+      {
+        q: "What is the transfer fee at Forest Park East?",
+        a: "$995 per space, paid to the cemetery to record the change of ownership. We confirm the current figure in writing before anyone signs.",
+      },
+      {
+        q: "Do vaults and markers transfer with a Forest Park East deed?",
+        a: "Often, yes. Commodities on these deeds are frequently transferable, but it has to be confirmed with the office case by case. We check before we price anything and set out exactly what is included.",
+      },
+      {
+        q: "Can I sell a Forest Park East plot from out of state?",
+        a: "Yes. We prepare and route the paperwork electronically and by post, and file the transfer with the cemetery office, so no travel to Webster is required.",
+      },
+    ],
+    nearby: ["forest-park-lawndale", "brookside-memorial-park", "woodlawn-garden-of-memories"],
+    seo: {
+      title: "Forest Park East Webster TX | Cemetery Plots for Sale & Prices",
+      description:
+        "Cemetery plots, crypts and niches for sale at Forest Park East, Webster TX near Clear Lake. Price guidance by section, the $995 transfer fee and free valuations.",
+      h1: "Forest Park East, Webster",
+    },
+  },
+  {
+    slug: "woodlawn-garden-of-memories",
+    name: "Woodlawn Garden of Memories",
+    alsoKnownAs: ["Woodlawn Cemetery Houston", "Woodlawn Funeral Home Antoine", "Woodlawn Garden of Memories Houston"],
+    city: "Houston",
+    region: "Greater Houston",
+    address: "1101 Antoine Dr, Houston, TX 77055",
+    lat: 29.7986,
+    lng: -95.4924,
+    website: "https://woodlawnfh.com",
+    transferFee: 995,
+    operator: "Woodlawn Funeral Home & Cemetery",
+    tagline: "Inside the Loop's north-west park on Antoine Drive",
+    intro: [
+      "Woodlawn Garden of Memories sits on Antoine Drive just north of I-10, serving Spring Branch, Memorial, the Heights and north-west Houston. Its position close to the Loop makes it one of the more convenient parks in the city for families who want to visit often.",
+      "The grounds are laid out in named gardens with mature trees and flat markers, and there is a funeral home and chapel on site. Deeds read by garden, lot and space.",
+      "Property is available new from the cemetery, and there is also a resale market here from long-standing Spring Branch and Heights families whose plans have changed. Both routes are worth comparing before you buy.",
+    ],
+    facts: [
+      { label: "City", value: "Houston (Antoine Dr, north-west)" },
+      { label: "Operator", value: "Woodlawn Funeral Home & Cemetery" },
+      { label: "Transfer fee", value: "About $995 per space" },
+      { label: "Paperwork", value: "Cemetery's own forms · remote OK" },
+    ],
+    sections: [
+      { name: "Named memorial gardens", kind: "Ground", tier: "premium", note: "Established flat-marker gardens across the mature part of the park." },
+      { name: "Family lots", kind: "Ground", tier: "premium", note: "Multi-space lots bought decades ago; usually only available through resale." },
+      { name: "Later lawn sections", kind: "Ground", tier: "standard", note: "More accessible ground pricing towards the newer areas." },
+      { name: "Mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Level and building drive the price." },
+      { name: "Cremation niches", kind: "Niche", tier: "value", note: "The most accessible option here for cremated remains." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [5500, 20000], resale: [3500, 12000] },
+      { type: "Companion / two spaces", retail: [10000, 34000], resale: [6500, 20000] },
+      { type: "Mausoleum crypt", retail: [9000, 30000], resale: [6000, 19000] },
+      { type: "Cremation niche", retail: [1750, 10000], resale: [1500, 7000] },
+    ],
+    localNotes: [
+      "Woodlawn uses its own transfer paperwork and can complete a change of ownership remotely, which suits the many owners here who have left Houston.",
+      "The transfer fee we work to is about $995 per space. We re-confirm the exact figure with the office in writing before either side commits.",
+      "Older Spring Branch family lots often hold more spaces than a family now needs. Selling the surplus and keeping the rest is straightforward here.",
+      "Buying ahead of need? Ask us about spreading the cost at 0% over up to two years on selected pre-need property.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Woodlawn Garden of Memories in Houston?",
+        a: "It depends on the garden and property type. New property is available from the cemetery, and resale property from current owners generally sits below new pricing. Tell us the garden and space and we will give you a real figure.",
+      },
+      {
+        q: "What is the transfer fee at Woodlawn Garden of Memories?",
+        a: "About $995 per space, paid to the cemetery to record the change of ownership. We confirm the current amount with the office in writing before anyone signs.",
+      },
+      {
+        q: "Can I sell a Woodlawn plot from another state?",
+        a: "Yes. The cemetery uses its own forms and will process the transfer remotely. We prepare and route every document, so no travel to Houston is needed.",
+      },
+      {
+        q: "Where exactly is Woodlawn Garden of Memories?",
+        a: "1101 Antoine Drive, just north of I-10 in north-west Houston, close to Spring Branch, Memorial and the Heights.",
+      },
+    ],
+    nearby: ["memorial-oaks-cemetery", "forest-park-lawndale", "brookside-memorial-park"],
+    seo: {
+      title: "Woodlawn Garden of Memories Houston | Plots for Sale & Prices",
+      description:
+        "Cemetery plots for sale at Woodlawn Garden of Memories on Antoine Drive, Houston TX. Price guidance by garden, transfer fees, remote paperwork and free valuations.",
+      h1: "Woodlawn Garden of Memories, Houston",
+    },
+  },
+  {
+    slug: "greenlawn-memorial-park",
+    name: "Greenlawn Memorial Park",
+    alsoKnownAs: ["Greenlawn Memorial Park Groves", "Greenlawn Cemetery Port Arthur", "Greenlawn Twin City Highway"],
+    city: "Groves",
+    region: "East Texas",
+    address: "3900 Twin City Hwy, Groves, TX 77619",
+    lat: 29.9483,
+    lng: -93.9171,
+    website: "https://www.dignitymemorial.com",
+    transferFee: 350,
+    operator: "Dignity Memorial",
+    tagline: "The Golden Triangle's park on Twin City Highway",
+    intro: [
+      "Greenlawn Memorial Park sits on Twin City Highway in Groves, in the middle of the Golden Triangle between Port Arthur, Port Neches and Nederland. It is the park families across Jefferson County name most often when they contact us from south-east Texas.",
+      "The grounds are laid out in named gardens — Pioneer Gardens among them — with flat markers, mature trees and a funeral home nearby. Deeds read by garden, lot and space.",
+      "The cemetery sells new property directly, and there is a steady resale market here too, often from families who left the refinery towns for Houston or out of state and no longer need the property they bought.",
+    ],
+    facts: [
+      { label: "City", value: "Groves (Twin City Hwy)" },
+      { label: "Area", value: "Port Arthur · Port Neches · Nederland" },
+      { label: "Transfer fee", value: "$350 per space" },
+      { label: "Paperwork", value: "Cemetery quitclaim · remote OK" },
+    ],
+    sections: [
+      { name: "Pioneer Gardens", kind: "Ground", tier: "premium", note: "Established named garden; the one we see most on Golden Triangle deeds." },
+      { name: "Established lawn gardens", kind: "Ground", tier: "standard", note: "Flat-marker ground across the mature part of the park." },
+      { name: "Later sections", kind: "Ground", tier: "value", note: "The most accessible ground pricing on the property." },
+      { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "Niche space for cremated remains, well below ground burial." },
+    ],
+    pricing: [
+      { type: "Single burial space", retail: [3500, 12000], resale: [2250, 7000] },
+      { type: "Companion / two spaces", retail: [6500, 20000], resale: [4000, 12000] },
+      { type: "Second right of interment", retail: [1750, 6500], resale: [1500, 4500] },
+      { type: "Cremation niche", retail: [1500, 8000], resale: [1250, 5500] },
+    ],
+    localNotes: [
+      "The transfer fee here is $350 per space. The office has also mentioned a $225 processing fee, which we are told is not charged separately when the transfer fee is being paid — we confirm both in writing on every file.",
+      "Greenlawn uses its own quitclaim form and can complete transfers remotely, which suits owners who have moved away from the Golden Triangle.",
+      "No endowment care charge is added on transfer here, which keeps closing costs lower than at many Houston parks.",
+      "Buying pre-need? Ask us about spreading the cost at 0% over up to two years on selected property.",
+    ],
+    faqs: [
+      {
+        q: "How much are cemetery plots at Greenlawn Memorial Park in Groves, Texas?",
+        a: "It depends on the garden and property type. New property is available from the cemetery, and resale property from current owners generally sits below new pricing. Give us the garden and space number and we will price it properly.",
+      },
+      {
+        q: "What is the transfer fee at Greenlawn Memorial Park?",
+        a: "$350 per space. There is also a $225 processing fee that, we are told, is not charged separately where the transfer fee is paid. We confirm both figures with the office before anyone signs.",
+      },
+      {
+        q: "Can I sell a Greenlawn plot without travelling to Groves?",
+        a: "Yes. The cemetery uses its own quitclaim and will process the transfer remotely. We prepare the documents, route them for signature and file them for you.",
+      },
+      {
+        q: "Which towns does Greenlawn Memorial Park serve?",
+        a: "Groves, Port Arthur, Port Neches, Nederland and the wider Golden Triangle, with families across Jefferson and Orange counties.",
+      },
+    ],
+    nearby: ["forest-park-east", "brookside-memorial-park", "forest-park-lawndale"],
+    seo: {
+      title: "Greenlawn Memorial Park Groves TX | Cemetery Plots & Prices",
+      description:
+        "Cemetery plots for sale at Greenlawn Memorial Park, Groves TX near Port Arthur. Price guidance by garden, the $350 transfer fee, remote quitclaim paperwork and free valuations.",
+      h1: "Greenlawn Memorial Park, Groves",
+    },
+  },
 ];
+
 
 export const flagshipBySlug = (slug: string | undefined) =>
   slug ? FLAGSHIP_CEMETERIES.find((c) => c.slug === slug) : undefined;
