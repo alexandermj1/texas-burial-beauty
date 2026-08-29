@@ -115,8 +115,9 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                       </p>
                     </div>
                   </Link>
-                </motion.article>
-              ))}
+                  </motion.article>
+                );
+              })}
             </div>
             <div className="mt-6 text-center">
               <Link
