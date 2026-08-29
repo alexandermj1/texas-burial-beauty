@@ -66,41 +66,85 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
 
         {variant === "compact" ? (
           <>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {DALLAS_CEMETERY_PROFILES.map((c, i) => (
-                <motion.article
-                  key={c.slug}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.55, delay: (i % 3) * 0.06 }}
-                  className="group overflow-hidden rounded-[26px] border border-border/70 bg-card"
-                >
-                  <Link to={`/cemeteries/${c.slug}`} className="block">
-                    <div className="relative h-52 overflow-hidden">
-                      <img
-                        src={c.hero.src}
-                        alt={c.hero.alt}
-                        width={1200}
-                        height={800}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-5">
-                        <span className="block text-[10px] uppercase tracking-[0.28em] text-background/75">{c.city}, Texas</span>
-                        <h3 className="font-display text-xl leading-snug text-background">{c.name}</h3>
+            {/* Asymmetric editorial spread: 7/5, 5/7, then a full-width closing
+                card — no orphan gaps, each block a different rhythm. */}
+            <div className="grid gap-5 lg:grid-cols-12">
+              {DALLAS_CEMETERY_PROFILES.map((c, i) => {
+                const spans = ["lg:col-span-7", "lg:col-span-5", "lg:col-span-5", "lg:col-span-7", "lg:col-span-12"];
+                const wide = i === 0 || i === 3;
+                const closing = i === 4;
+                return (
+                  <motion.article
+                    key={c.slug}
+                    initial={{ opacity: 0, y: 22 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-60px" }}
+                    transition={{ duration: 0.6, delay: (i % 2) * 0.08 }}
+                    className={`group relative overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-[0_18px_50px_-30px_hsl(var(--foreground)/0.35)] ${spans[i]}`}
+                  >
+                    <Link
+                      to={`/cemeteries/${c.slug}`}
+                      className={closing ? "grid md:grid-cols-2" : "flex h-full flex-col"}
+                    >
+                      <div className={`relative overflow-hidden ${closing ? "h-64 md:h-full md:min-h-[320px]" : wide ? "h-64 sm:h-72" : "h-56"}`}>
+                        {/* Cloudy-day grade: lift exposure, warm the light, deepen greens */}
+                        <img
+                          src={c.hero.src}
+                          alt={c.hero.alt}
+                          width={1600}
+                          height={1000}
+                          loading="lazy"
+                          className="h-full w-full object-cover brightness-[1.12] contrast-[1.06] saturate-[1.28] sepia-[0.12] transition-transform duration-[1100ms] ease-out group-hover:scale-[1.06]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/15 to-transparent" />
+                        {/* warm sunlight wash */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/15 via-transparent to-[hsl(45_80%_70%/0.22)] mix-blend-soft-light" />
+
+                        {/* index numeral */}
+                        <span className="absolute left-5 top-5 font-display text-5xl leading-none text-background/25 [text-shadow:0_1px_12px_hsl(var(--foreground)/0.3)]">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span className="absolute right-5 top-5 rounded-full border border-background/40 bg-foreground/30 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-background backdrop-blur-sm">
+                          {c.city}, TX
+                        </span>
+
+                        {!closing && (
+                          <div className="absolute inset-x-0 bottom-0 p-5">
+                            <span className="mb-2 block h-px w-8 bg-primary/80 transition-all duration-500 group-hover:w-14" />
+                            <h3 className="font-display text-xl leading-snug text-background md:text-2xl [text-wrap:balance]">{c.name}</h3>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="p-5">
-                      <p className="text-sm leading-relaxed text-muted-foreground">{c.standfirst}</p>
-                      <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary transition-all group-hover:gap-3">
-                        Read the profile <ArrowRight className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </Link>
-                </motion.article>
-              ))}
+
+                      <div className={`flex flex-1 flex-col p-5 md:p-6 ${closing ? "justify-center md:p-10" : ""}`}>
+                        {closing && (
+                          <>
+                            <span className="text-[10px] uppercase tracking-[0.28em] text-primary">{c.city}, Texas</span>
+                            <h3 className="mt-2 font-display text-2xl leading-tight text-foreground md:text-3xl">{c.name}</h3>
+                          </>
+                        )}
+                        <p className={`text-sm leading-relaxed text-muted-foreground ${closing ? "mt-4 text-[15px]" : "mt-1"}`}>
+                          {c.standfirst}
+                        </p>
+
+                        {/* facts reveal on hover (desktop), always visible on touch */}
+                        <dl className="mt-4 space-y-1.5 border-t border-border/60 pt-3 opacity-100 transition-all duration-500 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">
+                          {c.facts.slice(0, closing ? 3 : 2).map((f) => (
+                            <div key={f.label} className="flex items-baseline gap-3">
+                              <dt className="shrink-0 text-[9px] uppercase tracking-[0.2em] text-primary/80">{f.label}</dt>
+                              <dd className="text-xs text-foreground/80">{f.value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+
+                        <span className={`mt-auto inline-flex items-center gap-2 pt-4 text-sm font-medium text-primary transition-all group-hover:gap-3`}>
+                          Read the profile <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </Link>
+                  </motion.article>
+                );
+              })}
             </div>
             <div className="mt-10 text-center">
               <Link
@@ -136,7 +180,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         width={1600}
                         height={1000}
                         loading="lazy"
-                        className="h-[260px] w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04] md:h-[420px]"
+                        className="h-[260px] w-full object-cover brightness-[1.12] contrast-[1.06] saturate-[1.28] sepia-[0.12] transition-transform duration-[900ms] ease-out group-hover:scale-[1.04] md:h-[420px]"
                       />
                     </Link>
                     <div className="mt-3 grid grid-cols-3 gap-3">
