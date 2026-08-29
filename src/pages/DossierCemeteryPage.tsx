@@ -240,9 +240,9 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
         style={{ transform: `scaleX(${progress})` }}
       />
 
-      {/* Sticky context bar */}
+      {/* Sticky context bar — desktop only; on mobile it eats too much of the screen */}
       <div
-        className={`fixed top-[64px] left-0 right-0 z-50 border-b border-[hsl(var(--gold)/0.28)] bg-[hsl(var(--ink-deep)/0.94)] backdrop-blur-md transition-all duration-300 ${
+        className={`hidden lg:block fixed top-[64px] left-0 right-0 z-50 border-b border-[hsl(var(--gold)/0.28)] bg-[hsl(var(--ink-deep)/0.94)] backdrop-blur-md transition-all duration-300 ${
           stuck ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
         }`}
       >
