@@ -73,7 +73,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
         <div
           className={
             variant === "compact"
-              ? "mx-auto mb-10 max-w-2xl text-center md:mb-14"
+              ? "mx-auto mb-8 max-w-2xl text-center md:mb-10"
               : "max-w-3xl mb-12 md:mb-16"
           }
         >
