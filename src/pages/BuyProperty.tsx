@@ -705,6 +705,63 @@ const BuyProperty = () => {
         </div>
       </main>
 
+      {/* Slim SEO section — below the form so the wizard stays clean */}
+      <section className="border-t border-border bg-muted/30">
+        <div className="container mx-auto px-6 lg:px-10 max-w-4xl py-10 sm:py-14">
+          <h2 className="font-display text-xl sm:text-2xl text-foreground tracking-tight mb-3">
+            Burial plots for sale across Texas — at private resale prices
+          </h2>
+          <div className="space-y-3 text-sm sm:text-[15px] text-muted-foreground leading-relaxed max-w-3xl">
+            <p>
+              Texas Cemetery Brokers helps families buy cemetery plots, cremation niches, mausoleum crypts and
+              family estates throughout Dallas–Fort Worth, Houston, Austin, San Antonio and the rest of Texas.
+              Because we work the private resale market rather than selling for the cemeteries themselves, the
+              properties we place are typically 30–50% below the price the cemetery would charge for a comparable space.
+            </p>
+            <p>
+              Tell us what you're looking for above — at-need, within six months, or pre-need — and a licensed broker
+              will send you a shortlist that matches your budget, usually within 24 hours. The concierge is free and
+              there's no obligation.
+            </p>
+          </div>
+
+          <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-card">
+            {[
+              {
+                q: "How much do burial plots cost in Texas?",
+                a: "It varies widely by cemetery and section. Direct-from-cemetery single spaces in major Texas metros generally run from around $2,000 to well over $10,000, and premium mausoleum crypts considerably more. Private resales of the same properties typically sell for 30–50% less.",
+              },
+              {
+                q: "Is it legal to buy a cemetery plot from a private seller?",
+                a: "Yes. Texas law allows plot owners to resell their interment rights. The transfer is recorded with the cemetery via a deed or assignment — we handle the paperwork and coordinate with the cemetery so the transfer is clean and documented.",
+              },
+              {
+                q: "Can I buy ahead of time (pre-need)?",
+                a: "Absolutely — pre-need buyers usually get the best selection and pricing, and on selected properties we can arrange 0% interest financing for up to two years. At-need buyers are prioritized and we can often present options the same day.",
+              },
+              {
+                q: "Which cemeteries do you serve?",
+                a: "We cover cemeteries across Texas, with the most activity around Dallas–Fort Worth and Houston — including Restland Memorial Park, Sparkman/Hillcrest, Bluebonnet Hills, Forest Park and many more. Browse the directory or just tell us the cemetery you have in mind.",
+              },
+            ].map((f, i) => (
+              <details key={i} className="group px-5 sm:px-6">
+                <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none text-sm sm:text-[15px] font-medium text-foreground hover:text-primary transition-colors [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <span className="shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-45 text-lg leading-none">+</span>
+                </summary>
+                <p className="pb-4 text-sm text-muted-foreground leading-relaxed max-w-3xl">{f.a}</p>
+              </details>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <Link to="/guides/buying-a-cemetery-plot" className="text-primary font-medium hover:underline">How to buy a cemetery plot →</Link>
+            <Link to="/guides/cemetery-plot-cost-texas" className="text-primary font-medium hover:underline">Texas cemetery plot costs →</Link>
+            <Link to="/cemeteries" className="text-primary font-medium hover:underline">Browse the cemetery directory →</Link>
+          </div>
+        </div>
+      </section>
+
       {/* Sticky footer */}
       <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
         <div className="container mx-auto px-6 lg:px-10 max-w-6xl py-3 flex items-center justify-between gap-3">
