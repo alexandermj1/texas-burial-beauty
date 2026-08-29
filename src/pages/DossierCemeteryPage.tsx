@@ -241,29 +241,43 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       </div>
 
       {/* ================= HERO ================= */}
-      <section className="relative min-h-[560px] md:min-h-[640px] flex items-center">
+      <section className="relative min-h-[620px] md:min-h-[760px] flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage.src} alt={heroImage.alt} className="w-full h-full object-cover" />
+          <img src={heroImage.src} alt={heroImage.alt} className="w-full h-full object-cover scale-[1.04]" />
         </div>
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--ink)/0.96)] via-[hsl(var(--ink)/0.78)] to-[hsl(var(--ink)/0.3)]"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, hsl(var(--ink) / 0.96) 0%, hsl(var(--ink) / 0.78) 42%, hsl(var(--ink) / 0.24) 100%), linear-gradient(180deg, hsl(var(--ink) / 0.5) 0%, hsl(var(--ink) / 0) 30%, hsl(var(--ink) / 0.75) 100%)",
+          }}
         />
-        <div className="relative container mx-auto px-6 md:px-10 pt-28 pb-16 md:py-24 max-w-[1440px]">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <p className={`${eyebrow} mb-5`}>
+        <div className="relative container mx-auto px-6 md:px-10 pt-32 pb-36 md:pt-36 md:pb-40 max-w-[1440px] w-full">
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-3xl">
+            <p className={`${eyebrow} mb-6 tracking-[0.3em]`}>
               <Link to="/cemeteries" className="text-[hsl(var(--gold))] hover:text-[hsl(var(--parchment))]">
                 Texas
-              </Link>{" "}
-              · {cemetery.region} · {cemetery.city}
+              </Link>
+              <span className="text-[hsl(var(--gold)/0.5)]"> / </span>
+              {metro.label}
+              <span className="text-[hsl(var(--gold)/0.5)]"> / </span>
+              {cemetery.city}
             </p>
-            <h1 className="font-display text-[hsl(var(--parchment))] text-[clamp(2.6rem,5.6vw,5.1rem)] leading-[0.98] max-w-3xl">
-              {cemetery.seo.h1}
+            <div aria-hidden className="w-24 h-px bg-[hsl(var(--gold))] mb-7" />
+            <h1 className="font-display text-[#FFFDF9] text-[clamp(2.9rem,6.4vw,6rem)] leading-[0.96] tracking-[-0.01em]">
+              {heroTitle.lead}
+              {heroTitle.rest && (
+                <>
+                  <br />
+                  <em className="italic text-[hsl(var(--gold))]">{heroTitle.rest}</em>
+                </>
+              )}
             </h1>
-            <p className="mt-6 max-w-xl text-lg md:text-xl leading-relaxed text-[hsl(var(--parchment)/0.88)] font-light">
-              Plots, crypts and niches for sale in {cemetery.city}, Texas — {cemetery.tagline}.
+            <p className="mt-6 max-w-xl text-lg md:text-[1.35rem] leading-[1.5] text-[#FFFDF9]/90 font-light">
+              Plots for sale, prices and transfers in {cemetery.city}, Texas — {cemetery.tagline}.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-9 flex flex-wrap gap-3">
               <Link to={`/listings?cemetery=${cemetery.slug}`} className={goldBtn}>
                 Buy a space here
               </Link>
@@ -271,17 +285,25 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
                 Sell my space here
               </a>
             </div>
+            <p className="mt-8 text-[15px] text-[hsl(var(--parchment)/0.62)]">
+              <strong className="font-normal text-[hsl(var(--parchment)/0.85)]">Texas cemetery brokers</strong>
+              {" "}· buying, selling &amp; transfers · same-day in-person showings ·{" "}
+              <a href="tel:+12142304740" className="hover:text-[hsl(var(--parchment))]">(214) 230-4740</a>
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* ================= FACT BAND ================= */}
-      <div className="border-y border-[hsl(var(--gold)/0.24)] bg-[hsl(var(--ink-deep)/0.72)]">
-        <dl className="container mx-auto max-w-[1440px] px-6 md:px-10 py-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {factBand.map((f) => (
-            <div key={f.label}>
+      {/* ================= FACT BAND — half-overlapping the photograph ================= */}
+      <div className="relative z-10 container mx-auto max-w-[1440px] px-6 md:px-10 -mt-16 md:-mt-[68px]">
+        <dl className="grid grid-cols-2 lg:grid-cols-4 rounded-xl border border-[hsl(var(--gold)/0.28)] bg-[hsl(var(--ink-deep)/0.92)] backdrop-blur-md shadow-[0_24px_60px_-24px_hsl(var(--ink)/0.8)] overflow-hidden">
+          {factBand.map((f, i) => (
+            <div
+              key={f.label}
+              className={`px-6 py-6 md:px-8 md:py-7 ${i % 2 === 1 ? "border-l" : ""} ${i > 1 ? "max-lg:border-t" : ""} ${i > 0 ? "lg:border-l" : ""} border-[hsl(var(--gold)/0.18)]`}
+            >
               <dt className={eyebrow}>{f.label}</dt>
-              <dd className="mt-2 text-[hsl(var(--parchment))] leading-snug">{f.value}</dd>
+              <dd className="mt-2 text-lg text-[hsl(var(--parchment))] leading-snug">{f.value}</dd>
             </div>
           ))}
         </dl>
