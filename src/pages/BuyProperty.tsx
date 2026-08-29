@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-// Guide routes live at /cemetery-plots-for-sale-texas and /cemetery-plot-cost-texas
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
