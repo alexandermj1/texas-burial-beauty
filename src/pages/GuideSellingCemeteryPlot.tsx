@@ -118,7 +118,7 @@ const GuideSellingCemeteryPlot = () => (
       description="What your plot is worth today, the transfer steps Texas cemeteries require, and how to sell it without upfront fees. Free valuation in 24 hours."
       path="/sell-cemetery-plot-texas"
       type="article"
-      jsonLd={jsonLd}
+      jsonLd={[...jsonLd, guideGalleryJsonLd("https://texascemeterybrokers.com/sell-cemetery-plot-texas", "Texas cemeteries we serve")]}
     />
     <Navbar forceScrolled />
 
