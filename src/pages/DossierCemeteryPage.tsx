@@ -536,7 +536,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
           )}
 
           {/* ---------- Section plan + map ---------- */}
-          <div className="grid xl:grid-cols-2 gap-10 px-6 md:px-10 pt-20">
+          <div className={`grid gap-10 px-6 md:px-10 pt-20 ${planMap ? "xl:grid-cols-2" : ""}`}>
 
             {planMap && (
               <section id="sections" className="scroll-mt-28">
