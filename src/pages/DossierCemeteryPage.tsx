@@ -277,8 +277,12 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
               </Link>
               <span className="text-[hsl(var(--gold)/0.5)]"> / </span>
               {metro.label}
-              <span className="text-[hsl(var(--gold)/0.5)]"> / </span>
-              {cemetery.city}
+              {cemetery.city.toLowerCase() !== metro.label.toLowerCase() && (
+                <>
+                  <span className="text-[hsl(var(--gold)/0.5)]"> / </span>
+                  {cemetery.city}
+                </>
+              )}
             </p>
             <div aria-hidden className="w-24 h-px bg-[hsl(var(--gold))] mb-7" />
             <h1 className="font-display text-[#FFFDF9] text-[clamp(2.9rem,6.4vw,6rem)] leading-[0.96] tracking-[-0.01em]">
