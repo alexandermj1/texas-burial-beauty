@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BellRing, Download, Maximize2, Search, X } from "lucide-react";
+import { ArrowRight, BellRing, Download, ExternalLink, Maximize2, Search, X } from "lucide-react";
 
 import { RESTLAND_GARDENS } from "./restlandGardens";
 import { RESTLAND_MAPS } from "./restlandMaps";
@@ -106,6 +106,15 @@ const RestlandGardenMap = () => {
               Download {h.label.toLowerCase()} map (PNG)
             </a>
           ))}
+          <a
+            href="https://www.restlandfuneralhome.com/download/187794/map.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-background text-xs font-medium text-foreground hover:border-primary transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-primary" />
+            Cemetery's official plan (PDF)
+          </a>
         </div>
       </div>
 

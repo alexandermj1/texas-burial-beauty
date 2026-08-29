@@ -1,4 +1,4 @@
-import westMap from "@/assets/restland-map-west.png.asset.json";
+import westMap from "@/assets/restland-map-west-clean.png";
 import eastMap from "@/assets/restland-map-east.png.asset.json";
 
 /**
@@ -12,7 +12,7 @@ export const RESTLAND_MAPS = [
     label: "West grounds",
     blurb:
       "Whispering Waters, Abbey Estates, Good Shepherd, Trinity and the United Jewish Cemeteries — the older, more established side of the park.",
-    src: westMap.url,
+    src: westMap,
     downloadName: "restland-memorial-park-west-grounds-garden-map.png",
     alt: "Map of the west grounds at Restland Memorial Park, Dallas, showing Whispering Waters, Abbey Estates, Good Shepherd, Trinity and the surrounding gardens",
     caption: "Restland Memorial Park garden map — west grounds, Dallas, Texas",
