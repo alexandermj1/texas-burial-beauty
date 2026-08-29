@@ -8,9 +8,39 @@ const SITE = "https://texascemeterybrokers.com";
 /**
  * Editorial profiles of the five Dallas–Fort Worth parks we photograph most.
  * `full` runs a magazine spread (used on the Dallas city page); `compact`
- * runs a card row for the home page. Both emit ImageGallery + ItemList
- * structured data so the photography is indexable.
+ * runs the home page "Editorial Archive" card grid. Both emit ImageGallery +
+ * ItemList structured data so the photography is indexable.
  */
+
+/** Accent rotation for the compact cards — sage, terracotta, sand, repeat. */
+const COMPACT_ACCENTS = [
+  {
+    panel: "bg-sage-light/45 border-l-2 border-sage/30",
+    kicker: "text-sage",
+    thumbs: "-left-4",
+  },
+  {
+    panel: "bg-terracotta-light/45 border-r-2 border-terracotta/30",
+    kicker: "text-terracotta",
+    thumbs: "-right-4",
+  },
+  {
+    panel: "bg-sand-light/70 border-l-2 border-sand/70",
+    kicker: "text-foreground/60",
+    thumbs: "-left-4",
+  },
+  {
+    panel: "bg-sage-light/45 border-l-2 border-sage/30",
+    kicker: "text-sage",
+    thumbs: "-left-4",
+  },
+  {
+    panel: "bg-terracotta-light/45 border-r-2 border-terracotta/30",
+    kicker: "text-terracotta",
+    thumbs: "-right-4",
+  },
+] as const;
+
 const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "compact" }) => {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -40,23 +70,36 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
 
       <div className={variant === "full" ? "" : "container mx-auto px-6"}>
         {/* Masthead */}
-        <div className={variant === "full" ? "max-w-3xl mb-12 md:mb-16" : "text-center max-w-2xl mx-auto mb-8"}>
+        <div
+          className={
+            variant === "compact"
+              ? "mx-auto mb-10 max-w-2xl text-center md:mb-14"
+              : "max-w-3xl mb-12 md:mb-16"
+          }
+        >
           <div className={`mb-4 flex items-center gap-4 ${variant === "compact" ? "justify-center" : ""}`}>
-            {variant === "compact" && <span className="h-px w-10 bg-primary/40" />}
-            <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
-              Featured Dallas–Fort Worth cemeteries
-            </span>
             {variant === "compact" ? (
-              <span className="h-px w-10 bg-primary/40" />
+              <>
+                <span className="h-px w-12 bg-gold/40" />
+                <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-gold">
+                  Cemetery directory
+                </span>
+                <span className="h-px w-12 bg-gold/40" />
+              </>
             ) : (
-              <span className="h-px flex-1 bg-border" />
+              <>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
+                  Featured Dallas–Fort Worth cemeteries
+                </span>
+                <span className="h-px flex-1 bg-border" />
+              </>
             )}
           </div>
           <h2
             id="featured-cemeteries-heading"
-            className="font-display text-2xl md:text-3xl leading-[1.1] tracking-tight text-foreground [text-wrap:balance]"
+            className="font-display text-3xl leading-[1.08] tracking-tight text-foreground italic [text-wrap:balance] md:text-[40px]"
           >
-            The Dallas parks we <span className="italic font-light">know by heart</span>
+            The Dallas parks we <span className="font-light not-italic">know by heart</span>
           </h2>
           {variant !== "compact" && (
             <p className="mt-5 text-base md:text-[17px] font-light leading-relaxed text-muted-foreground">
@@ -68,58 +111,142 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
 
         {variant === "compact" ? (
           <>
-            {/* Slim index cards: tight two-column ledger rows, thumbnail left,
-                details right — compact, dense, no orphan gaps. */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {DALLAS_CEMETERY_PROFILES.map((c, i) => {
-                const last = i === DALLAS_CEMETERY_PROFILES.length - 1;
+            {/* Editorial Archive: photo-forward cards with overlapping detail
+                thumbnails and tinted caption panels. Four regular cards, then
+                Sparkman/Hillcrest as a full-width closing spread. */}
+            <div className="grid gap-x-8 gap-y-14 md:grid-cols-2 md:gap-x-10">
+              {DALLAS_CEMETERY_PROFILES.slice(0, 4).map((c, i) => {
+                const accent = COMPACT_ACCENTS[i];
                 return (
                   <motion.article
                     key={c.slug}
-                    initial={{ opacity: 0, y: 14 }}
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-40px" }}
-                    transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
-                    className={`group ${last ? "sm:col-span-2" : ""}`}
+                    transition={{ duration: 0.5, delay: (i % 2) * 0.07 }}
                   >
-                  <Link
-                    to={`/cemeteries/${c.slug}`}
-                    className="flex h-full items-center gap-4 rounded-2xl border border-border/60 bg-card p-3 shadow-[0_10px_30px_-22px_hsl(var(--foreground)/0.35)] transition-colors duration-300 hover:border-primary/40"
-                  >
-                    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl sm:h-20 sm:w-28">
-                      <img
-                        src={c.hero.src}
-                        alt={c.hero.alt}
-                        width={320}
-                        height={240}
-                        loading="lazy"
-                        className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.24] sepia-[0.1] transition-transform duration-700 ease-out group-hover:scale-[1.07]"
-                      />
-                      <span className="absolute bottom-1 left-1 rounded-full bg-foreground/60 px-1.5 py-0.5 font-display text-[9px] leading-none text-background backdrop-blur-sm">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                    </div>
+                    <Link to={`/cemeteries/${c.slug}`} className="group block">
+                      <div className="relative">
+                        <div className="aspect-[16/10] overflow-hidden rounded-[4px] bg-sand-light shadow-[0_18px_40px_-28px_hsl(var(--foreground)/0.5)]">
+                          <img
+                            src={c.hero.src}
+                            alt={c.hero.alt}
+                            width={800}
+                            height={500}
+                            loading="lazy"
+                            className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[900ms] ease-out group-hover:scale-[1.045]"
+                          />
+                        </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <h3 className="truncate font-display text-base leading-snug text-foreground sm:text-[17px]">
+                        {/* Ghost index */}
+                        <span className="absolute right-3 top-3 rounded-full bg-foreground/50 px-2 py-0.5 font-display text-[10px] leading-none tracking-[0.15em] text-background backdrop-blur-sm">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+
+                        {/* Overlapping detail thumbnails */}
+                        <div className={`absolute -bottom-4 flex gap-2 ${accent.thumbs}`}>
+                          {c.photos.map((p) => (
+                            <figure
+                              key={p.src}
+                              className="h-12 w-12 overflow-hidden rounded-[3px] border-2 border-background shadow-md sm:h-14 sm:w-14"
+                            >
+                              <img
+                                src={p.src}
+                                alt={p.alt}
+                                width={120}
+                                height={120}
+                                loading="lazy"
+                                className="h-full w-full object-cover brightness-[1.08] contrast-[1.05] saturate-[1.2]"
+                              />
+                            </figure>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className={`mt-9 p-5 sm:p-6 ${accent.panel}`}>
+                        <span className={`text-[10px] font-semibold uppercase tracking-[0.25em] ${accent.kicker}`}>
+                          {c.city}, Texas
+                        </span>
+                        <h3 className="mt-2 mb-2.5 font-display text-2xl leading-tight text-foreground md:text-[26px]">
                           {c.name}
                         </h3>
-                        <ArrowRight className="h-4 w-4 shrink-0 text-primary transition-transform duration-300 group-hover:translate-x-1" />
+                        <p className="mb-4 max-w-sm text-sm font-light leading-relaxed text-muted-foreground">
+                          {c.standfirst}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold transition-all duration-300 group-hover:gap-4">
+                          View profile <span className="h-px w-8 bg-gold" />
+                        </div>
                       </div>
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-[0.22em] text-primary/80">
-                        {c.city}, Texas
-                      </span>
-                      <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                        {c.standfirst}
-                      </p>
-                    </div>
-                  </Link>
+                    </Link>
                   </motion.article>
                 );
               })}
+
+              {/* Full-width closing spread — Sparkman/Hillcrest */}
+              {(() => {
+                const c = DALLAS_CEMETERY_PROFILES[4];
+                if (!c) return null;
+                return (
+                  <motion.article
+                    className="md:col-span-2 md:mt-4"
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.55 }}
+                  >
+                    <Link
+                      to={`/cemeteries/${c.slug}`}
+                      className="group flex flex-col overflow-hidden rounded-[4px] bg-card shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.5)] md:flex-row"
+                    >
+                      <div className="relative md:w-3/5">
+                        <div className="aspect-[16/10] w-full overflow-hidden bg-sand-light md:aspect-auto md:h-full md:min-h-[360px]">
+                          <img
+                            src={c.hero.src}
+                            alt={c.hero.alt}
+                            width={1200}
+                            height={600}
+                            loading="lazy"
+                            className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[1000ms] ease-out group-hover:scale-[1.035]"
+                          />
+                        </div>
+                        <div className="absolute bottom-5 left-5 flex gap-2.5">
+                          {c.photos.map((p) => (
+                            <figure
+                              key={p.src}
+                              className="h-14 w-14 overflow-hidden rounded-[3px] border-2 border-background shadow-lg sm:h-16 sm:w-16"
+                            >
+                              <img
+                                src={p.src}
+                                alt={p.alt}
+                                width={140}
+                                height={140}
+                                loading="lazy"
+                                className="h-full w-full object-cover brightness-[1.08] contrast-[1.05] saturate-[1.2]"
+                              />
+                            </figure>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex flex-col justify-center bg-terracotta-light/50 p-8 md:w-2/5 md:p-10 lg:p-14">
+                        <span className="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-terracotta">
+                          {c.city}, Texas
+                        </span>
+                        <h3 className="mb-4 font-display text-3xl leading-[1.12] text-foreground lg:text-4xl">
+                          {c.name}
+                        </h3>
+                        <p className="mb-7 text-sm font-light leading-relaxed text-muted-foreground lg:text-[15px]">
+                          {c.standfirst}
+                        </p>
+                        <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-gold transition-all duration-300 group-hover:gap-5">
+                          Explore full archive <span className="h-px w-10 bg-gold" />
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.article>
+                );
+              })()}
             </div>
-            <div className="mt-6 text-center">
+            <div className="mt-12 text-center">
               <Link
                 to="/cemetery-plots-for-sale-dallas"
                 className="inline-flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 transition-all hover:gap-3 hover:underline"
