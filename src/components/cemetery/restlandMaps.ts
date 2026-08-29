@@ -1,4 +1,4 @@
-import westMap from "@/assets/restland-map-west.png.asset.json";
+import westMap from "@/assets/restland-map-west-clean.png";
 import eastMap from "@/assets/restland-map-east.png.asset.json";
 
 /**
