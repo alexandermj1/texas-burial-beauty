@@ -841,7 +841,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Section 501 and the 500s", kind: "Ground", tier: "premium", note: "Family holdings of multiple spaces with niches are common in this part of the park." },
       { name: "Garden and mausoleum crypts", kind: "Mausoleum", tier: "premium", note: "Crypt tier and building drive the price; eye level costs the most." },
       { name: "Lawn crypts", kind: "Lawn crypt", tier: "premium", note: "Pre-installed double-depth vaults — two interments in a single space." },
-      { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "The most accessible option on an otherwise expensive property." },
+      { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "The most accessible option on the property for cremated remains." },
     ],
     pricing: [
       { type: "Single burial space", retail: [16000, 22000], resale: [7000, 12000] },
@@ -851,7 +851,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { type: "Cremation niche", retail: [4000, 10000], resale: [2200, 5500] },
     ],
     localNotes: [
-      "Memorial Oaks carries some of the highest counter pricing we record in Houston — singles in Section 8 have been quoted to us at about $20,000. Resale is where families here actually save.",
+      "Buying pre-need direct from Memorial Oaks? The cemetery offers interest-free financing on selected property for up to two years, so a family can spread the cost with no interest added.",
       "The transfer fee is $995 per space, paid to the cemetery to record the change of ownership. We confirm the live figure in writing before either side commits.",
       "The cemetery has quoted the second interment right on an existing space at around 35% of retail in some sections, which can be cheaper than buying an additional space.",
       "Bring the section, lot and space line from your deed (for example Section 8, Lot 38, Spaces 11 and 12) and we can value your property the same day, with no site visit.",
