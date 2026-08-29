@@ -95,11 +95,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Islamic Garden", kind: "Ground", tier: "value", note: "Faith-designated garden near the north drive; the most accessible counter pricing on the property." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [10000, 18000], resale: [4500, 9500] },
-      { type: "Companion / two spaces", retail: [20000, 34000], resale: [9000, 18000] },
-      { type: "Lawn crypt (double depth)", retail: [16000, 26000], resale: [8000, 15000] },
-      { type: "Mausoleum crypt", retail: [13000, 30000], resale: [7000, 18000] },
-      { type: "Cremation niche", retail: [3500, 9000], resale: [2000, 5500] },
+      { type: "Single burial space", retail: [6500, 30000], resale: [5000, 17000] },
+      { type: "Companion / two spaces", retail: [13000, 55000], resale: [10000, 32500] },
+      { type: "Lawn crypt (double depth)", retail: [10500, 42500], resale: [9000, 27500] },
+      { type: "Mausoleum crypt", retail: [8500, 47500], resale: [7500, 32500] },
+      { type: "Cremation niche", retail: [2250, 14500], resale: [2250, 10000] },
     ],
     localNotes: [
       "Restland's transfer fee is $1,495 per space. We confirm the current figure in writing before either side commits, and we tell you plainly who is expected to pay it.",
@@ -170,10 +170,10 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Established lawn sections", kind: "Ground", tier: "standard", note: "Mature lawns holding two to four contiguous spaces." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [12000, 26000], resale: [6000, 15000] },
-      { type: "Companion / two spaces", retail: [24000, 50000], resale: [12000, 28000] },
-      { type: "Mausoleum crypt", retail: [18000, 45000], resale: [10000, 28000] },
-      { type: "Cremation niche", retail: [5000, 12000], resale: [2800, 7000] },
+      { type: "Single burial space", retail: [8000, 42500], resale: [6500, 27500] },
+      { type: "Companion / two spaces", retail: [15500, 80000], resale: [13000, 50000] },
+      { type: "Mausoleum crypt", retail: [11500, 72500], resale: [11000, 50000] },
+      { type: "Cremation niche", retail: [3250, 19000], resale: [3000, 12500] },
     ],
     localNotes: [
       "Sparkman-Hillcrest sits at the upper end of the Dallas market, and the monument gardens in particular are valued well above ordinary lawn ground. If you inherited spaces, do not assume they are worth what the family paid.",
@@ -246,11 +246,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
 
     pricing: [
-      { type: "Single burial space", retail: [6000, 14000], resale: [3200, 7500] },
-      { type: "Companion / two spaces", retail: [12000, 26000], resale: [6000, 14000] },
-      { type: "Lawn crypt (double depth)", retail: [4500, 12000], resale: [2600, 7000] },
-      { type: "Mausoleum crypt", retail: [12000, 26000], resale: [7000, 15000] },
-      { type: "Cremation niche", retail: [3500, 8000], resale: [2000, 4800] },
+      { type: "Single burial space", retail: [4000, 22500], resale: [3500, 13500] },
+      { type: "Companion / two spaces", retail: [8000, 42500], resale: [6500, 25000] },
+      { type: "Lawn crypt (double depth)", retail: [3000, 19000], resale: [2750, 12500] },
+      { type: "Mausoleum crypt", retail: [8000, 42500], resale: [7500, 27500] },
+      { type: "Cremation niche", retail: [2250, 13000], resale: [2250, 8500] },
     ],
     localNotes: [
       "Counter pricing swings widely by lawn here — a single grave space in the Columns garden can cost several times a lawn crypt tier in the Court of Fidelity. Tell us the garden and we will tell you where it sits.",
@@ -261,7 +261,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Bluebonnet Hills in Colleyville?",
-        a: "It depends heavily on the lawn. Premium garden ground reaches the low teens of thousands at the counter, while lawn crypt tiers in the courts are a fraction of that. Resale spaces typically trade at roughly half of counter pricing. We quote precisely once we know the garden.",
+        a: "It depends heavily on the lawn. Premium garden ground reaches the low teens of thousands at the counter, while lawn crypt tiers in the courts are a fraction of that. Resale spaces typically trade meaningfully below counter pricing. We quote precisely once we know the garden.",
 
       },
       {
@@ -319,11 +319,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Numbered sections (3, 17, 36, 42)", kind: "Ground", tier: "value", note: "Older numbered lawns; best value per space at Laurel Land." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [4800, 7500], resale: [2500, 4500] },
-      { type: "Companion / two spaces", retail: [9500, 15000], resale: [5000, 9000] },
-      { type: "Veteran crypt", retail: [11000, 15000], resale: [6000, 9500] },
-      { type: "Mausoleum crypt", retail: [11000, 22000], resale: [6000, 13000] },
-      { type: "Cremation niche", retail: [3000, 7000], resale: [1800, 4200] },
+      { type: "Single burial space", retail: [3000, 12000], resale: [2750, 8000] },
+      { type: "Companion / two spaces", retail: [6000, 25000], resale: [5500, 16000] },
+      { type: "Veteran crypt", retail: [7000, 25000], resale: [6500, 17000] },
+      { type: "Mausoleum crypt", retail: [7000, 35000], resale: [6500, 22500] },
+      { type: "Cremation niche", retail: [2000, 11000], resale: [2000, 7500] },
     ],
     localNotes: [
       "Ground pricing here is unusually consistent across the numbered sections and named gardens, which makes valuations quick and disputes rare. Crypts in the Court of Liberty sit in a much higher band.",
@@ -334,7 +334,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Laurel Land Fort Worth?",
-        a: "Ground spaces here sit in the mid-thousands at the counter, with veteran crypts several times higher. Resale ground typically trades at roughly half of counter pricing, which makes Laurel Land Fort Worth one of the better-value established parks in the metroplex.",
+        a: "Ground spaces here sit in the mid-thousands at the counter, with veteran crypts several times higher. Resale ground typically trades meaningfully below counter pricing, which makes Laurel Land Fort Worth one of the better-value established parks in the metroplex.",
       },
 
       {
@@ -390,11 +390,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Babyland (Section 49)", kind: "Infant", tier: "value", note: "Infant and child section; handled with particular care." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [5000, 7500], resale: [2600, 4500] },
-      { type: "Companion / two spaces", retail: [10000, 15000], resale: [5200, 9000] },
-      { type: "Lawn crypt (double depth)", retail: [10000, 14000], resale: [5500, 8500] },
-      { type: "Mausoleum crypt", retail: [11000, 24000], resale: [6000, 14000] },
-      { type: "Cremation niche", retail: [3000, 7500], resale: [1800, 4500] },
+      { type: "Single burial space", retail: [3250, 12000], resale: [2750, 8000] },
+      { type: "Companion / two spaces", retail: [6500, 25000], resale: [5500, 16000] },
+      { type: "Lawn crypt (double depth)", retail: [6500, 22500], resale: [6000, 15500] },
+      { type: "Mausoleum crypt", retail: [7000, 37500], resale: [6500, 25000] },
+      { type: "Cremation niche", retail: [2000, 12000], resale: [2000, 8000] },
     ],
     localNotes: [
       "Entry-level sections here are flat-monument only, which keeps counter pricing low and consistent; double-depth crypts in the Court of Inspiration sit roughly twice as high.",
@@ -405,7 +405,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much do plots cost at Laurel Land Memorial Park in Dallas?",
-        a: "Ground spaces sit in the mid-thousands at the counter depending on the section, and double-depth crypts in the Court of Inspiration run roughly double that. Resale spaces typically trade at around half of counter pricing.",
+        a: "Ground spaces sit in the mid-thousands at the counter depending on the section, and double-depth crypts in the Court of Inspiration run roughly double that. Resale spaces typically trade well below counter pricing.",
       },
 
       {
@@ -448,7 +448,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     tagline: "Rockwall County's memorial park, east of Lake Ray Hubbard",
     intro: [
       "Rest Haven on State Highway 66 is the memorial park most Rockwall County families think of first. It sits minutes east of Lake Ray Hubbard and serves Rockwall, Heath, Royse City, Fate and the eastern edge of Garland, with the funeral home, crematory and care centre all on the same grounds as the gardens.",
-      "Property here is described by named garden, lot and space — Garden of Devotion is the one families ask for most. Singles are common, and the cemetery allows the second right of interment on an existing space to be purchased at roughly half price, which changes the maths for anyone weighing a resale space against a counter purchase.",
+      "Property here is described by named garden, lot and space — Garden of Devotion is the one families ask for most. Singles are common, and the cemetery allows the second right of interment on an existing space to be purchased at a reduced price, which changes the maths for anyone weighing a resale space against a counter purchase.",
     ],
     facts: [
       { label: "City", value: "Rockwall (State Highway 66)" },
@@ -468,10 +468,10 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
 
     pricing: [
-      { type: "Single burial space", retail: [6500, 8500], resale: [3200, 5200] },
-      { type: "Companion / two spaces", retail: [12000, 16000], resale: [6000, 10000] },
-      { type: "Second right of interment", retail: [3200, 4500], resale: [1800, 3200] },
-      { type: "Cremation niche or urn space", retail: [2500, 5500], resale: [1400, 3200] },
+      { type: "Single burial space", retail: [4250, 13500], resale: [3500, 9500] },
+      { type: "Companion / two spaces", retail: [8000, 25000], resale: [6500, 18000] },
+      { type: "Second right of interment", retail: [2000, 7000], resale: [2000, 6000] },
+      { type: "Cremation niche or urn space", retail: [1500, 9000], resale: [1500, 6000] },
     ],
     localNotes: [
       "The transfer fee here is $300 per space — confirmed directly with the cemetery office and among the lowest in the metroplex.",
@@ -482,7 +482,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     faqs: [
       {
         q: "How much are cemetery plots at Rest Haven in Rockwall?",
-        a: "Single spaces at the cemetery counter sit in the mid to high thousands depending on the garden. Resale spaces at Rest Haven typically trade for roughly half of counter pricing, and we quote a precise figure once we know the garden, lot and space.",
+        a: "Single spaces at the cemetery counter sit in the mid to high thousands depending on the garden. Resale spaces at Rest Haven typically trade below counter pricing, and we quote a precise figure once we know the garden, lot and space.",
       },
       {
         q: "What is the transfer fee at Rest Haven Memorial Park?",
@@ -547,10 +547,10 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Section J", kind: "Ground", tier: "value", note: "Quieter lawn section, generally the most accessible pricing on the property." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [9500, 11500], resale: [4200, 6500] },
-      { type: "Companion / two spaces", retail: [19000, 23000], resale: [8500, 13000] },
-      { type: "Second right of interment", retail: [4800, 6000], resale: [2500, 4000] },
-      { type: "Cremation niche or urn space", retail: [3000, 7000], resale: [1600, 4000] },
+      { type: "Single burial space", retail: [6000, 18500], resale: [4500, 11500] },
+      { type: "Companion / two spaces", retail: [12500, 37500], resale: [9500, 22500] },
+      { type: "Second right of interment", retail: [3000, 9500], resale: [2750, 7000] },
+      { type: "Cremation niche or urn space", retail: [2000, 11000], resale: [1750, 7000] },
     ],
     localNotes: [
       "The transfer fee here is $695 per space, and the cemetery has told us it can be applied toward additional services with the funeral home. We confirm the live figure in writing before either side commits.",
@@ -622,11 +622,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Cremation gardens & niches", kind: "Niche", tier: "value", note: "The most accessible pricing on the property for cremated remains." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [16000, 20000], resale: [6500, 11000] },
-      { type: "Companion / two spaces", retail: [32000, 40000], resale: [13000, 21000] },
-      { type: "Lawn crypt (double depth)", retail: [18000, 26000], resale: [8000, 15000] },
-      { type: "Mausoleum crypt", retail: [14000, 30000], resale: [7000, 17000] },
-      { type: "Cremation niche", retail: [3500, 9000], resale: [1900, 5000] },
+      { type: "Single burial space", retail: [10500, 32500], resale: [7000, 20000] },
+      { type: "Companion / two spaces", retail: [20000, 65000], resale: [14500, 37500] },
+      { type: "Lawn crypt (double depth)", retail: [11500, 42500], resale: [9000, 27500] },
+      { type: "Mausoleum crypt", retail: [9000, 47500], resale: [7500, 30000] },
+      { type: "Cremation niche", retail: [2250, 14500], resale: [2000, 9000] },
     ],
     localNotes: [
       "The transfer fee at Forest Park Lawndale is $1,295 per space. We confirm it in writing with the office before either side commits and tell you plainly who is expected to pay it.",
@@ -696,11 +696,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Cremation niches", kind: "Niche", tier: "value", note: "Niche walls and urn gardens for cremated remains." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [8000, 12000], resale: [3800, 6500] },
-      { type: "Companion / two spaces", retail: [16000, 22000], resale: [7500, 12500] },
-      { type: "Lawn crypt (double depth)", retail: [17000, 21000], resale: [8000, 13000] },
-      { type: "Second right of interment", retail: [2500, 4000], resale: [1500, 2800] },
-      { type: "Cremation niche", retail: [3200, 8000], resale: [1800, 4500] },
+      { type: "Single burial space", retail: [5000, 19000], resale: [4250, 11500] },
+      { type: "Companion / two spaces", retail: [10500, 35000], resale: [8000, 22500] },
+      { type: "Lawn crypt (double depth)", retail: [11000, 32500], resale: [9000, 22500] },
+      { type: "Second right of interment", retail: [1500, 6500], resale: [1750, 5000] },
+      { type: "Cremation niche", retail: [2000, 13000], resale: [2000, 8000] },
     ],
     localNotes: [
       "The transfer fee at Forest Park Westheimer is $995 per space. We confirm it with the office in writing before either side commits.",
@@ -771,10 +771,10 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "Niche walls for cremated remains, well below the cost of ground burial." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [10000, 18000], resale: [4000, 8000] },
-      { type: "Companion / two spaces", retail: [18000, 30000], resale: [8000, 15000] },
-      { type: "Second right of interment", retail: [5000, 8500], resale: [2500, 5000] },
-      { type: "Cremation niche", retail: [3000, 8000], resale: [1700, 4500] },
+      { type: "Single burial space", retail: [6500, 30000], resale: [4500, 14500] },
+      { type: "Companion / two spaces", retail: [11500, 47500], resale: [9000, 27500] },
+      { type: "Second right of interment", retail: [3250, 13500], resale: [2750, 9000] },
+      { type: "Cremation niche", retail: [2000, 13000], resale: [1750, 8000] },
     ],
     localNotes: [
       "We have confirmed the transfer fee directly with the Brookside office at $1,295 per space. A higher figure has been quoted to us once and never repeated, so we always re-confirm in writing before either side commits.",
@@ -844,11 +844,11 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "The most accessible option on the property for cremated remains." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [16000, 22000], resale: [7000, 12000] },
-      { type: "Companion / two spaces", retail: [30000, 42000], resale: [13000, 22000] },
-      { type: "Second right of interment", retail: [6000, 8000], resale: [3000, 5500] },
-      { type: "Mausoleum crypt", retail: [15000, 32000], resale: [7500, 18000] },
-      { type: "Cremation niche", retail: [4000, 10000], resale: [2200, 5500] },
+      { type: "Single burial space", retail: [10500, 35000], resale: [7500, 22500] },
+      { type: "Companion / two spaces", retail: [19500, 67500], resale: [14500, 40000] },
+      { type: "Second right of interment", retail: [4000, 13000], resale: [3250, 10000] },
+      { type: "Mausoleum crypt", retail: [10000, 50000], resale: [8000, 32500] },
+      { type: "Cremation niche", retail: [2500, 16000], resale: [2500, 10000] },
     ],
     localNotes: [
       "Buying pre-need direct from Memorial Oaks? The cemetery offers interest-free financing on selected property for up to two years, so a family can spread the cost with no interest added.",
