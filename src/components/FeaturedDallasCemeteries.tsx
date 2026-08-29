@@ -64,7 +64,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
     <section
       id="featured-cemeteries"
       aria-labelledby="featured-cemeteries-heading"
-      className={variant === "full" ? "py-14 md:py-20 scroll-mt-24" : "py-12 sm:py-16 bg-gradient-warm"}
+      className={variant === "full" ? "py-14 md:py-20 scroll-mt-24" : "py-10 sm:py-14 bg-gradient-warm scroll-mt-20"}
     >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
@@ -73,7 +73,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
         <div
           className={
             variant === "compact"
-              ? "mx-auto mb-8 max-w-2xl text-center md:mb-10"
+              ? "mx-auto mb-8 max-w-2xl text-center"
               : "max-w-3xl mb-12 md:mb-16"
           }
         >
@@ -114,7 +114,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
             {/* Editorial Archive: photo-forward cards with overlapping detail
                 thumbnails and tinted caption panels. Four regular cards, then
                 Sparkman/Hillcrest as a full-width closing spread. */}
-            <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 md:gap-x-10">
+            <div className="mx-auto grid w-full max-w-5xl gap-x-8 gap-y-10 md:grid-cols-2 md:gap-x-10">
               {DALLAS_CEMETERY_PROFILES.slice(0, 4).map((c, i) => {
                 const accent = COMPACT_ACCENTS[i];
                 return (
