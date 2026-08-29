@@ -107,7 +107,7 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
     "w-full rounded-[10px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink))] px-4 py-3 text-[hsl(var(--parchment))] placeholder:text-[hsl(var(--parchment)/0.4)] focus:outline-none focus:border-[hsl(var(--gold))]";
 
   return (
-    <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep))] p-7 md:p-10">
+    <div className="rounded-[20px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.72)] p-7 md:p-10">
       <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 items-start">
         <div>
           <p className={eyebrow}>Looking to buy here</p>
