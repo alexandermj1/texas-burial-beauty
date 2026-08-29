@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BellRing, Download, Maximize2, Search, X } from "lucide-react";
+import { ArrowRight, BellRing, Download, ExternalLink, Maximize2, Search, X } from "lucide-react";
 
 import { RESTLAND_GARDENS } from "./restlandGardens";
 import { RESTLAND_MAPS } from "./restlandMaps";
