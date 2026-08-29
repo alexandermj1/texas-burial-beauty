@@ -34,14 +34,14 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
     <section
       id="featured-cemeteries"
       aria-labelledby="featured-cemeteries-heading"
-      className={variant === "full" ? "py-14 md:py-20 scroll-mt-24" : "py-16 sm:py-20 bg-gradient-warm"}
+      className={variant === "full" ? "py-14 md:py-20 scroll-mt-24" : "py-12 sm:py-16 bg-gradient-warm"}
     >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <div className={variant === "full" ? "" : "container mx-auto px-6"}>
         {/* Masthead */}
-        <div className={variant === "full" ? "max-w-3xl mb-12 md:mb-16" : "text-center max-w-2xl mx-auto mb-12"}>
-          <div className={`mb-5 flex items-center gap-4 ${variant === "compact" ? "justify-center" : ""}`}>
+        <div className={variant === "full" ? "max-w-3xl mb-12 md:mb-16" : "text-center max-w-2xl mx-auto mb-8"}>
+          <div className={`mb-4 flex items-center gap-4 ${variant === "compact" ? "justify-center" : ""}`}>
             {variant === "compact" && <span className="h-px w-10 bg-primary/40" />}
             <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
               Featured Dallas–Fort Worth cemeteries
@@ -54,14 +54,16 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
           </div>
           <h2
             id="featured-cemeteries-heading"
-            className="font-display text-3xl md:text-5xl leading-[1.05] tracking-tight text-foreground [text-wrap:balance]"
+            className="font-display text-2xl md:text-3xl leading-[1.1] tracking-tight text-foreground [text-wrap:balance]"
           >
             The Dallas parks we <span className="italic font-light">know by heart</span>
           </h2>
-          <p className={`mt-5 text-base md:text-[17px] font-light leading-relaxed text-muted-foreground ${variant === "compact" ? "mx-auto" : ""}`}>
-            Five memorial parks across Dallas, Colleyville, Fort Worth and Rockwall — photographed on the grounds, with the
-            details families actually ask about: how flat the ground is, how close you can park, and what each lawn looks like.
-          </p>
+          {variant !== "compact" && (
+            <p className="mt-5 text-base md:text-[17px] font-light leading-relaxed text-muted-foreground">
+              Five memorial parks across Dallas, Colleyville, Fort Worth and Rockwall — photographed on the grounds, with the
+              details families actually ask about: how flat the ground is, how close you can park, and what each lawn looks like.
+            </p>
+          )}
         </div>
 
         {variant === "compact" ? (
