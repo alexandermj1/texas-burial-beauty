@@ -203,6 +203,8 @@ const GuideSellingCemeteryPlot = () => (
                 { href: "#process", t: "The process" },
                 { href: "#legal", t: "Legal side" },
                 { href: "#cities", t: "Coverage" },
+                { href: "#cemeteries", t: "Popular cemeteries" },
+
                 { href: "#faq", t: "FAQ" },
               ].map((c) => (
                 <a key={c.href} href={c.href} className="text-xs px-3 py-1.5 rounded-full bg-card border border-border/60 text-foreground/75 hover:border-primary/40 hover:text-primary transition-colors">
