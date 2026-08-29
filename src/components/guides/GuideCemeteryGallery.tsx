@@ -5,7 +5,6 @@ import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
 import { LAUREL_LAND_HERO } from "@/data/laurelLandPhotos";
 import { RESTHAVEN_HERO } from "@/data/resthavenPhotos";
-import { RESTHAVEN_PHOTOS } from "@/data/resthavenPhotos";
 
 export interface GuideCemeteryFeature {
   slug: string;
@@ -68,15 +67,6 @@ export const GUIDE_CEMETERY_FEATURES: GuideCemeteryFeature[] = [
     src: RESTHAVEN_HERO.src,
     alt: "Statue of Christ on the open lawn at Rest Haven Memorial Park in Rockwall, Texas",
     kicker: "Rockwall · Highway 66",
-  },
-  {
-    slug: "forest-park-lawndale",
-    name: "Forest Park Lawndale",
-    city: "Houston",
-    note: "One of Houston's landmark memorial parks, with gardens, mausoleums and cremation options.",
-    src: RESTHAVEN_PHOTOS[0]?.src ?? RESTHAVEN_HERO.src,
-    alt: "Mature live oaks shading flat lawn markers along a walkway in a Texas memorial park",
-    kicker: "Houston · Lawndale Street",
   },
 ];
 
