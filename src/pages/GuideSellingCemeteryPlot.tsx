@@ -425,6 +425,21 @@ const GuideSellingCemeteryPlot = () => (
           </p>
         </section>
 
+        <GuideCemeteryGallery
+          eyebrow="Chapter 06b · Where we sell"
+          title={<>Cemeteries where we place <span className="italic text-primary">sellers' property</span></>}
+          intro="If you own property in one of these memorial parks, we almost certainly have buyers asking for it. Each cemetery page explains the sections and gardens, the cemetery's own transfer fee and paperwork, and what owners there can realistically expect."
+          footer={
+            <>
+              You can also <Link to="/cemeteries" className="text-primary underline-offset-4 hover:underline font-medium">browse every Texas cemetery we serve</Link>, read{" "}
+              <Link to="/cemetery-plot-cost-texas" className="text-primary underline-offset-4 hover:underline font-medium">what cemetery plots cost in Texas</Link>, or{" "}
+              <Link to="/sell" className="text-primary underline-offset-4 hover:underline font-medium">request a free valuation</Link> for your own property.
+            </>
+          }
+        />
+
+
+
         {/* H2: FAQ */}
         <section id="faq" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 07 · Questions</Eyebrow>
