@@ -132,7 +132,9 @@ const jsonLd: Record<string, unknown>[] = [
       { "@type": "ListItem", position: 3, name: "Cemetery Plots for Sale in Texas", item: FULL },
     ],
   },
+  guideGalleryJsonLd(FULL, "Popular Texas cemeteries"),
 ];
+
 
 const Section: React.FC<{ id?: string; eyebrow?: string; title: React.ReactNode; children: React.ReactNode }> = ({ id, eyebrow, title, children }) => (
   <section id={id} className="py-12 md:py-16 scroll-mt-24">
