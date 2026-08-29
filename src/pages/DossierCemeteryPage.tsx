@@ -25,6 +25,7 @@ const SITE = "https://texascemeterybrokers.com";
 const NAV = [
   { href: "#market", label: "The market here" },
   { href: "#prices", label: "Prices" },
+  { href: "#financing", label: "0% financing" },
   { href: "#buy", label: "Buy a space" },
   { href: "#valuation", label: "Free valuation" },
   { href: "#grounds", label: "Photographs" },
