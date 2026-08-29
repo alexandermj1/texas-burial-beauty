@@ -177,7 +177,7 @@ const RestlandGardenMap = () => {
 
       <div className="px-6 md:px-8 py-6 border-t border-border/60 flex flex-col lg:flex-row gap-5 justify-between lg:items-center">
         <p className="text-[11px] text-muted-foreground max-w-md leading-relaxed">
-          Redrawn by Texas Cemetery Brokers from Restland's published garden plan. Positions are indicative — confirm
+          Redrawn from the published garden plan. Positions are indicative — confirm
           the exact lot and space with the cemetery office before you visit.
         </p>
         <div className="flex flex-wrap gap-2 shrink-0">
