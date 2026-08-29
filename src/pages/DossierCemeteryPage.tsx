@@ -780,14 +780,18 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
         </div>
       </section>
 
-      {/* Mobile action bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.96)] backdrop-blur-md px-4 py-3 flex gap-2">
-        <a href="tel:+12142304740" className={`${ghostBtn} flex-1 px-3 py-3 text-[14px]`}>
+      {/* Mobile action bar — slim, slides away while scrolling down */}
+      <div
+        className={`lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.96)] backdrop-blur-md px-4 py-2 flex gap-2 transition-transform duration-300 ${
+          actionBarHidden ? "translate-y-full" : "translate-y-0"
+        }`}
+      >
+        <a href="tel:+12142304740" className={`${ghostBtn} flex-1 px-3 py-2.5 text-[13px]`}>
           <Phone className="w-4 h-4 text-[hsl(var(--gold))]" /> Call
         </a>
-        <a href="#valuation" className={`${goldBtn} flex-1 px-3 py-3 text-[14px]`}>Free valuation</a>
+        <a href="#valuation" className={`${goldBtn} flex-1 px-3 py-2.5 text-[13px]`}>Free valuation</a>
       </div>
-      <div className="lg:hidden h-[76px]" aria-hidden />
+      <div className="lg:hidden h-[64px]" aria-hidden />
 
       <Footer />
 
