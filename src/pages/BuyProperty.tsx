@@ -755,8 +755,8 @@ const BuyProperty = () => {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            <Link to="/guides/buying-a-cemetery-plot" className="text-primary font-medium hover:underline">How to buy a cemetery plot →</Link>
-            <Link to="/guides/cemetery-plot-cost-texas" className="text-primary font-medium hover:underline">Texas cemetery plot costs →</Link>
+            <Link to="/cemetery-plots-for-sale-texas" className="text-primary font-medium hover:underline">How to buy a cemetery plot →</Link>
+            <Link to="/cemetery-plot-cost-texas" className="text-primary font-medium hover:underline">Texas cemetery plot costs →</Link>
             <Link to="/cemeteries" className="text-primary font-medium hover:underline">Browse the cemetery directory →</Link>
           </div>
         </div>
