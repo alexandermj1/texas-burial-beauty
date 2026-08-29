@@ -14,6 +14,12 @@ const NO_PHOTO_SLUGS = [
   "forest-park-westheimer",
   "brookside-memorial-park",
   "memorial-oaks-cemetery",
+  "mount-olivet-cemetery",
+  "grove-hill-memorial-park",
+  "moore-memorial-gardens",
+  "forest-park-east",
+  "woodlawn-garden-of-memories",
+  "greenlawn-memorial-park",
 ] as const;
 
 export const ARCHIVE_HEROES: Record<string, { src: string; alt: string }> = Object.fromEntries(
