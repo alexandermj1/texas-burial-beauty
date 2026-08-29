@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, MapPin, ArrowRight, X } from "lucide-react";
@@ -112,6 +112,20 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       const max = h.scrollHeight - h.clientHeight;
       setProgress(max > 0 ? Math.min(1, h.scrollTop / max) : 0);
       setStuck(h.scrollTop > 620);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Mobile action bar slides out of the way while reading down, returns on scroll up
+  const lastScrollY = useRef(0);
+  const [actionBarHidden, setActionBarHidden] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setActionBarHidden(y > lastScrollY.current + 4 && y > 400);
+      lastScrollY.current = y;
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -240,9 +254,9 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
         style={{ transform: `scaleX(${progress})` }}
       />
 
-      {/* Sticky context bar */}
+      {/* Sticky context bar — desktop only; on mobile it eats too much of the screen */}
       <div
-        className={`fixed top-[64px] left-0 right-0 z-50 border-b border-[hsl(var(--gold)/0.28)] bg-[hsl(var(--ink-deep)/0.94)] backdrop-blur-md transition-all duration-300 ${
+        className={`hidden lg:block fixed top-[64px] left-0 right-0 z-50 border-b border-[hsl(var(--gold)/0.28)] bg-[hsl(var(--ink-deep)/0.94)] backdrop-blur-md transition-all duration-300 ${
           stuck ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
         }`}
       >
@@ -766,14 +780,18 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
         </div>
       </section>
 
-      {/* Mobile action bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.96)] backdrop-blur-md px-4 py-3 flex gap-2">
-        <a href="tel:+12142304740" className={`${ghostBtn} flex-1 px-3 py-3 text-[14px]`}>
+      {/* Mobile action bar — slim, slides away while scrolling down */}
+      <div
+        className={`lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink-deep)/0.96)] backdrop-blur-md px-4 py-2 flex gap-2 transition-transform duration-300 ${
+          actionBarHidden ? "translate-y-full" : "translate-y-0"
+        }`}
+      >
+        <a href="tel:+12142304740" className={`${ghostBtn} flex-1 px-3 py-2.5 text-[13px]`}>
           <Phone className="w-4 h-4 text-[hsl(var(--gold))]" /> Call
         </a>
-        <a href="#valuation" className={`${goldBtn} flex-1 px-3 py-3 text-[14px]`}>Free valuation</a>
+        <a href="#valuation" className={`${goldBtn} flex-1 px-3 py-2.5 text-[13px]`}>Free valuation</a>
       </div>
-      <div className="lg:hidden h-[76px]" aria-hidden />
+      <div className="lg:hidden h-[64px]" aria-hidden />
 
       <Footer />
 
