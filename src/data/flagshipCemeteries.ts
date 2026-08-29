@@ -95,10 +95,10 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Islamic Garden", kind: "Ground", tier: "value", note: "Faith-designated garden near the north drive; the most accessible counter pricing on the property." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [6500, 29000], resale: [5000, 17000] },
-      { type: "Companion / two spaces", retail: [13000, 54500], resale: [10000, 32500] },
-      { type: "Lawn crypt (double depth)", retail: [10500, 41500], resale: [9000, 27000] },
-      { type: "Mausoleum crypt", retail: [8500, 48000], resale: [7500, 32500] },
+      { type: "Single burial space", retail: [6500, 30000], resale: [5000, 17000] },
+      { type: "Companion / two spaces", retail: [13000, 55000], resale: [10000, 32500] },
+      { type: "Lawn crypt (double depth)", retail: [10500, 42500], resale: [9000, 27500] },
+      { type: "Mausoleum crypt", retail: [8500, 47500], resale: [7500, 32500] },
       { type: "Cremation niche", retail: [2250, 14500], resale: [2250, 10000] },
     ],
     localNotes: [
@@ -170,9 +170,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Established lawn sections", kind: "Ground", tier: "standard", note: "Mature lawns holding two to four contiguous spaces." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [8000, 41500], resale: [6500, 27000] },
-      { type: "Companion / two spaces", retail: [15500, 80000], resale: [13000, 50500] },
-      { type: "Mausoleum crypt", retail: [11500, 72000], resale: [11000, 50500] },
+      { type: "Single burial space", retail: [8000, 42500], resale: [6500, 27500] },
+      { type: "Companion / two spaces", retail: [15500, 80000], resale: [13000, 50000] },
+      { type: "Mausoleum crypt", retail: [11500, 72500], resale: [11000, 50000] },
       { type: "Cremation niche", retail: [3250, 19000], resale: [3000, 12500] },
     ],
     localNotes: [
@@ -247,9 +247,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
 
     pricing: [
       { type: "Single burial space", retail: [4000, 22500], resale: [3500, 13500] },
-      { type: "Companion / two spaces", retail: [8000, 41500], resale: [6500, 25000] },
+      { type: "Companion / two spaces", retail: [8000, 42500], resale: [6500, 25000] },
       { type: "Lawn crypt (double depth)", retail: [3000, 19000], resale: [2750, 12500] },
-      { type: "Mausoleum crypt", retail: [8000, 41500], resale: [7500, 27000] },
+      { type: "Mausoleum crypt", retail: [8000, 42500], resale: [7500, 27500] },
       { type: "Cremation niche", retail: [2250, 13000], resale: [2250, 8500] },
     ],
     localNotes: [
@@ -320,9 +320,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
     pricing: [
       { type: "Single burial space", retail: [3000, 12000], resale: [2750, 8000] },
-      { type: "Companion / two spaces", retail: [6000, 24000], resale: [5500, 16000] },
-      { type: "Veteran crypt", retail: [7000, 24000], resale: [6500, 17000] },
-      { type: "Mausoleum crypt", retail: [7000, 35000], resale: [6500, 23500] },
+      { type: "Companion / two spaces", retail: [6000, 25000], resale: [5500, 16000] },
+      { type: "Veteran crypt", retail: [7000, 25000], resale: [6500, 17000] },
+      { type: "Mausoleum crypt", retail: [7000, 35000], resale: [6500, 22500] },
       { type: "Cremation niche", retail: [2000, 11000], resale: [2000, 7500] },
     ],
     localNotes: [
@@ -391,9 +391,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
     pricing: [
       { type: "Single burial space", retail: [3250, 12000], resale: [2750, 8000] },
-      { type: "Companion / two spaces", retail: [6500, 24000], resale: [5500, 16000] },
+      { type: "Companion / two spaces", retail: [6500, 25000], resale: [5500, 16000] },
       { type: "Lawn crypt (double depth)", retail: [6500, 22500], resale: [6000, 15500] },
-      { type: "Mausoleum crypt", retail: [7000, 38500], resale: [6500, 25000] },
+      { type: "Mausoleum crypt", retail: [7000, 37500], resale: [6500, 25000] },
       { type: "Cremation niche", retail: [2000, 12000], resale: [2000, 8000] },
     ],
     localNotes: [
@@ -469,7 +469,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
 
     pricing: [
       { type: "Single burial space", retail: [4250, 13500], resale: [3500, 9500] },
-      { type: "Companion / two spaces", retail: [8000, 25500], resale: [6500, 18000] },
+      { type: "Companion / two spaces", retail: [8000, 25000], resale: [6500, 18000] },
       { type: "Second right of interment", retail: [2000, 7000], resale: [2000, 6000] },
       { type: "Cremation niche or urn space", retail: [1500, 9000], resale: [1500, 6000] },
     ],
@@ -548,7 +548,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
     pricing: [
       { type: "Single burial space", retail: [6000, 18500], resale: [4500, 11500] },
-      { type: "Companion / two spaces", retail: [12500, 37000], resale: [9500, 23500] },
+      { type: "Companion / two spaces", retail: [12500, 37500], resale: [9500, 22500] },
       { type: "Second right of interment", retail: [3000, 9500], resale: [2750, 7000] },
       { type: "Cremation niche or urn space", retail: [2000, 11000], resale: [1750, 7000] },
     ],
@@ -622,10 +622,10 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Cremation gardens & niches", kind: "Niche", tier: "value", note: "The most accessible pricing on the property for cremated remains." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [10500, 32000], resale: [7000, 20000] },
-      { type: "Companion / two spaces", retail: [21000, 64000], resale: [14500, 38000] },
-      { type: "Lawn crypt (double depth)", retail: [11500, 41500], resale: [9000, 27000] },
-      { type: "Mausoleum crypt", retail: [9000, 48000], resale: [7500, 30500] },
+      { type: "Single burial space", retail: [10500, 32500], resale: [7000, 20000] },
+      { type: "Companion / two spaces", retail: [20000, 65000], resale: [14500, 37500] },
+      { type: "Lawn crypt (double depth)", retail: [11500, 42500], resale: [9000, 27500] },
+      { type: "Mausoleum crypt", retail: [9000, 47500], resale: [7500, 30000] },
       { type: "Cremation niche", retail: [2250, 14500], resale: [2000, 9000] },
     ],
     localNotes: [
@@ -698,7 +698,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     pricing: [
       { type: "Single burial space", retail: [5000, 19000], resale: [4250, 11500] },
       { type: "Companion / two spaces", retail: [10500, 35000], resale: [8000, 22500] },
-      { type: "Lawn crypt (double depth)", retail: [11000, 33500], resale: [9000, 23500] },
+      { type: "Lawn crypt (double depth)", retail: [11000, 32500], resale: [9000, 22500] },
       { type: "Second right of interment", retail: [1500, 6500], resale: [1750, 5000] },
       { type: "Cremation niche", retail: [2000, 13000], resale: [2000, 8000] },
     ],
@@ -771,8 +771,8 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "Niche walls for cremated remains, well below the cost of ground burial." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [6500, 29000], resale: [4500, 14500] },
-      { type: "Companion / two spaces", retail: [11500, 48000], resale: [9000, 27000] },
+      { type: "Single burial space", retail: [6500, 30000], resale: [4500, 14500] },
+      { type: "Companion / two spaces", retail: [11500, 47500], resale: [9000, 27500] },
       { type: "Second right of interment", retail: [3250, 13500], resale: [2750, 9000] },
       { type: "Cremation niche", retail: [2000, 13000], resale: [1750, 8000] },
     ],
@@ -844,10 +844,10 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { name: "Cremation niches & urn gardens", kind: "Niche", tier: "value", note: "The most accessible option on the property for cremated remains." },
     ],
     pricing: [
-      { type: "Single burial space", retail: [10500, 35000], resale: [7500, 21500] },
-      { type: "Companion / two spaces", retail: [19500, 67000], resale: [14500, 39500] },
+      { type: "Single burial space", retail: [10500, 35000], resale: [7500, 22500] },
+      { type: "Companion / two spaces", retail: [19500, 67500], resale: [14500, 40000] },
       { type: "Second right of interment", retail: [4000, 13000], resale: [3250, 10000] },
-      { type: "Mausoleum crypt", retail: [10000, 51000], resale: [8000, 32500] },
+      { type: "Mausoleum crypt", retail: [10000, 50000], resale: [8000, 32500] },
       { type: "Cremation niche", retail: [2500, 16000], resale: [2500, 10000] },
     ],
     localNotes: [
