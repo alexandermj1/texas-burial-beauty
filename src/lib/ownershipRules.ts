@@ -553,8 +553,12 @@ export function signingRoster(a: OwnershipAnswers): RosterPerson[] {
 }
 
 /**
- * The full document list for a submission: statewide rules first, then the
- * cemetery's own overrides, then a per-person POA + photo ID for every signer.
+ * The full document list for a submission.
+ *
+ * When the family tree has been completed, the MASTER LOGIC in
+ * plotInheritanceRules.ts is the sole authority for the document request; the
+ * older question-by-question rules below only run for files that have no tree
+ * yet. Hand-added documents and the de-duplication step apply to both.
  */
 export function computeRequirements(
   raw: OwnershipAnswers,
@@ -564,6 +568,11 @@ export function computeRequirements(
   const out: Requirement[] = [];
   const add = (r: Requirement) => out.push(r);
   const rules = cem ?? {};
+
+  const tree = (raw as { v2?: unknown }).v2;
+  const useMaster = hasFamilyTree(tree);
+  if (useMaster) out.push(...masterRequirements(tree as V2State, rules, a.deed === "no"));
+  if (!useMaster) {
 
 
   // ── Proof of the right being sold ──
