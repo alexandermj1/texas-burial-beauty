@@ -18,7 +18,7 @@ type SubRow = { id: string; name: string | null; email: string | null; ownership
 
 const emptyState = (): V2State => ({
   deed: [{ id: uid(), n: "", st: "living" }],
-  spouse: {}, poa: {}, will: {}, taker: {}, kids: [], sibs: [], parents: {} as never,
+  spouse: {}, poa: {}, will: {}, taker: {}, kids: [], sibs: [], parents: [],
   heirSpouse: {}, contacts: {},
 });
 
@@ -139,7 +139,7 @@ export default function RulesPlaygroundPanel() {
   const lbl = "text-xs font-medium uppercase tracking-wide text-muted-foreground";
   const sel = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
-  const PersonList = ({ k, title, hint }: { k: "kids" | "sibs" | "parents"; title: string; hint: string }) => (
+  const personList = (k: "kids" | "sibs" | "parents", title: string, hint: string) => (
     <div className={box}>
       <div className="flex items-center justify-between">
         <div>
@@ -328,9 +328,9 @@ export default function RulesPlaygroundPanel() {
             )}
           </div>
 
-          <PersonList k="kids" title="Children of the deceased owner(s)" hint="Grandchildren step into a deceased child's share." />
-          <PersonList k="sibs" title="Brothers and sisters" hint="Only used when there are no children or grandchildren." />
-          <PersonList k="parents" title="Surviving parents" hint="Only used when there are no descendants and no siblings." />
+          {personList("kids", "Children of the deceased owner(s)", "Grandchildren step into a deceased child's share.")}
+          {personList("sibs", "Brothers and sisters", "Only used when there are no children or grandchildren.")}
+          {personList("parents", "Surviving parents", "Only used when there are no descendants and no siblings.")}
         </div>
 
         <div className="space-y-4 lg:sticky lg:top-4 self-start">
