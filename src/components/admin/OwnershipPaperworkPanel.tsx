@@ -85,6 +85,42 @@ const personKey = (n?: string | null) => {
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
 };
 const reqDbKey = (r: Requirement) => `${r.code}::${personKey(r.personName)}`;
+
+/**
+ * What a checklist row is *about*, regardless of how it was created. A broker
+ * who typed "Photo ID - Carol Anderson" by hand made the very same item the
+ * rules engine later emits as D2P for Carol, so the two must never both show.
+ */
+const DOC_FAMILIES: Array<[string, RegExp, RegExp]> = [
+  // family, matching generated codes, matching free-text labels
+  ["photo_id", /^(D2|D2P)$/, /(photo\s*id|photo\s*identification|driver'?s?\s*licen|state\s*id|passport)/i],
+  ["death_certificate", /^D6$/, /death\s*certificate/i],
+  ["marriage_certificate", /^D5$/, /marriage\s*(certificate|licen)/i],
+  ["poa", /^D21$/, /power\s*of\s*attorney/i],
+];
+const docFamily = (code?: string | null, label?: string | null): string | null => {
+  const c = String(code ?? "");
+  const l = String(label ?? "");
+  for (const [family, codeRe, labelRe] of DOC_FAMILIES) {
+    if (c && codeRe.test(c)) return family;
+    if (l && labelRe.test(l)) return family;
+  }
+  return null;
+};
+/** Ad-hoc rows a broker added by hand carry an "X-…" code. */
+const isAdHoc = (code?: string | null) => /^X-/i.test(String(code ?? ""));
+/** Person a row is about — from the field, or trailing "… - Name" in the label. */
+const rowPerson = (code?: string | null, person?: string | null, label?: string | null) => {
+  const direct = personKey(person);
+  if (direct) return direct;
+  const m = String(label ?? "").match(/[-–—]\s*([^-–—]+)$/);
+  return personKey(m?.[1] ?? "");
+};
+const familyKey = (code?: string | null, person?: string | null, label?: string | null) => {
+  const fam = docFamily(code, label);
+  return fam ? `${fam}::${rowPerson(code, person, label)}` : null;
+};
+
 /** Stable DOM id so the family tree can jump straight to a checklist row. */
 const anchorId = (r: Requirement) => `req-${reqKey(r).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
 
@@ -728,6 +764,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // duplicate-key error.
       const live = await fetchLiveRows();
       const existing = new Map(live.filter((r) => r.doc_code).map((r) => [keyOf(r.doc_code, r.person_name), r]));
+      // Hand-added rows that mean the same thing as a generated requirement are
+      // adopted rather than duplicated (one "Photo ID — Carol", not two).
+      const adHocByFamily = new Map<string, DocRow>();
+      for (const r of live) {
+        if (!isAdHoc(r.doc_code)) continue;
+        const fk = familyKey(r.doc_code, r.person_name, r.label);
+        if (fk && !adHocByFamily.has(fk)) adHocByFamily.set(fk, r);
+      }
+      const adopted = new Set<string>();
+
       const seen = new Set<string>();
       const inserts: Record<string, unknown>[] = [];
       const updates: { id: string; patch: Record<string, unknown> }[] = [];
@@ -736,7 +782,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         const key = reqDbKey(r);
         if (seen.has(key)) return; // never write the same item twice in one pass
         seen.add(key);
-        const prev = existing.get(key);
+        const fk = familyKey(r.code, r.personName, r.label);
+        const twin = !existing.get(key) && fk ? adHocByFamily.get(fk) : undefined;
+        if (twin) adopted.add(twin.id);
+        const prev = existing.get(key) ?? twin;
+
         const base = {
           submission_id: submissionId,
           doc_code: r.code,
@@ -775,15 +825,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
       const wanted = new Set(requirements.map(reqDbKey));
+      const wantedFamilies = new Set(
+        requirements.map((r) => familyKey(r.code, r.personName, r.label)).filter(Boolean) as string[],
+      );
       const stale = live.filter((r) => {
          const key = keyOf(r.doc_code, r.person_name);
+         if (adopted.has(r.id)) return false;
          const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
          const supersededPlaceholder = !!r.person_name
            && /^(owner on the deed|each co-owner|each heir|executor|trustee|authorised officer|person acting under authority)$/i.test(r.person_name)
            && requirements.some((x) => x.code === r.doc_code && x.personName && x.personName !== r.person_name);
+         // A hand-typed row that says the same thing as a generated requirement
+         // for the same person is a duplicate — drop it (never when a file is on it).
+         const fk = familyKey(r.doc_code, r.person_name, r.label);
+         const duplicateAdHoc = isAdHoc(r.doc_code) && !!fk && wantedFamilies.has(fk);
+         if (duplicateAdHoc) return !r.file_url && !(r.file_urls ?? []).length && r.status !== "received";
          return !!r.doc_code && !wanted.has(key) && !r.file_url
            && (supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
        });
+
       if (stale.length) {
         await softDelete("submission_documents", stale.map((s) => s.id));
       }
@@ -1117,7 +1177,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
             county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
             // The deed is the controlling description — use it verbatim when we hold one.
-            plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
+            plot_description: str(prior?.plot_description) || str(s.plot_description) || plotHints[0]?.text ||
               formatPlotDescription({ section: str(s.section), lawn: str(s.lawn), space_numbers: str(s.space_numbers) }),
             plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
             listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",

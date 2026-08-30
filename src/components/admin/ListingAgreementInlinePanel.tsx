@@ -105,7 +105,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
       const { data } = await supabase
         .from("contact_submissions")
         .select(
-          "quote_amount, plot_count, spaces, space_numbers, section, lawn, cemetery, cemetery_city, cemetery_retail, list_price, listing_tier, listing_option, deed_owner_names, phone, email, ownership_answers",
+          "quote_amount, plot_count, spaces, space_numbers, section, lawn, plot_description, cemetery, cemetery_city, cemetery_retail, list_price, listing_tier, listing_option, deed_owner_names, phone, email, ownership_answers",
         )
         .eq("id", seller.id)
         .maybeSingle();
@@ -132,6 +132,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
       setCemetery(row.cemetery ?? seller.cemetery ?? "");
       setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
       setPlotDescription(
+        String((row as any).plot_description ?? "").trim() ||
         formatPlotDescription({
           section: row.section,
           lawn: row.lawn,

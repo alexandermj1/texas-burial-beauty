@@ -148,7 +148,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
         email: merged.email ?? "",
         cemetery: merged.cemetery ?? "",
         county_state: merged.cemetery_city ? `${merged.cemetery_city}, TX` : "",
-        plot_description: formatPlotDescription({
+        plot_description: String(merged.plot_description ?? "").trim() || formatPlotDescription({
           section: merged.section,
           lawn: (merged as any).lawn,
           spaces: merged.spaces,
