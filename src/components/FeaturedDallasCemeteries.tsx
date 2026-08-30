@@ -120,7 +120,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                 thumbnails and tinted caption panels. Four regular cards, then
                 Sparkman/Hillcrest as a full-width closing spread. */}
             <div className="mx-auto grid w-full max-w-5xl gap-x-8 gap-y-10 md:grid-cols-2 md:gap-x-10">
-              {DALLAS_CEMETERY_PROFILES.slice(0, 4).map((c, i) => {
+              {compactCards.map((c, i) => {
                 const accent = COMPACT_ACCENTS[i];
                 return (
                   <motion.article
