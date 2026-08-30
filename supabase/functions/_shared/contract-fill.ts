@@ -268,6 +268,7 @@ export async function buildFilledPdf(
     }
   } else {
     if (pages.length >= 3) buildPoaOverlays(pages[0], serif, serifBold, data);
+    appendPoaScopeAddendum(pdf, serif, serifBold, data);
   }
   appendInfoSheet(pdf, serif, serifBold, serif, serifBold, kind, data);
   return await pdf.save();
