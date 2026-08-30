@@ -153,6 +153,46 @@ function buildPoaOverlays(page1: PDFPage, font: PDFFont, _bold: PDFFont, data: F
   }
 }
 
+// ---------- POA SCOPE ADDENDUM ----------
+// The POA template's powers clause lists the transfer mechanics but never says in
+// plain words that the Agent may SELL the property. This page records that the
+// authority includes the right to sell on the terms of the seller's Listing
+// Agreement — deliberately without restating any of its numbers or terms.
+function appendPoaScopeAddendum(pdf: PDFDocument, font: PDFFont, bold: PDFFont, data: FillData) {
+  const page = pdf.addPage([612, 792]);
+  const { width } = page.getSize();
+
+  page.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
+  page.drawText('Addendum A — Scope of Authority', { x: 50, y: 712, size: 18, font: bold, color: INK });
+  page.drawLine({ start: { x: 50, y: 700 }, end: { x: width - 50, y: 700 }, thickness: 0.6, color: HAIRLINE });
+  page.drawText('This Addendum is part of, and is signed together with, the Limited Power of Attorney to which it is attached.',
+    { x: 50, y: 682, size: 9, font, color: MUTED });
+
+  const body = [
+    `1.  Sale authority. In addition to the powers stated in the body of the Power of Attorney, the Principal expressly authorises Texas Cemetery Brokers LLC (the "Agent") to market, offer for sale and sell the interment rights described in that document (the "Property") on the Principal's behalf.`,
+    `2.  Governing terms. Any sale of the Property by the Agent is made on the terms agreed between the Principal and the Agent in their Listing Agreement. Those terms are set out in that Listing Agreement and, by agreement of the parties, are not repeated in this Power of Attorney or in this Addendum.`,
+    `3.  Limits unchanged. Nothing in this Addendum enlarges the limits stated in the Power of Attorney. The Agent remains bound to act only on the Property described there, in the Principal's best interest, and in accordance with the terms of the Listing Agreement referred to above.`,
+  ];
+  let y = 650;
+  for (const text of body) {
+    for (const line of wrapToWidth(text, font, 10.5, width - 100)) {
+      page.drawText(line, { x: 50, y, size: 10.5, font, color: INK });
+      y -= 15;
+    }
+    y -= 12;
+  }
+
+  // Reference the principal so the addendum is unambiguously tied to the instrument.
+  y -= 8;
+  page.drawText(`Principal: ${data.seller_name ?? ''}`, { x: 50, y, size: 10.5, font: bold, color: INK });
+  y -= 18;
+  page.drawText(`Property: ${[data.cemetery, data.plot_description].filter(Boolean).join(' — ')}`,
+    { x: 50, y, size: 9.5, font, color: MUTED });
+
+  page.drawLine({ start: { x: 50, y: 55 }, end: { x: width - 50, y: 55 }, thickness: 0.4, color: HAIRLINE });
+  page.drawText('ADDENDUM A — PART OF THE LIMITED POWER OF ATTORNEY', { x: 50, y: 40, size: 8, font: bold, color: MUTED });
+}
+
 // ---------- APPENDED DATA REFERENCE SHEET ----------
 // Plain contract-style data sheet: Times fonts, black ink, thin rules, no colored UI cards.
 function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: PDFFont, serifBold: PDFFont, kind: string, data: FillData) {
