@@ -44,7 +44,10 @@ export function initialState(CRM) {
     // for those people here rather than leaving a gap for the office to chase.
     sibs: [], parents: [], noSibs: {}, noParents: {}, sseq: 0,
     spaces: (CRM.spaces || []).map(l => ({ label: l, used: '', who: '' })),
-    contacts: {}, note: '', submitted: false, sent: false
+    // The power of attorney and any affidavit are typed from these answers, so
+    // for anyone who must sign we need their name exactly as it reads on their
+    // ID and the address the notary will visit. Phone and email are not needed.
+    contacts: {}, plotOk: '', plotFix: '', note: '', submitted: false, sent: false
   };
 }
 
