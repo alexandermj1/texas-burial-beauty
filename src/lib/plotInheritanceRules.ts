@@ -438,10 +438,6 @@ function linkHeirSpouse(ctx: Ctx, heir: MasterSigner, sp: V2SpouseAnswer | undef
 
 /** The signing roster the master rules produce, for the admin family view. */
 export function masterRoster(v2: V2State): MasterSigner[] {
-  const ctx: Ctx = { signers: new Map(), order: [], reqs: [] };
-  masterRequirements(v2, null, false);
-  void ctx;
-  // Rebuild by re-running and reading the person-scoped requirements.
   const reqs = masterRequirements(v2, null, false);
   const seen = new Map<string, MasterSigner>();
   for (const r of reqs) {
