@@ -53,7 +53,15 @@ export type V2State = {
   will?: Record<string, string>;
   taker?: Record<string, string>;
   kids?: V2Kid[];
+  /** Brothers and sisters, used when a deed holder left no descendants. */
+  sibs?: V2Kid[];
+  /** Surviving parents, used when there are no descendants and no siblings. */
+  parents?: V2Kid[];
   noKids?: Record<string, boolean>;
+  noSibs?: Record<string, boolean>;
+  noParents?: Record<string, boolean>;
+  /** What the deed holders were to each other when they were not a couple. */
+  deedRel?: string;
   heirSpouse?: Record<string, V2SpouseAnswer>;
   contacts?: Record<string, { addr?: string; email?: string; phone?: string }>;
   submitted?: boolean;
@@ -161,11 +169,25 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
   }
 
   // ── Exception: deed holders who were not spouses of each other ─────────────
-  if (named.length > 1 && !marriedToEachOther) {
+  const REL_LABEL: Record<string, string> = {
+    siblings: "brother and sister",
+    parent_child: "parent and child",
+    other_family: "other family",
+    unrelated: "not related",
+  };
+  const relLabel = REL_LABEL[clean(v2.deedRel)];
+  if (named.length > 1 && !marriedToEachOther && gone.length > 0) {
+    // Only matters once one of them has died: their share moves to their own
+    // family, not to the other owner. While everyone is living they each
+    // simply sign, so no manual decision is needed.
     add({
       code: "REVIEW",
-      label: "More than one name on the deed — confirm the relationship between them",
-      why: "Where the deed holders were not husband and wife (for example a mother and daughter), the ownership route is settled by hand before anything is sent.",
+      label: relLabel
+        ? `Deed held by ${relLabel} — confirm how the deceased owner's share passes`
+        : "More than one name on the deed — confirm the relationship between them",
+      why: relLabel
+        ? `The seller has told us the deed holders were ${relLabel}. Because one of them has died, a broker confirms whether the share passed to the surviving owner or to the deceased owner's own heirs before anything is sent.`
+        : "Where the deed holders were not husband and wife (for example a mother and daughter), the ownership route is settled by hand before anything is sent.",
       review: true,
     });
   }
@@ -280,13 +302,66 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
     const namedKids = kids.filter((k) => clean(k.n) || (k.kids ?? []).some((g) => clean(g.n)));
 
     if (!namedKids.length) {
-      add({
-        code: "REVIEW",
-        label: `Heirs at law of ${name} — no younger generation recorded`,
-        why: "With no children or grandchildren, the right passes to surviving siblings, and then to surviving parents. A broker confirms who they are before the request goes out.",
-        personName: name,
-        review: true,
-      });
+      // No descendants: the right passes to surviving brothers and sisters
+      // (their children stepping into a deceased sibling's share), and then to
+      // surviving parents. The family tree now asks for both.
+      const pick = (list: V2Kid[] | undefined) =>
+        (list ?? []).filter((x) => {
+          const of = x.of ?? [];
+          return of.length ? of.includes(d.id) : gone.length === 1;
+        });
+      const sibs = pick(v2.sibs).filter((x) => clean(x.n) || (x.kids ?? []).some((g) => clean(g.n)));
+      const folks = pick(v2.parents).filter((x) => clean(x.n) && x.st !== "deceased");
+
+      if (sibs.length) {
+        for (const x of sibs) {
+          const xName = clean(x.n);
+          if (x.st === "deceased") {
+            if (xName) {
+              add({
+                code: "D6",
+                label: `Death certificate — ${xName}`,
+                why: `Brother or sister of ${name} who would have inherited if living. Not needed if they are buried at this same cemetery.`,
+                personName: xName,
+                originalsOnly: rules.requires_originals,
+              });
+            }
+            for (const g of x.kids ?? []) {
+              const gName = clean(g.n);
+              if (!gName) continue;
+              const heir = addSigner(ctx, {
+                key: key(gName), name: gName, role: "heir",
+                why: `Niece or nephew of ${name} — steps into ${xName || "their parent"}'s share.`,
+              });
+              linkHeirSpouse(ctx, heir, heirSpouseOf(g.id), deedKeys);
+            }
+            continue;
+          }
+          if (!xName) continue;
+          const heir = addSigner(ctx, {
+            key: key(xName), name: xName, role: "heir",
+            why: `Brother or sister of ${name} — inherits under the Texas heirs-at-law rules, there being no descendants.`,
+          });
+          linkHeirSpouse(ctx, heir, heirSpouseOf(x.id), deedKeys);
+        }
+      } else if (folks.length) {
+        for (const x of folks) {
+          const xName = clean(x.n);
+          const heir = addSigner(ctx, {
+            key: key(xName), name: xName, role: "heir",
+            why: `Surviving parent of ${name} — inherits under the Texas heirs-at-law rules, there being no descendants or siblings.`,
+          });
+          linkHeirSpouse(ctx, heir, heirSpouseOf(x.id), deedKeys);
+        }
+      } else {
+        add({
+          code: "REVIEW",
+          label: `Heirs at law of ${name} — no younger generation recorded`,
+          why: "With no children or grandchildren, the right passes to surviving siblings, and then to surviving parents. A broker confirms who they are before the request goes out.",
+          personName: name,
+          review: true,
+        });
+      }
     }
 
     for (const k of kids) {
