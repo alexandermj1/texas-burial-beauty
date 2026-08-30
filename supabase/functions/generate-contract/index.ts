@@ -178,8 +178,7 @@ Deno.serve(async (req) => {
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
       county_state: overrides.county_state ?? defaultCountyState,
       plot_count: overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? '',
-      plot_description: overrides.plot_description ??
-        formatPlotDescription({ section: sub.section, lawn: sub.lawn, spaces: sub.spaces, space_numbers: sub.space_numbers }),
+      plot_description: plotDescription,
       authorized_min_total: authMinTotal || undefined,
       authorized_min_per_plot: Number(overrides.authorized_min_per_plot) ||
         (authMinTotal ? Math.round(authMinTotal / plots) : undefined),
@@ -223,8 +222,7 @@ Deno.serve(async (req) => {
         surviving_spouse: overrides.surviving_spouse ?? (spouseOnRoster ? fullName(spouseOnRoster) : ''),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
-        plot_description: overrides.plot_description ??
-          formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers }),
+        plot_description: plotDescriptionNoCount,
         spaces: sub.spaces ?? '',
         include_spouse_page: overrides.include_spouse_page ?? ownership.spouse === 'yes',
       });
@@ -235,7 +233,7 @@ Deno.serve(async (req) => {
         owner_name: fullName(String(overrides.owner_name ?? sub.deed_owner_names ?? sub.name ?? '')),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
-        plot_description: formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers }),
+        plot_description: plotDescriptionNoCount,
         spaces: sub.spaces ?? '',
       });
 
@@ -261,9 +259,8 @@ Deno.serve(async (req) => {
 
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
-        plot_description: overrides.plot_description ??
-          formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers }),
-        spaces: overrides.plot_description ? '' : (sub.spaces ?? ''),
+        plot_description: plotDescriptionNoCount,
+        spaces: adminPlotDescription ? '' : (sub.spaces ?? ''),
         phone: fill.phone,
         email: fill.email,
       });
