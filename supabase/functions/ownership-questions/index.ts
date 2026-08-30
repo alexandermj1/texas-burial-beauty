@@ -11,6 +11,7 @@
 //   send    — admin-only, emails the seller the link through the info@ mailbox
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { isInternalCall } from "../_shared/internal-auth.ts";
+import { hasFamilyTree, masterRequirements } from "../_shared/plot-inheritance-rules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
