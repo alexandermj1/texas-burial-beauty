@@ -112,6 +112,7 @@ function addSigner(ctx: Ctx, p: MasterSigner): MasterSigner {
     if (p.spouseKey && !existing.spouseKey) existing.spouseKey = p.spouseKey;
     if (p.agentName && !existing.agentName) existing.agentName = p.agentName;
     if (p.spouseNotOnDeed) existing.spouseNotOnDeed = true;
+    if (p.survivingSpouse) existing.survivingSpouse = true;
     return existing;
   }
   ctx.signers.set(p.key, p);
@@ -257,6 +258,7 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
         key: key(sName), name: sName, role: "spouse",
         why: `Surviving spouse of ${name} at the time of death — signs in their own right.`,
         spouseNotOnDeed: !deedKeys.has(key(sName)),
+        survivingSpouse: true,
       });
     } else if (isDeadSpouse(sp)) {
       const sName = clean(sp!.n);
@@ -338,7 +340,9 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
   // ── Marriage certificate for a surviving spouse not named on the deed ──────
   for (const k of ctx.order) {
     const p = ctx.signers.get(k)!;
-    if (p.role === "spouse" && p.spouseNotOnDeed) {
+    // Only a surviving spouse of a deceased deed holder has to prove the
+    // marriage; the current husband or wife of a living owner does not.
+    if (p.role === "spouse" && p.spouseNotOnDeed && p.survivingSpouse) {
       add({
         code: "D5",
         label: `Marriage certificate — ${p.name}`,
