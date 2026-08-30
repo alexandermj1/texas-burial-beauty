@@ -574,6 +574,23 @@ const OwnershipConfirm = () => {
                         </div>
                       </div>
                     ) : null}
+                    {V.relAsk ? (
+                      <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "10px", "padding": "12px 14px", "borderRadius": "15px", "background": "#f7f8f6", "border": "1px solid #ececf0"}}>
+                        <span style={{"fontSize": "14px", "fontWeight": "400", "color": "#3a3a3f"}}>
+                          What were {V.relNames} to each other?
+                        </span>
+                        <div style={{"display": "flex", "flexWrap": "wrap", "background": "#ffffff", "borderRadius": "10px", "padding": "3px", "border": "1px solid #ececf0"}}>
+                          {(V.relSeg || []).map((o: any, ir: number) => (
+                            <div key={ir} onClick={o.pick} style={{"padding": "6px 11px", "borderRadius": "8px", "fontSize": "13px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`, "transition": "background .2s ease, color .2s ease"}}>
+                              {o.label}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{"flexBasis": "100%", "fontSize": "13px", "fontWeight": "300", "lineHeight": "1.5", "color": "#9a9aa2"}}>
+                          {V.relNote}
+                        </div>
+                      </div>
+                    ) : null}
                     <div onClick={V.addDeed} style={{"display": "inline-block", "marginTop": "11px", "padding": "10px 17px", "borderRadius": "100px", "border": "1.5px dashed #dcdce1", "fontSize": "14.5px", "fontWeight": "500", "color": `${V.accent}`, "cursor": "pointer", "userSelect": "none"}} className="dcx4">
                       + Add another name
                     </div>
@@ -991,6 +1008,120 @@ const OwnershipConfirm = () => {
                               + Add a child
                             </div>
                           </div>
+                        </div>
+                      </React.Fragment>) : null}
+                      {V.showElders ? (<React.Fragment>
+                        <div style={{"background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "clamp(22px,4vw,30px) clamp(18px,3.6vw,30px)", "animation": "rise .45s cubic-bezier(.2,.7,.3,1) both"}}>
+                          <div style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.07em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
+                            Follow-up · No children
+                          </div>
+                          <h3 style={{"margin": "13px 0 0 0", "fontSize": "clamp(20px,3.6vw,24px)", "lineHeight": "1.24", "fontWeight": "600", "letterSpacing": "-0.021em", "color": "#1d1d1f", "textWrap": "pretty"}}>
+                            Who is the next of kin?
+                          </h3>
+                          {(V.elderGroups || []).map((g: any, ig: number) => (
+                            <div key={ig} style={{"marginTop": "20px"}}>
+                              <div style={{"fontSize": "16.5px", "fontWeight": "600", "letterSpacing": "-0.013em", "color": "#1d1d1f"}}>
+                                {g.title}
+                              </div>
+                              <p style={{"margin": "6px 0 0 0", "fontSize": "15px", "fontWeight": "300", "lineHeight": "1.55", "color": "#6e6e73", "textWrap": "pretty"}}>
+                                {g.blurb}
+                              </p>
+                              <div style={{"display": "flex", "flexDirection": "column", "gap": "8px", "marginTop": "14px"}}>
+                                {(g.rows || []).map((x: any, ix: number) => (
+                                  <div key={ix} style={{"padding": "12px 14px", "borderRadius": "15px", "background": `${x.cardBg}`, "border": `1px solid ${x.cardBd}`}}>
+                                    <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center"}}>
+                                      <div style={{"flex": "none", "width": "36px", "height": "36px", "borderRadius": "50%", "background": `${x.avBg}`, "color": `${x.avFg}`, "display": "grid", "placeItems": "center", "fontSize": "13.5px", "fontWeight": "600"}}>
+                                        {x.initials}
+                                      </div>
+                                      <div style={{"flex": "1", "minWidth": "130px"}}>
+                                        <input value={x.name ?? ""} onChange={x.setName} placeholder="Brother or sister's full name" style={{"width": "100%", "padding": "6px 8px", "fontSize": "16px", "fontWeight": "500", "color": "#1d1d1f", "background": "transparent", "border": "1px solid transparent", "borderRadius": "9px", "outline": "none"}} className="dcx13" />
+                                        <div style={{"marginTop": "1px", "paddingLeft": "8px", "fontSize": "12.5px", "fontWeight": "300", "color": "#9a9aa2"}}>
+                                          {x.rel}
+                                        </div>
+                                      </div>
+                                      <div style={{"display": "flex", "background": "#f2f2f5", "borderRadius": "10px", "padding": "3px"}}>
+                                        {(x.seg || []).map((o: any, io: number) => (
+                                          <div key={io} onClick={o.pick} style={{"padding": "7px 11px", "borderRadius": "8px", "fontSize": "13.5px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`}}>
+                                            {o.label}
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div onClick={x.remove} style={{"fontSize": "13px", "color": "#b7b7bf", "cursor": "pointer", "userSelect": "none"}}>
+                                        Remove
+                                      </div>
+                                    </div>
+                                    {x.dead ? (
+                                      <div style={{"marginTop": "10px", "paddingLeft": "12px", "borderLeft": "2px solid #ececf0"}}>
+                                        {(x.kids || []).map((k2: any, ik: number) => (
+                                          <div key={ik} style={{"display": "flex", "gap": "9px", "alignItems": "center", "marginBottom": "7px"}}>
+                                            <div style={{"flex": "none", "width": "30px", "height": "30px", "borderRadius": "50%", "background": `${k2.avBg}`, "color": `${k2.avFg}`, "display": "grid", "placeItems": "center", "fontSize": "12px", "fontWeight": "600"}}>
+                                              {k2.initials}
+                                            </div>
+                                            <input value={k2.name ?? ""} onChange={k2.setName} placeholder="Their child's full name" style={{"flex": "1", "minWidth": "120px", "padding": "8px 11px", "fontSize": "15px", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #ececf0", "borderRadius": "10px", "outline": "none"}} />
+                                            <div onClick={k2.remove} style={{"fontSize": "13px", "color": "#b7b7bf", "cursor": "pointer", "userSelect": "none"}}>
+                                              Remove
+                                            </div>
+                                          </div>
+                                        ))}
+                                        <div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px", "marginTop": "4px"}}>
+                                          <div onClick={x.addKid} style={{"padding": "8px 14px", "borderRadius": "100px", "border": "1.5px dashed #dcdce1", "fontSize": "13.5px", "fontWeight": "500", "color": `${V.accent}`, "cursor": "pointer", "userSelect": "none"}}>
+                                            + Add their child
+                                          </div>
+                                          <div onClick={x.toggleNoneKids} style={{"padding": "8px 14px", "borderRadius": "100px", "fontSize": "13.5px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none", "background": x.noneKids ? V.accent : "#ffffff", "color": x.noneKids ? "#ffffff" : "#4c4c54", "border": `1.5px solid ${x.noneKids ? V.accent : "#e3e3e8"}`}}>
+                                            {x.noneKidsLabel}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px", "marginTop": "11px"}}>
+                                <div onClick={g.addRow} style={{"padding": "9px 15px", "borderRadius": "100px", "border": "1.5px dashed #dcdce1", "fontSize": "14px", "fontWeight": "500", "color": `${V.accent}`, "cursor": "pointer", "userSelect": "none"}}>
+                                  + Add a brother or sister
+                                </div>
+                                <div onClick={g.toggleNone} style={{"padding": "9px 15px", "borderRadius": "100px", "fontSize": "14px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none", "background": `${g.noneBg}`, "color": `${g.noneFg}`, "border": `1.5px solid ${g.noneBd}`}}>
+                                  {g.noneLabel}
+                                </div>
+                              </div>
+                              {g.showParents ? (
+                                <div style={{"marginTop": "18px", "padding": "14px 15px", "borderRadius": "16px", "background": "#f7f8f6", "border": "1px solid #ececf0"}}>
+                                  <div style={{"fontSize": "15.5px", "fontWeight": "600", "color": "#1d1d1f"}}>
+                                    {g.parentsTitle}
+                                  </div>
+                                  <p style={{"margin": "5px 0 0 0", "fontSize": "14.5px", "fontWeight": "300", "lineHeight": "1.5", "color": "#6e6e73"}}>
+                                    {g.parentsBlurb}
+                                  </p>
+                                  {(g.parentRows || []).map((x: any, ip: number) => (
+                                    <div key={ip} style={{"display": "flex", "flexWrap": "wrap", "gap": "9px", "alignItems": "center", "marginTop": "10px"}}>
+                                      <div style={{"flex": "none", "width": "32px", "height": "32px", "borderRadius": "50%", "background": `${x.avBg}`, "color": `${x.avFg}`, "display": "grid", "placeItems": "center", "fontSize": "12.5px", "fontWeight": "600"}}>
+                                        {x.initials}
+                                      </div>
+                                      <input value={x.name ?? ""} onChange={x.setName} placeholder="Parent's full name" style={{"flex": "1", "minWidth": "140px", "padding": "9px 12px", "fontSize": "15px", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #ececf0", "borderRadius": "10px", "outline": "none"}} />
+                                      <div style={{"display": "flex", "background": "#ffffff", "borderRadius": "10px", "padding": "3px", "border": "1px solid #ececf0"}}>
+                                        {(x.seg || []).map((o: any, io2: number) => (
+                                          <div key={io2} onClick={o.pick} style={{"padding": "6px 11px", "borderRadius": "8px", "fontSize": "13px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`}}>
+                                            {o.label}
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div onClick={x.remove} style={{"fontSize": "13px", "color": "#b7b7bf", "cursor": "pointer", "userSelect": "none"}}>
+                                        Remove
+                                      </div>
+                                    </div>
+                                  ))}
+                                  <div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px", "marginTop": "11px"}}>
+                                    <div onClick={g.addParent} style={{"padding": "9px 15px", "borderRadius": "100px", "border": "1.5px dashed #dcdce1", "fontSize": "14px", "fontWeight": "500", "color": `${V.accent}`, "cursor": "pointer", "userSelect": "none"}}>
+                                      + Add a parent
+                                    </div>
+                                    <div onClick={g.toggleParentsNone} style={{"padding": "9px 15px", "borderRadius": "100px", "fontSize": "14px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none", "background": `${g.parentsNoneBg}`, "color": `${g.parentsNoneFg}`, "border": `1.5px solid ${g.parentsNoneBd}`}}>
+                                      {g.parentsNoneLabel}
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          ))}
                         </div>
                       </React.Fragment>) : null}
                       {V.show8 ? (<React.Fragment>
