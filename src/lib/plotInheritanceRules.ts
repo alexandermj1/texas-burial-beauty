@@ -149,13 +149,15 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
   if (deedMissing) {
     add({
       code: "D1",
-      label: rules.in_person_lost_deed
-        ? "Affidavit of lost deed (cemetery's own form, signed in person)"
-        : "Affidavit of lost deed",
+      label: rules.own_lost_deed_form
+        ? `Affidavit of lost deed — ${rules.own_lost_deed_form_name ?? "cemetery's own form"}`
+        : rules.in_person_lost_deed
+          ? "Affidavit of lost deed (cemetery's own form, signed in person)"
+          : "Affidavit of lost deed",
       why: "The cemetery's record of ownership has to be re-established before the transfer.",
-      issuedByUs: !rules.in_person_lost_deed,
+      issuedByUs: !rules.in_person_lost_deed && !rules.own_lost_deed_form,
       needsNotary: true,
-      fromCemetery: rules.in_person_lost_deed,
+      fromCemetery: !!rules.in_person_lost_deed || !!rules.own_lost_deed_form,
       review: rules.in_person_lost_deed,
     });
   } else {
