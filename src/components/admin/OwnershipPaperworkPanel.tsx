@@ -782,7 +782,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         const key = reqDbKey(r);
         if (seen.has(key)) return; // never write the same item twice in one pass
         seen.add(key);
-        const prev = existing.get(key);
+        const fk = familyKey(r.code, r.personName, r.label);
+        const twin = !existing.get(key) && fk ? adHocByFamily.get(fk) : undefined;
+        if (twin) adopted.add(twin.id);
+        const prev = existing.get(key) ?? twin;
+
         const base = {
           submission_id: submissionId,
           doc_code: r.code,
