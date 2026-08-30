@@ -613,6 +613,17 @@ export function buildLogic(state, setS, accent0, CRM) {
       coupleAsk: L.coupleAsk(),
       coupleNames: L.coupleIds().length === 2 ? L.named().map(d => d.n.trim()).join(' and ') : '',
       coupleSeg: L.seg(L.coupleVal(), [['yes', 'Yes'], ['no', 'No'], ['unknown', "Don't know"]], v => setS({ couple: v })),
+      relAsk: L.relAsk(),
+      relNames: L.named().map(d => d.n.trim()).filter(Boolean).join(' and '),
+      relSeg: L.seg(s.deedRel, [
+        ['siblings', 'Brother & sister'], ['parent_child', 'Parent & child'],
+        ['other_family', 'Other family'], ['unrelated', 'Not related'], ['unsure', "Don't know"]
+      ], v => setS({ deedRel: v })),
+      relNote: s.deedRel === 'unsure'
+        ? 'We will confirm the relationship with the cemetery before anything is drawn up.'
+        : s.deedRel
+          ? 'Thank you \u2014 that tells us how the share of anyone who has died is passed on.'
+          : 'If they were not husband and wife, their shares pass differently, so we have to know what they were to each other.',
 
       addDeed: () => setS(st => ({ deed: st.deed.concat([{ id: 'd' + st.seq, n: '', st: '' }]), seq: st.seq + 1 })),
 
@@ -760,6 +771,66 @@ export function buildLogic(state, setS, accent0, CRM) {
         }))
       })),
       addKid: () => L.addKid(''),
+
+      showElders: d6 && L.elderEstates().length > 0,
+      elderGroups: L.elderEstates().map(d => {
+        const who = d.n.trim() || 'this owner';
+        const ofIds = L.elderEstates().length > 1 ? [d.id] : [];
+        const named = L.namedSibs(d.id);
+        const noneSibs = !!(s.noSibs || {})[d.id];
+        const noneParents = !!(s.noParents || {})[d.id];
+        const idxOf = (list, x) => (s[list] || []).map(y => y.id).indexOf(x.id);
+        return {
+          name: d.n, initials: initials(d.n),
+          title: 'Brothers and sisters of ' + who,
+          blurb: 'With no children or grandchildren, the right passes to ' + who + '\u2019s brothers and sisters. If one of them has died, their own children step into that share.',
+          noneLabel: noneSibs ? 'No brothers or sisters \u2713' : 'No brothers or sisters',
+          noneBg: noneSibs ? acc : '#ffffff', noneFg: noneSibs ? '#ffffff' : '#4c4c54', noneBd: noneSibs ? acc : '#e3e3e8',
+          toggleNone: () => setS(st => ({ noSibs: Object.assign({}, st.noSibs, { [d.id]: !(st.noSibs || {})[d.id] }) })),
+          rows: L.sibsOf(d.id).map(x => {
+            const i = idxOf('sibs', x);
+            const dead = x.st === 'deceased';
+            return {
+              name: x.n, initials: initials(x.n), dead,
+              rel: dead ? 'Brother or sister, has died \u2014 their children step in' : 'Brother or sister',
+              cardBg: dead ? '#fafafa' : '#ffffff', cardBd: dead ? '#e6e6eb' : '#ececf0',
+              avBg: dead ? '#f2f2f5' : (x.n.trim() ? '#eef1ea' : '#f5f5f7'),
+              avFg: dead ? '#9a9aa2' : (x.n.trim() ? acc : '#b7b7bf'),
+              seg: L.seg(x.st, [['living', 'Living'], ['deceased', 'Has died']], v => L.mutList('sibs', l => { l[i].st = v; })),
+              setName: ev => { const v = ev.target.value; L.mutList('sibs', l => { l[i].n = v; }); },
+              remove: () => L.mutList('sibs', l => { l.splice(i, 1); }),
+              noneKids: !!(s.noSibs || {})['sib:' + x.id],
+              noneKidsLabel: (s.noSibs || {})['sib:' + x.id] ? 'They had no children \u2713' : 'They had no children',
+              toggleNoneKids: () => setS(st => ({ noSibs: Object.assign({}, st.noSibs, { ['sib:' + x.id]: !(st.noSibs || {})['sib:' + x.id] }) })),
+              addKid: () => L.mutList('sibs', l => { l[i].kids = (l[i].kids || []).concat([{ id: 'sg' + Math.random().toString(36).slice(2, 8), n: '' }]); }),
+              kids: (x.kids || []).map((g, j) => ({
+                name: g.n, initials: initials(g.n),
+                avBg: g.n.trim() ? '#eef1ea' : '#f5f5f7', avFg: g.n.trim() ? acc : '#b7b7bf',
+                setName: ev => { const v = ev.target.value; L.mutList('sibs', l => { l[i].kids[j].n = v; }); },
+                remove: () => L.mutList('sibs', l => { l[i].kids.splice(j, 1); })
+              }))
+            };
+          }),
+          addRow: () => L.addElder('sibs', ofIds),
+          showParents: noneSibs && named.length === 0,
+          parentsTitle: 'Parents of ' + who,
+          parentsBlurb: 'With no brothers or sisters either, the right passes to ' + who + '\u2019s surviving parents.',
+          parentsNoneLabel: noneParents ? 'Both parents have died \u2713' : 'Both parents have died',
+          parentsNoneBg: noneParents ? acc : '#ffffff', parentsNoneFg: noneParents ? '#ffffff' : '#4c4c54', parentsNoneBd: noneParents ? acc : '#e3e3e8',
+          toggleParentsNone: () => setS(st => ({ noParents: Object.assign({}, st.noParents, { [d.id]: !(st.noParents || {})[d.id] }) })),
+          parentRows: L.parentsOf(d.id).map(x => {
+            const i = idxOf('parents', x);
+            return {
+              name: x.n, initials: initials(x.n),
+              avBg: x.n.trim() ? '#eef1ea' : '#f5f5f7', avFg: x.n.trim() ? acc : '#b7b7bf',
+              seg: L.seg(x.st, [['living', 'Living'], ['deceased', 'Has died']], v => L.mutList('parents', l => { l[i].st = v; })),
+              setName: ev => { const v = ev.target.value; L.mutList('parents', l => { l[i].n = v; }); },
+              remove: () => L.mutList('parents', l => { l.splice(i, 1); })
+            };
+          }),
+          addParent: () => L.addElder('parents', ofIds)
+        };
+      }),
 
       show8: d7 && L.inheritors().length > 0,
       heirSpouseRows: L.inheritors().map(h => {
