@@ -871,14 +871,19 @@ export function buildLogic(state, setS, accent0, CRM) {
       contacts: alive.map(c => {
         const st = s.contacts[c.key] || {};
         const needAddr = c.must && !(st.addr || '').trim();
+        const needLegal = c.must && !(st.legal || '').trim() && !(c.name || '').trim();
         return {
           name: c.name || 'Name still needed', roles: c.roles,
           nameFg: c.blank ? '#7d3a28' : '#1d1d1f',
           tag: c.must ? 'Must sign' : 'For contact only',
           tagBg: c.must ? '#eef1ea' : '#f0f0f3',
           tagFg: c.must ? acc : '#86868b',
-          bd: needAddr ? '#f2ddd5' : (c.must ? '#e0e6dd' : '#ececf0'),
-          needAddr,
+          bd: (needAddr || needLegal) ? '#f2ddd5' : (c.must ? '#e0e6dd' : '#ececf0'),
+          needAddr, needLegal, showLegal: c.must,
+          legalLabel: 'Full legal name, exactly as it reads on their driving licence or passport',
+          legalPlaceholder: c.name ? 'e.g. ' + c.name + ' \u2014 with any middle name' : 'Full legal name',
+          legal: st.legal || '',
+          setLegal: ev => { const v = ev.target.value; L.patch('contacts', c.key, { legal: v }); },
           addrLabel: c.must
             ? 'Postal address \u2014 required, this is where their power of attorney is posted'
             : 'Postal address, if you have it',
@@ -891,6 +896,27 @@ export function buildLogic(state, setS, accent0, CRM) {
           setPhone: ev => { const v = ev.target.value; L.patch('contacts', c.key, { phone: v }); }
         };
       }),
+
+      // The plot itself has to be described correctly on the power of attorney
+      // and on any affidavit, so we show the seller what is on file and let
+      // them correct it rather than the office guessing later.
+      plotTitle: 'The property being sold',
+      plotOnFile: [CRM.cemetery, CRM.location].filter(x => (x || '').trim()).join(' \u2014 '),
+      plotSeg: L.seg(s.plotOk, [['yes', 'That is correct'], ['no', 'Not quite right']], v => setS({ plotOk: v })),
+      plotFixAsk: s.plotOk === 'no',
+      plotFix: s.plotFix,
+      setPlotFix: ev => { const v = ev.target.value; setS({ plotFix: v }); },
+      plotNote: s.plotOk === 'no'
+        ? 'Tell us the garden or section, block, lot and space numbers as they read on the deed.'
+        : 'This wording goes on the power of attorney and on the transfer, so it has to match the deed.',
+
+      // Nothing is submitted until we hold everything the documents need.
+      contactsBlocked: !signers.every(c => {
+        const st = s.contacts[c.key] || {};
+        return (st.addr || '').trim() && ((st.legal || '').trim() || (c.name || '').trim());
+      }) || !s.plotOk || (s.plotOk === 'no' && !s.plotFix.trim()),
+      contactsBlockedNote: 'Add a full legal name and postal address for everyone who has to sign, and confirm the property details, and we can prepare the paperwork straight away.',
+
       note: s.note,
       setNote: ev => { const v = ev.target.value; setS({ note: v }); },
       submit: () => setS({ submitted: true }),
