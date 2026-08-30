@@ -25,6 +25,8 @@ import TexasCemeteriesPanel from "@/components/admin/TexasCemeteriesPanel";
 import CemeteryInfoCard from "@/components/admin/CemeteryInfoCard";
 import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipelinePanel";
 import InboxPanel from "@/components/admin/InboxPanel";
+// TEMPORARY test ground — remove this import, the tab entry and the render line to retire it.
+import RulesPlaygroundPanel from "@/components/admin/RulesPlaygroundPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
@@ -70,7 +72,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks" | "rules_playground">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -490,6 +492,8 @@ const Admin = () => {
     ...(user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com"
       ? [{ key: "activity_monitor" as typeof tab, label: "Activity Monitor", Icon: Radio }]
       : []),
+    // TEMPORARY test ground for the document rules.
+    { key: "rules_playground", label: "Rules Playground", Icon: FlaskConical },
   ];
 
   // Staff users only get Submissions and Map — even if they also carry the
@@ -984,6 +988,7 @@ const Admin = () => {
 
 
           <TeamTasksStartup onOpenList={() => setTeamMsgTasks(true)} />
+          {tab === "rules_playground" && <RulesPlaygroundPanel />}
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}
           {tab === "accounting" && <AccountingPanel />}
