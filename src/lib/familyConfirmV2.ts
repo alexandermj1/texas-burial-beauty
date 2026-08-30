@@ -463,27 +463,9 @@ export function buildLogic(state, setS, accent0, CRM) {
     s.kids.forEach(k => {
       if (k.st === 'deceased' && k.n.trim()) add('Death certificate for ' + k.n.trim(), 'It is what lets their children step into the share.');
     });
-    L.elderEstates().forEach(d => {
-      const who = d.n.trim() || 'the deceased owner';
-      L.sibsOf(d.id).forEach(x => {
-        if (x.st === 'deceased') {
-          if (x.n.trim()) add(x.n, 'Brother or sister of ' + who + ' \u00b7 has died', { dead: true });
-          (x.kids || []).forEach(g => {
-            if (g.n.trim()) add(g.n, 'Niece or nephew of ' + who + ' \u2014 steps into ' + (x.n.trim() || 'their parent') + '\u2019s share', { must: true });
-          });
-        } else if (x.n.trim()) {
-          add(x.n, 'Brother or sister of ' + who + ' \u2014 inherits a share', { must: true });
-        }
-      });
-      if (!L.namedSibs(d.id).length) {
-        L.parentsOf(d.id).forEach(x => {
-          if (!x.n.trim()) return;
-          if (x.st === 'deceased') add(x.n, 'Parent of ' + who + ' \u00b7 has died', { dead: true });
-          else add(x.n, 'Surviving parent of ' + who + ' \u2014 inherits a share', { must: true });
-        });
-      }
+    (s.sibs || []).forEach(x => {
+      if (x.st === 'deceased' && x.n.trim()) add('Death certificate for ' + x.n.trim(), 'It is what lets their children step into the share.');
     });
-
     L.inheritors().forEach(h => {
       const hs = s.heirSpouse[h.id] || {};
       if (hs.has === 'yes' && (hs.n || '').trim() && hs.alive !== 'deceased') add('Spousal consent from ' + hs.n.trim(), 'Signed by the husband or wife of ' + h.n.trim() + ', who inherits a share.');
@@ -536,27 +518,6 @@ export function buildLogic(state, setS, accent0, CRM) {
     s.kids.forEach(k => {
       if (k.st === 'deceased' && !(k.kids || []).some(g => g.n.trim()))
         push((k.n.trim() || 'A child') + ' has died and no children are listed', 'Their share has to go somewhere. Add their children, or tell us there were none, and we will work out who inherits it.');
-    });
-
-    L.elderEstates().forEach(d => {
-      const who = d.n.trim() || 'the deceased owner';
-      L.sibsOf(d.id).forEach(x => {
-        if (x.st === 'deceased') {
-          if (x.n.trim()) add(x.n, 'Brother or sister of ' + who + ' \u00b7 has died', { dead: true });
-          (x.kids || []).forEach(g => {
-            if (g.n.trim()) add(g.n, 'Niece or nephew of ' + who + ' \u2014 steps into ' + (x.n.trim() || 'their parent') + '\u2019s share', { must: true });
-          });
-        } else if (x.n.trim()) {
-          add(x.n, 'Brother or sister of ' + who + ' \u2014 inherits a share', { must: true });
-        }
-      });
-      if (!L.namedSibs(d.id).length) {
-        L.parentsOf(d.id).forEach(x => {
-          if (!x.n.trim()) return;
-          if (x.st === 'deceased') add(x.n, 'Parent of ' + who + ' \u00b7 has died', { dead: true });
-          else add(x.n, 'Surviving parent of ' + who + ' \u2014 inherits a share', { must: true });
-        });
-      }
     });
 
     L.inheritors().forEach(h => {
