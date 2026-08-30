@@ -764,6 +764,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // duplicate-key error.
       const live = await fetchLiveRows();
       const existing = new Map(live.filter((r) => r.doc_code).map((r) => [keyOf(r.doc_code, r.person_name), r]));
+      // Hand-added rows that mean the same thing as a generated requirement are
+      // adopted rather than duplicated (one "Photo ID — Carol", not two).
+      const adHocByFamily = new Map<string, DocRow>();
+      for (const r of live) {
+        if (!isAdHoc(r.doc_code)) continue;
+        const fk = familyKey(r.doc_code, r.person_name, r.label);
+        if (fk && !adHocByFamily.has(fk)) adHocByFamily.set(fk, r);
+      }
+      const adopted = new Set<string>();
+
       const seen = new Set<string>();
       const inserts: Record<string, unknown>[] = [];
       const updates: { id: string; patch: Record<string, unknown> }[] = [];
