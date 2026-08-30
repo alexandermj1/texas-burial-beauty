@@ -203,10 +203,10 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                   >
                     <Link
                       to={`/cemeteries/${c.slug}`}
-                      className="group flex flex-col overflow-hidden rounded-[4px] bg-card shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.5)] md:flex-row"
+                      className="group flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.5)] transition-shadow duration-500 hover:shadow-[0_32px_72px_-34px_hsl(var(--foreground)/0.55)] md:flex-row"
                     >
                       <div className="relative md:w-3/5">
-                        <div className="aspect-[16/8] w-full overflow-hidden bg-sand-light md:aspect-auto md:h-full md:min-h-[240px]">
+                        <div className="aspect-[16/8] w-full overflow-hidden bg-sand-light md:aspect-auto md:h-full md:min-h-[260px]">
                           <img
                             src={c.hero.src}
                             alt={c.hero.alt}
@@ -215,18 +215,19 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                             loading="lazy"
                             className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[1000ms] ease-out group-hover:scale-[1.035]"
                           />
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-foreground/30 to-transparent" />
                         </div>
-                        <div className="absolute bottom-4 left-4 flex gap-2">
+                        <div className="absolute bottom-4 left-4 flex gap-2.5">
                           {c.photos.map((p) => (
                             <figure
                               key={p.src}
-                              className="h-11 w-11 overflow-hidden rounded-[3px] border-2 border-background shadow-lg sm:h-12 sm:w-12"
+                              className="h-14 w-14 overflow-hidden rounded-lg ring-2 ring-background shadow-[0_12px_24px_-8px_hsl(var(--foreground)/0.5)] transition-transform duration-500 group-hover:-translate-y-0.5 sm:h-16 sm:w-16"
                             >
                               <img
                                 src={p.src}
                                 alt={p.alt}
-                                width={140}
-                                height={140}
+                                width={160}
+                                height={160}
                                 loading="lazy"
                                 className="h-full w-full object-cover brightness-[1.08] contrast-[1.05] saturate-[1.2]"
                               />
