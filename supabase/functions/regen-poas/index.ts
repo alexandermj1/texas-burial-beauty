@@ -14,14 +14,18 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url)
   const dryRun = url.searchParams.get('dry') === '1'
+  const limit = Number(url.searchParams.get('limit') ?? '8')
   const svc = createClient(SUPABASE_URL, SERVICE_KEY)
 
   const { data: rows, error } = await svc
     .from('contracts')
-    .select('id, submission_id, kind, status, fill_data, principal_key')
+    .select('id, submission_id, kind, status, fill_data, principal_key, updated_at')
     .eq('kind', 'poa')
     .is('deleted_at', null)
     .in('status', ['draft', 'sent', 'viewed'])
+    .lt('updated_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
+    .order('updated_at', { ascending: true })
+    .limit(limit)
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
