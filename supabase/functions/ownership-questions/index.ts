@@ -182,6 +182,54 @@ Deno.serve(async (req) => {
             })));
           }
         }
+
+        // Email the office when the master rules produce anything that needs a
+        // human decision. Document requests themselves are never sent
+        // automatically — this is only the heads-up that a review is needed.
+        try {
+          const v2 = (merged as Record<string, unknown>).v2;
+          if (hasFamilyTree(v2) && !(merged as Record<string, unknown>).reviewEmailSentAt) {
+            const reviews = masterRequirements(v2, null, false).filter((r) => r.review || r.code === "REVIEW");
+            if (reviews.length) {
+              const sellerName = sub.name ?? "Seller";
+              const link = `${SITE_URL}/admin?tab=submissions&submission=${submissionId}`;
+              const textBody =
+                `${sellerName} has completed the family tree, but the document request needs a manual review before it can go out.\n\n` +
+                reviews.map((r) => `• ${r.label}\n  ${r.why}`).join("\n") +
+                `\n\nOpen the submission: ${link}`;
+              const htmlBody =
+                `<p><strong>${sellerName}</strong> has completed the family tree, but the document request needs a manual review before it can go out.</p>` +
+                `<ul>${reviews.map((r) => `<li><strong>${r.label}</strong><br/><span style="color:#555">${r.why}</span></li>`).join("")}</ul>` +
+                `<p><a href="${link}">Open the submission</a></p>`;
+              const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+                  apikey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+                },
+                body: JSON.stringify({
+                  action: "send",
+                  to: "simonjamesphd@gmail.com",
+                  subject: `Document request review required — ${sellerName}`,
+                  body: textBody,
+                  htmlBody,
+                  submissionId,
+                }),
+              });
+              if (gmailRes.ok) {
+                await svc.from("contact_submissions")
+                  .update({ ownership_answers: { ...merged, reviewEmailSentAt: new Date().toISOString() } as never })
+                  .eq("id", submissionId);
+              } else {
+                console.error("review email failed", gmailRes.status, await gmailRes.text());
+              }
+            }
+          }
+        } catch (e) {
+          // Never fail the seller's save because the heads-up email failed.
+          console.error("review email error", e);
+        }
       }
 
 
