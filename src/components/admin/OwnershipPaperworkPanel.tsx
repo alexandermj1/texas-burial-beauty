@@ -825,15 +825,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
       const wanted = new Set(requirements.map(reqDbKey));
+      const wantedFamilies = new Set(
+        requirements.map((r) => familyKey(r.code, r.personName, r.label)).filter(Boolean) as string[],
+      );
       const stale = live.filter((r) => {
          const key = keyOf(r.doc_code, r.person_name);
+         if (adopted.has(r.id)) return false;
          const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
          const supersededPlaceholder = !!r.person_name
            && /^(owner on the deed|each co-owner|each heir|executor|trustee|authorised officer|person acting under authority)$/i.test(r.person_name)
            && requirements.some((x) => x.code === r.doc_code && x.personName && x.personName !== r.person_name);
+         // A hand-typed row that says the same thing as a generated requirement
+         // for the same person is a duplicate — drop it (never when a file is on it).
+         const fk = familyKey(r.doc_code, r.person_name, r.label);
+         const duplicateAdHoc = isAdHoc(r.doc_code) && !!fk && wantedFamilies.has(fk);
+         if (duplicateAdHoc) return !r.file_url && !(r.file_urls ?? []).length && r.status !== "received";
          return !!r.doc_code && !wanted.has(key) && !r.file_url
            && (supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
        });
+
       if (stale.length) {
         await softDelete("submission_documents", stale.map((s) => s.id));
       }
