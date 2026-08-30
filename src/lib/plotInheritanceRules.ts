@@ -179,7 +179,7 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
     let spouseKey = "";
     if (marriedToEachOther) {
       const other = named.find((x) => x.id !== d.id);
-      if (other && other.st === "living") spouseKey = key(clean(other.n));
+      if (other && other.st === "living" && key(clean(other.n)) !== owner.key) spouseKey = key(clean(other.n));
     } else {
       const sp = spouseOf(d.id);
       if (isLivingSpouse(sp)) {
@@ -190,11 +190,10 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
           spouseKey: owner.key,
           spouseNotOnDeed: !deedKeys.has(key(sName)),
         });
-        spouseKey = s.key;
-        s.spouseKey = owner.key;
+        if (s.key !== owner.key) { spouseKey = s.key; s.spouseKey = owner.key; }
       }
     }
-    if (spouseKey) owner.spouseKey = spouseKey;
+    if (spouseKey && spouseKey !== owner.key) owner.spouseKey = spouseKey;
 
     // Someone already holds a durable power of attorney for them.
     const poa = (v2.poa ?? {})[d.id];
@@ -369,7 +368,7 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
 
     if (pairedOff.has(p.key)) continue;
     const spouse = p.spouseKey ? ctx.signers.get(p.spouseKey) : undefined;
-    if (spouse && !pairedOff.has(spouse.key)) {
+    if (spouse && spouse.key !== p.key && !pairedOff.has(spouse.key)) {
       pairedOff.add(p.key);
       pairedOff.add(spouse.key);
       add({
@@ -425,13 +424,14 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
 
 function linkHeirSpouse(ctx: Ctx, heir: MasterSigner, sp: V2SpouseAnswer | undefined, deedKeys: Set<string>) {
   if (!isLivingSpouse(sp)) return;
+  void deedKeys;
   const sName = clean(sp!.n);
   const s = addSigner(ctx, {
     key: key(sName), name: sName, role: "spouse",
     why: `Currently married to ${heir.name}, who inherits — signs alongside them.`,
     spouseKey: heir.key,
-    spouseNotOnDeed: !deedKeys.has(key(sName)),
   });
+  if (s.key === heir.key) return;
   s.spouseKey = heir.key;
   heir.spouseKey = s.key;
 }
