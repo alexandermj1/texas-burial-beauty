@@ -189,7 +189,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
 
               {/* Full-width closing spread — Sparkman/Hillcrest */}
               {(() => {
-                const c = DALLAS_CEMETERY_PROFILES[4];
+                const c = spread;
                 if (!c) return null;
                 return (
                   <motion.article
