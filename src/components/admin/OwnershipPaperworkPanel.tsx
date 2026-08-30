@@ -85,6 +85,42 @@ const personKey = (n?: string | null) => {
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
 };
 const reqDbKey = (r: Requirement) => `${r.code}::${personKey(r.personName)}`;
+
+/**
+ * What a checklist row is *about*, regardless of how it was created. A broker
+ * who typed "Photo ID - Carol Anderson" by hand made the very same item the
+ * rules engine later emits as D2P for Carol, so the two must never both show.
+ */
+const DOC_FAMILIES: Array<[string, RegExp, RegExp]> = [
+  // family, matching generated codes, matching free-text labels
+  ["photo_id", /^(D2|D2P)$/, /(photo\s*id|photo\s*identification|driver'?s?\s*licen|state\s*id|passport)/i],
+  ["death_certificate", /^D6$/, /death\s*certificate/i],
+  ["marriage_certificate", /^D5$/, /marriage\s*(certificate|licen)/i],
+  ["poa", /^D21$/, /power\s*of\s*attorney/i],
+];
+const docFamily = (code?: string | null, label?: string | null): string | null => {
+  const c = String(code ?? "");
+  const l = String(label ?? "");
+  for (const [family, codeRe, labelRe] of DOC_FAMILIES) {
+    if (c && codeRe.test(c)) return family;
+    if (l && labelRe.test(l)) return family;
+  }
+  return null;
+};
+/** Ad-hoc rows a broker added by hand carry an "X-…" code. */
+const isAdHoc = (code?: string | null) => /^X-/i.test(String(code ?? ""));
+/** Person a row is about — from the field, or trailing "… - Name" in the label. */
+const rowPerson = (code?: string | null, person?: string | null, label?: string | null) => {
+  const direct = personKey(person);
+  if (direct) return direct;
+  const m = String(label ?? "").match(/[-–—]\s*([^-–—]+)$/);
+  return personKey(m?.[1] ?? "");
+};
+const familyKey = (code?: string | null, person?: string | null, label?: string | null) => {
+  const fam = docFamily(code, label);
+  return fam ? `${fam}::${rowPerson(code, person, label)}` : null;
+};
+
 /** Stable DOM id so the family tree can jump straight to a checklist row. */
 const anchorId = (r: Requirement) => `req-${reqKey(r).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
 
