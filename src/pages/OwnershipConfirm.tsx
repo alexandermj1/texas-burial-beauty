@@ -1207,7 +1207,7 @@ const OwnershipConfirm = () => {
                         {V.contactsTitle}
                       </h3>
                       <p style={{"margin": "8px 0 0 0", "fontSize": "15.5px", "fontWeight": "300", "lineHeight": "1.55", "color": "#6e6e73", "textWrap": "pretty"}}>
-                        Your answers say these are the people with a say in the sale. Anyone who came up more than once appears here once, with every hat they wear. An address is what we really need; email and phone just make it faster.
+                        Your answers say these are the people with a say in the sale. For anyone who has to sign we need their name exactly as it reads on their ID and the address a notary can visit — that is what the power of attorney is typed from. We do not need their phone number or email.
                       </p>
                       <div style={{"display": "flex", "flexDirection": "column", "gap": "10px", "marginTop": "22px"}}>
                         {(V.contacts || []).map((c: any, i19: number) => (
@@ -1232,17 +1232,44 @@ const OwnershipConfirm = () => {
                                   </React.Fragment>
                                 ))}
                               </div>
+                              {c.showLegal ? (
+                                <React.Fragment>
+                                  <div style={{"marginTop": "13px", "fontSize": "12.5px", "fontWeight": "500", "color": c.needLegal ? "#a8654c" : "#6e6e73"}}>
+                                    {c.legalLabel}
+                                  </div>
+                                  <input value={c.legal ?? ""} onChange={c.setLegal} placeholder={c.legalPlaceholder} style={{"width": "100%", "marginTop": "6px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${c.needLegal ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none"}} />
+                                </React.Fragment>
+                              ) : null}
                               <div style={{"marginTop": "13px", "fontSize": "12.5px", "fontWeight": "500", "color": c.needAddr ? "#a8654c" : "#6e6e73"}}>
                                 {c.addrLabel}
                               </div>
                               <textarea value={c.addr ?? ""} onChange={c.setAddr} placeholder={c.addrPlaceholder} style={{"width": "100%", "marginTop": "6px", "minHeight": "72px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "lineHeight": "1.5", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${c.needAddr ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "resize": "vertical"}} className="dcx21" />
-                              <div style={{"display": "flex", "flexWrap": "wrap", "gap": "9px", "marginTop": "9px"}}>
-                                <input value={c.email ?? ""} onChange={c.setEmail} placeholder="Email, if you have it" style={{"flex": "1", "minWidth": "170px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none"}} className="dcx22" />
-                                <input value={c.phone ?? ""} onChange={c.setPhone} placeholder="Phone" style={{"flex": "1", "minWidth": "140px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none"}} className="dcx23" />
-                              </div>
                             </div>
                           </React.Fragment>
                         ))}
+                      </div>
+                      <div style={{"marginTop": "24px", "padding": "17px 19px", "borderRadius": "16px", "background": "#fafafc", "border": "1px solid #ececf0"}}>
+                        <div style={{"fontSize": "16.5px", "fontWeight": "500", "letterSpacing": "-0.012em", "color": "#1d1d1f"}}>
+                          {V.plotTitle}
+                        </div>
+                        <div style={{"marginTop": "4px", "fontSize": "15.5px", "fontWeight": "400", "color": "#4c4c54", "textWrap": "pretty"}}>
+                          {V.plotOnFile}
+                        </div>
+                        <div style={{"marginTop": "12px"}}>
+                          <div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px"}}>
+                            {(V.plotSeg?.opts || []).map((o: any, i27: number) => (
+                              <div key={i27} onClick={o.on} style={{"padding": "10px 18px", "borderRadius": "100px", "fontSize": "15px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none", "background": o.bg, "color": o.fg, "border": `1px solid ${o.bd}`}}>
+                                {o.t}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{"marginTop": "9px", "fontSize": "13.5px", "fontWeight": "300", "lineHeight": "1.5", "color": "#6e6e73"}}>
+                          {V.plotNote}
+                        </div>
+                        {V.plotFixAsk ? (
+                          <textarea value={V.plotFix ?? ""} onChange={V.setPlotFix} placeholder="Garden or section, block, lot and space numbers as written on the deed" style={{"width": "100%", "marginTop": "10px", "minHeight": "72px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "lineHeight": "1.5", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none", "resize": "vertical"}} />
+                        ) : null}
                       </div>
                       <div style={{"marginTop": "24px"}}>
                         <div style={{"fontSize": "16.5px", "fontWeight": "500", "letterSpacing": "-0.012em", "color": "#1d1d1f"}}>
@@ -1254,13 +1281,14 @@ const OwnershipConfirm = () => {
                         <textarea value={V.note ?? ""} onChange={V.setNote} placeholder="Type here…" style={{"width": "100%", "marginTop": "12px", "minHeight": "92px", "padding": "13px 15px", "fontSize": "16px", "fontWeight": "400", "lineHeight": "1.5", "color": "#1d1d1f", "background": "#f5f5f7", "border": "1px solid transparent", "borderRadius": "13px", "outline": "none", "resize": "vertical"}} className="dcx24" />
                       </div>
                       <div style={{"display": "flex", "flexWrap": "wrap", "alignItems": "center", "gap": "14px", "marginTop": "24px"}}>
-                        <div onClick={V.submit} style={{"padding": "14px 28px", "borderRadius": "100px", "background": `${V.accent}`, "color": "#ffffff", "fontSize": "16.5px", "fontWeight": "500", "letterSpacing": "-0.012em", "cursor": "pointer", "userSelect": "none", "transition": "transform .18s ease"}} className="dcx26">
+                        <div onClick={V.contactsBlocked ? undefined : V.submit} style={{"padding": "14px 28px", "borderRadius": "100px", "background": V.contactsBlocked ? "#e3e3e8" : `${V.accent}`, "color": V.contactsBlocked ? "#9a9aa2" : "#ffffff", "fontSize": "16.5px", "fontWeight": "500", "letterSpacing": "-0.012em", "cursor": V.contactsBlocked ? "not-allowed" : "pointer", "userSelect": "none", "transition": "transform .18s ease"}} className={V.contactsBlocked ? undefined : "dcx26"}>
                           Show me who has to sign
                         </div>
                         <span style={{"fontSize": "14px", "fontWeight": "300", "color": "#9a9aa2"}}>
-                          You will see the whole list before anything is sent.
+                          {V.contactsBlocked ? V.contactsBlockedNote : "You will see the whole list before anything is sent."}
                         </span>
                       </div>
+
                     </div>
                   </div>
                 </React.Fragment>) : null}
