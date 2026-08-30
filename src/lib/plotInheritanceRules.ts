@@ -70,6 +70,8 @@ export type MasterSigner = {
   spouseKey?: string;
   /** True when this person is a spouse who is not printed on the deed. */
   spouseNotOnDeed?: boolean;
+  /** True when they are the surviving spouse of a deed holder who has died. */
+  survivingSpouse?: boolean;
   /** Name of the attorney-in-fact signing in their place, if any. */
   agentName?: string;
 };
