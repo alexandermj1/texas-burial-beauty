@@ -132,7 +132,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                   >
                     <Link to={`/cemeteries/${c.slug}`} className="group block">
                       <div className="relative">
-                        <div className="aspect-[16/8] overflow-hidden rounded-[4px] bg-sand-light shadow-[0_14px_32px_-24px_hsl(var(--foreground)/0.5)]">
+                        <div className="aspect-[16/8] overflow-hidden rounded-xl border border-border/60 bg-sand-light shadow-[0_18px_40px_-28px_hsl(var(--foreground)/0.45)] transition-shadow duration-500 group-hover:shadow-[0_24px_48px_-26px_hsl(var(--foreground)/0.5)]">
                           <img
                             src={c.hero.src}
                             alt={c.hero.alt}
@@ -141,6 +141,8 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                             loading="lazy"
                             className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[900ms] ease-out group-hover:scale-[1.045]"
                           />
+                          {/* Soft scrim so the index chip and thumbnails read on any photo */}
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-foreground/25 to-transparent" />
                         </div>
 
                         {/* Ghost index */}
@@ -149,17 +151,17 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         </span>
 
                         {/* Overlapping detail thumbnails */}
-                        <div className={`absolute -bottom-3.5 flex gap-1.5 ${accent.thumbs}`}>
+                        <div className={`absolute -bottom-5 flex gap-2 ${accent.thumbs}`}>
                           {c.photos.map((p) => (
                             <figure
                               key={p.src}
-                              className="h-10 w-10 overflow-hidden rounded-[3px] border-2 border-background shadow-md sm:h-11 sm:w-11"
+                              className="h-14 w-14 overflow-hidden rounded-lg ring-2 ring-background shadow-[0_10px_20px_-8px_hsl(var(--foreground)/0.45)] transition-transform duration-500 group-hover:-translate-y-0.5 sm:h-16 sm:w-16"
                             >
                               <img
                                 src={p.src}
                                 alt={p.alt}
-                                width={120}
-                                height={120}
+                                width={160}
+                                height={160}
                                 loading="lazy"
                                 className="h-full w-full object-cover brightness-[1.08] contrast-[1.05] saturate-[1.2]"
                               />
@@ -168,7 +170,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         </div>
                       </div>
 
-                      <div className={`mt-7 p-4 sm:p-5 ${accent.panel}`}>
+                      <div className={`mt-8 rounded-lg p-4 sm:p-5 ${accent.panel}`}>
                         <span className={`text-[9px] font-semibold uppercase tracking-[0.25em] ${accent.kicker}`}>
                           {c.city}, Texas
                         </span>
