@@ -443,6 +443,9 @@ export type CemeteryDocRules = {
   accepts_outside_poa?: boolean;
   allows_remote_signing?: boolean;
   in_person_lost_deed?: boolean;
+  /** The cemetery has its own lost-deed / lost-certificate affidavit. */
+  own_lost_deed_form?: boolean;
+  own_lost_deed_form_name?: string;
   child_waiver_required?: boolean;
   extra_docs?: { label: string; when?: "always" | "deceased_owner" | "no_deed" | "occupied"; why?: string }[];
   notes?: string;

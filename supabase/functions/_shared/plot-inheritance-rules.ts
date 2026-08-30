@@ -49,6 +49,9 @@ export type CemeteryDocRules = {
   accepts_outside_poa?: boolean;
   allows_remote_signing?: boolean;
   in_person_lost_deed?: boolean;
+  /** The cemetery has its own lost-deed / lost-certificate affidavit. */
+  own_lost_deed_form?: boolean;
+  own_lost_deed_form_name?: string;
   child_waiver_required?: boolean;
   extra_docs?: { label: string; when?: "always" | "deceased_owner" | "no_deed" | "occupied"; why?: string }[];
   notes?: string;
@@ -183,13 +186,15 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
   if (deedMissing) {
     add({
       code: "D1",
-      label: rules.in_person_lost_deed
-        ? "Affidavit of lost deed (cemetery's own form, signed in person)"
-        : "Affidavit of lost deed",
+      label: rules.own_lost_deed_form
+        ? `Affidavit of lost deed — ${rules.own_lost_deed_form_name ?? "cemetery's own form"}`
+        : rules.in_person_lost_deed
+          ? "Affidavit of lost deed (cemetery's own form, signed in person)"
+          : "Affidavit of lost deed",
       why: "The cemetery's record of ownership has to be re-established before the transfer.",
-      issuedByUs: !rules.in_person_lost_deed,
+      issuedByUs: !rules.in_person_lost_deed && !rules.own_lost_deed_form,
       needsNotary: true,
-      fromCemetery: rules.in_person_lost_deed,
+      fromCemetery: !!rules.in_person_lost_deed || !!rules.own_lost_deed_form,
       review: rules.in_person_lost_deed,
     });
   } else {
