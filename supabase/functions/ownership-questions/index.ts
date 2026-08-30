@@ -192,7 +192,7 @@ Deno.serve(async (req) => {
             const reviews = masterRequirements(v2, null, false).filter((r) => r.review || r.code === "REVIEW");
             if (reviews.length) {
               const sellerName = sub.name ?? "Seller";
-              const link = `${SITE_URL}/admin?tab=submissions&submission=${submissionId}`;
+              const link = `${PUBLIC_SITE_URL}/admin?tab=submissions&submission=${submissionId}`;
               const textBody =
                 `${sellerName} has completed the family tree, but the document request needs a manual review before it can go out.\n\n` +
                 reviews.map((r) => `• ${r.label}\n  ${r.why}`).join("\n") +
