@@ -1257,9 +1257,9 @@ const OwnershipConfirm = () => {
                         </div>
                         <div style={{"marginTop": "12px"}}>
                           <div style={{"display": "flex", "flexWrap": "wrap", "gap": "8px"}}>
-                            {(V.plotSeg?.opts || []).map((o: any, i27: number) => (
-                              <div key={i27} onClick={o.on} style={{"padding": "10px 18px", "borderRadius": "100px", "fontSize": "15px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none", "background": o.bg, "color": o.fg, "border": `1px solid ${o.bd}`}}>
-                                {o.t}
+                            {(V.plotSeg || []).map((o: any, i27: number) => (
+                              <div key={i27} onClick={o.pick} style={{"padding": "8px 14px", "borderRadius": "10px", "fontSize": "14px", "fontWeight": "500", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`, "border": "1px solid #ececf0"}}>
+                                {o.label}
                               </div>
                             ))}
                           </div>
