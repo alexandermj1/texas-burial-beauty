@@ -98,10 +98,31 @@ Deno.serve(async (req) => {
        overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? 1,
      ) || 1;
 
+    // The plot description an admin typed on the quote / listing agreement is
+    // the controlling wording — it is stored on the submission and reused
+    // verbatim on every later document. Only fall back to parsing the raw
+    // section/lot fields when nobody has written one.
+    const adminPlotDescription = typeof overrides.plot_description === 'string' && overrides.plot_description.trim()
+      ? overrides.plot_description.trim()
+      : (typeof sub.plot_description === 'string' && sub.plot_description.trim() ? sub.plot_description.trim() : '');
+    if (
+      typeof overrides.plot_description === 'string' && overrides.plot_description.trim() &&
+      overrides.plot_description.trim() !== (sub.plot_description ?? '')
+    ) {
+      await svc.from('contact_submissions')
+        .update({ plot_description: overrides.plot_description.trim() })
+        .eq('id', submission_id);
+    }
+    const plotDescription = adminPlotDescription ||
+      formatPlotDescription({ section: sub.section, lawn: sub.lawn, spaces: sub.spaces, space_numbers: sub.space_numbers });
+    const plotDescriptionNoCount = adminPlotDescription ||
+      formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers });
+
     // County/State for the Interment Property: default to the cemetery's city + TX
     // (admin can override in the review dialog). Never mix the seller's own address here.
     const cemLocationCity = cemeteryCity ?? sub.cemetery_city ?? '';
     const defaultCountyState = cemLocationCity ? `${cemLocationCity}, TX` : '';
+
 
     // Everything the seller told us in the family-tree questionnaire — the POA
     // is now built entirely from this, so nothing is left blank for them to fill.
