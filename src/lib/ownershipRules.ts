@@ -834,6 +834,7 @@ export function computeRequirements(
       personName: p.name, personRole: p.role,
     });
   }
+  } // end legacy (no family tree) rules
 
   // ── Documents added by hand for this file only ──
   // Most are plain requests, but a broker can also add a power of attorney, a
