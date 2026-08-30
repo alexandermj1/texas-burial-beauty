@@ -104,14 +104,17 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
-        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, cemetery_city, ownership_roster, seller_attachments")
+        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, plot_description, cemetery_city, ownership_roster, seller_attachments")
         .eq("id", seller.id)
         .maybeSingle();
       if (cancelled) return;
       const row = (data as any) || {};
       const names = String(row.deed_owner_names || row.name || seller.name || "").trim();
       setDeedOwners(names);
+      // Whatever the broker typed before wins — that exact wording carries all
+      // the way through to the agreement, POA and document request.
       setPlotDescription(
+        String(row.plot_description ?? "").trim() ||
         formatPlotDescription({
           section: row.section ?? seller.section,
           lawn: row.lawn ?? seller.lawn,
@@ -253,6 +256,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         plot_count: countNum,
         list_price: salesNum > 0 ? salesNum * countNum : null,
         deed_owner_names: deedOwnersClean,
+        plot_description: plotDescription.trim() || null,
         ownership_roster: roster.filter((r) => r.name.trim()) as never,
         ownership_answers: {
           ...answers,

@@ -1177,7 +1177,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
             county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
             // The deed is the controlling description — use it verbatim when we hold one.
-            plot_description: str(prior?.plot_description) || plotHints[0]?.text ||
+            plot_description: str(prior?.plot_description) || str(s.plot_description) || plotHints[0]?.text ||
               formatPlotDescription({ section: str(s.section), lawn: str(s.lawn), space_numbers: str(s.space_numbers) }),
             plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
             listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",

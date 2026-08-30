@@ -132,6 +132,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
       setCemetery(row.cemetery ?? seller.cemetery ?? "");
       setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
       setPlotDescription(
+        String((row as any).plot_description ?? "").trim() ||
         formatPlotDescription({
           section: row.section,
           lawn: row.lawn,
