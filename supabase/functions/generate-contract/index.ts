@@ -125,7 +125,11 @@ Deno.serve(async (req) => {
       ...(() => {
         const v2 = (ownership.v2 ?? {}) as Record<string, unknown>;
         const deed = Array.isArray(v2.deed) ? v2.deed as Record<string, string>[] : [];
-        return deed.map((d) => d.n);
+        // The last step of the family tree asks for each signer's name exactly
+        // as it reads on their ID, so that spelling wins on the document.
+        const contacts = (v2.contacts ?? {}) as Record<string, { legal?: string }>;
+        const legal = Object.values(contacts).map((c) => String(c?.legal ?? ''));
+        return [...deed.map((d) => d.n), ...legal];
       })(),
     ].filter((n) => typeof n === 'string' && n.trim());
     const fullName = (n: string) => {
