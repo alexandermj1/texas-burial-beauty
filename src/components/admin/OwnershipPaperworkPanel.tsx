@@ -364,8 +364,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setThumbs((prev) => ({ ...prev, ...previews }));
 
     if (cemetery) {
-      const { data: cem } = await supabase.from("texas_cemeteries")
+      let { data: cem } = await supabase.from("texas_cemeteries")
         .select("name, doc_rules").ilike("name", cemetery).maybeSingle();
+      if (!cem) {
+        // Sellers type the cemetery name loosely ("Restland Cemetery, Dallas
+        // Texas"). Fall back to matching on the distinctive first word so the
+        // cemetery's own paperwork rules still apply.
+        const stem = cemetery.replace(/[^a-zA-Z ]/g, " ").trim().split(/\s+/)[0];
+        if (stem && stem.length >= 4) {
+          const { data: fuzzy } = await supabase.from("texas_cemeteries")
+            .select("name, doc_rules").ilike("name", `%${stem}%`).limit(5);
+          const rows = (fuzzy ?? []) as { name?: string; doc_rules?: unknown }[];
+          cem = (rows.find(r => r.doc_rules && Object.keys(r.doc_rules as object).length > 0) ?? rows[0]) as typeof cem;
+        }
+      }
       setRules(((cem as Record<string, unknown> | null)?.doc_rules ?? null) as CemeteryDocRules | null);
       setCemName((cem as { name?: string } | null)?.name ?? null);
     }
