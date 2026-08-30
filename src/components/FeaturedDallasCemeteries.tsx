@@ -41,7 +41,12 @@ const COMPACT_ACCENTS = [
   },
 ] as const;
 
+/** Sparkman/Hillcrest is the featured closing spread in the compact grid. */
+const SPREAD_SLUG = "sparkman-hillcrest-memorial-park";
+
 const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "compact" }) => {
+  const spread = DALLAS_CEMETERY_PROFILES.find((c) => c.slug === SPREAD_SLUG) ?? DALLAS_CEMETERY_PROFILES[4];
+  const compactCards = DALLAS_CEMETERY_PROFILES.filter((c) => c !== spread);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
