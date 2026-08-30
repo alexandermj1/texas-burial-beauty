@@ -125,7 +125,11 @@ Deno.serve(async (req) => {
       ...(() => {
         const v2 = (ownership.v2 ?? {}) as Record<string, unknown>;
         const deed = Array.isArray(v2.deed) ? v2.deed as Record<string, string>[] : [];
-        return deed.map((d) => d.n);
+        // The last step of the family tree asks for each signer's name exactly
+        // as it reads on their ID, so that spelling wins on the document.
+        const contacts = (v2.contacts ?? {}) as Record<string, { legal?: string }>;
+        const legal = Object.values(contacts).map((c) => String(c?.legal ?? ''));
+        return [...deed.map((d) => d.n), ...legal];
       })(),
     ].filter((n) => typeof n === 'string' && n.trim());
     const fullName = (n: string) => {
@@ -167,10 +171,15 @@ Deno.serve(async (req) => {
 
     let filled: Uint8Array;
     if (kind === 'affidavit_heirship') {
+      // Same rule as the POA: the legal spelling and the address the seller gave
+      // in the questionnaire win over the short name on the enquiry.
+      const affiantName = fullName(affiant);
+      const affiantContact = contactFor(ownership, affiantName);
       filled = await buildAffidavitPdf({
         county: overrides.county ?? cemLocationCity ?? '',
-        affiant_name: affiant,
-        affiant_address: [overrides.address, overrides.city_state_zip].filter(Boolean).join(', '),
+        affiant_name: affiantName,
+        affiant_address: [overrides.address, overrides.city_state_zip].filter(Boolean).join(', ') ||
+          [affiantContact.address, affiantContact.city_state_zip].filter(Boolean).join(', '),
         affiant_relationship: overrides.affiant_relationship ?? sub.relationship_to_owner ?? '',
         affiant_is_heir: overrides.affiant_is_heir ?? true,
         decedent_name: overrides.decedent_name ?? sub.deed_owner_names ?? '',
@@ -181,8 +190,16 @@ Deno.serve(async (req) => {
         heirs: overrides.heirs ?? people
           .filter((p) => p.role === 'heir' || p.role === 'co_owner')
           .filter((p) => !/husband or wife of|spouse of (?!.*deed)/i.test(p.relationship ?? ''))
-          .map((p) => ({ name: p.name, relationship: p.relationship ?? '', address: p.address ?? '' })),
-        surviving_spouse: overrides.surviving_spouse ?? spouseOnRoster ?? '',
+          .map((p) => {
+            const n = fullName(p.name);
+            const c = contactFor(ownership, n);
+            return {
+              name: n,
+              relationship: p.relationship ?? '',
+              address: p.address || [c.address, c.city_state_zip].filter(Boolean).join(', '),
+            };
+          }),
+        surviving_spouse: overrides.surviving_spouse ?? (spouseOnRoster ? fullName(spouseOnRoster) : ''),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: overrides.plot_description ??
@@ -193,13 +210,14 @@ Deno.serve(async (req) => {
     } else if (kind === 'spousal_consent') {
       filled = await buildSpousalConsentPdf({
         county: overrides.county ?? cemLocationCity ?? '',
-        spouse_name: overrides.spouse_name ?? spouseOnRoster ?? overrides.seller_name ?? '',
-        owner_name: overrides.owner_name ?? sub.deed_owner_names ?? sub.name ?? '',
+        spouse_name: fullName(String(overrides.spouse_name ?? spouseOnRoster ?? overrides.seller_name ?? '')),
+        owner_name: fullName(String(overrides.owner_name ?? sub.deed_owner_names ?? sub.name ?? '')),
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
         plot_description: formatPlotDescription({ section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers }),
         spaces: sub.spaces ?? '',
       });
+
     } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.filter(Boolean).length > 1) {
       // A married couple signing one instrument instead of one POA each.
       const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2).map(fullName);
