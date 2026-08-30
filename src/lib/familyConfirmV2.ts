@@ -37,8 +37,12 @@ export function initialState(CRM) {
     rel: '', relOther: '', selfIs: '', youName: '',
     deed: (CRM.deed || []).map((n, i) => ({ id: 'd' + i, n: n, st: '' })),
     seq: (CRM.deed || []).length, kseq: 0,
-    couple: '', poa: {}, spouse: {}, will: {}, taker: {},
+    couple: '', deedRel: '', poa: {}, spouse: {}, will: {}, taker: {},
     kids: [], noKids: {}, heirSpouse: {},
+    // When a deed owner dies leaving no children or grandchildren, the right
+    // passes to their brothers and sisters, and then to their parents. We ask
+    // for those people here rather than leaving a gap for the office to chase.
+    sibs: [], parents: [], noSibs: {}, noParents: {}, sseq: 0,
     spaces: (CRM.spaces || []).map(l => ({ label: l, used: '', who: '' })),
     contacts: {}, note: '', submitted: false, sent: false
   };
@@ -60,12 +64,16 @@ export function buildLogic(state, setS, accent0, CRM) {
   // whether they have a spouse, because their spouse is the other owner.
   coupleIds: () => {
     const named = L.named();
-    if (named.length !== 2) return [];
-    const last = n => { const k = nameKey(n).split(' '); return k[k.length - 1]; };
-    const a = last(named[0].n), b = last(named[1].n);
-    return a && a === b ? named.map(d => d.id) : [];
+    // Any two names on one deed get the question. A shared surname is a good
+    // hint but a poor rule: plenty of couples do not share one, and plenty of
+    // mother-and-daughter deeds do.
+    return named.length === 2 ? named.map(d => d.id) : [];
   },
   coupleAsk: () => { return L.coupleIds().length === 2; },
+  // Two or more names that are not a married couple: the relationship between
+  // them decides how a deceased owner's share moves, so we ask outright
+  // instead of sending the file for a manual decision later.
+  relAsk: () => { return L.named().length > 1 && state.couple !== 'yes'; },
   coupleVal: () => { return state.couple || ''; },
   coupleYes: (id) => { return L.coupleVal() === 'yes' && L.coupleIds().indexOf(id) >= 0; },
   // The effective spouse answer for a deed owner: married-to-each-other means
@@ -136,6 +144,35 @@ export function buildLogic(state, setS, accent0, CRM) {
     });
   },
 
+  // Estates where the seller has told us there are no children or
+  // grandchildren: the heirs are then brothers and sisters, then parents.
+  elderEstates: () => { return L.estates().filter(d => !!state.noKids[d.id]); },
+  sibsOf: (id) => {
+    const list = state.sibs || [];
+    const many = L.elderEstates().length > 1;
+    return list.filter(x => (x.of || []).length ? (x.of || []).indexOf(id) >= 0 : !many);
+  },
+  parentsOf: (id) => {
+    const list = state.parents || [];
+    const many = L.elderEstates().length > 1;
+    return list.filter(x => (x.of || []).length ? (x.of || []).indexOf(id) >= 0 : !many);
+  },
+  namedSibs: (id) => { return L.sibsOf(id).filter(x => x.n.trim() || (x.kids || []).some(g => g.n.trim())); },
+  namedParents: (id) => { return L.parentsOf(id).filter(x => x.n.trim()); },
+  mutList: (keyName, fn) => {
+    setS(s => {
+      const list = JSON.parse(JSON.stringify(s[keyName] || []));
+      fn(list);
+      return { [keyName]: list };
+    });
+  },
+  addElder: (keyName, ofIds) => {
+    setS(s => ({
+      [keyName]: (s[keyName] || []).concat([{ id: (keyName === 'sibs' ? 's' : 'p') + s.sseq, n: '', st: 'living', of: ofIds || [], kids: [] }]),
+      sseq: s.sseq + 1
+    }));
+  },
+
   done1: () => {
     const named = L.named();
     if (!named.length) return false;
@@ -143,6 +180,9 @@ export function buildLogic(state, setS, accent0, CRM) {
     if (!named.every(d => d.st === 'living' || d.st === 'deceased')) return false;
     // And if the two names look like a couple, that question must be answered too.
     if (L.coupleAsk() && !state.couple) return false;
+    // And when they are not a couple we must be told what they were to each
+    // other, otherwise the inheritance route cannot be worked out.
+    if (L.relAsk() && !state.deedRel) return false;
     return true;
   },
   done2: () => {
