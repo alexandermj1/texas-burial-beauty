@@ -41,7 +41,12 @@ const COMPACT_ACCENTS = [
   },
 ] as const;
 
+/** Sparkman/Hillcrest is the featured closing spread in the compact grid. */
+const SPREAD_SLUG = "sparkman-hillcrest-memorial-park";
+
 const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "compact" }) => {
+  const spread = DALLAS_CEMETERY_PROFILES.find((c) => c.slug === SPREAD_SLUG) ?? DALLAS_CEMETERY_PROFILES[4];
+  const compactCards = DALLAS_CEMETERY_PROFILES.filter((c) => c !== spread);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -115,7 +120,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                 thumbnails and tinted caption panels. Four regular cards, then
                 Sparkman/Hillcrest as a full-width closing spread. */}
             <div className="mx-auto grid w-full max-w-5xl gap-x-8 gap-y-10 md:grid-cols-2 md:gap-x-10">
-              {DALLAS_CEMETERY_PROFILES.slice(0, 4).map((c, i) => {
+              {compactCards.map((c, i) => {
                 const accent = COMPACT_ACCENTS[i];
                 return (
                   <motion.article
@@ -127,7 +132,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                   >
                     <Link to={`/cemeteries/${c.slug}`} className="group block">
                       <div className="relative">
-                        <div className="aspect-[16/8] overflow-hidden rounded-[4px] bg-sand-light shadow-[0_14px_32px_-24px_hsl(var(--foreground)/0.5)]">
+                        <div className="aspect-[16/8] overflow-hidden rounded-xl border border-border/60 bg-sand-light shadow-[0_18px_40px_-28px_hsl(var(--foreground)/0.45)] transition-shadow duration-500 group-hover:shadow-[0_24px_48px_-26px_hsl(var(--foreground)/0.5)]">
                           <img
                             src={c.hero.src}
                             alt={c.hero.alt}
@@ -136,6 +141,8 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                             loading="lazy"
                             className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[900ms] ease-out group-hover:scale-[1.045]"
                           />
+                          {/* Soft scrim so the index chip and thumbnails read on any photo */}
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-foreground/25 to-transparent" />
                         </div>
 
                         {/* Ghost index */}
@@ -144,17 +151,17 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         </span>
 
                         {/* Overlapping detail thumbnails */}
-                        <div className={`absolute -bottom-3.5 flex gap-1.5 ${accent.thumbs}`}>
+                        <div className={`absolute -bottom-5 flex gap-2 ${accent.thumbs}`}>
                           {c.photos.map((p) => (
                             <figure
                               key={p.src}
-                              className="h-10 w-10 overflow-hidden rounded-[3px] border-2 border-background shadow-md sm:h-11 sm:w-11"
+                              className="h-14 w-14 overflow-hidden rounded-lg ring-2 ring-background shadow-[0_10px_20px_-8px_hsl(var(--foreground)/0.45)] transition-transform duration-500 group-hover:-translate-y-0.5 sm:h-16 sm:w-16"
                             >
                               <img
                                 src={p.src}
                                 alt={p.alt}
-                                width={120}
-                                height={120}
+                                width={160}
+                                height={160}
                                 loading="lazy"
                                 className="h-full w-full object-cover brightness-[1.08] contrast-[1.05] saturate-[1.2]"
                               />
@@ -163,7 +170,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                         </div>
                       </div>
 
-                      <div className={`mt-7 p-4 sm:p-5 ${accent.panel}`}>
+                      <div className={`mt-8 rounded-lg p-4 sm:p-5 ${accent.panel}`}>
                         <span className={`text-[9px] font-semibold uppercase tracking-[0.25em] ${accent.kicker}`}>
                           {c.city}, Texas
                         </span>
@@ -184,7 +191,7 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
 
               {/* Full-width closing spread — Sparkman/Hillcrest */}
               {(() => {
-                const c = DALLAS_CEMETERY_PROFILES[4];
+                const c = spread;
                 if (!c) return null;
                 return (
                   <motion.article
@@ -196,10 +203,10 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                   >
                     <Link
                       to={`/cemeteries/${c.slug}`}
-                      className="group flex flex-col overflow-hidden rounded-[4px] bg-card shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.5)] md:flex-row"
+                      className="group flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.5)] transition-shadow duration-500 hover:shadow-[0_32px_72px_-34px_hsl(var(--foreground)/0.55)] md:flex-row"
                     >
                       <div className="relative md:w-3/5">
-                        <div className="aspect-[16/8] w-full overflow-hidden bg-sand-light md:aspect-auto md:h-full md:min-h-[240px]">
+                        <div className="aspect-[16/8] w-full overflow-hidden bg-sand-light md:aspect-auto md:h-full md:min-h-[260px]">
                           <img
                             src={c.hero.src}
                             alt={c.hero.alt}
@@ -208,18 +215,19 @@ const FeaturedDallasCemeteries = ({ variant = "full" }: { variant?: "full" | "co
                             loading="lazy"
                             className="h-full w-full object-cover brightness-[1.1] contrast-[1.06] saturate-[1.26] sepia-[0.1] transition-transform duration-[1000ms] ease-out group-hover:scale-[1.035]"
                           />
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-foreground/30 to-transparent" />
                         </div>
-                        <div className="absolute bottom-4 left-4 flex gap-2">
+                        <div className="absolute bottom-4 left-4 flex gap-2.5">
                           {c.photos.map((p) => (
                             <figure
                               key={p.src}
-                              className="h-11 w-11 overflow-hidden rounded-[3px] border-2 border-background shadow-lg sm:h-12 sm:w-12"
+                              className="h-14 w-14 overflow-hidden rounded-lg ring-2 ring-background shadow-[0_12px_24px_-8px_hsl(var(--foreground)/0.5)] transition-transform duration-500 group-hover:-translate-y-0.5 sm:h-16 sm:w-16"
                             >
                               <img
                                 src={p.src}
                                 alt={p.alt}
-                                width={140}
-                                height={140}
+                                width={160}
+                                height={160}
                                 loading="lazy"
                                 className="h-full w-full object-cover brightness-[1.08] contrast-[1.05] saturate-[1.2]"
                               />
