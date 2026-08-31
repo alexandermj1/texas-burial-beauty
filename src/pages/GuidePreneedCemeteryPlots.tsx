@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Mail, Plus, CheckCircle2, MapPin, ShieldCheck, FileSearch, BadgeCheck } from "lucide-react";
+import { ArrowRight, ArrowLeft, Mail, Plus, CheckCircle2, MapPin, ShieldCheck, FileSearch, BadgeCheck, Footprints } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -367,6 +367,69 @@ const GuidePreneedCemeteryPlots = () => (
           </p>
         </section>
 
+        {/* Chapter 03b — discounts */}
+        <section id="discounts" className="scroll-mt-24 mt-20">
+          <Eyebrow>Chapter 03b · The numbers</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">How <span className="italic text-primary">cheap</span> is a discounted resale plot, really?</h2>
+          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+            People search for cheap cemetery plots, discount burial plots, affordable grave spaces — all of it describes the same thing: the secondary market. Our prices run up to 50% below what the cemetery charges for a comparable new space, because the seller is a family that no longer needs the property rather than a cemetery working from a price list.
+          </p>
+          <DiscountTable />
+        </section>
+
+        {/* Chapter 03c — financing */}
+        <section id="financing" className="scroll-mt-24 mt-20">
+          <Eyebrow>Chapter 03c · Paying for it</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">A discount, and <span className="italic text-primary">0% interest</span> — stacked together</h2>
+          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+            The two savings compound. First you pay a by-owner price instead of retail. Then, where we can offer it, you spread that price interest-free over up to 24 months. Compared with an at-need family paying the cemetery's current price in full in the same week as a funeral, the difference is not small.
+          </p>
+          <FinancingGraphic />
+          <p className="text-xs text-foreground/55 leading-relaxed mt-5">
+            Example figures for illustration only. Financing availability depends on the property and the plan agreed; the property transfers into your name once the balance is settled.
+          </p>
+        </section>
+
+        {/* Chapter 03d — sold-out sections & sourcing */}
+        <section id="sold-out" className="scroll-mt-24 mt-20">
+          <Eyebrow>Chapter 03d · Sold-out gardens</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">The cemetery says <span className="italic text-primary">"sold out."</span> We can usually still get you in.</h2>
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            The most common call we take starts the same way: a family wants to be beside a mother, a husband, a plot bought decades ago — and the cemetery office says the lawn or garden has been sold out for years. That is true of the cemetery's own inventory. It says nothing about the spaces already owned by families in that section, and many of those families will never use them.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+            So we source it. Tell us the exact garden, lawn or crypt level you need and we will go looking for an owner there — and we will keep looking. The same works if you are simply price-sensitive: we can hold your requirements on file and come back to you when a space in that section comes up at a discount worth taking.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { n: "01", t: "Name the exact section", d: "The garden, the lawn, the crypt level, the space beside a specific family member. The more precise, the better we can hunt." },
+              { n: "02", t: "We search the ownership records", d: "We work through owners in that section and approach them directly — spaces that were never publicly for sale." },
+              { n: "03", t: "You wait for the right one", d: "No pressure and no deadline. Families often sit on our list for months waiting for the position, or the price, that is worth it." },
+            ].map((c) => (
+              <motion.div key={c.n} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }} className="rounded-2xl bg-card border border-border/60 p-6 hover:border-primary/30 transition-colors">
+                <p className="font-display text-2xl text-primary mb-3">{c.n}</p>
+                <p className="font-display text-lg text-foreground mb-2 leading-snug">{c.t}</p>
+                <p className="text-sm text-foreground/70 leading-relaxed">{c.d}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/8 via-background to-accent/5 p-7 md:p-9 mt-8">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]">
+                <Footprints className="w-6 h-6" strokeWidth={1.75} />
+              </div>
+              <div>
+                <Eyebrow>Walked, not clicked</Eyebrow>
+                <p className="font-display text-2xl md:text-3xl text-foreground leading-snug mb-2">Someone from Texas Cemetery Brokers will walk the sections with you.</p>
+                <p className="text-foreground/75 leading-relaxed">
+                  We meet you at the cemetery and show you the spaces in person — where they sit, what is beside them, what the section is actually like to stand in. And from that point, the transfer paperwork is ours: we verify the ownership, obtain co-owner consent, clear any right of first refusal, complete the cemetery's conveyance forms and coordinate the recording with the cemetery office. The seller does not fill out your paperwork; we do all of it, for both sides, and only offer property that is verified and available to transfer.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Chapter 04 */}
         <section id="cost" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 04 · Cost</Eyebrow>
@@ -511,6 +574,16 @@ const GuidePreneedCemeteryPlots = () => (
             </>
           }
         />
+
+        {/* Inline buyer form */}
+        <section id="enquire" className="scroll-mt-24 mt-20">
+          <Eyebrow>Start here</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Ask us what is <span className="italic text-primary">available — and for how much less</span></h2>
+          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+            One short form. We come back with verified spaces in the cemetery you named, the real total including the cemetery's own fees, and whether 0% financing is available on it.
+          </p>
+          <PreneedInquiryForm />
+        </section>
 
         {/* FAQ */}
         <section id="faq" className="scroll-mt-24 mt-20">
