@@ -11,7 +11,15 @@
 //                                                  signature; emails fully-executed copy
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
-import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
+import {
+  buildFilledPdf,
+  saleTermsInitialsY,
+  SALE_TERMS_PAGE_INDEX,
+  SALE_TERMS_INITIALS_X,
+  SALE_TERMS_INITIALS_W,
+  SALE_TERMS_DATE_X,
+  type FillData,
+} from '../_shared/contract-fill.ts';
 import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
 
 /** Two principals on one POA — kept on fill_data so every rebuild stays joint. */
