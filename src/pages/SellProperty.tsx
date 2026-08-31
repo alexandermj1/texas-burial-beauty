@@ -103,7 +103,7 @@ const SellProperty = () => {
             <div className="col-span-12 text-left lg:text-center">
               <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-5">A guide for Texas families</p>
               <h1 className="font-display text-foreground leading-[0.92] tracking-tight text-[clamp(3rem,9vw,8.5rem)]">
-                <span className="block">Sell your plot</span>
+                <span className="block">Sell your plot{" "}</span>
                 <span className="block">
                   the <span className="italic font-medium text-primary">right</span> way.
                 </span>
