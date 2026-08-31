@@ -159,12 +159,13 @@ export async function buildListingOptionsBlock(opts: {
     <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:800;">Our Suggested Sales Price</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border-radius:8px;margin:14px 0 16px;">
       <tr><td style="padding:18px 20px;">
-        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price</p>
-        <p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(salePerSpace)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">per space</span></p>
+        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price${transferFee > 0 ? " (incl. cemetery transfer fee)" : ""}</p>
+        <p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(grossPerSpace)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">per space</span></p>
         ${plotCount > 1 ? `<p style="font-family:${SANS};font-size:13px;color:${BRAND_INK_MUTED};margin:8px 0 0;">${fmtUsd(totalSale)} across all ${plotCount} spaces</p>` : ""}
       </td></tr>
     </table>
-    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the price we suggest listing at to stay in line with other listings at this location, and the minimum figure at which you authorize us to complete a sale on your behalf. In practice we always pursue the highest achievable price — the final sale may close at this figure or above it, and any amount above the suggested price flows through to your proceeds on the same terms.</p>
+    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the price we suggest listing at to stay in line with other listings at this location, and the minimum figure at which you authorize us to complete a sale on your behalf.${transferFee > 0 ? ` It is quoted inclusive of the cemetery's transfer fee of ${fmtUsd(transferFee)} per space, which is paid by the buyer and is shown separately in the breakdown below.` : ""} In practice we always pursue the highest achievable price — the final sale may close at this figure or above it, and any amount above the suggested price flows through to your proceeds on the same terms.</p>
+
   </td></tr>
 </table>`.trim();
 
