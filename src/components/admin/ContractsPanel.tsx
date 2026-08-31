@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { openFileViewer } from "@/lib/fileViewer";
 import {
   FileSignature, Loader2, ExternalLink, Copy, CheckCircle2, Upload,
   ScrollText, Shield, Mail, PenLine, Send, X,
@@ -61,6 +62,12 @@ const KIND_ICON = {
   poa: Shield,
 };
 
+const contractPdfPath = (contract: Contract) =>
+  contract.countersigned_pdf_path
+  ?? contract.signed_pdf_path
+  ?? contract.notarized_pdf_path
+  ?? contract.filled_pdf_path;
+
 export default function ContractsPanel({ submissionId, sellerEmail, sellerName, kinds = ["listing_agreement", "poa"], hideHeader }: Props) {
   const shows = (k: Contract["kind"]) => kinds.includes(k);
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -93,13 +100,10 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
     // some PDF extensions) block cross-origin storage links outright.
     const map: Record<string, string> = {};
     for (const c of data ?? []) {
-      const path = (c as Contract).countersigned_pdf_path
-        ?? (c as Contract).signed_pdf_path
-        ?? (c as Contract).notarized_pdf_path
-        ?? (c as Contract).filled_pdf_path;
+      const path = contractPdfPath(c as Contract);
       if (path) {
         const { data: blob } = await supabase.storage.from("contracts").download(path);
-        if (blob) map[c.id] = URL.createObjectURL(blob);
+        if (blob) map[c.id] = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
       }
     }
     setUrls((prev) => {
@@ -118,6 +122,15 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
   const poa = contracts.find((c) => c.kind === "poa");
   const priorLa = contracts.filter((c) => c.kind === "listing_agreement" && c.id !== la?.id);
   const priorPoa = contracts.filter((c) => c.kind === "poa" && c.id !== poa?.id);
+
+  const openContractPdf = (contract: Contract) => {
+    const path = contractPdfPath(contract);
+    if (!path) return;
+    const label = KIND_LABEL[contract.kind];
+    if (!openFileViewer({ bucket: "contracts", path, name: `${label}.pdf`, mime: "application/pdf" })) {
+      toast.error("Pop-up blocked — allow pop-ups for this site and try again");
+    }
+  };
 
 
   const openGenerate = async (kind: Contract["kind"]) => {
@@ -401,7 +414,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
           </div>
           <div className="flex items-center gap-1 flex-wrap shrink-0">
             {contract && urls[contract.id] && (
-              <Button size="sm" variant="ghost" onClick={() => window.open(urls[contract.id], "_blank")}>
+              <Button size="sm" variant="ghost" onClick={() => openContractPdf(contract)}>
                 <ExternalLink className="w-3.5 h-3.5 mr-1" />
                 {contract.signed_at ? "Signed PDF" : "PDF"}
               </Button>
@@ -719,14 +732,13 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
               <div className="border rounded-lg overflow-hidden bg-muted/30">
                 <div className="flex items-center justify-between px-3 py-2 border-b bg-background">
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Seller-signed copy</span>
-                  <a
-                    href={urls[countersignFor.id]}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => openContractPdf(countersignFor)}
                     className="text-xs text-primary hover:underline inline-flex items-center gap-1"
                   >
                     <ExternalLink className="w-3 h-3" /> Open in new tab
-                  </a>
+                  </button>
                 </div>
                 <iframe
                   src={urls[countersignFor.id]}
