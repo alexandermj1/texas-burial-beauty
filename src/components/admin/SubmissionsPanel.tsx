@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -2701,6 +2701,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 indigo:  { dot: "bg-indigo-600",  ring: "ring-indigo-500/40",  text: "text-indigo-700 dark:text-indigo-300",   soft: "bg-indigo-500/10" },
                 teal:    { dot: "bg-teal-600",    ring: "ring-teal-500/40",    text: "text-teal-700 dark:text-teal-300",       soft: "bg-teal-500/10" },
                 sky:     { dot: "bg-sky-600",     ring: "ring-sky-500/40",     text: "text-sky-700 dark:text-sky-300",         soft: "bg-sky-500/10" },
+                cyan:    { dot: "bg-cyan-600",    ring: "ring-cyan-500/40",    text: "text-cyan-700 dark:text-cyan-300",       soft: "bg-cyan-500/10" },
                 green:   { dot: "bg-emerald-700", ring: "ring-emerald-600/40", text: "text-emerald-800 dark:text-emerald-300", soft: "bg-emerald-600/10" },
                 amber:   { dot: "bg-amber-500",   ring: "ring-amber-500/40",   text: "text-amber-700 dark:text-amber-300",     soft: "bg-amber-500/10" },
               };
