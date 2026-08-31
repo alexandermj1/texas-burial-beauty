@@ -41,7 +41,7 @@ export default function PdfCanvasViewer({ url, title }: { url: string; title: st
         canvas.className = "block max-w-full bg-background shadow-sm";
         canvas.setAttribute("aria-label", `${title}, page ${pageNumber} of ${pdf.numPages}`);
         staging.appendChild(canvas);
-        await page.render({ canvas, canvasContext: context, viewport, transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0] }).promise;
+        await page.render({ canvasContext: context, viewport, transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0] }).promise;
       }
       if (cancelled) return;
       const keep = host.scrollTop;
