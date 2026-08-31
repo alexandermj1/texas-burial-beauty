@@ -106,14 +106,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         }),
       );
       setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
-      const existing = Array.isArray(row.ownership_roster) ? (row.ownership_roster as RosterEntry[]) : [];
-      setRoster(
-        existing.length
-          ? existing.map((p) => ({ name: String(p.name ?? ""), deceased: !!p.deceased }))
-          : names
-            ? names.split(/\s*(?:&|and|,)\s*/i).filter(Boolean).map((n) => ({ name: n, deceased: false }))
-            : [],
-      );
+      // No separate roster to maintain — the deed names typed here ARE the
+      // family-tree seed. The tree view derives from deedOwnerNames below.
 
     })();
     return () => { cancelled = true; };
