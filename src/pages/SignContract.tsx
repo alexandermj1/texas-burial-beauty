@@ -543,7 +543,7 @@ export default function SignContract() {
                   <Label className="text-xs uppercase tracking-wider text-muted-foreground">
                     Listing option {locked.listing_option && <span className="normal-case tracking-normal text-muted-foreground/80">— set by Texas Cemetery Brokers</span>}
                   </Label>
-                  <div className="grid sm:grid-cols-3 gap-3" role="radiogroup" aria-label="Listing option">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3" role="radiogroup" aria-label="Listing option">
                     {listingOptions.map(({ id, tagline }) => {
                       const selected = fields.listing_option === id;
                       const disabled = locked.listing_option && !selected;
