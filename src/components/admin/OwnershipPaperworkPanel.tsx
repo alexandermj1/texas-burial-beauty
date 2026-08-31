@@ -85,6 +85,7 @@ const personKey = (n?: string | null) => {
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
 };
 const reqDbKey = (r: Requirement) => `${r.code}::${personKey(r.personName)}`;
+const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${personKey(person)}`;
 
 /**
  * What a checklist row is *about*, regardless of how it was created. A broker
@@ -135,6 +136,12 @@ type DocRow = {
   notes: string | null;
   file_url: string | null;
   file_urls?: string[] | null;
+  why?: string | null;
+  statute_ref?: string | null;
+  issued_by_us?: boolean | null;
+  needs_notary?: boolean | null;
+  person_role?: string | null;
+  sort_order?: number | null;
 };
 
 const STATE_STYLE: Record<RequiredState, string> = {
@@ -294,7 +301,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       supabase.from("contact_submissions")
         .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
-        .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls").is("deleted_at", null)
+        .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls, why, statute_ref, issued_by_us, needs_notary, person_role, sort_order").is("deleted_at", null)
         .eq("submission_id", submissionId),
       supabase.from("contracts")
         .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token, principal_key")
@@ -428,10 +435,40 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   const path = questionPath(answers);
   const prog = progress(answers);
-  const requirements = useMemo(() => {
+  const computedRequirements = useMemo(() => {
     const removed = new Set(answers.removedDocs ?? []);
     return computeRequirements(answers, rules).filter((r) => !removed.has(reqKey(r)));
   }, [answers, rules]);
+
+  // Once a document request has actually been emailed, the checklist is a
+  // HISTORICAL record of what we asked that seller for. It must never be
+  // silently re-computed by a later rules change — brokers need to see exactly
+  // what was sent and when. So after `documents_requested_at` we render the
+  // persisted rows themselves, and drop "family tree not completed" review
+  // placeholders, which are meaningless once the request is out the door.
+  const frozen = !!requestedAt && rows.some((r) => r.doc_code && r.doc_code !== "REVIEW");
+  const requirements = useMemo(() => {
+    if (!frozen) return computedRequirements;
+    const byKey = new Map(computedRequirements.map((r) => [reqDbKey(r), r]));
+    return rows
+      .filter((r) => r.doc_code && r.doc_code !== "REVIEW")
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((r) => {
+        const match = byKey.get(keyOf(r.doc_code, r.person_name));
+        return {
+          ...(match ?? {}),
+          code: r.doc_code as string,
+          label: r.label,
+          why: r.why ?? match?.why ?? "",
+          statute: r.statute_ref ?? match?.statute,
+          issuedByUs: r.issued_by_us ?? match?.issuedByUs,
+          needsNotary: r.needs_notary ?? match?.needsNotary,
+          personName: r.person_name ?? match?.personName,
+          personRole: (r.person_role as Requirement["personRole"]) ?? match?.personRole,
+        } as Requirement;
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frozen, rows, computedRequirements]);
   const roster = useMemo(() => signingRoster(answers), [answers]);
 
   /**
@@ -516,13 +553,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   );
   useEffect(() => {
     if (!open || loading || saving) return;
+    // Never rewrite a checklist we already sent to the seller.
+    if (frozen) return;
     if (!requirements.length) return;
     if (lastSynced.current === wantedSignature) return;
     lastSynced.current = wantedSignature;
     setAutoSynced(true);
     void syncChecklist(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, loading, wantedSignature]);
+  }, [open, loading, wantedSignature, frozen]);
 
 
   useEffect(() => {
@@ -759,11 +798,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** The live checklist rows, keyed the same way the DB's unique item index is. */
   const fetchLiveRows = async (): Promise<DocRow[]> => {
     const { data } = await supabase.from("submission_documents")
-      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls").is("deleted_at", null)
+      .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls, why, statute_ref, issued_by_us, needs_notary, person_role, sort_order").is("deleted_at", null)
       .eq("submission_id", submissionId);
     return (data ?? []) as DocRow[];
   };
-  const keyOf = (code?: string | null, person?: string | null) => `${code ?? ""}::${personKey(person)}`;
   /** Same requirement, matched loosely on the person's name. */
   const rowFor = (r: Requirement) => rows.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
 
@@ -930,7 +968,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       needs_notary: !!r.needsNotary,
       why: r.why,
       statute_ref: r.statute ?? null,
-    } as never).select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls").maybeSingle();
+    } as never).select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls, why, statute_ref, issued_by_us, needs_notary, person_role, sort_order").maybeSingle();
     if (error) { toast.error(error.message); return; }
     if (data) setRows((prev) => [...prev, data as DocRow]);
   };
