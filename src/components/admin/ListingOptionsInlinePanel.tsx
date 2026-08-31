@@ -53,15 +53,27 @@ const inputCls =
 const labelCls =
   "text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block";
 
-type RosterEntry = { name: string };
+type RosterEntry = { name: string; deceased?: boolean };
 
-/** Split "A & B, C"-style
- deed names into one entry per person. */
-const rosterFromNames = (raw: string): RosterEntry[] =>
-  String(raw || "")
+const normKey = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, "").trim();
+
+/** Split "A & B, C"-style deed names into one entry per person, carrying over
+    any deceased flag already recorded against that name so a re-save from
+    this panel never downgrades what the questionnaire established. */
+const rosterFromNames = (raw: string, existing?: unknown): RosterEntry[] => {
+  const prev = new Map<string, boolean>();
+  if (Array.isArray(existing)) {
+    for (const p of existing as Record<string, unknown>[]) {
+      const n = String(p?.name ?? "").trim();
+      if (n && (p?.deceased === true || p?.role === "decedent")) prev.set(normKey(n), true);
+    }
+  }
+  return String(raw || "")
     .split(/\s*(?:&|,|;|\band\b)\s*/i)
     .filter(Boolean)
-    .map((name) => ({ name }));
+    .map((name) => (prev.get(normKey(name)) ? { name, deceased: true } : { name }));
+};
 
 export default function ListingOptionsInlinePanel({ seller, onGenerated, onGeneratedAndSend, hasGenerated, sending }: Props) {
   const { toast } = useToast();
