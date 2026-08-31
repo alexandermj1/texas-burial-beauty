@@ -274,21 +274,31 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
       originalsOnly: rules.requires_originals,
     });
 
-    // Wills are always a manual exception.
+    // Wills stay a manual exception, but where the seller has told us who the
+    // will leaves the property to, those people are still listed as signers so
+    // the broker only has to confirm the will agrees with them.
     if ((v2.will ?? {})[d.id] === "yes") {
       const taker = clean((v2.taker ?? {})[d.id]);
+      const takers = splitNames(taker);
       add({
         code: "REVIEW",
         label: `Will of ${name} — reviewed by hand`,
         why: taker
-          ? `A will is said to leave this property to ${taker}. A will only changes the outcome when it deals with the cemetery property differently from the Texas heirs-at-law rules, so a broker settles this file personally.`
+          ? `A will is said to leave this property to ${taker}. Their photo ID and power of attorney are listed below, but a broker reads the will against them before anything is sent.`
           : "A will only changes the outcome when it deals with the cemetery property differently from the Texas heirs-at-law rules, so a broker settles this file personally.",
         personName: name,
         review: true,
       });
       add({ code: "D7", label: `The will of ${name}`, why: "So we can check whether it deals with the cemetery property.", personName: name });
+      for (const t of takers) {
+        addSigner(ctx, {
+          key: key(t), name: t, role: "heir",
+          why: `Named in the will of ${name} as taking this property — signs subject to a broker's check of the will.`,
+        });
+      }
       continue;
     }
+
 
     // Their surviving legal spouse at the time of death — even if remarried.
     const sp = spouseOf(d.id);
