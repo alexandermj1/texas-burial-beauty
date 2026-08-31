@@ -1650,6 +1650,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       const answers = { ...ans };
                       answers.questionsSentAt = at("tree_sent") ? (ans.questionsSentAt || now) : null;
                       answers.sellerConfirmedAt = at("tree_done") ? (ans.sellerConfirmedAt || now) : null;
+                      answers.docsReturnedAt = at("docs_returned") ? (ans.docsReturnedAt || now) : null;
                       const patch: any = {
                         ownership_answers: answers,
                         quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
