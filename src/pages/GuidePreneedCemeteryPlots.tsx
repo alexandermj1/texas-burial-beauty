@@ -307,8 +307,14 @@ const GuidePreneedCemeteryPlots = () => (
         <section id="why-ahead" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 02 · The case for planning</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Why families buy <span className="italic text-primary">before they need to</span></h2>
-          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
             Nobody enjoys the conversation. But the families who have it early are, without exception, in a better position than the ones who do not — financially and otherwise.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            Purchasing ahead of time means you can choose a property that works for your budget and your personal preferences. It gives you the freedom to explore all your options thoroughly, and it saves your loved ones from having to make rushed decisions in their time of grief. It also lets you select a final resting place that suits your wishes exactly — be it under a shady tree at Sparkman-Hillcrest in Dallas or beside a serene lake at Bluebonnet Hills in Colleyville.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            Whatever your personal wishes, buying ahead of time provides the chance to be honored exactly as you intend, whether that is within a particular garden or section, or surrounded by your loved ones in contiguous spaces within a family plot. Your peace of mind is assured, too, when choosing a Perpetual Care cemetery in Texas: the cemetery is legally required to maintain an endowment fund from which the long-term upkeep and maintenance of the park is paid, so the grounds are cared for in the future without worry.
           </p>
           <div className="space-y-4 mb-8">
             {reasons.map(({ Icon, t, d }) => (
