@@ -227,15 +227,15 @@ Deno.serve(async (req) => {
 
       const joint = c.kind === 'poa' ? jointNamesOf(merged) : [];
       let filled: Uint8Array;
-      if (joint.length > 1) {
+      if (c.kind === 'poa') {
         filled = await buildJointPoaPdf({
           // POAs carry no county: the notary writes the county of signing.
           county: '',
           county_state: '',
-          principals: joint.slice(0, 2).map((n) => ({
-            name: n,
-            address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),
-          })),
+          // One principal or two — the shared builder handles both. Addresses
+          // are completed by hand in front of the notary.
+          principals: (joint.length > 1 ? joint.slice(0, 2) : [merged.seller_name as string])
+            .map((n) => ({ name: n, address: '' })),
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
           phone: merged.phone as string,
@@ -308,15 +308,14 @@ Deno.serve(async (req) => {
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
         });
-      } else if (jointNamesOf(merged).length > 1) {
+      } else if (c.kind === 'poa') {
         filled = await buildJointPoaPdf({
           // POAs carry no county: the notary writes the county of signing.
           county: '',
           county_state: '',
-          principals: jointNamesOf(merged).slice(0, 2).map((n) => ({
-            name: n,
-            address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),
-          })),
+          principals: (jointNamesOf(merged).length > 1
+            ? jointNamesOf(merged).slice(0, 2)
+            : [merged.seller_name as string]).map((n) => ({ name: n, address: '' })),
           cemetery: merged.cemetery as string,
           plot_description: merged.plot_description as string,
           phone: merged.phone as string,
@@ -324,10 +323,7 @@ Deno.serve(async (req) => {
         });
 
       } else {
-        const { data: tmpl } = await svc.storage.from('contracts').download('_templates/poa-template.pdf');
-        if (!tmpl) throw new Error('template missing');
-        const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
-        filled = await buildFilledPdf(tmplBytes, 'poa', merged);
+        throw new Error('unsupported document kind');
       }
 
       const newPath = `${c.submission_id}/${c.kind}-${Date.now()}.pdf`;

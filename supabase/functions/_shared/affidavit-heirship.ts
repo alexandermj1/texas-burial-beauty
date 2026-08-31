@@ -4,7 +4,7 @@
 // variable-length heir table and an optional spouse page, so it is composed
 // rather than stamped.
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'npm:pdf-lib@1.17.1';
-import { appendDataReferenceSheet } from './contract-fill.ts';
+import { buildPoaPdf } from './poa.ts';
 
 export interface Heir {
   name: string;
@@ -300,15 +300,12 @@ export async function buildSpousalConsentPdf(d: {
 }
 
 /**
- * Joint Limited Power of Attorney — one instrument signed by two principals
- * (typically a married couple who hold the interment rights together).
+ * Limited (Special) Durable Power of Attorney.
  *
- * Legal basis: Texas Estates Code Chapter 751 (Durable Power of Attorney Act).
- * §751.0021 fixes the statutory form's core language; §751.0022 fixes the
- * acknowledgment/"Important Information for Agent" disclosure. Two principals
- * may execute a single instrument — each signature is simply acknowledged
- * separately before a notary (Tex. Civ. Prac. & Rem. Code §121.005–.007), so
- * this document carries one acknowledgment block per principal.
+ * Both the single-signer and the two-principal ("joint") versions are now
+ * typeset from the one shared builder in ./poa.ts, so the two forms can never
+ * again state different policies. Kept under this name for the callers that
+ * already import it.
  */
 export async function buildJointPoaPdf(d: {
   county?: string;
@@ -322,86 +319,14 @@ export async function buildJointPoaPdf(d: {
   phone?: string;
   email?: string;
 }): Promise<Uint8Array> {
-  const doc = await PDFDocument.create();
-  const ctx: Ctx = {
-    doc,
-    page: doc.addPage([PAGE_W, PAGE_H]),
-    y: PAGE_H - M,
-    body: await doc.embedFont(StandardFonts.TimesRoman),
-    bold: await doc.embedFont(StandardFonts.TimesRomanBold),
-    italic: await doc.embedFont(StandardFonts.TimesRomanItalic),
-  };
-  // A notary acknowledgment must state the county where the signing physically
-  // happens — not where the cemetery is, and not a guess from our records. We
-  // therefore never pre-print a county on a POA: every venue block is left
-  // blank for the notary to complete on the day.
-  const county = '';
-  const hasSpaces = /space/i.test(d.plot_description ?? '');
-  const plot = [d.plot_description, !hasSpaces && d.spaces && `Spaces ${d.spaces}`].filter(Boolean).join(' · ');
-  const names = d.principals.map((p) => p.name).filter(Boolean);
-  const addr = d.principals.map((p) => p.address ?? '').filter(Boolean);
-
-  heading(ctx, 'LIMITED (SPECIAL) POWER OF ATTORNEY', 14);
-  para(ctx, 'Interment Rights — Joint Principals · Texas Cemetery Brokers LLC', { size: 10, font: ctx.italic, gap: 12 });
-  venue(ctx, county);
-  para(ctx, 'County to be completed at signing — the county where the instrument is actually signed before the notary.', { size: 8.5, font: ctx.italic, gap: 12 });
-
-  para(ctx, `NOTICE: THE POWERS GRANTED BY THIS DOCUMENT ARE LIMITED AND ARE EXPLAINED IN SUBTITLE P, TITLE 2, TEXAS ESTATES CODE. IF YOU HAVE ANY QUESTIONS ABOUT THESE POWERS, OBTAIN COMPETENT LEGAL ADVICE. YOU MAY REVOKE THIS POWER OF ATTORNEY IF YOU LATER WISH TO DO SO.`, { size: 9, font: ctx.bold, gap: 12 });
-
-  para(ctx, `KNOW ALL PERSONS BY THESE PRESENTS, that the undersigned, ${inline(names[0], 32)} and ${inline(names[1], 32)} (each a "Principal" and together the "Principals"), acting both individually and jointly, hereby appoint Texas Cemetery Brokers LLC, a Texas limited liability company, and its authorised officers, as their true and lawful attorney-in-fact ("Agent") for the limited purposes set out below.`);
-
-  para(ctx, `Principals' address${addr.length > 1 ? 'es' : ''}: ${inline(addr.join('; '), 52)}.`);
-
-  para(ctx, `1.  Property. The Principals own the interment rights at ${inline(d.cemetery, 32)}${d.cemetery_city ? `, ${d.cemetery_city}, Texas` : ''}, described as ${inline(plot, 40)} (the "Property").`);
-
-
-  para(ctx, '2.  Powers granted. The Agent may, on behalf of either or both Principals: (a) market, offer for sale and sell the Property on the terms agreed between the Principals and the Agent in their Listing Agreement — those terms are set out in that Listing Agreement and, by agreement of the parties, are not repeated in this instrument; (b) obtain from the cemetery any records, deeds, certificates of ownership and transfer forms relating to the Property; (c) complete, sign and deliver the cemetery\'s transfer, assignment and release documents; (d) pay and receive the cemetery\'s transfer fees on the Principals\' behalf; and (e) do anything else reasonably necessary to complete the sale and transfer of the Property.');
-
-  para(ctx, '3.  Limits. This power is limited to the Property described above. It does not authorise the Agent to sell the Property below the price the Principals have approved in writing, to receive sale proceeds other than through the closing statement provided to the Principals, or to act on any other property, account or interest of either Principal. The Agent is not authorised to create, change or revoke any right of survivorship, beneficiary designation, trust or gift.');
-
-  para(ctx, '4.  Agent\'s duties. The Agent must act in good faith, within the scope granted above and in the Principals\' best interest, must keep the Principals\' property separate from the Agent\'s own, and must keep a record of each receipt, disbursement and transaction made on the Principals\' behalf, as required by Texas Estates Code §751.101–§751.106.');
-
-  para(ctx, '5.  Effective date, durability and termination. This power of attorney is effective immediately on execution by a Principal and is NOT affected by that Principal\'s subsequent disability or incapacity. It terminates on the earlier of (a) completion of the sale and transfer of the Property, (b) one year from the date of the last acknowledgment below, or (c) revocation.');
-
-  para(ctx, '6.  Revocation. Either Principal may revoke this instrument as to that Principal by written notice delivered to the Agent and to the cemetery. Revocation by one Principal does not invalidate the authority granted by the other Principal, which continues in full force as to that Principal\'s interest.');
-
-  para(ctx, '7.  Reliance and copies. The cemetery, any title company and any purchaser may rely on this instrument, and on a photocopy or electronically transmitted copy of it, with the same force and effect as the original, until they receive actual written notice of revocation. A person who acts in good faith reliance on this instrument is protected under Texas Estates Code §751.201–§751.212.', { gap: 8 });
-
-  para(ctx, '8.  Governing law. This instrument is governed by the laws of the State of Texas.', { gap: 18 });
-
-  para(ctx, 'Each Principal signs below and appears separately before a notary public. Both acknowledgments must be completed for this instrument to be effective as to both Principals.', { size: 10, font: ctx.italic, gap: 12 });
-
-  notaryBlock(ctx, 'First Principal', names[0] ?? '', county, true);
-  newPage(ctx);
-  heading(ctx, 'ACKNOWLEDGMENT OF SECOND PRINCIPAL', 12);
-  para(ctx, 'This page is part of, and is executed under, the Limited (Special) Power of Attorney of the same date appearing on the preceding page.', { size: 10, font: ctx.italic, gap: 12 });
-  venue(ctx, county);
-  notaryBlock(ctx, 'Second Principal', names[1] ?? '', county, true);
-
-  // Brand the instrument pages first — the data-reference sheet below carries
-  // its own masthead/footer (identical to the single-signer POA), so it must
-  // not be double-stamped.
-  brandPages(doc, ctx.bold, ctx.body, doc.getPages().length + 1);
-
-  // Same audit / data-reference sheet the single-signer POA carries, so both
-  // documents review and file identically.
-  await appendDataReferenceSheet(doc, 'poa', {
-    // First principal in the seller row, second in the co-owner row — listing
-    // "A & B" in both places double-counted the second signer.
-    seller_name: names[0] ?? '',
-    co_owner_name: names[1] ?? '',
-    address: addr[0] ?? '',
+  return await buildPoaPdf({
+    principals: d.principals,
+    cemetery: d.cemetery,
+    cemetery_city: d.cemetery_city,
+    plot_description: d.plot_description,
+    spaces: d.spaces,
+    plot_count: d.plot_count,
     phone: d.phone,
     email: d.email,
-    cemetery: d.cemetery,
-    // County is deliberately omitted from POAs (see the venue note above).
-    county_state: '',
-    plot_count: d.plot_count ?? d.spaces ?? '',
-    plot_description: d.plot_description,
   });
-
-
-  return await doc.save();
-
 }
-
