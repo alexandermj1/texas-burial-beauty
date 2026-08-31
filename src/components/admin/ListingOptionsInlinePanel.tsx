@@ -1,26 +1,19 @@
-// Inline "Quote (with pay buttons)" builder that lives inside the composer.
+// Inline "Seller pack" builder that lives inside the composer.
 //
-// It is now a three-step walkthrough, because acceptance carries the seller
-// straight on to the agreement and then the family tree with no chance to
-// correct anything in between:
-//
-//   1. Quote        — retail, net/plot, sales price, plots, transfer fee.
-//   2. Agreement    — the exact wording the listing agreement will print,
-//                     with a real draft PDF preview.
-//   3. Family tree  — the deed roster the seller's questions are built from,
-//                     with a live preview of their page.
-//
-// Only at the end of step 3 is the quote email inserted into the composer, so
-// everything downstream is prepared and reviewed before the seller sees it.
+// It is a single page: pricing, the deed viewer with the AI-read owner names,
+// the roster the family tree is built from, and the agreement wording all sit
+// together. Each downstream document can be viewed individually from the top
+// of the panel before anything is sent.
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Eye, ArrowRight, ArrowLeft, Plus, X, Send } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Plus, X, Send } from "lucide-react";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
+import DeedNameChecker from "./DeedNameChecker";
 import {
   buildFamilyTreeBlock,
   defaultFamilyTreeHelpNote,
@@ -62,16 +55,9 @@ const labelCls =
 
 type RosterEntry = { name: string; deceased?: boolean };
 
-const STEPS = [
-  { key: 1, label: "Quote", icon: Sparkles },
-  { key: 2, label: "Listing agreement", icon: FileSignature },
-  { key: 3, label: "Family tree", icon: Network },
-] as const;
-
 export default function ListingOptionsInlinePanel({ seller, onGenerated, onGeneratedAndSend, hasGenerated, sending }: Props) {
   const { toast } = useToast();
   const defaultSpaces = parseSpaces(seller.spaces);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [retail, setRetail] = useState<string>("");
   const [netPerPlot, setNetPerPlot] = useState<string>("");
   const [salesPrice, setSalesPrice] = useState<string>("");
@@ -92,9 +78,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // the very same builders the standalone buttons use, so nothing differs.
   const [agreementEmailHtml, setAgreementEmailHtml] = useState<string>("");
   const [familyTreeEmailHtml, setFamilyTreeEmailHtml] = useState<string>("");
-  // Deed images the seller uploaded with the form — shown so the roster can be
-  // checked against the actual document.
-  const [deedFiles, setDeedFiles] = useState<{ name: string; url: string; isImage: boolean }[]>([]);
 
   // Pre-fill everything we already hold on the submission.
   useEffect(() => {
@@ -155,7 +138,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   }, [seller.id, seller.name, seller.section, seller.lawn, seller.spaces, seller.space_numbers]);
 
   useEffect(() => {
-    setStep(1);
     setPlotCount(String(parseSpaces(seller.spaces)));
     setRetail("");
     setNetPerPlot("");
