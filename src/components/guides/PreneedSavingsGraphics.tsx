@@ -33,7 +33,6 @@ const rows = [
 
 export const DiscountTable = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
     <div ref={ref} className="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/8 via-background to-accent/5 overflow-hidden">
@@ -104,7 +103,7 @@ export const DiscountTable = () => {
       </div>
 
       <p className="px-6 md:px-9 py-5 text-xs text-foreground/55 leading-relaxed border-t border-primary/10">
-        Illustrative ranges only, based on what we see across Dallas–Fort Worth, Houston, Austin and San Antonio. Actual pricing depends on the cemetery, the section and what is included — we quote the real figure in writing, {inView ? "" : ""}including the cemetery's own fees.
+        Illustrative ranges only, based on what we see across Dallas–Fort Worth, Houston, Austin and San Antonio. Actual pricing depends on the cemetery, the section and what is included — we quote the real figure in writing, including the cemetery's own fees.
       </p>
     </div>
   );
