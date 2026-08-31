@@ -452,6 +452,7 @@ const SellerQuoteForm = ({
                   accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
                   className="hidden" onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
               </label>
+              <div className="hidden sm:block"><PhoneUploadQR intakeId={intakeId} /></div>
               {files.length > 0 && (
                 <ul className="mt-3 space-y-1.5">
                   {files.map((f) => (
