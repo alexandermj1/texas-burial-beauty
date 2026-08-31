@@ -68,6 +68,13 @@ export async function buildListingOptionsBlock(opts: {
   transferFee: number;
   /** Stripe environment — defaults to sandbox if omitted. */
   environment?: "sandbox" | "live";
+  /**
+   * Exact property wording the broker typed in the quote generator. When set
+   * it is printed verbatim (after the cemetery name) instead of being rebuilt
+   * from the raw intake fields, so the quote, agreement and family tree all
+   * describe the property identically.
+   */
+  plotDescription?: string | null;
 }): Promise<string> {
   const { seller, netPerPlot, plotCount, transferFee, environment = "sandbox" } = opts;
   const salePerSpace = netPerPlot;
