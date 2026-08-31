@@ -348,12 +348,23 @@ export default function SignContract() {
   useEffect(() => {
     if (loading || done) return;
     if (firstLoadRef.current) { firstLoadRef.current = false; return; }
-    // Long enough that a half-typed address is never what gets autosaved.
-    const t = setTimeout(() => { void refreshContract(true); }, 1800);
-
-    return () => clearTimeout(t);
+    let stop = false;
+    let timer: number;
+    // Only rebuild the preview once the seller has actually stopped typing and
+    // left the field — otherwise the document reloads under them while they
+    // are trying to read it.
+    const attempt = () => {
+      if (stop) return;
+      const el = document.activeElement as HTMLElement | null;
+      const stillTyping = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (stillTyping) { timer = window.setTimeout(attempt, 1500); return; }
+      void refreshContract(true);
+    };
+    timer = window.setTimeout(attempt, 2000);
+    return () => { stop = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, fields.authorized_min_per_plot, loading, done]);
+
 
   const submit = async () => {
     if (!fields.seller_name.trim()) return toast.error("Enter your full legal name");
