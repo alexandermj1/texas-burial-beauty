@@ -81,7 +81,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
   const [busy, setBusy] = useState(false);
 
   // Headline fields
-  const [sellerName, setSellerName] = useState<string>(seller.name ?? "");
   const [plotCount, setPlotCount] = useState<string>(String(parseCount(seller.spaces)));
   const [listingOption, setListingOption] = useState<string>("Starter");
 
@@ -100,7 +99,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setSellerName(seller.name ?? "");
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
@@ -179,7 +177,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
         authorizedMinTotal: total,
         plotCount: plots,
         overrides: {
-          seller_name: clean(sellerName),
           co_owner_name: clean(coOwnerName),
           address: clean(address),
           city_state_zip: clean(cityStateZip),
@@ -235,10 +232,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        <Field label="Seller name on contract">
-          <input type="text" value={sellerName} onChange={(e) => setSellerName(e.target.value)} className={inputCls} />
-        </Field>
+      <div className="grid grid-cols-2 gap-2">
         <Field label="# of spaces">
           <input
             type="number"
