@@ -154,22 +154,42 @@ const GuidePreneedCemeteryPlots = () => (
             Preneed Cemetery Plots in <span className="italic text-primary">Texas</span>
           </h1>
           <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 max-w-2xl font-light">
-            Buying the space before it is needed — what preneed really means, why buying from an owner costs less than buying new from the cemetery, and how to choose calmly instead of in the week of a funeral.
+            Buy the space before it is needed — at a discount. Verified by-owner plots at up to <strong className="text-foreground font-medium">50% below cemetery retail</strong>, access to sections the cemetery has sold out, someone from our team walking the grounds with you in person, all the paperwork completed by us, and 0% interest financing for up to two years where we can offer it.
           </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-9 max-w-3xl">
+            {[
+              { k: "Up to 50%", v: "below cemetery retail" },
+              { k: "0%", v: "interest for up to 24 months" },
+              { k: "Sold-out", v: "sections we can still source" },
+              { k: "100%", v: "of the paperwork done by us" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.k}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.25 + i * 0.09 }}
+                className="rounded-2xl bg-background/70 backdrop-blur border border-border/60 px-4 py-3.5"
+              >
+                <p className="font-display text-2xl text-primary leading-none mb-1.5">{s.k}</p>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-foreground/60 leading-snug">{s.v}</p>
+              </motion.div>
+            ))}
+          </div>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs tracking-wide text-foreground/60 mb-9">
             <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Texas Cemetery Brokers</span>
             <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Updated 2026</span>
             <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 8 min read</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 9 chapters</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 12 chapters</span>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start gap-3 mb-10">
             <Link to="/buy" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
-              <Plus className="w-4 h-4" /> See Available Spaces
+              <Plus className="w-4 h-4" /> See Discounted Spaces
             </Link>
-            <a href="#by-owner" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-              Buying By Owner <ArrowRight className="w-4 h-4" />
+            <a href="#discounts" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
+              See The Discounts <ArrowRight className="w-4 h-4" />
             </a>
           </div>
 
@@ -180,7 +200,11 @@ const GuidePreneedCemeteryPlots = () => (
                 { href: "#what-is-preneed", t: "What preneed means" },
                 { href: "#why-ahead", t: "Why buy ahead" },
                 { href: "#by-owner", t: "By owner vs cemetery" },
+                { href: "#discounts", t: "The discounts" },
+                { href: "#financing", t: "0% financing" },
+                { href: "#sold-out", t: "Sold-out sections" },
                 { href: "#cost", t: "What it costs" },
+                { href: "#enquire", t: "Get options" },
                 { href: "#how", t: "How it works with us" },
                 { href: "#myths", t: "Myths" },
                 { href: "#cities", t: "Coverage" },
