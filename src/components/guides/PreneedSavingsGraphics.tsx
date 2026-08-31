@@ -244,6 +244,9 @@ const retailPath = Array.from({ length: 29 }, (_, i) => {
 const DEAL = 6500;
 const payPath = `M${px(0)},${py(0)} L${px(2)},${py(DEAL)}`;
 
+// shaded wedge: area between the rising retail curve and your locked $6,500 price
+const gapPath = `${retailPath} L${px(7)},${py(DEAL)} L${px(0)},${py(DEAL)} Z`;
+
 export const PriceAppreciationChart = () => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
