@@ -88,7 +88,10 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // Names exactly as they appear on the deed. Confirmed here, at quote time,
   // because acceptance now automatically produces the listing agreement (and
   // then the family tree) with no chance to correct them in between.
-  const [deedOwners, setDeedOwners] = useState<string>("");
+  // One box per person on the deed — a deed often carries two or more owners,
+  // and the family tree starts from every one of them.
+  const [ownerNames, setOwnerNames] = useState<string[]>([""]);
+
   const [plotDescription, setPlotDescription] = useState<string>("");
   const [countyState, setCountyState] = useState<string>("");
   const [busy, setBusy] = useState(false);
