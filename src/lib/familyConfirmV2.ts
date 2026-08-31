@@ -625,7 +625,10 @@ export function buildLogic(state, setS, accent0, CRM) {
     const d7 = d6 && L.done7();
     const d8 = d7 && L.done8();
     const stage2Done = !hasGone || d8;
-    const ready = d5 && stage2Done;
+    const stage3 = d5 && stage2Done;
+    const signerAsks = stage3 ? L.signerAsks() : [];
+    const d9 = stage3 && L.done9();
+    const ready = stage3 && d9;
 
     const num = ok => ({ bg: ok ? acc : '#f0f0f3', fg: ok ? '#ffffff' : '#9a9aa2' });
     const N = [d1, d2, d3, d4, d5, d6, d7, d8].map(num);
