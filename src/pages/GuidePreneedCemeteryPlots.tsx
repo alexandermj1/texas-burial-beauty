@@ -9,7 +9,7 @@ import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/Gu
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
-import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough.jpg.asset.json";
+import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 const TEAM_WALKTHROUGH = teamWalkthroughAsset.url;
 import { DiscountTable, FinancingGraphic, PriceAppreciationChart } from "@/components/guides/PreneedSavingsGraphics";
 import PreneedInquiryForm from "@/components/guides/PreneedInquiryForm";
