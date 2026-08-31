@@ -361,8 +361,9 @@ function featuredCard(opts: {
 function buildMortuarySheetPreview(opts: { cemLabel: string; propertyLine: string; salePerSpace: number }) {
   const { cemLabel, propertyLine, salePerSpace } = opts;
   const listPrice = fmtUsd(salePerSpace);
-  const cemPrice = fmtUsd(Math.round((salePerSpace / 0.42) / 100) * 100);
-  const saves = fmtUsd(Math.round((salePerSpace / 0.42) / 100) * 100 - salePerSpace);
+  const cemPrice = fmtUsd(Math.round((salePerSpace / 0.55) / 100) * 100);
+  const saves = fmtUsd(Math.round((salePerSpace / 0.55) / 100) * 100 - salePerSpace);
+
   return `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_PAGE};border:1px solid ${SHEET_BORDER};border-radius:10px;margin:0 0 18px;overflow:hidden;">
   <tr><td style="height:4px;background:${SHEET_INK};line-height:4px;font-size:0;">&nbsp;</td></tr>
