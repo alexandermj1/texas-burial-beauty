@@ -20,6 +20,8 @@ const TEXAS_REGIONS = [
   "El Paso & West Texas",
 ];
 import { cemeteryPath } from "@/lib/cemeterySlug";
+import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
+import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
 import { EMAIL, jsonLd, checks, valueFactors, faqs, resources } from "./guide-selling-data";
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
