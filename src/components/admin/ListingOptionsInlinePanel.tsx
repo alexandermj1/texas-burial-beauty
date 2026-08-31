@@ -464,21 +464,13 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               <Plus className="w-3 h-3" /> Add a name from the deed
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 gap-2">
+            <div>
               <label className={labelCls}>Plot description</label>
               <input
                 type="text" value={plotDescription}
                 onChange={(e) => setPlotDescription(e.target.value)}
                 placeholder="Section / lawn / spaces" className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>County, state</label>
-              <input
-                type="text" value={countyState}
-                onChange={(e) => setCountyState(e.target.value)}
-                placeholder="e.g. Dallas, TX" className={inputCls}
               />
             </div>
           </div>
@@ -493,7 +485,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
           <ListingAgreementInlinePanel
             seller={{
               id: seller.id,
-              name: deedOwnersClean || seller.name,
+              name: seller.name,
               email: seller.email,
               cemetery: seller.cemetery,
               section: seller.section,
