@@ -122,6 +122,19 @@ export default function SignContract() {
   /** Finished notary-ready PDF, returned when the document is completed. */
   const [finalPdfUrl, setFinalPdfUrl] = useState<string | null>(null);
 
+  // Chrome (and some PDF extensions) block cross-origin storage PDFs opened
+  // directly. Fetch the bytes and swap in a same-origin blob URL instead.
+  const localizePdf = async (url: string, setter: (u: string) => void) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+      const blob = await res.blob();
+      setter(URL.createObjectURL(blob));
+    } catch {
+      setter(url); // fall back to the direct URL
+    }
+  };
+
   const [fields, setFields] = useState<SellerFields>({
     seller_name: "", address: "", city_state_zip: "",
     phone: "", email: "", plot_description: "", listing_option: "Starter",
@@ -238,7 +251,7 @@ export default function SignContract() {
         if (!res.ok) throw new Error(data.error ?? "Could not load");
         setInfo(data);
         setSubmissionId(data.submission_id ?? "");
-        setPdfUrl(data.pdf_url);
+        void localizePdf(data.pdf_url as string, setPdfUrl);
         const fd = (data.fill_data ?? {}) as Record<string, string>;
         const next: SellerFields = {
           seller_name: "",
@@ -312,7 +325,7 @@ export default function SignContract() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not update contract");
-      setPdfUrl(data.pdf_url);
+      void localizePdf(data.pdf_url as string, setPdfUrl);
       if (!silent) toast.success("Contract updated with your details");
     } catch (e) {
       if (!silent) toast.error((e as Error).message);
@@ -400,7 +413,7 @@ export default function SignContract() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not complete document");
-      if (data.pdf_url) setFinalPdfUrl(data.pdf_url as string);
+      if (data.pdf_url) void localizePdf(data.pdf_url as string, (u) => setFinalPdfUrl(u));
       setDone(true);
       toast.success("Your document is ready — next steps are on this page.");
     } catch (e) {

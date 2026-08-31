@@ -89,6 +89,8 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
       .from("contracts").select("*").eq("submission_id", submissionId)
       .order("created_at", { ascending: false });
     setContracts((data ?? []) as Contract[]);
+    // Use same-origin blob URLs rather than signed storage URLs — Chrome (and
+    // some PDF extensions) block cross-origin storage links outright.
     const map: Record<string, string> = {};
     for (const c of data ?? []) {
       const path = (c as Contract).countersigned_pdf_path
@@ -96,12 +98,14 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
         ?? (c as Contract).notarized_pdf_path
         ?? (c as Contract).filled_pdf_path;
       if (path) {
-        const { data: s } = await supabase.storage
-          .from("contracts").createSignedUrl(path, 60 * 60);
-        if (s?.signedUrl) map[c.id] = s.signedUrl;
+        const { data: blob } = await supabase.storage.from("contracts").download(path);
+        if (blob) map[c.id] = URL.createObjectURL(blob);
       }
     }
-    setUrls(map);
+    setUrls((prev) => {
+      for (const u of Object.values(prev)) URL.revokeObjectURL(u);
+      return map;
+    });
     setLoading(false);
   };
 
