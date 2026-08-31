@@ -149,6 +149,8 @@ const STATE_STYLE: Record<RequiredState, string> = {
   maybe: "bg-slate-100 text-slate-700",
   needed: "bg-amber-100 text-amber-800",
   issued: "bg-blue-100 text-blue-800",
+  sent: "bg-indigo-100 text-indigo-800",
+
   awaiting_seller: "bg-purple-100 text-purple-800",
   received: "bg-teal-100 text-teal-800",
   notarized: "bg-emerald-100 text-emerald-800",
