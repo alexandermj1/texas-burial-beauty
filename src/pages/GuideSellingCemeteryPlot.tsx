@@ -20,6 +20,8 @@ const TEXAS_REGIONS = [
   "El Paso & West Texas",
 ];
 import { cemeteryPath } from "@/lib/cemeterySlug";
+import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
+import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
 import { EMAIL, jsonLd, checks, valueFactors, faqs, resources } from "./guide-selling-data";
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -233,6 +235,39 @@ const GuideSellingCemeteryPlot = () => (
           <p className="relative text-lg md:text-xl text-foreground/90 leading-relaxed">
             Yes, you can sell a cemetery plot in Texas. Check your purchase contract for a right-of-first-refusal clause, confirm any co-owners agree, then list privately or work with a cemetery broker who finds the buyer, prices it correctly, and completes the legal transfer with the cemetery for you.
           </p>
+        </div>
+
+        {/* Editorial photo band — flagship Dallas cemeteries */}
+        <div className="grid sm:grid-cols-2 gap-4 md:gap-5 my-14">
+          {[
+            {
+              src: SPARKMAN_HERO.src,
+              alt: "The fountain garden at Sparkman-Hillcrest Memorial Park on Northwest Highway in Dallas, Texas",
+              kicker: "Dallas · Northwest Highway",
+              name: "Sparkman-Hillcrest Memorial Park",
+              slug: "sparkman-hillcrest-memorial-park",
+            },
+            {
+              src: BLUEBONNET_HERO.src,
+              alt: "The lake and fountain at Bluebonnet Hills Memorial Park in Colleyville, Texas, with walkways and memorial benches",
+              kicker: "Colleyville · Harwood Road",
+              name: "Bluebonnet Hills Memorial Park",
+              slug: "bluebonnet-hills-memorial-park",
+            },
+          ].map((p) => (
+            <Link key={p.slug} to={`/cemeteries/${p.slug}`} className="group relative block overflow-hidden rounded-3xl border border-border/60 shadow-soft">
+              <figure className="m-0">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img loading="lazy" decoding="async" src={p.src} alt={p.alt} className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  <figcaption className="absolute inset-x-0 bottom-0 p-5">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/70 mb-1.5">{p.kicker}</p>
+                    <p className="font-display text-xl md:text-2xl text-white leading-tight">{p.name}</p>
+                  </figcaption>
+                </div>
+              </figure>
+            </Link>
+          ))}
         </div>
 
         {/* H2: Can you sell */}
