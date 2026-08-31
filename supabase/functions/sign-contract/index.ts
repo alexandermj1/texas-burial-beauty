@@ -225,9 +225,12 @@ Deno.serve(async (req) => {
       );
       // Never locked — the seller always owns these two.
       const ALWAYS_SELLER = new Set([
+        // The signer's own legal name is always theirs to type.
+        'seller_name',
         'address', 'city_state_zip',
         ...(ownPrice ? ['authorized_min_per_plot', 'authorized_min_total'] : []),
       ]);
+
       const existing = (c.fill_data ?? {}) as Record<string, unknown>;
       const sellerSupplied = new Set<string>(
         Array.isArray(existing._seller_supplied) ? (existing._seller_supplied as string[]) : [],
