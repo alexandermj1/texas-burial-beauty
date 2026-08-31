@@ -78,7 +78,7 @@ export const buildListingAgreementHtml = (opts: {
           </tr>
         </table>
         <p style="font-family:Georgia,serif;font-size:12px;line-height:1.6;color:#4a5568;margin:0 0 12px;">
-          One note you'll see in the agreement (Addendum B): the buyer pays a 15% buyer's fee on top of the
+          One note you'll see in the agreement (Sale Terms): the buyer pays a 15% buyer's fee on top of the
           sale price, along with the cemetery's transfer fee. Those are buyer-side charges — they don't come
           out of your proceeds.
         </p>
