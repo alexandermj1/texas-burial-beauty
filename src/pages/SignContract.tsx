@@ -595,7 +595,7 @@ export default function SignContract() {
                 {refreshing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Refresh preview now
               </Button>
-              <p className="text-xs text-muted-foreground">The preview updates once you finish typing and click out of a field.</p>
+              <p className="text-xs text-muted-foreground">The preview updates automatically about a second after you stop typing.</p>
             </div>
           </Card>
         )}
