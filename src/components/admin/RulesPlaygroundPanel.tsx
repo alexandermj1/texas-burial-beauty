@@ -331,6 +331,61 @@ export default function RulesPlaygroundPanel() {
           {personList("kids", "Children of the deceased owner(s)", "Grandchildren step into a deceased child's share.")}
           {personList("sibs", "Brothers and sisters", "Only used when there are no children or grandchildren.")}
           {personList("parents", "Surviving parents", "Only used when there are no descendants and no siblings.")}
+
+          <div className={box}>
+            <div className="text-sm font-semibold">Every signer — spouse & durable POA</div>
+            <div className="text-xs text-muted-foreground">
+              Asked of everyone who signs. A living spouse signs the joint POA; anyone who has given a durable POA signs through their attorney-in-fact.
+            </div>
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={s.signerCheck !== false} onChange={(e) => patch({ signerCheck: e.target.checked })} />
+              These questions were put to the seller (untick to see the old-tree review flag)
+            </label>
+            {roster.length === 0 && <div className="text-sm text-muted-foreground">Nobody yet.</div>}
+            {roster.map((p) => {
+              const k = signerKey(p.name);
+              const sp = (s.signerSpouse ?? {})[k] ?? {};
+              const pa = (s.signerPoa ?? {})[k] ?? {};
+              return (
+                <div key={k} className="rounded-lg border border-border/60 p-3 space-y-2">
+                  <div className="text-sm font-medium">{p.name}</div>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className={lbl}>Married</span>
+                    <select className={sel} value={sp.has ?? ""}
+                      onChange={(e) => patch({ signerSpouse: { ...(s.signerSpouse ?? {}), [k]: { ...sp, has: e.target.value } } })}>
+                      <option value="">—</option>
+                      <option value="yes">Married</option>
+                      <option value="no">Not married</option>
+                    </select>
+                    {sp.has === "yes" && (
+                      <>
+                        <Input className="w-48" placeholder="Spouse name" value={sp.n ?? ""}
+                          onChange={(e) => patch({ signerSpouse: { ...(s.signerSpouse ?? {}), [k]: { ...sp, n: e.target.value } } })} />
+                        <select className={sel} value={sp.alive ?? "living"}
+                          onChange={(e) => patch({ signerSpouse: { ...(s.signerSpouse ?? {}), [k]: { ...sp, alive: e.target.value } } })}>
+                          <option value="living">Living</option>
+                          <option value="deceased">Deceased</option>
+                        </select>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className={lbl}>Durable POA over them</span>
+                    <select className={sel} value={pa.has ?? ""}
+                      onChange={(e) => patch({ signerPoa: { ...(s.signerPoa ?? {}), [k]: { ...pa, has: e.target.value } } })}>
+                      <option value="">—</option>
+                      <option value="yes">Yes — someone holds one</option>
+                      <option value="no">No</option>
+                    </select>
+                    {pa.has === "yes" && (
+                      <Input className="w-48" placeholder="Attorney-in-fact name" value={pa.n ?? ""}
+                        onChange={(e) => patch({ signerPoa: { ...(s.signerPoa ?? {}), [k]: { ...pa, n: e.target.value } } })} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="space-y-4 lg:sticky lg:top-4 self-start">
