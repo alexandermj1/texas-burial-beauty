@@ -336,12 +336,12 @@ export const PriceAppreciationChart = () => {
           {/* end dot + label */}
           <motion.g initial={{ opacity: 0, scale: 0 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 2.2, duration: 0.4 }}>
             <circle cx={px(7)} cy={py(20000)} r="6.5" fill="hsl(var(--accent))" />
-            <text x={px(7) - 12} y={py(20000) - 16} textAnchor="end" fontSize="15" fontWeight="700" fill="hsl(var(--accent))">
-              ≈ ${retailFuture.toLocaleString()} at-need
+            <text x={px(7) - 12} y={py(20000) - (isMobile ? 22 : 16)} textAnchor="end" fontSize={fs(15)} fontWeight="700" fill="hsl(var(--accent))">
+              ≈ ${retailFuture.toLocaleString()}{isMobile ? "" : " at-need"}
             </text>
           </motion.g>
-          <motion.text x={px(0) + 8} y={py(10000) + 24} fontSize="13.5" fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.4 }}>
-            Cemetery retail today: $10,000
+          <motion.text x={px(0) + 8} y={py(10000) + (isMobile ? 34 : 24)} fontSize={fs(13.5)} fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.4 }}>
+            {isMobile ? "Retail today: $10,000" : "Cemetery retail today: $10,000"}
           </motion.text>
 
           {/* 0% payment line (first 24 months) */}
@@ -363,8 +363,8 @@ export const PriceAppreciationChart = () => {
           />
           <motion.g initial={{ opacity: 0, scale: 0 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 1.9, duration: 0.4 }}>
             <circle cx={px(2)} cy={py(DEAL)} r="6.5" fill="hsl(var(--primary))" />
-            <text x={px(2) + 12} y={py(DEAL) + 24} fontSize="15" fontWeight="700" fill="hsl(var(--primary))">
-              You: ≈ ${dealCount.toLocaleString()} · paid off by month 24 · $0 interest
+            <text x={isMobile ? X0 : px(2) + 12} y={py(DEAL) + (isMobile ? 40 : 24)} fontSize={fs(15)} fontWeight="700" fill="hsl(var(--primary))">
+              You: ≈ ${dealCount.toLocaleString()}{isMobile ? " · 0% for 24 mo" : " · paid off by month 24 · $0 interest"}
             </text>
           </motion.g>
         </svg>
