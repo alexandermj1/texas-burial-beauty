@@ -25,7 +25,9 @@ const firstName = (n?: string | null) => (n?.trim().split(/\s+/)[0] || "");
 
 export default function PaymentSuccess() {
   const [params] = useSearchParams();
-  const sessionId = params.get("session_id");
+  // Checkout sessions redirect with ?session_id, Payment Links with ?pl.
+  const sessionId = params.get("session_id") || params.get("pl");
+
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
