@@ -791,21 +791,29 @@ const InlineEmailComposer = ({
           >
             Blank
           </button>
-          {templates.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => applyTemplate(t.id)}
-              className={`text-[10px] font-medium px-2 py-1 rounded-full border transition-colors ${
-                activeTemplateId === t.id
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-border hover:bg-muted"
-              }`}
-              title={`Load: ${t.label}`}
-            >
-              {t.label}
-            </button>
-          ))}
+          {templates.map((t) => {
+            // The seller pack drives the whole downstream run, so it is called
+            // out visually rather than sitting in the row like any other note.
+            const isPack = t.id === "seller_listing_options";
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => applyTemplate(t.id)}
+                className={`text-[10px] font-medium px-2 py-1 rounded-full border transition-colors inline-flex items-center gap-1 ${
+                  activeTemplateId === t.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : isPack
+                      ? "bg-primary/10 text-primary border-primary/50 ring-1 ring-primary/30 hover:bg-primary/20"
+                      : "bg-background text-foreground border-border hover:bg-muted"
+                }`}
+                title={`Load: ${t.label}`}
+              >
+                {isPack && <Sparkles className="w-3 h-3" />}
+                {t.label}
+              </button>
+            );
+          })}
         </div>
       )}
       <input
