@@ -1795,22 +1795,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               {r.review && <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
               <span className="text-sm font-medium">{r.label}</span>
               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{r.code}</span>
-              {r.issuedByUs && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">We issue</span>}
-              {r.needsNotary && <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Notary</span>}
-              {r.originalsOnly && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Originals</span>}
-              {mailFor(r) && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 inline-flex items-center gap-0.5">
-                  <Mail className="w-2.5 h-2.5" />Original by post
-                </span>
-              )}
               {postedAt(r) && (
                 <span
                   className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 inline-flex items-center gap-0.5"
-                  title={`Seller confirmed it was posted on ${new Date(postedAt(r)!).toLocaleDateString()}`}
+                  title={`Seller ticked "it's in the post" on ${new Date(postedAt(r)!).toLocaleString()}`}
                 >
-                  <Send className="w-2.5 h-2.5" />Seller posted
+                  <Send className="w-2.5 h-2.5" />Seller mailed {new Date(postedAt(r)!).toLocaleDateString()}
                 </span>
               )}
+
 
 
               {fromContract && (
