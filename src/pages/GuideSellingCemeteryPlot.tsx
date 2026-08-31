@@ -222,7 +222,7 @@ const GuideSellingCemeteryPlot = () => (
       <div className="container mx-auto px-6 max-w-5xl">
         {/* Intro */}
         <p className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
-          Plans change. Families relocate, choose cremation, or inherit plots they'll never use. The good news: a cemetery plot you own can be sold — and it is often worth more than people expect. The challenge is that selling privately in Texas can be slow and uncertain. This guide explains what affects your plot's value, the legal steps, and the most reliable way to sell it.
+          Plans change. Families move to other cities or out of state, often people make alternative burial arrangements, or inherit plots they'll never use. The good news: cemetery properties located in Texas can legally be resold to another person who needs them, and the value of your asset can be released. The challenge is that, just like in other states, private resales on the secondary market can be slow and challenging. Many people assume that selling cemetery property is just like real estate, but plots are a unique type of asset with several important quirks when it comes to transferring ownership, which need to be carefully understood to be successful. This guide explains what affects your plot's value, the legal steps, and the most reliable way to sell it.
         </p>
 
         {/* Short answer callout */}
