@@ -131,7 +131,7 @@ Thank you for reaching out to Texas Cemetery Brokers about selling your cemetery
 
 ${ask}${closing}${signature(i.adminName)}`;
 
-  return { id: "seller_intake", label: "Seller (no deed)", body };
+  return { id: "seller_intake", label: "Seller reply", body };
 };
 
 // Seller acknowledgement when the deed was already supplied with the inquiry.
@@ -206,7 +206,7 @@ export const buildSellerListingOptionsTemplate = (i: SellerInput): EmailTemplate
   const body = `Dear ${first(i.recipientName)},
 
 ${signature(i.adminName)}`;
-  return { id: "seller_listing_options", label: "Quote (with pay buttons)", body };
+  return { id: "seller_listing_options", label: "Seller pack — quote, agreement & tree", body };
 };
 
 // Seller "Listing agreement" — the admin picks this, then uses the inline
