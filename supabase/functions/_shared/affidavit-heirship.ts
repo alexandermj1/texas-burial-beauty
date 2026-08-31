@@ -318,6 +318,7 @@ export async function buildJointPoaPdf(d: {
   county_state?: string;
   plot_description?: string;
   spaces?: string;
+  plot_count?: string | number;
   phone?: string;
   email?: string;
 }): Promise<Uint8Array> {
@@ -395,7 +396,7 @@ export async function buildJointPoaPdf(d: {
     cemetery: d.cemetery,
     // County is deliberately omitted from POAs (see the venue note above).
     county_state: '',
-    plot_count: d.spaces ?? '',
+    plot_count: d.plot_count ?? d.spaces ?? '',
     plot_description: d.plot_description,
   });
 
