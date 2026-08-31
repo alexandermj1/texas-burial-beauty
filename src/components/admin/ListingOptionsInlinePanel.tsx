@@ -249,7 +249,12 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       .eq("id", seller.id);
   };
 
-  /** Build a real draft of the listing agreement and open it. */
+  /**
+   * Build a real draft of the listing agreement and open the seller's signing
+   * page (/sign/:token) — the exact screen they'll land on once they accept.
+   * The listing option is deliberately left unset here, so the page shows the
+   * package choice open (it only locks once they pick a package in the quote).
+   */
   const previewAgreement = async () => {
     if (previewing) return;
     setPreviewing(true);
@@ -266,16 +271,20 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             co_owner_name: deedOwnersClean,
             plot_description: plotDescription.trim() || undefined,
             county_state: countyState.trim() || undefined,
+            listing_option: "",
           },
         },
       });
       if (error) throw error;
-      const url = (data as any)?.pdf_url;
-      if (!url) throw new Error("No preview returned");
-      window.open(url, "_blank", "noopener");
-      toast({ title: "Draft agreement ready", description: "Opened in a new tab — nothing has been sent." });
+      const token = (data as any)?.sign_token;
+      if (!token) throw new Error("No signing link returned");
+      window.open(`/sign/${token}`, "_blank", "noopener");
+      toast({
+        title: "Signing page opened",
+        description: "This is exactly what the seller sees — nothing has been sent, and no package is selected yet.",
+      });
     } catch (e: any) {
-      toast({ title: "Couldn't build the draft", description: String(e?.message ?? e), variant: "destructive" });
+      toast({ title: "Couldn't open the signing page", description: String(e?.message ?? e), variant: "destructive" });
     } finally {
       setPreviewing(false);
     }
@@ -366,7 +375,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             {previewing ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileSignature className="w-3 h-3" />}
-            {previewing ? "Building…" : "View listing agreement"}
+            {previewing ? "Building…" : "View signing page"}
           </button>
           <button
             type="button" onClick={previewFamilyTree}
