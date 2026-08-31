@@ -12,7 +12,7 @@ import {
   Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X, Check, Network,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { openFileViewer } from "@/lib/fileViewer";
+import { openFileViewer, type FileViewerSource } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import FamilyTreeMap from "./FamilyTreeMap";
