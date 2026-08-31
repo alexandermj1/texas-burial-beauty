@@ -340,7 +340,7 @@ export const PriceAppreciationChart = () => {
               ≈ ${retailFuture.toLocaleString()}{isMobile ? "" : " at-need"}
             </text>
           </motion.g>
-          <motion.text x={px(0) + 8} y={py(10000) - (isMobile ? 20 : -24)} fontSize={fs(13.5)} fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.4 }}>
+          <motion.text x={px(0) + 8} y={py(10000) - (isMobile ? 20 : -24)} fontSize={fs(13.5)} fontWeight="600" fill="hsl(var(--foreground))" paintOrder="stroke" stroke="hsl(var(--background))" strokeWidth={isMobile ? 8 : 5} strokeLinejoin="round" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.4 }}>
             {isMobile ? "Retail today: $10,000" : "Cemetery retail today: $10,000"}
           </motion.text>
 
