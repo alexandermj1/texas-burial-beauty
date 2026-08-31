@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, Upload, Lock, X, FileText, User, MapPin, FileSignature, Paperclip } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import CemeteryPicker from "@/components/CemeteryPicker";
+import PhoneUploadQR from "@/components/PhoneUploadQR";
 
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
