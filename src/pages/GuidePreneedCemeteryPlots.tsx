@@ -470,7 +470,7 @@ const GuidePreneedCemeteryPlots = () => (
                 <div className="overflow-hidden rounded-2xl border border-border/60 shadow-soft">
                   <img loading="lazy" decoding="async" src={TEAM_WALKTHROUGH} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[16/10] object-cover" />
                 </div>
-                <figcaption className="mt-2.5 text-xs text-foreground/55 leading-snug">A member of our team on the grounds — we show you the space in person before you commit to anything.</figcaption>
+                <figcaption className="mt-2.5 text-xs text-foreground/55 leading-snug">We meet you at the cemetery and show you the space in person before you commit to anything.</figcaption>
               </figure>
             </div>
           </div>
