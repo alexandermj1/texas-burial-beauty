@@ -708,11 +708,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const load = async () => {
       const { data } = await supabase
         .from("submission_documents" as any)
-        .select("submission_id, status, received_at, file_url, file_urls")
+        .select("submission_id, doc_code, status, received_at, file_url, file_urls")
         .is("deleted_at", null);
       if (cancelled || !data) return;
       const ids = new Set<string>();
       for (const r of data as any[]) {
+        // The plot deed and the listing agreement are always on file BEFORE we
+        // send the request, so they never mean "the seller sent paperwork back".
+        if (r.doc_code === "D1" || r.doc_code === "LA") continue;
         const returned =
           r.status === "received" ||
           !!r.received_at ||
@@ -720,6 +723,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           (Array.isArray(r.file_urls) && r.file_urls.length > 0);
         if (returned && r.submission_id) ids.add(r.submission_id);
       }
+
       const emails = new Set<string>();
       for (const s of submissions) {
         const e = (s.email || "").trim().toLowerCase();
