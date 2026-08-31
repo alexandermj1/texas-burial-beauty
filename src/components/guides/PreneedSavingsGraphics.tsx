@@ -226,26 +226,28 @@ export const FinancingGraphic = () => {
 const CHART_SRC = "https://bayercemeterybrokers.com/cemetery-grave-plot-price-increases-market-trend-analysis/";
 
 // geometry
-const W = 720, H = 360;
-const X0 = 58, X1 = 690;            // plot width  (years 0..7)
+const W = 720;
 const Y0 = 306, Y1 = 44;            // plot height (price $0..$22k)
 const MAXP = 22000;
-const px = (yr: number) => X0 + (yr / 7) * (X1 - X0);
-const py = (p: number) => Y0 - (p / MAXP) * (Y0 - Y1);
-
-// retail: $10k compounding ~10.4%/yr -> ~$20k at year 7
+const DEAL = 6500;                  // ~35% off today's $10k, paid over 24 months at 0%
 const retailAt = (yr: number) => 10000 * Math.pow(2, yr / 7);
-const retailPath = Array.from({ length: 29 }, (_, i) => {
-  const yr = (i / 28) * 7;
-  return `${i === 0 ? "M" : "L"}${px(yr).toFixed(1)},${py(retailAt(yr)).toFixed(1)}`;
-}).join(" ");
 
-// our deal: ~35% off today's $10k = $6,500, paid evenly over 24 months, 0% interest
-const DEAL = 6500;
-const payPath = `M${px(0)},${py(0)} L${px(2)},${py(DEAL)}`;
+const makeGeom = (mobile: boolean) => {
+  const X0 = mobile ? 92 : 58;      // room for the axis labels (larger on phones)
+  const X1 = mobile ? 648 : 690;
+  const px = (yr: number) => X0 + (yr / 7) * (X1 - X0);
+  const py = (p: number) => Y0 - (p / MAXP) * (Y0 - Y1);
+  const retailPath = Array.from({ length: 29 }, (_, i) => {
+    const yr = (i / 28) * 7;
+    return `${i === 0 ? "M" : "L"}${px(yr).toFixed(1)},${py(retailAt(yr)).toFixed(1)}`;
+  }).join(" ");
+  const payPath = `M${px(0)},${py(0)} L${px(2)},${py(DEAL)}`;
+  const gapPath = `${retailPath} L${px(7)},${py(DEAL)} L${px(0)},${py(DEAL)} Z`;
+  return { X0, X1, px, py, retailPath, payPath, gapPath, H: mobile ? 392 : 360 };
+};
+const GEOM_DESKTOP = makeGeom(false);
+const GEOM_MOBILE = makeGeom(true);
 
-// shaded wedge: area between the rising retail curve and your locked $6,500 price
-const gapPath = `${retailPath} L${px(7)},${py(DEAL)} L${px(0)},${py(DEAL)} Z`;
 
 export const PriceAppreciationChart = () => {
   const ref = useRef<HTMLDivElement>(null);
