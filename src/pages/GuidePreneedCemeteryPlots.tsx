@@ -9,6 +9,8 @@ import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/Gu
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
+import { DiscountTable, FinancingGraphic } from "@/components/guides/PreneedSavingsGraphics";
+import PreneedInquiryForm from "@/components/guides/PreneedInquiryForm";
 import { EMAIL, jsonLd, reasons, priceFactors, myths, faqs, resources } from "./guide-preneed-data";
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
