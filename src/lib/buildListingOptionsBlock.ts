@@ -71,11 +71,16 @@ export async function buildListingOptionsBlock(opts: {
 }): Promise<string> {
   const { seller, netPerPlot, plotCount, transferFee, environment = "sandbox" } = opts;
   const salePerSpace = netPerPlot;
+  // The headline figure is quoted INCLUSIVE of the cemetery transfer fee and
+  // the fee is then deducted in the breakdown below, so the seller can see the
+  // full price the property is listed at rather than a pre-netted number.
+  const grossPerSpace = salePerSpace + (transferFee > 0 ? transferFee : 0);
   const commissionPerSpace = Math.round(salePerSpace * 0.15);
   const proceedsPerSpace = salePerSpace - commissionPerSpace;
-  const totalSale = salePerSpace * plotCount;
+  const totalSale = grossPerSpace * plotCount;
   const totalProceeds = proceedsPerSpace * plotCount;
   const cemLabel = properCase(seller.cemetery || "your cemetery");
+
 
   const links = await Promise.all(
     TIERS.map(async (t) => {
@@ -154,12 +159,13 @@ export async function buildListingOptionsBlock(opts: {
     <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:800;">Our Suggested Sales Price</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border-radius:8px;margin:14px 0 16px;">
       <tr><td style="padding:18px 20px;">
-        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price</p>
-        <p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(salePerSpace)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">per space</span></p>
+        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price${transferFee > 0 ? " (incl. cemetery transfer fee)" : ""}</p>
+        <p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(grossPerSpace)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">per space</span></p>
         ${plotCount > 1 ? `<p style="font-family:${SANS};font-size:13px;color:${BRAND_INK_MUTED};margin:8px 0 0;">${fmtUsd(totalSale)} across all ${plotCount} spaces</p>` : ""}
       </td></tr>
     </table>
-    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the price we suggest listing at to stay in line with other listings at this location, and the minimum figure at which you authorize us to complete a sale on your behalf. In practice we always pursue the highest achievable price — the final sale may close at this figure or above it, and any amount above the suggested price flows through to your proceeds on the same terms.</p>
+    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the price we suggest listing at to stay in line with other listings at this location, and the minimum figure at which you authorize us to complete a sale on your behalf.${transferFee > 0 ? ` It is quoted inclusive of the cemetery's transfer fee of ${fmtUsd(transferFee)} per space, which is paid by the buyer and is shown separately in the breakdown below.` : ""} In practice we always pursue the highest achievable price — the final sale may close at this figure or above it, and any amount above the suggested price flows through to your proceeds on the same terms.</p>
+
   </td></tr>
 </table>`.trim();
 
@@ -175,14 +181,16 @@ export async function buildListingOptionsBlock(opts: {
   <tr><td style="padding:22px 24px;">
     <p style="font-family:${SERIF};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 12px;font-weight:800;">Your Proceeds Per Space</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      ${proceedsRow("Sale price", fmtUsd(salePerSpace))}
-      ${proceedsRow("Commission (15%)", `–${fmtUsd(commissionPerSpace)}`)}
+      ${proceedsRow(`Sales price${transferFee > 0 ? " (incl. transfer fee)" : ""}`, fmtUsd(grossPerSpace))}
+      ${transferFee > 0 ? proceedsRow("Cemetery transfer fee (paid by the buyer)", `–${fmtUsd(transferFee)}`) : ""}
+      ${proceedsRow("Our commission (15%)", `–${fmtUsd(commissionPerSpace)}`)}
       <tr>
         <td style="padding:14px 0 0;font-family:${SANS};font-size:14px;color:${BRAND_INK};font-weight:600;">Your proceeds</td>
         <td style="padding:14px 0 0;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(proceedsPerSpace)}${proceedsTotalLine}</td>
       </tr>
     </table>
-    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price.</p>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price. The buyer additionally pays a 15% buyer's fee on top of this price — that fee is charged to the buyer and never comes out of your proceeds.</p>
+
   </td></tr>
 </table>`.trim();
 
@@ -221,7 +229,7 @@ ${tierCards}
       <!-- HOW IT WORKS -->
       ${section("How this works", `
         ${p(`Our process is simple: you authorize us to sell your property at (or above) an agreed minimum price, and we handle everything from there — marketing, buyer negotiations, cemetery paperwork, and the closing itself. Because we can complete a sale the moment a qualified buyer commits, without coming back to you for approval on each offer, your property stays competitive with buyers who need to move quickly.`, true)}
-        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. All cemetery transfer fees and any optional buyer services are paid by the buyer, so they never touch your proceeds.`, true)}
+        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. Separately, the buyer pays a 15% buyer's fee on top of the sale price, along with the cemetery transfer fee and any optional buyer services. Those buyer-side charges are billed to the buyer, so they never touch your proceeds.`, true)}
       `)}
 
       <!-- WHY PRE-AUTH -->
@@ -239,7 +247,10 @@ ${tierCards}
 
       <!-- BUYER PAID -->
       ${section("Buyer-paid costs", `
-        ${p(`For clarity on the closing statement you'll eventually see: the mandatory cemetery transfer fee at ${escapeHtml(cemLabel)}${transferFee > 0 ? ` (${fmtUsd(transferFee)})` : ""} is paid by the buyer, not you. The buyer is responsible for all cemetery fees—such as transfer, quitclaim, and additional endowment care—as well as broker fees, including marketing, referral, and processing expenses. Buyers may also elect additional services through our company — financing, mortuary referral coordination, in-person showings, and similar — which are likewise billed to the buyer and itemized separately. As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
+        ${p(`For clarity on the closing statement you'll eventually see, these charges fall to the buyer, not to you:`, true)}
+        ${p(`&bull; <strong style="color:${BRAND_INK};">Buyer's fee — 15% of the sale price.</strong> A fee we charge the buyer for handling the purchase, paperwork and cemetery coordination. It is added on top of the sale price and is entirely separate from the 15% commission deducted from your side.<br>&bull; <strong style="color:${BRAND_INK};">Cemetery transfer fee${transferFee > 0 ? ` — ${fmtUsd(transferFee)} at ${escapeHtml(cemLabel)}` : ""}.</strong> Charged by the cemetery to move the interment rights into the buyer's name.<br>&bull; <strong style="color:${BRAND_INK};">Other cemetery and service charges.</strong> Quitclaim and endowment care fees, plus optional buyer services such as financing, mortuary referral coordination and in-person showings, itemized separately to the buyer.`, true)}
+        ${p(`As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
+
       `)}
 
       <!-- MORTUARY SHEET LINK -->
@@ -350,8 +361,9 @@ function featuredCard(opts: {
 function buildMortuarySheetPreview(opts: { cemLabel: string; propertyLine: string; salePerSpace: number }) {
   const { cemLabel, propertyLine, salePerSpace } = opts;
   const listPrice = fmtUsd(salePerSpace);
-  const cemPrice = fmtUsd(Math.round((salePerSpace / 0.42) / 100) * 100);
-  const saves = fmtUsd(Math.round((salePerSpace / 0.42) / 100) * 100 - salePerSpace);
+  const cemPrice = fmtUsd(Math.round((salePerSpace / 0.55) / 100) * 100);
+  const saves = fmtUsd(Math.round((salePerSpace / 0.55) / 100) * 100 - salePerSpace);
+
   return `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_PAGE};border:1px solid ${SHEET_BORDER};border-radius:10px;margin:0 0 18px;overflow:hidden;">
   <tr><td style="height:4px;background:${SHEET_INK};line-height:4px;font-size:0;">&nbsp;</td></tr>

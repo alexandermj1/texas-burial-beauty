@@ -77,9 +77,15 @@ export const buildListingAgreementHtml = (opts: {
             </td>
           </tr>
         </table>
+        <p style="font-family:Georgia,serif;font-size:12px;line-height:1.6;color:#4a5568;margin:0 0 12px;">
+          One note you'll see in the agreement (Addendum B): the buyer pays a 15% buyer's fee on top of the
+          sale price, along with the cemetery's transfer fee. Those are buyer-side charges — they don't come
+          out of your proceeds.
+        </p>
         <p style="font-family:Georgia,serif;font-size:11px;line-height:1.6;color:#9a8f7a;margin:0;text-align:center;word-break:break-all;">
           Or paste this link into your browser: ${esc(opts.signUrl)}
         </p>
+
       </td>
     </tr>
   </table>

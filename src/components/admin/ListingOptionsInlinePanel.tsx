@@ -208,7 +208,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     setRetail(v);
     const r = Number(v);
     if (isFinite(r) && r > 0) {
-      if (!netTouched) setNetPerPlot(String(round100(r * 0.42)));
+      if (!netTouched) setNetPerPlot(String(round100(r * 0.55)));
       if (!salesTouched) setSalesPrice(String(round100(r * 0.67)));
     }
   };
@@ -419,9 +419,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               <input
                 type="number" min="0" step="50" value={netPerPlot}
                 onChange={(e) => { setNetPerPlot(e.target.value); setNetTouched(true); }}
-                placeholder="42% of retail" className={inputCls}
+                placeholder="55% of retail" className={inputCls}
               />
-              <p className="text-[9px] text-muted-foreground mt-1">42% of retail, rounded to $100.</p>
+              <p className="text-[9px] text-muted-foreground mt-1">55% of retail, rounded to $100.</p>
             </div>
             <div>
               <label className={labelCls}>Sales price / plot</label>

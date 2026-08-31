@@ -193,7 +193,47 @@ function appendPoaScopeAddendum(pdf: PDFDocument, font: PDFFont, bold: PDFFont, 
   page.drawText('ADDENDUM A — PART OF THE LIMITED POWER OF ATTORNEY', { x: 50, y: 40, size: 8, font: bold, color: MUTED });
 }
 
+// ---------- LISTING AGREEMENT BUYER-FEE ADDENDUM ----------
+// Records, for agreements generated from this point forward, that the buyer pays
+// a separate 15% buyer's fee in addition to the sale price. This is a buyer-side
+// charge and does not reduce the Seller's proceeds.
+function appendBuyerFeeAddendum(pdf: PDFDocument, font: PDFFont, bold: PDFFont, data: FillData) {
+  const page = pdf.addPage([612, 792]);
+  const { width } = page.getSize();
+
+  page.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
+  page.drawText("Addendum B — Buyer's Fee", { x: 50, y: 712, size: 18, font: bold, color: INK });
+  page.drawLine({ start: { x: 50, y: 700 }, end: { x: width - 50, y: 700 }, thickness: 0.6, color: HAIRLINE });
+  page.drawText('This Addendum is part of, and is signed together with, the Listing Agreement to which it is attached.',
+    { x: 50, y: 682, size: 9, font, color: MUTED });
+
+  const body = [
+    `1.  Buyer's fee. In addition to the purchase price for the Property, the buyer shall pay Texas Cemetery Brokers LLC (the "Broker") a buyer's fee equal to fifteen percent (15%) of the purchase price, for handling the purchase, the transfer paperwork and coordination with the cemetery.`,
+    `2.  Charged to the buyer. The buyer's fee is charged to and collected from the buyer. It is separate from, and in addition to, the Broker's commission payable by the Seller under the Listing Agreement, and it is not deducted from the Seller's proceeds.`,
+    `3.  Other buyer-paid amounts. The buyer also remains responsible for the cemetery's transfer fee and any other cemetery charges, together with any optional buyer services the buyer elects. As a result, the buyer's total at closing will exceed the purchase price on which the Seller's proceeds are calculated.`,
+    `4.  No change to Seller's proceeds. Nothing in this Addendum alters the price, commission or net proceeds agreed with the Seller in the Listing Agreement.`,
+  ];
+  let y = 650;
+  for (const text of body) {
+    for (const line of wrapToWidth(text, font, 10.5, width - 100)) {
+      page.drawText(line, { x: 50, y, size: 10.5, font, color: INK });
+      y -= 15;
+    }
+    y -= 12;
+  }
+
+  y -= 8;
+  page.drawText(`Seller: ${data.seller_name ?? ''}`, { x: 50, y, size: 10.5, font: bold, color: INK });
+  y -= 18;
+  page.drawText(`Property: ${[data.cemetery, data.plot_description].filter(Boolean).join(' — ')}`,
+    { x: 50, y, size: 9.5, font, color: MUTED });
+
+  page.drawLine({ start: { x: 50, y: 55 }, end: { x: width - 50, y: 55 }, thickness: 0.4, color: HAIRLINE });
+  page.drawText("ADDENDUM B — PART OF THE LISTING AGREEMENT", { x: 50, y: 40, size: 8, font: bold, color: MUTED });
+}
+
 // ---------- APPENDED DATA REFERENCE SHEET ----------
+
 // Plain contract-style data sheet: Times fonts, black ink, thin rules, no colored UI cards.
 function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: PDFFont, serifBold: PDFFont, kind: string, data: FillData) {
   const page = pdf.addPage([612, 792]);
@@ -306,7 +346,9 @@ export async function buildFilledPdf(
       p8.drawRectangle({ x: 204, y: 134, width: 300, height: 18, color: white });
       p8.drawRectangle({ x: 204, y: 68, width: 300, height: 18, color: white });
     }
+    appendBuyerFeeAddendum(pdf, serif, serifBold, data);
   } else {
+
     if (pages.length >= 3) buildPoaOverlays(pages[0], serif, serifBold, data);
     appendPoaScopeAddendum(pdf, serif, serifBold, data);
   }
