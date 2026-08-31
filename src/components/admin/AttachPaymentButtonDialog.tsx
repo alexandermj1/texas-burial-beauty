@@ -208,8 +208,10 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
+
 };
 
 export default AttachPaymentButtonDialog;
