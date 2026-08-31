@@ -302,7 +302,7 @@ function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: 
       ['Authorized Min. per Plot', money(data.authorized_min_per_plot)],
       ['Authorized Min. Total', money(data.authorized_min_total)],
       ['Seller Net at Min. (85%)', data.authorized_min_total ? money(Math.round(Number(data.authorized_min_total) * 0.85)) : undefined],
-      // Buyer-side charge under Addendum B — shown here so the economics of the
+      // Buyer-side charge under Sale Terms 4.1 — shown here so the economics of the
       // deal read in full, but it never reduces the Seller's net above.
       ["Buyer's Fee (15%) - paid by buyer", data.authorized_min_total ? money(Math.round(Number(data.authorized_min_total) * 0.15)) : undefined],
       ['Buyer Total at Min. (before cemetery fees)', data.authorized_min_total ? money(Math.round(Number(data.authorized_min_total) * 1.15)) : undefined],
@@ -356,7 +356,7 @@ export async function buildFilledPdf(
       p8.drawRectangle({ x: 204, y: 134, width: 300, height: 18, color: white });
       p8.drawRectangle({ x: 204, y: 68, width: 300, height: 18, color: white });
     }
-    appendBuyerFeeAddendum(pdf, serif, serifBold, data);
+    insertBuyerFeeClause(pdf, serif, serifBold, data);
   } else {
 
     if (pages.length >= 3) buildPoaOverlays(pages[0], serif, serifBold, data);
