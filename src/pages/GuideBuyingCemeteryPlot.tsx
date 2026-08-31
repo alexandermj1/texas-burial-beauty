@@ -335,6 +335,10 @@ const GuideBuyingCemeteryPlot = () => (
           <p className="mt-6 text-foreground/85 leading-relaxed">We're reachable and accountable — not an anonymous listing that vanishes after the sale.</p>
         </section>
 
+        <PreneedBlock id="preneed" eyebrow="Planning ahead · Pre-need" />
+
+
+
         <Section id="what-you-buy" eyebrow="The right of sepulture" title="What you're actually buying">
           <p>When you "buy a cemetery plot" in Texas, you aren't buying the land itself. You're buying the <strong>exclusive right of sepulture</strong> — the legal right to bury someone in a specific space — while the cemetery keeps and maintains the land. That's why every transfer runs through the cemetery and why correct paperwork matters so much.</p>
           <p>A few things to confirm on any purchase:</p>
