@@ -727,15 +727,17 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
               <h2 className="mt-4 mb-6 font-display text-[clamp(1.8rem,2.6vw,2.4rem)] leading-tight text-[hsl(var(--parchment))]">
                 {cemetery.name} on the map.
               </h2>
-              <div className="rounded-[28px] overflow-hidden">
-                <CemeteryLocationMap
-                  name={cemetery.name}
-                  address={cemetery.address}
-                  lat={cemetery.lat}
-                  lng={cemetery.lng}
-                  heightClass="h-[320px] md:h-[420px]"
-                />
-              </div>
+              <MapReveal title={`See ${cemetery.name} on the map`} sub={cemetery.address}>
+                <div className="rounded-[28px] overflow-hidden">
+                  <CemeteryLocationMap
+                    name={cemetery.name}
+                    address={cemetery.address}
+                    lat={cemetery.lat}
+                    lng={cemetery.lng}
+                    heightClass="h-[320px] md:h-[420px]"
+                  />
+                </div>
+              </MapReveal>
 
               <div className="mt-6 rounded-[14px] border border-[hsl(var(--gold)/0.26)] p-6">
                 <p className="font-display text-2xl text-[hsl(var(--parchment))]">{cemetery.name}</p>
@@ -791,9 +793,14 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
             <h2 className="mt-4 mb-6 max-w-3xl font-display text-[clamp(1.8rem,2.6vw,2.4rem)] leading-tight text-[hsl(var(--parchment))]">
               Every {metro.label} cemetery we broker.
             </h2>
-            <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-5">
-              <MetroCemeteryMap regions={metro.regions} metro={metro.label} fullBleed={false} searchable compact hideTitle />
-            </div>
+            <MapReveal
+              title={`Browse the ${metro.label} map`}
+              sub="Every cemetery we broker, searchable."
+            >
+              <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-5">
+                <MetroCemeteryMap regions={metro.regions} metro={metro.label} fullBleed={false} searchable compact hideTitle />
+              </div>
+            </MapReveal>
           </section>
         </div>
       </div>
