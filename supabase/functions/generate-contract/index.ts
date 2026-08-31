@@ -170,9 +170,11 @@ Deno.serve(async (req) => {
     const fill: FillData = {
       seller_name: principalName || (sub.name ?? ''),
       co_owner_name: overrides.co_owner_name ?? sub.deed_owner_names ?? '',
-      // Mailing address comes from the seller's own questionnaire answers.
-      address: overrides.address || sellerContact.address || '',
-      city_state_zip: overrides.city_state_zip || sellerContact.city_state_zip || '',
+      // The signer writes their own address on the Power of Attorney in front of
+      // the notary, so we never pre-print one there. Other documents keep using
+      // whatever address we hold.
+      address: kind === 'poa' ? '' : (overrides.address || sellerContact.address || ''),
+      city_state_zip: kind === 'poa' ? '' : (overrides.city_state_zip || sellerContact.city_state_zip || ''),
       phone: overrides.phone || sellerContact.phone || sub.phone || '',
       email: overrides.email || sellerContact.email || sub.email || '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
@@ -248,14 +250,9 @@ Deno.serve(async (req) => {
       filled = await buildJointPoaPdf({
         county: overrides.county ?? overrides.county_state ?? cemLocationCity ?? '',
         county_state: fill.county_state,
-        principals: jointNames.map((n) => {
-          const c = contactFor(ownership, n);
-          const addr = [c.address, c.city_state_zip].filter(Boolean).join(', ');
-          return {
-            name: n,
-            address: addr || [overrides.address, overrides.city_state_zip].filter(Boolean).join(', '),
-          };
-        }),
+        // Left blank on purpose: each principal fills in their own address when
+        // they sign the joint Power of Attorney before the notary.
+        principals: jointNames.map((n) => ({ name: n, address: '' })),
 
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,

@@ -459,7 +459,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const requirements = useMemo(() => {
     if (!frozen) return computedRequirements;
     const byKey = new Map(computedRequirements.map((r) => [reqDbKey(r), r]));
-    return rows
+    const persisted = rows
       .filter((r) => r.doc_code && r.doc_code !== "REVIEW")
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
       .map((r) => {
@@ -476,8 +476,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           personRole: (r.person_role as Requirement["personRole"]) ?? match?.personRole,
         } as Requirement;
       });
+    // Freezing protects the history of what we already asked for — it must not
+    // swallow a document the broker adds afterwards (a photo ID, say). Anything
+    // newly required that has no persisted row yet is appended, so it shows in
+    // the checklist, syncs to the seller's page and rides the next request.
+    const have = new Set(persisted.map((r) => reqDbKey(r)));
+    const added = computedRequirements.filter((r) => !have.has(reqDbKey(r)));
+    return [...persisted, ...added];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frozen, rows, computedRequirements]);
+
   const roster = useMemo(() => signingRoster(answers), [answers]);
 
   /**
@@ -937,9 +945,34 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       });
 
       if (inserts.length) {
-        const { error } = await supabase.from("submission_documents").insert(inserts as never);
-        if (error) throw error;
+        // A row that was removed earlier is still on the table, soft-deleted, and
+        // the unique item key would collide with it. Bring those back to life
+        // instead of inserting a second copy — that duplicate-key error is what
+        // brokers were seeing when they re-sent a request.
+        const { data: buried } = await supabase.from("submission_documents")
+          .select("id, doc_code, person_name")
+          .eq("submission_id", submissionId).not("deleted_at", "is", null);
+        const buriedByKey = new Map(
+          ((buried ?? []) as DocRow[]).filter((b) => b.doc_code)
+            .map((b) => [keyOf(b.doc_code, b.person_name), b.id]),
+        );
+        const fresh: Record<string, unknown>[] = [];
+        for (const ins of inserts) {
+          const id = buriedByKey.get(keyOf(ins.doc_code as string, ins.person_name as string | null));
+          if (id) {
+            const { error } = await supabase.from("submission_documents")
+              .update({ ...ins, deleted_at: null, deleted_by: null } as never).eq("id", id);
+            if (error) throw error;
+          } else {
+            fresh.push(ins);
+          }
+        }
+        if (fresh.length) {
+          const { error } = await supabase.from("submission_documents").insert(fresh as never);
+          if (error) throw error;
+        }
       }
+
       for (const u of updates) {
         const { error } = await supabase.from("submission_documents")
           .update(u.patch as never).eq("id", u.id);
@@ -2529,16 +2562,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 </div>
               )}
 
-              <div className="md:col-span-2">
-                <Label className="text-xs">Mailing address</Label>
-                <Input value={docEdit.fields.address} placeholder="Street address"
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
-              </div>
-              <div className={docEdit.r.contractKind === "poa" ? "md:col-span-2" : ""}>
-                <Label className="text-xs">City, State, ZIP</Label>
-                <Input value={docEdit.fields.city_state_zip}
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
-              </div>
+              {/* A Power of Attorney is signed in front of a notary, and the
+                  signer writes their own address on it — nothing to fill here. */}
+              {docEdit.r.contractKind !== "poa" && (
+                <>
+                  <div className="md:col-span-2">
+                    <Label className="text-xs">Mailing address</Label>
+                    <Input value={docEdit.fields.address} placeholder="Street address"
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">City, State, ZIP</Label>
+                    <Input value={docEdit.fields.city_state_zip}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
+                  </div>
+                </>
+              )}
               {/* Phone and email only ever print on the Listing Agreement. */}
               {docEdit.r.contractKind !== "poa" && (
                 <>
