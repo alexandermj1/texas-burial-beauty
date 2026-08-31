@@ -464,13 +464,43 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
 
         <div className="space-y-2">
           <div>
-            <label className={labelCls}>Names on the deed (required — used by the agreement)</label>
-            <input
-              type="text" value={deedOwners}
-              onChange={(e) => setDeedOwners(e.target.value)}
-              placeholder="e.g. John A. Smith & Mary Smith" className={inputCls}
-            />
+            <label className={labelCls}>
+              Names on the deed (required — one box per person)
+            </label>
+            <div className="space-y-1.5">
+              {ownerNames.map((n, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={n}
+                    onChange={(e) =>
+                      setOwnerNames((prev) => prev.map((v, idx) => (idx === i ? e.target.value : v)))
+                    }
+                    placeholder={i === 0 ? "e.g. John A. Smith" : "Second owner on the deed"}
+                    className={inputCls}
+                  />
+                  {ownerNames.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setOwnerNames((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="shrink-0 h-9 w-9 rounded-md border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/50 text-sm"
+                      aria-label={`Remove owner ${i + 1}`}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setOwnerNames((prev) => [...prev, ""])}
+              className="mt-1.5 text-[11px] text-primary hover:underline"
+            >
+              + Add another owner
+            </button>
           </div>
+
           {/* The deed names above ARE the family-tree seed — the tree view
               derives straight from deedOwnerNames, no duplicate list. */}
           <div>
