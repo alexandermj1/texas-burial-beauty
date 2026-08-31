@@ -3,6 +3,8 @@
 // edge function (kind: "custom") and injects a Georgia-styled CTA block into
 // the editor. Uses the LIVE Stripe environment so real money is collected.
 import { useState } from "react";
+import { createPortal } from "react-dom";
+
 import { Loader2, CreditCard, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
