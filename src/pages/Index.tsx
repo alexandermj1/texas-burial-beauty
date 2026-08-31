@@ -25,6 +25,7 @@ import cemeteriesImg from "@/assets/story-cemeteries.png";
 import propertyTypesImg from "@/assets/story-property-types.png";
 import mobileImg from "@/assets/story-mobile.png";
 import Seo from "@/components/Seo";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ListingCard } from "@/pages/Properties";
 import { guides as guideEntries } from "@/pages/Guides";
 import GuidesCarousel from "@/components/GuidesCarousel";
@@ -79,6 +80,7 @@ const HOME_FAQ_JSONLD = {
 };
 
 const Index = () => {
+  const isMobile = useIsMobile();
   const [allListings, setAllListings] = useState<any[]>([]);
   const [rotationOffset, setRotationOffset] = useState(0);
 
@@ -161,6 +163,8 @@ const Index = () => {
         </section>
       )}
 
+      {/* On phones the "How selling works" story comes before the map */}
+      {isMobile && <SellerPromoAnimation />}
       <HomeCemeteryMap />
 
       <StoryStrip
@@ -190,7 +194,7 @@ const Index = () => {
         variant="compact"
       />
 
-      <SellerPromoAnimation />
+      {!isMobile && <SellerPromoAnimation />}
       <ListingFeePromo />
       <PriceComparison />
       <PreneedBlock variant="home" eyebrow="Planning ahead · Pre-need" />
