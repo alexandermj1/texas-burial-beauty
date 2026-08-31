@@ -264,6 +264,18 @@ Deno.serve(async (req) => {
     await svc.from('contact_submissions')
       .update({ documents_requested_at: now }).eq('id', submissionId);
 
+    // Every POA / affidavit that rode along as an attachment has now physically
+    // been emailed to the seller, so it must stop reading "draft" in the admin.
+    const sentPaths = [...seenPaths];
+    if (sentPaths.length) {
+      await svc.from('contracts')
+        .update({ status: 'sent', sent_at: now })
+        .eq('submission_id', submissionId)
+        .eq('status', 'draft')
+        .in('filled_pdf_path', sentPaths);
+    }
+
+
     // gmail-action already logged a bare row for the sent message; enrich it so
     // the packet shows up on this submission's thread with the full HTML body.
     const sentId = typeof gmailJson.id === 'string' ? gmailJson.id : null;
