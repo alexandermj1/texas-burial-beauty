@@ -5,6 +5,7 @@ import { Download, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { FileViewerSource } from "@/lib/fileViewer";
+import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 
 export default function FileViewer() {
   const [params] = useSearchParams();
@@ -58,7 +59,9 @@ export default function FileViewer() {
         {error ? <div className="max-w-md text-center"><FileText className="w-9 h-9 mx-auto mb-3 text-muted-foreground" /><p className="font-medium">File could not be opened</p><p className="text-sm text-muted-foreground mt-1">{error}</p></div>
           : !url ? <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" />Opening file…</div>
           : image ? <img src={url} alt={name} className="max-w-full max-h-[calc(100vh-5rem)] object-contain" />
-          : <iframe src={url} title={name} className="w-full h-full min-h-[calc(100vh-5rem)] bg-background border border-border rounded-md" />}
+          : mime === "application/pdf" || name.toLowerCase().endsWith(".pdf")
+            ? <div className="w-full self-stretch"><PdfCanvasViewer url={url} title={name} /></div>
+            : <iframe src={url} title={name} className="w-full h-full min-h-[calc(100vh-5rem)] bg-background border border-border rounded-md" />}
       </section>
     </main>
   );

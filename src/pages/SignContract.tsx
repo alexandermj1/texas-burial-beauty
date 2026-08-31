@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, FileText, ShieldCheck, PenLine, Lock, Upload, Smartphone, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import PdfCanvasViewer from "@/components/PdfCanvasViewer";
+import { openFileViewer } from "@/lib/fileViewer";
 
 const FN_URL = `https://mceguxfdoikjthsrbmzx.supabase.co/functions/v1/sign-contract`;
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWd1eGZkb2lranRoc3JibXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTI4MDYsImV4cCI6MjA5MjM2ODgwNn0.YDuw7oQqllDnunSA0Fv4eENslzol1Lni7n6kfSRa9T0";
@@ -115,6 +117,7 @@ export default function SignContract() {
   const { token } = useParams();
   const [info, setInfo] = useState<ContractInfo | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string>("");
+  const [pdfSourceUrl, setPdfSourceUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -161,6 +164,7 @@ export default function SignContract() {
   const [notaryUploading, setNotaryUploading] = useState(false);
   const [notaryUploaded, setNotaryUploaded] = useState(false);
   const notaryInputRef = useRef<HTMLInputElement | null>(null);
+  const legalNameRef = useRef<HTMLInputElement | null>(null);
 
   const uploadNotarizedCopy = async (f: File) => {
     if (!submissionId) return;
@@ -251,6 +255,7 @@ export default function SignContract() {
         if (!res.ok) throw new Error(data.error ?? "Could not load");
         setInfo(data);
         setSubmissionId(data.submission_id ?? "");
+        setPdfSourceUrl(data.pdf_url as string);
         void localizePdf(data.pdf_url as string, setPdfUrl);
         const fd = (data.fill_data ?? {}) as Record<string, string>;
         const next: SellerFields = {
@@ -284,6 +289,10 @@ export default function SignContract() {
       }
     })();
   }, [token]);
+
+  useEffect(() => {
+    if (!loading && !done && info?.kind === "listing_agreement") legalNameRef.current?.focus();
+  }, [done, info?.kind, loading]);
 
   // Carry the seller straight from a signed listing agreement into the family
   // tree questions instead of waiting on an email.
@@ -325,6 +334,7 @@ export default function SignContract() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not update contract");
+      setPdfSourceUrl(data.pdf_url as string);
       void localizePdf(data.pdf_url as string, setPdfUrl);
       if (!silent) toast.success("Contract updated with your details");
     } catch (e) {
@@ -486,8 +496,8 @@ export default function SignContract() {
             </p>
             <div className="grid md:grid-cols-2 gap-5">
               <div className="md:col-span-2">
-                <Label>Full legal name</Label>
-                <Input value={fields.seller_name} onChange={setField("seller_name")} readOnly={locked.seller_name} disabled={locked.seller_name} />
+                <Label>Full legal name <span className="text-[10px] uppercase tracking-widest text-[#8a6d3b] ml-1">Required</span></Label>
+                <Input ref={legalNameRef} name="full-legal-name" autoComplete="name" required value={fields.seller_name} onChange={setField("seller_name")} readOnly={locked.seller_name} disabled={locked.seller_name} />
               </div>
               <div className="md:col-span-2">
                 <Label>Mailing address <span className="text-[10px] uppercase tracking-widest text-[#8a6d3b] ml-1">Required</span></Label>
@@ -592,16 +602,14 @@ export default function SignContract() {
                 <FileText className="h-4 w-4" /> Review the full contract
               </h2>
             </div>
-            <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline hover:text-foreground">
+            <button type="button" onClick={() => {
+              const source = pdfSourceUrl || pdfUrl;
+              if (source && !openFileViewer({ url: source, name: `${title}.pdf`, mime: "application/pdf" })) toast.error("Pop-up blocked — allow pop-ups for this site and try again");
+            }} className="text-xs text-muted-foreground underline hover:text-foreground">
               Open in new tab
-            </a>
+            </button>
           </div>
-          <iframe
-            key={pdfUrl}
-            title="Contract"
-            src={pdfUrl}
-            className="w-full h-[75vh] bg-background"
-          />
+          {pdfUrl ? <PdfCanvasViewer url={pdfUrl} title={title} /> : <div className="h-80 flex items-center justify-center text-sm text-muted-foreground"><Loader2 className="h-4 w-4 mr-2 animate-spin" />Loading contract…</div>}
         </Card>
 
         {done ? (
