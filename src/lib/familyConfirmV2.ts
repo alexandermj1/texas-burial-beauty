@@ -758,7 +758,10 @@ export function buildLogic(state, setS, accent0, CRM) {
         setWho: ev => { const v = ev.target.value; setS(st => { const l = st.spaces.slice(); l[i] = Object.assign({}, l[i], { who: v }); return { spaces: l }; }); }
       })),
 
-      show5: d4,
+      // When the two deed owners are married to each other there is no
+      // off-deed spouse to ask about, so the whole Spouses section is skipped
+      // rather than shown with an empty body.
+      show5: d4 && L.named().some(d => !L.coupleYes(d.id)),
       spouseRows: L.named().filter(d => !L.coupleYes(d.id)).map(d => {
         const sp = L.sp(d.id);
         const who = d.n.trim() || 'this owner';
