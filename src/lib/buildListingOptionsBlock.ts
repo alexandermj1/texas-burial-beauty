@@ -229,7 +229,7 @@ ${tierCards}
       <!-- HOW IT WORKS -->
       ${section("How this works", `
         ${p(`Our process is simple: you authorize us to sell your property at (or above) an agreed minimum price, and we handle everything from there — marketing, buyer negotiations, cemetery paperwork, and the closing itself. Because we can complete a sale the moment a qualified buyer commits, without coming back to you for approval on each offer, your property stays competitive with buyers who need to move quickly.`, true)}
-        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. All cemetery transfer fees and any optional buyer services are paid by the buyer, so they never touch your proceeds.`, true)}
+        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. Separately, the buyer pays a 15% buyer's fee on top of the sale price, along with the cemetery transfer fee and any optional buyer services. Those buyer-side charges are billed to the buyer, so they never touch your proceeds.`, true)}
       `)}
 
       <!-- WHY PRE-AUTH -->
