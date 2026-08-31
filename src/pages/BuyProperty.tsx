@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
-import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough.jpg.asset.json";
+import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
