@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, Upload, Lock, X, FileText, User, MapPin, FileSignature, Paperclip } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import CemeteryPicker from "@/components/CemeteryPicker";
+import PhoneUploadQR from "@/components/PhoneUploadQR";
 
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -120,6 +121,31 @@ const SellerQuoteForm = ({
     await supabase.storage.from("customer-files").remove([path]);
     setFiles(prev => prev.filter(f => f.path !== path));
   };
+
+  // Pick up anything the seller sent from their phone via the QR code.
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      const { data, error } = await supabase.storage
+        .from("customer-files")
+        .list(`public-intake/${intakeId}`, { limit: 50, sortBy: { column: "name", order: "asc" } });
+      if (cancelled || error || !data) return;
+      setFiles(prev => {
+        const known = new Set(prev.map(f => f.path));
+        const incoming = data
+          .filter(o => o.name && !known.has(`public-intake/${intakeId}/${o.name}`))
+          .map(o => ({
+            path: `public-intake/${intakeId}/${o.name}`,
+            name: o.name.replace(/^\d{10,}-/, ""),
+            size: (o as any).metadata?.size ?? 0,
+            type: (o as any).metadata?.mimetype ?? "",
+          }));
+        return incoming.length ? [...prev, ...incoming] : prev;
+      });
+    };
+    const t = setInterval(poll, 5000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [intakeId]);
 
   const validateStep = (s: number): string | null => {
     if (s === 0) {
@@ -427,6 +453,7 @@ const SellerQuoteForm = ({
                   accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
                   className="hidden" onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
               </label>
+              <div className="hidden sm:block"><PhoneUploadQR intakeId={intakeId} /></div>
               {files.length > 0 && (
                 <ul className="mt-3 space-y-1.5">
                   {files.map((f) => (
@@ -821,6 +848,7 @@ const SellerQuoteForm = ({
                           disabled={uploading}
                         />
                       </label>
+                      <div className="hidden sm:block"><PhoneUploadQR intakeId={intakeId} /></div>
 
                       {files.length > 0 && (
                         <ul className="mt-4 space-y-2">
