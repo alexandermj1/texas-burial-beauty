@@ -459,7 +459,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const requirements = useMemo(() => {
     if (!frozen) return computedRequirements;
     const byKey = new Map(computedRequirements.map((r) => [reqDbKey(r), r]));
-    return rows
+    const persisted = rows
       .filter((r) => r.doc_code && r.doc_code !== "REVIEW")
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
       .map((r) => {
@@ -476,8 +476,16 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           personRole: (r.person_role as Requirement["personRole"]) ?? match?.personRole,
         } as Requirement;
       });
+    // Freezing protects the history of what we already asked for — it must not
+    // swallow a document the broker adds afterwards (a photo ID, say). Anything
+    // newly required that has no persisted row yet is appended, so it shows in
+    // the checklist, syncs to the seller's page and rides the next request.
+    const have = new Set(persisted.map((r) => reqDbKey(r)));
+    const added = computedRequirements.filter((r) => !have.has(reqDbKey(r)));
+    return [...persisted, ...added];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frozen, rows, computedRequirements]);
+
   const roster = useMemo(() => signingRoster(answers), [answers]);
 
   /**
