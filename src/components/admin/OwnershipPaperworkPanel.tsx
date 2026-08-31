@@ -602,7 +602,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
     return m;
 
-  }, [rows, contractStates]);
+  }, [rows, contractStates, attachedKeys]);
 
 
   // `summarise` keys states by the raw requirement key (`code::Person Name`)
