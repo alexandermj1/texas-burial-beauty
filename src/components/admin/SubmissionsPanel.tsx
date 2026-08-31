@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -279,7 +279,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
   const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
   const [docsOutFilter, setDocsOutFilter] = useState<boolean>(false);
+  const [docsReturnedFilter, setDocsReturnedFilter] = useState<boolean>(false);
   const [completeFilter, setCompleteFilter] = useState<boolean>(false);
+  // Texas-only: lower-case emails whose submission has at least one document
+  // marked received back (submission_documents.received_at set). Drives the
+  // "Docs returned" pipeline stage between "Docs out" and "Complete".
+  const [returnedDocsEmails, setReturnedDocsEmails] = useState<Set<string>>(new Set());
   // Family tree (ownership questionnaire) filters: link sent vs seller finished.
   const [ftSentFilter, setFtSentFilter] = useState<boolean>(false);
   const [ftDoneFilter, setFtDoneFilter] = useState<boolean>(false);
@@ -694,20 +699,59 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [texasEmailsKey]);
 
+  // Texas-only: which submissions have had at least one requested document sent
+  // back (submission_documents.received_at set). Keyed by lower-case email so it
+  // survives email-merged duplicates. Drives the "Docs returned" stage.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("submission_documents" as any)
+        .select("submission_id")
+        .is("deleted_at", null)
+        .not("received_at", "is", null);
+      if (cancelled || !data) return;
+      const ids = new Set<string>((data as any[]).map(r => r.submission_id).filter(Boolean));
+      const emails = new Set<string>();
+      for (const s of submissions) {
+        const e = (s.email || "").trim().toLowerCase();
+        if (e && ids.has(s.id)) emails.add(e);
+      }
+      setReturnedDocsEmails(emails);
+    };
+    load();
+    let ft: ReturnType<typeof setTimeout> | null = null;
+    const scheduleLoad = () => {
+      if (ft) clearTimeout(ft);
+      ft = setTimeout(() => { ft = null; load(); }, 2500);
+    };
+    const ch = supabase.channel("submission_documents_returned")
+      .on("postgres_changes", { event: "*", schema: "public", table: "submission_documents" }, scheduleLoad)
+      .subscribe();
+    return () => { cancelled = true; if (ft) clearTimeout(ft); ch.unsubscribe(); supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissions]);
+
+
 
   const hasDocs = (s: Submission) => {
     const e = (s.email || "").trim().toLowerCase();
     return !!e && docsEmails.has(e);
   };
 
-  // ---- Single authoritative pipeline stage (1..8) ----
+  // ---- Single authoritative pipeline stage (1..9) ----
   // A submission belongs to exactly ONE stage: the furthest one it has reached.
   // Both the pipeline filters and the row badge use this, so nobody can appear
   // under "Awaiting quote" and "Accepted" at the same time.
   const stageStep = (s: Submission): number => {
     const a = s as any;
-    if (a.documents_completed_at) return 8;
-    if (a.documents_requested_at) return 7;
+    if (a.documents_completed_at) return 9;
+    if (a.documents_requested_at) {
+      const e = (s.email || "").trim().toLowerCase();
+      const ans = (a.ownership_answers ?? {}) as Record<string, any>;
+      if ((e && returnedDocsEmails.has(e)) || ans.docsReturnedAt) return 8;
+      return 7;
+    }
     if (ftState(s).doneAt) return 6;
     if (ftState(s).sentAt) return 5;
     if (a.quote_response === "accepted") return 4;
@@ -867,7 +911,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (ftSentFilter && step !== 5) return false;
       if (ftDoneFilter && step !== 6) return false;
       if (docsOutFilter && step !== 7) return false;
-      if (completeFilter && step !== 8) return false;
+      if (docsReturnedFilter && step !== 8) return false;
+      if (completeFilter && step !== 9) return false;
 
 
       if (eFilter === "new" && !isNew(s)) return false;
@@ -929,7 +974,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
@@ -1585,10 +1630,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
                       { key: "tree_done",      label: "Tree done",      cls: "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300" },
                       { key: "docs_out",       label: "Docs out",       cls: "bg-sky-500/15 border-sky-500/50 text-sky-700 dark:text-sky-300" },
+                      { key: "docs_returned",  label: "Docs returned",  cls: "bg-cyan-500/15 border-cyan-500/50 text-cyan-700 dark:text-cyan-300" },
                       { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
                     ];
+                    const retE = (selected.email || "").trim().toLowerCase();
                     const current =
                       x.documents_completed_at ? "complete"
+                      : x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
                       : x.documents_requested_at ? "docs_out"
                       : ans.sellerConfirmedAt ? "tree_done"
                       : ans.questionsSentAt ? "tree_sent"
@@ -1602,6 +1650,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       const answers = { ...ans };
                       answers.questionsSentAt = at("tree_sent") ? (ans.questionsSentAt || now) : null;
                       answers.sellerConfirmedAt = at("tree_done") ? (ans.sellerConfirmedAt || now) : null;
+                      answers.docsReturnedAt = at("docs_returned") ? (ans.docsReturnedAt || now) : null;
                       const patch: any = {
                         ownership_answers: answers,
                         quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
@@ -2656,6 +2705,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 indigo:  { dot: "bg-indigo-600",  ring: "ring-indigo-500/40",  text: "text-indigo-700 dark:text-indigo-300",   soft: "bg-indigo-500/10" },
                 teal:    { dot: "bg-teal-600",    ring: "ring-teal-500/40",    text: "text-teal-700 dark:text-teal-300",       soft: "bg-teal-500/10" },
                 sky:     { dot: "bg-sky-600",     ring: "ring-sky-500/40",     text: "text-sky-700 dark:text-sky-300",         soft: "bg-sky-500/10" },
+                cyan:    { dot: "bg-cyan-600",    ring: "ring-cyan-500/40",    text: "text-cyan-700 dark:text-cyan-300",       soft: "bg-cyan-500/10" },
                 green:   { dot: "bg-emerald-700", ring: "ring-emerald-600/40", text: "text-emerald-800 dark:text-emerald-300", soft: "bg-emerald-600/10" },
                 amber:   { dot: "bg-amber-500",   ring: "ring-amber-500/40",   text: "text-amber-700 dark:text-amber-300",     soft: "bg-amber-500/10" },
               };
@@ -2685,8 +2735,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { key: "docs-out", label: "Docs out", icon: FileText,
                   count: txU.filter(s => effStep(s) === 7).length,
                   active: docsOutFilter, toggle: () => setDocsOutFilter(!docsOutFilter), tone: tones.sky },
-                { key: "complete", label: "Complete", icon: Sparkles,
+                { key: "docs-returned", label: "Docs returned", icon: FileCheck,
                   count: txU.filter(s => effStep(s) === 8).length,
+                  active: docsReturnedFilter, toggle: () => setDocsReturnedFilter(!docsReturnedFilter), tone: tones.cyan },
+                { key: "complete", label: "Complete", icon: Sparkles,
+                  count: txU.filter(s => effStep(s) === 9).length,
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
               ];
               const anyActive = steps.some(s => s.active);
@@ -2741,7 +2794,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <button
                         onClick={() => {
                           setDocsFilter("all"); setAwaitingQuoteFilter(false); setQuotedFilter(false); setAcceptedFilter(false);
-                          setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setCompleteFilter(false);
+                          setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setDocsReturnedFilter(false); setCompleteFilter(false);
                         }}
                         title="Clear stage filters"
                         className="ml-2 shrink-0 w-6 h-6 rounded-full grid place-items-center border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
@@ -2836,8 +2889,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const ft = ftState(sg);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((sg as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
-              if ((sg as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
+              if ((sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
+              if ((sg as any).documents_requested_at) {
+                const retE = (sg.email || "").trim().toLowerCase();
+                const retAns = ((sg as any).ownership_answers ?? {}) as Record<string, any>;
+                if ((retE && returnedDocsEmails.has(retE)) || retAns.docsReturnedAt)
+                  return { step: 8, label: "Docs returned", accent: "cyan", cls: "bg-cyan-600 text-white border-cyan-700", bar: "bg-cyan-500", tint: "bg-cyan-500/[0.07] hover:bg-cyan-500/[0.12]", icon: FileCheck, at: (sg as any).documents_requested_at };
+                return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
+              }
               if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
               if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
               if ((sg as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
