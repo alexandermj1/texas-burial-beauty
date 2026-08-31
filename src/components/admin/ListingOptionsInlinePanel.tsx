@@ -115,24 +115,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             : [],
       );
 
-      // Signed URLs for the uploaded deed so it can be eyeballed here.
-      const atts = Array.isArray(row.seller_attachments) ? row.seller_attachments : [];
-      const signed = await Promise.all(
-        atts.slice(0, 6).map(async (f: any) => {
-          const path = String(f?.path ?? "");
-          if (!path) return null;
-          const { data: sd } = await supabase.storage.from("customer-files").createSignedUrl(path, 3600);
-          if (!sd?.signedUrl) return null;
-          const type = String(f?.type ?? "");
-          return {
-            name: String(f?.name ?? "Attachment"),
-            url: sd.signedUrl,
-            isImage: type.startsWith("image/") || /\.(png|jpe?g|webp|gif|heic)$/i.test(String(f?.name ?? "")),
-          };
-        }),
-      );
-      if (cancelled) return;
-      setDeedFiles(signed.filter(Boolean) as { name: string; url: string; isImage: boolean }[]);
     })();
     return () => { cancelled = true; };
   }, [seller.id, seller.name, seller.section, seller.lawn, seller.spaces, seller.space_numbers]);
