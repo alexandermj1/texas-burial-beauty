@@ -625,8 +625,8 @@ Deno.serve(async (req) => {
       const nowIso = new Date().toISOString();
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-      if (c.kind === 'listing_agreement' && pages.length >= 8) {
-        const p8 = pages[8];
+      if (c.kind === 'listing_agreement' && pages.length > LA_SIGNATURE_PAGE_INDEX) {
+        const p8 = pages[LA_SIGNATURE_PAGE_INDEX];
         // The template ships with a pre-printed broker signature + typed name in the
         // broker block. Cover those areas with opaque white before stamping our own,
         // so the counter-signature isn't drawn on top of the pre-filled artwork.
