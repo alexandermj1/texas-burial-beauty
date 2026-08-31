@@ -253,16 +253,19 @@ Deno.serve(async (req) => {
       (fill as Record<string, unknown>).joint_names = jointNames;
       fill.seller_name = jointNames.join(' & ');
       filled = await buildJointPoaPdf({
-        county: overrides.county ?? overrides.county_state ?? cemLocationCity ?? '',
-        county_state: fill.county_state,
+        // No county on a POA — the notary fills in the county of signing.
+        county: '',
+        county_state: '',
         // Left blank on purpose: each principal fills in their own address when
         // they sign the joint Power of Attorney before the notary.
         principals: jointNames.map((n) => ({ name: n, address: '' })),
 
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
-        plot_description: plotDescriptionNoCount,
+        // Same wording as the quote / listing agreement.
+        plot_description: plotDescriptionNoCount || plotDescription,
         spaces: adminPlotDescription ? '' : (sub.spaces ?? ''),
+
         phone: fill.phone,
         email: fill.email,
       });
