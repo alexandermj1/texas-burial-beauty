@@ -196,10 +196,17 @@ const TYPE_CODES: { test: RegExp; codes: string[] }[] = [
 
 const codesForFile = (f: AnyFile): string[] => {
   const type = String(f.extractedData?.document_type ?? "").toLowerCase();
-  if (!type) return [];
-  const hit = TYPE_CODES.find((t) => t.test.test(type));
-  return hit ? hit.codes : [];
+  const hit = type ? TYPE_CODES.find((t) => t.test.test(type)) : undefined;
+  if (hit) return hit.codes;
+  // Nothing read yet (email attachments arrive unclassified): fall back to what
+  // the file is actually called. "Power of Attorney - Donnis D. Hatchett.pdf"
+  // coming back from the seller is plainly the returned POA.
+  const name = String(f.name ?? "").toLowerCase();
+  if (!name) return [];
+  const byName = TYPE_CODES.find((t) => t.test.test(name));
+  return byName ? byName.codes : [];
 };
+
 
 /** Does this file plainly name the person the requirement is about? */
 const fileNamesPerson = (f: AnyFile, person?: string | null) => {
@@ -515,8 +522,28 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return m;
   }, [contracts, requirements]);
 
+  /**
+   * Documents we physically hold against an item — a seller upload, or a PDF
+   * that came back as an email attachment. Anything here means the item has
+   * been returned, whatever the checklist row still says.
+   */
+  const attachedKeys = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of requirements) {
+      const key = reqDbKey(r);
+      const row = rows.find((x) => `${x.doc_code}::${personKey(x.person_name)}` === key);
+      const linked = answers.linkedFiles?.[reqKey(r)] ?? [];
+      const detached = answers.unlinkedFiles?.[reqKey(r)] ?? [];
+      const hit = files.some((f) => !detached.includes(f.path)
+        && (linked.includes(f.path) || fileMatchesRequirement(f, r, row)));
+      if (hit) s.add(key);
+    }
+    return s;
+  }, [requirements, rows, files, answers]);
+
   const stateByKey = useMemo(() => {
     const m: Record<string, RequiredState> = { ...contractStates };
+
     const PROGRESS: RequiredState[] = ["not_needed", "maybe", "needed", "issued", "sent", "awaiting_seller", "received", "notarized", "complete"];
     const rankOf = (s?: RequiredState | null) => (s ? PROGRESS.indexOf(s) : -1);
     // Contracts are keyed by the name on the contract ("Danny Roby") which is
@@ -544,7 +571,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // freshly re-computed "needed" — otherwise a checklist sync silently
       // un-ticks documents we already hold. It also outranks "we emailed it",
       // because a signed copy coming back is further along than sending it out.
-      const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0);
+      const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0)
+        || attachedKeys.has(key);
       const override = (r.manual_override as RequiredState | null) ?? null;
       const fromContract = contractFor(r.doc_code, r.person_name);
       const rowState = (r.required_state as RequiredState) ?? "needed";
@@ -566,8 +594,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
     }
 
+    // Items with a returned file but no checklist row yet (or a row that
+    // hasn't been re-read) still read as received.
+    for (const key of attachedKeys) {
+      if (rankOf(m[key]) < rankOf("received") && m[key] !== "not_needed") m[key] = "received";
+    }
+
     return m;
-  }, [rows, contractStates]);
+
+  }, [rows, contractStates, attachedKeys]);
 
 
   // `summarise` keys states by the raw requirement key (`code::Person Name`)
