@@ -485,8 +485,13 @@ export default function SignContract() {
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> E-Sign Act &amp; Texas UETA compliant</span>
             <span className="inline-flex items-center gap-1.5"><PenLine className="h-3.5 w-3.5" /> Tamper-evident audit trail</span>
           </div>
+          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#d9c7a3]/50 bg-white/10 px-4 py-2 text-xs text-[#f0e4cd]">
+            <PenLine className="h-3.5 w-3.5" />
+            The whole document is shown on this page — scroll to the bottom to initial and sign.
+          </p>
         </div>
       </div>
+
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-10 space-y-8">
         {!done && (

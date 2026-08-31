@@ -160,22 +160,47 @@ function buildPoaOverlays(page1: PDFPage, font: PDFFont, _bold: PDFFont, data: F
 // Written into the body of the agreement (immediately after the Sale Terms page)
 // rather than tacked on at the end as an addendum, so it reads as part of the
 // contract and the seller initials it alongside the rest of the terms.
+const BUYER_FEE_BODY = [
+  `4.1  Buyer's fee. In addition to the purchase price for the Property, the buyer shall pay Texas Cemetery Brokers LLC (the "Broker") a buyer's fee equal to fifteen percent (15%) of the purchase price, for handling the purchase, the transfer paperwork and coordination with the cemetery.`,
+  `4.2  Charged to the buyer. The buyer's fee is charged to and collected from the buyer. It is separate from, and in addition to, the Broker's commission payable by the Seller under this Agreement, and it is not deducted from the Seller's proceeds.`,
+  `4.3  Other buyer-paid amounts. The buyer also remains responsible for the cemetery's transfer fee and any other cemetery charges, together with any administrative, documentary, notarial, statutory or third-party charges properly billed to the buyer, and any optional buyer services the buyer elects. The buyer's total at closing will therefore exceed the purchase price on which the Seller's proceeds are calculated.`,
+  `4.4  No change to Seller's proceeds. Nothing in this Section alters the price, commission or net proceeds agreed with the Seller elsewhere in this Agreement.`,
+];
+
+/** Page index of the generated Sale Terms page inside a filled listing agreement. */
+export const SALE_TERMS_PAGE_INDEX = 2;
+/** Underline geometry of the Sale Terms "Seller's initials:" / "Date:" rules. */
+export const SALE_TERMS_INITIALS_X = 140;
+export const SALE_TERMS_INITIALS_W = 90;
+export const SALE_TERMS_DATE_X = 295;
+export const SALE_TERMS_DATE_W = 105;
+
+/** Baseline of the Sale Terms initials/date labels. The body text is static, so
+ *  this is fully deterministic given the body font — the signer stamps the same
+ *  line the generator drew, instead of a coordinate measured against an old
+ *  template that has since shifted. */
+export function saleTermsInitialsY(font: PDFFont): number {
+  let y = 668;
+  for (const text of BUYER_FEE_BODY) {
+    y -= 15 * wrapToWidth(text, font, 10.5, 612 - 100).length;
+    y -= 12;
+  }
+  y -= 10;   // spacer before the Seller line
+  y -= 18;   // Seller line -> Property line
+  y -= 42;   // Property line -> initials block
+  return y;
+}
+
 function insertBuyerFeeClause(pdf: PDFDocument, font: PDFFont, bold: PDFFont, data: FillData) {
-  const page = pdf.getPageCount() >= 3 ? pdf.insertPage(2, [612, 792]) : pdf.addPage([612, 792]);
+  const page = pdf.getPageCount() >= 3 ? pdf.insertPage(SALE_TERMS_PAGE_INDEX, [612, 792]) : pdf.addPage([612, 792]);
   const { width } = page.getSize();
 
   page.drawText('LISTING AGREEMENT (CONTINUED)', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
   page.drawText("Sale Terms — Buyer's Fee and Buyer-Paid Costs", { x: 50, y: 712, size: 15, font: bold, color: INK });
   page.drawLine({ start: { x: 50, y: 700 }, end: { x: width - 50, y: 700 }, thickness: 0.6, color: HAIRLINE });
 
-  const body = [
-    `4.1  Buyer's fee. In addition to the purchase price for the Property, the buyer shall pay Texas Cemetery Brokers LLC (the "Broker") a buyer's fee equal to fifteen percent (15%) of the purchase price, for handling the purchase, the transfer paperwork and coordination with the cemetery.`,
-    `4.2  Charged to the buyer. The buyer's fee is charged to and collected from the buyer. It is separate from, and in addition to, the Broker's commission payable by the Seller under this Agreement, and it is not deducted from the Seller's proceeds.`,
-    `4.3  Other buyer-paid amounts. The buyer also remains responsible for the cemetery's transfer fee and any other cemetery charges, together with any administrative, documentary, notarial, statutory or third-party charges properly billed to the buyer, and any optional buyer services the buyer elects. The buyer's total at closing will therefore exceed the purchase price on which the Seller's proceeds are calculated.`,
-    `4.4  No change to Seller's proceeds. Nothing in this Section alters the price, commission or net proceeds agreed with the Seller elsewhere in this Agreement.`,
-  ];
   let y = 668;
-  for (const text of body) {
+  for (const text of BUYER_FEE_BODY) {
     for (const line of wrapToWidth(text, font, 10.5, width - 100)) {
       page.drawText(line, { x: 50, y, size: 10.5, font, color: INK });
       y -= 15;
@@ -192,9 +217,9 @@ function insertBuyerFeeClause(pdf: PDFDocument, font: PDFFont, bold: PDFFont, da
   // Initials block — the seller initials this section with the rest of the terms.
   y -= 42;
   page.drawText("Seller's initials:", { x: 50, y, size: 10, font, color: MUTED });
-  page.drawLine({ start: { x: 140, y: y - 2 }, end: { x: 230, y: y - 2 }, thickness: 0.8, color: INK });
+  page.drawLine({ start: { x: SALE_TERMS_INITIALS_X, y: y - 2 }, end: { x: SALE_TERMS_INITIALS_X + SALE_TERMS_INITIALS_W, y: y - 2 }, thickness: 0.8, color: INK });
   page.drawText('Date:', { x: 260, y, size: 10, font, color: MUTED });
-  page.drawLine({ start: { x: 295, y: y - 2 }, end: { x: 400, y: y - 2 }, thickness: 0.8, color: INK });
+  page.drawLine({ start: { x: SALE_TERMS_DATE_X, y: y - 2 }, end: { x: SALE_TERMS_DATE_X + SALE_TERMS_DATE_W, y: y - 2 }, thickness: 0.8, color: INK });
 
   page.drawLine({ start: { x: 50, y: 55 }, end: { x: width - 50, y: 55 }, thickness: 0.4, color: HAIRLINE });
   page.drawText("LISTING AGREEMENT — SALE TERMS (CONTINUED)", { x: 50, y: 40, size: 8, font: bold, color: MUTED });

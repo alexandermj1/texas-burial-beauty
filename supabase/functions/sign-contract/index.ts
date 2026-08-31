@@ -11,7 +11,15 @@
 //                                                  signature; emails fully-executed copy
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
-import { buildFilledPdf, type FillData } from '../_shared/contract-fill.ts';
+import {
+  buildFilledPdf,
+  saleTermsInitialsY,
+  SALE_TERMS_PAGE_INDEX,
+  SALE_TERMS_INITIALS_X,
+  SALE_TERMS_INITIALS_W,
+  SALE_TERMS_DATE_X,
+  type FillData,
+} from '../_shared/contract-fill.ts';
 import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../_shared/affidavit-heirship.ts';
 
 /** Two principals on one POA — kept on fill_data so every rebuild stays joint. */
@@ -68,38 +76,57 @@ function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) 
 }
 
 /** Inline "SELLER INITIAL HERE" acknowledgement boxes on the Listing Agreement.
- * Each box has a real underline rect in the template at x0=490.5, x1=558.0
- * (width 67.5). y_bot values below are the underline baseline (pdf-lib coords),
- * measured directly from the template rects. We mask the placeholder text and
- * stamp the seller's initials sitting on the underline. */
+ *  Page indexes are those of the FILLED agreement (the generated Sale Terms page
+ *  is inserted at index 2, so every template page after it shifts down by one).
+ *  `ty` is the baseline of the printed "SELLER INITIAL HERE" placeholder,
+ *  measured from the generated document itself. */
 const LA_INITIAL_UNDERLINE_X = 490.5;
 const LA_INITIAL_UNDERLINE_W = 67.5;
-const LA_INLINE_INITIALS: Array<{ pageIndex: number; y: number }> = [
-  { pageIndex: 1, y: 353.3 }, // p2 — Authorized Minimum Price
-  { pageIndex: 1, y: 239.3 }, // p2 — Sales at or above authorized minimum
-  { pageIndex: 2, y: 201.0 }, // p3 — Buyer-Paid Broker Charges (Section 2.2)
-  { pageIndex: 4, y: 566.2 }, // p5 — Warranty of ownership
-  { pageIndex: 4, y: 482.2 }, // p5 — Warranty of plot condition
+const LA_INLINE_INITIALS: Array<{ pageIndex: number; ty: number }> = [
+  { pageIndex: 1, ty: 350.1 }, // p2 — Authorized Minimum Price
+  { pageIndex: 1, ty: 236.1 }, // p2 — Sales at or above authorized minimum
+  { pageIndex: 3, ty: 197.9 }, // p4 — Buyer-Paid Broker Charges (Section 2.2)
+  { pageIndex: 5, ty: 563.7 }, // p6 — Warranty of ownership
+  { pageIndex: 5, ty: 479.7 }, // p6 — Warranty of plot condition
 ];
+/** Signature block page of the filled listing agreement (template p9 + inserted page). */
+const LA_SIGNATURE_PAGE_INDEX = 9;
+
 function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
   const WHITE = rgb(1, 1, 1);
-  for (const { pageIndex, y } of LA_INLINE_INITIALS) {
+  for (const { pageIndex, ty } of LA_INLINE_INITIALS) {
     if (pageIndex >= pages.length) continue;
     const page = pages[pageIndex];
-    // Mask the "SELLER INITIAL HERE" placeholder text that sits ABOVE the underline
-    // (roughly x=395..488, ~15pt tall, baseline about 8pt above the rule).
-    page.drawRectangle({ x: 395, y: y + 2, width: 100, height: 14, color: WHITE });
-    // Stamp the initials centred over the actual underline rect, resting on the line.
+    // Mask the "SELLER INITIAL HERE" placeholder text sitting left of the rule.
+    page.drawRectangle({ x: 388, y: ty - 3, width: 100, height: 14, color: WHITE });
+    // Stamp the initials centred over the underline rect, resting on the line.
     const size = 12;
     const w = bold.widthOfTextAtSize(initials, size);
     page.drawText(initials, {
       x: LA_INITIAL_UNDERLINE_X + (LA_INITIAL_UNDERLINE_W - w) / 2,
-      y: y + 2.2, // baseline sits ~2pt above the rule, like a handwritten mark
+      y: ty,
       size,
       font: bold,
       color: INK,
     });
   }
+}
+
+/** The generated Sale Terms page carries its own "Seller's initials / Date" rules. */
+function stampSaleTermsInitials(pages: PDFPage[], initials: string, font: PDFFont, bold: PDFFont) {
+  const page = pages[SALE_TERMS_PAGE_INDEX];
+  if (!page) return;
+  const y = saleTermsInitialsY(font);
+  const size = 12;
+  const w = bold.widthOfTextAtSize(initials, size);
+  page.drawText(initials, {
+    x: SALE_TERMS_INITIALS_X + (SALE_TERMS_INITIALS_W - w) / 2,
+    y: y + 1,
+    size,
+    font: bold,
+    color: INK,
+  });
+  page.drawText(todayFormatted(), { x: SALE_TERMS_DATE_X + 4, y: y + 1, size: 10, font, color: INK });
 }
 
 function todayFormatted(): string {
@@ -598,8 +625,8 @@ Deno.serve(async (req) => {
       const nowIso = new Date().toISOString();
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-      if (c.kind === 'listing_agreement' && pages.length >= 8) {
-        const p8 = pages[8];
+      if (c.kind === 'listing_agreement' && pages.length > LA_SIGNATURE_PAGE_INDEX) {
+        const p8 = pages[LA_SIGNATURE_PAGE_INDEX];
         // The template ships with a pre-printed broker signature + typed name in the
         // broker block. Cover those areas with opaque white before stamping our own,
         // so the counter-signature isn't drawn on top of the pre-filled artwork.
@@ -791,18 +818,18 @@ Deno.serve(async (req) => {
     // === Stamp signature block on the correct template page ===
     // Coordinates measured directly from the template underline rects; stamp
     // sits ~3pt above the rule so the baseline sits on the line.
-    if (c.kind === 'listing_agreement' && pages.length >= 8) {
-      const p8 = pages[8];
+    if (c.kind === 'listing_agreement' && pages.length > LA_SIGNATURE_PAGE_INDEX) {
+      const sigPage = pages[LA_SIGNATURE_PAGE_INDEX];
       // Seller block underline rects (pdf-lib coords, measured from template):
       //   printed name y=282.0, signature y=252.8, date y=223.5, all x0=204.7 w=337.5.
-      stampText(p8, signature_name, 210, 284.2, font, 11);
+      stampText(sigPage, signature_name, 210, 284.2, font, 11);
       if (sigImg) {
         // Height capped at 24pt so the top of the signature never crosses into
         // the printed-name underline just above (282 - 254 = 28pt of clear space).
         const dims = sigImg.scaleToFit(220, 24);
-        p8.drawImage(sigImg, { x: 210, y: 254, width: dims.width, height: dims.height });
+        sigPage.drawImage(sigImg, { x: 210, y: 254, width: dims.width, height: dims.height });
       }
-      stampText(p8, todayFormatted(), 210, 225.7, font, 11);
+      stampText(sigPage, todayFormatted(), 210, 225.7, font, 11);
     } else if (c.kind === 'poa' && pages.length >= 3) {
       const p3 = pages[2];
       // Principal block underlines: name 319.5, signature 290.3, date 261.0.
@@ -820,7 +847,10 @@ Deno.serve(async (req) => {
     // Listing Agreement has five "SELLER INITIAL HERE" acknowledgement boxes in
     // the body of the document; stamp the seller's initials inside each one so
     // every requested section is affirmatively initialed.
-    if (c.kind === 'listing_agreement') stampInlineInitials(pages, initialsStamp, bold);
+    if (c.kind === 'listing_agreement') {
+      stampInlineInitials(pages, initialsStamp, bold);
+      stampSaleTermsInitials(pages, initialsStamp, font, bold);
+    }
 
     // === Certification / audit page (E-SIGN + UETA compliance) ===
     // Styled to match the appended data-reference sheet and template chrome.
