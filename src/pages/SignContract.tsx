@@ -122,6 +122,19 @@ export default function SignContract() {
   /** Finished notary-ready PDF, returned when the document is completed. */
   const [finalPdfUrl, setFinalPdfUrl] = useState<string | null>(null);
 
+  // Chrome (and some PDF extensions) block cross-origin storage PDFs opened
+  // directly. Fetch the bytes and swap in a same-origin blob URL instead.
+  const localizePdf = async (url: string, setter: (u: string) => void) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+      const blob = await res.blob();
+      setter(URL.createObjectURL(blob));
+    } catch {
+      setter(url); // fall back to the direct URL
+    }
+  };
+
   const [fields, setFields] = useState<SellerFields>({
     seller_name: "", address: "", city_state_zip: "",
     phone: "", email: "", plot_description: "", listing_option: "Starter",
