@@ -1088,7 +1088,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   }, [filtered, summaryMap]);
 
 
-  const selected = submissions.find(s => s.id === selectedId) || filtered[0] || null;
+  // Duplicates are merged into one card, but paperwork/documents live on whichever
+  // submission actually reached the furthest stage. Open that one so the requested
+  // documents are always visible instead of an empty checklist on an older duplicate.
+  const selectedRaw = submissions.find(s => s.id === selectedId) || filtered[0] || null;
+  const selected = selectedRaw ? stageSource(selectedRaw) : null;
+
   const cemeteryProfileFor = (cemetery: string | null | undefined) => {
     const k = _canon(cemetery || "");
     if (!k) return null;
