@@ -307,8 +307,14 @@ const GuidePreneedCemeteryPlots = () => (
         <section id="why-ahead" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 02 · The case for planning</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Why families buy <span className="italic text-primary">before they need to</span></h2>
-          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
             Nobody enjoys the conversation. But the families who have it early are, without exception, in a better position than the ones who do not — financially and otherwise.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            Purchasing ahead of time means you can choose a property that works for your budget and your personal preferences. It gives you the freedom to explore all your options thoroughly, and it saves your loved ones from having to make rushed decisions in their time of grief. It also lets you select a final resting place that suits your wishes exactly — be it under a shady tree at Sparkman-Hillcrest in Dallas or beside a serene lake at Bluebonnet Hills in Colleyville.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            Whatever your personal wishes, buying ahead of time provides the chance to be honored exactly as you intend, whether that is within a particular garden or section, or surrounded by your loved ones in contiguous spaces within a family plot. Your peace of mind is assured, too, when choosing a Perpetual Care cemetery in Texas: the cemetery is legally required to maintain an endowment fund from which the long-term upkeep and maintenance of the park is paid, so the grounds are cared for in the future without worry.
           </p>
           <div className="space-y-4 mb-8">
             {reasons.map(({ Icon, t, d }) => (
@@ -323,9 +329,29 @@ const GuidePreneedCemeteryPlots = () => (
               </motion.div>
             ))}
           </div>
-          <p className="text-foreground/80 leading-relaxed text-lg">
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
             The comparison worth making is not preneed versus nothing. It is preneed versus at-need — the same purchase, made in the same cemetery, but under a deadline, without the chance to shop the secondary market, and at whatever the price list says that week.
           </p>
+          <div className="rounded-3xl border border-border/60 bg-muted/30 p-7 md:p-9 mt-8">
+            <Eyebrow>Planning ahead</Eyebrow>
+            <h3 className="font-display text-2xl md:text-3xl text-foreground mb-4 leading-snug">So how do you begin to plan ahead?</h3>
+            <p className="text-foreground/80 leading-relaxed mb-5">
+              In Texas, the steps are quite straightforward. Begin by considering these two questions:
+            </p>
+            <ol className="space-y-4 mb-6">
+              <li className="flex gap-4 items-start">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary font-display flex items-center justify-center text-sm mt-0.5">1</span>
+                <p className="text-foreground/80 leading-relaxed"><strong className="font-medium text-foreground">What type of interment would you like?</strong> For example, traditional burial in the ground, entombment in a mausoleum crypt, or cremation with a memorial niche.</p>
+              </li>
+              <li className="flex gap-4 items-start">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary font-display flex items-center justify-center text-sm mt-0.5">2</span>
+                <p className="text-foreground/80 leading-relaxed"><strong className="font-medium text-foreground">Which location do you want your memorial to be?</strong> Perhaps your preferred cemetery is the one closest to where your family resides, or is located at a meaningful place dear to you.</p>
+              </li>
+            </ol>
+            <p className="text-foreground/70 leading-relaxed">
+              Once you have thought about these two questions you are ready to begin the search, bearing in mind that people commonly change their minds from their original ideas as they start exploring options and see the wealth of choices available.
+            </p>
+          </div>
         </section>
 
         {/* Chapter 03 */}
@@ -444,7 +470,7 @@ const GuidePreneedCemeteryPlots = () => (
                 <div className="overflow-hidden rounded-2xl border border-border/60 shadow-soft">
                   <img loading="lazy" decoding="async" src={TEAM_WALKTHROUGH} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[16/10] object-cover" />
                 </div>
-                <figcaption className="mt-2.5 text-xs text-foreground/55 leading-snug">A member of our team on the grounds — we show you the space in person before you commit to anything.</figcaption>
+                <figcaption className="mt-2.5 text-xs text-foreground/55 leading-snug">We meet you at the cemetery and show you the space in person before you commit to anything.</figcaption>
               </figure>
             </div>
           </div>
