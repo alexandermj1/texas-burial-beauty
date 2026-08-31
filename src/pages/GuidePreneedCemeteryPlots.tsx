@@ -9,6 +9,8 @@ import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/Gu
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
+import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough.jpg.asset.json";
+const TEAM_WALKTHROUGH = teamWalkthroughAsset.url;
 import { DiscountTable, FinancingGraphic, PriceAppreciationChart } from "@/components/guides/PreneedSavingsGraphics";
 import PreneedInquiryForm from "@/components/guides/PreneedInquiryForm";
 import { EMAIL, jsonLd, reasons, priceFactors, myths, faqs, resources } from "./guide-preneed-data";
@@ -425,17 +427,25 @@ const GuidePreneedCemeteryPlots = () => (
           </div>
 
           <div className="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/8 via-background to-accent/5 p-7 md:p-9 mt-8">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]">
-                <Footprints className="w-6 h-6" strokeWidth={1.75} />
+            <div className="grid md:grid-cols-[minmax(0,1fr)_300px] gap-7 md:gap-9 items-start">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]">
+                  <Footprints className="w-6 h-6" strokeWidth={1.75} />
+                </div>
+                <div>
+                  <Eyebrow>Walked, not clicked</Eyebrow>
+                  <p className="font-display text-2xl md:text-3xl text-foreground leading-snug mb-2">Someone from Texas Cemetery Brokers will walk the sections with you.</p>
+                  <p className="text-foreground/75 leading-relaxed">
+                    We meet you at the cemetery and show you the spaces in person — where they sit, what is beside them, what the section is actually like to stand in. And from that point, the transfer paperwork is ours: we verify the ownership, obtain co-owner consent, clear any right of first refusal, complete the cemetery's conveyance forms and coordinate the recording with the cemetery office. The seller does not fill out your paperwork; we do all of it, for both sides, and only offer property that is verified and available to transfer.
+                  </p>
+                </div>
               </div>
-              <div>
-                <Eyebrow>Walked, not clicked</Eyebrow>
-                <p className="font-display text-2xl md:text-3xl text-foreground leading-snug mb-2">Someone from Texas Cemetery Brokers will walk the sections with you.</p>
-                <p className="text-foreground/75 leading-relaxed">
-                  We meet you at the cemetery and show you the spaces in person — where they sit, what is beside them, what the section is actually like to stand in. And from that point, the transfer paperwork is ours: we verify the ownership, obtain co-owner consent, clear any right of first refusal, complete the cemetery's conveyance forms and coordinate the recording with the cemetery office. The seller does not fill out your paperwork; we do all of it, for both sides, and only offer property that is verified and available to transfer.
-                </p>
-              </div>
+              <figure className="m-0 md:pt-1">
+                <div className="overflow-hidden rounded-2xl border border-border/60 shadow-soft">
+                  <img loading="lazy" decoding="async" src={TEAM_WALKTHROUGH} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[4/3] object-cover" />
+                </div>
+                <figcaption className="mt-2.5 text-xs text-foreground/55 leading-snug">A member of our team on the grounds — we show you the space in person before you commit to anything.</figcaption>
+              </figure>
             </div>
           </div>
         </section>
