@@ -375,7 +375,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             {previewing ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileSignature className="w-3 h-3" />}
-            {previewing ? "Building…" : "View listing agreement"}
+            {previewing ? "Building…" : "View signing page"}
           </button>
           <button
             type="button" onClick={previewFamilyTree}
