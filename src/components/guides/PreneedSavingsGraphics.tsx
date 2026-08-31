@@ -340,7 +340,7 @@ export const PriceAppreciationChart = () => {
               ≈ ${retailFuture.toLocaleString()}{isMobile ? "" : " at-need"}
             </text>
           </motion.g>
-          <motion.text x={px(0) + 8} y={py(10000) - (isMobile ? 14 : -24)} fontSize={fs(13.5)} fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.4 }}>
+          <motion.text x={px(0) + 8} y={py(10000) - (isMobile ? 20 : -24)} fontSize={fs(13.5)} fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.4 }}>
             {isMobile ? "Retail today: $10,000" : "Cemetery retail today: $10,000"}
           </motion.text>
 
@@ -363,7 +363,7 @@ export const PriceAppreciationChart = () => {
           />
           <motion.g initial={{ opacity: 0, scale: 0 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 1.9, duration: 0.4 }}>
             <circle cx={px(2)} cy={py(DEAL)} r="6.5" fill="hsl(var(--primary))" />
-            <text x={isMobile ? X0 : px(2) + 12} y={py(DEAL) + (isMobile ? 62 : 24)} fontSize={fs(15)} fontWeight="700" fill="hsl(var(--primary))">
+            <text x={isMobile ? X1 : px(2) + 12} y={py(DEAL) + (isMobile ? 34 : 24)} textAnchor={isMobile ? "end" : "start"} fontSize={fs(15)} fontWeight="700" fill="hsl(var(--primary))">
               You: ≈ ${dealCount.toLocaleString()}{isMobile ? " · 0% for 24 mo" : " · paid off by month 24 · $0 interest"}
             </text>
           </motion.g>
