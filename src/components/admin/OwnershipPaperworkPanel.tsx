@@ -522,8 +522,28 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return m;
   }, [contracts, requirements]);
 
+  /**
+   * Documents we physically hold against an item — a seller upload, or a PDF
+   * that came back as an email attachment. Anything here means the item has
+   * been returned, whatever the checklist row still says.
+   */
+  const attachedKeys = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of requirements) {
+      const key = reqDbKey(r);
+      const row = rows.find((x) => `${x.doc_code}::${personKey(x.person_name)}` === key);
+      const linked = answers.linkedFiles?.[reqKey(r)] ?? [];
+      const detached = answers.unlinkedFiles?.[reqKey(r)] ?? [];
+      const hit = files.some((f) => !detached.includes(f.path)
+        && (linked.includes(f.path) || fileMatchesRequirement(f, r, row)));
+      if (hit) s.add(key);
+    }
+    return s;
+  }, [requirements, rows, files, answers]);
+
   const stateByKey = useMemo(() => {
     const m: Record<string, RequiredState> = { ...contractStates };
+
     const PROGRESS: RequiredState[] = ["not_needed", "maybe", "needed", "issued", "sent", "awaiting_seller", "received", "notarized", "complete"];
     const rankOf = (s?: RequiredState | null) => (s ? PROGRESS.indexOf(s) : -1);
     // Contracts are keyed by the name on the contract ("Danny Roby") which is
