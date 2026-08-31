@@ -196,10 +196,17 @@ const TYPE_CODES: { test: RegExp; codes: string[] }[] = [
 
 const codesForFile = (f: AnyFile): string[] => {
   const type = String(f.extractedData?.document_type ?? "").toLowerCase();
-  if (!type) return [];
-  const hit = TYPE_CODES.find((t) => t.test.test(type));
-  return hit ? hit.codes : [];
+  const hit = type ? TYPE_CODES.find((t) => t.test.test(type)) : undefined;
+  if (hit) return hit.codes;
+  // Nothing read yet (email attachments arrive unclassified): fall back to what
+  // the file is actually called. "Power of Attorney - Donnis D. Hatchett.pdf"
+  // coming back from the seller is plainly the returned POA.
+  const name = String(f.name ?? "").toLowerCase();
+  if (!name) return [];
+  const byName = TYPE_CODES.find((t) => t.test.test(name));
+  return byName ? byName.codes : [];
 };
+
 
 /** Does this file plainly name the person the requirement is about? */
 const fileNamesPerson = (f: AnyFile, person?: string | null) => {
