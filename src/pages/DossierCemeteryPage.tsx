@@ -43,6 +43,72 @@ const STEPS = [
   { n: "04", t: "Cemetery transfer", b: "We file the transfer with the cemetery office, pay the recording fee from proceeds and send you the net." },
 ];
 
+/** Collapsible map wrapper — maps stay folded away until a visitor asks for them. */
+function MapReveal({
+  title,
+  sub,
+  children,
+  tall,
+}: {
+  title: string;
+  sub?: string;
+  children: React.ReactNode;
+  tall?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <AnimatePresence initial={false} mode="wait">
+        {!open ? (
+          <motion.button
+            key="closed"
+            type="button"
+            onClick={() => setOpen(true)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="group flex w-full items-center justify-between gap-4 rounded-[28px] border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--gold)/0.06)] px-6 py-6 text-left transition-colors hover:border-[hsl(var(--gold)/0.6)] hover:bg-[hsl(var(--gold)/0.1)] sm:px-8"
+          >
+            <span className="flex items-center gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[hsl(var(--gold)/0.4)] text-[hsl(var(--gold))]">
+                <MapPin className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block font-display text-lg text-[hsl(var(--parchment))] sm:text-xl">{title}</span>
+                {sub && (
+                  <span className="mt-0.5 block text-sm text-[hsl(var(--parchment)/0.6)]">{sub}</span>
+                )}
+              </span>
+            </span>
+            <span className="shrink-0 rounded-full border border-[hsl(var(--gold)/0.5)] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-[hsl(var(--gold))] transition-colors group-hover:bg-[hsl(var(--gold))] group-hover:text-[hsl(var(--ink))]">
+              Show map
+            </span>
+          </motion.button>
+        ) : (
+          <motion.div
+            key="open"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+            className="overflow-hidden"
+          >
+            {children}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="mt-3 text-[11px] uppercase tracking-[0.22em] text-[hsl(var(--parchment)/0.55)] underline-offset-4 hover:text-[hsl(var(--gold))] hover:underline"
+            >
+              Hide map
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 interface Props {
   cemetery: FlagshipCemetery;
   /** Optional original hero photograph. Falls back to a stock grounds frame. */
