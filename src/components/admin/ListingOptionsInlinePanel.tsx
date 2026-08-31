@@ -104,7 +104,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // Pre-fill everything we already hold on the submission.
   useEffect(() => {
     let cancelled = false;
-    setDeedOwners("");
+    setOwnerNames([""]);
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
