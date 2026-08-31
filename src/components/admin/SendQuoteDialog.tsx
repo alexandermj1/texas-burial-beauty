@@ -54,6 +54,12 @@ const buildBody = (s: Submission, quote: string, transferFee: string, customMess
   const propertyDesc = buildPropertyDescriptor(s);
   const quoteAmount = formatMoney(quote) || "[Quote Amount]";
   const transferFeeAmount = formatMoney(transferFee) || "[Transfer Fee Amount]";
+  const quoteNum = Number(String(quote).replace(/[^0-9.]/g, ""));
+  const feeNum = Number(String(transferFee).replace(/[^0-9.]/g, ""));
+  const grossAmount =
+    isFinite(quoteNum) && quoteNum > 0 && isFinite(feeNum) && feeNum > 0
+      ? formatMoney(quoteNum + feeNum)
+      : "";
 
   const customBlock = customMessage.trim()
     ? `\n${customMessage.trim()}\n`
@@ -63,13 +69,16 @@ const buildBody = (s: Submission, quote: string, transferFee: string, customMess
 
 Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${propertyDesc}. We understand that selling cemetery property is a unique and often specialized process, and navigating the market for cemetery plots can be complex.
 
-After a thorough evaluation of your specific property, considering its features, current market conditions, and recent comparable sales, we are pleased to offer you a guaranteed net proceeds amount of ${quoteAmount}.
+After a thorough evaluation of your specific property, considering its features, current market conditions, and recent comparable sales, we are pleased to offer you an authorized sales price of ${grossAmount || quoteAmount}${grossAmount ? ` (inclusive of the cemetery's transfer fee of ${transferFeeAmount})` : ""}, giving you a guaranteed net proceeds amount of ${quoteAmount}.
 ${customBlock}
 We offer the following DOUBLE GUARANTEE, designed to provide you with certainty and peace of mind:
 
 1) Your Net Proceeds Guarantee: When your property sells through us, you are guaranteed to receive this exact ${quoteAmount}. This is the precise amount you will walk away with, free and clear, after all selling expenses — including our commission and the cemetery's transfer fee — have been accounted for.
 
-2) Transfer Fee Coverage Guarantee: We also guarantee to cover the cemetery's transfer fee up to the current prevailing rate of ${transferFeeAmount}. The ${quoteAmount} guaranteed net proceeds amount above is already net of this transfer fee.
+2) Transfer Fee Coverage Guarantee: We also guarantee to cover the cemetery's transfer fee up to the current prevailing rate of ${transferFeeAmount}. The authorized sales price${grossAmount ? ` of ${grossAmount}` : ""} above includes this ${transferFeeAmount} transfer fee, which is then deducted, leaving your guaranteed net proceeds of ${quoteAmount}.
+
+Fees paid by the buyer (not by you): in addition to the sales price, the buyer pays a buyer's fee of 15% of the sales price for handling the purchase, paperwork and cemetery coordination, plus the cemetery's transfer fee and any optional buyer services they elect. These are charged to the buyer and never reduce your guaranteed net proceeds.
+
 
 To begin the process, we offer flexible listing options designed to suit your preferences:
 
