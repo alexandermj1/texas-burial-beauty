@@ -92,9 +92,11 @@ const LA_INLINE_INITIALS: Array<{ pageIndex: number; ty: number }> = [
 /** Signature block page of the filled listing agreement (template p9 + inserted page). */
 const LA_SIGNATURE_PAGE_INDEX = 9;
 
-function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
+function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont, mask?: boolean[]) {
   const WHITE = rgb(1, 1, 1);
-  for (const { pageIndex, ty } of LA_INLINE_INITIALS) {
+  for (const [i, { pageIndex, ty }] of LA_INLINE_INITIALS.entries()) {
+    if (mask && !mask[i]) continue;
+
     if (pageIndex >= pages.length) continue;
     const page = pages[pageIndex];
     // Mask the "SELLER INITIAL HERE" placeholder text sitting left of the rule.
@@ -306,6 +308,39 @@ Deno.serve(async (req) => {
         const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
         filled = await buildFilledPdf(tmplBytes, c.kind as 'listing_agreement' | 'poa', merged);
       }
+
+      // Live preview of the seller's initials + printed name so they can see
+      // exactly where each mark lands before they submit. These are preview
+      // stamps only — the signed copy is stamped again at signing time.
+      const previewInitials = typeof body.initials === 'string'
+        ? body.initials.trim().slice(0, 6).toUpperCase() : '';
+      const initialedSections: boolean[] | undefined = Array.isArray(body.initialed_sections)
+        ? (body.initialed_sections as unknown[]).map(Boolean) : undefined;
+      if (c.kind === 'listing_agreement' && (previewInitials || (merged.seller_name ?? '').toString().trim())) {
+        try {
+          const pv = await PDFDocument.load(filled);
+          const pvFont = await pv.embedFont(StandardFonts.TimesRoman);
+          const pvBold = await pv.embedFont(StandardFonts.TimesRomanBold);
+          const pvPages = pv.getPages();
+          const name = (merged.seller_name ?? '').toString().trim();
+          if (name && pvPages.length > LA_SIGNATURE_PAGE_INDEX) {
+            // The signature block's printed name always mirrors the full legal
+            // name typed at the top of the signing page.
+            stampText(pvPages[LA_SIGNATURE_PAGE_INDEX], name, 210, 284.2, pvFont, 11);
+          }
+          if (previewInitials) {
+            stampInlineInitials(pvPages, previewInitials, pvBold, initialedSections);
+            if (!initialedSections || initialedSections.every(Boolean)) {
+              stampSaleTermsInitials(pvPages, previewInitials, pvFont, pvBold);
+            }
+          }
+          filled = await pv.save();
+        } catch (e) {
+          console.error('preview stamp failed', e);
+        }
+      }
+
+
 
       const newPath = `${c.submission_id}/${c.kind}-${Date.now()}.pdf`;
       const { error: upE } = await svc.storage.from('contracts')

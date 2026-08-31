@@ -330,8 +330,16 @@ export default function SignContract() {
       const res = await fetch(FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
-        body: JSON.stringify({ action: "refresh", token, fields: outboundFields() }),
+        body: JSON.stringify({
+          action: "refresh",
+          token,
+          fields: outboundFields(),
+          // Preview-only: show the seller their initials landing on each line.
+          initials: initials.trim().toUpperCase(),
+          initialed_sections: sectionInitials,
+        }),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not update contract");
       setPdfSourceUrl(data.pdf_url as string);
@@ -357,7 +365,7 @@ export default function SignContract() {
     }, 1200);
     return () => { stop = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, fields.authorized_min_per_plot, loading, done]);
+  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, fields.authorized_min_per_plot, initials, sectionInitials, loading, done]);
 
 
 
@@ -565,10 +573,15 @@ export default function SignContract() {
                   </div>
                   {ownPrice && (
                     <div className="rounded-xl border border-[#8a6d3b]/40 bg-[#8a6d3b]/5 p-4">
+                      <p className="text-[11px] text-muted-foreground mb-3">
+                        Set your own price includes everything in the <strong className="text-foreground">Featured</strong> package —
+                        Featured is ticked on the agreement and you set the minimum price below.
+                      </p>
                       <Label>
                         Your own minimum price per space
                         <span className="text-[10px] uppercase tracking-widest text-[#8a6d3b] ml-2">Set your own price</span>
                       </Label>
+
                       <Input
                         type="number"
                         min="0"
