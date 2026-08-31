@@ -165,45 +165,8 @@ Deno.serve(async (req) => {
       });
       sessionLike = { id: paymentLink.id, url: paymentLink.url };
     }
-    if (false) {
 
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        ui_mode: "hosted_page",
-        payment_method_types: ["card"],
-        line_items: [{
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: productName,
-              ...(productDescription && { description: productDescription }),
-            },
-            unit_amount: amountCents,
-          },
-          quantity: 1,
-        }],
-        customer_email: recipientEmail,
-        payment_intent_data: {
-          description: `${BRAND_NAME} — ${productName}`,
-          metadata: {
-            submission_id: submissionId,
-            kind,
-            recipient_name: recipientName,
-            ...(listingTier && { listing_tier: listingTier }),
-          },
-        },
-        metadata: {
-          submission_id: submissionId,
-          kind,
-          recipient_email: recipientEmail,
-          recipient_name: recipientName,
-          ...(listingTier && { listing_tier: listingTier }),
-        },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/payment-cancelled`,
-      });
-      sessionLike = { id: session.id, url: session.url };
-    }
+
 
     const session = sessionLike;
 
