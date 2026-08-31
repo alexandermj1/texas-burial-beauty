@@ -67,9 +67,10 @@ const splitNames = (raw: string): string[] => {
   return parts.length ? parts : [""];
 };
 
+/** Split deed names into one roster entry per person, carrying over any
+    deceased flag already recorded against that name so a re-save from this
+    panel never downgrades what the questionnaire established. */
 
-    any deceased flag already recorded against that name so a re-save from
-    this panel never downgrades what the questionnaire established. */
 const rosterFromNames = (raw: string, existing?: unknown): RosterEntry[] => {
   const prev = new Map<string, boolean>();
   if (Array.isArray(existing)) {
