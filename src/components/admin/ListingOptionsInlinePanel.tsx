@@ -219,7 +219,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const savePrep = async () => {
     const { data: current } = await supabase
       .from("contact_submissions")
-      .select("ownership_answers")
+      .select("ownership_answers, ownership_roster")
       .eq("id", seller.id)
       .maybeSingle();
     const answers = ((current as any)?.ownership_answers ?? {}) as Record<string, unknown>;
@@ -233,7 +233,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         list_price: salesNum > 0 ? salesNum * countNum : null,
         deed_owner_names: deedOwnersClean,
         plot_description: plotDescription.trim() || null,
-        ownership_roster: rosterFromNames(deedOwnersClean),
+        ownership_roster: rosterFromNames(deedOwnersClean, (current as any)?.ownership_roster),
         ownership_answers: {
           ...answers,
           autopilot: { ...((answers as any).autopilot ?? {}), ...prepBlock },
