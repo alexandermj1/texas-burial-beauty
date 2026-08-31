@@ -215,7 +215,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         list_price: salesNum > 0 ? salesNum * countNum : null,
         deed_owner_names: deedOwnersClean,
         plot_description: plotDescription.trim() || null,
-        ownership_roster: roster.filter((r) => r.name.trim()) as never,
+        ownership_roster: rosterFromNames(deedOwnersClean),
         ownership_answers: {
           ...answers,
           autopilot: { ...((answers as any).autopilot ?? {}), ...prepBlock },
