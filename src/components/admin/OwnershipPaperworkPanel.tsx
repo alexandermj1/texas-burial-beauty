@@ -1593,7 +1593,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const path = data?.notarized_pdf_path || data?.signed_pdf_path || data?.filled_pdf_path;
       if (path) {
         const url = await blobUrlFor("contracts", path);
-        if (url) { setPdfPreview({ url, title: r.label }); return; }
+        if (url) { setPdfPreview({ url, title: r.label, source: { bucket: "contracts", path, name: `${r.label}.pdf`, mime: "application/pdf" } }); return; }
 
       }
       if (data?.sign_token) {
