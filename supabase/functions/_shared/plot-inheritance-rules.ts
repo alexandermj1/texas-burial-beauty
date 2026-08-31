@@ -130,6 +130,22 @@ const key = (n: string) => {
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
 };
 
+/** Splits a free-text list of names ("A, B and C") into individual names. */
+const splitNames = (s: string): string[] => {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of String(s ?? "").split(/,|;|\band\b|&|\n/i)) {
+    const n = raw.replace(/\s+/g, " ").trim();
+    if (n.length < 3 || !/[a-z]/i.test(n)) continue;
+    const k = key(n);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    out.push(n);
+  }
+  return out;
+};
+
+
 const isLivingSpouse = (s?: V2SpouseAnswer) =>
   !!s && s.has === "yes" && clean(s.n).length > 0 && s.alive !== "deceased";
 
