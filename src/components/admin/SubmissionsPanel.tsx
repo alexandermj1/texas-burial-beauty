@@ -1630,10 +1630,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
                       { key: "tree_done",      label: "Tree done",      cls: "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300" },
                       { key: "docs_out",       label: "Docs out",       cls: "bg-sky-500/15 border-sky-500/50 text-sky-700 dark:text-sky-300" },
+                      { key: "docs_returned",  label: "Docs returned",  cls: "bg-cyan-500/15 border-cyan-500/50 text-cyan-700 dark:text-cyan-300" },
                       { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
                     ];
+                    const retE = (selected.email || "").trim().toLowerCase();
                     const current =
                       x.documents_completed_at ? "complete"
+                      : x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
                       : x.documents_requested_at ? "docs_out"
                       : ans.sellerConfirmedAt ? "tree_done"
                       : ans.questionsSentAt ? "tree_sent"
