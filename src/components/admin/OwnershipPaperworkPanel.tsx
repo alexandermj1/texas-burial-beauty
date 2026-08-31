@@ -487,7 +487,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (c.completed_at || c.countersigned_at || c.status === "completed") return "complete";
       if (c.notarized_at || c.status === "notarized") return "notarized";
       if (c.signed_at || c.status === "signed") return "received";
-      if (c.status === "sent" || c.status === "viewed") return "issued";
+      if (c.status === "sent" || c.status === "viewed") return "sent";
       return null;
     };
     const codeFor: Record<string, string> = {
@@ -496,7 +496,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       affidavit_heirship: "D12",
       spousal_consent: "D3",
     };
-    const rank: RequiredState[] = ["issued", "received", "notarized", "complete"];
+    const rank: RequiredState[] = ["issued", "sent", "received", "notarized", "complete"];
+
     for (const c of contracts) {
       const st = stateOf(c);
       const code = codeFor[c.kind];
