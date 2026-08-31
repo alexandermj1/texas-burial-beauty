@@ -1552,7 +1552,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       }
       if (!silent) {
         // Show the filled PDF inline so it can be checked line by line.
-        if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
+        if (res?.pdf_url) void showPdf(r.label, { url: res.pdf_url, name: `${r.label}.pdf`, mime: "application/pdf" });
         toast.success(`${r.label} updated`, {
           description: supersedeId
             ? "The seller's document page now shows this revised version — the old copy has been retired."
