@@ -55,9 +55,9 @@ const labelCls =
 
 type RosterEntry = { name: string };
 
-/** Split "A & B, C"-style deed names into one entry per person. */
-const rosterFrom
-Names = (raw: string): RosterEntry[] =>
+/** Split "A & B, C"-style
+ deed names into one entry per person. */
+const rosterFromNames = (raw: string): RosterEntry[] =>
   String(raw || "")
     .split(/\s*(?:&|,|;|\band\b)\s*/i)
     .filter(Boolean)
