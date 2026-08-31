@@ -349,21 +349,16 @@ export default function SignContract() {
     if (loading || done) return;
     if (firstLoadRef.current) { firstLoadRef.current = false; return; }
     let stop = false;
-    let timer: number;
-    // Only rebuild the preview once the seller has actually stopped typing and
-    // left the field — otherwise the document reloads under them while they
-    // are trying to read it.
-    const attempt = () => {
+    // Rebuild the preview shortly after the seller stops typing. The canvas
+    // viewer swaps pages in offscreen, so this never blanks or scrolls the doc.
+    const timer = window.setTimeout(() => {
       if (stop) return;
-      const el = document.activeElement as HTMLElement | null;
-      const stillTyping = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
-      if (stillTyping) { timer = window.setTimeout(attempt, 1500); return; }
       void refreshContract(true);
-    };
-    timer = window.setTimeout(attempt, 2000);
+    }, 1200);
     return () => { stop = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, fields.authorized_min_per_plot, loading, done]);
+
 
 
   const submit = async () => {
@@ -600,7 +595,7 @@ export default function SignContract() {
                 {refreshing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Refresh preview now
               </Button>
-              <p className="text-xs text-muted-foreground">The preview updates once you finish typing and click out of a field.</p>
+              <p className="text-xs text-muted-foreground">The preview updates automatically about a second after you stop typing.</p>
             </div>
           </Card>
         )}
