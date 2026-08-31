@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+import PreneedBlock from "@/components/PreneedBlock";
+
 
 
 const PATH = "/cemetery-plot-cost-texas";
@@ -158,6 +160,8 @@ const GuideCemeteryPlotCost = () => (
                   <li><a href="#extras" className="hover:text-primary transition-colors">II. The rest of the bill</a></li>
                   <li><a href="#type" className="hover:text-primary transition-colors">III. By property type</a></li>
                   <li><a href="#resale" className="hover:text-primary transition-colors">IV. Why resale is cheaper</a></li>
+                  <li><a href="#preneed" className="hover:text-primary transition-colors">Pre-need: locking today's price</a></li>
+
                   <li><a href="#map" className="hover:text-primary transition-colors">Texas coverage map</a></li>
                   <li><a href="#save" className="hover:text-primary transition-colors">V. Practical steps</a></li>
                   <li><a href="#faq" className="hover:text-primary transition-colors">VI. Questions</a></li>
@@ -297,6 +301,12 @@ const GuideCemeteryPlotCost = () => (
           .
         </p>
       </Section>
+
+      <div className="border-t border-border/60 pt-10 md:pt-14">
+        <PreneedBlock id="preneed" eyebrow="The cheapest it will ever be" />
+      </div>
+
+
 
       <div className="border-t border-border/60">
         <MetroCemeteryMap

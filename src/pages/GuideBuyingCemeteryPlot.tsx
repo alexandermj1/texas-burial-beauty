@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
+import PreneedBlock from "@/components/PreneedBlock";
+
 
 
 const TEXAS_REGIONS = [
@@ -225,6 +227,8 @@ const GuideBuyingCemeteryPlot = () => (
                 { href: "#sold-out", t: "Sold-out sections" },
                 { href: "#in-person", t: "See it in person" },
                 { href: "#timing", t: "At-need vs pre-need" },
+                { href: "#preneed", t: "Pre-need savings" },
+
                 { href: "#vs-marketplace", t: "Broker vs Craigslist" },
                 { href: "#what-you-buy", t: "What you're buying" },
                 { href: "#types", t: "Property types" },
@@ -334,6 +338,10 @@ const GuideBuyingCemeteryPlot = () => (
           </div>
           <p className="mt-6 text-foreground/85 leading-relaxed">We're reachable and accountable — not an anonymous listing that vanishes after the sale.</p>
         </section>
+
+        <PreneedBlock id="preneed" eyebrow="Planning ahead · Pre-need" />
+
+
 
         <Section id="what-you-buy" eyebrow="The right of sepulture" title="What you're actually buying">
           <p>When you "buy a cemetery plot" in Texas, you aren't buying the land itself. You're buying the <strong>exclusive right of sepulture</strong> — the legal right to bury someone in a specific space — while the cemetery keeps and maintains the land. That's why every transfer runs through the cemetery and why correct paperwork matters so much.</p>
