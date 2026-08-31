@@ -9,7 +9,7 @@ import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/Gu
 import { cemeteryPath } from "@/lib/cemeterySlug";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
-import { DiscountTable, FinancingGraphic } from "@/components/guides/PreneedSavingsGraphics";
+import { DiscountTable, FinancingGraphic, PriceAppreciationChart } from "@/components/guides/PreneedSavingsGraphics";
 import PreneedInquiryForm from "@/components/guides/PreneedInquiryForm";
 import { EMAIL, jsonLd, reasons, priceFactors, myths, faqs, resources } from "./guide-preneed-data";
 
@@ -375,6 +375,16 @@ const GuidePreneedCemeteryPlots = () => (
             People search for cheap cemetery plots, discount burial plots, affordable grave spaces — all of it describes the same thing: the secondary market. Our prices run up to 50% below what the cemetery charges for a comparable new space, because the seller is a family that no longer needs the property rather than a cemetery working from a price list.
           </p>
           <DiscountTable />
+        </section>
+
+        {/* Chapter 03b-ii — price appreciation */}
+        <section id="price-growth" className="scroll-mt-24 mt-20">
+          <Eyebrow>Chapter 03b · The clock</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Every year you wait, the space gets <span className="italic text-primary">more expensive</span></h2>
+          <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
+            Cemetery retail prices do not drift — they climb, and they have climbed for decades. A space that retails for $10,000 today is on the historic trend to cost close to $20,000 within about seven years. Buying preneed through us flips that curve in your favour: you pay roughly a third off today's price, not the doubled price later, and you pay it interest-free over up to 24 months.
+          </p>
+          <PriceAppreciationChart />
         </section>
 
         {/* Chapter 03c — financing */}
