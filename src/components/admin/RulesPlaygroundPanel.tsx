@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { masterRequirements, masterRoster, type V2State, type V2Kid, type V2DeedPerson } from "@/lib/plotInheritanceRules";
+import { masterRequirements, masterRoster, signerKey, type V2State, type V2Kid, type V2DeedPerson } from "@/lib/plotInheritanceRules";
 import type { CemeteryDocRules } from "@/lib/ownershipRules";
 import { Plus, Trash2, FlaskConical, RotateCcw } from "lucide-react";
 
@@ -19,7 +19,7 @@ type SubRow = { id: string; name: string | null; email: string | null; ownership
 const emptyState = (): V2State => ({
   deed: [{ id: uid(), n: "", st: "living" }],
   spouse: {}, poa: {}, will: {}, taker: {}, kids: [], sibs: [], parents: [],
-  heirSpouse: {}, contacts: {},
+  heirSpouse: {}, signerSpouse: {}, signerPoa: {}, signerCheck: true, contacts: {},
 });
 
 const SCENARIOS: { label: string; build: () => V2State }[] = [
