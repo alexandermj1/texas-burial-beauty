@@ -101,7 +101,7 @@ const GuidePreneedCemeteryPlots = () => (
   <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
       title="Preneed Cemetery Plots in Texas | Buy Before You Need To"
-      description="Buy cemetery plots in Texas ahead of time at today's price — verified by-owner resale spaces, in-person showings and 0% interest over 24 months."
+      description="Cheap preneed cemetery plots in Texas — verified by-owner spaces at up to 50% off cemetery retail, sold-out sections sourced, in-person showings and 0% interest for 24 months."
       path="/preneed-cemetery-plots-texas"
       type="article"
       jsonLd={[...jsonLd, guideGalleryJsonLd("https://texascemeterybrokers.com/preneed-cemetery-plots-texas", "Texas cemeteries where we place buyers")]}
