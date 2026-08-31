@@ -385,16 +385,20 @@ export async function buildJointPoaPdf(d: {
   // Same audit / data-reference sheet the single-signer POA carries, so both
   // documents review and file identically.
   await appendDataReferenceSheet(doc, 'poa', {
-    seller_name: names.join(' & '),
+    // First principal in the seller row, second in the co-owner row — listing
+    // "A & B" in both places double-counted the second signer.
+    seller_name: names[0] ?? '',
     co_owner_name: names[1] ?? '',
     address: addr[0] ?? '',
     phone: d.phone,
     email: d.email,
     cemetery: d.cemetery,
-    county_state: d.county_state ?? (d.cemetery_city ? `${d.cemetery_city}, TX` : ''),
+    // County is deliberately omitted from POAs (see the venue note above).
+    county_state: '',
     plot_count: d.spaces ?? '',
     plot_description: d.plot_description,
   });
+
 
   return await doc.save();
 
