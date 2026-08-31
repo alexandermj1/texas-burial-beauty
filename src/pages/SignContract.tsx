@@ -573,10 +573,15 @@ export default function SignContract() {
                   </div>
                   {ownPrice && (
                     <div className="rounded-xl border border-[#8a6d3b]/40 bg-[#8a6d3b]/5 p-4">
+                      <p className="text-[11px] text-muted-foreground mb-3">
+                        Set your own price includes everything in the <strong className="text-foreground">Featured</strong> package —
+                        Featured is ticked on the agreement and you set the minimum price below.
+                      </p>
                       <Label>
                         Your own minimum price per space
                         <span className="text-[10px] uppercase tracking-widest text-[#8a6d3b] ml-2">Set your own price</span>
                       </Label>
+
                       <Input
                         type="number"
                         min="0"
