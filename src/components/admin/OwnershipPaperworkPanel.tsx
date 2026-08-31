@@ -937,9 +937,34 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       });
 
       if (inserts.length) {
-        const { error } = await supabase.from("submission_documents").insert(inserts as never);
-        if (error) throw error;
+        // A row that was removed earlier is still on the table, soft-deleted, and
+        // the unique item key would collide with it. Bring those back to life
+        // instead of inserting a second copy — that duplicate-key error is what
+        // brokers were seeing when they re-sent a request.
+        const { data: buried } = await supabase.from("submission_documents")
+          .select("id, doc_code, person_name")
+          .eq("submission_id", submissionId).not("deleted_at", "is", null);
+        const buriedByKey = new Map(
+          ((buried ?? []) as DocRow[]).filter((b) => b.doc_code)
+            .map((b) => [keyOf(b.doc_code, b.person_name), b.id]),
+        );
+        const fresh: Record<string, unknown>[] = [];
+        for (const ins of inserts) {
+          const id = buriedByKey.get(keyOf(ins.doc_code as string, ins.person_name as string | null));
+          if (id) {
+            const { error } = await supabase.from("submission_documents")
+              .update({ ...ins, deleted_at: null, deleted_by: null } as never).eq("id", id);
+            if (error) throw error;
+          } else {
+            fresh.push(ins);
+          }
+        }
+        if (fresh.length) {
+          const { error } = await supabase.from("submission_documents").insert(fresh as never);
+          if (error) throw error;
+        }
       }
+
       for (const u of updates) {
         const { error } = await supabase.from("submission_documents")
           .update(u.patch as never).eq("id", u.id);
