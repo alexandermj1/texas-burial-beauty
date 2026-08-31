@@ -4,7 +4,7 @@ import { Download, FileText, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import type { FileViewerSource } from "@/lib/fileViewer";
+import { decodeViewerSource, type FileViewerSource } from "@/lib/fileViewer";
 import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 
 export default function FileViewer() {
@@ -15,11 +15,18 @@ export default function FileViewer() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const id = params.get("id");
-    if (!id) { setError("This file link is incomplete."); return; }
-    const raw = sessionStorage.getItem(`file-viewer:${id}`);
-    sessionStorage.removeItem(`file-viewer:${id}`);
-    if (!raw) { setError("This file link has expired. Close this tab and open the file again."); return; }
+    // New-style links carry the source encoded in the URL; fall back to the
+    // legacy sessionStorage hand-off for any tabs opened before the change.
+    let raw: string | null = null;
+    const encoded = params.get("f");
+    if (encoded) {
+      const decoded = decodeViewerSource(encoded);
+      if (decoded) raw = JSON.stringify(decoded);
+    } else {
+      const id = params.get("id");
+      if (id) raw = sessionStorage.getItem(`file-viewer:${id}`);
+    }
+    if (!raw) { setError("This file link is incomplete. Close this tab and open the file again."); return; }
 
     let objectUrl = "";
     (async () => {
