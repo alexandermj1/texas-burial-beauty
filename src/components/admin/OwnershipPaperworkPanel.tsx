@@ -261,7 +261,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [poaPrompt, setPoaPrompt] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
   /** A prepared PDF shown inline so it can be checked without leaving the page. */
-  const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string } | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string; source?: FileViewerSource } | null>(null);
   /** The send-document-request review flow. */
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
   /** The broker's own touches on this request: who it greets and what it says. */
