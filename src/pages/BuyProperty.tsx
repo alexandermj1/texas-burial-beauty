@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
+import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough.jpg.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
@@ -712,18 +713,25 @@ const BuyProperty = () => {
           <h2 className="font-display text-xl sm:text-2xl text-foreground tracking-tight mb-3">
             Burial plots for sale across Texas — at private resale prices
           </h2>
-          <div className="space-y-3 text-sm sm:text-[15px] text-muted-foreground leading-relaxed max-w-3xl">
-            <p>
-              Texas Cemetery Brokers helps families buy cemetery plots, cremation niches, mausoleum crypts and
-              family estates throughout Dallas–Fort Worth, Houston, Austin, San Antonio and the rest of Texas.
-              Because we work the private resale market rather than selling for the cemeteries themselves, the
-              properties we place are typically 30–50% below the price the cemetery would charge for a comparable space.
-            </p>
-            <p>
-              Tell us what you're looking for above — at-need, within six months, or pre-need — and a licensed broker
-              will send you a shortlist that matches your budget, usually within 24 hours. The concierge is free and
-              there's no obligation.
-            </p>
+          <div className="grid sm:grid-cols-[minmax(0,1fr)_240px] gap-6 items-start">
+            <div className="space-y-3 text-sm sm:text-[15px] text-muted-foreground leading-relaxed max-w-3xl">
+              <p>
+                Texas Cemetery Brokers helps families buy cemetery plots, cremation niches, mausoleum crypts and
+                family estates throughout Dallas–Fort Worth, Houston, Austin, San Antonio and the rest of Texas.
+                Because we work the private resale market rather than selling for the cemeteries themselves, the
+                properties we place are typically 30–50% below the price the cemetery would charge for a comparable space.
+              </p>
+              <p>
+                Tell us what you're looking for above — at-need, within six months, or pre-need — and a licensed broker
+                will send you a shortlist that matches your budget, usually within 24 hours. When you're ready, we can
+                also meet you at the cemetery and walk the sections with you in person before you commit. The concierge
+                is free and there's no obligation.
+              </p>
+            </div>
+            <figure className="m-0">
+              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[4/3] object-cover rounded-2xl border border-border" />
+              <figcaption className="mt-2 text-xs text-muted-foreground leading-snug">A member of our team, ready to walk the grounds with you in person.</figcaption>
+            </figure>
           </div>
 
           <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-card">
