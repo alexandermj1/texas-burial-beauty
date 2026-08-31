@@ -92,9 +92,11 @@ const LA_INLINE_INITIALS: Array<{ pageIndex: number; ty: number }> = [
 /** Signature block page of the filled listing agreement (template p9 + inserted page). */
 const LA_SIGNATURE_PAGE_INDEX = 9;
 
-function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
+function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont, mask?: boolean[]) {
   const WHITE = rgb(1, 1, 1);
-  for (const { pageIndex, ty } of LA_INLINE_INITIALS) {
+  for (const [i, { pageIndex, ty }] of LA_INLINE_INITIALS.entries()) {
+    if (mask && !mask[i]) continue;
+
     if (pageIndex >= pages.length) continue;
     const page = pages[pageIndex];
     // Mask the "SELLER INITIAL HERE" placeholder text sitting left of the rule.
