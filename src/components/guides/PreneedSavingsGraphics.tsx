@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { TrendingDown, PiggyBank, CalendarClock, Tag } from "lucide-react";
+import { TrendingDown, PiggyBank, CalendarClock, Tag, TrendingUp, ExternalLink } from "lucide-react";
 
 /* ---------------------------------------------------------------- helpers */
 
