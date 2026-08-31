@@ -365,7 +365,7 @@ export default function SignContract() {
     }, 1200);
     return () => { stop = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, fields.authorized_min_per_plot, loading, done]);
+  }, [fields.seller_name, fields.address, fields.city_state_zip, fields.phone, fields.email, fields.plot_description, fields.listing_option, fields.authorized_min_per_plot, initials, sectionInitials, loading, done]);
 
 
 
