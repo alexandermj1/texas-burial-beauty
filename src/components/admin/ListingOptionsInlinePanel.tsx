@@ -443,18 +443,15 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               placeholder="e.g. John A. Smith & Mary Smith" className={inputCls}
             />
           </div>
-          <div className="space-y-1.5">
           {/* The deed names above ARE the family-tree seed — the tree view
               derives straight from deedOwnerNames, no duplicate list. */}
-          <div className="grid grid-cols-1 gap-2">
-            <div>
-              <label className={labelCls}>Plot description</label>
-              <input
-                type="text" value={plotDescription}
-                onChange={(e) => setPlotDescription(e.target.value)}
-                placeholder="Section / lawn / spaces" className={inputCls}
-              />
-            </div>
+          <div>
+            <label className={labelCls}>Plot description</label>
+            <input
+              type="text" value={plotDescription}
+              onChange={(e) => setPlotDescription(e.target.value)}
+              placeholder="Section / lawn / spaces" className={inputCls}
+            />
           </div>
         </div>
       </div>
