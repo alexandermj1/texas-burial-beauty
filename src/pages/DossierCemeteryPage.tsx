@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, MapPin, ArrowRight, X } from "lucide-react";
@@ -52,7 +52,7 @@ function MapReveal({
 }: {
   title: string;
   sub?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   tall?: boolean;
 }) {
   const [open, setOpen] = useState(false);
