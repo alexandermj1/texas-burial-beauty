@@ -306,6 +306,9 @@ export async function buildFilledPdf(
       p8.drawRectangle({ x: 204, y: 134, width: 300, height: 18, color: white });
       p8.drawRectangle({ x: 204, y: 68, width: 300, height: 18, color: white });
     }
+    appendBuyerFeeAddendum(pdf, serif, serifBold, data);
+  }
+
   } else {
     if (pages.length >= 3) buildPoaOverlays(pages[0], serif, serifBold, data);
     appendPoaScopeAddendum(pdf, serif, serifBold, data);
