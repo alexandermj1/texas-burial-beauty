@@ -44,10 +44,9 @@ export default function PdfCanvasViewer({ url, title }: { url: string; title: st
         await page.render({ canvas, canvasContext: context, viewport, transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0] }).promise;
       }
       if (cancelled) return;
-      const scroller = host.parentElement;
-      const keep = scroller?.scrollTop ?? 0;
+      const keep = host.scrollTop;
       host.replaceChildren(...Array.from(staging.childNodes));
-      if (scroller) scroller.scrollTop = keep;
+      host.scrollTop = keep;
       setLoading(false);
     }).catch((cause: unknown) => {
       if (!cancelled) {
