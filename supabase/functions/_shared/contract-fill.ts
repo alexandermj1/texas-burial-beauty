@@ -346,6 +346,11 @@ export async function buildFilledPdf(
   const serif = await pdf.embedFont(StandardFonts.TimesRoman);
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
   const pages = pdf.getPages();
+  // Never print a county anywhere on a Power of Attorney (body, notary block or
+  // data sheet): our stored county is often wrong and the acknowledgment county
+  // must be the county where the seller actually signs.
+  if (kind === 'poa') data = { ...data, county_state: '' };
+
 
   if (kind === 'listing_agreement') {
     if (pages.length >= 9) {
