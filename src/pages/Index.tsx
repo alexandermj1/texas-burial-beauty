@@ -191,7 +191,9 @@ const Index = () => {
       <SellerPromoAnimation />
       <ListingFeePromo />
       <PriceComparison />
+      <PreneedBlock variant="home" eyebrow="Planning ahead · Pre-need" />
       <HowItWorksSection />
+
 
       <StoryStrip
         img={cemeteriesImg}
