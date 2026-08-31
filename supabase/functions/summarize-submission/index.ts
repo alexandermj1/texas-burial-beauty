@@ -11,17 +11,30 @@ const SYSTEM = `You summarise the current status of a cemetery-plot seller/buyer
 Reply in EXACTLY this format, nothing else:
 HEADLINE: <2-5 words, lowercase-ish label of what they want or what we must do, e.g. "asked about documents", "needs help with quote", "wants higher quote", "wants call back". No full stop.>
 SUMMARY: <ONE short sentence, max 110 characters, plain English, where things stand.>
-Be factual — only use the supplied data. Never invent prices, dates, or promises. No markdown, no bullets.`;
+
+STRICT ACCURACY RULES — the reader trusts this line, so never guess:
+- Use ONLY the facts supplied below. If a fact is not listed, it did not happen.
+- Never say the seller sent, attached, uploaded or returned anything unless a fact explicitly says so with a count.
+- Never invent prices, dates, documents, phone calls or promises.
+- Emails marked "(from us)" are OUR messages — do not describe them as something the customer said or sent.
+- If there is little information, say so plainly (e.g. "New enquiry, nothing sent yet").
+No markdown, no bullets.`;
 
 // Bump the version when the prompt/format changes so cached summaries regenerate.
-const PROMPT_VERSION = "v3";
+const PROMPT_VERSION = "v4";
 
-function fingerprint(s: any, lastMsgAt: string | null): string {
+const OUR_DOMAINS = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
+const isOurs = (email?: string | null) =>
+  !!email && OUR_DOMAINS.some(d => String(email).toLowerCase().includes(d));
+
+function fingerprint(s: any, lastMsgAt: string | null, docState: string): string {
   return [
     PROMPT_VERSION,
     s.quote_sent_at, s.quote_response, s.quote_responded_at, s.accepted_quote_amount,
-    s.documents_requested_at, s.documents_completed_at, s.la_signed_at,
-    s.handled, s.custom_tag, lastMsgAt,
+    s.documents_requested_at, s.documents_completed_at, s.la_signed_at, s.la_issued_at,
+    s.listing_paid_at, s.listing_live_at, s.sold_at, s.closed_at, s.closed_outcome,
+    s.texas_pipeline_stage, s.pipeline_stage_override,
+    s.handled, s.custom_tag, lastMsgAt, docState,
   ].map(v => (v == null ? "" : String(v))).join("|");
 }
 
@@ -31,6 +44,7 @@ function pack(raw: string): string {
   const s = raw.match(/SUMMARY:\s*([\s\S]+)/i)?.[1]?.trim() ?? raw.trim();
   return h ? `${h}||${s}` : s;
 }
+
 
 
 Deno.serve(async (req) => {
