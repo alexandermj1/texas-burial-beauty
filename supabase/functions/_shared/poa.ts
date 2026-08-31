@@ -57,7 +57,7 @@ function para(ctx: Ctx, text: string, opts: { size?: number; font?: PDFFont; ind
   const font = opts.font ?? ctx.body;
   const indent = opts.indent ?? 0;
   for (const line of wrap(text, font, size, W - indent)) {
-    if (ctx.y < M + 40) newPage(ctx);
+    if (ctx.y < M + 84) newPage(ctx);
     ctx.page.drawText(line, { x: M + indent, y: ctx.y, size, font, color: INK });
     ctx.y -= size + 3.5;
   }
@@ -66,7 +66,7 @@ function para(ctx: Ctx, text: string, opts: { size?: number; font?: PDFFont; ind
 
 function space(ctx: Ctx, h: number) {
   ctx.y -= h;
-  if (ctx.y < M + 40) newPage(ctx);
+  if (ctx.y < M + 84) newPage(ctx);
 }
 
 function heading(ctx: Ctx, text: string, size = 14) {
@@ -95,6 +95,8 @@ function rule(ctx: Ctx, width = 290) {
 
 /** Principal signature + notarial acknowledgment, with a printed-name line for the notary. */
 function acknowledgmentBlock(ctx: Ctx, label: string, signerName: string) {
+  // Never let a signature/notary block split across a page break.
+  if (ctx.y < M + 330) newPage(ctx);
   space(ctx, 18);
   rule(ctx);
   para(ctx, `${label} — signature`, { size: 9, font: ctx.italic, gap: 8 });

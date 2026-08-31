@@ -165,7 +165,7 @@ function appendPoaScopeAddendum(pdf: PDFDocument, font: PDFFont, bold: PDFFont, 
   const page = pdf.addPage([612, 792]);
   const { width } = page.getSize();
 
-  page.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
+  page.drawText('TEXAS CEMETERY BROKERS LLC', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
   page.drawText('Addendum A — Scope of Authority', { x: 50, y: 712, size: 18, font: bold, color: INK });
   page.drawLine({ start: { x: 50, y: 700 }, end: { x: width - 50, y: 700 }, thickness: 0.6, color: HAIRLINE });
   page.drawText('This Addendum is part of, and is signed together with, the Limited Power of Attorney to which it is attached.',
@@ -249,7 +249,7 @@ function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: 
   const { width } = page.getSize();
 
   // Header masthead — deliberately conservative so it reads as part of the contract packet.
-  page.drawText('TEXAS CEMETERY BROKERS', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
+  page.drawText('TEXAS CEMETERY BROKERS LLC', { x: 50, y: 740, size: 9, font: bold, color: MUTED });
   page.drawText(
     kind === 'poa' ? 'Power of Attorney — Data Reference' : 'Listing Agreement — Data Reference',
     { x: 50, y: 712, size: 18, font: serifBold, color: INK },
