@@ -79,7 +79,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const [deedOwners, setDeedOwners] = useState<string>("");
   const [plotDescription, setPlotDescription] = useState<string>("");
   const [countyState, setCountyState] = useState<string>("");
-  const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   // The exact emails the seller will receive after they accept — prepared with
@@ -91,7 +90,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   useEffect(() => {
     let cancelled = false;
     setDeedOwners("");
-    setRoster([]);
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
@@ -354,11 +352,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       const add = clean.filter((n) => !have.includes(n.toLowerCase()));
       if (!add.length) return prev;
       return [prev.trim(), ...add].filter(Boolean).join(" & ");
-    });
-    setRoster((prev) => {
-      const have = prev.map((p) => p.name.trim().toLowerCase());
-      const add = clean.filter((n) => !have.includes(n.toLowerCase())).map((n) => ({ name: n, deceased: false }));
-      return add.length ? [...prev, ...add] : prev;
     });
   };
 
