@@ -298,6 +298,12 @@ const GuideCemeteryPlotCost = () => (
         </p>
       </Section>
 
+      <div className="border-t border-border/60 pt-10 md:pt-14">
+        <PreneedBlock id="preneed" eyebrow="The cheapest it will ever be" />
+      </div>
+
+
+
       <div className="border-t border-border/60">
         <MetroCemeteryMap
           regions={["Dallas–Fort Worth"]}
