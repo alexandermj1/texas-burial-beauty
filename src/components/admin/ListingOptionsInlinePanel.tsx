@@ -114,7 +114,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       if (cancelled) return;
       const row = (data as any) || {};
       const names = String(row.deed_owner_names || row.name || seller.name || "").trim();
-      setDeedOwners(names);
+      setOwnerNames(splitNames(names));
       // Whatever the broker typed before wins — that exact wording carries all
       // the way through to the agreement, POA and document request.
       setPlotDescription(
