@@ -12,7 +12,7 @@ import {
   Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X, Check, Network,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { openFileViewer } from "@/lib/fileViewer";
+import { openFileViewer, type FileViewerSource } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import FamilyTreeMap from "./FamilyTreeMap";
@@ -261,7 +261,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [poaPrompt, setPoaPrompt] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
   /** A prepared PDF shown inline so it can be checked without leaving the page. */
-  const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string } | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string; source?: FileViewerSource } | null>(null);
   /** The send-document-request review flow. */
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
   /** The broker's own touches on this request: who it greets and what it says. */
@@ -417,6 +417,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       ? data.type
       : (/\.pdf$/i.test(path) ? "application/pdf" : "application/octet-stream");
     return URL.createObjectURL(new Blob([data], { type }));
+  };
+
+  /** Pull a remote (signed) file down so we can show it from a same-origin blob. */
+  const blobUrlFromUrl = async (url: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.blob();
+      const type = data.type && data.type !== "application/octet-stream"
+        ? data.type
+        : (/\.pdf(\?|$)/i.test(url) ? "application/pdf" : "application/octet-stream");
+      return URL.createObjectURL(new Blob([data], { type }));
+    } catch { return null; }
+  };
+
+  /**
+   * Show a PDF inline. We always render a same-origin blob (Chrome blocks
+   * cross-origin PDFs in a frame) and keep the original source so "Open in new
+   * tab" can go through /file-viewer — Chrome also blocks a blob: URL opened
+   * directly as a top-level tab.
+   */
+  const showPdf = async (title: string, source: FileViewerSource) => {
+    const url = "url" in source
+      ? (await blobUrlFromUrl(source.url)) ?? source.url
+      : (await blobUrlFor(source.bucket as "customer-files" | "portal-uploads" | "contracts", source.path)) ?? "";
+    if (!url) { toast.error("That file could not be opened — try again in a moment."); return; }
+    setPdfPreview({ url, title, source });
   };
 
   /** Open any collected file in a new tab. */
@@ -1525,7 +1552,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       }
       if (!silent) {
         // Show the filled PDF inline so it can be checked line by line.
-        if (res?.pdf_url) setPdfPreview({ url: res.pdf_url, title: r.label });
+        if (res?.pdf_url) void showPdf(r.label, { url: res.pdf_url, name: `${r.label}.pdf`, mime: "application/pdf" });
         toast.success(`${r.label} updated`, {
           description: supersedeId
             ? "The seller's document page now shows this revised version — the old copy has been retired."
@@ -1566,7 +1593,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const path = data?.notarized_pdf_path || data?.signed_pdf_path || data?.filled_pdf_path;
       if (path) {
         const url = await blobUrlFor("contracts", path);
-        if (url) { setPdfPreview({ url, title: r.label }); return; }
+        if (url) { setPdfPreview({ url, title: r.label, source: { bucket: "contracts", path, name: `${r.label}.pdf`, mime: "application/pdf" } }); return; }
 
       }
       if (data?.sign_token) {
@@ -2695,12 +2722,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => {
               if (!pdfPreview) return;
-              const tab = window.open(pdfPreview.url, "_blank");
-              if (!tab) toast.error("Pop-up blocked — allow pop-ups for this site and try again");
-              else tab.opener = null;
+              // Chrome blocks a blob:/cross-origin PDF opened straight into a
+              // tab, so route through our own viewer page instead.
+              const ok = pdfPreview.source
+                ? openFileViewer(pdfPreview.source)
+                : !!window.open(pdfPreview.url, "_blank", "noopener,noreferrer");
+              if (!ok) toast.error("Pop-up blocked — allow pop-ups for this site and try again");
             }}>
               Open in new tab
             </Button>
+            {pdfPreview && (
+              <Button variant="ghost" size="sm" asChild>
+                <a href={pdfPreview.url} download={`${pdfPreview.title}.pdf`}>Download</a>
+              </Button>
+            )}
             <Button size="sm" onClick={() => setPdfPreview(null)}>Looks right</Button>
           </DialogFooter>
         </DialogContent>
@@ -2940,7 +2975,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                       <button
                         key={f.path}
                         className="rounded-md border overflow-hidden text-left hover:border-primary/60"
-                        onClick={() => setPdfPreview({ url: thumbs[f.path] ?? "", title: f.name })}
+                        onClick={() => void showPdf(f.name, { bucket: f.bucket, path: f.path, name: f.name })}
                         title={f.name}
                       >
                         <div className="aspect-[4/5] bg-muted flex items-center justify-center overflow-hidden">
