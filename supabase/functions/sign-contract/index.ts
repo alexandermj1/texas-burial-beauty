@@ -68,38 +68,57 @@ function stampFooterInitials(pages: PDFPage[], initials: string, font: PDFFont) 
 }
 
 /** Inline "SELLER INITIAL HERE" acknowledgement boxes on the Listing Agreement.
- * Each box has a real underline rect in the template at x0=490.5, x1=558.0
- * (width 67.5). y_bot values below are the underline baseline (pdf-lib coords),
- * measured directly from the template rects. We mask the placeholder text and
- * stamp the seller's initials sitting on the underline. */
+ *  Page indexes are those of the FILLED agreement (the generated Sale Terms page
+ *  is inserted at index 2, so every template page after it shifts down by one).
+ *  `ty` is the baseline of the printed "SELLER INITIAL HERE" placeholder,
+ *  measured from the generated document itself. */
 const LA_INITIAL_UNDERLINE_X = 490.5;
 const LA_INITIAL_UNDERLINE_W = 67.5;
-const LA_INLINE_INITIALS: Array<{ pageIndex: number; y: number }> = [
-  { pageIndex: 1, y: 353.3 }, // p2 — Authorized Minimum Price
-  { pageIndex: 1, y: 239.3 }, // p2 — Sales at or above authorized minimum
-  { pageIndex: 2, y: 201.0 }, // p3 — Buyer-Paid Broker Charges (Section 2.2)
-  { pageIndex: 4, y: 566.2 }, // p5 — Warranty of ownership
-  { pageIndex: 4, y: 482.2 }, // p5 — Warranty of plot condition
+const LA_INLINE_INITIALS: Array<{ pageIndex: number; ty: number }> = [
+  { pageIndex: 1, ty: 350.1 }, // p2 — Authorized Minimum Price
+  { pageIndex: 1, ty: 236.1 }, // p2 — Sales at or above authorized minimum
+  { pageIndex: 3, ty: 197.9 }, // p4 — Buyer-Paid Broker Charges (Section 2.2)
+  { pageIndex: 5, ty: 563.7 }, // p6 — Warranty of ownership
+  { pageIndex: 5, ty: 479.7 }, // p6 — Warranty of plot condition
 ];
+/** Signature block page of the filled listing agreement (template p9 + inserted page). */
+const LA_SIGNATURE_PAGE_INDEX = 9;
+
 function stampInlineInitials(pages: PDFPage[], initials: string, bold: PDFFont) {
   const WHITE = rgb(1, 1, 1);
-  for (const { pageIndex, y } of LA_INLINE_INITIALS) {
+  for (const { pageIndex, ty } of LA_INLINE_INITIALS) {
     if (pageIndex >= pages.length) continue;
     const page = pages[pageIndex];
-    // Mask the "SELLER INITIAL HERE" placeholder text that sits ABOVE the underline
-    // (roughly x=395..488, ~15pt tall, baseline about 8pt above the rule).
-    page.drawRectangle({ x: 395, y: y + 2, width: 100, height: 14, color: WHITE });
-    // Stamp the initials centred over the actual underline rect, resting on the line.
+    // Mask the "SELLER INITIAL HERE" placeholder text sitting left of the rule.
+    page.drawRectangle({ x: 388, y: ty - 3, width: 100, height: 14, color: WHITE });
+    // Stamp the initials centred over the underline rect, resting on the line.
     const size = 12;
     const w = bold.widthOfTextAtSize(initials, size);
     page.drawText(initials, {
       x: LA_INITIAL_UNDERLINE_X + (LA_INITIAL_UNDERLINE_W - w) / 2,
-      y: y + 2.2, // baseline sits ~2pt above the rule, like a handwritten mark
+      y: ty,
       size,
       font: bold,
       color: INK,
     });
   }
+}
+
+/** The generated Sale Terms page carries its own "Seller's initials / Date" rules. */
+function stampSaleTermsInitials(pages: PDFPage[], initials: string, font: PDFFont, bold: PDFFont) {
+  const page = pages[SALE_TERMS_PAGE_INDEX];
+  if (!page) return;
+  const y = saleTermsInitialsY(font);
+  const size = 12;
+  const w = bold.widthOfTextAtSize(initials, size);
+  page.drawText(initials, {
+    x: SALE_TERMS_INITIALS_X + (SALE_TERMS_INITIALS_W - w) / 2,
+    y: y + 1,
+    size,
+    font: bold,
+    color: INK,
+  });
+  page.drawText(todayFormatted(), { x: SALE_TERMS_DATE_X + 4, y: y + 1, size: 10, font, color: INK });
 }
 
 function todayFormatted(): string {
