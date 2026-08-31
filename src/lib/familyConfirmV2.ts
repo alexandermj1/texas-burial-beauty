@@ -39,6 +39,10 @@ export function initialState(CRM) {
     seq: (CRM.deed || []).length, kseq: 0,
     couple: '', deedRel: '', poa: {}, spouse: {}, will: {}, taker: {},
     kids: [], noKids: {}, heirSpouse: {},
+    // Asked of every single signer, whoever they are: is there a husband or
+    // wife who therefore signs too, and does anyone hold a durable power of
+    // attorney over them (in which case they cannot sign themselves).
+    signerSpouse: {}, signerPoa: {},
     // When a deed owner dies leaving no children or grandchildren, the right
     // passes to their brothers and sisters, and then to their parents. We ask
     // for those people here rather than leaving a gap for the office to chase.
