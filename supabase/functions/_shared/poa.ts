@@ -209,7 +209,7 @@ export async function buildPoaPdf(d: PoaData): Promise<Uint8Array> {
 
   para(ctx, '1.2  Cemetery dealings. The Agent may obtain from the cemetery any records, deeds, certificates of ownership, account balances and transfer forms relating to the Property, may complete and sign the cemetery\'s transfer, assignment and release documents, and may pay the cemetery\'s transfer and administrative fees.');
 
-  para(ctx, `1.3  Price floor. The Agent may not sell the Property for less than the minimum total price ${p_} ${has} approved in writing. The cemetery, a title company or a purchaser is not required to inquire into that figure and may instead rely on the Agent's certification under Section 4.1 that the sale is within the Agent's authority; that certification is conclusive as to any person relying on it in good faith.`);
+  para(ctx, `1.3  Sale terms. The Agent may sell the Property only on the terms, including the minimum price, that ${p_} ${has} approved in writing separately from this instrument. Those terms are deliberately not stated here and are confidential. The cemetery, a title company or a purchaser is not required to inquire into them and may instead rely on the Agent's certification under Section 4.1 that the sale is within the Agent's authority; that certification is conclusive as to any person relying on it in good faith.`);
 
   para(ctx, `1.4  Proceeds. The Agent may receive, endorse, deposit, hold and disburse the proceeds of sale on ${their} behalf, may sign checks and drafts payable to ${p_} for that purpose, and shall pay the net proceeds to ${p_} in accordance with the closing statement delivered to ${p_}. All such funds are held subject to Section 2.`);
 
