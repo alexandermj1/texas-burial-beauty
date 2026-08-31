@@ -911,7 +911,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (ftSentFilter && step !== 5) return false;
       if (ftDoneFilter && step !== 6) return false;
       if (docsOutFilter && step !== 7) return false;
-      if (completeFilter && step !== 8) return false;
+      if (docsReturnedFilter && step !== 8) return false;
+      if (completeFilter && step !== 9) return false;
 
 
       if (eFilter === "new" && !isNew(s)) return false;
@@ -973,7 +974,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
@@ -2729,8 +2730,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { key: "docs-out", label: "Docs out", icon: FileText,
                   count: txU.filter(s => effStep(s) === 7).length,
                   active: docsOutFilter, toggle: () => setDocsOutFilter(!docsOutFilter), tone: tones.sky },
-                { key: "complete", label: "Complete", icon: Sparkles,
+                { key: "docs-returned", label: "Docs returned", icon: FileCheck,
                   count: txU.filter(s => effStep(s) === 8).length,
+                  active: docsReturnedFilter, toggle: () => setDocsReturnedFilter(!docsReturnedFilter), tone: tones.cyan },
+                { key: "complete", label: "Complete", icon: Sparkles,
+                  count: txU.filter(s => effStep(s) === 9).length,
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
               ];
               const anyActive = steps.some(s => s.active);
@@ -2785,7 +2789,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <button
                         onClick={() => {
                           setDocsFilter("all"); setAwaitingQuoteFilter(false); setQuotedFilter(false); setAcceptedFilter(false);
-                          setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setCompleteFilter(false);
+                          setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setDocsReturnedFilter(false); setCompleteFilter(false);
                         }}
                         title="Clear stage filters"
                         className="ml-2 shrink-0 w-6 h-6 rounded-full grid place-items-center border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
@@ -2880,8 +2884,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const ft = ftState(sg);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((sg as any).documents_completed_at) return { step: 8, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
-              if ((sg as any).documents_requested_at) return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
+              if ((sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
+              if ((sg as any).documents_requested_at) {
+                const retE = (sg.email || "").trim().toLowerCase();
+                const retAns = ((sg as any).ownership_answers ?? {}) as Record<string, any>;
+                if ((retE && returnedDocsEmails.has(retE)) || retAns.docsReturnedAt)
+                  return { step: 8, label: "Docs returned", accent: "cyan", cls: "bg-cyan-600 text-white border-cyan-700", bar: "bg-cyan-500", tint: "bg-cyan-500/[0.07] hover:bg-cyan-500/[0.12]", icon: FileCheck, at: (sg as any).documents_requested_at };
+                return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
+              }
               if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
               if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
               if ((sg as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
