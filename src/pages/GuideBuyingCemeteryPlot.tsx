@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
+import PreneedBlock from "@/components/PreneedBlock";
+
 
 
 const TEXAS_REGIONS = [
