@@ -144,7 +144,10 @@ function buildPoaOverlays(page1: PDFPage, font: PDFFont, _bold: PDFFont, data: F
   stamp(page1, data.address ?? '', FIELD_X, POA_P1.address, font);
   stamp(page1, data.city_state_zip ?? '', FIELD_X, POA_P1.city_state_zip, font);
   stamp(page1, data.cemetery ?? '', FIELD_X, POA_P1.cemetery, font);
-  stamp(page1, data.county_state ?? '', FIELD_X, POA_P1.county_state, font);
+  // County is intentionally left blank on the POA: the county our records hold
+  // is often wrong, and the notary acknowledgment must state the county where
+  // the document is actually signed. The signer/notary completes it by hand.
+
   stamp(page1, data.plot_count ? String(data.plot_count) : '', FIELD_X, POA_P1.plots, font);
   const desc = data.plot_description ?? '';
   if (desc) {
