@@ -700,18 +700,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   }, [texasEmailsKey]);
 
   // Texas-only: which submissions have had at least one requested document sent
-  // back (submission_documents.received_at set). Keyed by lower-case email so it
-  // survives email-merged duplicates. Drives the "Docs returned" stage.
+  // back. A document counts as returned when it is marked received (status or
+  // received_at) OR a file has been attached to it. Keyed by lower-case email so
+  // it survives email-merged duplicates. Drives the "Docs returned" stage.
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       const { data } = await supabase
         .from("submission_documents" as any)
-        .select("submission_id")
-        .is("deleted_at", null)
-        .not("received_at", "is", null);
+        .select("submission_id, status, received_at, file_url, file_urls")
+        .is("deleted_at", null);
       if (cancelled || !data) return;
-      const ids = new Set<string>((data as any[]).map(r => r.submission_id).filter(Boolean));
+      const ids = new Set<string>();
+      for (const r of data as any[]) {
+        const returned =
+          r.status === "received" ||
+          !!r.received_at ||
+          !!r.file_url ||
+          (Array.isArray(r.file_urls) && r.file_urls.length > 0);
+        if (returned && r.submission_id) ids.add(r.submission_id);
+      }
       const emails = new Set<string>();
       for (const s of submissions) {
         const e = (s.email || "").trim().toLowerCase();
@@ -719,6 +727,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
       setReturnedDocsEmails(emails);
     };
+
     load();
     let ft: ReturnType<typeof setTimeout> | null = null;
     const scheduleLoad = () => {
