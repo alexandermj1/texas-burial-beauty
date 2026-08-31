@@ -558,7 +558,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       let best: RequiredState = override ?? rowState;
       if (rankOf(fromContract) > rankOf(best)) best = fromContract as RequiredState;
       if (held && rankOf("received") > rankOf(best)) best = "received";
+      // Everything on a request that has gone out is obviously "sent" — the
+      // only thing a broker needs to see is whether it has come back. So the
+      // drafted/sent stages collapse into the same plain "Needed" chip.
+      if (best === "issued" || best === "sent") best = "needed";
       m[key] = best;
+
     }
 
     return m;
