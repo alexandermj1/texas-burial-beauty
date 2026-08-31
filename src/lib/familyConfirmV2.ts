@@ -79,8 +79,16 @@ export function buildLogic(state, setS, accent0, CRM) {
   coupleAsk: () => { return L.coupleIds().length === 2; },
   // Two or more names that are not a married couple: the relationship between
   // them decides how a deceased owner's share moves, so we ask outright
-  // instead of sending the file for a manual decision later.
-  relAsk: () => { return L.named().length > 1 && state.couple !== 'yes'; },
+  // instead of sending the file for a manual decision later. When the two
+  // owners are a possible couple we hold this question back until they have
+  // answered the marriage question — and drop it entirely if they were married,
+  // because "husband and wife" already IS the relationship.
+  relAsk: () => {
+    if (L.named().length <= 1) return false;
+    if (L.coupleAsk()) return state.couple === 'no' || state.couple === 'unknown';
+    return true;
+  },
+
   coupleVal: () => { return state.couple || ''; },
   coupleYes: (id) => { return L.coupleVal() === 'yes' && L.coupleIds().indexOf(id) >= 0; },
   // The effective spouse answer for a deed owner: married-to-each-other means

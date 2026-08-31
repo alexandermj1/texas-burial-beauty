@@ -58,9 +58,19 @@ type RosterEntry = { name: string; deceased?: boolean };
 const normKey = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, "").trim();
 
-/** Split "A & B, C"-style deed names into one entry per person, carrying over
-    any deceased flag already recorded against that name so a re-save from
-    this panel never downgrades what the questionnaire established. */
+/** One box per owner: split a stored "A & B, C" string back into people. */
+const splitNames = (raw: string): string[] => {
+  const parts = String(raw || "")
+    .split(/\s*(?:&|,|;|\band\b)\s*/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length ? parts : [""];
+};
+
+/** Split deed names into one roster entry per person, carrying over any
+    deceased flag already recorded against that name so a re-save from this
+    panel never downgrades what the questionnaire established. */
+
 const rosterFromNames = (raw: string, existing?: unknown): RosterEntry[] => {
   const prev = new Map<string, boolean>();
   if (Array.isArray(existing)) {
@@ -88,7 +98,10 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // Names exactly as they appear on the deed. Confirmed here, at quote time,
   // because acceptance now automatically produces the listing agreement (and
   // then the family tree) with no chance to correct them in between.
-  const [deedOwners, setDeedOwners] = useState<string>("");
+  // One box per person on the deed — a deed often carries two or more owners,
+  // and the family tree starts from every one of them.
+  const [ownerNames, setOwnerNames] = useState<string[]>([""]);
+
   const [plotDescription, setPlotDescription] = useState<string>("");
   const [countyState, setCountyState] = useState<string>("");
   const [busy, setBusy] = useState(false);
@@ -101,7 +114,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // Pre-fill everything we already hold on the submission.
   useEffect(() => {
     let cancelled = false;
-    setDeedOwners("");
+    setOwnerNames([""]);
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
@@ -111,7 +124,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       if (cancelled) return;
       const row = (data as any) || {};
       const names = String(row.deed_owner_names || row.name || seller.name || "").trim();
-      setDeedOwners(names);
+      setOwnerNames(splitNames(names));
       // Whatever the broker typed before wins — that exact wording carries all
       // the way through to the agreement, POA and document request.
       setPlotDescription(
@@ -195,7 +208,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const countNum = Math.max(1, Number(plotCount) || 1);
   const feeNum = Number(transferFee) || 0;
   const total = nppNum * countNum;
-  const deedOwnersClean = deedOwners.trim();
+  const ownerList = ownerNames.map((n) => n.trim()).filter(Boolean);
+  const deedOwnersClean = ownerList.join(" & ");
+
   const canGenerate = nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1;
 
   const prepBlock = useMemo(
@@ -359,12 +374,13 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const addNames = (names: string[]) => {
     const clean = names.map((n) => n.trim()).filter(Boolean);
     if (!clean.length) return;
-    setDeedOwners((prev) => {
-      const have = prev.split(/\s*(?:&|and|,)\s*/i).map((s) => s.trim().toLowerCase()).filter(Boolean);
+    setOwnerNames((prev) => {
+      const have = prev.map((s) => s.trim().toLowerCase()).filter(Boolean);
       const add = clean.filter((n) => !have.includes(n.toLowerCase()));
       if (!add.length) return prev;
-      return [prev.trim(), ...add].filter(Boolean).join(" & ");
+      return [...prev.filter((s) => s.trim()), ...add];
     });
+
   };
 
   return (
@@ -448,13 +464,43 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
 
         <div className="space-y-2">
           <div>
-            <label className={labelCls}>Names on the deed (required — used by the agreement)</label>
-            <input
-              type="text" value={deedOwners}
-              onChange={(e) => setDeedOwners(e.target.value)}
-              placeholder="e.g. John A. Smith & Mary Smith" className={inputCls}
-            />
+            <label className={labelCls}>
+              Names on the deed (required — one box per person)
+            </label>
+            <div className="space-y-1.5">
+              {ownerNames.map((n, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={n}
+                    onChange={(e) =>
+                      setOwnerNames((prev) => prev.map((v, idx) => (idx === i ? e.target.value : v)))
+                    }
+                    placeholder={i === 0 ? "e.g. John A. Smith" : "Second owner on the deed"}
+                    className={inputCls}
+                  />
+                  {ownerNames.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setOwnerNames((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="shrink-0 h-9 w-9 rounded-md border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/50 text-sm"
+                      aria-label={`Remove owner ${i + 1}`}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setOwnerNames((prev) => [...prev, ""])}
+              className="mt-1.5 text-[11px] text-primary hover:underline"
+            >
+              + Add another owner
+            </button>
           </div>
+
           {/* The deed names above ARE the family-tree seed — the tree view
               derives straight from deedOwnerNames, no duplicate list. */}
           <div>
