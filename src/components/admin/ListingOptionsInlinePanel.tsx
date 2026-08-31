@@ -367,244 +367,113 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     }
   };
 
+  /** Add names read off the deed to both the agreement line and the roster. */
+  const addNames = (names: string[]) => {
+    const clean = names.map((n) => n.trim()).filter(Boolean);
+    if (!clean.length) return;
+    setDeedOwners((prev) => {
+      const have = prev.split(/\s*(?:&|and|,)\s*/i).map((s) => s.trim().toLowerCase()).filter(Boolean);
+      const add = clean.filter((n) => !have.includes(n.toLowerCase()));
+      if (!add.length) return prev;
+      return [prev.trim(), ...add].filter(Boolean).join(" & ");
+    });
+    setRoster((prev) => {
+      const have = prev.map((p) => p.name.trim().toLowerCase());
+      const add = clean.filter((n) => !have.includes(n.toLowerCase())).map((n) => ({ name: n, deceased: false }));
+      return add.length ? [...prev, ...add] : prev;
+    });
+  };
+
   return (
-    <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-3">
+    <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-primary" />
           <p className="text-[10px] uppercase tracking-[0.18em] text-primary font-semibold">
-            Prepare the whole run for {properCase(seller.name || "Seller")}
+            Seller pack for {properCase(seller.name || "Seller")} — quote, listing agreement & family tree
           </p>
         </div>
-        <div className="flex items-center gap-1">
-          {STEPS.map((s) => {
-            const Icon = s.icon;
-            const active = step === s.key;
-            const doneStep = step > s.key;
-            return (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => setStep(s.key as 1 | 2 | 3)}
-                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition ${
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : doneStep
-                      ? "bg-primary/15 text-primary"
-                      : "bg-background text-muted-foreground border border-border/60"
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                {s.key}. {s.label}
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button" onClick={previewAgreement} disabled={previewing}
+            className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            {previewing ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileSignature className="w-3 h-3" />}
+            {previewing ? "Building…" : "View listing agreement"}
+          </button>
+          <button
+            type="button" onClick={previewFamilyTree}
+            className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border border-primary/40 text-primary hover:bg-primary/10"
+          >
+            <Network className="w-3 h-3" /> View family tree page
+          </button>
         </div>
       </div>
 
-      {step === 1 && (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            <div>
-              <label className={labelCls}>Retail / plot (USD)</label>
-              <input
-                type="number" min="0" step="50" value={retail}
-                onChange={(e) => handleRetailChange(e.target.value)}
-                placeholder="e.g. 6000" className={inputCls}
-              />
-              <p className="text-[9px] text-muted-foreground mt-1">Cemetery retail. Auto-fills the two below.</p>
-            </div>
-            <div>
-              <label className={labelCls}>Quote (net) / plot</label>
-              <input
-                type="number" min="0" step="50" value={netPerPlot}
-                onChange={(e) => { setNetPerPlot(e.target.value); setNetTouched(true); }}
-                placeholder="55% of retail" className={inputCls}
-              />
-              <p className="text-[9px] text-muted-foreground mt-1">55% of retail, rounded to $100.</p>
-            </div>
-            <div>
-              <label className={labelCls}>Sales price / plot</label>
-              <input
-                type="number" min="0" step="50" value={salesPrice}
-                onChange={(e) => { setSalesPrice(e.target.value); setSalesTouched(true); }}
-                placeholder="67% of retail" className={inputCls}
-              />
-              <p className="text-[9px] text-muted-foreground mt-1">67% of retail, rounded to $100.</p>
-            </div>
-            <div>
-              <label className={labelCls}># of plots</label>
-              <input
-                type="number" min="1" step="1" value={plotCount}
-                onChange={(e) => setPlotCount(e.target.value)} className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Transfer fee (USD)</label>
-              <input
-                type="number" min="0" step="5" value={transferFee}
-                onChange={(e) => setTransferFee(e.target.value)} className={inputCls}
-              />
-            </div>
-          </div>
+      {/* ── Everything the pack needs, on one page ─────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div>
+          <label className={labelCls}>Retail / plot (USD)</label>
+          <input
+            type="number" min="0" step="50" value={retail}
+            onChange={(e) => handleRetailChange(e.target.value)}
+            placeholder="e.g. 6000" className={inputCls}
+          />
+          <p className="text-[9px] text-muted-foreground mt-1">Cemetery retail. Auto-fills the two below.</p>
+        </div>
+        <div>
+          <label className={labelCls}>Quote (net) / plot</label>
+          <input
+            type="number" min="0" step="50" value={netPerPlot}
+            onChange={(e) => { setNetPerPlot(e.target.value); setNetTouched(true); }}
+            placeholder="55% of retail" className={inputCls}
+          />
+          <p className="text-[9px] text-muted-foreground mt-1">55% of retail, rounded to $100.</p>
+        </div>
+        <div>
+          <label className={labelCls}>Sales price / plot</label>
+          <input
+            type="number" min="0" step="50" value={salesPrice}
+            onChange={(e) => { setSalesPrice(e.target.value); setSalesTouched(true); }}
+            placeholder="67% of retail" className={inputCls}
+          />
+          <p className="text-[9px] text-muted-foreground mt-1">67% of retail, rounded to $100.</p>
+        </div>
+        <div>
+          <label className={labelCls}># of plots</label>
+          <input
+            type="number" min="1" step="1" value={plotCount}
+            onChange={(e) => setPlotCount(e.target.value)} className={inputCls}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Transfer fee (USD)</label>
+          <input
+            type="number" min="0" step="5" value={transferFee}
+            onChange={(e) => setTransferFee(e.target.value)} className={inputCls}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            The deed they sent — check the names
+          </p>
+          <DeedNameChecker submissionId={seller.id} onUseNames={addNames} />
+        </div>
+
+        <div className="space-y-2">
           <div>
-            <label className={labelCls}>Names on the deed (required)</label>
+            <label className={labelCls}>Names on the deed (required — used by the agreement)</label>
             <input
               type="text" value={deedOwners}
               onChange={(e) => setDeedOwners(e.target.value)}
               placeholder="e.g. John A. Smith & Mary Smith" className={inputCls}
             />
           </div>
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="text-[11px] text-muted-foreground">
-              {canGenerate ? (
-                <>
-                  {fmtUsd(nppNum)} × {countNum} plot{countNum === 1 ? "" : "s"} ={" "}
-                  <span className="text-foreground font-semibold">{fmtUsd(total)}</span> guaranteed net
-                  {salesNum > 0 ? <> · list at {fmtUsd(salesNum)}/plot</> : null}
-                  {feeNum > 0 ? <> · {fmtUsd(feeNum)} buyer-paid transfer fee</> : null}
-                </>
-              ) : nppNum > 0 && !deedOwnersClean ? (
-                "Add the names exactly as they appear on the deed before continuing."
-              ) : (
-                "Enter the retail price per plot — the quote and sales price will auto-calculate."
-              )}
-            </p>
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              disabled={!canGenerate}
-              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
-            >
-              Next: agreement <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <p className="text-[11px] text-muted-foreground">
-            This is exactly what the listing agreement will print the moment they accept. Preview the real PDF before
-            the quote goes out — nothing is sent from here.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <div className="md:col-span-2">
-              <label className={labelCls}>Plot description</label>
-              <input
-                type="text" value={plotDescription}
-                onChange={(e) => setPlotDescription(e.target.value)}
-                placeholder="Section / lawn / spaces" className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>County, state</label>
-              <input
-                type="text" value={countyState}
-                onChange={(e) => setCountyState(e.target.value)}
-                placeholder="e.g. Dallas, TX" className={inputCls}
-              />
-            </div>
-          </div>
-          <div className="rounded-md bg-background/70 border border-border/60 p-2.5 text-[11px] text-muted-foreground space-y-1">
-            <div><span className="text-foreground font-medium">Seller / deed:</span> {deedOwnersClean || "—"}</div>
-            <div>
-              <span className="text-foreground font-medium">Authorized minimum:</span> {fmtUsd(nppNum)} per space ·{" "}
-              {fmtUsd(total)} total for {countNum} space{countNum === 1 ? "" : "s"}
-            </div>
-            <div>
-              <span className="text-foreground font-medium">Listing option:</span> whichever tier they choose in the
-              quote email — it is written into the agreement automatically.
-            </div>
-          </div>
-          <div className="rounded-md border border-border/60 bg-background/60 p-2">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-              The agreement email they'll receive on acceptance
-            </p>
-            <ListingAgreementInlinePanel
-              seller={{
-                id: seller.id,
-                name: deedOwnersClean || seller.name,
-                email: seller.email,
-                cemetery: seller.cemetery,
-                section: seller.section,
-                property_type: seller.property_type,
-                spaces: String(countNum),
-                space_numbers: seller.space_numbers ?? null,
-              }}
-              hideListingOption
-              netPerPlot={nppNum}
-              hasGenerated={!!agreementEmailHtml}
-              onGenerated={async (html) => {
-                setAgreementEmailHtml(html);
-                await savePrepWith({ agreementEmailHtml: html });
-                toast({
-                  title: "Agreement email prepared",
-                  description: "This exact email is sent automatically the moment they accept.",
-                });
-              }}
-            />
-          </div>
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <button
-              type="button" onClick={() => setStep(1)}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border/60 hover:bg-background"
-            >
-              <ArrowLeft className="w-3 h-3" /> Back
-            </button>
-            <div className="flex items-center gap-2">
-              <button
-                type="button" onClick={previewAgreement} disabled={previewing}
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
-              >
-                {previewing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
-                {previewing ? "Building…" : "Preview draft PDF"}
-              </button>
-              <button
-                type="button" onClick={() => setStep(3)}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90"
-              >
-                Next: family tree <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {step === 3 && (
-        <>
-          <p className="text-[11px] text-muted-foreground">
-            Check the names below against the deed they uploaded. That's all the family-tree email needs — the seller
-            answers the rest themselves after signing.
-          </p>
-
-          {deedFiles.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {deedFiles.map((f) => (
-                <a
-                  key={f.url}
-                  href={f.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shrink-0 rounded-md border border-border/60 bg-background overflow-hidden hover:border-primary/50"
-                  title={f.name}
-                >
-                  {f.isImage ? (
-                    <img src={f.url} alt={`Deed uploaded by the seller: ${f.name}`} className="h-32 w-auto object-contain" />
-                  ) : (
-                    <span className="flex items-center gap-1.5 px-3 py-6 text-[11px] text-foreground">
-                      <Eye className="w-3 h-3" /> {f.name}
-                    </span>
-                  )}
-                </a>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[11px] text-muted-foreground italic">No deed was uploaded with the form.</p>
-          )}
-
           <div className="space-y-1.5">
-            <label className={labelCls}>Names on the deed</label>
+            <label className={labelCls}>Family-tree roster (one per owner)</label>
             {roster.map((r, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
@@ -631,41 +500,92 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               <Plus className="w-3 h-3" /> Add a name from the deed
             </button>
           </div>
-
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <button
-              type="button" onClick={() => setStep(2)}
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border/60 hover:bg-background"
-            >
-              <ArrowLeft className="w-3 h-3" /> Back
-            </button>
-            <div className="flex items-center gap-2">
-              <button
-                type="button" onClick={previewFamilyTree}
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10"
-              >
-                <Eye className="w-3 h-3" /> Preview their page
-              </button>
-              <button
-                type="button" onClick={() => generate(false)} disabled={!canGenerate || busy}
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
-              >
-                {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : hasGenerated ? <RefreshCw className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
-                {busy ? "Preparing…" : hasGenerated ? "Regenerate quote" : "Insert quote email"}
-              </button>
-              {onGeneratedAndSend && (
-                <button
-                  type="button" onClick={() => generate(true)} disabled={!canGenerate || busy || !!sending}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                >
-                  {busy || sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                  {sending ? "Sending…" : "Send quote email"}
-                </button>
-              )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="md:col-span-2">
+              <label className={labelCls}>Plot description</label>
+              <input
+                type="text" value={plotDescription}
+                onChange={(e) => setPlotDescription(e.target.value)}
+                placeholder="Section / lawn / spaces" className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>County, state</label>
+              <input
+                type="text" value={countyState}
+                onChange={(e) => setCountyState(e.target.value)}
+                placeholder="e.g. Dallas, TX" className={inputCls}
+              />
             </div>
           </div>
-        </>
-      )}
+        </div>
+      </div>
+
+      <details className="rounded-md border border-border/60 bg-background/60 p-2">
+        <summary className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold cursor-pointer">
+          The agreement email they receive on acceptance
+        </summary>
+        <div className="mt-2">
+          <ListingAgreementInlinePanel
+            seller={{
+              id: seller.id,
+              name: deedOwnersClean || seller.name,
+              email: seller.email,
+              cemetery: seller.cemetery,
+              section: seller.section,
+              property_type: seller.property_type,
+              spaces: String(countNum),
+              space_numbers: seller.space_numbers ?? null,
+            }}
+            hideListingOption
+            netPerPlot={nppNum}
+            hasGenerated={!!agreementEmailHtml}
+            onGenerated={async (html) => {
+              setAgreementEmailHtml(html);
+              await savePrepWith({ agreementEmailHtml: html });
+              toast({
+                title: "Agreement email prepared",
+                description: "This exact email is sent automatically the moment they accept.",
+              });
+            }}
+          />
+        </div>
+      </details>
+
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-[11px] text-muted-foreground">
+          {canGenerate ? (
+            <>
+              {fmtUsd(nppNum)} × {countNum} plot{countNum === 1 ? "" : "s"} ={" "}
+              <span className="text-foreground font-semibold">{fmtUsd(total)}</span> guaranteed net
+              {salesNum > 0 ? <> · list at {fmtUsd(salesNum)}/plot</> : null}
+              {feeNum > 0 ? <> · {fmtUsd(feeNum)} buyer-paid transfer fee</> : null}
+            </>
+          ) : nppNum > 0 && !deedOwnersClean ? (
+            "Add the names exactly as they appear on the deed before sending."
+          ) : (
+            "Enter the retail price per plot — the quote and sales price will auto-calculate."
+          )}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button" onClick={() => generate(false)} disabled={!canGenerate || busy}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : hasGenerated ? <RefreshCw className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+            {busy ? "Preparing…" : hasGenerated ? "Regenerate email" : "Insert email"}
+          </button>
+          {onGeneratedAndSend && (
+            <button
+              type="button" onClick={() => generate(true)} disabled={!canGenerate || busy || !!sending}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {busy || sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+              {sending ? "Sending…" : "Send seller pack"}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
