@@ -571,7 +571,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // freshly re-computed "needed" — otherwise a checklist sync silently
       // un-ticks documents we already hold. It also outranks "we emailed it",
       // because a signed copy coming back is further along than sending it out.
-      const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0);
+      const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0)
+        || attachedKeys.has(key);
       const override = (r.manual_override as RequiredState | null) ?? null;
       const fromContract = contractFor(r.doc_code, r.person_name);
       const rowState = (r.required_state as RequiredState) ?? "needed";
@@ -593,7 +594,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
     }
 
+    // Items with a returned file but no checklist row yet (or a row that
+    // hasn't been re-read) still read as received.
+    for (const key of attachedKeys) {
+      if (rankOf(m[key]) < rankOf("received") && m[key] !== "not_needed") m[key] = "received";
+    }
+
     return m;
+
   }, [rows, contractStates]);
 
 
