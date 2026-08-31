@@ -419,6 +419,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return URL.createObjectURL(new Blob([data], { type }));
   };
 
+  /** Pull a remote (signed) file down so we can show it from a same-origin blob. */
+  const blobUrlFromUrl = async (url: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.blob();
+      const type = data.type && data.type !== "application/octet-stream"
+        ? data.type
+        : (/\.pdf(\?|$)/i.test(url) ? "application/pdf" : "application/octet-stream");
+      return URL.createObjectURL(new Blob([data], { type }));
+    } catch { return null; }
+  };
+
+  /**
+   * Show a PDF inline. We always render a same-origin blob (Chrome blocks
+   * cross-origin PDFs in a frame) and keep the original source so "Open in new
+   * tab" can go through /file-viewer — Chrome also blocks a blob: URL opened
+   * directly as a top-level tab.
+   */
+  const showPdf = async (title: string, source: FileViewerSource) => {
+    const url = "url" in source
+      ? (await blobUrlFromUrl(source.url)) ?? source.url
+      : (await blobUrlFor(source.bucket as "customer-files" | "portal-uploads" | "contracts", source.path)) ?? "";
+    if (!url) { toast.error("That file could not be opened — try again in a moment."); return; }
+    setPdfPreview({ url, title, source });
+  };
+
   /** Open any collected file in a new tab. */
   const openFile = async (f: AnyFile) => {
     if (!openFileViewer({ bucket: f.bucket, path: f.path, name: f.name }))
