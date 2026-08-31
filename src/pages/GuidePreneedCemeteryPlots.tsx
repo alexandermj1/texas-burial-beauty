@@ -333,7 +333,7 @@ const GuidePreneedCemeteryPlots = () => (
             The comparison worth making is not preneed versus nothing. It is preneed versus at-need — the same purchase, made in the same cemetery, but under a deadline, without the chance to shop the secondary market, and at whatever the price list says that week.
           </p>
           <div className="rounded-3xl border border-border/60 bg-muted/30 p-7 md:p-9 mt-8">
-            <Eyebrow>Planning ahead</Eyeb>
+            <Eyebrow>Planning ahead</Eyebrow>
             <h3 className="font-display text-2xl md:text-3xl text-foreground mb-4 leading-snug">So how do you begin to plan ahead?</h3>
             <p className="text-foreground/80 leading-relaxed mb-5">
               In Texas, the steps are quite straightforward. Begin by considering these two questions:
