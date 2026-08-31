@@ -53,7 +53,15 @@ const inputCls =
 const labelCls =
   "text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block";
 
-type RosterEntry = { name: string; deceased?: boolean };
+type RosterEntry = { name: string };
+
+/** Split "A & B, C"-style
+ deed names into one entry per person. */
+const rosterFromNames = (raw: string): RosterEntry[] =>
+  String(raw || "")
+    .split(/\s*(?:&|,|;|\band\b)\s*/i)
+    .filter(Boolean)
+    .map((name) => ({ name }));
 
 export default function ListingOptionsInlinePanel({ seller, onGenerated, onGeneratedAndSend, hasGenerated, sending }: Props) {
   const { toast } = useToast();
@@ -71,7 +79,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const [deedOwners, setDeedOwners] = useState<string>("");
   const [plotDescription, setPlotDescription] = useState<string>("");
   const [countyState, setCountyState] = useState<string>("");
-  const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   // The exact emails the seller will receive after they accept — prepared with
@@ -83,7 +90,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   useEffect(() => {
     let cancelled = false;
     setDeedOwners("");
-    setRoster([]);
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
@@ -106,14 +112,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         }),
       );
       setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
-      const existing = Array.isArray(row.ownership_roster) ? (row.ownership_roster as RosterEntry[]) : [];
-      setRoster(
-        existing.length
-          ? existing.map((p) => ({ name: String(p.name ?? ""), deceased: !!p.deceased }))
-          : names
-            ? names.split(/\s*(?:&|and|,)\s*/i).filter(Boolean).map((n) => ({ name: n, deceased: false }))
-            : [],
-      );
+      // No separate roster to maintain — the deed names typed here ARE the
+      // family-tree seed. The tree view derives from deedOwnerNames below.
 
     })();
     return () => { cancelled = true; };
@@ -221,7 +221,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         list_price: salesNum > 0 ? salesNum * countNum : null,
         deed_owner_names: deedOwnersClean,
         plot_description: plotDescription.trim() || null,
-        ownership_roster: roster.filter((r) => r.name.trim()) as never,
+        ownership_roster: rosterFromNames(deedOwnersClean),
         ownership_answers: {
           ...answers,
           autopilot: { ...((answers as any).autopilot ?? {}), ...prepBlock },
@@ -353,11 +353,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       if (!add.length) return prev;
       return [prev.trim(), ...add].filter(Boolean).join(" & ");
     });
-    setRoster((prev) => {
-      const have = prev.map((p) => p.name.trim().toLowerCase());
-      const add = clean.filter((n) => !have.includes(n.toLowerCase())).map((n) => ({ name: n, deceased: false }));
-      return add.length ? [...prev, ...add] : prev;
-    });
   };
 
   return (
@@ -449,33 +444,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             />
           </div>
           <div className="space-y-1.5">
-            <label className={labelCls}>Family-tree roster (one per owner)</label>
-            {roster.map((r, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  type="text" value={r.name}
-                  onChange={(e) =>
-                    setRoster((prev) => prev.map((p, j) => (j === i ? { ...p, name: e.target.value } : p)))
-                  }
-                  placeholder="Name as it appears on the deed" className={inputCls}
-                />
-                <button
-                  type="button"
-                  onClick={() => setRoster((prev) => prev.filter((_, j) => j !== i))}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setRoster((prev) => [...prev, { name: "", deceased: false }])}
-              className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
-            >
-              <Plus className="w-3 h-3" /> Add a name from the deed
-            </button>
-          </div>
+          {/* The deed names above ARE the family-tree seed — the tree view
+              derives straight from deedOwnerNames, no duplicate list. */}
           <div className="grid grid-cols-1 gap-2">
             <div>
               <label className={labelCls}>Plot description</label>
