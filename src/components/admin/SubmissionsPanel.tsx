@@ -968,15 +968,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const bt = new Date(awaitingAll[b.id] || b.created_at).getTime();
       return bt - at;
     };
-    // Brand-new form submissions must stay visible at the top. Previously the
-    // entire "Needs reply" backlog was placed ahead of them, which made a fresh
-    // submission look missing even after a successful refresh.
-    const freshRows = matches.filter(s => isNew(s) && !awaitingAll[s.id]).sort(byNewest);
+    // "Needs reply" always wins the top of the list — an unanswered inbound email is
+    // the most time-sensitive thing in the panel. Brand-new form submissions come
+    // right after, then tagged rows, then everything else.
     const awaitingRows = matches.filter(s => awaitingAll[s.id]).sort(byLatestInbound);
+    const freshRows = matches.filter(s => isNew(s) && !awaitingAll[s.id]).sort(byNewest);
     const rest = matches.filter(s => !awaitingAll[s.id] && !isNew(s));
     const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
     const otherRows = rest.filter(s => !((s as any).custom_tag || "").trim()).sort(byNewest);
-    const ordered = [...freshRows, ...awaitingRows, ...taggedRows, ...otherRows];
+    const ordered = [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
