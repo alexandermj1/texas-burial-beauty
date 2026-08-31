@@ -329,9 +329,29 @@ const GuidePreneedCemeteryPlots = () => (
               </motion.div>
             ))}
           </div>
-          <p className="text-foreground/80 leading-relaxed text-lg">
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
             The comparison worth making is not preneed versus nothing. It is preneed versus at-need — the same purchase, made in the same cemetery, but under a deadline, without the chance to shop the secondary market, and at whatever the price list says that week.
           </p>
+          <div className="rounded-3xl border border-border/60 bg-muted/30 p-7 md:p-9 mt-8">
+            <Eyebrow>Planning ahead</Eyeb>
+            <h3 className="font-display text-2xl md:text-3xl text-foreground mb-4 leading-snug">So how do you begin to plan ahead?</h3>
+            <p className="text-foreground/80 leading-relaxed mb-5">
+              In Texas, the steps are quite straightforward. Begin by considering these two questions:
+            </p>
+            <ol className="space-y-4 mb-6">
+              <li className="flex gap-4 items-start">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary font-display flex items-center justify-center text-sm mt-0.5">1</span>
+                <p className="text-foreground/80 leading-relaxed"><strong className="font-medium text-foreground">What type of interment would you like?</strong> For example, traditional burial in the ground, entombment in a mausoleum crypt, or cremation with a memorial niche.</p>
+              </li>
+              <li className="flex gap-4 items-start">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary font-display flex items-center justify-center text-sm mt-0.5">2</span>
+                <p className="text-foreground/80 leading-relaxed"><strong className="font-medium text-foreground">Which location do you want your memorial to be?</strong> Perhaps your preferred cemetery is the one closest to where your family resides, or is located at a meaningful place dear to you.</p>
+              </li>
+            </ol>
+            <p className="text-foreground/70 leading-relaxed">
+              Once you have thought about these two questions you are ready to begin the search, bearing in mind that people commonly change their minds from their original ideas as they start exploring options and see the wealth of choices available.
+            </p>
+          </div>
         </section>
 
         {/* Chapter 03 */}
