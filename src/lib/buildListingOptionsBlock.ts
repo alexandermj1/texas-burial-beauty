@@ -71,11 +71,16 @@ export async function buildListingOptionsBlock(opts: {
 }): Promise<string> {
   const { seller, netPerPlot, plotCount, transferFee, environment = "sandbox" } = opts;
   const salePerSpace = netPerPlot;
+  // The headline figure is quoted INCLUSIVE of the cemetery transfer fee and
+  // the fee is then deducted in the breakdown below, so the seller can see the
+  // full price the property is listed at rather than a pre-netted number.
+  const grossPerSpace = salePerSpace + (transferFee > 0 ? transferFee : 0);
   const commissionPerSpace = Math.round(salePerSpace * 0.15);
   const proceedsPerSpace = salePerSpace - commissionPerSpace;
-  const totalSale = salePerSpace * plotCount;
+  const totalSale = grossPerSpace * plotCount;
   const totalProceeds = proceedsPerSpace * plotCount;
   const cemLabel = properCase(seller.cemetery || "your cemetery");
+
 
   const links = await Promise.all(
     TIERS.map(async (t) => {
