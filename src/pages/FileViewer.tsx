@@ -4,7 +4,7 @@ import { Download, FileText, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import type { FileViewerSource } from "@/lib/fileViewer";
+import { decodeViewerSource, type FileViewerSource } from "@/lib/fileViewer";
 import PdfCanvasViewer from "@/components/PdfCanvasViewer";
 
 export default function FileViewer() {
