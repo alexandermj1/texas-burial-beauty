@@ -2722,12 +2722,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => {
               if (!pdfPreview) return;
-              const tab = window.open(pdfPreview.url, "_blank");
-              if (!tab) toast.error("Pop-up blocked — allow pop-ups for this site and try again");
-              else tab.opener = null;
+              // Chrome blocks a blob:/cross-origin PDF opened straight into a
+              // tab, so route through our own viewer page instead.
+              const ok = pdfPreview.source
+                ? openFileViewer(pdfPreview.source)
+                : !!window.open(pdfPreview.url, "_blank", "noopener,noreferrer");
+              if (!ok) toast.error("Pop-up blocked — allow pop-ups for this site and try again");
             }}>
               Open in new tab
             </Button>
+            {pdfPreview && (
+              <Button variant="ghost" size="sm" asChild>
+                <a href={pdfPreview.url} download={`${pdfPreview.title}.pdf`}>Download</a>
+              </Button>
+            )}
             <Button size="sm" onClick={() => setPdfPreview(null)}>Looks right</Button>
           </DialogFooter>
         </DialogContent>
