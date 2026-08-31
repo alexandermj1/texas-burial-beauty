@@ -32,6 +32,7 @@ export const resources = [
   { label: "Texas Funeral Service Commission — Consumer Information", href: "https://tfsc.texas.gov/ConsumerInformation.html", note: "Consumer-facing resources from the state funeral commission." },
   { label: "Texas Cemeteries & Crematories Association", href: "https://www.txcca.us/", note: "State industry association with its own review committee." },
   { label: "Bayer Cemetery Brokers", href: "https://bayercemeterybrokers.com/", note: "Our national partner — nationwide buyer reach." },
+  { label: "Beyond the Grave Blog", href: "https://bayercemeterybrokers.com/beyond-the-grave-blog/", note: "Interesting stories and information about the funeral industry, burial traditions and cemeteries." },
 ];
 
 interface IconItem { Icon: LucideIcon; t: string; d: string }

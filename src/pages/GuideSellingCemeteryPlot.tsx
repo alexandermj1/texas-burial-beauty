@@ -325,8 +325,11 @@ const GuideSellingCemeteryPlot = () => (
         <section id="value" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 02 · Valuation</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">What affects your plot's <span className="italic text-primary">value</span></h2>
+          <p className="text-foreground/80 leading-relaxed mb-5 text-lg">
+            The value of your memorial property will depend on many factors, including the type of plot, the number of interments included, where it is located, and even how the current ownership is structured and recorded with the cemetery. There is no general rule of thumb for valuing Texas cemetery property that can be applied to all plots, nor is there a simple universal formula to determine current market value.
+          </p>
           <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
-            Pricing a cemetery plot is not like checking a home's value — there is no public listing database, and two plots in the same cemetery can be worth very different amounts. The main factors are:
+            However, whether your plot is at <Link to={cemeteryPath("Sparkman/Hillcrest Memorial Park")} className="text-primary underline-offset-4 hover:underline font-medium">Sparkman–Hillcrest</Link> in Dallas, <Link to={cemeteryPath("Forest Park Lawndale Cemetery")} className="text-primary underline-offset-4 hover:underline font-medium">Forest Park Lawndale</Link> in Houston, or anywhere in between, it will have a unique value that can be determined when all the relevant factors are taken into account. Two plots in the same cemetery can be worth very different amounts. The main factors are:
           </p>
           <div className="space-y-4 mb-8">
             {valueFactors.map(({ Icon, t, d }) => (
