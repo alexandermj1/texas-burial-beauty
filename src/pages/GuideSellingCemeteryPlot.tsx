@@ -198,6 +198,7 @@ const GuideSellingCemeteryPlot = () => (
             <div className="flex flex-wrap gap-2">
               {[
                 { href: "#can-you-sell", t: "Can you sell?" },
+                { href: "#key-questions", t: "Before you list" },
                 { href: "#value", t: "What it's worth" },
                 { href: "#why", t: "Why a broker" },
                 { href: "#process", t: "The process" },
