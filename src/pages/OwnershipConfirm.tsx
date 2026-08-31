@@ -410,7 +410,7 @@ const OwnershipConfirm = () => {
         action: "save",
         submission_id: submissionId,
         finished: true,
-        answers: { v2: { ...state, submitted: true, sent }, people, sellerNotes: state.note },
+        answers: { v2: { ...state, submitted: true, signerCheck: true, sent }, people, sellerNotes: state.note },
       },
     });
   };
