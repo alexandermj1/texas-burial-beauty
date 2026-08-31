@@ -330,8 +330,16 @@ export default function SignContract() {
       const res = await fetch(FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` },
-        body: JSON.stringify({ action: "refresh", token, fields: outboundFields() }),
+        body: JSON.stringify({
+          action: "refresh",
+          token,
+          fields: outboundFields(),
+          // Preview-only: show the seller their initials landing on each line.
+          initials: initials.trim().toUpperCase(),
+          initialed_sections: sectionInitials,
+        }),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not update contract");
       setPdfSourceUrl(data.pdf_url as string);
