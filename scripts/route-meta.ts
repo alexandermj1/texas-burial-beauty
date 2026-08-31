@@ -60,6 +60,13 @@ export const STATIC_ROUTES: RouteMeta[] = [
       "Guides and family resources for buying and selling cemetery plots, niches and crypts across Texas — pricing, transfers and paperwork explained.",
   },
   {
+    path: "/preneed-cemetery-plots-texas",
+    title: "Preneed Cemetery Plots in Texas | Buy Before You Need To",
+    description:
+      "Buy cemetery plots in Texas ahead of time at today's price — verified by-owner resale spaces, in-person showings and 0% interest over 24 months.",
+    type: "article",
+  },
+  {
     path: "/sell-cemetery-plot-texas",
     title: "How to Sell a Cemetery Plot in Texas (2026 Guide)",
     description:
