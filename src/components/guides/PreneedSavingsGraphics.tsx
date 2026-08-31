@@ -270,28 +270,50 @@ export const PriceAppreciationChart = () => {
         </div>
       </div>
 
-      <div className="p-5 md:p-8">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Line chart: cemetery retail price rising from $10,000 to about $20,000 over seven years, compared with a discounted by-owner price of about $6,500 paid over 24 months at zero interest">
+      <div className="p-4 md:p-8">
+        <div className="overflow-x-auto -mx-1 px-1 pb-1">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[640px] h-auto" role="img" aria-label="Line chart: cemetery retail price rising from $10,000 to about $20,000 over seven years, compared with a discounted by-owner price of about $6,500 paid over 24 months at zero interest">
+          <defs>
+            <linearGradient id="gapFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0.04" />
+            </linearGradient>
+          </defs>
+
           {/* gridlines */}
           {[0, 5500, 11000, 16500, 22000].map((v) => (
             <g key={v}>
-              <line x1={X0} x2={X1} y1={py(v)} y2={py(v)} stroke="hsl(var(--border))" strokeOpacity="0.6" strokeDasharray={v === 0 ? "" : "3 5"} />
-              <text x={X0 - 8} y={py(v) + 4} textAnchor="end" fontSize="11" fill="hsl(var(--muted-foreground))">{v === 0 ? "$0" : `$${v / 1000}k`}</text>
+              <line x1={X0} x2={X1} y1={py(v)} y2={py(v)} stroke="hsl(var(--border))" strokeOpacity="0.7" strokeWidth={v === 0 ? 1.5 : 1} strokeDasharray={v === 0 ? "" : "3 5"} />
+              <text x={X0 - 10} y={py(v) + 5} textAnchor="end" fontSize="13" fill="hsl(var(--muted-foreground))">{v === 0 ? "$0" : `$${(v / 1000).toLocaleString()}k`}</text>
             </g>
           ))}
           {[0, 1, 2, 3, 4, 5, 6, 7].map((yr) => (
-            <text key={yr} x={px(yr)} y={Y0 + 20} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">
+            <text key={yr} x={px(yr)} y={Y0 + 24} textAnchor="middle" fontSize="13" fill="hsl(var(--muted-foreground))">
               {yr === 0 ? "Today" : `Yr ${yr}`}
             </text>
           ))}
+
+          {/* shaded gap between rising retail and your locked price */}
+          <motion.path
+            d={gapPath}
+            fill="url(#gapFill)"
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ delay: 2.5, duration: 1 }}
+          />
+          {/* gap bracket at year 7 */}
+          <motion.g initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 2.9, duration: 0.5 }}>
+            <line x1={px(7) + 14} x2={px(7) + 14} y1={py(20000)} y2={py(DEAL)} stroke="hsl(var(--accent))" strokeWidth="2" />
+            <line x1={px(7) + 9} x2={px(7) + 19} y1={py(20000)} y2={py(20000)} stroke="hsl(var(--accent))" strokeWidth="2" />
+            <line x1={px(7) + 9} x2={px(7) + 19} y1={py(DEAL)} y2={py(DEAL)} stroke="hsl(var(--accent))" strokeWidth="2" />
+          </motion.g>
 
           {/* retail line */}
           <motion.path
             d={retailPath}
             fill="none"
-            stroke="hsl(var(--foreground))"
-            strokeOpacity="0.55"
-            strokeWidth="2.5"
+            stroke="hsl(var(--accent))"
+            strokeWidth="4"
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
             animate={inView ? { pathLength: 1 } : {}}
@@ -299,12 +321,12 @@ export const PriceAppreciationChart = () => {
           />
           {/* end dot + label */}
           <motion.g initial={{ opacity: 0, scale: 0 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 2.2, duration: 0.4 }}>
-            <circle cx={px(7)} cy={py(20000)} r="5" fill="hsl(var(--foreground))" />
-            <text x={px(7) - 8} y={py(20000) - 12} textAnchor="end" fontSize="13" fontWeight="600" fill="hsl(var(--foreground))">
+            <circle cx={px(7)} cy={py(20000)} r="6.5" fill="hsl(var(--accent))" />
+            <text x={px(7) - 12} y={py(20000) - 16} textAnchor="end" fontSize="15" fontWeight="700" fill="hsl(var(--accent))">
               ≈ ${retailFuture.toLocaleString()} at-need
             </text>
           </motion.g>
-          <motion.text x={px(0) + 6} y={py(10000) - 10} fontSize="12" fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.3 }}>
+          <motion.text x={px(0) + 8} y={py(10000) + 24} fontSize="13.5" fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.4 }}>
             Cemetery retail today: $10,000
           </motion.text>
 
@@ -313,7 +335,7 @@ export const PriceAppreciationChart = () => {
             d={payPath}
             fill="none"
             stroke="hsl(var(--primary))"
-            strokeWidth="3.5"
+            strokeWidth="4.5"
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
             animate={inView ? { pathLength: 1 } : {}}
@@ -322,21 +344,23 @@ export const PriceAppreciationChart = () => {
           {/* flat dashed continuation of the deal price */}
           <motion.line
             x1={px(2)} x2={px(7)} y1={py(DEAL)} y2={py(DEAL)}
-            stroke="hsl(var(--primary))" strokeWidth="2.5" strokeDasharray="6 5" strokeOpacity="0.7"
-            initial={{ opacity: 0 }} animate={inView ? { opacity: 0.7 } : {}} transition={{ delay: 2.3, duration: 0.6 }}
+            stroke="hsl(var(--primary))" strokeWidth="3" strokeDasharray="7 6" strokeOpacity="0.75"
+            initial={{ opacity: 0 }} animate={inView ? { opacity: 0.75 } : {}} transition={{ delay: 2.3, duration: 0.6 }}
           />
           <motion.g initial={{ opacity: 0, scale: 0 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 1.9, duration: 0.4 }}>
-            <circle cx={px(2)} cy={py(DEAL)} r="5.5" fill="hsl(var(--primary))" />
-            <text x={px(2) + 10} y={py(DEAL) - 12} fontSize="13" fontWeight="700" fill="hsl(var(--primary))">
-              You: ≈ ${dealCount.toLocaleString()} · paid in full by month 24 · $0 interest
+            <circle cx={px(2)} cy={py(DEAL)} r="6.5" fill="hsl(var(--primary))" />
+            <text x={px(2) + 12} y={py(DEAL) + 24} fontSize="15" fontWeight="700" fill="hsl(var(--primary))">
+              You: ≈ ${dealCount.toLocaleString()} · paid off by month 24 · $0 interest
             </text>
           </motion.g>
         </svg>
+        </div>
 
         {/* legend */}
-        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs text-foreground/70">
-          <span className="inline-flex items-center gap-2"><span className="w-6 h-[2.5px] rounded bg-foreground/55" /> Cemetery retail, compounding ≈10%/yr</span>
-          <span className="inline-flex items-center gap-2"><span className="w-6 h-[3.5px] rounded bg-primary" /> Our by-owner price, ~35% off today, spread over 24 months at 0%</span>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs sm:text-sm text-foreground/70">
+          <span className="inline-flex items-center gap-2"><span className="w-7 h-1 rounded bg-accent" /> Cemetery retail, compounding ≈10%/yr</span>
+          <span className="inline-flex items-center gap-2"><span className="w-7 h-[4.5px] rounded bg-primary" /> Our by-owner price, ~35% off today, spread over 24 months at 0%</span>
+          <span className="inline-flex items-center gap-2"><span className="w-4 h-3 rounded-sm bg-accent/20 border border-accent/30" /> The widening gap you avoid</span>
         </div>
 
         {/* gap callout */}
