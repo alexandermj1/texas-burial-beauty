@@ -208,7 +208,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const countNum = Math.max(1, Number(plotCount) || 1);
   const feeNum = Number(transferFee) || 0;
   const total = nppNum * countNum;
-  const deedOwnersClean = deedOwners.trim();
+  const ownerList = ownerNames.map((n) => n.trim()).filter(Boolean);
+  const deedOwnersClean = ownerList.join(" & ");
+
   const canGenerate = nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1;
 
   const prepBlock = useMemo(
