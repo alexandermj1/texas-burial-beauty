@@ -48,12 +48,10 @@ function MapReveal({
   title,
   sub,
   children,
-  tall,
 }: {
   title: string;
   sub?: string;
   children: ReactNode;
-  tall?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
