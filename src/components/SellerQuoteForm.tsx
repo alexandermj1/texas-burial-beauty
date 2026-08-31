@@ -121,6 +121,31 @@ const SellerQuoteForm = ({
     setFiles(prev => prev.filter(f => f.path !== path));
   };
 
+  // Pick up anything the seller sent from their phone via the QR code.
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      const { data, error } = await supabase.storage
+        .from("customer-files")
+        .list(`public-intake/${intakeId}`, { limit: 50, sortBy: { column: "name", order: "asc" } });
+      if (cancelled || error || !data) return;
+      setFiles(prev => {
+        const known = new Set(prev.map(f => f.path));
+        const incoming = data
+          .filter(o => o.name && !known.has(`public-intake/${intakeId}/${o.name}`))
+          .map(o => ({
+            path: `public-intake/${intakeId}/${o.name}`,
+            name: o.name.replace(/^\d{10,}-/, ""),
+            size: (o as any).metadata?.size ?? 0,
+            type: (o as any).metadata?.mimetype ?? "",
+          }));
+        return incoming.length ? [...prev, ...incoming] : prev;
+      });
+    };
+    const t = setInterval(poll, 5000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [intakeId]);
+
   const validateStep = (s: number): string | null => {
     if (s === 0) {
       if (!form.name.trim()) return "Please enter your name.";
