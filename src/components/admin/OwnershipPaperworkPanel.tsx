@@ -2562,16 +2562,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 </div>
               )}
 
-              <div className="md:col-span-2">
-                <Label className="text-xs">Mailing address</Label>
-                <Input value={docEdit.fields.address} placeholder="Street address"
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
-              </div>
-              <div className={docEdit.r.contractKind === "poa" ? "md:col-span-2" : ""}>
-                <Label className="text-xs">City, State, ZIP</Label>
-                <Input value={docEdit.fields.city_state_zip}
-                  onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
-              </div>
+              {/* A Power of Attorney is signed in front of a notary, and the
+                  signer writes their own address on it — nothing to fill here. */}
+              {docEdit.r.contractKind !== "poa" && (
+                <>
+                  <div className="md:col-span-2">
+                    <Label className="text-xs">Mailing address</Label>
+                    <Input value={docEdit.fields.address} placeholder="Street address"
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, address: e.target.value } })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">City, State, ZIP</Label>
+                    <Input value={docEdit.fields.city_state_zip}
+                      onChange={(e) => setDocEdit({ ...docEdit, fields: { ...docEdit.fields, city_state_zip: e.target.value } })} />
+                  </div>
+                </>
+              )}
               {/* Phone and email only ever print on the Listing Agreement. */}
               {docEdit.r.contractKind !== "poa" && (
                 <>
