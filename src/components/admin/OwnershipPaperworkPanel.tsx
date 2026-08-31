@@ -2975,7 +2975,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                       <button
                         key={f.path}
                         className="rounded-md border overflow-hidden text-left hover:border-primary/60"
-                        onClick={() => setPdfPreview({ url: thumbs[f.path] ?? "", title: f.name })}
+                        onClick={() => void showPdf(f.name, { bucket: f.bucket, path: f.path, name: f.name })}
                         title={f.name}
                       >
                         <div className="aspect-[4/5] bg-muted flex items-center justify-center overflow-hidden">
