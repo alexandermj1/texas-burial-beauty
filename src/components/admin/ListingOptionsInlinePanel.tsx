@@ -307,6 +307,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         plotCount: countNum,
         transferFee: feeNum,
         environment: getPaymentsEnvironment(),
+        // The broker-typed description is the single source of truth — it also
+        // lands on the listing agreement, POAs and family tree.
+        plotDescription: plotDescription.trim() || null,
       });
       // Persist the retail + quote amount (and the prepared family-tree email)
       // before anything goes out, so the automated chain has it all.

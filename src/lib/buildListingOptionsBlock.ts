@@ -68,6 +68,13 @@ export async function buildListingOptionsBlock(opts: {
   transferFee: number;
   /** Stripe environment — defaults to sandbox if omitted. */
   environment?: "sandbox" | "live";
+  /**
+   * Exact property wording the broker typed in the quote generator. When set
+   * it is printed verbatim (after the cemetery name) instead of being rebuilt
+   * from the raw intake fields, so the quote, agreement and family tree all
+   * describe the property identically.
+   */
+  plotDescription?: string | null;
 }): Promise<string> {
   const { seller, netPerPlot, plotCount, transferFee, environment = "sandbox" } = opts;
   const salePerSpace = netPerPlot;
@@ -114,14 +121,17 @@ export async function buildListingOptionsBlock(opts: {
     }),
   );
 
-  const propertyLine = buildPropertyDescription({
-    cemetery: cemLabel,
-    lawn: seller.lawn,
-    section: seller.section,
-    propertyType: seller.property_type,
-    spaceNumbers: seller.space_numbers,
-    plotCount,
-  });
+  const typedDescription = (opts.plotDescription ?? "").trim();
+  const propertyLine = typedDescription
+    ? [escapeHtml(cemLabel), escapeHtml(typedDescription)].join(" · ")
+    : buildPropertyDescription({
+        cemetery: cemLabel,
+        lawn: seller.lawn,
+        section: seller.section,
+        propertyType: seller.property_type,
+        spaceNumbers: seller.space_numbers,
+        plotCount,
+      });
 
   const spaceWord = plotCount === 1 ? "space" : "spaces";
   const acrossLine = plotCount > 1
