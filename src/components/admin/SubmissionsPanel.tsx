@@ -279,7 +279,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
   const [acceptedFilter, setAcceptedFilter] = useState<boolean>(false);
   const [docsOutFilter, setDocsOutFilter] = useState<boolean>(false);
+  const [docsReturnedFilter, setDocsReturnedFilter] = useState<boolean>(false);
   const [completeFilter, setCompleteFilter] = useState<boolean>(false);
+  // Texas-only: lower-case emails whose submission has at least one document
+  // marked received back (submission_documents.received_at set). Drives the
+  // "Docs returned" pipeline stage between "Docs out" and "Complete".
+  const [returnedDocsEmails, setReturnedDocsEmails] = useState<Set<string>>(new Set());
   // Family tree (ownership questionnaire) filters: link sent vs seller finished.
   const [ftSentFilter, setFtSentFilter] = useState<boolean>(false);
   const [ftDoneFilter, setFtDoneFilter] = useState<boolean>(false);
