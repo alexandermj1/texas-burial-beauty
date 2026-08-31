@@ -149,6 +149,8 @@ const STATE_STYLE: Record<RequiredState, string> = {
   maybe: "bg-slate-100 text-slate-700",
   needed: "bg-amber-100 text-amber-800",
   issued: "bg-blue-100 text-blue-800",
+  sent: "bg-indigo-100 text-indigo-800",
+
   awaiting_seller: "bg-purple-100 text-purple-800",
   received: "bg-teal-100 text-teal-800",
   notarized: "bg-emerald-100 text-emerald-800",
@@ -485,7 +487,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       if (c.completed_at || c.countersigned_at || c.status === "completed") return "complete";
       if (c.notarized_at || c.status === "notarized") return "notarized";
       if (c.signed_at || c.status === "signed") return "received";
-      if (c.status === "sent" || c.status === "viewed") return "issued";
+      if (c.status === "sent" || c.status === "viewed") return "sent";
       return null;
     };
     const codeFor: Record<string, string> = {
@@ -494,7 +496,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       affidavit_heirship: "D12",
       spousal_consent: "D3",
     };
-    const rank: RequiredState[] = ["issued", "received", "notarized", "complete"];
+    const rank: RequiredState[] = ["issued", "sent", "received", "notarized", "complete"];
+
     for (const c of contracts) {
       const st = stateOf(c);
       const code = codeFor[c.kind];
@@ -517,17 +520,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     for (const r of rows) {
       if (!r.doc_code) continue;
       const key = `${r.doc_code}::${personKey(r.person_name)}`;
-      if (r.manual_override) { m[key] = r.manual_override as RequiredState; continue; }
-      const fromContract = contractStates[key];
-      if (fromContract) { m[key] = fromContract; continue; }
-      const state = (r.required_state as RequiredState) ?? "needed";
       // A file the seller has actually sent for this item always outranks a
       // freshly re-computed "needed" — otherwise a checklist sync silently
-      // un-ticks documents we already hold.
+      // un-ticks documents we already hold. It also outranks "we emailed it",
+      // because a signed copy coming back is further along than sending it out.
       const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0);
+      if (r.manual_override) { m[key] = r.manual_override as RequiredState; continue; }
+      const fromContract = contractStates[key];
+      if (fromContract) {
+        m[key] = held && ["issued", "sent"].includes(fromContract) ? "received" : fromContract;
+        continue;
+      }
+      const state = (r.required_state as RequiredState) ?? "needed";
       m[key] = held && !["notarized", "complete"].includes(state) ? "received" : state;
 
     }
+
     return m;
   }, [rows, contractStates]);
 

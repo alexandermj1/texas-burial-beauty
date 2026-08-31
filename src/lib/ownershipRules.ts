@@ -454,7 +454,7 @@ export type CemeteryDocRules = {
 // ── Requirements ─────────────────────────────────────────────────────────────
 
 export type RequiredState =
-  | "not_needed" | "maybe" | "needed" | "issued"
+  | "not_needed" | "maybe" | "needed" | "issued" | "sent"
   | "awaiting_seller" | "received" | "notarized" | "complete";
 
 export const STATE_LABEL: Record<RequiredState, string> = {
@@ -462,6 +462,7 @@ export const STATE_LABEL: Record<RequiredState, string> = {
   maybe: "Maybe",
   needed: "Needed",
   issued: "Drafted — not sent",
+  sent: "Sent to seller",
   awaiting_seller: "Waiting on seller",
   received: "Received",
   notarized: "Notarized",
@@ -469,8 +470,9 @@ export const STATE_LABEL: Record<RequiredState, string> = {
 };
 
 export const STATE_ORDER: RequiredState[] = [
-  "maybe", "needed", "issued", "awaiting_seller", "received", "notarized", "complete", "not_needed",
+  "maybe", "needed", "issued", "sent", "awaiting_seller", "received", "notarized", "complete", "not_needed",
 ];
+
 
 export type Requirement = {
   /** D-code from the master catalog, or REVIEW for a human decision. */
