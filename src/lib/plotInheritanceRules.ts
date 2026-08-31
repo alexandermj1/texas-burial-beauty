@@ -63,6 +63,12 @@ export type V2State = {
   /** What the deed holders were to each other when they were not a couple. */
   deedRel?: string;
   heirSpouse?: Record<string, V2SpouseAnswer>;
+  /** Marriage answer for ANY signer, keyed by their name key. */
+  signerSpouse?: Record<string, V2SpouseAnswer>;
+  /** Durable power of attorney held over ANY signer, keyed by their name key. */
+  signerPoa?: Record<string, { has?: string; n?: string }>;
+  /** True once the seller has answered the spouse / durable POA questions for every signer. */
+  signerCheck?: boolean;
   contacts?: Record<string, { addr?: string; email?: string; phone?: string }>;
   submitted?: boolean;
 };
