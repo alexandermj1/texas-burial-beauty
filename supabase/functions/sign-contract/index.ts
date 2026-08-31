@@ -148,8 +148,35 @@ Deno.serve(async (req) => {
           status: c.status === 'sent' ? 'viewed' : c.status,
         }).eq('id', c.id);
       }
+      // The seller types their own full legal name — never show them a
+      // pre-filled one. If an admin-seeded name is still sitting in an unsigned
+      // listing agreement, blank it out and rebuild the PDF once.
+      if (!c.signed_at && c.kind === 'listing_agreement') {
+        const fd = (c.fill_data ?? {}) as Record<string, unknown>;
+        const supplied = Array.isArray(fd._seller_supplied) ? (fd._seller_supplied as string[]) : [];
+        if (typeof fd.seller_name === 'string' && fd.seller_name.trim() && !supplied.includes('seller_name')) {
+          try {
+            const cleaned = { ...fd, seller_name: '' } as FillData;
+            const { data: tmpl } = await svc.storage.from('contracts').download('_templates/listing-agreement-template.pdf');
+            if (tmpl) {
+              const rebuilt = await buildFilledPdf(new Uint8Array(await tmpl.arrayBuffer()), 'listing_agreement', cleaned);
+              const p = `${c.submission_id}/listing_agreement-${Date.now()}.pdf`;
+              const { error: e2 } = await svc.storage.from('contracts')
+                .upload(p, rebuilt, { contentType: 'application/pdf', upsert: true });
+              if (!e2) {
+                await svc.from('contracts').update({ fill_data: cleaned, filled_pdf_path: p }).eq('id', c.id);
+                c.fill_data = cleaned;
+                c.filled_pdf_path = p;
+              }
+            }
+          } catch (e) {
+            console.error('blank seller_name rebuild failed', e);
+          }
+        }
+      }
       const path = c.signed_pdf_path ?? c.filled_pdf_path;
       const { data: signed } = await svc.storage.from('contracts').createSignedUrl(path, 60 * 60);
+
       return new Response(JSON.stringify({
         kind: c.kind,
         status: c.status,
