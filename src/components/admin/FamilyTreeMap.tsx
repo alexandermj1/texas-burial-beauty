@@ -55,6 +55,8 @@ const CHIP_STYLE: Record<RequiredState, string> = {
   maybe: "bg-slate-100 text-slate-600 border-slate-200",
   needed: "bg-amber-100 text-amber-900 border-amber-200",
   issued: "bg-blue-100 text-blue-900 border-blue-200",
+  sent: "bg-indigo-100 text-indigo-900 border-indigo-200",
+
   awaiting_seller: "bg-purple-100 text-purple-900 border-purple-200",
   received: "bg-teal-100 text-teal-900 border-teal-200",
   notarized: "bg-emerald-100 text-emerald-900 border-emerald-200",
