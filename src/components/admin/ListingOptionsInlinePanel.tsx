@@ -451,33 +451,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             />
           </div>
           <div className="space-y-1.5">
-            <label className={labelCls}>Family-tree roster (one per owner)</label>
-            {roster.map((r, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  type="text" value={r.name}
-                  onChange={(e) =>
-                    setRoster((prev) => prev.map((p, j) => (j === i ? { ...p, name: e.target.value } : p)))
-                  }
-                  placeholder="Name as it appears on the deed" className={inputCls}
-                />
-                <button
-                  type="button"
-                  onClick={() => setRoster((prev) => prev.filter((_, j) => j !== i))}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setRoster((prev) => [...prev, { name: "", deceased: false }])}
-              className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
-            >
-              <Plus className="w-3 h-3" /> Add a name from the deed
-            </button>
-          </div>
+          {/* The deed names above ARE the family-tree seed — the tree view
+              derives straight from deedOwnerNames, no duplicate list. */}
           <div className="grid grid-cols-1 gap-2">
             <div>
               <label className={labelCls}>Plot description</label>
