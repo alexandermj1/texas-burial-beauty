@@ -48,6 +48,7 @@ const SignContract = lazy(() => import("./pages/SignContract"));
 const SelectStarter = lazy(() => import("./pages/SelectStarter"));
 const SellerPortal = lazy(() => import("./pages/SellerPortal"));
 const SellerPortalMobileUpload = lazy(() => import("./pages/SellerPortalMobileUpload"));
+const SellerIntakeUpload = lazy(() => import("./pages/SellerIntakeUpload"));
 const SellerDocuments = lazy(() => import("./pages/SellerDocuments"));
 const OwnershipConfirm = lazy(() => import("./pages/OwnershipConfirm"));
 const FileViewer = lazy(() => import("./pages/FileViewer"));
