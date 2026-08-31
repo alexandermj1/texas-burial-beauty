@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
+import PreneedBlock from "@/components/PreneedBlock";
+
 
 
 const PATH = "/cemetery-plot-cost-texas";
