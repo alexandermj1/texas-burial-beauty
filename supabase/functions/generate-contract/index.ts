@@ -274,9 +274,22 @@ Deno.serve(async (req) => {
         email: fill.email,
       });
 
+    } else if (kind === 'poa') {
+      // Single-signer POA is now typeset from the same shared builder as the
+      // joint one (no scanned template), so both forms carry identical terms.
+      filled = await buildJointPoaPdf({
+        principals: [{ name: fill.seller_name, address: '' }],
+        cemetery: overrides.cemetery ?? sub.cemetery ?? '',
+        cemetery_city: cemLocationCity,
+        plot_description: plotDescriptionNoCount || plotDescription,
+        spaces: adminPlotDescription ? '' : (sub.spaces ?? ''),
+        plot_count: fill.plot_count ?? '',
+        phone: fill.phone,
+        email: fill.email,
+      });
     } else {
-      const templateBytes = await fetchTemplate(svc, kind as 'listing_agreement' | 'poa');
-      filled = await buildFilledPdf(templateBytes, kind as 'listing_agreement' | 'poa', fill);
+      const templateBytes = await fetchTemplate(svc, 'listing_agreement');
+      filled = await buildFilledPdf(templateBytes, 'listing_agreement', fill);
     }
 
     const path = `${submission_id}/${kind}-${Date.now()}.pdf`;

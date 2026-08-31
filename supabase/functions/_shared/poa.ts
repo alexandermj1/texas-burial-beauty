@@ -111,8 +111,7 @@ function acknowledgmentBlock(ctx: Ctx, label: string, signerName: string) {
 
 /** The Agent countersigns to accept the appointment and the duties in Section 2. */
 function agentAcceptanceBlock(ctx: Ctx) {
-  space(ctx, 10);
-  para(ctx, 'ACCEPTANCE BY AGENT', { size: 11, font: ctx.bold, gap: 6 });
+  space(ctx, 4);
   para(ctx, 'The undersigned accepts appointment as Agent under this instrument and agrees to act only within the authority granted above and in accordance with the duties stated in Section 2, including keeping the Principal\'s funds separate from the Agent\'s own funds and accounting for them on request.',
     { size: 10, gap: 16 });
   rule(ctx, 260);
@@ -249,7 +248,6 @@ export async function buildPoaPdf(d: PoaData): Promise<Uint8Array> {
 
   newPage(ctx);
   heading(ctx, 'ACCEPTANCE BY AGENT', 12);
-  ctx.y += 12;
   agentAcceptanceBlock(ctx);
 
   // Chrome on the instrument pages only — the appended data-reference sheet
