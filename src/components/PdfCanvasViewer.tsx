@@ -15,8 +15,13 @@ export default function PdfCanvasViewer({ url, title }: { url: string; title: st
     if (!host || !url) return;
     let cancelled = false;
     const task = pdfjs.getDocument({ url });
-    host.replaceChildren();
-    setLoading(true);
+    // Render into a detached container first so the currently visible pages
+    // stay on screen (and keep their scroll position) while the new version
+    // loads — no blank flash while the seller is reading.
+    const staging = document.createElement("div");
+    staging.className = "flex flex-col items-center gap-4";
+    const hadContent = host.childElementCount > 0;
+    setLoading(!hadContent);
     setError("");
 
     void task.promise.then(async (pdf) => {
@@ -35,10 +40,14 @@ export default function PdfCanvasViewer({ url, title }: { url: string; title: st
         canvas.style.height = `${Math.floor(viewport.height)}px`;
         canvas.className = "block max-w-full bg-background shadow-sm";
         canvas.setAttribute("aria-label", `${title}, page ${pageNumber} of ${pdf.numPages}`);
-        host.appendChild(canvas);
+        staging.appendChild(canvas);
         await page.render({ canvas, canvasContext: context, viewport, transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0] }).promise;
       }
-      if (!cancelled) setLoading(false);
+      if (cancelled) return;
+      const keep = host.scrollTop;
+      host.replaceChildren(...Array.from(staging.childNodes));
+      host.scrollTop = keep;
+      setLoading(false);
     }).catch((cause: unknown) => {
       if (!cancelled) {
         setLoading(false);
@@ -49,9 +58,9 @@ export default function PdfCanvasViewer({ url, title }: { url: string; title: st
     return () => {
       cancelled = true;
       void task.destroy();
-      host.replaceChildren();
     };
   }, [title, url]);
+
 
   return (
     <div className="relative min-h-80 bg-muted/30">
