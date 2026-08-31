@@ -247,7 +247,10 @@ ${tierCards}
 
       <!-- BUYER PAID -->
       ${section("Buyer-paid costs", `
-        ${p(`For clarity on the closing statement you'll eventually see: the mandatory cemetery transfer fee at ${escapeHtml(cemLabel)}${transferFee > 0 ? ` (${fmtUsd(transferFee)})` : ""} is paid by the buyer, not you. The buyer is responsible for all cemetery fees—such as transfer, quitclaim, and additional endowment care—as well as broker fees, including marketing, referral, and processing expenses. Buyers may also elect additional services through our company — financing, mortuary referral coordination, in-person showings, and similar — which are likewise billed to the buyer and itemized separately. As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
+        ${p(`For clarity on the closing statement you'll eventually see, these charges fall to the buyer, not to you:`, true)}
+        ${p(`&bull; <strong style="color:${BRAND_INK};">Buyer's fee — 15% of the sale price.</strong> A fee we charge the buyer for handling the purchase, paperwork and cemetery coordination. It is added on top of the sale price and is entirely separate from the 15% commission deducted from your side.<br>&bull; <strong style="color:${BRAND_INK};">Cemetery transfer fee${transferFee > 0 ? ` — ${fmtUsd(transferFee)} at ${escapeHtml(cemLabel)}` : ""}.</strong> Charged by the cemetery to move the interment rights into the buyer's name.<br>&bull; <strong style="color:${BRAND_INK};">Other cemetery and service charges.</strong> Quitclaim and endowment care fees, plus optional buyer services such as financing, mortuary referral coordination and in-person showings, itemized separately to the buyer.`, true)}
+        ${p(`As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
+
       `)}
 
       <!-- MORTUARY SHEET LINK -->
