@@ -517,6 +517,26 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   const stateByKey = useMemo(() => {
     const m: Record<string, RequiredState> = { ...contractStates };
+    const PROGRESS: RequiredState[] = ["not_needed", "maybe", "needed", "issued", "sent", "awaiting_seller", "received", "notarized", "complete"];
+    const rankOf = (s?: RequiredState | null) => (s ? PROGRESS.indexOf(s) : -1);
+    // Contracts are keyed by the name on the contract ("Danny Roby") which is
+    // often a short form of the checklist person ("Danny Howard Roby"). Fall
+    // back to a token-subset match so the real contract status still lands.
+    const contractFor = (code: string, person?: string | null): RequiredState | undefined => {
+      const exact = contractStates[`${code}::${personKey(person)}`];
+      if (exact) return exact;
+      const tokens = String(person ?? "").toLowerCase().split(/\s+/).filter(Boolean);
+      if (!tokens.length) return undefined;
+      let best: RequiredState | undefined;
+      for (const [k, v] of Object.entries(contractStates)) {
+        if (!k.startsWith(`${code}::`)) continue;
+        const other = k.slice(code.length + 2).split(/\s+/).filter(Boolean);
+        if (!other.length) continue;
+        const overlap = other.every((t) => tokens.includes(t)) || tokens.every((t) => other.includes(t));
+        if (overlap && rankOf(v) > rankOf(best)) best = v;
+      }
+      return best;
+    };
     for (const r of rows) {
       if (!r.doc_code) continue;
       const key = `${r.doc_code}::${personKey(r.person_name)}`;
@@ -525,19 +545,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // un-ticks documents we already hold. It also outranks "we emailed it",
       // because a signed copy coming back is further along than sending it out.
       const held = !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0);
-      if (r.manual_override) { m[key] = r.manual_override as RequiredState; continue; }
-      const fromContract = contractStates[key];
-      if (fromContract) {
-        m[key] = held && ["issued", "sent"].includes(fromContract) ? "received" : fromContract;
-        continue;
-      }
-      const state = (r.required_state as RequiredState) ?? "needed";
-      m[key] = held && !["notarized", "complete"].includes(state) ? "received" : state;
+      const override = (r.manual_override as RequiredState | null) ?? null;
+      const fromContract = contractFor(r.doc_code, r.person_name);
+      const rowState = (r.required_state as RequiredState) ?? "needed";
 
+      // "Not needed" is a deliberate admin decision and always wins.
+      if (override === "not_needed") { m[key] = "not_needed"; continue; }
+
+      // Otherwise take the furthest-along truth we have. A stale "issued"
+      // override must never hide the fact that the contract was actually
+      // emailed, and a returned file must never be hidden by either.
+      let best: RequiredState = override ?? rowState;
+      if (rankOf(fromContract) > rankOf(best)) best = fromContract as RequiredState;
+      if (held && rankOf("received") > rankOf(best)) best = "received";
+      m[key] = best;
     }
 
     return m;
   }, [rows, contractStates]);
+
 
   // `summarise` keys states by the raw requirement key (`code::Person Name`)
   // while `stateByKey` uses the normalised person key, so hand it a re-keyed
