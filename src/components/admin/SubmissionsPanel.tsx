@@ -745,8 +745,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // under "Awaiting quote" and "Accepted" at the same time.
   const stageStep = (s: Submission): number => {
     const a = s as any;
-    if (a.documents_completed_at) return 8;
-    if (a.documents_requested_at) return 7;
+    if (a.documents_completed_at) return 9;
+    if (a.documents_requested_at) {
+      const e = (s.email || "").trim().toLowerCase();
+      const ans = (a.ownership_answers ?? {}) as Record<string, any>;
+      if ((e && returnedDocsEmails.has(e)) || ans.docsReturnedAt) return 8;
+      return 7;
+    }
     if (ftState(s).doneAt) return 6;
     if (ftState(s).sentAt) return 5;
     if (a.quote_response === "accepted") return 4;
