@@ -374,12 +374,13 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const addNames = (names: string[]) => {
     const clean = names.map((n) => n.trim()).filter(Boolean);
     if (!clean.length) return;
-    setDeedOwners((prev) => {
-      const have = prev.split(/\s*(?:&|and|,)\s*/i).map((s) => s.trim().toLowerCase()).filter(Boolean);
+    setOwnerNames((prev) => {
+      const have = prev.map((s) => s.trim().toLowerCase()).filter(Boolean);
       const add = clean.filter((n) => !have.includes(n.toLowerCase()));
       if (!add.length) return prev;
-      return [prev.trim(), ...add].filter(Boolean).join(" & ");
+      return [...prev.filter((s) => s.trim()), ...add];
     });
+
   };
 
   return (
