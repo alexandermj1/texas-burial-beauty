@@ -130,7 +130,10 @@ Deno.serve(async (req) => {
     //    indefinitely for the recipient.
     let sessionLike: { id: string; url: string | null };
 
-    if (kind === "custom") {
+    {
+      // Payment Links (not Checkout Sessions) for every paid kind: Stripe
+      // caps a Checkout Session at 24h, which silently broke emailed links
+      // opened the next day. Payment Links never expire.
       const product = await stripe.products.create({
         name: productName,
         ...(productDescription && { description: productDescription }),
@@ -140,6 +143,13 @@ Deno.serve(async (req) => {
         unit_amount: amountCents,
         product: product.id,
       });
+      const linkMetadata = {
+        submission_id: submissionId,
+        kind,
+        recipient_email: recipientEmail,
+        recipient_name: recipientName,
+        ...(listingTier && { listing_tier: listingTier }),
+      };
       const paymentLink = await stripe.paymentLinks.create({
         line_items: [{ price: price.id, quantity: 1 }],
         payment_method_types: ["card"],
@@ -149,59 +159,14 @@ Deno.serve(async (req) => {
         },
         payment_intent_data: {
           description: `${BRAND_NAME} — ${productName}`,
-          metadata: {
-            submission_id: submissionId,
-            kind,
-            recipient_name: recipientName,
-            recipient_email: recipientEmail,
-          },
+          metadata: linkMetadata,
         },
-        metadata: {
-          submission_id: submissionId,
-          kind,
-          recipient_email: recipientEmail,
-          recipient_name: recipientName,
-        },
+        metadata: linkMetadata,
       });
       sessionLike = { id: paymentLink.id, url: paymentLink.url };
-    } else {
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        ui_mode: "hosted_page",
-        payment_method_types: ["card"],
-        line_items: [{
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: productName,
-              ...(productDescription && { description: productDescription }),
-            },
-            unit_amount: amountCents,
-          },
-          quantity: 1,
-        }],
-        customer_email: recipientEmail,
-        payment_intent_data: {
-          description: `${BRAND_NAME} — ${productName}`,
-          metadata: {
-            submission_id: submissionId,
-            kind,
-            recipient_name: recipientName,
-            ...(listingTier && { listing_tier: listingTier }),
-          },
-        },
-        metadata: {
-          submission_id: submissionId,
-          kind,
-          recipient_email: recipientEmail,
-          recipient_name: recipientName,
-          ...(listingTier && { listing_tier: listingTier }),
-        },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/payment-cancelled`,
-      });
-      sessionLike = { id: session.id, url: session.url };
     }
+
+
 
     const session = sessionLike;
 

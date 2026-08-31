@@ -3,6 +3,8 @@
 // edge function (kind: "custom") and injects a Georgia-styled CTA block into
 // the editor. Uses the LIVE Stripe environment so real money is collected.
 import { useState } from "react";
+import { createPortal } from "react-dom";
+
 import { Loader2, CreditCard, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -109,12 +111,19 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
   };
 
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+  // Rendered through a portal so the dialog is always centred in the
+  // viewport — inside a long email thread the surrounding transformed /
+  // scrolled containers pushed it far down the page.
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center overflow-y-auto bg-black/50 p-4 py-10"
+      onClick={onClose}
+    >
       <div
-        className="bg-background rounded-xl border border-border shadow-2xl w-full max-w-md p-5 space-y-4"
+        className="bg-background rounded-xl border border-border shadow-2xl w-full max-w-md p-5 space-y-4 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-primary" />
@@ -199,8 +208,10 @@ const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
+
 };
 
 export default AttachPaymentButtonDialog;
