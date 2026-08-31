@@ -71,14 +71,22 @@ export async function buildListingOptionsBlock(opts: {
 }): Promise<string> {
   const { seller, netPerPlot, plotCount, transferFee, environment = "sandbox" } = opts;
   const salePerSpace = netPerPlot;
+  const fee = transferFee > 0 ? transferFee : 0;
   // The headline figure is quoted INCLUSIVE of the cemetery transfer fee and
   // the fee is then deducted in the breakdown below, so the seller can see the
   // full price the property is listed at rather than a pre-netted number.
-  const grossPerSpace = salePerSpace + (transferFee > 0 ? transferFee : 0);
+  // Across multiple spaces the cemetery charges its transfer fee ONCE, so the
+  // "all spaces" column adds it a single time rather than per space.
+  const grossPerSpace = salePerSpace + fee;
   const commissionPerSpace = Math.round(salePerSpace * 0.15);
   const proceedsPerSpace = salePerSpace - commissionPerSpace;
-  const totalSale = grossPerSpace * plotCount;
-  const totalProceeds = proceedsPerSpace * plotCount;
+  const saleSubtotal = salePerSpace * plotCount;
+  const commissionTotal = Math.round(saleSubtotal * 0.15);
+  const totalSale = saleSubtotal + fee;
+  const totalProceeds = saleSubtotal - commissionTotal;
+  const buyerFeePerSpace = Math.round(salePerSpace * 0.15);
+  const buyerFeeTotal = Math.round(saleSubtotal * 0.15);
+
   const cemLabel = properCase(seller.cemetery || "your cemetery");
 
 
