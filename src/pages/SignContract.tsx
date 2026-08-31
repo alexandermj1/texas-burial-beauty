@@ -251,7 +251,7 @@ export default function SignContract() {
         if (!res.ok) throw new Error(data.error ?? "Could not load");
         setInfo(data);
         setSubmissionId(data.submission_id ?? "");
-        setPdfUrl(data.pdf_url);
+        void localizePdf(data.pdf_url as string, setPdfUrl);
         const fd = (data.fill_data ?? {}) as Record<string, string>;
         const next: SellerFields = {
           seller_name: "",
@@ -325,7 +325,7 @@ export default function SignContract() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not update contract");
-      setPdfUrl(data.pdf_url);
+      void localizePdf(data.pdf_url as string, setPdfUrl);
       if (!silent) toast.success("Contract updated with your details");
     } catch (e) {
       if (!silent) toast.error((e as Error).message);
@@ -413,7 +413,7 @@ export default function SignContract() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not complete document");
-      if (data.pdf_url) setFinalPdfUrl(data.pdf_url as string);
+      if (data.pdf_url) void localizePdf(data.pdf_url as string, (u) => setFinalPdfUrl(u));
       setDone(true);
       toast.success("Your document is ready — next steps are on this page.");
     } catch (e) {
