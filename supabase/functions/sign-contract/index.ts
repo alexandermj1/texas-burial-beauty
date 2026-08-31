@@ -847,7 +847,10 @@ Deno.serve(async (req) => {
     // Listing Agreement has five "SELLER INITIAL HERE" acknowledgement boxes in
     // the body of the document; stamp the seller's initials inside each one so
     // every requested section is affirmatively initialed.
-    if (c.kind === 'listing_agreement') stampInlineInitials(pages, initialsStamp, bold);
+    if (c.kind === 'listing_agreement') {
+      stampInlineInitials(pages, initialsStamp, bold);
+      stampSaleTermsInitials(pages, initialsStamp, font, bold);
+    }
 
     // === Certification / audit page (E-SIGN + UETA compliance) ===
     // Styled to match the appended data-reference sheet and template chrome.
