@@ -53,7 +53,15 @@ const inputCls =
 const labelCls =
   "text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-1 block";
 
-type RosterEntry = { name: string; deceased?: boolean };
+type RosterEntry = { name: string };
+
+/** Split "A & B, C"-style deed names into one entry per person. */
+const rosterFrom
+Names = (raw: string): RosterEntry[] =>
+  String(raw || "")
+    .split(/\s*(?:&|,|;|\band\b)\s*/i)
+    .filter(Boolean)
+    .map((name) => ({ name }));
 
 export default function ListingOptionsInlinePanel({ seller, onGenerated, onGeneratedAndSend, hasGenerated, sending }: Props) {
   const { toast } = useToast();
