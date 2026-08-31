@@ -951,6 +951,47 @@ export function buildLogic(state, setS, accent0, CRM) {
         };
       }),
 
+      show9: stage3 && signerAsks.length > 0,
+      n9bg: (d9 ? acc : '#f0f0f3'), n9fg: (d9 ? '#ffffff' : '#9a9aa2'),
+      signerRows: signerAsks.map(r => {
+        const a = (s.signerSpouse || {})[r.key] || {};
+        const p = (s.signerPoa || {})[r.key] || {};
+        const typed = (a.n || '').trim();
+        const clash = !!typed && nameKey(typed) === r.key;
+        return {
+          name: r.name, roles: r.roles.join(' \u00b7 '),
+          askSpouse: r.askSpouse,
+          spouseQuestion: 'Is ' + r.name + ' married?',
+          spouseSeg: L.seg(a.has, [['no', 'Not married'], ['yes', 'Married']], v => L.patch('signerSpouse', r.key, { has: v })),
+          spouseYes: a.has === 'yes',
+          spouseName: a.n || '',
+          spousePlaceholder: 'Full legal name of ' + r.name + '\u2019s husband or wife \u2014 not ' + r.name,
+          setSpouse: ev => { const v = ev.target.value; L.patch('signerSpouse', r.key, { n: v }); },
+          clash,
+          clashNote: clash ? 'That is the same name as ' + r.name + '. Please type the name of their husband or wife instead.' : '',
+          pair: typed ? typed + ' is the husband or wife of ' + r.name : 'Whoever you name here is recorded as the husband or wife of ' + r.name + '.',
+          aliveLabel: typed ? 'Is ' + typed + ' still living?' : 'Is that spouse still living?',
+          aliveSeg: L.seg(a.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('signerSpouse', r.key, { alive: v })),
+          aliveNeeded: a.has === 'yes' && !a.alive,
+          aliveNote: a.alive === 'living'
+            ? 'They sign the same power of attorney as ' + r.name + ', so we will ask for their address at the end.'
+            : a.alive === 'deceased'
+              ? 'Nothing to sign from them.'
+              : 'Only a living husband or wife signs, so we have to know.',
+
+          askPoa: r.askPoa,
+          poaQuestion: 'Does anyone hold a durable power of attorney for ' + r.name + '?',
+          poaSeg: L.seg(p.has, [['no', 'No'], ['yes', 'Yes']], v => L.patch('signerPoa', r.key, { has: v })),
+          poaYes: p.has === 'yes',
+          poaAgent: p.n || '',
+          poaPlaceholder: 'Full legal name of the person who holds it',
+          setPoaAgent: ev => { const v = ev.target.value; L.patch('signerPoa', r.key, { n: v }); },
+          poaNote: p.has === 'yes'
+            ? r.name + ' cannot sign personally \u2014 whoever holds the power of attorney signs in their name, and we will need a copy of it.'
+            : 'If someone holds a durable power of attorney over them, that person signs in their place.'
+        };
+      }),
+
       showContacts: ready,
       contactsTitle: signers.length === 1 ? 'One person needs a power of attorney' : signers.length + ' people need a power of attorney',
       contacts: alive.map(c => {
