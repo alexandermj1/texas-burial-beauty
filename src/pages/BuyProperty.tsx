@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
-import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough.jpg.asset.json";
+import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
@@ -729,7 +729,7 @@ const BuyProperty = () => {
               </p>
             </div>
             <figure className="m-0">
-              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[4/3] object-cover rounded-2xl border border-border" />
+              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[16/10] object-cover rounded-2xl border border-border" />
               <figcaption className="mt-2 text-xs text-muted-foreground leading-snug">A member of our team, ready to walk the grounds with you in person.</figcaption>
             </figure>
           </div>
