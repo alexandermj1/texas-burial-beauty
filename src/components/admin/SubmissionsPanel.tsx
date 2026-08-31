@@ -699,6 +699,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [texasEmailsKey]);
 
+  // Texas-only: which submissions have had at least one requested document sent
+  // back (submission_documents.received_at set). Keyed by lower-case email so it
+  // survives email-merged duplicates. Drives the "Docs returned" stage.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("submission_documents" as any)
+        .select("submission_id")
+        .is("deleted_at", null)
+        .not("received_at", "is", null);
+      if (cancelled || !data) return;
+      const ids = new Set<string>((data as any[]).map(r => r.submission_id).filter(Boolean));
+      const emails = new Set<string>();
+      for (const s of submissions) {
+        const e = (s.email || "").trim().toLowerCase();
+        if (e && ids.has(s.id)) emails.add(e);
+      }
+      setReturnedDocsEmails(emails);
+    };
+    load();
+    let ft: ReturnType<typeof setTimeout> | null = null;
+    const scheduleLoad = () => {
+      if (ft) clearTimeout(ft);
+      ft = setTimeout(() => { ft = null; load(); }, 2500);
+    };
+    const ch = supabase.channel("submission_documents_returned")
+      .on("postgres_changes", { event: "*", schema: "public", table: "submission_documents" }, scheduleLoad)
+      .subscribe();
+    return () => { cancelled = true; if (ft) clearTimeout(ft); ch.unsubscribe(); supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissions]);
+
+
 
   const hasDocs = (s: Submission) => {
     const e = (s.email || "").trim().toLowerCase();
