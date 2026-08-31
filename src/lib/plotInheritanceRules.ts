@@ -92,6 +92,10 @@ export type MasterSigner = {
 
 const clean = (s: unknown) => String(s ?? "").trim();
 
+export const signerKey = (n: string) => {
+  return key(n);
+};
+
 const key = (n: string) => {
   const t = n.toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
   if (!t) return "";
