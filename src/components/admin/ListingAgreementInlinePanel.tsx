@@ -81,7 +81,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
   const [busy, setBusy] = useState(false);
 
   // Headline fields
-  const [sellerName, setSellerName] = useState<string>(seller.name ?? "");
   const [plotCount, setPlotCount] = useState<string>(String(parseCount(seller.spaces)));
   const [listingOption, setListingOption] = useState<string>("Starter");
 
@@ -100,7 +99,6 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setSellerName(seller.name ?? "");
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
