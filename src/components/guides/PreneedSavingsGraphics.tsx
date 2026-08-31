@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { TrendingDown, PiggyBank, CalendarClock, Tag } from "lucide-react";
+import { TrendingDown, PiggyBank, CalendarClock, Tag, TrendingUp, ExternalLink } from "lucide-react";
 
 /* ---------------------------------------------------------------- helpers */
 
@@ -216,6 +216,156 @@ export const FinancingGraphic = () => {
             <span>Month 24</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+/* --------------------------------------- price appreciation vs buying today */
+
+const CHART_SRC = "https://bayercemeterybrokers.com/cemetery-grave-plot-price-increases-market-trend-analysis/";
+
+// geometry
+const W = 720, H = 360;
+const X0 = 58, X1 = 690;            // plot width  (years 0..7)
+const Y0 = 306, Y1 = 44;            // plot height (price $0..$22k)
+const MAXP = 22000;
+const px = (yr: number) => X0 + (yr / 7) * (X1 - X0);
+const py = (p: number) => Y0 - (p / MAXP) * (Y0 - Y1);
+
+// retail: $10k compounding ~10.4%/yr -> ~$20k at year 7
+const retailAt = (yr: number) => 10000 * Math.pow(2, yr / 7);
+const retailPath = Array.from({ length: 29 }, (_, i) => {
+  const yr = (i / 28) * 7;
+  return `${i === 0 ? "M" : "L"}${px(yr).toFixed(1)},${py(retailAt(yr)).toFixed(1)}`;
+}).join(" ");
+
+// our deal: ~35% off today's $10k = $6,500, paid evenly over 24 months, 0% interest
+const DEAL = 6500;
+const payPath = `M${px(0)},${py(0)} L${px(2)},${py(DEAL)}`;
+
+export const PriceAppreciationChart = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+
+  const retailFuture = useCountUp(20000, inView, 2200);
+  const dealCount = useCountUp(DEAL, inView, 1600);
+  const gapCount = useCountUp(20000 - DEAL, inView, 2400);
+
+  return (
+    <div ref={ref} className="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/8 via-background to-accent/5 overflow-hidden">
+      <div className="p-7 md:p-9 border-b border-primary/10 flex items-start gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]">
+          <TrendingUp className="w-6 h-6" strokeWidth={1.75} />
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-2">Prices only move one way</p>
+          <p className="font-display text-2xl md:text-3xl text-foreground leading-snug">A $10,000 space today is likely a $20,000 space within about seven years</p>
+          <p className="text-foreground/75 leading-relaxed mt-2">
+            Cemetery retail prices have historically doubled at roughly that pace.{" "}
+            <a href={CHART_SRC} target="_blank" rel="noopener noreferrer" className="text-primary font-medium underline decoration-primary/40 underline-offset-4 hover:decoration-primary inline-flex items-center gap-1">
+              Read our market trend analysis on cemetery plot price increases <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <div className="p-5 md:p-8">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Line chart: cemetery retail price rising from $10,000 to about $20,000 over seven years, compared with a discounted by-owner price of about $6,500 paid over 24 months at zero interest">
+          {/* gridlines */}
+          {[0, 5500, 11000, 16500, 22000].map((v) => (
+            <g key={v}>
+              <line x1={X0} x2={X1} y1={py(v)} y2={py(v)} stroke="hsl(var(--border))" strokeOpacity="0.6" strokeDasharray={v === 0 ? "" : "3 5"} />
+              <text x={X0 - 8} y={py(v) + 4} textAnchor="end" fontSize="11" fill="hsl(var(--muted-foreground))">{v === 0 ? "$0" : `$${v / 1000}k`}</text>
+            </g>
+          ))}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((yr) => (
+            <text key={yr} x={px(yr)} y={Y0 + 20} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">
+              {yr === 0 ? "Today" : `Yr ${yr}`}
+            </text>
+          ))}
+
+          {/* retail line */}
+          <motion.path
+            d={retailPath}
+            fill="none"
+            stroke="hsl(var(--foreground))"
+            strokeOpacity="0.55"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={inView ? { pathLength: 1 } : {}}
+            transition={{ duration: 2.4, ease: "easeInOut" }}
+          />
+          {/* end dot + label */}
+          <motion.g initial={{ opacity: 0, scale: 0 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 2.2, duration: 0.4 }}>
+            <circle cx={px(7)} cy={py(20000)} r="5" fill="hsl(var(--foreground))" />
+            <text x={px(7) - 8} y={py(20000) - 12} textAnchor="end" fontSize="13" fontWeight="600" fill="hsl(var(--foreground))">
+              ≈ ${retailFuture.toLocaleString()} at-need
+            </text>
+          </motion.g>
+          <motion.text x={px(0) + 6} y={py(10000) - 10} fontSize="12" fill="hsl(var(--muted-foreground))" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.3 }}>
+            Cemetery retail today: $10,000
+          </motion.text>
+
+          {/* 0% payment line (first 24 months) */}
+          <motion.path
+            d={payPath}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={inView ? { pathLength: 1 } : {}}
+            transition={{ duration: 1.6, delay: 0.8, ease: "easeOut" }}
+          />
+          {/* flat dashed continuation of the deal price */}
+          <motion.line
+            x1={px(2)} x2={px(7)} y1={py(DEAL)} y2={py(DEAL)}
+            stroke="hsl(var(--primary))" strokeWidth="2.5" strokeDasharray="6 5" strokeOpacity="0.7"
+            initial={{ opacity: 0 }} animate={inView ? { opacity: 0.7 } : {}} transition={{ delay: 2.3, duration: 0.6 }}
+          />
+          <motion.g initial={{ opacity: 0, scale: 0 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 1.9, duration: 0.4 }}>
+            <circle cx={px(2)} cy={py(DEAL)} r="5.5" fill="hsl(var(--primary))" />
+            <text x={px(2) + 10} y={py(DEAL) - 12} fontSize="13" fontWeight="700" fill="hsl(var(--primary))">
+              You: ≈ ${dealCount.toLocaleString()} · paid in full by month 24 · $0 interest
+            </text>
+          </motion.g>
+        </svg>
+
+        {/* legend */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs text-foreground/70">
+          <span className="inline-flex items-center gap-2"><span className="w-6 h-[2.5px] rounded bg-foreground/55" /> Cemetery retail, compounding ≈10%/yr</span>
+          <span className="inline-flex items-center gap-2"><span className="w-6 h-[3.5px] rounded bg-primary" /> Our by-owner price, ~35% off today, spread over 24 months at 0%</span>
+        </div>
+
+        {/* gap callout */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mt-6 rounded-2xl bg-primary/10 border border-primary/20 p-5 md:p-6 flex flex-wrap items-center gap-4 justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+              <PiggyBank className="w-5 h-5" strokeWidth={1.75} />
+            </div>
+            <div>
+              <p className="font-display text-3xl text-primary leading-none">${gapCount.toLocaleString()}</p>
+              <p className="text-sm text-foreground/70 mt-1">the gap between buying preneed through us and paying at-need retail in seven years</p>
+            </div>
+          </div>
+          <p className="text-xs text-foreground/60 max-w-[240px] leading-relaxed">
+            Lock the discounted price now, pay it off interest-free — and the doubling curve works for you, not against you.
+          </p>
+        </motion.div>
+
+        <p className="text-xs text-foreground/55 leading-relaxed mt-4">
+          Illustrative projection based on historic cemetery retail increases; see our{" "}
+          <a href={CHART_SRC} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 underline-offset-2">published market analysis</a>{" "}
+          for the underlying data. Future prices are not guaranteed — but the direction of travel has been consistent for decades.
+        </p>
       </div>
     </div>
   );
