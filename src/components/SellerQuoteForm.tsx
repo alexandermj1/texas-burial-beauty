@@ -847,6 +847,7 @@ const SellerQuoteForm = ({
                           disabled={uploading}
                         />
                       </label>
+                      <div className="hidden sm:block"><PhoneUploadQR intakeId={intakeId} /></div>
 
                       {files.length > 0 && (
                         <ul className="mt-4 space-y-2">
