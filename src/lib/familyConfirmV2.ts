@@ -376,8 +376,86 @@ export function buildLogic(state, setS, accent0, CRM) {
       }
     });
 
+    // Anyone who signs brings their own household with them: a living husband
+    // or wife signs the joint power of attorney, and anyone who has given a
+    // durable power of attorney signs through their attorney-in-fact instead.
+    // Their spouse then becomes a signer too, so this runs in passes.
+    for (let pass = 0; pass < 4; pass++) {
+      const before = order.length;
+      order.slice().forEach(k => {
+        const e = map[k];
+        if (!e.must || e.dead || e.agentFor) return;
+        const sa = (s.signerSpouse || {})[k] || {};
+        if (sa.has === 'yes' && (sa.n || '').trim()) {
+          const spDead = sa.alive === 'deceased';
+          add(sa.n,
+            spDead
+              ? 'Husband or wife of ' + e.name + ' \u00b7 has died \u2014 nothing to sign from them'
+              : 'Husband or wife of ' + e.name + ' \u2014 holds a right of interment and signs alongside them',
+            spDead ? { dead: true } : { must: true });
+        }
+        const pa = (s.signerPoa || {})[k] || {};
+        if (pa.has === 'yes' && (pa.n || '').trim()) {
+          add(pa.n, 'Holds a durable power of attorney for ' + e.name + ' \u2014 signs in ' + e.name + '\u2019s name', { must: true, agentFor: e.name });
+        }
+      });
+      if (order.length === before) break;
+    }
+
     return order.map(k => map[k]);
   },
+
+  // Every signer, and which of the two questions still has to be put to the
+  // seller about them. Deed owners were already asked about a durable power of
+  // attorney in step 3, and deed owners and heirs about their marriage.
+  signerAsks: () => {
+    const s = state;
+    const asked = {}, isSpouseOf = {}, poaAsked = {};
+    L.named().forEach(d => {
+      asked[nameKey(d.n)] = true;
+      const sp = L.sp(d.id);
+      if (sp.has === 'yes' && (sp.n || '').trim()) isSpouseOf[nameKey(sp.n)] = true;
+    });
+    L.living().forEach(d => { poaAsked[nameKey(d.n)] = true; });
+    L.inheritors().forEach(h => {
+      asked[nameKey(h.n)] = true;
+      const hs = s.heirSpouse[h.id] || {};
+      if (hs.has === 'yes' && (hs.n || '').trim()) isSpouseOf[nameKey(hs.n)] = true;
+    });
+    Object.keys(s.signerSpouse || {}).forEach(k => {
+      const a = s.signerSpouse[k] || {};
+      if (a.has === 'yes' && (a.n || '').trim()) isSpouseOf[nameKey(a.n)] = true;
+    });
+    return L.people()
+      .filter(e => e.must && !e.dead && !e.agentFor && (e.name || '').trim())
+      .map(e => ({
+        key: e.key, name: e.name, roles: e.roles,
+        askSpouse: !asked[e.key] && !isSpouseOf[e.key],
+        askPoa: !poaAsked[e.key]
+      }))
+      .filter(r => r.askSpouse || r.askPoa);
+  },
+
+  done9: () => {
+    return L.signerAsks().every(r => {
+      if (r.askSpouse) {
+        const a = (state.signerSpouse || {})[r.key] || {};
+        if (!a.has || a.has === 'unknown') return false;
+        if (a.has === 'yes') {
+          const n = (a.n || '').trim();
+          if (!n || !a.alive) return false;
+          if (nameKey(n) === r.key) return false;
+        }
+      }
+      if (r.askPoa) {
+        const p = (state.signerPoa || {})[r.key] || {};
+        if (!p.has) return false;
+        if (p.has === 'yes' && !(p.n || '').trim()) return false;
+      }
+      return true;
+    });
+  },
+
 
   // ---- live diagram -------------------------------------------------
   chip: (name, tone, tag, link) => {
