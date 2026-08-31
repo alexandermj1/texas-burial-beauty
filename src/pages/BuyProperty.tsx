@@ -729,7 +729,7 @@ const BuyProperty = () => {
               </p>
             </div>
             <figure className="m-0">
-              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[4/3] object-cover rounded-2xl border border-border" />
+              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[16/10] object-cover rounded-2xl border border-border" />
               <figcaption className="mt-2 text-xs text-muted-foreground leading-snug">A member of our team, ready to walk the grounds with you in person.</figcaption>
             </figure>
           </div>
