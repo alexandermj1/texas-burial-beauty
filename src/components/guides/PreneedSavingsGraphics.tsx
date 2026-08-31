@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendingDown, PiggyBank, CalendarClock, Tag, TrendingUp, ExternalLink } from "lucide-react";
 
 /* ---------------------------------------------------------------- helpers */
@@ -253,6 +254,7 @@ export const PriceAppreciationChart = () => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const isMobile = useIsMobile();
+  const { px, py, X0, X1, retailPath, payPath, gapPath, H } = isMobile ? GEOM_MOBILE : GEOM_DESKTOP;
 
   const retailFuture = useCountUp(20000, inView, 2200);
   const dealCount = useCountUp(DEAL, inView, 1600);
