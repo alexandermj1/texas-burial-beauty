@@ -97,7 +97,9 @@ export const signerKey = (n: string) => {
 };
 
 const key = (n: string) => {
-  const t = n.toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
+  // Accent-folded so "Cantú" and "Cantu" are the same signer.
+  const t = n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
   if (!t) return "";
   const p = t.split(" ");
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
