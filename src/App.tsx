@@ -107,6 +107,7 @@ const App = () => (
                 <Route path="/select-starter" element={<SelectStarter />} />
                 <Route path="/seller-portal" element={<SellerPortal />} />
                 <Route path="/seller-portal/upload/mobile" element={<SellerPortalMobileUpload />} />
+                <Route path="/seller-upload" element={<SellerIntakeUpload />} />
                 <Route path="/documents" element={<SellerDocuments />} />
                 <Route path="/confirm" element={<OwnershipConfirm />} />
                 <Route path="/file-viewer" element={<FileViewer />} />
