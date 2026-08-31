@@ -229,8 +229,9 @@ Deno.serve(async (req) => {
       let filled: Uint8Array;
       if (joint.length > 1) {
         filled = await buildJointPoaPdf({
-          county: merged.county_state as string,
-          county_state: merged.county_state as string,
+          // POAs carry no county: the notary writes the county of signing.
+          county: '',
+          county_state: '',
           principals: joint.slice(0, 2).map((n) => ({
             name: n,
             address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),
@@ -309,8 +310,9 @@ Deno.serve(async (req) => {
         });
       } else if (jointNamesOf(merged).length > 1) {
         filled = await buildJointPoaPdf({
-          county: merged.county_state as string,
-          county_state: merged.county_state as string,
+          // POAs carry no county: the notary writes the county of signing.
+          county: '',
+          county_state: '',
           principals: jointNamesOf(merged).slice(0, 2).map((n) => ({
             name: n,
             address: [merged.address, merged.city_state_zip].filter(Boolean).join(', '),

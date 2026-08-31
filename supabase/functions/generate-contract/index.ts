@@ -178,9 +178,14 @@ Deno.serve(async (req) => {
       phone: overrides.phone || sellerContact.phone || sub.phone || '',
       email: overrides.email || sellerContact.email || sub.email || '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
-      county_state: overrides.county_state ?? defaultCountyState,
+      // POAs never carry a county: our stored county is frequently wrong, and the
+      // acknowledgment county must be where the signing happens, not the cemetery.
+      county_state: kind === 'poa' ? '' : (overrides.county_state ?? defaultCountyState),
       plot_count: overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? '',
-      plot_description: plotDescription,
+      // The POA must describe the property exactly as the quote / listing
+      // agreement does, so a later edit to that wording flows through here too.
+      plot_description: kind === 'poa' ? (plotDescriptionNoCount || plotDescription) : plotDescription,
+
       authorized_min_total: authMinTotal || undefined,
       authorized_min_per_plot: Number(overrides.authorized_min_per_plot) ||
         (authMinTotal ? Math.round(authMinTotal / plots) : undefined),
@@ -248,16 +253,23 @@ Deno.serve(async (req) => {
       (fill as Record<string, unknown>).joint_names = jointNames;
       fill.seller_name = jointNames.join(' & ');
       filled = await buildJointPoaPdf({
-        county: overrides.county ?? overrides.county_state ?? cemLocationCity ?? '',
-        county_state: fill.county_state,
+        // No county on a POA — the notary fills in the county of signing.
+        county: '',
+        county_state: '',
         // Left blank on purpose: each principal fills in their own address when
         // they sign the joint Power of Attorney before the notary.
         principals: jointNames.map((n) => ({ name: n, address: '' })),
 
         cemetery: overrides.cemetery ?? sub.cemetery ?? '',
         cemetery_city: cemLocationCity,
-        plot_description: plotDescriptionNoCount,
+        // Same wording as the quote / listing agreement.
+        plot_description: plotDescriptionNoCount || plotDescription,
         spaces: adminPlotDescription ? '' : (sub.spaces ?? ''),
+        // The data sheet still shows the plot count even when the description
+        // already spells out the spaces.
+        plot_count: fill.plot_count ?? '',
+
+
         phone: fill.phone,
         email: fill.email,
       });

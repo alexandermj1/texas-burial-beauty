@@ -318,6 +318,7 @@ export async function buildJointPoaPdf(d: {
   county_state?: string;
   plot_description?: string;
   spaces?: string;
+  plot_count?: string | number;
   phone?: string;
   email?: string;
 }): Promise<Uint8Array> {
@@ -330,7 +331,11 @@ export async function buildJointPoaPdf(d: {
     bold: await doc.embedFont(StandardFonts.TimesRomanBold),
     italic: await doc.embedFont(StandardFonts.TimesRomanItalic),
   };
-  const county = (d.county ?? d.county_state ?? '').replace(/,\s*TX$/i, '').trim();
+  // A notary acknowledgment must state the county where the signing physically
+  // happens — not where the cemetery is, and not a guess from our records. We
+  // therefore never pre-print a county on a POA: every venue block is left
+  // blank for the notary to complete on the day.
+  const county = '';
   const hasSpaces = /space/i.test(d.plot_description ?? '');
   const plot = [d.plot_description, !hasSpaces && d.spaces && `Spaces ${d.spaces}`].filter(Boolean).join(' · ');
   const names = d.principals.map((p) => p.name).filter(Boolean);
@@ -339,14 +344,16 @@ export async function buildJointPoaPdf(d: {
   heading(ctx, 'LIMITED (SPECIAL) POWER OF ATTORNEY', 14);
   para(ctx, 'Interment Rights — Joint Principals · Texas Cemetery Brokers LLC', { size: 10, font: ctx.italic, gap: 12 });
   venue(ctx, county);
+  para(ctx, 'County to be completed at signing — the county where the instrument is actually signed before the notary.', { size: 8.5, font: ctx.italic, gap: 12 });
 
-  para(ctx, `NOTICE: THE POWERS GRANTED BY THIS DOCUMENT ARE LIMITED AND ARE EXPLAINED IN THE TEXAS ESTATES CODE, CHAPTER 751, SUBCHAPTER D. IF YOU HAVE ANY QUESTIONS ABOUT THESE POWERS, OBTAIN COMPETENT LEGAL ADVICE. YOU MAY REVOKE THIS POWER OF ATTORNEY IF YOU LATER WISH TO DO SO.`, { size: 9, font: ctx.bold, gap: 12 });
+  para(ctx, `NOTICE: THE POWERS GRANTED BY THIS DOCUMENT ARE LIMITED AND ARE EXPLAINED IN SUBTITLE P, TITLE 2, TEXAS ESTATES CODE. IF YOU HAVE ANY QUESTIONS ABOUT THESE POWERS, OBTAIN COMPETENT LEGAL ADVICE. YOU MAY REVOKE THIS POWER OF ATTORNEY IF YOU LATER WISH TO DO SO.`, { size: 9, font: ctx.bold, gap: 12 });
 
   para(ctx, `KNOW ALL PERSONS BY THESE PRESENTS, that the undersigned, ${inline(names[0], 32)} and ${inline(names[1], 32)} (each a "Principal" and together the "Principals"), acting both individually and jointly, hereby appoint Texas Cemetery Brokers LLC, a Texas limited liability company, and its authorised officers, as their true and lawful attorney-in-fact ("Agent") for the limited purposes set out below.`);
 
   para(ctx, `Principals' address${addr.length > 1 ? 'es' : ''}: ${inline(addr.join('; '), 52)}.`);
 
   para(ctx, `1.  Property. The Principals own the interment rights at ${inline(d.cemetery, 32)}${d.cemetery_city ? `, ${d.cemetery_city}, Texas` : ''}, described as ${inline(plot, 40)} (the "Property").`);
+
 
   para(ctx, '2.  Powers granted. The Agent may, on behalf of either or both Principals: (a) market, offer for sale and sell the Property on the terms agreed between the Principals and the Agent in their Listing Agreement — those terms are set out in that Listing Agreement and, by agreement of the parties, are not repeated in this instrument; (b) obtain from the cemetery any records, deeds, certificates of ownership and transfer forms relating to the Property; (c) complete, sign and deliver the cemetery\'s transfer, assignment and release documents; (d) pay and receive the cemetery\'s transfer fees on the Principals\' behalf; and (e) do anything else reasonably necessary to complete the sale and transfer of the Property.');
 
@@ -379,16 +386,20 @@ export async function buildJointPoaPdf(d: {
   // Same audit / data-reference sheet the single-signer POA carries, so both
   // documents review and file identically.
   await appendDataReferenceSheet(doc, 'poa', {
-    seller_name: names.join(' & '),
+    // First principal in the seller row, second in the co-owner row — listing
+    // "A & B" in both places double-counted the second signer.
+    seller_name: names[0] ?? '',
     co_owner_name: names[1] ?? '',
     address: addr[0] ?? '',
     phone: d.phone,
     email: d.email,
     cemetery: d.cemetery,
-    county_state: d.county_state ?? (d.cemetery_city ? `${d.cemetery_city}, TX` : ''),
-    plot_count: d.spaces ?? '',
+    // County is deliberately omitted from POAs (see the venue note above).
+    county_state: '',
+    plot_count: d.plot_count ?? d.spaces ?? '',
     plot_description: d.plot_description,
   });
+
 
   return await doc.save();
 
