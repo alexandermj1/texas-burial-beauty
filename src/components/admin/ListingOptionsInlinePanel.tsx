@@ -58,7 +58,16 @@ type RosterEntry = { name: string; deceased?: boolean };
 const normKey = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, "").trim();
 
-/** Split "A & B, C"-style deed names into one entry per person, carrying over
+/** One box per owner: split a stored "A & B, C" string back into people. */
+const splitNames = (raw: string): string[] => {
+  const parts = String(raw || "")
+    .split(/\s*(?:&|,|;|\band\b)\s*/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length ? parts : [""];
+};
+
+
     any deceased flag already recorded against that name so a re-save from
     this panel never downgrades what the questionnaire established. */
 const rosterFromNames = (raw: string, existing?: unknown): RosterEntry[] => {
