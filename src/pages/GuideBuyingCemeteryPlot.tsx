@@ -227,6 +227,8 @@ const GuideBuyingCemeteryPlot = () => (
                 { href: "#sold-out", t: "Sold-out sections" },
                 { href: "#in-person", t: "See it in person" },
                 { href: "#timing", t: "At-need vs pre-need" },
+                { href: "#preneed", t: "Pre-need savings" },
+
                 { href: "#vs-marketplace", t: "Broker vs Craigslist" },
                 { href: "#what-you-buy", t: "What you're buying" },
                 { href: "#types", t: "Property types" },
