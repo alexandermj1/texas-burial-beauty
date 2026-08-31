@@ -178,9 +178,14 @@ Deno.serve(async (req) => {
       phone: overrides.phone || sellerContact.phone || sub.phone || '',
       email: overrides.email || sellerContact.email || sub.email || '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
-      county_state: overrides.county_state ?? defaultCountyState,
+      // POAs never carry a county: our stored county is frequently wrong, and the
+      // acknowledgment county must be where the signing happens, not the cemetery.
+      county_state: kind === 'poa' ? '' : (overrides.county_state ?? defaultCountyState),
       plot_count: overrides.plot_count ?? sub.plot_count ?? sub.spaces ?? '',
-      plot_description: plotDescription,
+      // The POA must describe the property exactly as the quote / listing
+      // agreement does, so a later edit to that wording flows through here too.
+      plot_description: kind === 'poa' ? (plotDescriptionNoCount || plotDescription) : plotDescription,
+
       authorized_min_total: authMinTotal || undefined,
       authorized_min_per_plot: Number(overrides.authorized_min_per_plot) ||
         (authMinTotal ? Math.round(authMinTotal / plots) : undefined),
