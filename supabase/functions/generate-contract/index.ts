@@ -265,6 +265,10 @@ Deno.serve(async (req) => {
         // Same wording as the quote / listing agreement.
         plot_description: plotDescriptionNoCount || plotDescription,
         spaces: adminPlotDescription ? '' : (sub.spaces ?? ''),
+        // The data sheet still shows the plot count even when the description
+        // already spells out the spaces.
+        plot_count: fill.plot_count ?? '',
+
 
         phone: fill.phone,
         email: fill.email,
