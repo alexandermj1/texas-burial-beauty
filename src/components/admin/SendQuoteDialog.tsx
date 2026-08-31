@@ -113,7 +113,7 @@ ${WEBSITE}`;
 const computeQuoteFromRetail = (retailStr: string): string => {
   const r = Number(retailStr);
   if (!isFinite(r) || r <= 0) return "";
-  const raw = r * 0.42;
+  const raw = r * 0.55;
   return String(Math.round(raw / 100) * 100);
 };
 
@@ -246,7 +246,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                           className="w-full h-11 pl-7 pr-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                         />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1.5">Auto-filled from Stage 1. Quote auto-calcs at 42% of retail.</p>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">Auto-filled from Stage 1. Quote auto-calcs at 55% of retail.</p>
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
@@ -270,10 +270,10 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                         }
                         const pct = q / r;
                         const pctStr = `${(pct * 100).toFixed(1)}%`;
-                        // High >= 42%, Low < 25%, Medium in between.
+                        // High >= 55%, Low < 25%, Medium in between.
                         const tone = pct < 0.25
                           ? { cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", label: "Low" }
-                          : pct >= 0.42
+                          : pct >= 0.55
                             ? { cls: "bg-rose-500/15 text-rose-700 border-rose-500/30", label: "High" }
                             : { cls: "bg-amber-500/15 text-amber-700 border-amber-500/30", label: "Medium" };
                         return (
