@@ -241,7 +241,7 @@ export default function SignContract() {
         setPdfUrl(data.pdf_url);
         const fd = (data.fill_data ?? {}) as Record<string, string>;
         const next: SellerFields = {
-          seller_name: fd.seller_name ?? "",
+          seller_name: "",
           address: fd.address ?? "",
           city_state_zip: fd.city_state_zip ?? "",
           phone: fd.phone ?? "",
@@ -254,7 +254,7 @@ export default function SignContract() {
         // Lock anything the admin pre-filled. Mailing address + city/state/zip
         // are never locked — those are the seller's job to complete.
         setLocked({
-          seller_name: !!next.seller_name.trim(),
+          seller_name: false,
           address: false,
           city_state_zip: false,
           phone: !!next.phone.trim(),
