@@ -1287,7 +1287,7 @@ const OwnershipConfirm = () => {
                   <div style={{"animation": "rise .5s cubic-bezier(.2,.7,.3,1) both"}}>
                     <div style={{"display": "flex", "alignItems": "center", "gap": "12px", "padding": "40px 2px 14px 2px"}}>
                       <span style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
-                        Last step · Where we post the paperwork
+                        Last step · Who signs the paperwork
                       </span>
                       <span style={{"flex": "1", "height": "1px", "background": "#ececf0"}}>
                       </span>
@@ -1297,7 +1297,7 @@ const OwnershipConfirm = () => {
                         {V.contactsTitle}
                       </h3>
                       <p style={{"margin": "8px 0 0 0", "fontSize": "15.5px", "fontWeight": "300", "lineHeight": "1.55", "color": "#6e6e73", "textWrap": "pretty"}}>
-                        Your answers say these are the people with a say in the sale. For anyone who has to sign we need their name exactly as it reads on their ID and the address a notary can visit — that is what the power of attorney is typed from. We do not need their phone number or email.
+                        Your answers say these are the people with a say in the sale. For anyone who has to sign we need their name exactly as it reads on their ID — that is what the power of attorney is typed from. They fill in their own address when they sign, so we do not need it here, and we do not need a phone number or email.
                       </p>
                       <div style={{"display": "flex", "flexDirection": "column", "gap": "10px", "marginTop": "22px"}}>
                         {(V.contacts || []).map((c: any, i19: number) => (
@@ -1330,10 +1330,6 @@ const OwnershipConfirm = () => {
                                   <input value={c.legal ?? ""} onChange={c.setLegal} placeholder={c.legalPlaceholder} style={{"width": "100%", "marginTop": "6px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${c.needLegal ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none"}} />
                                 </React.Fragment>
                               ) : null}
-                              <div style={{"marginTop": "13px", "fontSize": "12.5px", "fontWeight": "500", "color": c.needAddr ? "#a8654c" : "#6e6e73"}}>
-                                {c.addrLabel}
-                              </div>
-                              <textarea value={c.addr ?? ""} onChange={c.setAddr} placeholder={c.addrPlaceholder} style={{"width": "100%", "marginTop": "6px", "minHeight": "72px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "lineHeight": "1.5", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${c.needAddr ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "resize": "vertical"}} className="dcx21" />
                             </div>
                           </React.Fragment>
                         ))}

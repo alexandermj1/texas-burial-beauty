@@ -50,7 +50,7 @@ export function initialState(CRM) {
     spaces: (CRM.spaces || []).map(l => ({ label: l, used: '', who: '' })),
     // The power of attorney and any affidavit are typed from these answers, so
     // for anyone who must sign we need their name exactly as it reads on their
-    // ID and the address the notary will visit. Phone and email are not needed.
+    // ID. The signer writes their own address on the document, so we never ask.
     contacts: {}, plotOk: '', plotFix: '', note: '', submitted: false, sent: false
   };
 }
@@ -785,7 +785,7 @@ export function buildLogic(state, setS, accent0, CRM) {
           aliveNeeded: sp.has === 'yes' && !sp.alive,
           aliveLabel: typed ? 'Is ' + typed + ' still living?' : 'Is that spouse still living?',
           aliveNote: sp.alive === 'living'
-            ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
+            ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their full legal name at the end.'
             : sp.alive === 'deceased'
               ? 'Nothing to sign from them. We may ask for a death certificate later.'
               : 'Tell us whether they are still living \u2014 only a living spouse signs.',
@@ -945,7 +945,7 @@ export function buildLogic(state, setS, accent0, CRM) {
           aliveNeeded: hs.has === 'yes' && !hs.alive,
           aliveLabel: typed ? 'Is ' + typed + ' still living?' : 'Is that spouse still living?',
           aliveNote: hs.alive === 'living'
-            ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their address at the end.'
+            ? 'They will be sent their own consent and power of attorney to sign, so we will ask for their full legal name at the end.'
             : hs.alive === 'deceased'
               ? 'Nothing to sign from them. We may ask for a death certificate later.'
               : 'Tell us whether they are still living \u2014 only a living spouse signs.',
@@ -977,7 +977,7 @@ export function buildLogic(state, setS, accent0, CRM) {
           aliveSeg: L.seg(a.alive, [['living', 'Still living'], ['deceased', 'Has died']], v => L.patch('signerSpouse', r.key, { alive: v })),
           aliveNeeded: a.has === 'yes' && !a.alive,
           aliveNote: a.alive === 'living'
-            ? 'They sign the same power of attorney as ' + r.name + ', so we will ask for their address at the end.'
+            ? 'They sign the same power of attorney as ' + r.name + ', so we will ask for their full legal name at the end.'
             : a.alive === 'deceased'
               ? 'Nothing to sign from them.'
               : 'Only a living husband or wife signs, so we have to know.',
@@ -999,7 +999,7 @@ export function buildLogic(state, setS, accent0, CRM) {
       contactsTitle: signers.length === 1 ? 'One person needs a power of attorney' : signers.length + ' people need a power of attorney',
       contacts: alive.map(c => {
         const st = s.contacts[c.key] || {};
-        const needAddr = c.must && !(st.addr || '').trim();
+        const needAddr = false;
         const needLegal = c.must && !(st.legal || '').trim() && !(c.name || '').trim();
         return {
           name: c.name || 'Name still needed', roles: c.roles,
@@ -1042,9 +1042,9 @@ export function buildLogic(state, setS, accent0, CRM) {
       // Nothing is submitted until we hold everything the documents need.
       contactsBlocked: !signers.every(c => {
         const st = s.contacts[c.key] || {};
-        return (st.addr || '').trim() && ((st.legal || '').trim() || (c.name || '').trim());
+        return (st.legal || '').trim() || (c.name || '').trim();
       }) || !s.plotOk || (s.plotOk === 'no' && !s.plotFix.trim()),
-      contactsBlockedNote: 'Add a full legal name and postal address for everyone who has to sign, and confirm the property details, and we can prepare the paperwork straight away.',
+      contactsBlockedNote: 'Add a full legal name for everyone who has to sign, and confirm the property details, and we can prepare the paperwork straight away.',
 
       note: s.note,
       setNote: ev => { const v = ev.target.value; setS({ note: v }); },
@@ -1054,7 +1054,7 @@ export function buildLogic(state, setS, accent0, CRM) {
       signerHeadline: signers.length === 1 ? 'One person has to sign' : signers.length + ' people have to sign',
       signers: signers.map(c => {
         const st = s.contacts[c.key] || {};
-        const missing = !(st.addr || '').trim() || c.blank;
+        const missing = c.blank;
         const bits = [st.addr, st.email, st.phone].filter(x => (x || '').trim()).join('\n');
         return {
           name: c.name || 'Name still needed', roles: c.roles,
