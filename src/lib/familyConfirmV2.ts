@@ -1001,7 +1001,7 @@ export function buildLogic(state, setS, accent0, CRM) {
 
       note: s.note,
       setNote: ev => { const v = ev.target.value; setS({ note: v }); },
-      submit: () => setS({ submitted: true }),
+      submit: () => setS({ submitted: true, signerCheck: true }),
 
       submitted: s.submitted,
       signerHeadline: signers.length === 1 ? 'One person has to sign' : signers.length + ' people have to sign',
