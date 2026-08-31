@@ -818,18 +818,18 @@ Deno.serve(async (req) => {
     // === Stamp signature block on the correct template page ===
     // Coordinates measured directly from the template underline rects; stamp
     // sits ~3pt above the rule so the baseline sits on the line.
-    if (c.kind === 'listing_agreement' && pages.length >= 8) {
-      const p8 = pages[8];
+    if (c.kind === 'listing_agreement' && pages.length > LA_SIGNATURE_PAGE_INDEX) {
+      const sigPage = pages[LA_SIGNATURE_PAGE_INDEX];
       // Seller block underline rects (pdf-lib coords, measured from template):
       //   printed name y=282.0, signature y=252.8, date y=223.5, all x0=204.7 w=337.5.
-      stampText(p8, signature_name, 210, 284.2, font, 11);
+      stampText(sigPage, signature_name, 210, 284.2, font, 11);
       if (sigImg) {
         // Height capped at 24pt so the top of the signature never crosses into
         // the printed-name underline just above (282 - 254 = 28pt of clear space).
         const dims = sigImg.scaleToFit(220, 24);
-        p8.drawImage(sigImg, { x: 210, y: 254, width: dims.width, height: dims.height });
+        sigPage.drawImage(sigImg, { x: 210, y: 254, width: dims.width, height: dims.height });
       }
-      stampText(p8, todayFormatted(), 210, 225.7, font, 11);
+      stampText(sigPage, todayFormatted(), 210, 225.7, font, 11);
     } else if (c.kind === 'poa' && pages.length >= 3) {
       const p3 = pages[2];
       // Principal block underlines: name 319.5, signature 290.3, date 261.0.
