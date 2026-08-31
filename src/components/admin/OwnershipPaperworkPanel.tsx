@@ -79,7 +79,10 @@ type Reading = {
  * person and never spawns a duplicate checklist row.
  */
 const personKey = (n?: string | null) => {
-  const t = String(n ?? "").toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
+  // Accents are folded ("Cantú" === "Cantu"): the same person is typed both ways
+  // across the deed, the family tree and the prepared POA.
+  const t = String(n ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
   if (!t) return "";
   const p = t.split(" ");
   return p.length > 1 ? `${p[0]} ${p[p.length - 1]}` : p[0];
