@@ -198,6 +198,7 @@ const GuideSellingCemeteryPlot = () => (
             <div className="flex flex-wrap gap-2">
               {[
                 { href: "#can-you-sell", t: "Can you sell?" },
+                { href: "#key-questions", t: "Before you list" },
                 { href: "#value", t: "What it's worth" },
                 { href: "#why", t: "Why a broker" },
                 { href: "#process", t: "The process" },
@@ -222,7 +223,7 @@ const GuideSellingCemeteryPlot = () => (
       <div className="container mx-auto px-6 max-w-5xl">
         {/* Intro */}
         <p className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
-          Plans change. Families relocate, choose cremation, or inherit plots they'll never use. The good news: a cemetery plot you own can be sold — and it is often worth more than people expect. The challenge is that selling privately in Texas can be slow and uncertain. This guide explains what affects your plot's value, the legal steps, and the most reliable way to sell it.
+          Plans change. Families move to other cities or out of state, often people make alternative burial arrangements, or inherit plots they'll never use. The good news: cemetery properties located in Texas can legally be resold to another person who needs them, and the value of your asset can be released. The challenge is that, just like in other states, private resales on the secondary market can be slow and challenging. Many people assume that selling cemetery property is just like real estate, but plots are a unique type of asset with several important quirks when it comes to transferring ownership, which need to be carefully understood to be successful. This guide explains what affects your plot's value, the legal steps, and the most reliable way to sell it.
         </p>
 
         {/* Short answer callout */}
@@ -239,7 +240,13 @@ const GuideSellingCemeteryPlot = () => (
           <Eyebrow>Chapter 01</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Can you sell a cemetery plot in <span className="italic text-primary">Texas?</span></h2>
           <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
-            Yes. When you bought your plot, you acquired the <strong className="text-foreground">exclusive right of sepulture</strong> — the legal right to bury someone in a specific space. That right is presumed to be your property, and you are entitled to sell or transfer it. Before listing, three quick checks save time and trouble:
+            Yes — typically you can sell grave plots, mausoleum crypts, cremation niches and urn spaces you own in Texas, and release the value of your cemetery property assets. In Texas, whoever initially bought your plot from the cemetery acquired the <strong className="text-foreground">exclusive right of sepulture</strong> — the legal right to bury someone in a specific grave space, or to entomb someone in a specific mausoleum crypt. The exclusive right to use that particular plot for its intended purpose is what is presumed to be the cemetery property asset.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            People often get confused and believe they own an actual piece of land at a cemetery, but that is not the case. To sum up, what is commonly referred to as a "grave plot" or "cemetery property" in Texas is the exclusive right of sepulture. If you own these cemetery property rights, you are entitled to sell or transfer them to a third party.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            However, it is not easy. Reselling cemetery property is typically far more complex than selling other personal assets. It tends to be very time-consuming and requires several highly specific steps to be followed for the transfer to be legal and for the sale to go through. The first step toward selling your Texas cemetery property is to find the answer to three key questions:
           </p>
           <ol className="space-y-4">
             {checks.map((c, i) => (
@@ -254,12 +261,76 @@ const GuideSellingCemeteryPlot = () => (
           </ol>
         </section>
 
+        {/* H2: Three key questions */}
+        <section id="key-questions" className="scroll-mt-24 mt-20">
+          <Eyebrow>Chapter 01b · Before you list</Eyebrow>
+          <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Three key questions before you <span className="italic text-primary">sell</span></h2>
+
+          <h3 className="font-display text-2xl text-foreground mt-10 mb-4 leading-snug">1. Does your contract have a right-of-first-refusal clause?</h3>
+          <p className="text-foreground/80 leading-relaxed mb-5">
+            Sometimes, Texas cemetery properties have a right-of-first-refusal clause. Begin by checking whether any pre-existing restrictions limit your ability to sell the plot. Start by examining the original purchase records and the certificate of ownership or deed. If your contract contains this kind of limitation, you can only resell your plot if the cemetery declines to take up their right of first refusal to buy it back. Depending on the exact language of the agreement, you will need the cemetery administration to first officially approve your property for transfer to a third party — a future buyer or other individual.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-5">
+            So how does the cemetery decide how much they will give you to buy back your plot? The answer depends on the specific language in your original contract. Spoiler alert: it won't be 100% of the retail list price that the cemetery markets and sells comparable new plots for today. Depending on the cemetery's regulations and the specific language of your original agreement, the amount is determined according to a predetermined method. Formulas vary widely, but common buyback offers we see at Texas Cemetery Brokers determine the dollar amount to be:
+          </p>
+          <ul className="space-y-3 mb-6">
+            {[
+              "Calculated as a certain percentage of the original purchase price paid, with adjustments for services performed, commodities, etc.",
+              "Calculated as a ratio of the current retail price for comparable 'new' properties that the cemetery is selling today.",
+              "A refund of the exact same dollar amount you originally paid for the plot when it was first bought from the cemetery — without any upward adjustment for inflation.",
+            ].map((t, i) => (
+              <li key={i} className="flex items-start gap-3 text-foreground/80">
+                <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <span className="leading-relaxed">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-foreground/80 leading-relaxed mb-5">
+            Another important consideration we have noticed with cemetery buybacks is that property owners are often required to pay administrative fees upfront when initiating the transaction. These fees are non-refundable and apply even if you change your mind later in the process, or you do not complete the buyback transfer for some reason — for example, if you fail to provide the correct documents or co-signatures.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-5">
+            Finally, remember the buyback amount will be calculated on the price paid for the exclusive right of sepulture only — not for any additional services, interest charges, administration fees, and so on that you purchased along with the plot.
+          </p>
+
+          <h3 className="font-display text-2xl text-foreground mt-12 mb-4 leading-snug">2. Do all co-owners consent to the sale?</h3>
+          <p className="text-foreground/80 leading-relaxed mb-5">
+            Texas has numerous and unique laws that govern how cemetery property is passed down within families. These laws concern who has a legal interest in the plot — whether that means an ownership share, the right to use the plot personally, or the authority to decide who is buried there. These Texas laws, such as the <Ext href="https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm">Health and Safety Code, Chapter 711</Ext>, were designed to make sure family members' rights are respected when it comes to who can "use" a particular plot, and who can authorize its sale or transfer.
+          </p>
+          <p className="text-foreground/80 leading-relaxed mb-5">
+            In practice, it means that owners of cemetery property often assume they can proceed with selling their plot, only to discover later that other individuals — typically their family members, their spouses, or other co-heirs — will need to be involved. Under Texas community property rules, written agreement and sign-off to transfer or sell cemetery property is frequently required from spouses, siblings, or even more distant family members because they qualify as co-owners. People can get surprised by these restrictions because they have no idea they apply in their situation. Common misunderstandings occur because these rules still apply even if:
+          </p>
+          <ul className="space-y-4 mb-6">
+            {[
+              { t: "The co-owners do not know they have an ownership interest in the property.", d: "A legal interest can exist whether or not the person is aware of it." },
+              { t: "The co-owners have indicated they don't want the plot.", d: "Whether expressed verbally, written in personal correspondence, or documented in an informal will — unless the process of technically updating the owner(s) of record with the cemetery administration has been entirely completed (all documentation requirements met and fees paid, and the new ownership recorded), then as far as the cemetery is concerned, this likely still needs to take place in order for the cemetery to authorize the transfer of the property to a third party." },
+              { t: "The plot was passed down informally within the family.", d: "Informal hand-downs to the 'current' owner do not change the cemetery's records — the recorded ownership is what counts." },
+              { t: "A co-owner has never objected.", d: "Just because a co-owner never objected does not mean their rights will be ignored. Cemetery administrators will base their decision to authorize a transfer on adhering to the Texas Health and Safety Code and their own regulations — not on whether or not any co-owners intend to exercise their rights." },
+            ].map((item, i) => (
+              <li key={i} className="flex gap-4 items-start p-5 rounded-2xl bg-card border border-border/60">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-accent/15 text-accent font-display flex items-center justify-center text-sm mt-0.5">{String.fromCharCode(97 + i)}</span>
+                <div>
+                  <p className="font-medium text-foreground leading-snug mb-1">{item.t}</p>
+                  <p className="text-sm text-foreground/70 leading-relaxed">{item.d}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="font-display text-2xl text-foreground mt-12 mb-4 leading-snug">3. What is the cemetery's transfer policy, documentation and fees?</h3>
+          <p className="text-foreground/80 leading-relaxed mb-5">
+            Each Texas cemetery has its own regulations, quitclaim and conveyancing forms, documentation requirements, fees and policies for recording a transfer. These need to be understood and adhered to for any resale to go through.
+          </p>
+        </section>
+
         {/* H2: Value factors */}
         <section id="value" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 02 · Valuation</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">What affects your plot's <span className="italic text-primary">value</span></h2>
+          <p className="text-foreground/80 leading-relaxed mb-5 text-lg">
+            The value of your memorial property will depend on many factors, including the type of plot, the number of interments included, where it is located, and even how the current ownership is structured and recorded with the cemetery. There is no general rule of thumb for valuing Texas cemetery property that can be applied to all plots, nor is there a simple universal formula to determine current market value.
+          </p>
           <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
-            Pricing a cemetery plot is not like checking a home's value — there is no public listing database, and two plots in the same cemetery can be worth very different amounts. The main factors are:
+            However, whether your plot is at <Link to={cemeteryPath("Sparkman/Hillcrest Memorial Park")} className="text-primary underline-offset-4 hover:underline font-medium">Sparkman–Hillcrest</Link> in Dallas, <Link to={cemeteryPath("Forest Park Lawndale Cemetery")} className="text-primary underline-offset-4 hover:underline font-medium">Forest Park Lawndale</Link> in Houston, or anywhere in between, it will have a unique value that can be determined when all the relevant factors are taken into account. Two plots in the same cemetery can be worth very different amounts. The main factors are:
           </p>
           <div className="space-y-4 mb-8">
             {valueFactors.map(({ Icon, t, d }) => (
