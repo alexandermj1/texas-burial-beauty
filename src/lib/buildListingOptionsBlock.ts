@@ -121,14 +121,17 @@ export async function buildListingOptionsBlock(opts: {
     }),
   );
 
-  const propertyLine = buildPropertyDescription({
-    cemetery: cemLabel,
-    lawn: seller.lawn,
-    section: seller.section,
-    propertyType: seller.property_type,
-    spaceNumbers: seller.space_numbers,
-    plotCount,
-  });
+  const typedDescription = (opts.plotDescription ?? "").trim();
+  const propertyLine = typedDescription
+    ? [escapeHtml(cemLabel), escapeHtml(typedDescription)].join(" · ")
+    : buildPropertyDescription({
+        cemetery: cemLabel,
+        lawn: seller.lawn,
+        section: seller.section,
+        propertyType: seller.property_type,
+        spaceNumbers: seller.space_numbers,
+        plotCount,
+      });
 
   const spaceWord = plotCount === 1 ? "space" : "spaces";
   const acrossLine = plotCount > 1
