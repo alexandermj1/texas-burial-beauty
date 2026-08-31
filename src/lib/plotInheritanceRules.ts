@@ -63,6 +63,12 @@ export type V2State = {
   /** What the deed holders were to each other when they were not a couple. */
   deedRel?: string;
   heirSpouse?: Record<string, V2SpouseAnswer>;
+  /** Marriage answer for ANY signer, keyed by their name key. */
+  signerSpouse?: Record<string, V2SpouseAnswer>;
+  /** Durable power of attorney held over ANY signer, keyed by their name key. */
+  signerPoa?: Record<string, { has?: string; n?: string }>;
+  /** True once the seller has answered the spouse / durable POA questions for every signer. */
+  signerCheck?: boolean;
   contacts?: Record<string, { addr?: string; email?: string; phone?: string }>;
   submitted?: boolean;
 };
@@ -85,6 +91,10 @@ export type MasterSigner = {
 };
 
 const clean = (s: unknown) => String(s ?? "").trim();
+
+export const signerKey = (n: string) => {
+  return key(n);
+};
 
 const key = (n: string) => {
   const t = n.toLowerCase().replace(/[.,'\u2019]/g, " ").replace(/\s+/g, " ").trim();
@@ -423,6 +433,89 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
       linkHeirSpouse(ctx, heir, heirSpouseOf(k.id), deedKeys);
     }
   }
+
+  // ── Every signer: their own husband or wife, and any durable POA ──────────
+  // A signer's living spouse holds a right of interment, so they sign too —
+  // and they then become a signer in their own right, whose own marriage and
+  // powers of attorney have to be checked as well. Anyone who has given a
+  // durable power of attorney cannot sign personally; their attorney-in-fact
+  // signs in their name. This runs in passes so a chain resolves fully.
+  const poaSeen = new Set<string>();
+  for (const k of ctx.order) {
+    const p = ctx.signers.get(k)!;
+    if (p.agentName) poaSeen.add(p.key);
+  }
+  for (let pass = 0; pass < 4; pass++) {
+    const before = ctx.order.length;
+    for (const k of [...ctx.order]) {
+      const p = ctx.signers.get(k)!;
+      if (p.role === "agent") continue;
+
+      if (!p.spouseKey) {
+        const sa = (v2.signerSpouse ?? {})[p.key];
+        if (isLivingSpouse(sa)) {
+          const sName = clean(sa!.n);
+          const s = addSigner(ctx, {
+            key: key(sName), name: sName, role: "spouse",
+            why: `Currently married to ${p.name}, who signs — signs alongside them.`,
+            spouseKey: p.key,
+            spouseNotOnDeed: !deedKeys.has(key(sName)),
+          });
+          if (s.key !== p.key) { s.spouseKey = p.key; p.spouseKey = s.key; }
+        } else if (isDeadSpouse(sa)) {
+          const sName = clean(sa!.n);
+          if (p.role === "owner" || p.role === "heir") {
+            // Nothing to sign from them; no death certificate is needed either
+            // unless they were themselves on the deed, which is handled above.
+            void sName;
+          }
+        }
+      }
+
+      if (!p.agentName && !poaSeen.has(p.key)) {
+        const pa = (v2.signerPoa ?? {})[p.key];
+        if (pa?.has === "yes") {
+          poaSeen.add(p.key);
+          const agent = clean(pa.n);
+          p.agentName = agent || undefined;
+          add({
+            code: "D15",
+            label: agent ? `Existing durable power of attorney — ${agent} for ${p.name}` : `Existing durable power of attorney for ${p.name}`,
+            why: `${p.name} has given a durable power of attorney, so they cannot sign personally — their attorney-in-fact signs in their name. It has to cover property and allow the authority to be passed to us.`,
+            statute: "§751.031",
+            personName: p.name,
+            review: rules.accepts_outside_poa === false,
+          });
+          if (agent) {
+            addSigner(ctx, {
+              key: key(agent), name: agent, role: "agent",
+              why: `Signs in ${p.name}'s name under their durable power of attorney.`,
+            });
+          }
+        }
+      }
+    }
+    if (ctx.order.length === before) break;
+  }
+
+  // Where the seller was never asked these questions (a tree completed before
+  // we started asking), a broker confirms them by hand rather than guessing.
+  if (v2.signerCheck !== true) {
+    const unchecked = ctx.order
+      .map((k) => ctx.signers.get(k)!)
+      .filter((p) => p.role !== "agent" && p.role !== "owner" && !p.spouseKey)
+      .map((p) => p.name);
+    if (unchecked.length) {
+      add({
+        code: "REVIEW",
+        label: `Confirm marriage and any durable power of attorney — ${unchecked.join(", ")}`,
+        why: "This family tree was completed before we asked every signer whether they are married and whether anyone holds a durable power of attorney over them. A living spouse signs a joint power of attorney, and an attorney-in-fact signs in place of the person themselves, so both are confirmed before anything goes out.",
+        review: true,
+      });
+    }
+  }
+
+
 
   // ── Affidavit of heirship whenever the heirs-at-law rule was used ──────────
   if (heirsAtLawUsed) {

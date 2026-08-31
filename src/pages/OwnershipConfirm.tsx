@@ -410,7 +410,7 @@ const OwnershipConfirm = () => {
         action: "save",
         submission_id: submissionId,
         finished: true,
-        answers: { v2: { ...state, submitted: true, sent }, people, sellerNotes: state.note },
+        answers: { v2: { ...state, submitted: true, signerCheck: true, sent }, people, sellerNotes: state.note },
       },
     });
   };
@@ -1190,6 +1190,96 @@ const OwnershipConfirm = () => {
                           </div>
                         </div>
                       </React.Fragment>) : null}
+                    </div>
+                  </div>
+                </React.Fragment>) : null}
+                {V.show9 ? (<React.Fragment>
+                  <div style={{"animation": "rise .5s cubic-bezier(.2,.7,.3,1) both"}}>
+                    <div style={{"display": "flex", "alignItems": "center", "gap": "12px", "padding": "40px 2px 14px 2px"}}>
+                      <span style={{"fontSize": "12px", "fontWeight": "500", "letterSpacing": "0.09em", "textTransform": "uppercase", "color": "#9a9aa2"}}>
+                        Everyone who signs · their spouse and any power of attorney
+                      </span>
+                      <span style={{"flex": "1", "height": "1px", "background": "#ececf0"}}>
+                      </span>
+                    </div>
+                    <div style={{"background": "#ffffff", "borderRadius": "20px", "boxShadow": "0 1px 2px rgba(0,0,0,0.03), 0 6px 22px rgba(0,0,0,0.045)", "padding": "clamp(22px,4vw,30px) clamp(18px,3.6vw,30px)"}}>
+                      <h3 style={{"margin": "0", "fontSize": "clamp(20px,3.6vw,24px)", "lineHeight": "1.24", "fontWeight": "600", "letterSpacing": "-0.021em", "color": "#1d1d1f", "textWrap": "pretty"}}>
+                        Two questions about each person who signs
+                      </h3>
+                      <p style={{"margin": "8px 0 0 0", "fontSize": "15.5px", "fontWeight": "300", "lineHeight": "1.55", "color": "#6e6e73", "textWrap": "pretty"}}>
+                        A husband or wife gains a right of interment the moment their spouse holds a share, so they sign the same power of attorney. And anyone who has already given a durable power of attorney cannot sign for themselves — the person holding it signs in their name.
+                      </p>
+                      <div style={{"display": "flex", "flexDirection": "column", "gap": "9px", "marginTop": "20px"}}>
+                        {(V.signerRows || []).map((r: any, ir: number) => (
+                          <div key={ir} style={{"padding": "13px 15px", "borderRadius": "15px", "background": "#fafafc", "border": "1px solid #ececf0"}}>
+                            <div style={{"fontSize": "16px", "fontWeight": "500", "letterSpacing": "-0.011em", "color": "#1d1d1f"}}>
+                              {r.name}
+                            </div>
+                            <div style={{"marginTop": "1px", "fontSize": "12.5px", "fontWeight": "300", "color": "#9a9aa2"}}>
+                              {r.roles}
+                            </div>
+                            {r.askSpouse ? (
+                              <div style={{"marginTop": "12px"}}>
+                                <div style={{"display": "flex", "flexWrap": "wrap", "gap": "11px", "alignItems": "center"}}>
+                                  <div style={{"flex": "1", "minWidth": "140px", "fontSize": "14.5px", "color": "#1d1d1f"}}>
+                                    {r.spouseQuestion}
+                                  </div>
+                                  <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
+                                    {(r.spouseSeg || []).map((o: any, io: number) => (
+                                      <div key={io} onClick={o.pick} style={{"padding": "7px 11px", "borderRadius": "8px", "fontSize": "13.5px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`}}>
+                                        {o.label}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                {r.spouseYes ? (<React.Fragment>
+                                  <input value={r.spouseName ?? ""} onChange={r.setSpouse} placeholder={r.spousePlaceholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${r.clash ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none"}} />
+                                  <div style={{"marginTop": "7px", "fontSize": "13px", "color": r.clash ? "#a8654c" : "#4a6b54"}}>
+                                    {r.clash ? r.clashNote : r.pair}
+                                  </div>
+                                  <div style={{"display": "flex", "flexWrap": "wrap", "gap": "10px", "alignItems": "center", "marginTop": "9px"}}>
+                                    <div style={{"fontSize": "13.5px", "color": r.aliveNeeded ? "#a8654c" : "#6e6e73"}}>
+                                      {r.aliveLabel}
+                                    </div>
+                                    <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
+                                      {(r.aliveSeg || []).map((o: any, ia: number) => (
+                                        <div key={ia} onClick={o.pick} style={{"padding": "7px 11px", "borderRadius": "8px", "fontSize": "13.5px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`}}>
+                                          {o.label}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "300", "lineHeight": "1.5", "color": r.aliveNeeded ? "#a8654c" : "#9a9aa2"}}>
+                                    {r.aliveNote}
+                                  </div>
+                                </React.Fragment>) : null}
+                              </div>
+                            ) : null}
+                            {r.askPoa ? (
+                              <div style={{"marginTop": "14px", "paddingTop": "13px", "borderTop": "1px solid #ececf0"}}>
+                                <div style={{"display": "flex", "flexWrap": "wrap", "gap": "11px", "alignItems": "center"}}>
+                                  <div style={{"flex": "1", "minWidth": "140px", "fontSize": "14.5px", "color": "#1d1d1f"}}>
+                                    {r.poaQuestion}
+                                  </div>
+                                  <div style={{"display": "flex", "background": "#f0f0f3", "borderRadius": "10px", "padding": "3px"}}>
+                                    {(r.poaSeg || []).map((o: any, ip: number) => (
+                                      <div key={ip} onClick={o.pick} style={{"padding": "7px 11px", "borderRadius": "8px", "fontSize": "13.5px", "fontWeight": "500", "whiteSpace": "nowrap", "cursor": "pointer", "userSelect": "none", "background": `${o.bg}`, "color": `${o.fg}`, "boxShadow": `${o.sh}`}}>
+                                        {o.label}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                {r.poaYes ? (
+                                  <input value={r.poaAgent ?? ""} onChange={r.setPoaAgent} placeholder={r.poaPlaceholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "color": "#1d1d1f", "background": "#ffffff", "border": "1px solid #e3e3e8", "borderRadius": "11px", "outline": "none"}} />
+                                ) : null}
+                                <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "300", "lineHeight": "1.5", "color": "#9a9aa2"}}>
+                                  {r.poaNote}
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </React.Fragment>) : null}
