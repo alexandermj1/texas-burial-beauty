@@ -443,7 +443,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     lat: 32.9386229,
     lng: -96.4252855,
     website: "https://www.resthavenfuneral.com/",
-    transferFee: 300,
+    transferFee: 495,
     operator: "Rest Haven Funeral Home & Memorial Park (Carriage Services)",
     tagline: "Rockwall County's memorial park, east of Lake Ray Hubbard",
     intro: [
@@ -453,7 +453,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     facts: [
       { label: "City", value: "Rockwall (State Highway 66)" },
       { label: "Operator", value: "Carriage Services" },
-      { label: "Transfer fee", value: "$300 per space" },
+      { label: "Transfer fee", value: "$495 per space" },
       { label: "Paperwork", value: "Original deed required" },
     ],
     sections: [
@@ -474,7 +474,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       { type: "Cremation niche or urn space", retail: [1500, 9000], resale: [1500, 6000] },
     ],
     localNotes: [
-      "The transfer fee here is $300 per space — confirmed directly with the cemetery office and among the lowest in the metroplex.",
+      "The transfer fee here is $495 per space — confirmed directly with the cemetery office and among the lowest in the metroplex.",
       "Rest Haven requires original documents, not copies: the original deed and original death certificates where an owner has passed away. Our power of attorney form is accepted.",
       "Spaces are sold as singles, and a second right of interment on a space you already own can normally be added for about half the price of a new space.",
       "Bring the garden, lot and space line from your deed (for example Garden of Devotion, Lot 86, Space D) and we can value it the same day without a site visit.",
@@ -486,7 +486,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "What is the transfer fee at Rest Haven Memorial Park?",
-        a: "$300 per space, paid to the cemetery to record the change of ownership. It is one of the lowest transfer fees in Dallas–Fort Worth, and we confirm the live figure in writing before anyone signs.",
+        a: "$495 per space, paid to the cemetery to record the change of ownership. It is one of the lowest transfer fees in Dallas–Fort Worth, and we confirm the live figure in writing before anyone signs.",
       },
       {
         q: "What paperwork does Rest Haven need to transfer a plot?",
@@ -499,9 +499,9 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
     nearby: ["restland-memorial-park", "laurel-land-memorial-park-dallas"],
     seo: {
-      title: "Rest Haven Rockwall Plots for Sale | Prices & $300 Transfer",
+      title: "Rest Haven Rockwall Plots for Sale | Prices & $495 Transfer",
       description:
-        "Rest Haven Memorial Park, Rockwall TX — cemetery plots and cremation spaces for sale. Resale price ranges, the $300 per-space transfer fee, paperwork and free valuations.",
+        "Rest Haven Memorial Park, Rockwall TX — cemetery plots and cremation spaces for sale. Resale price ranges, the $495 per-space transfer fee, paperwork and free valuations.",
       h1: "Rest Haven Memorial Park, Rockwall",
     },
   },
