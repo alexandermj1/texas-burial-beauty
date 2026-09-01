@@ -703,9 +703,11 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
           {/* ---------- Restland's own garden plans + directory ---------- */}
           {cemetery.slug === "restland-memorial-park" && (
             <section id="sections" className="scroll-mt-28 px-6 md:px-10 pt-20">
-              <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-6">
-                <RestlandGardenMap />
-              </div>
+              <MapReveal title="View the garden plans" sub="Section-by-section plan of the grounds and directory.">
+                <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))] p-3 sm:p-6">
+                  <RestlandGardenMap />
+                </div>
+              </MapReveal>
             </section>
           )}
 
@@ -714,9 +716,11 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
 
             {planMap && (
               <section id="sections" className="scroll-mt-28">
-                <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
-                  <CemeteryPlanMap cemeteryName={cemetery.name} map={planMap} />
-                </div>
+                <MapReveal title={`View the ${cemetery.name} grounds plan`} sub="Gardens, mausoleums and sections, mapped.">
+                  <div className="rounded-[28px] overflow-hidden bg-[hsl(var(--parchment))]">
+                    <CemeteryPlanMap cemeteryName={cemetery.name} map={planMap} />
+                  </div>
+                </MapReveal>
               </section>
             )}
 
