@@ -254,12 +254,14 @@ Deno.serve(async (req) => {
         poa: poas[0] ?? null,
 
 
-        documents: deduped.map((d) => {
+        documents: await Promise.all(deduped.map(async (d) => {
           const state = d.manual_override ?? d.required_state;
           const held = heldFiles(d);
           const complete = DONE_STATES.includes(state) || (held > 0 && d.status === "received");
           const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
-          const preparedUrl = d.issued_by_us ? preparedFor(d.label ?? "", d.person_name) : null;
+          const attachedForm = await brokerFormFor(d.doc_code, d.person_name);
+          const preparedUrl = attachedForm
+            ?? (d.issued_by_us ? preparedFor(d.label ?? "", d.person_name) : null);
           return {
             id: d.id,
             code: d.doc_code,
@@ -267,7 +269,7 @@ Deno.serve(async (req) => {
             person_name: d.person_name,
             why: d.why,
             needs_notary: d.needs_notary,
-            issued_by_us: d.issued_by_us,
+            issued_by_us: d.issued_by_us || !!attachedForm,
             // Once we hold an item there is nothing left to post or upload.
             prepared_pdf_url: preparedUrl,
             // A document we prepared still has to come back to us as a signed
@@ -280,7 +282,8 @@ Deno.serve(async (req) => {
             complete,
             uploaded: held > 0,
           };
-        }),
+        })),
+
 
       });
     }
