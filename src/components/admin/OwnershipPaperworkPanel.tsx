@@ -1708,6 +1708,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   };
 
+  /** Warnings are notes, not documents — read one, tick it off, it goes away. */
+  const acknowledgeWarning = async (r: Requirement) => {
+    const key = reqKey(r);
+    await persistAnswers({
+      ...answers,
+      acknowledgedWarnings: [...new Set([...(answers.acknowledgedWarnings ?? []), key])],
+    } as OwnershipAnswers);
+    // A review placeholder may already have a row on the checklist; drop it so
+    // it never reaches the seller's page.
+    const live = await fetchLiveRows();
+    const match = live.filter((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r)).map((x) => x.id);
+    if (match.length) await softDelete("submission_documents", match);
+    await load();
+    toast.success("Warning acknowledged", {
+      action: { label: "Undo", onClick: () => void unacknowledgeWarning(key) },
+    });
+  };
+
+  const unacknowledgeWarning = async (key: string) => {
+    await persistAnswers({
+      ...answers,
+      acknowledgedWarnings: (answers.acknowledgedWarnings ?? []).filter((k) => k !== key),
+    } as OwnershipAnswers);
+  };
+
 
   /** Take a requirement off this file's checklist for good (not just "not needed"). */
   const removeRequirement = async (r: Requirement) => {
