@@ -224,6 +224,21 @@ Deno.serve(async (req) => {
         return (k && list.find((x) => x.key === k)?.url) || list[0].url;
       };
 
+      // A form a broker attached by hand to a checklist item (a cemetery's own
+      // transfer form, say). It behaves exactly like a document we prepared:
+      // the seller opens it, prints it, and posts or uploads it back.
+      const brokerForms: Record<string, { path?: string; name?: string }> =
+        (ownershipAnswers.brokerForms as Record<string, { path?: string; name?: string }>) ?? {};
+      const brokerFormFor = async (code?: string | null, person?: string | null) => {
+        const entry = brokerForms[`${code ?? ""}::${personKeyOf(person)}`]
+          ?? brokerForms[`${code ?? ""}::`];
+        if (!entry?.path) return null;
+        const { data } = await supabase.storage
+          .from("customer-files").createSignedUrl(entry.path, 60 * 60 * 24);
+        return data?.signedUrl ?? null;
+      };
+
+
       return json({
         seller_name: String(ownershipAnswers.packetGreeting ?? "").trim() || sub.name,
         broker_note: String(ownershipAnswers.packetNote ?? "").trim() || null,
