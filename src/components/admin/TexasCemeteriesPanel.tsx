@@ -13,6 +13,8 @@ import type { Submission } from "./SubmissionsPanel";
 import type { CemeteryDocRules } from "@/lib/ownershipRules";
 import { refreshCemeteryRegistry, regionForCity } from "@/hooks/useCemeteryRegistry";
 import { softDelete } from "@/lib/softDelete";
+import CemeteryPeople from "./CemeteryPeople";
+
 
 
 interface TexasCemetery {
@@ -621,6 +623,11 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                               </div>
                             );
                           })()}
+
+                          <div className="sm:col-span-2">
+                            <CemeteryPeople cemeteryId={profile.id} cemeteryName={profile.name} />
+                          </div>
+
 
                           <div className="sm:col-span-2 flex justify-end">
 

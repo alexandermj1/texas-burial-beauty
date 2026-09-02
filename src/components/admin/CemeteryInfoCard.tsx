@@ -10,6 +10,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CemeteryFiles from "./CemeteryFiles";
+import CemeteryPeople from "./CemeteryPeople";
+
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
 
 
@@ -371,8 +373,13 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
           )}
 
           {profile?.id && (
+            <CemeteryPeople cemeteryId={profile.id} cemeteryName={profile.name || displayName} />
+          )}
+
+          {profile?.id && (
             <CemeteryFiles cemeteryId={profile.id} cemeteryName={profile.name || displayName} />
           )}
+
         </div>
       )}
 
