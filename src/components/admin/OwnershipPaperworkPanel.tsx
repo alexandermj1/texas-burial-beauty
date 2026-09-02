@@ -1967,6 +1967,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const attached = filesFor(r);
     const isOpen = !!expanded[key];
     const supplied = ["received", "notarized", "complete"].includes(s);
+    const brokerForm = brokerFormFor(r);
+    const formInputRef = useRef<HTMLInputElement>(null);
+
     return (
       <div id={anchorId(r)} className={`border rounded-md px-3 py-2 scroll-mt-24 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
         <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
