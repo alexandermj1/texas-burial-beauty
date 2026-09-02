@@ -622,6 +622,11 @@ const TexasCemeteriesPanel = ({ texasSubmissions, activeCemeteryCanon, onSelectC
                             );
                           })()}
 
+                          <div className="sm:col-span-2">
+                            <CemeteryPeople cemeteryId={profile.id} cemeteryName={profile.name} />
+                          </div>
+
+
                           <div className="sm:col-span-2 flex justify-end">
 
                             <button
