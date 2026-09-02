@@ -463,6 +463,59 @@ export type Database = {
           },
         ]
       }
+      cemetery_people: {
+        Row: {
+          cemetery_id: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          cemetery_id: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cemetery_id?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cemetery_people_cemetery_id_fkey"
+            columns: ["cemetery_id"]
+            isOneToOne: false
+            referencedRelation: "texas_cemeteries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cemetery_photos: {
         Row: {
           alt_text: string | null
