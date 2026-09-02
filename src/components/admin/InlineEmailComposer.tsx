@@ -784,6 +784,8 @@ const InlineEmailComposer = ({
           ? "fixed inset-4 z-50 rounded-xl border border-primary/30 bg-background p-5 shadow-2xl flex flex-col gap-3 overflow-hidden"
           : "mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2") +
         (dragOver ? " ring-2 ring-primary/60" : "")
+      }
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="text-[10px] uppercase tracking-wide font-bold text-primary">
           {inReplyToGmailId ? "Reply in this thread" : "New email"} · from info@texascemeterybrokers.com
