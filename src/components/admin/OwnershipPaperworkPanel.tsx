@@ -1819,6 +1819,49 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     } as OwnershipAnswers);
   };
 
+  /**
+   * A form we have to hand the seller ourselves — a cemetery's own transfer
+   * form, say. It is stored privately and shows on their document page exactly
+   * like a POA: open it, print it, then post or upload it back to us.
+   */
+  const brokerForms =
+    ((answers as Record<string, unknown>).brokerForms as Record<string, { path?: string; name?: string }> | undefined) ?? {};
+  const brokerFormFor = (r: Requirement) => brokerForms[reqDbKey(r)];
+
+  const attachBrokerForm = async (r: Requirement, file: File) => {
+    setBusy(`${reqKey(r)}-form`);
+    try {
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${submissionId}/broker-forms/${Date.now()}_${safe}`;
+      const { error } = await supabase.storage
+        .from("customer-files")
+        .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+      if (error) throw error;
+      await persistAnswers({
+        ...answers,
+        brokerForms: { ...brokerForms, [reqDbKey(r)]: { path, name: file.name } },
+      } as OwnershipAnswers);
+      toast.success("Attached — the seller can now open and print this form");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not attach that file");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const removeBrokerForm = async (r: Requirement) => {
+    const next = { ...brokerForms };
+    delete next[reqDbKey(r)];
+    await persistAnswers({ ...answers, brokerForms: next } as OwnershipAnswers);
+    toast.success("Form removed from this item");
+  };
+
+  const openBrokerForm = async (entry: { path?: string; name?: string }) => {
+    if (!entry.path) return;
+    openFileViewer({ bucket: "customer-files", path: entry.path, name: entry.name ?? "Form" });
+  };
+
+
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
