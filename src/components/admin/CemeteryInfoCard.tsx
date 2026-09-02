@@ -10,6 +10,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CemeteryFiles from "./CemeteryFiles";
+import CemeteryPeople from "./CemeteryPeople";
+
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
 
 
