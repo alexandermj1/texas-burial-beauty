@@ -158,7 +158,7 @@ function brandPages(doc: PDFDocument, bold: PDFFont, body: PDFFont, totalPages?:
 function heirTable(ctx: Ctx, heirs: Heir[]) {
   const cols = [150, 190, 90, 70];
   const headers = ['Name', 'Address', 'Relationship', 'Age / DOB'];
-  const rows = heirs.length ? heirs : Array.from({ length: 4 }, () => ({ name: '' } as Heir));
+  const rows = heirs.length ? heirs : Array.from({ length: 8 }, () => ({ name: '' } as Heir));
   const rowH = 20;
   if (ctx.y < M + rowH * (rows.length + 2)) newPage(ctx);
 
