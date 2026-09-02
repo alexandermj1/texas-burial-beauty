@@ -13,6 +13,8 @@ import type { Submission } from "./SubmissionsPanel";
 import type { CemeteryDocRules } from "@/lib/ownershipRules";
 import { refreshCemeteryRegistry, regionForCity } from "@/hooks/useCemeteryRegistry";
 import { softDelete } from "@/lib/softDelete";
+import CemeteryPeople from "./CemeteryPeople";
+
 
 
 interface TexasCemetery {
