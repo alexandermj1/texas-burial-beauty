@@ -2035,6 +2035,35 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             )}
 
             {r.code !== "REVIEW" && r.code !== "NOTE" && (
+              <>
+                <input
+                  ref={formInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) void attachBrokerForm(r, f);
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant={brokerForm ? "default" : "ghost"}
+                  className="text-[11px] h-7"
+                  disabled={busy === `${key}-form`}
+                  onClick={() => (brokerForm ? void openBrokerForm(brokerForm) : formInputRef.current?.click())}
+                  title={brokerForm
+                    ? `Attached for the seller: ${brokerForm.name ?? "form"} — click to open it`
+                    : "Attach a form for the seller to print, sign and post back (e.g. the cemetery's own transfer form)"}
+                >
+                  {busy === `${key}-form`
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Paperclip className="w-3.5 h-3.5" />}
+                </Button>
+              </>
+            )}
+
+            {r.code !== "REVIEW" && r.code !== "NOTE" && (
               <Button
                 size="sm"
                 variant={mailFor(r) ? "default" : "ghost"}
