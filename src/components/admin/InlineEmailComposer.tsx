@@ -387,6 +387,10 @@ const InlineEmailComposer = ({
   };
 
   const applyTemplate = (id: string) => {
+    // Picking a template is an explicit reset: any saved draft for this thread
+    // must go, otherwise the restore effect below immediately puts it back and
+    // "Blank" looks like it kept the previous email.
+    clearDraft();
     if (id === "__blank__") {
       setActiveTemplateId(null);
       // Wipe the body back to just the greeting + signature — a template that
