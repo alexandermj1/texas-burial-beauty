@@ -476,7 +476,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const prog = progress(answers);
   const computedRequirements = useMemo(() => {
     const removed = new Set(answers.removedDocs ?? []);
-    return computeRequirements(answers, rules).filter((r) => !removed.has(reqKey(r)));
+    const acked = new Set(answers.acknowledgedWarnings ?? []);
+    return computeRequirements(answers, rules)
+      .filter((r) => !removed.has(reqKey(r)))
+      // Warnings are notes, not documents: once a broker has read and
+      // acknowledged one it disappears from the checklist.
+      .filter((r) => !((r.code === "REVIEW" || r.code === "NOTE") && acked.has(reqKey(r))));
   }, [answers, rules]);
 
   // Once a document request has actually been emailed, the checklist is a
@@ -1703,6 +1708,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   };
 
+  /** Warnings are notes, not documents — read one, tick it off, it goes away. */
+  const acknowledgeWarning = async (r: Requirement) => {
+    const key = reqKey(r);
+    await persistAnswers({
+      ...answers,
+      acknowledgedWarnings: [...new Set([...(answers.acknowledgedWarnings ?? []), key])],
+    } as OwnershipAnswers);
+    // A review placeholder may already have a row on the checklist; drop it so
+    // it never reaches the seller's page.
+    const live = await fetchLiveRows();
+    const match = live.filter((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r)).map((x) => x.id);
+    if (match.length) await softDelete("submission_documents", match);
+    await load();
+    toast.success("Warning acknowledged", {
+      action: { label: "Undo", onClick: () => void unacknowledgeWarning(key) },
+    });
+  };
+
+  const unacknowledgeWarning = async (key: string) => {
+    await persistAnswers({
+      ...answers,
+      acknowledgedWarnings: (answers.acknowledgedWarnings ?? []).filter((k) => k !== key),
+    } as OwnershipAnswers);
+  };
+
 
   /** Take a requirement off this file's checklist for good (not just "not needed"). */
   const removeRequirement = async (r: Requirement) => {
@@ -1968,6 +1998,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const isOpen = !!expanded[key];
     const supplied = ["received", "notarized", "complete"].includes(s);
     const brokerForm = brokerFormFor(r);
+    const isWarning = r.code === "REVIEW" || r.code === "NOTE";
     const formInputRef = useRef<HTMLInputElement>(null);
 
     return (
@@ -2076,34 +2107,48 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 <Mail className="w-3.5 h-3.5" />
               </Button>
             )}
-            <Button
-              size="sm"
-              variant={supplied ? "default" : "outline"}
-
-              className="text-[11px] h-7"
-              onClick={() => void setRowState(r, supplied ? "needed" : "received")}
-              title={supplied ? "Mark as still needed" : "Mark as supplied"}
-            >
-              {supplied ? <Undo2 className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-            </Button>
-            {r.code !== "REVIEW" && r.code !== "NOTE" && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-[11px] h-7 text-muted-foreground hover:text-rose-600"
-                onClick={() => void removeRequirement(r)}
-                title="Remove this document from the request altogether"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
+            {isWarning ? (
+              <>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Warning</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-[11px] h-7 border-amber-300 text-amber-800 hover:bg-amber-100"
+                  onClick={() => void acknowledgeWarning(r)}
+                  title="You have read this — dismiss it from the checklist"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />Acknowledge
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant={supplied ? "default" : "outline"}
+                  className="text-[11px] h-7"
+                  onClick={() => void setRowState(r, supplied ? "needed" : "received")}
+                  title={supplied ? "Mark as still needed" : "Mark as supplied"}
+                >
+                  {supplied ? <Undo2 className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-[11px] h-7 text-muted-foreground hover:text-rose-600"
+                  onClick={() => void removeRequirement(r)}
+                  title="Remove this document from the request altogether"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+                <select
+                  className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
+                  value={s}
+                  onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
+                >
+                  {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
+                </select>
+              </>
             )}
-            <select
-              className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
-              value={s}
-              onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
-            >
-              {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
-            </select>
           </div>
         </div>
 

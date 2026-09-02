@@ -80,6 +80,8 @@ export type OwnershipAnswers = {
 
   /** Requirement keys an admin has removed outright from this file's checklist. */
   removedDocs?: string[];
+  /** Review/warning keys an admin has read and acknowledged, so they stop showing. */
+  acknowledgedWarnings?: string[];
   /**
    * Files we already hold that an admin has linked to a checklist item by hand,
    * keyed by "CODE::personName" and holding storage paths. Used when a document
