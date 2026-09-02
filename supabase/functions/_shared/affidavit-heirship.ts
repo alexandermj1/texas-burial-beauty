@@ -186,7 +186,16 @@ function heirTable(ctx: Ctx, heirs: Heir[]) {
   ctx.y -= 14;
 }
 
-export async function buildAffidavitPdf(d: AffidavitData): Promise<Uint8Array> {
+export async function buildAffidavitPdf(input: AffidavitData): Promise<Uint8Array> {
+  // We no longer pre-fill the affidavit of heirship. The family swears to these
+  // facts themselves, so the document goes out blank with a ruled space for
+  // every answer; only the spouse page flag is honoured (and it defaults on).
+  const d: AffidavitData = {
+    affiant_name: '',
+    decedent_name: '',
+    heirs: [],
+    include_spouse_page: input.include_spouse_page ?? true,
+  };
   const doc = await PDFDocument.create();
   const ctx: Ctx = {
     doc,
@@ -196,31 +205,28 @@ export async function buildAffidavitPdf(d: AffidavitData): Promise<Uint8Array> {
     bold: await doc.embedFont(StandardFonts.TimesRomanBold),
     italic: await doc.embedFont(StandardFonts.TimesRomanItalic),
   };
-  const county = (d.county ?? '').trim();
-  const plot = [d.plot_description, d.spaces && `Spaces ${d.spaces}`, d.deed_number && `Deed ${d.deed_number}`]
-    .filter(Boolean).join(' · ');
+  const county = '';
+  const plot = '';
 
   // ── Page 1: the affidavit ──
   heading(ctx, 'AFFIDAVIT OF HEIRSHIP', 15);
   venue(ctx, county);
+  para(ctx, 'Complete this form in ink, then sign it in front of a notary. Do not sign it beforehand.', { size: 9.5, font: ctx.italic, gap: 10 });
   para(ctx, `BEFORE ME, the undersigned authority, on this day personally appeared ${inline(d.affiant_name, 40)} ("Affiant"), who, after being by me duly sworn, deposed and said:`, { gap: 10 });
 
-  para(ctx, `1.  My name is ${inline(d.affiant_name, 36)} and I reside at ${inline(d.affiant_address, 44)}. I am over eighteen years of age and fully competent to make this affidavit. My relationship to the Decedent named below is ${inline(d.affiant_relationship, 26)}. ${d.affiant_is_heir ? 'I am an heir of the Decedent.' : 'I am not an heir of the Decedent.'}`);
+  para(ctx, `1.  My name is ${inline(d.affiant_name, 36)} and I reside at ${inline(d.affiant_address, 44)}. I am over eighteen years of age and fully competent to make this affidavit. My relationship to the Decedent named below is ${inline(d.affiant_relationship, 26)}. I am  [ ] an heir  [ ] not an heir  of the Decedent.`);
 
   para(ctx, `2.  The Decedent is ${inline(d.decedent_name, 40)}, who died on ${inline(d.decedent_death_date, 20)} at ${inline(d.decedent_death_place, 34)} and who, at the time of death, resided at ${inline(d.decedent_residence, 42)}. I was personally familiar with the Decedent's family and marital history from ${inline(d.knew_from, 12)} until ${inline(d.knew_until, 12)}.`);
 
-  para(ctx, '3.  Marital history:', { font: ctx.bold, gap: 3 });
-  if (d.never_married) {
-    para(ctx, '[X]  The Decedent was never married.', { indent: 18 });
-  } else {
-    para(ctx, `[X]  The Decedent was married as follows (each spouse's name, the date of marriage, and how and when it ended): ${inline(d.marital_history, 60)}`, { indent: 18 });
-    para(ctx, `The Decedent ${d.surviving_spouse ? '[X] was  [ ] was not' : '[ ] was  [X] was not'} survived by a spouse. Surviving spouse: ${inline(d.surviving_spouse, 40)}.`, { indent: 18 });
-  }
+  para(ctx, '3.  Marital history (tick one):', { font: ctx.bold, gap: 3 });
+  para(ctx, '[ ]  The Decedent was never married.', { indent: 18, gap: 3 });
+  para(ctx, `[ ]  The Decedent was married as follows (each spouse's name, the date of marriage, and how and when it ended): ${inline(d.marital_history, 60)}`, { indent: 18, gap: 3 });
+  para(ctx, `${'_'.repeat(78)}`, { indent: 18, gap: 3 });
+  para(ctx, `The Decedent  [ ] was   [ ] was not  survived by a spouse. Surviving spouse: ${inline(d.surviving_spouse, 40)}.`, { indent: 18 });
 
-  para(ctx, '4.  Children:', { font: ctx.bold, gap: 3 });
-  para(ctx, d.no_children
-    ? '[X]  The Decedent never had or adopted any child and never took any child into the Decedent\'s home or raised any child as the Decedent\'s own.'
-    : '[X]  The Decedent\'s children are listed in Paragraph 6. If a child died before the Decedent, that child\'s own children are listed in that child\'s place. No other person was ever a child of the Decedent by birth, adoption, or otherwise.',
+  para(ctx, '4.  Children (tick one):', { font: ctx.bold, gap: 3 });
+  para(ctx, '[ ]  The Decedent never had or adopted any child and never took any child into the Decedent\'s home or raised any child as the Decedent\'s own.', { indent: 18, gap: 3 });
+  para(ctx, '[ ]  The Decedent\'s children are listed in Paragraph 6. If a child died before the Decedent, that child\'s own children are listed in that child\'s place. No other person was ever a child of the Decedent by birth, adoption, or otherwise.',
     { indent: 18 });
 
   para(ctx, '5.  Complete only if the Decedent left no spouse and no children or grandchildren:', { font: ctx.bold, gap: 3 });
@@ -231,13 +237,15 @@ export async function buildAffidavitPdf(d: AffidavitData): Promise<Uint8Array> {
   heirTable(ctx, d.heirs ?? []);
   para(ctx, 'The persons listed above are all of the heirs at law of the Decedent. No other person has any interest in the property described in Paragraph 7.');
 
-  para(ctx, `7.  Cemetery property. The Decedent owned interment rights at ${inline(d.cemetery, 34)}${d.cemetery_city ? `, ${d.cemetery_city}, Texas` : ''}, described as ${inline(plot, 44)}.`);
+  para(ctx, `7.  Cemetery property. The Decedent owned interment rights at ${inline(d.cemetery, 34)}, ${inline(d.cemetery_city, 20)}, Texas, described as ${inline(plot, 44)}.`);
+  para(ctx, `Section / Block / Lot / Space(s): ${'_'.repeat(58)}`, { indent: 18 });
 
   para(ctx, '8.  The Decedent\'s estate was not administered, or administration has closed, and there are no unpaid debts and no unpaid estate or inheritance taxes.');
 
   para(ctx, '9.  This affidavit is made so that the cemetery and any purchaser may rely on it. I understand that knowingly making a false statement under oath is an offense under Chapter 37 of the Texas Penal Code.', { gap: 20 });
 
-  notaryBlock(ctx, 'Affiant', d.affiant_name, county);
+  notaryBlock(ctx, 'Affiant', '', county);
+
 
   // ── Page 2: second disinterested witness ──
   newPage(ctx);
