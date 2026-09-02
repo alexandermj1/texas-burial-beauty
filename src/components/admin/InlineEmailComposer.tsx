@@ -996,6 +996,24 @@ const InlineEmailComposer = ({
           </div>
         </div>
       )}
+      {fileAtts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {fileAtts.map((f, i) => (
+            <span
+              key={`${f.name}-${i}`}
+              className="inline-flex items-center gap-1.5 max-w-[220px] text-[11px] px-2 py-1 rounded-full border border-border bg-muted/50"
+              title={f.name}
+            >
+              <Paperclip className="w-3 h-3 shrink-0" />
+              <span className="truncate">{f.name}</span>
+              <span className="text-muted-foreground shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+              <button type="button" onClick={() => removeFileAtt(i)} className="text-muted-foreground hover:text-foreground shrink-0" title="Remove">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-end gap-2 flex-wrap">
         {draftRestored && (
           <span className="mr-auto inline-flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400">
