@@ -277,6 +277,10 @@ const InlineEmailComposer = ({
   const [laBlockInserted, setLaBlockInserted] = useState(false);
   const [laSignToken, setLaSignToken] = useState<string | null>(null);
   const [ftBlockInserted, setFtBlockInserted] = useState(false);
+  // Real file attachments picked from the computer (or dropped onto the composer).
+  const [fileAtts, setFileAtts] = useState<{ name: string; mime: string; size: number; base64: string }[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // For replies, start with the plain greeting+signature so we don't
   // clobber the user's reply with a full template. Templates can still be
   // chosen from the picker below.
