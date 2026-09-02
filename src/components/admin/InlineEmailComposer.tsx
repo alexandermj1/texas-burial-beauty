@@ -1051,6 +1051,22 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted"
+          title="Attach a file from your computer (or drag and drop one onto this composer)"
+        >
+          <Paperclip className="w-3 h-3" />
+          Attach file
+        </button>
         {submissionId && (
           <button
             type="button"
