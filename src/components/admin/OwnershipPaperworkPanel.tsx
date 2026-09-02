@@ -1998,6 +1998,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const isOpen = !!expanded[key];
     const supplied = ["received", "notarized", "complete"].includes(s);
     const brokerForm = brokerFormFor(r);
+    const isWarning = r.code === "REVIEW" || r.code === "NOTE";
     const formInputRef = useRef<HTMLInputElement>(null);
 
     return (
