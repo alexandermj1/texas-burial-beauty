@@ -471,6 +471,9 @@ const InlineEmailComposer = ({
         subject: subject || "(no subject)",
         body: plain,
         htmlBody: brandedHtml,
+        attachments: fileAtts.length
+          ? fileAtts.map((f) => ({ filename: f.name, mimeType: f.mime, contentBase64: f.base64 }))
+          : undefined,
         threadId: threadId || undefined,
         inReplyToGmailId: inReplyToGmailId || undefined,
         submissionId: submissionId ?? sellerContext?.id ?? buyerContext?.id ?? undefined,
