@@ -2106,34 +2106,48 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 <Mail className="w-3.5 h-3.5" />
               </Button>
             )}
-            <Button
-              size="sm"
-              variant={supplied ? "default" : "outline"}
-
-              className="text-[11px] h-7"
-              onClick={() => void setRowState(r, supplied ? "needed" : "received")}
-              title={supplied ? "Mark as still needed" : "Mark as supplied"}
-            >
-              {supplied ? <Undo2 className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-            </Button>
-            {r.code !== "REVIEW" && r.code !== "NOTE" && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-[11px] h-7 text-muted-foreground hover:text-rose-600"
-                onClick={() => void removeRequirement(r)}
-                title="Remove this document from the request altogether"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
+            {isWarning ? (
+              <>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Warning</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-[11px] h-7 border-amber-300 text-amber-800 hover:bg-amber-100"
+                  onClick={() => void acknowledgeWarning(r)}
+                  title="You have read this — dismiss it from the checklist"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />Acknowledge
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant={supplied ? "default" : "outline"}
+                  className="text-[11px] h-7"
+                  onClick={() => void setRowState(r, supplied ? "needed" : "received")}
+                  title={supplied ? "Mark as still needed" : "Mark as supplied"}
+                >
+                  {supplied ? <Undo2 className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-[11px] h-7 text-muted-foreground hover:text-rose-600"
+                  onClick={() => void removeRequirement(r)}
+                  title="Remove this document from the request altogether"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+                <select
+                  className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
+                  value={s}
+                  onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
+                >
+                  {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
+                </select>
+              </>
             )}
-            <select
-              className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
-              value={s}
-              onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
-            >
-              {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
-            </select>
           </div>
         </div>
 
