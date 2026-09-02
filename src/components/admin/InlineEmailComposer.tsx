@@ -6,7 +6,7 @@
 // (bold, italic, underline, bulleted/numbered lists, links) — sent as
 // multipart/alternative so recipients see formatting in Gmail.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, CreditCard, Sparkles, Save } from "lucide-react";
+import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, CreditCard, Sparkles, Save, Paperclip } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -277,6 +277,10 @@ const InlineEmailComposer = ({
   const [laBlockInserted, setLaBlockInserted] = useState(false);
   const [laSignToken, setLaSignToken] = useState<string | null>(null);
   const [ftBlockInserted, setFtBlockInserted] = useState(false);
+  // Real file attachments picked from the computer (or dropped onto the composer).
+  const [fileAtts, setFileAtts] = useState<{ name: string; mime: string; size: number; base64: string }[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // For replies, start with the plain greeting+signature so we don't
   // clobber the user's reply with a full template. Templates can still be
   // chosen from the picker below.
@@ -467,6 +471,9 @@ const InlineEmailComposer = ({
         subject: subject || "(no subject)",
         body: plain,
         htmlBody: brandedHtml,
+        attachments: fileAtts.length
+          ? fileAtts.map((f) => ({ filename: f.name, mimeType: f.mime, contentBase64: f.base64 }))
+          : undefined,
         threadId: threadId || undefined,
         inReplyToGmailId: inReplyToGmailId || undefined,
         submissionId: submissionId ?? sellerContext?.id ?? buyerContext?.id ?? undefined,
@@ -488,6 +495,7 @@ const InlineEmailComposer = ({
         ? `Sent to ${to} using the backup mailbox while info@ recovers.`
         : `Sent to ${to}`,
     });
+    setFileAtts([]);
     // If a listing-options quote block was inserted OR the seller_listing_options
     // template was used, stamp the submission's quote_sent_at so it moves to the
     // "Quoted" pipeline stage / gets the quoted tag.
@@ -739,13 +747,47 @@ const InlineEmailComposer = ({
     toast({ title: aiHasDraft ? "Draft updated" : "AI draft ready", description: "Review, edit, or ask for more changes." });
   };
 
+  /** Read files picked from Finder/Explorer (or dropped in) as base64 for Gmail. */
+  const addFiles = async (list: FileList | File[] | null) => {
+    const files = Array.from(list ?? []);
+    if (!files.length) return;
+    const MAX = 20 * 1024 * 1024;
+    for (const f of files) {
+      if (f.size > MAX) {
+        toast({ title: `${f.name} is too large`, description: "Max 20 MB per attachment.", variant: "destructive" });
+        continue;
+      }
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(f);
+      }).catch(() => "");
+      if (!base64) {
+        toast({ title: `Could not read ${f.name}`, variant: "destructive" });
+        continue;
+      }
+      setFileAtts((prev) => [...prev, { name: f.name, mime: f.type || "application/octet-stream", size: f.size, base64 }]);
+    }
+  };
+
+  const removeFileAtt = (idx: number) => setFileAtts((prev) => prev.filter((_, i) => i !== idx));
 
   return (
     <div
+      onDragOver={(e) => { e.preventDefault(); if (!dragOver) setDragOver(true); }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setDragOver(false); }}
+      onDrop={(e) => {
+        if (!e.dataTransfer?.files?.length) return;
+        e.preventDefault();
+        setDragOver(false);
+        void addFiles(e.dataTransfer.files);
+      }}
       className={
-        expanded
+        (expanded
           ? "fixed inset-4 z-50 rounded-xl border border-primary/30 bg-background p-5 shadow-2xl flex flex-col gap-3 overflow-hidden"
-          : "mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2"
+          : "mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2") +
+        (dragOver ? " ring-2 ring-primary/60" : "")
       }
     >
       <div className="flex items-center justify-between gap-2">
@@ -954,6 +996,24 @@ const InlineEmailComposer = ({
           </div>
         </div>
       )}
+      {fileAtts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {fileAtts.map((f, i) => (
+            <span
+              key={`${f.name}-${i}`}
+              className="inline-flex items-center gap-1.5 max-w-[220px] text-[11px] px-2 py-1 rounded-full border border-border bg-muted/50"
+              title={f.name}
+            >
+              <Paperclip className="w-3 h-3 shrink-0" />
+              <span className="truncate">{f.name}</span>
+              <span className="text-muted-foreground shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+              <button type="button" onClick={() => removeFileAtt(i)} className="text-muted-foreground hover:text-foreground shrink-0" title="Remove">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-end gap-2 flex-wrap">
         {draftRestored && (
           <span className="mr-auto inline-flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400">
@@ -1009,6 +1069,22 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted"
+          title="Attach a file from your computer (or drag and drop one onto this composer)"
+        >
+          <Paperclip className="w-3 h-3" />
+          Attach file
+        </button>
         {submissionId && (
           <button
             type="button"
