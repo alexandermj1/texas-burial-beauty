@@ -476,7 +476,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const prog = progress(answers);
   const computedRequirements = useMemo(() => {
     const removed = new Set(answers.removedDocs ?? []);
-    return computeRequirements(answers, rules).filter((r) => !removed.has(reqKey(r)));
+    const acked = new Set(answers.acknowledgedWarnings ?? []);
+    return computeRequirements(answers, rules)
+      .filter((r) => !removed.has(reqKey(r)))
+      // Warnings are notes, not documents: once a broker has read and
+      // acknowledged one it disappears from the checklist.
+      .filter((r) => !((r.code === "REVIEW" || r.code === "NOTE") && acked.has(reqKey(r))));
   }, [answers, rules]);
 
   // Once a document request has actually been emailed, the checklist is a
