@@ -27,6 +27,7 @@ type PacketDoc = {
   issued_by_us: boolean | null;
   /** The finished PDF when this is a document we prepared for them (affidavit, consent). */
   prepared_pdf_url?: string | null;
+  extra_form_url?: string | null;
   /** When set, the cemetery only accepts the original — post it to this address. */
   mail_to?: string | null;
   /** Set once the seller has ticked "this is in the post". */
@@ -525,6 +526,21 @@ const DocRow = ({
                 className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90"
               >
                 <Stamp className="w-3.5 h-3.5" /> Open the document we prepared
+              </button>
+            </div>
+          )}
+          {doc.extra_form_url && (
+            <div className="mt-3 rounded-xl bg-card/70 border border-border/60 px-4 py-3">
+              <p className="text-[11px] font-medium text-foreground">Extra form from us for this item</p>
+              <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
+                Please print and complete this as well, then upload or post it back with the document above.
+              </p>
+              <button
+                type="button"
+                onClick={() => void openPrivateFile(doc.extra_form_url!, () => {})}
+                className="inline-flex items-center gap-1.5 mt-3 text-xs px-4 py-2 rounded-full border border-border bg-background hover:bg-muted"
+              >
+                <Stamp className="w-3.5 h-3.5" /> Open the extra form
               </button>
             </div>
           )}

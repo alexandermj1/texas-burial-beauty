@@ -260,8 +260,11 @@ Deno.serve(async (req) => {
           const complete = DONE_STATES.includes(state) || (held > 0 && d.status === "received");
           const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
           const attachedForm = await brokerFormFor(d.doc_code, d.person_name);
-          const preparedUrl = attachedForm
-            ?? (d.issued_by_us ? preparedFor(d.label ?? "", d.person_name) : null);
+          const ourPrepared = d.issued_by_us ? await preparedFor(d.label ?? "", d.person_name) : null;
+          // A document we already prepare (POA, affidavit, consent) keeps its own
+          // PDF; anything the broker clips on shows up alongside it as an extra form.
+          const preparedUrl = ourPrepared ?? attachedForm;
+          const extraFormUrl = ourPrepared && attachedForm ? attachedForm : null;
           return {
             id: d.id,
             code: d.doc_code,
@@ -272,6 +275,7 @@ Deno.serve(async (req) => {
             issued_by_us: d.issued_by_us || !!attachedForm,
             // Once we hold an item there is nothing left to post or upload.
             prepared_pdf_url: preparedUrl,
+            extra_form_url: extraFormUrl,
             // A document we prepared still has to come back to us as a signed
             // original, so it keeps its posting address once it is issued.
             mail_to: complete || (d.issued_by_us && !preparedUrl)
