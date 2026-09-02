@@ -743,15 +743,47 @@ const InlineEmailComposer = ({
     toast({ title: aiHasDraft ? "Draft updated" : "AI draft ready", description: "Review, edit, or ask for more changes." });
   };
 
+  /** Read files picked from Finder/Explorer (or dropped in) as base64 for Gmail. */
+  const addFiles = async (list: FileList | File[] | null) => {
+    const files = Array.from(list ?? []);
+    if (!files.length) return;
+    const MAX = 20 * 1024 * 1024;
+    for (const f of files) {
+      if (f.size > MAX) {
+        toast({ title: `${f.name} is too large`, description: "Max 20 MB per attachment.", variant: "destructive" });
+        continue;
+      }
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(f);
+      }).catch(() => "");
+      if (!base64) {
+        toast({ title: `Could not read ${f.name}`, variant: "destructive" });
+        continue;
+      }
+      setFileAtts((prev) => [...prev, { name: f.name, mime: f.type || "application/octet-stream", size: f.size, base64 }]);
+    }
+  };
+
+  const removeFileAtt = (idx: number) => setFileAtts((prev) => prev.filter((_, i) => i !== idx));
 
   return (
     <div
+      onDragOver={(e) => { e.preventDefault(); if (!dragOver) setDragOver(true); }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setDragOver(false); }}
+      onDrop={(e) => {
+        if (!e.dataTransfer?.files?.length) return;
+        e.preventDefault();
+        setDragOver(false);
+        void addFiles(e.dataTransfer.files);
+      }}
       className={
-        expanded
+        (expanded
           ? "fixed inset-4 z-50 rounded-xl border border-primary/30 bg-background p-5 shadow-2xl flex flex-col gap-3 overflow-hidden"
-          : "mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2"
-      }
-    >
+          : "mt-2 rounded-lg border border-primary/30 bg-background p-3 space-y-2") +
+        (dragOver ? " ring-2 ring-primary/60" : "")
       <div className="flex items-center justify-between gap-2">
         <div className="text-[10px] uppercase tracking-wide font-bold text-primary">
           {inReplyToGmailId ? "Reply in this thread" : "New email"} · from info@texascemeterybrokers.com
