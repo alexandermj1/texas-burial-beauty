@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
           const complete = DONE_STATES.includes(state) || (held > 0 && d.status === "received");
           const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
           const attachedForm = await brokerFormFor(d.doc_code, d.person_name);
-          const ourPrepared = d.issued_by_us ? await preparedFor(d.label ?? "", d.person_name) : null;
+          const ourPrepared = d.issued_by_us ? preparedFor(d.label ?? "", d.person_name) : null;
           // A document we already prepare (POA, affidavit, consent) keeps its own
           // PDF; anything the broker clips on shows up alongside it as an extra form.
           const preparedUrl = ourPrepared ?? attachedForm;
