@@ -1819,6 +1819,49 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     } as OwnershipAnswers);
   };
 
+  /**
+   * A form we have to hand the seller ourselves — a cemetery's own transfer
+   * form, say. It is stored privately and shows on their document page exactly
+   * like a POA: open it, print it, then post or upload it back to us.
+   */
+  const brokerForms =
+    ((answers as Record<string, unknown>).brokerForms as Record<string, { path?: string; name?: string }> | undefined) ?? {};
+  const brokerFormFor = (r: Requirement) => brokerForms[reqDbKey(r)];
+
+  const attachBrokerForm = async (r: Requirement, file: File) => {
+    setBusy(`${reqKey(r)}-form`);
+    try {
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${submissionId}/broker-forms/${Date.now()}_${safe}`;
+      const { error } = await supabase.storage
+        .from("customer-files")
+        .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+      if (error) throw error;
+      await persistAnswers({
+        ...answers,
+        brokerForms: { ...brokerForms, [reqDbKey(r)]: { path, name: file.name } },
+      } as OwnershipAnswers);
+      toast.success("Attached — the seller can now open and print this form");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not attach that file");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const removeBrokerForm = async (r: Requirement) => {
+    const next = { ...brokerForms };
+    delete next[reqDbKey(r)];
+    await persistAnswers({ ...answers, brokerForms: next } as OwnershipAnswers);
+    toast.success("Form removed from this item");
+  };
+
+  const openBrokerForm = async (entry: { path?: string; name?: string }) => {
+    if (!entry.path) return;
+    openFileViewer({ bucket: "customer-files", path: entry.path, name: entry.name ?? "Form" });
+  };
+
+
 
 
   const documentRequirements = requirements.filter((r) => r.code !== "LA");
@@ -1924,6 +1967,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const attached = filesFor(r);
     const isOpen = !!expanded[key];
     const supplied = ["received", "notarized", "complete"].includes(s);
+    const brokerForm = brokerFormFor(r);
+    const formInputRef = useRef<HTMLInputElement>(null);
+
     return (
       <div id={anchorId(r)} className={`border rounded-md px-3 py-2 scroll-mt-24 ${r.review ? "border-amber-300 bg-amber-50/50" : "bg-background/60"}`}>
         <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
@@ -1986,6 +2032,35 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   : <FileSignature className="w-3.5 h-3.5 mr-1" />}
                 Edit
               </Button>
+            )}
+
+            {r.code !== "REVIEW" && r.code !== "NOTE" && (
+              <>
+                <input
+                  ref={formInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) void attachBrokerForm(r, f);
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant={brokerForm ? "default" : "ghost"}
+                  className="text-[11px] h-7"
+                  disabled={busy === `${key}-form`}
+                  onClick={() => (brokerForm ? void openBrokerForm(brokerForm) : formInputRef.current?.click())}
+                  title={brokerForm
+                    ? `Attached for the seller: ${brokerForm.name ?? "form"} — click to open it`
+                    : "Attach a form for the seller to print, sign and post back (e.g. the cemetery's own transfer form)"}
+                >
+                  {busy === `${key}-form`
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Paperclip className="w-3.5 h-3.5" />}
+                </Button>
+              </>
             )}
 
             {r.code !== "REVIEW" && r.code !== "NOTE" && (
@@ -2079,6 +2154,32 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             ) : (
               <p className="text-[11px] text-muted-foreground italic">Nothing uploaded for this item yet.</p>
             )}
+            {brokerForm && (
+              <div className="rounded-md border border-primary/30 bg-primary/[0.05] px-2.5 py-2">
+                <p className="text-[11px] font-medium text-foreground flex items-center gap-1">
+                  <Paperclip className="w-3 h-3" />We are giving the seller this form
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  It shows on their document page like a POA — they open it, print it, sign it and post or upload it back.
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button type="button" onClick={() => void openBrokerForm(brokerForm)} className="text-[11px] underline">
+                    {brokerForm.name ?? "Open the form"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void removeBrokerForm(r)}
+                    className="text-[11px] underline text-muted-foreground hover:text-rose-600"
+                  >
+                    Remove
+                  </button>
+                  <button type="button" onClick={() => formInputRef.current?.click()} className="text-[11px] underline text-muted-foreground">
+                    Replace
+                  </button>
+                </div>
+              </div>
+            )}
+
             {!r.issuedByUs && files.filter((f) => !attached.some((a) => a.path === f.path)).length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] text-muted-foreground">Already have it on file?</span>

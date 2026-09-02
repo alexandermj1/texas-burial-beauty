@@ -224,6 +224,21 @@ Deno.serve(async (req) => {
         return (k && list.find((x) => x.key === k)?.url) || list[0].url;
       };
 
+      // A form a broker attached by hand to a checklist item (a cemetery's own
+      // transfer form, say). It behaves exactly like a document we prepared:
+      // the seller opens it, prints it, and posts or uploads it back.
+      const brokerForms: Record<string, { path?: string; name?: string }> =
+        (ownershipAnswers.brokerForms as Record<string, { path?: string; name?: string }>) ?? {};
+      const brokerFormFor = async (code?: string | null, person?: string | null) => {
+        const entry = brokerForms[`${code ?? ""}::${personKeyOf(person)}`]
+          ?? brokerForms[`${code ?? ""}::`];
+        if (!entry?.path) return null;
+        const { data } = await supabase.storage
+          .from("customer-files").createSignedUrl(entry.path, 60 * 60 * 24);
+        return data?.signedUrl ?? null;
+      };
+
+
       return json({
         seller_name: String(ownershipAnswers.packetGreeting ?? "").trim() || sub.name,
         broker_note: String(ownershipAnswers.packetNote ?? "").trim() || null,
@@ -239,12 +254,14 @@ Deno.serve(async (req) => {
         poa: poas[0] ?? null,
 
 
-        documents: deduped.map((d) => {
+        documents: await Promise.all(deduped.map(async (d) => {
           const state = d.manual_override ?? d.required_state;
           const held = heldFiles(d);
           const complete = DONE_STATES.includes(state) || (held > 0 && d.status === "received");
           const key = `${d.doc_code ?? ""}::${d.person_name ?? ""}`;
-          const preparedUrl = d.issued_by_us ? preparedFor(d.label ?? "", d.person_name) : null;
+          const attachedForm = await brokerFormFor(d.doc_code, d.person_name);
+          const preparedUrl = attachedForm
+            ?? (d.issued_by_us ? preparedFor(d.label ?? "", d.person_name) : null);
           return {
             id: d.id,
             code: d.doc_code,
@@ -252,7 +269,7 @@ Deno.serve(async (req) => {
             person_name: d.person_name,
             why: d.why,
             needs_notary: d.needs_notary,
-            issued_by_us: d.issued_by_us,
+            issued_by_us: d.issued_by_us || !!attachedForm,
             // Once we hold an item there is nothing left to post or upload.
             prepared_pdf_url: preparedUrl,
             // A document we prepared still has to come back to us as a signed
@@ -265,7 +282,8 @@ Deno.serve(async (req) => {
             complete,
             uploaded: held > 0,
           };
-        }),
+        })),
+
 
       });
     }
