@@ -20,6 +20,7 @@ interface CustomerFileRow {
   document_type: string | null;
   notes: string | null;
   uploaded_by_name: string | null;
+  uploaded_by_user_id: string | null;
   created_at: string;
   extracted_data: Record<string, any> | null;
   extracted_summary: string | null;
@@ -63,6 +64,9 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
   const [displayName, setDisplayName] = useState<string>("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
+  // Files a broker uploaded (things we sent out) are hidden by default — this
+  // grid is for what the customer has sent back to us.
+  const [showOurs, setShowOurs] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchFiles = async () => {
@@ -232,6 +236,9 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     fetchFiles();
   };
 
+  const ourFiles = files.filter(f => !!f.uploaded_by_user_id);
+  const visibleFiles = showOurs ? files : files.filter(f => !f.uploaded_by_user_id);
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const toggleExpanded = (id: string) => setExpandedId(prev => (prev === id ? null : id));
 
@@ -303,10 +310,19 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
     <div>
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <p className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-          <Paperclip className="w-3 h-3" /> Files & documents ({files.length})
+          <Paperclip className="w-3 h-3" /> Files & documents ({visibleFiles.length})
         </p>
         {!pendingFile && (
           <div className="flex items-center gap-2">
+            {ourFiles.length > 0 && (
+              <button
+                onClick={() => setShowOurs(v => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-background hover:bg-muted"
+                title="Documents we uploaded or sent to this customer"
+              >
+                {showOurs ? "Hide" : "Show"} {ourFiles.length} we sent
+              </button>
+            )}
             <input ref={inputRef} type="file" className="hidden" onChange={handlePicked} />
             <button
               onClick={() => inputRef.current?.click()}
@@ -377,14 +393,14 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
 
       {loading ? (
         <p className="text-xs text-muted-foreground">Loading files…</p>
-      ) : files.length === 0 ? (
+      ) : visibleFiles.length === 0 ? (
         <p className="text-xs text-muted-foreground">
           No files uploaded yet. Upload Power of Attorney, deeds, IDs, or other documents related to {customerName || "this customer"}.
         </p>
       ) : (
         <>
         {(() => {
-          const openFileRow = expandedId ? files.find(f => f.id === expandedId) : null;
+          const openFileRow = expandedId ? visibleFiles.find(f => f.id === expandedId) : null;
           if (!openFileRow) return null;
           return (
             <div className="mb-3 rounded-lg border border-primary/20 bg-primary/5 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
@@ -413,7 +429,7 @@ export default function CustomerFiles({ customerId, customerName }: { customerId
         })()}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
 
-          {files.map(f => {
+          {visibleFiles.map(f => {
             const isImg = isImageMime(f.mime_type);
             const isPdf = f.mime_type === "application/pdf";
             const thumb = thumbs[f.id];
