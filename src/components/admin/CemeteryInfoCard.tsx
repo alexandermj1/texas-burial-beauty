@@ -371,8 +371,13 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
           )}
 
           {profile?.id && (
+            <CemeteryPeople cemeteryId={profile.id} cemeteryName={profile.name || displayName} />
+          )}
+
+          {profile?.id && (
             <CemeteryFiles cemeteryId={profile.id} cemeteryName={profile.name || displayName} />
           )}
+
         </div>
       )}
 
