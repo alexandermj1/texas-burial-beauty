@@ -750,10 +750,11 @@ export const DOC_GUIDE: Record<string, DocGuide> = {
     match: ["administration", "heirship", "judgment"],
   },
   D12: {
-    what: "An Affidavit of Heirship for the cemetery property: a sworn statement of the family tree signed by the heirs and two disinterested witnesses who knew the family but inherit nothing.",
-    how: "We prepare it from your answers. Every signer signs in front of a notary — Proof.com works from a phone in about fifteen minutes.",
+    what: "An Affidavit of Heirship for the cemetery property: a sworn statement of the family tree, completed and signed by an heir and by two disinterested witnesses who knew the family but inherit nothing.",
+    how: "We attach the blank form — please fill it in yourself in ink: the affiant's name and address, the decedent's name, date and place of death, the marital history, and every surviving relative in the table. Leave the notary sections empty. Then sign it in front of a notary (Proof.com works from a phone in about fifteen minutes), have the second witness do the same, and send us the notarised copy.",
     match: ["affidavit", "heirship"],
   },
+
   D13: {
     what: "A court-approved small estate affidavit, available when the estate is under $75,000 and every heir signs.",
     how: "Filed with, and returned by, the probate clerk.",
