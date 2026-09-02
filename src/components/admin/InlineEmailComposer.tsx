@@ -495,6 +495,7 @@ const InlineEmailComposer = ({
         ? `Sent to ${to} using the backup mailbox while info@ recovers.`
         : `Sent to ${to}`,
     });
+    setFileAtts([]);
     // If a listing-options quote block was inserted OR the seller_listing_options
     // template was used, stamp the submission's quote_sent_at so it moves to the
     // "Quoted" pipeline stage / gets the quoted tag.
