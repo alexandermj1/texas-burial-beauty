@@ -1325,7 +1325,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setDocEdit({ r, loading: true, fields: blank });
     try {
       const { data: sub } = await supabase.from("contact_submissions")
-        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier, deed_owner_names, customer_profile_id, ownership_roster")
+        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_description, plot_count, quote_amount, listing_tier, deed_owner_names, customer_profile_id, ownership_roster")
         .eq("id", submissionId).maybeSingle();
       const s = (sub ?? {}) as Record<string, unknown>;
       const str = (v: unknown) => (v == null ? "" : String(v));
