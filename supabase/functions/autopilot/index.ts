@@ -52,9 +52,10 @@ type Sub = Record<string, any>;
  *  IMPORTANT: only descriptive fields are borrowed. Milestone timestamps and
  *  status columns stay on this row — otherwise an old submission that was
  *  already signed would make the chain think this one is finished. */
+//  The property description is never borrowed from a sibling row: the same
+//  seller can have two submissions for two different plots.
 const MERGEABLE = new Set([
-  'name', 'phone', 'cemetery', 'cemetery_city', 'property_type', 'spaces', 'section', 'lawn',
-  'space_numbers', 'plot_count', 'deed_owner_names', 'state', 'relationship_to_owner',
+  'name', 'phone', 'property_type', 'deed_owner_names', 'state', 'relationship_to_owner',
   'ownership_type', 'purchase_info', 'cemetery_retail', 'customer_profile_id',
 ]);
 
