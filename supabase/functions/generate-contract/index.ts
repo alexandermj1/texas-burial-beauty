@@ -62,13 +62,21 @@ Deno.serve(async (req) => {
     // Merge duplicate submissions by email: the selected row (visible "primary"
     // after dedup) may be missing the quote we sent on a sibling row. Fill any
     // null/empty field from whichever duplicate has it so the contract picks
-    // up quote_amount, cemetery_retail, listing_tier, plot info, etc.
+    // up quote_amount, cemetery_retail, listing_tier, etc.
+    // The property itself is NEVER merged: the same seller can list two
+    // different plots (or the same plot typed differently), and borrowing the
+    // sibling row's section/lot printed the wrong property on the paperwork.
+    const NEVER_MERGE = new Set([
+      'plot_description', 'section', 'lawn', 'spaces', 'space_numbers',
+      'plot_count', 'cemetery', 'cemetery_city',
+    ]);
     if (sub.email) {
       const { data: sibs } = await svc
         .from('contact_submissions').select('*').eq('email', sub.email);
       for (const s of sibs ?? []) {
         if ((s as any).id === (sub as any).id) continue;
         for (const [k, v] of Object.entries(s as any)) {
+          if (NEVER_MERGE.has(k)) continue;
           if ((sub as any)[k] == null || (sub as any)[k] === '') (sub as any)[k] = v;
         }
       }

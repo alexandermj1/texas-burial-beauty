@@ -1325,7 +1325,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setDocEdit({ r, loading: true, fields: blank });
     try {
       const { data: sub } = await supabase.from("contact_submissions")
-        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_count, quote_amount, listing_tier, deed_owner_names, customer_profile_id, ownership_roster")
+        .select("name, email, phone, cemetery, cemetery_city, section, lawn, spaces, space_numbers, plot_description, plot_count, quote_amount, listing_tier, deed_owner_names, customer_profile_id, ownership_roster")
         .eq("id", submissionId).maybeSingle();
       const s = (sub ?? {}) as Record<string, unknown>;
       const str = (v: unknown) => (v == null ? "" : String(v));
@@ -1368,10 +1368,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             email: str(prior?.email) || c.email || str(s.email),
             cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
             county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
-            // The deed is the controlling description — use it verbatim when we hold one.
-            plot_description: str(prior?.plot_description) || str(s.plot_description) || plotHints[0]?.text ||
+            // The description the office typed on the submission is the single
+            // source of truth — it is the one that was checked against the deed
+            // and corrected. It must beat whatever an earlier (possibly wrong)
+            // copy of this document was generated with; only if the submission
+            // has none do we fall back to the deed extract, then the raw intake.
+            plot_description: str(s.plot_description) || str(prior?.plot_description) || plotHints[0]?.text ||
               formatPlotDescription({ section: str(s.section), lawn: str(s.lawn), space_numbers: str(s.space_numbers) }),
-            plot_count: str(prior?.plot_count) || str(s.plot_count) || str(s.spaces),
+            plot_count: str(s.plot_count) || str(prior?.plot_count) || str(s.spaces),
             listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
             authorized_min_total: str(prior?.authorized_min_total) || str(s.quote_amount),
           };
