@@ -144,6 +144,13 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
       // Merge duplicate submissions by email (same seller filled the form twice).
       // The visible "primary" row may lack the quote we sent on a sibling row;
       // fill any missing field from whichever duplicate has it.
+      // NEVER merge the property description: a seller can list two different
+      // plots, and borrowing the other row's section/lot put the wrong property
+      // on the paperwork.
+      const NEVER_MERGE = new Set([
+        "plot_description", "section", "lawn", "spaces", "space_numbers",
+        "plot_count", "cemetery", "cemetery_city",
+      ]);
       let merged: any = { ...sub };
       const email = (sub as any).email;
       if (email) {
@@ -152,6 +159,7 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
         for (const s of sibs ?? []) {
           if ((s as any).id === (sub as any).id) continue;
           for (const [k, v] of Object.entries(s as any)) {
+            if (NEVER_MERGE.has(k)) continue;
             if (merged[k] == null || merged[k] === "") merged[k] = v;
           }
         }
