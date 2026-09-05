@@ -259,6 +259,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
 
   /** Save prep plus an immediate patch (state updates are async). */
   const savePrepWith = async (patch: Record<string, unknown>) => {
+    // Persist the typed fields too (plot description above all) so anything
+    // generated afterwards reads the corrected wording, not the stale row.
+    await savePrep();
     const { data: current } = await supabase
       .from("contact_submissions")
       .select("ownership_answers")
