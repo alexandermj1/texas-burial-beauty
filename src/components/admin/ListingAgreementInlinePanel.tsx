@@ -37,6 +37,9 @@ interface Props {
   /** Guaranteed net per space, passed straight from the quote wizard so the
    *  agreement matches the quote without re-typing it. */
   netPerPlot?: number;
+  /** Property description typed by the broker in the quote panel above — it
+   *  always wins over whatever is stored on the submission. */
+  plotDescriptionOverride?: string;
   onGenerated: (html: string, meta: { signToken: string; signUrl: string }) => void;
 }
 
@@ -74,7 +77,7 @@ const Field = ({
 const inputCls =
   "w-full h-9 px-2 rounded-md bg-background border border-border/60 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
-export default function ListingAgreementInlinePanel({ seller, hasGenerated, hideListingOption, netPerPlot, onGenerated }: Props) {
+export default function ListingAgreementInlinePanel({ seller, hasGenerated, hideListingOption, netPerPlot, plotDescriptionOverride, onGenerated }: Props) {
   const { toast } = useToast();
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -130,6 +133,7 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
       setCemetery(row.cemetery ?? seller.cemetery ?? "");
       setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
       setPlotDescription(
+        String(plotDescriptionOverride ?? "").trim() ||
         String((row as any).plot_description ?? "").trim() ||
         formatPlotDescription({
           section: row.section,
@@ -154,6 +158,12 @@ export default function ListingAgreementInlinePanel({ seller, hasGenerated, hide
       cancelled = true;
     };
   }, [seller.id, seller.name, seller.spaces, seller.email, seller.cemetery, netPerPlot]);
+
+  // Live-follow the broker's edits in the quote panel above.
+  useEffect(() => {
+    const v = String(plotDescriptionOverride ?? "").trim();
+    if (v) setPlotDescription(v);
+  }, [plotDescriptionOverride]);
 
   // Keep in step with the quote above while the broker edits it.
   useEffect(() => {
