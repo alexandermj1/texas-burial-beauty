@@ -535,6 +535,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             }}
             hideListingOption
             netPerPlot={nppNum}
+            plotDescriptionOverride={plotDescription}
             hasGenerated={!!agreementEmailHtml}
             onGenerated={async (html) => {
               setAgreementEmailHtml(html);
