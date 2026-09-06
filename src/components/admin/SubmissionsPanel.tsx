@@ -943,6 +943,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
+      // Typing "buyer" in the search bar is a view switch, not a text search —
+      // match every buyer-kind submission regardless of its text content.
+      if (buyerSearch) return resolveKind(s.customer_kind, s.source) === "buyer";
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       const textHit = [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
