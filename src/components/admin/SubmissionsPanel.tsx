@@ -986,7 +986,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const rest = matches.filter(s => !awaitingAll[s.id] && !isNew(s));
     const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
     const otherRows = rest.filter(s => !((s as any).custom_tag || "").trim()).sort(byNewest);
-    const ordered = [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
+    // Buyer view groups by cemetery A→Z (blanks last), newest first within each
+    // cemetery — so the left list reads as a per-cemetery buyer breakdown.
+    const byCemetery = (a: Submission, b: Submission) => {
+      const ca = (a.cemetery || "").trim().toLowerCase() || "￿";
+      const cb = (b.cemetery || "").trim().toLowerCase() || "￿";
+      if (ca !== cb) return ca < cb ? -1 : 1;
+      return byNewest(a, b);
+    };
+    const ordered = buyerView
+      ? [...matches].sort(byCemetery)
+      : [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
