@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -2731,6 +2731,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   count: txU.filter(s => hasDocs(s)).length,
                   active: docsFilter === "with",
                   toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.slate },
+                { key: "no-docs", label: "No attachments", icon: FileX,
+                  count: txU.filter(s => !hasDocs(s)).length,
+                  active: docsFilter === "without",
+                  toggle: () => setDocsFilter(docsFilter === "without" ? "all" : "without"), tone: tones.slate },
                 { key: "awaiting-quote", label: "Awaiting quote", icon: Clock,
                   count: txU.filter(s => effStep(s) === 2).length,
                   active: awaitingQuoteFilter, toggle: () => setAwaitingQuoteFilter(!awaitingQuoteFilter), tone: tones.amber },
