@@ -2685,6 +2685,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide" : "Cemeteries"}
           </button>
+          <button
+            onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
+            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+              kindFilter === "buyer"
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-card text-muted-foreground border-border hover:text-foreground"
+            }`}
+            title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
+          >
+            <ArrowUpFromLine className="w-3.5 h-3.5" /> Buyers
+          </button>
           {onRefresh && (
             <button
               onClick={async () => {
