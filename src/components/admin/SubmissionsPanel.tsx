@@ -854,7 +854,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // buyers only, sorted by cemetery (so it's easy to see which cemeteries
   // buyers are coming from), and the seller pipeline stage tabs are hidden.
   const buyerSearch = /^buyers?$/.test(searchQuery.trim().toLowerCase());
-  const buyerView = !isMobile && (kindFilter === "buyer" || buyerSearch);
+  const buyerView = kindFilter === "buyer" || buyerSearch;
 
   // ---- Potential plot match -------------------------------------------------
   // When a SELLER submission reaches "quote accepted" at a cemetery, any pre-need
