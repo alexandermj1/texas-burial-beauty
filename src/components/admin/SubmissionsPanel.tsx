@@ -3124,6 +3124,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {/* Buyers don't move through the seller pipeline — no stage pill. */}
+                        {sKind !== "buyer" && (
                         <span
                           className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${stage.cls}`}
                           title={stage.at ? `${stage.label} · ${formatDate(stage.at)}` : stage.label}
@@ -3131,6 +3133,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <StageIcon className="w-2.5 h-2.5" strokeWidth={2.75} />
                           {stage.label}
                         </span>
+                        )}
                         <span className="text-[10px] text-muted-foreground tabular-nums" title={`Last interaction ${lastD.toLocaleString()}`}>
                           {lastLabel}
                         </span>
