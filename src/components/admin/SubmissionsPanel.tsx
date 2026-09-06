@@ -3224,6 +3224,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             );
           }
 
+          // Buyer view: interleave sticky cemetery headers so the list reads as
+          // a per-cemetery breakdown of where buyers are coming from.
+          if (buyerView) {
+            return (
+              <>
+                {filtered.map((s, i) => {
+                  const prev = filtered[i - 1];
+                  const cem = (s.cemetery || "").trim();
+                  const prevCem = ((prev?.cemetery) || "").trim();
+                  const showHeader = !prev || cem.toLowerCase() !== prevCem.toLowerCase();
+                  const cemCount = cem
+                    ? filtered.filter(x => (x.cemetery || "").trim().toLowerCase() === cem.toLowerCase()).length
+                    : 0;
+                  return (
+                    <Fragment key={s.id}>
+                      {showHeader && (
+                        <div className="sticky top-0 z-10 px-4 py-1.5 bg-emerald-600/95 backdrop-blur border-b border-emerald-700/40 flex items-center justify-between">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-white">
+                            {cem || "No cemetery listed"}
+                          </span>
+                          {cemCount > 0 && (
+                            <span className="text-[10px] font-bold text-emerald-100 tabular-nums">{cemCount} buyer{cemCount === 1 ? "" : "s"}</span>
+                          )}
+                        </div>
+                      )}
+                      {renderRow(s, i)}
+                    </Fragment>
+                  );
+                })}
+              </>
+            );
+          }
+
           return <>{filtered.map((s, i) => renderRow(s, i))}</>;
 
         })()}
