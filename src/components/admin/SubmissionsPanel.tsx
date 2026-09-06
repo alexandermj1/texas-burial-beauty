@@ -2791,10 +2791,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   count: txU.filter(s => effStep(s) === 9).length,
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
               ];
-              const anyActive = steps.some(s => s.active);
+              // Buyers don't move through the seller pipeline — in buyer view
+              // only the attachment filters stay; the stage tabs are hidden.
+              const visibleSteps = buyerView
+                ? steps.filter(s => s.key === "docs" || s.key === "no-docs")
+                : steps;
+              const anyActive = visibleSteps.some(s => s.active);
               return (
                 <div className="relative flex items-center gap-0 overflow-x-auto -mx-1 px-1">
-                    {steps.map((st, i) => {
+                    {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
                         <div key={st.key} className="flex items-stretch shrink-0">
