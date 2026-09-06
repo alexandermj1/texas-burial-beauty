@@ -849,6 +849,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eStage = isMobile ? "all" : stageFilter;
   const eSellerView = !isMobile && isSellerView;
 
+  // Buyer view: either the "Buyers" toolbar toggle is on, or the admin typed
+  // "buyer"/"buyers" into the search bar. In this view the list is filtered to
+  // buyers only, sorted by cemetery (so it's easy to see which cemeteries
+  // buyers are coming from), and the seller pipeline stage tabs are hidden.
+  const buyerSearch = /^buyers?$/.test(searchQuery.trim().toLowerCase());
+  const buyerView = !isMobile && (kindFilter === "buyer" || buyerSearch);
+
   // ---- Potential plot match -------------------------------------------------
   // When a SELLER submission reaches "quote accepted" at a cemetery, any pre-need
   // BUYER who inquired about that same cemetery becomes actionable: we now have
