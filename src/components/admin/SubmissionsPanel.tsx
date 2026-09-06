@@ -1,5 +1,5 @@
 import { toast } from "@/hooks/use-toast";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
@@ -32,7 +32,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 
-import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -849,6 +849,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const eStage = isMobile ? "all" : stageFilter;
   const eSellerView = !isMobile && isSellerView;
 
+  // Buyer view: either the "Buyers" toolbar toggle is on, or the admin typed
+  // "buyer"/"buyers" into the search bar. In this view the list is filtered to
+  // buyers only, sorted by cemetery (so it's easy to see which cemeteries
+  // buyers are coming from), and the seller pipeline stage tabs are hidden.
+  const buyerSearch = /^buyers?$/.test(searchQuery.trim().toLowerCase());
+  const buyerView = kindFilter === "buyer" || buyerSearch;
+
   // ---- Potential plot match -------------------------------------------------
   // When a SELLER submission reaches "quote accepted" at a cemetery, any pre-need
   // BUYER who inquired about that same cemetery becomes actionable: we now have
@@ -936,6 +943,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       if (eKind !== "all" && resolveKind(s.customer_kind, s.source) !== eKind) return false;
       if (eSellerView && eStage !== "all" && deriveBayerStage(s as any) !== eStage) return false;
+      // Typing "buyer" in the search bar is a view switch, not a text search —
+      // match every buyer-kind submission regardless of its text content.
+      if (buyerSearch) return resolveKind(s.customer_kind, s.source) === "buyer";
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       const textHit = [s.name, s.email, s.phone, s.cemetery, s.message, s.details, s.source]
@@ -976,7 +986,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const rest = matches.filter(s => !awaitingAll[s.id] && !isNew(s));
     const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
     const otherRows = rest.filter(s => !((s as any).custom_tag || "").trim()).sort(byNewest);
-    const ordered = [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
+    // Buyer view groups by cemetery A→Z (blanks last), newest first within each
+    // cemetery — so the left list reads as a per-cemetery buyer breakdown.
+    const byCemetery = (a: Submission, b: Submission) => {
+      const ca = (a.cemetery || "").trim().toLowerCase() || "￿";
+      const cb = (b.cemetery || "").trim().toLowerCase() || "￿";
+      if (ca !== cb) return ca < cb ? -1 : 1;
+      return byNewest(a, b);
+    };
+    const ordered = buyerView
+      ? [...matches].sort(byCemetery)
+      : [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
@@ -992,7 +1012,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
@@ -2665,6 +2685,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide" : "Cemeteries"}
           </button>
+          <button
+            onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
+            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+              kindFilter === "buyer"
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-card text-muted-foreground border-border hover:text-foreground"
+            }`}
+            title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
+          >
+            <ArrowUpFromLine className="w-3.5 h-3.5" /> Buyers
+          </button>
           {onRefresh && (
             <button
               onClick={async () => {
@@ -2760,10 +2791,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   count: txU.filter(s => effStep(s) === 9).length,
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
               ];
-              const anyActive = steps.some(s => s.active);
+              // Buyers don't move through the seller pipeline — in buyer view
+              // only the attachment filters stay; the stage tabs are hidden.
+              const visibleSteps = buyerView
+                ? steps.filter(s => s.key === "docs" || s.key === "no-docs")
+                : steps;
+              const anyActive = visibleSteps.some(s => s.active);
               return (
                 <div className="relative flex items-center gap-0 overflow-x-auto -mx-1 px-1">
-                    {steps.map((st, i) => {
+                    {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
                         <div key={st.key} className="flex items-stretch shrink-0">
@@ -3088,6 +3124,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {/* Buyers don't move through the seller pipeline — no stage pill. */}
+                        {sKind !== "buyer" && (
                         <span
                           className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${stage.cls}`}
                           title={stage.at ? `${stage.label} · ${formatDate(stage.at)}` : stage.label}
@@ -3095,6 +3133,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <StageIcon className="w-2.5 h-2.5" strokeWidth={2.75} />
                           {stage.label}
                         </span>
+                        )}
                         <span className="text-[10px] text-muted-foreground tabular-nums" title={`Last interaction ${lastD.toLocaleString()}`}>
                           {lastLabel}
                         </span>
@@ -3182,6 +3221,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No submissions in this view.</p>
               </div>
+            );
+          }
+
+          // Buyer view: interleave sticky cemetery headers so the list reads as
+          // a per-cemetery breakdown of where buyers are coming from.
+          if (buyerView) {
+            return (
+              <>
+                {filtered.map((s, i) => {
+                  const prev = filtered[i - 1];
+                  const cem = (s.cemetery || "").trim();
+                  const prevCem = ((prev?.cemetery) || "").trim();
+                  const showHeader = !prev || cem.toLowerCase() !== prevCem.toLowerCase();
+                  const cemCount = cem
+                    ? filtered.filter(x => (x.cemetery || "").trim().toLowerCase() === cem.toLowerCase()).length
+                    : 0;
+                  return (
+                    <Fragment key={s.id}>
+                      {showHeader && (
+                        <div className="sticky top-0 z-10 px-4 py-1.5 bg-emerald-600/95 backdrop-blur border-b border-emerald-700/40 flex items-center justify-between">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-white">
+                            {cem || "No cemetery listed"}
+                          </span>
+                          {cemCount > 0 && (
+                            <span className="text-[10px] font-bold text-emerald-100 tabular-nums">{cemCount} buyer{cemCount === 1 ? "" : "s"}</span>
+                          )}
+                        </div>
+                      )}
+                      {renderRow(s, i)}
+                    </Fragment>
+                  );
+                })}
+              </>
             );
           }
 
