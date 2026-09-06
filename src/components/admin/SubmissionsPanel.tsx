@@ -1012,7 +1012,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
 
     return deduped;
-  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
