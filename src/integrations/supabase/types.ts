@@ -651,6 +651,7 @@ export type Database = {
           listing_tier: string | null
           listing_url: string | null
           manual_followup: boolean
+          matched_seller_ids: Json
           message: string | null
           morgued_at: string | null
           multi_owner_perm_required: boolean | null
@@ -771,6 +772,7 @@ export type Database = {
           listing_tier?: string | null
           listing_url?: string | null
           manual_followup?: boolean
+          matched_seller_ids?: Json
           message?: string | null
           morgued_at?: string | null
           multi_owner_perm_required?: boolean | null
@@ -891,6 +893,7 @@ export type Database = {
           listing_tier?: string | null
           listing_url?: string | null
           manual_followup?: boolean
+          matched_seller_ids?: Json
           message?: string | null
           morgued_at?: string | null
           multi_owner_perm_required?: boolean | null

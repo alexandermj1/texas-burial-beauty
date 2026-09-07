@@ -234,6 +234,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [plotCardsOpen, setPlotCardsOpen] = useState(false);
+  // Manual buyer→seller matching search box (buyer workspace).
+  const [matchQuery, setMatchQuery] = useState("");
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
   // Map of submission_id -> latest incoming email received_at (ISO) when the latest
@@ -1818,7 +1820,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 !(s as any).sold_at &&
                 !!canon && _canon(s.cemetery || "") === canon
               );
-              const matchCount = liveListings.length + sellerPlots.length;
+              // Manually matched sellers — hand-picked by the team, stored on the
+              // buyer's record so they persist and sync for everyone.
+              const manualIds: string[] = Array.isArray((selected as any).matched_seller_ids)
+                ? (selected as any).matched_seller_ids : [];
+              const autoIds = new Set(sellerPlots.map(s => s.id));
+              const manualMatches = submissions.filter(s => manualIds.includes(s.id) && !autoIds.has(s.id));
+              const allSellerPlots = [...sellerPlots, ...manualMatches];
+              const matchCount = liveListings.length + allSellerPlots.length;
+              const setManualIds = (ids: string[]) =>
+                onUpdate(selected.id, { matched_seller_ids: ids } as any);
+              // Candidate sellers for the search box: any seller submission, not
+              // archived/trashed, not already matched, matching the typed text.
+              const mq = matchQuery.trim().toLowerCase();
+              const matchCandidates = mq.length < 2 ? [] : submissions
+                .filter(s =>
+                  resolveKind(s.customer_kind, s.source) === "seller" &&
+                  !s.archived_at && !(s as any).deleted_at &&
+                  s.id !== selected.id &&
+                  !manualIds.includes(s.id) &&
+                  [s.name, s.email, s.cemetery, s.property_type, (s as any).section]
+                    .filter(Boolean).some(v => String(v).toLowerCase().includes(mq))
+                )
+                .slice(0, 6);
               const wants = [
                 selected.cemetery ? { k: "Cemetery", v: selected.cemetery } : null,
                 selected.property_type ? { k: "Property", v: selected.property_type } : null,
@@ -1881,18 +1905,34 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           </li>
                         ))}
-                        {sellerPlots.map(s => (
-                          <li key={`s-${s.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
-                            <span className="text-xs text-foreground truncate">
-                              {[s.property_type, (s as any).section, s.spaces ? `${s.spaces} space${Number(s.spaces) > 1 ? "s" : ""}` : null]
-                                .filter(Boolean).join(" · ") || "Accepted seller plot"}
-                              <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">from seller</span>
-                            </span>
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">
-                              {(s as any).list_price != null ? `$${Number((s as any).list_price).toLocaleString()}` : "Price TBC"}
-                            </span>
-                          </li>
-                        ))}
+                        {allSellerPlots.map(s => {
+                          const isManual = manualIds.includes(s.id);
+                          return (
+                            <li key={`s-${s.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
+                              <span className="text-xs text-foreground truncate">
+                                {[s.name, s.cemetery, [s.property_type, (s as any).section, s.spaces ? `${s.spaces} space${Number(s.spaces) > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")]
+                                  .filter(Boolean).join(" — ") || "Seller plot"}
+                                <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  {isManual ? "matched by you" : "from seller"}
+                                </span>
+                              </span>
+                              <span className="inline-flex items-center gap-2 shrink-0">
+                                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                  {(s as any).list_price != null ? `$${Number((s as any).list_price).toLocaleString()}` : "Price TBC"}
+                                </span>
+                                {isManual && (
+                                  <button
+                                    onClick={() => setManualIds(manualIds.filter(id => id !== s.id))}
+                                    className="p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                    title="Remove this match"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -1909,6 +1949,43 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <DollarSign className="w-3.5 h-3.5" /> Send buyer quote
                       </button>
                     </div>
+                  </div>
+
+                  {/* Manually match a seller to this buyer */}
+                  <div className="relative">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
+                      <UserPlus className="w-3 h-3" /> Match a seller manually
+                    </p>
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <input
+                        value={matchQuery}
+                        onChange={e => setMatchQuery(e.target.value)}
+                        placeholder="Search sellers by name, cemetery or email…"
+                        className="w-full pl-8 pr-3 py-2 rounded-lg bg-card border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                      />
+                    </div>
+                    {matchCandidates.length > 0 && (
+                      <ul className="mt-1 rounded-lg border border-border bg-card shadow-lg divide-y divide-border/50 overflow-hidden">
+                        {matchCandidates.map(s => (
+                          <li key={s.id}>
+                            <button
+                              onClick={() => { setManualIds([...manualIds, s.id]); setMatchQuery(""); }}
+                              className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-emerald-500/10 transition-colors"
+                            >
+                              <span className="text-xs text-foreground truncate">
+                                <span className="font-medium">{s.name || s.email}</span>
+                                <span className="text-muted-foreground"> — {[s.cemetery, s.property_type, (s as any).section].filter(Boolean).join(" · ")}</span>
+                              </span>
+                              <span className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 shrink-0">+ Match</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {mq.length >= 2 && matchCandidates.length === 0 && (
+                      <p className="mt-1 text-[11px] text-muted-foreground italic">No sellers match that search.</p>
+                    )}
                   </div>
 
                   {/* Quick toggles */}
