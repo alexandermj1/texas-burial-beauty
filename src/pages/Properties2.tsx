@@ -206,16 +206,27 @@ export const Properties2Browser = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("listings")
-        .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, profit").is("deleted_at", null)
-        .in("status", ["active", "available"])
-        .order("created_at", { ascending: false })
-        .limit(200);
-      setListings((data as Listing[]) || []);
+      if (isAdmin) {
+        // Internal figures (cost/profit) are only available through the
+        // role-checked server function, never from the public table read.
+        const { data } = await supabase.rpc("get_listings_with_internal" as any);
+        const rows = ((data as any[]) || []).filter(
+          (l) => !l.deleted_at && ["active", "available"].includes(l.status)
+        );
+        setListings(rows as Listing[]);
+      } else {
+        const { data } = await supabase
+          .from("listings")
+          .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos").is("deleted_at", null)
+          .in("status", ["active", "available"])
+          .order("created_at", { ascending: false })
+          .limit(200);
+        setListings((data as Listing[]) || []);
+      }
       setLoading(false);
     })();
-  }, []);
+  }, [isAdmin]);
+
 
   const filteredListings = useMemo(() => {
     if (!query.trim()) return listings;
