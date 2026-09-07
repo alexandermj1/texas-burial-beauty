@@ -2524,6 +2524,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {/* Family tree questionnaire status — visible at a glance on the submission. */}
                 {(() => {
+                  if (kind === "buyer") return null;
                   const ft = ftState(selected);
                   if (!ft.sentAt && !ft.doneAt) return null;
                   const done = !!ft.doneAt;
