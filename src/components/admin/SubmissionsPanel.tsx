@@ -260,7 +260,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [typingUsers, setTypingUsers] = useState<{ name: string; color: string }[]>([]);
   const [pendingAction, setPendingAction] = useState<null | { label: string; run: () => void }>(null);
   const typingChanRef = useRef<RealtimeChannel | null>(null);
-  const { countFor } = useActiveListings();
+  const { countFor, listingsAt } = useActiveListings();
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
