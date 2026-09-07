@@ -1951,6 +1951,43 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </div>
                   </div>
 
+                  {/* Manually match a seller to this buyer */}
+                  <div className="relative">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
+                      <UserPlus className="w-3 h-3" /> Match a seller manually
+                    </p>
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <input
+                        value={matchQuery}
+                        onChange={e => setMatchQuery(e.target.value)}
+                        placeholder="Search sellers by name, cemetery or email…"
+                        className="w-full pl-8 pr-3 py-2 rounded-lg bg-card border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                      />
+                    </div>
+                    {matchCandidates.length > 0 && (
+                      <ul className="mt-1 rounded-lg border border-border bg-card shadow-lg divide-y divide-border/50 overflow-hidden">
+                        {matchCandidates.map(s => (
+                          <li key={s.id}>
+                            <button
+                              onClick={() => { setManualIds([...manualIds, s.id]); setMatchQuery(""); }}
+                              className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-emerald-500/10 transition-colors"
+                            >
+                              <span className="text-xs text-foreground truncate">
+                                <span className="font-medium">{s.name || s.email}</span>
+                                <span className="text-muted-foreground"> — {[s.cemetery, s.property_type, (s as any).section].filter(Boolean).join(" · ")}</span>
+                              </span>
+                              <span className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 shrink-0">+ Match</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {mq.length >= 2 && matchCandidates.length === 0 && (
+                      <p className="mt-1 text-[11px] text-muted-foreground italic">No sellers match that search.</p>
+                    )}
+                  </div>
+
                   {/* Quick toggles */}
                   <div className="pt-3 border-t border-emerald-500/20 space-y-2">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Quick toggles</p>
