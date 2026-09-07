@@ -1430,6 +1430,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
                   </p>
+                  {/* Seller money bands, listing option, quote status and stage mover —
+                      none of this applies to a buyer, so it's hidden for them. */}
+                  {kind !== "buyer" && (<>
                   {(() => {
                     const isAccepted = (selected as any).quote_response === "accepted";
                     const hasQuote = !!(selected as any).quote_sent_at;
