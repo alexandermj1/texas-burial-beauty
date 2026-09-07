@@ -989,8 +989,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // Buyer view groups by cemetery A→Z (blanks last), newest first within each
     // cemetery — so the left list reads as a per-cemetery buyer breakdown.
     const byCemetery = (a: Submission, b: Submission) => {
-      const ca = (a.cemetery || "").trim().toLowerCase() || "￿";
-      const cb = (b.cemetery || "").trim().toLowerCase() || "￿";
+      const ca = _canon(a.cemetery || "") || "￿";
+      const cb = _canon(b.cemetery || "") || "￿";
       if (ca !== cb) return ca < cb ? -1 : 1;
       return byNewest(a, b);
     };
