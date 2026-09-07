@@ -1797,6 +1797,156 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
+            {/* ---- Buyer workspace -------------------------------------------------
+                Buyers don't need any of the seller machinery. Instead they get what
+                they're looking for, the plots we can actually offer them right now,
+                and quick toggles the team can flick as they work the buyer. */}
+            {kind === "buyer" && (() => {
+              const canon = _canon(selected.cemetery || "");
+              const liveListings = listingsAt(selected.cemetery);
+              const sellerPlots = submissions.filter(s =>
+                resolveKind(s.customer_kind, s.source) === "buyer" ? false :
+                resolveKind(s.customer_kind, s.source) === "seller" &&
+                (s as any).quote_response === "accepted" &&
+                !(s as any).sold_at &&
+                !!canon && _canon(s.cemetery || "") === canon
+              );
+              const matchCount = liveListings.length + sellerPlots.length;
+              const wants = [
+                selected.cemetery ? { k: "Cemetery", v: selected.cemetery } : null,
+                selected.property_type ? { k: "Property", v: selected.property_type } : null,
+                selected.spaces ? { k: "Spaces", v: String(selected.spaces) } : null,
+                (selected as any).budget ? { k: "Budget", v: String((selected as any).budget) } : null,
+                (selected as any).timeline ? { k: "Timeline", v: String((selected as any).timeline) } : null,
+                (selected as any).region ? { k: "Area", v: String((selected as any).region) } : null,
+              ].filter(Boolean) as { k: string; v: string }[];
+
+              const tags = ["Ready to buy", "Pre-need", "Just browsing", "Plots sent", "Waiting on inventory"];
+              const currentTag = ((selected as any).custom_tag || "").trim();
+              const toggleCls = (on: boolean) =>
+                `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  on
+                    ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`;
+
+              return (
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <p className="text-[11px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 inline-flex items-center gap-1.5 font-semibold">
+                      <ArrowUpFromLine className="w-3.5 h-3.5" /> Buyer workspace
+                    </p>
+                    <span className="text-[11px] text-muted-foreground">
+                      {matchCount} possible {matchCount === 1 ? "match" : "matches"} at {selected.cemetery || "their cemetery"}
+                    </span>
+                  </div>
+
+                  {/* What they asked for */}
+                  {wants.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {wants.map(w => (
+                        <span key={w.k} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/60 text-[11px]">
+                          <span className="text-muted-foreground uppercase tracking-wide text-[9px]">{w.k}</span>
+                          <span className="text-foreground font-medium">{w.v}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Plot matches we can offer today */}
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3" /> Plots we can offer
+                    </p>
+                    {matchCount === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        Nothing in inventory at {selected.cemetery || "this cemetery"} yet. They'll be flagged automatically the moment a seller accepts here.
+                      </p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {liveListings.map(l => (
+                          <li key={`l-${l.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
+                            <span className="text-xs text-foreground truncate">
+                              {[l.plot_type, l.section, l.spaces ? `${l.spaces} space${l.spaces > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")}
+                            </span>
+                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">
+                              {l.asking_price != null ? `$${Number(l.asking_price).toLocaleString()}` : "Price on request"}
+                            </span>
+                          </li>
+                        ))}
+                        {sellerPlots.map(s => (
+                          <li key={`s-${s.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
+                            <span className="text-xs text-foreground truncate">
+                              {[s.property_type, (s as any).section, s.spaces ? `${s.spaces} space${Number(s.spaces) > 1 ? "s" : ""}` : null]
+                                .filter(Boolean).join(" · ") || "Accepted seller plot"}
+                              <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">from seller</span>
+                            </span>
+                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">
+                              {(s as any).list_price != null ? `$${Number((s as any).list_price).toLocaleString()}` : "Price TBC"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setPlotCardsOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                      >
+                        <Send className="w-3.5 h-3.5" /> Send plot cards
+                      </button>
+                      <button
+                        onClick={() => setBuyerOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-foreground hover:bg-muted/60 transition-colors"
+                      >
+                        <DollarSign className="w-3.5 h-3.5" /> Send buyer quote
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick toggles */}
+                  <div className="pt-3 border-t border-emerald-500/20 space-y-2">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Quick toggles</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        className={toggleCls(!!selected.handled)}
+                        onClick={() => onUpdate(selected.id, { handled: !selected.handled } as any)}
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" /> Handled
+                      </button>
+                      <button
+                        className={toggleCls(!!(selected as any).manual_followup)}
+                        onClick={() => onUpdate(selected.id, { manual_followup: !(selected as any).manual_followup } as any)}
+                      >
+                        <Clock className="w-3.5 h-3.5" /> Follow up
+                      </button>
+                      <button
+                        className={toggleCls(!!(selected as any).reply_dismissed_at)}
+                        onClick={() => onUpdate(selected.id, {
+                          reply_dismissed_at: (selected as any).reply_dismissed_at ? null : new Date().toISOString(),
+                        } as any)}
+                      >
+                        <MessageCircleX className="w-3.5 h-3.5" /> No reply needed
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {tags.map(t => (
+                        <button
+                          key={t}
+                          className={toggleCls(currentTag.toLowerCase() === t.toLowerCase())}
+                          onClick={() => onUpdate(selected.id, {
+                            custom_tag: currentTag.toLowerCase() === t.toLowerCase() ? null : t,
+                          } as any)}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Potential plot match — manual clear */}
             {plotMatchMap[selected.id] && (
               <div className="bg-card rounded-xl border border-fuchsia-300/60 dark:border-fuchsia-800 p-3 flex flex-wrap items-center gap-2">
