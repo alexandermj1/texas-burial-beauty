@@ -1905,18 +1905,34 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           </li>
                         ))}
-                        {sellerPlots.map(s => (
-                          <li key={`s-${s.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
-                            <span className="text-xs text-foreground truncate">
-                              {[s.property_type, (s as any).section, s.spaces ? `${s.spaces} space${Number(s.spaces) > 1 ? "s" : ""}` : null]
-                                .filter(Boolean).join(" · ") || "Accepted seller plot"}
-                              <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">from seller</span>
-                            </span>
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">
-                              {(s as any).list_price != null ? `$${Number((s as any).list_price).toLocaleString()}` : "Price TBC"}
-                            </span>
-                          </li>
-                        ))}
+                        {allSellerPlots.map(s => {
+                          const isManual = manualIds.includes(s.id);
+                          return (
+                            <li key={`s-${s.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
+                              <span className="text-xs text-foreground truncate">
+                                {[s.name, s.cemetery, [s.property_type, (s as any).section, s.spaces ? `${s.spaces} space${Number(s.spaces) > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")]
+                                  .filter(Boolean).join(" — ") || "Seller plot"}
+                                <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  {isManual ? "matched by you" : "from seller"}
+                                </span>
+                              </span>
+                              <span className="inline-flex items-center gap-2 shrink-0">
+                                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                  {(s as any).list_price != null ? `$${Number((s as any).list_price).toLocaleString()}` : "Price TBC"}
+                                </span>
+                                {isManual && (
+                                  <button
+                                    onClick={() => setManualIds(manualIds.filter(id => id !== s.id))}
+                                    className="p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                    title="Remove this match"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                     <div className="mt-2 flex flex-wrap gap-2">
