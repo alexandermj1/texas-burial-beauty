@@ -1,0 +1,1 @@
+ALTER TABLE public.contact_submissions ADD COLUMN IF NOT EXISTS matched_seller_ids jsonb NOT NULL DEFAULT '[]'::jsonb;
