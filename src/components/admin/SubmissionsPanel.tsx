@@ -234,6 +234,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [plotCardsOpen, setPlotCardsOpen] = useState(false);
+  // Manual buyer→seller matching search box (buyer workspace).
+  const [matchQuery, setMatchQuery] = useState("");
   const [matchOpen, setMatchOpen] = useState(false);
   const [views, setViews] = useState<ViewRow[]>([]);
   // Map of submission_id -> latest incoming email received_at (ISO) when the latest
