@@ -1820,7 +1820,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 !(s as any).sold_at &&
                 !!canon && _canon(s.cemetery || "") === canon
               );
-              const matchCount = liveListings.length + sellerPlots.length;
+              // Manually matched sellers — hand-picked by the team, stored on the
+              // buyer's record so they persist and sync for everyone.
+              const manualIds: string[] = Array.isArray((selected as any).matched_seller_ids)
+                ? (selected as any).matched_seller_ids : [];
+              const autoIds = new Set(sellerPlots.map(s => s.id));
+              const manualMatches = submissions.filter(s => manualIds.includes(s.id) && !autoIds.has(s.id));
+              const allSellerPlots = [...sellerPlots, ...manualMatches];
+              const matchCount = liveListings.length + allSellerPlots.length;
+              const setManualIds = (ids: string[]) =>
+                onUpdate(selected.id, { matched_seller_ids: ids } as any);
+              // Candidate sellers for the search box: any seller submission, not
+              // archived/trashed, not already matched, matching the typed text.
+              const mq = matchQuery.trim().toLowerCase();
+              const matchCandidates = mq.length < 2 ? [] : submissions
+                .filter(s =>
+                  resolveKind(s.customer_kind, s.source) === "seller" &&
+                  !s.archived_at && !(s as any).deleted_at &&
+                  s.id !== selected.id &&
+                  !manualIds.includes(s.id) &&
+                  [s.name, s.email, s.cemetery, s.property_type, (s as any).section]
+                    .filter(Boolean).some(v => String(v).toLowerCase().includes(mq))
+                )
+                .slice(0, 6);
               const wants = [
                 selected.cemetery ? { k: "Cemetery", v: selected.cemetery } : null,
                 selected.property_type ? { k: "Property", v: selected.property_type } : null,
