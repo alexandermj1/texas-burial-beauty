@@ -2990,7 +2990,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         {regionFilter === "texas" && (
           <div className="flex-1 min-w-0 xl:border-l xl:border-border/50 xl:pl-3">
             {(() => {
-              const tx = submissions.filter(s => subRegion(s) === "texas");
+              // Stage counters mirror the list exactly: archived submissions are
+              // excluded (the list hides them), and duplicate emails count once.
+              const tx = submissions.filter(s => subRegion(s) === "texas" && archivedView === !!s.archived_at);
               // Count merged people once, not once per duplicate submission.
               const seenTx = new Set<string>();
               const txU = tx.filter(s => {
