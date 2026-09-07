@@ -13,8 +13,10 @@ export const resolveKind = (
   if (customer_kind === "seller" || customer_kind === "buyer" || customer_kind === "contact") {
     return customer_kind;
   }
-  if (source === "seller_quote") return "seller";
-  if (source === "buy_property_wizard") return "buyer";
+  const src = (source || "").toLowerCase();
+  if (src.includes("sell")) return "seller";
+  // Any buyer-origin form: buy_property_wizard, buy_inquiry, cemetery_page_buyer, etc.
+  if (src.includes("buy")) return "buyer";
   return "contact";
 };
 

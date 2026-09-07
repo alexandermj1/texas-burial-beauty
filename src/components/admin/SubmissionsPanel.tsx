@@ -989,8 +989,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // Buyer view groups by cemetery A→Z (blanks last), newest first within each
     // cemetery — so the left list reads as a per-cemetery buyer breakdown.
     const byCemetery = (a: Submission, b: Submission) => {
-      const ca = (a.cemetery || "").trim().toLowerCase() || "￿";
-      const cb = (b.cemetery || "").trim().toLowerCase() || "￿";
+      const ca = _canon(a.cemetery || "") || "￿";
+      const cb = _canon(b.cemetery || "") || "￿";
       if (ca !== cb) return ca < cb ? -1 : 1;
       return byNewest(a, b);
     };
@@ -1003,7 +1003,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const seenEmails = new Set<string>();
     const deduped: Submission[] = [];
     for (const s of ordered) {
-      const key = (s.email || "").trim().toLowerCase();
+      // Buyers often enquire about several cemeteries from one address — keep those
+      // separate so every cemetery group shows its true buyers.
+      const key = (s.email || "").trim().toLowerCase()
+        + (buyerView ? `|${_canon(s.cemetery || "")}` : "");
       // Rows explicitly un-merged by staff always stand on their own.
       if (!key || UNMERGED_IDS.has(s.id)) { deduped.push(s); continue; }
       if (seenEmails.has(key)) continue;
@@ -3391,10 +3394,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {filtered.map((s, i) => {
                   const prev = filtered[i - 1];
                   const cem = (s.cemetery || "").trim();
-                  const prevCem = ((prev?.cemetery) || "").trim();
-                  const showHeader = !prev || cem.toLowerCase() !== prevCem.toLowerCase();
-                  const cemCount = cem
-                    ? filtered.filter(x => (x.cemetery || "").trim().toLowerCase() === cem.toLowerCase()).length
+                  const cemKey = _canon(cem);
+                  const prevKey = _canon(((prev?.cemetery) || "").trim());
+                  const showHeader = !prev || cemKey !== prevKey;
+                  const cemCount = cemKey
+                    ? filtered.filter(x => _canon(x.cemetery || "") === cemKey).length
                     : 0;
                   return (
                     <Fragment key={s.id}>
