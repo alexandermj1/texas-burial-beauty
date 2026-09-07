@@ -1003,7 +1003,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const seenEmails = new Set<string>();
     const deduped: Submission[] = [];
     for (const s of ordered) {
-      const key = (s.email || "").trim().toLowerCase();
+      // Buyers often enquire about several cemeteries from one address — keep those
+      // separate so every cemetery group shows its true buyers.
+      const key = (s.email || "").trim().toLowerCase()
+        + (buyerView ? `|${_canon(s.cemetery || "")}` : "");
       // Rows explicitly un-merged by staff always stand on their own.
       if (!key || UNMERGED_IDS.has(s.id)) { deduped.push(s); continue; }
       if (seenEmails.has(key)) continue;
