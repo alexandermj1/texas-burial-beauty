@@ -1727,6 +1727,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     );
                   })()}
+                  </>)}
                 </div>
               </div>
 
