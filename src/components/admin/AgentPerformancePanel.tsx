@@ -36,6 +36,7 @@ const AgentPerformancePanel = () => {
       const { data, error } = await supabase
         .from("agent_sales" as any)
         .select("*")
+        .is("deleted_at", null)
         .order("sale_date", { ascending: false });
       if (!error) setRows((data ?? []) as any);
       setLoading(false);
