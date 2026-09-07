@@ -2546,15 +2546,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   );
                 })()}
 
-                {/* Ownership proof + the exact paperwork this seller needs. */}
-                <OwnershipPaperworkPanel
-                  submissionId={selected.id}
-                  cemetery={selected.cemetery}
-                  sellerEmail={selected.email}
-                  sellerName={selected.name}
-                  quoteAccepted={(selected as any).quote_response === "accepted"}
-                  onSent={() => onRefresh?.()}
-                />
+                {/* Ownership proof + the exact paperwork this seller needs. Buyers never
+                    sign seller paperwork, so this whole section is hidden for them. */}
+                {kind !== "buyer" && (
+                  <OwnershipPaperworkPanel
+                    submissionId={selected.id}
+                    cemetery={selected.cemetery}
+                    sellerEmail={selected.email}
+                    sellerName={selected.name}
+                    quoteAccepted={(selected as any).quote_response === "accepted"}
+                    onSent={() => onRefresh?.()}
+                  />
+                )}
+
 
                 {/* Contracts live inside the paperwork panel above — no separate section. */}
 
