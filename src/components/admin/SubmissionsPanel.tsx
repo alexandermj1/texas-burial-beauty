@@ -2655,10 +2655,28 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <button
                         onClick={guard(selected.archived_at ? "Unarchive submission" : "Archive submission", async () => {
                           const archiving = !selected.archived_at;
-                          await onUpdate(selected.id, {
+                          const patch = {
                             archived_at: archiving ? new Date().toISOString() : null,
                             archived_by: archiving ? (adminName || "admin") : null,
-                          } as any);
+                          } as any;
+                          await onUpdate(selected.id, patch);
+                          // Archive every copy of this person: the same email often has
+                          // several submissions, and leaving a duplicate live makes it look
+                          // like the archive "didn't work".
+                          const em = (selected.email || "").trim().toLowerCase();
+                          if (em) {
+                            const dupes = submissions.filter(s =>
+                              s.id !== selected.id &&
+                              (s.email || "").trim().toLowerCase() === em &&
+                              !!s.archived_at !== archiving
+                            );
+                            for (const d of dupes) {
+                              try { await onUpdate(d.id, patch); } catch { /* keep going */ }
+                            }
+                            if (dupes.length) {
+                              toast({ title: `${dupes.length} other ${dupes.length === 1 ? "copy" : "copies"} of this person ${archiving ? "archived" : "restored"} too` });
+                            }
+                          }
                           toast({ title: archiving ? "Moved to archive" : "Restored to pipeline" });
                         })}
                         className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-500/10 rounded-full transition-colors"
