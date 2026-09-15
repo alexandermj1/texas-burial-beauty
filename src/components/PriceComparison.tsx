@@ -21,10 +21,10 @@ function useCountUp(target: number, duration = 2000, inView: boolean) {
 }
 
 const comparisons = [
-  { type: "Burial Plot", retail: 12000, resale: 7200 },
-  { type: "Lawn Crypt", retail: 18000, resale: 10800 },
-  { type: "Cremation Niche", retail: 6000, resale: 3600 },
-  { type: "Mausoleum Crypt", retail: 25000, resale: 15000 },
+  { type: "Burial Plot", retail: 9600, resale: 4800 },
+  { type: "Cremation Niche", retail: 2400, resale: 1400 },
+  { type: "Mausoleum Crypt", retail: 12500, resale: 7900 },
+  { type: "Family Estate", retail: 38000, resale: 24000 },
 ];
 
 const BarRow = ({ item, index, inView }: { item: typeof comparisons[0]; index: number; inView: boolean }) => {
