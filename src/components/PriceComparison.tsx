@@ -54,7 +54,7 @@ const BarRow = ({ item, index, inView }: { item: typeof comparisons[0]; index: n
           transition={{ duration: 0.4, delay: 0.8 + index * 0.15 }}
           className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full"
         >
-          Save ${savingsCount.toLocaleString()}
+          You save ${savingsCount.toLocaleString()}
         </motion.span>
       </div>
 
