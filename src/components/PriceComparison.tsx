@@ -21,10 +21,10 @@ function useCountUp(target: number, duration = 2000, inView: boolean) {
 }
 
 const comparisons = [
-  { type: "Burial Plot", retail: 12000, resale: 7200 },
-  { type: "Lawn Crypt", retail: 18000, resale: 10800 },
-  { type: "Cremation Niche", retail: 6000, resale: 3600 },
-  { type: "Mausoleum Crypt", retail: 25000, resale: 15000 },
+  { type: "Burial Plot", retail: 9600, resale: 4800 },
+  { type: "Cremation Niche", retail: 2400, resale: 1400 },
+  { type: "Mausoleum Crypt", retail: 12500, resale: 7900 },
+  { type: "Family Estate", retail: 38000, resale: 24000 },
 ];
 
 const BarRow = ({ item, index, inView }: { item: typeof comparisons[0]; index: number; inView: boolean }) => {
@@ -54,7 +54,7 @@ const BarRow = ({ item, index, inView }: { item: typeof comparisons[0]; index: n
           transition={{ duration: 0.4, delay: 0.8 + index * 0.15 }}
           className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full"
         >
-          Save ${savingsCount.toLocaleString()}
+          You save ${savingsCount.toLocaleString()}
         </motion.span>
       </div>
 
@@ -69,7 +69,7 @@ const BarRow = ({ item, index, inView }: { item: typeof comparisons[0]; index: n
         />
         <div className="absolute inset-y-0 left-0 flex items-center px-3">
           <span className="text-xs text-muted-foreground">
-            Cemetery Price: <span className="font-medium text-foreground/70">${retailCount.toLocaleString()}</span>
+            Cemetery retail price: <span className="font-medium text-foreground/70">${retailCount.toLocaleString()}</span>
           </span>
         </div>
       </div>
@@ -85,7 +85,7 @@ const BarRow = ({ item, index, inView }: { item: typeof comparisons[0]; index: n
         />
         <div className="absolute inset-y-0 left-0 flex items-center px-3">
           <span className="text-xs text-primary">
-            Our Price: <span className="font-semibold">${resaleCount.toLocaleString()}</span>
+            Our price: <span className="font-semibold">${resaleCount.toLocaleString()}</span>
           </span>
         </div>
       </div>
