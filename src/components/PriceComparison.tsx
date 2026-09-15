@@ -69,7 +69,7 @@ const BarRow = ({ item, index, inView }: { item: typeof comparisons[0]; index: n
         />
         <div className="absolute inset-y-0 left-0 flex items-center px-3">
           <span className="text-xs text-muted-foreground">
-            Cemetery Price: <span className="font-medium text-foreground/70">${retailCount.toLocaleString()}</span>
+            Cemetery retail price: <span className="font-medium text-foreground/70">${retailCount.toLocaleString()}</span>
           </span>
         </div>
       </div>
