@@ -3050,27 +3050,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex flex-1 min-w-max flex-col items-center justify-center gap-0 py-0.5 px-1.5 rounded-lg transition-all duration-200 ${
+                            className={`group relative flex flex-1 min-w-max flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-lg transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
                             }`}
                           >
-                            {st.count > 0 && (
-                              <span className={`text-[10px] font-bold leading-none ${
-                                st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
-                              }`}>
-                                {st.count}
+                            <span className="relative">
+                              <span
+                                className={`w-6 h-6 rounded-full grid place-items-center transition-all ${
+                                  st.active
+                                    ? `${st.tone.dot} text-white shadow-sm`
+                                    : `${st.tone.soft} ${st.tone.text} group-hover:scale-105`
+                                }`}
+                              >
+                                <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                               </span>
-                            )}
-                            <span
-                              className={`w-6 h-6 rounded-full grid place-items-center transition-all ${
-                                st.active
-                                  ? `${st.tone.dot} text-white shadow-sm`
-                                  : `${st.tone.soft} ${st.tone.text} group-hover:scale-105`
-                              }`}
-                            >
-                              <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                              {st.count > 0 && (
+                                <span className={`absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full text-[8px] font-semibold leading-none grid place-items-center border border-card shadow-sm ${
+                                  st.active ? "bg-foreground text-background" : `${st.tone.dot} text-white`
+                                }`}>
+                                  {st.count}
+                                </span>
+                              )}
                             </span>
                             <span className={`whitespace-nowrap text-[10.5px] font-medium leading-none text-center ${
                               st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
