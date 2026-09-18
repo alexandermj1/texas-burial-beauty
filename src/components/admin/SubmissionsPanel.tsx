@@ -2927,13 +2927,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             <button
               onClick={() => setListCollapsed(v => !v)}
               title={listCollapsed ? "Split view — show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
-              className={`w-7 h-7 rounded-full border transition-all grid place-items-center ${
+              className={`w-6 h-6 rounded-full border transition-all grid place-items-center ${
                 listCollapsed
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
-              {listCollapsed ? <PanelLeftOpen className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
+              {listCollapsed ? <PanelLeftOpen className="w-3 h-3" /> : <PanelLeftClose className="w-3 h-3" />}
             </button>
             <button
               onClick={() => setCemeteriesOpen(o => !o)}
