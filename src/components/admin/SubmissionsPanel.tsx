@@ -2946,31 +2946,31 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               <Building2 className="w-4 h-4" />
             </button>
             <div className="h-6 w-px bg-border/60 mx-1" />
-          <button
-            onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
-            className={`h-6 pl-1.5 pr-2 rounded-full text-[10px] font-medium border transition-all inline-flex items-center gap-1 ${
-              kindFilter === "buyer"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-            title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
-          >
-            <ArrowUpFromLine className="w-3 h-3" /> Buyers
-          </button>
-          {onRefresh && (
             <button
-              onClick={async () => {
-                if (refreshing) return;
-                setRefreshing(true);
-                try { await onRefresh(); } finally { setRefreshing(false); }
-              }}
-              disabled={refreshing}
-              className="w-6 h-6 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all grid place-items-center disabled:opacity-60"
-              title="Sync Gmail and reload submissions"
+              onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
+              className={`h-8 pl-2 pr-2.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+                kindFilter === "buyer"
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+              title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
             >
-              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+              <ArrowUpFromLine className="w-4 h-4" /> Buyers
             </button>
-          )}
+            {onRefresh && (
+              <button
+                onClick={async () => {
+                  if (refreshing) return;
+                  setRefreshing(true);
+                  try { await onRefresh(); } finally { setRefreshing(false); }
+                }}
+                disabled={refreshing}
+                className="w-8 h-8 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all grid place-items-center disabled:opacity-60"
+                title="Sync Gmail and reload submissions"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              </button>
+            )}
         </div>
         {regionFilter === "texas" && (
           <div className="flex-1 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
