@@ -1052,15 +1052,35 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     });
     if (!open.length) return 0;
 
+    // Items the cemetery only accepts on paper (the deed above all) are *not*
+    // closed by a scan. We record that we hold a copy, and the seller is still
+    // asked to post the original.
+    const skipped: string[] = (answers.mailSkip ?? []) as string[];
+    const needsOriginal = (code?: string | null) => {
+      const c = String(code ?? "");
+      if (!mailsByDefault(c)) return false;
+      return !skipped.some((k) => String(k).split("::")[0] === c);
+    };
+
     const matches = matchFilesToDocs(open, candidates);
+    let closed = 0;
     for (const m of matches) {
       const row = open.find((r) => r.id === m.docId);
-      const notes = [row?.notes, m.reason].filter(Boolean).join(" · ");
-      await supabase.from("submission_documents")
-        .update({ status: "received", required_state: "received", manual_override: "received", notes })
-        .eq("id", m.docId);
+      const original = needsOriginal(row?.doc_code);
+      const reason = original
+        ? `Copy already on file — “${m.file.name}”. The original is still needed by post.`
+        : m.reason;
+      const notes = [row?.notes, reason].filter(Boolean).join(" · ");
+      const patch: Record<string, unknown> = { notes };
+      if (!original) {
+        patch.status = "received";
+        patch.required_state = "received";
+        patch.manual_override = "received";
+        closed += 1;
+      }
+      await supabase.from("submission_documents").update(patch).eq("id", m.docId);
     }
-    return matches.length;
+    return closed;
   };
 
   /** Write the computed checklist into submission_documents, preserving progress. */
