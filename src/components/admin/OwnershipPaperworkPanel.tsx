@@ -20,6 +20,10 @@ import FamilyTreeMap from "./FamilyTreeMap";
 const SHOW_FAMILY_TREE_MAP = false;
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
+import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
+
+/** States that mean an item needs nothing further from the seller. */
+const DONE_STATES = new Set(["received", "notarized", "complete", "not_needed", "not_required", "waived"]);
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
