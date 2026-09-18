@@ -659,6 +659,8 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           details: string | null
+          document_followup_pause_reason: string | null
+          document_followup_paused_at: string | null
           documents_completed_at: string | null
           documents_requested_at: string | null
           docusign_envelope_url: string | null
@@ -780,6 +782,8 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           details?: string | null
+          document_followup_pause_reason?: string | null
+          document_followup_paused_at?: string | null
           documents_completed_at?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
@@ -901,6 +905,8 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           details?: string | null
+          document_followup_pause_reason?: string | null
+          document_followup_paused_at?: string | null
           documents_completed_at?: string | null
           documents_requested_at?: string | null
           docusign_envelope_url?: string | null
