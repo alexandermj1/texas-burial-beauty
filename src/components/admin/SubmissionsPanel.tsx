@@ -1691,7 +1691,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const ans = (x.ownership_answers ?? {}) as Record<string, any>;
                     const now = new Date().toISOString();
                     const STAGES = [
-                      { key: "awaiting_quote", label: "Awaiting quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
+                      // Before the quote the pipeline splits itself by attachments
+                      // (No attachments / Attachments) — that can't be forced by hand.
+                      { key: "awaiting_quote", label: "Before quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
                       { key: "quoted",         label: "Quoted",         cls: "bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300" },
                       { key: "accepted",       label: "Accepted",       cls: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300" },
                       { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
