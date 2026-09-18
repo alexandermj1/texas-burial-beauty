@@ -1045,7 +1045,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const open = live.filter((r) => {
       const state = String(r.manual_override ?? r.status ?? r.required_state ?? "").toLowerCase();
       const hasFile = !!r.file_url || !!(r.file_urls ?? []).length;
-      return !hasFile && !r.manual_override && !DONE_STATES.has(state);
+      // "needed" / "maybe" are the everyday states, not a broker's decision —
+      // only a deliberate "not needed" style choice is left alone.
+      const brokerDecided = !!r.manual_override && !["needed", "maybe"].includes(String(r.manual_override).toLowerCase());
+      return !hasFile && !brokerDecided && !DONE_STATES.has(state);
     });
     if (!open.length) return 0;
 
