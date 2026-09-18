@@ -3059,7 +3059,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       return (
                         <div key={st.key} className="flex items-stretch shrink-0">
                           {i > 0 && (
-                            <div className="w-4 sm:w-6 flex items-center pt-0.5">
+                            <div className="w-2 sm:w-3 flex items-center pt-0.5">
                               <span className="h-px w-full bg-gradient-to-r from-border via-border to-border/40" />
                             </div>
                           )}
