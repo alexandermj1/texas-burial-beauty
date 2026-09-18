@@ -242,6 +242,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   const [rules, setRules] = useState<CemeteryDocRules | null>(null);
   const [cemName, setCemName] = useState<string | null>(null);
+  /** The town the matched cemetery is in — used to refill "county / state" lines. */
+  const [cemCity, setCemCity] = useState<string | null>(null);
   const [rows, setRows] = useState<DocRow[]>([]);
   // A file with an accepted quote is always in paperwork mode, so open on arrival.
   const [open, setOpen] = useState(!!quoteAccepted);
@@ -384,7 +386,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
     if (cemetery) {
       let { data: cem } = await supabase.from("texas_cemeteries")
-        .select("name, doc_rules").ilike("name", cemetery).maybeSingle();
+        .select("name, doc_rules, city").ilike("name", cemetery).maybeSingle();
       if (!cem) {
         // Sellers type the cemetery name loosely ("Restland Cemetery, Dallas
         // Texas"). Fall back to matching on the distinctive first word so the
@@ -392,13 +394,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         const stem = cemetery.replace(/[^a-zA-Z ]/g, " ").trim().split(/\s+/)[0];
         if (stem && stem.length >= 4) {
           const { data: fuzzy } = await supabase.from("texas_cemeteries")
-            .select("name, doc_rules").ilike("name", `%${stem}%`).limit(5);
+            .select("name, doc_rules, city").ilike("name", `%${stem}%`).limit(5);
           const rows = (fuzzy ?? []) as { name?: string; doc_rules?: unknown }[];
           cem = (rows.find(r => r.doc_rules && Object.keys(r.doc_rules as object).length > 0) ?? rows[0]) as typeof cem;
         }
       }
       setRules(((cem as Record<string, unknown> | null)?.doc_rules ?? null) as CemeteryDocRules | null);
       setCemName((cem as { name?: string } | null)?.name ?? null);
+      setCemCity((cem as { city?: string | null } | null)?.city ?? null);
     }
     setLoading(false);
     didLoad.current = true;
