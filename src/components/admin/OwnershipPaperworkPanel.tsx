@@ -925,9 +925,68 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Same requirement, matched loosely on the person's name. */
   const rowFor = (r: Requirement) => rows.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
 
+  /** Loose comparison of two cemetery names ("Rose Hill Burial Park" ≠ "Rose Hill Memorial Park"). */
+  const sameCemetery = (a?: string | null, b?: string | null) =>
+    String(a ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+    === String(b ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+  /**
+   * The cemetery on a file can be corrected after the paperwork was built (the
+   * seller named the wrong Rose Hill, say). A re-sync has to carry that change
+   * through: every unsigned document we prepared still says the old cemetery,
+   * and the old cemetery's own extra forms are no longer the right ones.
+   * Returns true when the cemetery had in fact moved.
+   */
+  const reconcileCemeteryChange = async (): Promise<boolean> => {
+    const current = (cemName ?? cemetery ?? "").trim();
+    if (!current) return false;
+    const { data: cons } = await supabase.from("contracts")
+      .select("id, kind, status, fill_data, signed_at, notarized_at, completed_at")
+      .eq("submission_id", submissionId).is("deleted_at", null).neq("status", "void");
+    const rowsC = (cons ?? []) as Record<string, unknown>[];
+    const drifted = rowsC.filter((c) => {
+      const fd = (c.fill_data ?? {}) as Record<string, unknown>;
+      const was = String(fd.cemetery ?? "").trim();
+      return !!was && !sameCemetery(was, current);
+    });
+    const markerWas = String((answers as Record<string, unknown>).checklistCemetery ?? "");
+    const changed = drifted.length > 0 || (!!markerWas && !sameCemetery(markerWas, current));
+    if (!changed) {
+      if (!markerWas) {
+        await persistAnswers({ ...answers, checklistCemetery: current } as OwnershipAnswers);
+      }
+      return false;
+    }
+
+    const countyState = cemCity ? `${cemCity}, TX` : "";
+    for (const c of drifted) {
+      const fd = { ...((c.fill_data ?? {}) as Record<string, unknown>) };
+      const executed = !!c.signed_at || !!c.notarized_at || !!c.completed_at;
+      if (executed) continue; // never rewrite paper someone has already signed
+      const overrides: Record<string, unknown> = {
+        ...fd,
+        cemetery: current,
+        ...(countyState ? { county_state: countyState, county: countyState } : {}),
+        supersede_contract_id: c.id,
+      };
+      try {
+        await supabase.functions.invoke("generate-contract", {
+          body: { submission_id: submissionId, kind: c.kind, overrides },
+        });
+      } catch {
+        // If the rebuild fails, retire the stale copy so nobody signs the wrong
+        // cemetery — the broker can regenerate it from the checklist.
+        await supabase.from("contracts").update({ status: "void" }).eq("id", c.id as string);
+      }
+    }
+    await persistAnswers({ ...answers, checklistCemetery: current } as OwnershipAnswers);
+    return true;
+  };
+
   /** Write the computed checklist into submission_documents, preserving progress. */
   const syncChecklist = async (silent = false) => {
     setSaving(true);
+    const cemeteryMoved = await reconcileCemeteryChange().catch(() => false);
     try {
       // Read the live rows first: the unique index is on (submission, code,
       // person), so inserting against a stale snapshot is what produced the
