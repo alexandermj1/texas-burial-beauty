@@ -112,7 +112,7 @@ Unlike classified listing sites and other brokers who charge upfront fees regard
 
 Choosing Texas Cemetery Brokers means choosing a partner committed to your success. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) — ensuring your transaction is secure and compliant.
 
-This offer is valid for 3 days and contingent on verification. We reserve the right to revalue if ownership or property details differ from those provided.
+This offer is valid for 10 days and contingent on verification. We reserve the right to revalue if ownership or property details differ from those provided.
 
 Next Steps:
 
@@ -197,6 +197,7 @@ const TexasQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
       transfer_fee_amount: feeCap ? Number(feeCap) : null,
       quote_message: customMessage || null,
       quote_sent_at: new Date().toISOString(),
+      quote_expires_at: new Date(Date.now() + 10 * 86_400_000).toISOString(),
     } as any);
     setSaving(false);
     onClose();

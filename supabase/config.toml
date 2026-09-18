@@ -18,3 +18,6 @@ verify_jwt = false
 [functions.document-request-followup]
 verify_jwt = false
 
+
+[functions.quote-expiry-reminder]
+verify_jwt = false
