@@ -14,6 +14,12 @@ type ThreadMessage = { gmail_thread_id: string | null; gmail_message_id: string;
 const respond = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 const esc = (v: unknown) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const itemText = (item: Missing) => item.person_name ? `${item.label} — ${item.person_name}` : item.label;
+const dedupePerson = (label: string, person: string | null) => {
+  if (!person) return null;
+  const normalizedLabel = label.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const normalizedPerson = person.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return normalizedPerson && normalizedLabel.includes(normalizedPerson) ? null : person;
+};
 const b64url = (value: string) => {
   let binary = "";
   new TextEncoder().encode(value).forEach((byte) => { binary += String.fromCharCode(byte); });
@@ -78,7 +84,7 @@ Deno.serve(async (req) => {
         const state = String(doc.manual_override ?? doc.status ?? doc.required_state ?? "").toLowerCase();
         const files = (Array.isArray(doc.file_urls) ? doc.file_urls.length : 0) + (doc.file_url ? 1 : 0);
         return !HIDDEN.has(String(doc.doc_code ?? "")) && !DONE.has(state) && files === 0;
-      }).map((doc) => ({ label: doc.label, person_name: doc.person_name }));
+      }).map((doc) => ({ label: doc.label, person_name: dedupePerson(doc.label, doc.person_name) }));
       if (!missing.length) { results.push({ id: sub.id, status: "skipped", reason: "nothing-outstanding" }); continue; }
 
       const { data: prior } = await db.from("reminder_log").select("sent_at").eq("submission_id", sub.id).eq("reminder_type", TYPE).eq("status", "sent").is("deleted_at", null).order("sent_at", { ascending: false }).limit(1);
