@@ -60,7 +60,8 @@ Deno.serve(async (req) => {
       "Bayer Cemetery Brokers\n100 N Brand Blvd, Ste 213\nGlendale, CA 91203";
     const defaultMailAddress =
       String(ownershipAnswers.originalsAddress ?? "").trim() || ORIGINALS_MAIL_ADDRESS;
-    const mailsByDefault = (code: string) => !["REVIEW", "NOTE", "D2", "D2P", "LA"].includes(code);
+    // D15 is the family's own durable POA — a copy is enough, they keep the original.
+    const mailsByDefault = (code: string) => !["REVIEW", "NOTE", "D2", "D2P", "LA", "D15"].includes(code);
     const mailFor = (code: string, person: string): string | null => {
       const key = `${code}::${person}`;
       if (mailOriginals[key]?.address) return mailOriginals[key].address ?? null;
