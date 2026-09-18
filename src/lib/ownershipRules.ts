@@ -449,7 +449,7 @@ export type CemeteryDocRules = {
   own_lost_deed_form?: boolean;
   own_lost_deed_form_name?: string;
   child_waiver_required?: boolean;
-  extra_docs?: { label: string; when?: "always" | "deceased_owner" | "no_deed" | "occupied"; why?: string }[];
+  extra_docs?: { label: string; when?: "always" | "deceased_owner" | "no_deed" | "occupied" | "divorced"; why?: string }[];
   notes?: string;
 };
 
@@ -848,6 +848,10 @@ export const ORIGINALS_MAIL_ADDRESS =
 export const ORIGINALS_MAIL_REASON =
   "We work with Bayer Cemetery Brokers, our partner, who collect and store original documents securely for us so we can process the transfer quickly the moment the cemetery asks for the paper copy.";
 
-/** Photo ID is the only item we are happy to take as a photograph. */
+/**
+ * Photo ID, and a durable power of attorney the family already holds, are
+ * taken as copies — the family keeps the original POA because they need it for
+ * everything else in that person's affairs, and the cemetery accepts a copy.
+ */
 export const mailsByDefault = (code: string): boolean =>
-  !["REVIEW", "NOTE", "D2", "D2P"].includes(code);
+  !["REVIEW", "NOTE", "D2", "D2P", "D15"].includes(code);
