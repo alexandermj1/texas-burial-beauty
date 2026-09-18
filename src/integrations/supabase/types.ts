@@ -192,6 +192,7 @@ export type Database = {
           locked_by: string | null
           pause_reason: string | null
           status: string
+          trigger_secret: string
           updated_at: string
         }
         Insert: {
@@ -203,6 +204,7 @@ export type Database = {
           locked_by?: string | null
           pause_reason?: string | null
           status?: string
+          trigger_secret?: string
           updated_at?: string
         }
         Update: {
@@ -214,6 +216,7 @@ export type Database = {
           locked_by?: string | null
           pause_reason?: string | null
           status?: string
+          trigger_secret?: string
           updated_at?: string
         }
         Relationships: []
