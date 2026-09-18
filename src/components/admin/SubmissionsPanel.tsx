@@ -2906,44 +2906,49 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {!isMobile && (
       <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2 flex items-center gap-3 flex-wrap xl:flex-nowrap">
         <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+          {/* Compact icon utilities — labels live in the tooltips so the
+              pipeline below gets the full width on a single line. */}
           <button
             onClick={() => setArchivedView(v => !v)}
-            title={archivedView ? "Back to the live pipeline" : "View archived submissions"}
-            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+            title={archivedView ? "Back to the live pipeline" : `View archived submissions${archivedCount ? ` (${archivedCount})` : ""}`}
+            className={`relative w-7 h-7 rounded-full border transition-all grid place-items-center ${
               archivedView
                 ? "bg-amber-500 text-white border-amber-500"
                 : "bg-card text-muted-foreground border-border hover:text-foreground"
             }`}
           >
             <Archive className="w-3.5 h-3.5" />
-            {archivedView ? "Back to pipeline" : `Archive${archivedCount ? ` (${archivedCount})` : ""}`}
+            {!archivedView && archivedCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold grid place-items-center border border-card">
+                {archivedCount}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setListCollapsed(v => !v)}
-            title={listCollapsed ? "Show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
-            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+            title={listCollapsed ? "Split view — show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
+            className={`w-7 h-7 rounded-full border transition-all grid place-items-center ${
               listCollapsed
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-muted-foreground border-border hover:text-foreground"
             }`}
           >
             {listCollapsed ? <PanelLeftOpen className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
-            {listCollapsed ? "Split view" : "Focus"}
           </button>
           <button
             onClick={() => setCemeteriesOpen(o => !o)}
-            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+            className={`w-7 h-7 rounded-full border transition-all grid place-items-center ${
               cemeteriesOpen
                 ? "bg-foreground text-background border-foreground"
                 : "bg-card text-muted-foreground border-border hover:text-foreground"
             }`}
-            title="Show the Cemeteries directory in this tab"
+            title={cemeteriesOpen ? "Hide the Cemeteries directory" : "Show the Cemeteries directory in this tab"}
           >
-            <Building2 className="w-3.5 h-3.5" /> {cemeteriesOpen ? "Hide" : "Cemeteries"}
+            <Building2 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
-            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
+            className={`h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all inline-flex items-center gap-1.5 ${
               kindFilter === "buyer"
                 ? "bg-emerald-600 text-white border-emerald-600"
                 : "bg-card text-muted-foreground border-border hover:text-foreground"
@@ -2960,11 +2965,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 try { await onRefresh(); } finally { setRefreshing(false); }
               }}
               disabled={refreshing}
-              className="px-2 py-1 rounded-full text-[11px] font-medium border border-border bg-card text-muted-foreground hover:text-foreground transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+              className="w-7 h-7 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all grid place-items-center disabled:opacity-60"
               title="Sync Gmail and reload submissions"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "..." : "Refresh"}
             </button>
           )}
           {(() => {
