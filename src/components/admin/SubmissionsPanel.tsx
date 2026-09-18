@@ -3069,33 +3069,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex items-center gap-1 pl-0.5 pr-1.5 py-1 rounded-full transition-all duration-200 ${
+                            className={`group relative flex flex-col items-center justify-center gap-0.5 py-1 px-1 min-w-[52px] rounded-lg transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
                             }`}
                           >
+                            {st.count > 0 && (
+                              <span className={`text-[8.5px] font-bold leading-none ${
+                                st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
+                              }`}>
+                                {st.count}
+                              </span>
+                            )}
                             <span
-                              className={`w-[18px] h-[18px] rounded-full grid place-items-center transition-all ${
+                              className={`w-5 h-5 rounded-full grid place-items-center transition-all ${
                                 st.active
                                   ? `${st.tone.dot} text-white shadow-sm`
                                   : `${st.tone.soft} ${st.tone.text} group-hover:scale-105`
                               }`}
                             >
-                              <Icon className="w-[11px] h-[11px]" strokeWidth={2.2} />
+                              <Icon className="w-2.5 h-2.5" strokeWidth={2.2} />
                             </span>
-                            <span className={`text-[10.5px] font-medium whitespace-nowrap leading-none ${
+                            <span className={`text-[9px] font-medium leading-tight text-center max-w-[4.5rem] ${
                               st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
                             }`}>
                               {st.label}
                             </span>
-                            {st.count > 0 && (
-                              <span className={`min-w-[15px] h-3.5 px-1 rounded-full text-[8.5px] font-bold grid place-items-center ${
-                                st.active ? "bg-foreground text-background" : `${st.tone.dot} text-white`
-                              }`}>
-                                {st.count}
-                              </span>
-                            )}
                           </button>
                         </div>
                       );
