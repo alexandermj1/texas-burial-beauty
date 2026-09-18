@@ -668,8 +668,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   // is what left sellers looking at the original, superseded list.
   const lastSynced = useRef<string>("");
   const wantedSignature = useMemo(
-    () => requirements.map(reqDbKey).sort().join("|"),
-    [requirements],
+    // The cemetery is part of the signature: correcting it has to re-publish
+    // the checklist and the prepared documents, even when the items are the same.
+    () => `${cemName ?? cemetery ?? ""}::${requirements.map(reqDbKey).sort().join("|")}`,
+    [requirements, cemName, cemetery],
   );
   useEffect(() => {
     if (!open || loading || saving) return;
