@@ -2991,7 +2991,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           })()}
         </div>
         {regionFilter === "texas" && (
-          <div className="flex-1 min-w-0 xl:border-l xl:border-border/50 xl:pl-3">
+          <div className="basis-full w-full min-w-0 border-t border-border/50 mt-1 pt-1.5">
             {(() => {
               // Stage counters mirror the list exactly: archived submissions are
               // excluded (the list hides them), and duplicate emails count once.
