@@ -2911,13 +2911,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             <button
               onClick={() => setArchivedView(v => !v)}
               title={archivedView ? "Back to the live pipeline" : `View archived submissions${archivedCount ? ` (${archivedCount})` : ""}`}
-              className={`relative w-7 h-7 rounded-full border transition-all grid place-items-center ${
+              className={`relative w-6 h-6 rounded-full border transition-all grid place-items-center ${
                 archivedView
                   ? "bg-amber-500 text-white border-amber-500"
                   : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
             >
-              <Archive className="w-3.5 h-3.5" />
+              <Archive className="w-3 h-3" />
               {!archivedView && archivedCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold grid place-items-center border border-card">
                   {archivedCount}
