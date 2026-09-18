@@ -922,15 +922,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         const sc = _canon(s.cemetery || "");
         if (sc !== cemeteryCanon) return false;
       }
-      if (regionFilter === "texas" && docsFilter !== "all") {
-        const has = hasDocs(s);
-        if (docsFilter === "with" && !has) return false;
-        if (docsFilter === "without" && has) return false;
-      }
       // Each pipeline filter matches only its exact stage — a submission lives
-      // in exactly one stage (the furthest reached), so no double-counting.
+      // in exactly one bucket (the furthest stage reached), so nothing can be
+      // in "Attachments" and "Quoted" at the same time.
       const step = effStep(s);
-      if (awaitingQuoteFilter && step !== 2) return false;
+      if (regionFilter === "texas" && docsFilter !== "all") {
+        if (docsFilter === "with" && step !== 2) return false;
+        if (docsFilter === "without" && step !== 1) return false;
+      }
       if (quotedFilter && step !== 3) return false;
       if (acceptedFilter && step !== 4) return false;
       if (ftSentFilter && step !== 5) return false;
