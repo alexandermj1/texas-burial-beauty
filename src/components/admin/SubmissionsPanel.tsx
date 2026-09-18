@@ -3111,16 +3111,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {(() => {
-          const total = submissions.length;
+          // Same set the stage buckets count, so Total === sum of the stages.
+          const total = pipelineUniverse.length;
           const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
-          const today = submissions.filter(s => {
+          const today = pipelineUniverse.filter(s => {
             const d = (s as any).created_at ? new Date((s as any).created_at) : null;
             return d && d >= startOfToday;
           }).length;
           return (
             <div
               className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
-              title="Total submissions in view / new today"
+              title="Total people in this view (the stage counts add up to this) / new today"
             >
               <div className="flex items-center gap-1.5 pr-3">
                 <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
