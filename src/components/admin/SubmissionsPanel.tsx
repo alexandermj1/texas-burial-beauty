@@ -3053,7 +3053,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 : steps;
               const anyActive = visibleSteps.some(s => s.active);
               return (
-                <div className="relative flex items-center gap-0 overflow-x-auto -mx-1 px-1">
+                <div className="relative flex flex-wrap items-center gap-y-1 gap-x-0 -mx-1 px-1">
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
