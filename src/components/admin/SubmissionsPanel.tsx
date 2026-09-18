@@ -3088,9 +3088,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setDocsReturnedFilter(false); setCompleteFilter(false);
                         }}
                         title="Clear stage filters"
-                        className="ml-2 shrink-0 w-6 h-6 rounded-full grid place-items-center border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+                        className="ml-2 shrink-0 w-7 h-7 rounded-full grid place-items-center border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
