@@ -3057,48 +3057,44 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 : steps;
               const anyActive = visibleSteps.some(s => s.active);
               return (
-                <div className="relative flex flex-wrap items-center gap-y-1 gap-x-0 -mx-1 px-1">
+                <div className="flex items-center flex-nowrap gap-0 overflow-x-auto -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
-                        <div key={st.key} className="flex items-stretch shrink-0">
+                        <div key={st.key} className="flex items-center shrink-0">
                           {i > 0 && (
-                            <div className="w-2 sm:w-3 flex items-center pt-0.5">
-                              <span className="h-px w-full bg-gradient-to-r from-border via-border to-border/40" />
-                            </div>
+                            <ChevronRight className="w-3 h-3 mx-0.5 text-border shrink-0" />
                           )}
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex flex-col items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl transition-all duration-200 ${
+                            className={`group relative flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
                             }`}
                           >
-                            <span className="relative flex items-center justify-center">
-                              <span
-                                className={`w-7 h-7 rounded-full grid place-items-center transition-all ${
-                                  st.active
-                                    ? `${st.tone.dot} text-white shadow-sm`
-                                    : `${st.tone.soft} ${st.tone.text} group-hover:scale-105`
-                                }`}
-                              >
-                                <Icon className="w-3.5 h-3.5" strokeWidth={2.2} />
-                              </span>
-                              {st.count > 0 && (
-                                <span className={`absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold grid place-items-center border border-card ${
-                                  st.active ? "bg-foreground text-background" : `${st.tone.dot} text-white`
-                                }`}>
-                                  {st.count}
-                                </span>
-                              )}
+                            <span
+                              className={`w-5 h-5 rounded-full grid place-items-center transition-all ${
+                                st.active
+                                  ? `${st.tone.dot} text-white shadow-sm`
+                                  : `${st.tone.soft} ${st.tone.text} group-hover:scale-105`
+                              }`}
+                            >
+                              <Icon className="w-3 h-3" strokeWidth={2.2} />
                             </span>
-                            <span className={`text-[10px] font-medium whitespace-nowrap leading-none ${
+                            <span className={`text-[11px] font-medium whitespace-nowrap leading-none ${
                               st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
                             }`}>
                               {st.label}
                             </span>
+                            {st.count > 0 && (
+                              <span className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold grid place-items-center ${
+                                st.active ? "bg-foreground text-background" : `${st.tone.dot} text-white`
+                              }`}>
+                                {st.count}
+                              </span>
+                            )}
                           </button>
                         </div>
                       );
