@@ -2904,7 +2904,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Toolbar (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2 flex items-center justify-between gap-3">
+      <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-0.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Compact icon utilities — labels live in tooltips. */}
             <button
@@ -2973,7 +2973,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
         </div>
         {regionFilter === "texas" && (
-          <div className="flex-1 min-w-0 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex-1 min-w-0 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(() => {
               // Stage counters mirror the list exactly: archived submissions are
               // excluded (the list hides them), and duplicate emails count once.
@@ -3043,14 +3043,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
-                        <div key={st.key} className="flex items-center shrink-0">
+                        <div key={st.key} className="flex items-center flex-1 min-w-0">
                           {i > 0 && (
                             <ChevronRight className="w-3 h-3 text-border shrink-0" />
                           )}
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex flex-col items-center justify-center gap-0.5 py-1 px-1 min-w-[62px] rounded-lg transition-all duration-200 ${
+                            className={`group relative flex flex-1 min-w-max flex-col items-center justify-center gap-0 py-0.5 px-1.5 rounded-lg transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
@@ -3072,7 +3072,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             >
                               <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                             </span>
-                            <span className={`text-[10.5px] font-medium leading-tight text-center max-w-[5rem] ${
+                            <span className={`whitespace-nowrap text-[10.5px] font-medium leading-none text-center ${
                               st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
                             }`}>
                               {st.label}
