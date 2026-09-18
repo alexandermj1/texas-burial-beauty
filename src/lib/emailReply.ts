@@ -25,7 +25,7 @@ export const isIncoming = (from_email: string | null | undefined): boolean => {
 // ---------------------------------------------------------------------------
 // Classify key outgoing emails so the admin thread can show a coloured tag
 // (quote = purple, listing agreement = terracotta/amber, POA = blue).
-export type EmailKind = "quote" | "listing_agreement" | "poa" | "family_tree" | "document_request";
+export type EmailKind = "quote" | "listing_agreement" | "poa" | "family_tree" | "document_request" | "auto_followup";
 
 export const EMAIL_KIND_META: Record<EmailKind, { label: string; className: string }> = {
   quote: {
@@ -48,6 +48,10 @@ export const EMAIL_KIND_META: Record<EmailKind, { label: string; className: stri
     label: "Document request",
     className: "bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/40",
   },
+  auto_followup: {
+    label: "Auto follow-up",
+    className: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40",
+  },
 };
 
 export const EMAIL_KIND_RING: Record<EmailKind, string> = {
@@ -56,6 +60,7 @@ export const EMAIL_KIND_RING: Record<EmailKind, string> = {
   poa: "bg-sky-500/5 border-sky-500/40 ring-1 ring-sky-500/20",
   family_tree: "bg-emerald-500/5 border-emerald-500/40 ring-1 ring-emerald-500/20",
   document_request: "bg-teal-500/5 border-teal-500/40 ring-1 ring-teal-500/20",
+  auto_followup: "bg-rose-500/5 border-rose-500/40 ring-1 ring-rose-500/20",
 };
 
 /** Drop the quoted history from a reply so tags reflect the new message only. */
@@ -89,6 +94,7 @@ export const classifyEmailKind = (
   if (marker === "document_request") return "document_request";
   if (marker === "family_tree") return "family_tree";
   if (marker === "quote") return "quote";
+  if (marker === "auto_followup") return "auto_followup";
   if (/data-family-tree=["']1["']/i.test(b)) return "family_tree";
   if (/data-listing-agreement=["']1["']/i.test(b)) return "listing_agreement";
   if (/data-listing-options=["']1["']/i.test(b)) return "quote";
