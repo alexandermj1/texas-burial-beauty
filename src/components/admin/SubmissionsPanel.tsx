@@ -2992,17 +2992,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         {regionFilter === "texas" && (
           <div className="flex-1 min-w-0 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(() => {
-              // Stage counters mirror the list exactly: archived submissions are
-              // excluded (the list hides them), and duplicate emails count once.
-              const tx = submissions.filter(s => subRegion(s) === "texas" && archivedView === !!s.archived_at);
-              // Count merged people once, not once per duplicate submission.
-              const seenTx = new Set<string>();
-              const txU = tx.filter(s => {
-                const k = (s.email || "").trim().toLowerCase();
-                if (!k || UNMERGED_IDS.has(s.id)) return true;
-                if (seenTx.has(k)) return false;
-                seenTx.add(k); return true;
-              });
+              // Stage counters and the Total chip share one set (pipelineUniverse),
+              // so the nine buckets always add up to the total and nobody can sit
+              // in two buckets at once.
+              const txU = pipelineUniverse;
               type Tone = { dot: string; ring: string; text: string; soft: string };
               const tones: Record<string, Tone> = {
                 slate:   { dot: "bg-slate-500",   ring: "ring-slate-500/40",   text: "text-slate-600 dark:text-slate-300",     soft: "bg-slate-500/10" },
