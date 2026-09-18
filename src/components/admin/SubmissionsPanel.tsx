@@ -2923,28 +2923,29 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </span>
               )}
             </button>
-          <button
-            onClick={() => setListCollapsed(v => !v)}
-            title={listCollapsed ? "Split view — show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
-            className={`w-6 h-6 rounded-full border transition-all grid place-items-center ${
-              listCollapsed
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-          >
-            {listCollapsed ? <PanelLeftOpen className="w-3 h-3" /> : <PanelLeftClose className="w-3 h-3" />}
-          </button>
-          <button
-            onClick={() => setCemeteriesOpen(o => !o)}
-            className={`w-6 h-6 rounded-full border transition-all grid place-items-center ${
-              cemeteriesOpen
-                ? "bg-foreground text-background border-foreground"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-            title={cemeteriesOpen ? "Hide the Cemeteries directory" : "Show the Cemeteries directory in this tab"}
-          >
-            <Building2 className="w-3 h-3" />
-          </button>
+            <button
+              onClick={() => setListCollapsed(v => !v)}
+              title={listCollapsed ? "Split view — show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
+              className={`w-8 h-8 rounded-full border transition-all grid place-items-center ${
+                listCollapsed
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              {listCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => setCemeteriesOpen(o => !o)}
+              className={`w-8 h-8 rounded-full border transition-all grid place-items-center ${
+                cemeteriesOpen
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+              title={cemeteriesOpen ? "Hide the Cemeteries directory" : "Show the Cemeteries directory in this tab"}
+            >
+              <Building2 className="w-4 h-4" />
+            </button>
+            <div className="h-6 w-px bg-border/60 mx-1" />
           <button
             onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
             className={`h-6 pl-1.5 pr-2 rounded-full text-[10px] font-medium border transition-all inline-flex items-center gap-1 ${
