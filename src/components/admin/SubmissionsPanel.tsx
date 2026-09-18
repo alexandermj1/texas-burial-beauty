@@ -2973,7 +2973,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
         </div>
         {regionFilter === "texas" && (
-          <div className="flex-1 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex-1 min-w-0 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(() => {
               // Stage counters mirror the list exactly: archived submissions are
               // excluded (the list hides them), and duplicate emails count once.
@@ -3045,34 +3045,34 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       return (
                         <div key={st.key} className="flex items-center shrink-0">
                           {i > 0 && (
-                            <ChevronRight className="w-2.5 h-2.5 text-border shrink-0" />
+                            <ChevronRight className="w-3 h-3 text-border shrink-0" />
                           )}
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex flex-col items-center justify-center gap-0.5 py-1 px-1 min-w-[52px] rounded-lg transition-all duration-200 ${
+                            className={`group relative flex flex-col items-center justify-center gap-1 py-2 px-1.5 min-w-[70px] rounded-lg transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
                             }`}
                           >
                             {st.count > 0 && (
-                              <span className={`text-[8.5px] font-bold leading-none ${
+                              <span className={`text-[10px] font-bold leading-none ${
                                 st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
                               }`}>
                                 {st.count}
                               </span>
                             )}
                             <span
-                              className={`w-5 h-5 rounded-full grid place-items-center transition-all ${
+                              className={`w-6 h-6 rounded-full grid place-items-center transition-all ${
                                 st.active
                                   ? `${st.tone.dot} text-white shadow-sm`
                                   : `${st.tone.soft} ${st.tone.text} group-hover:scale-105`
                               }`}
                             >
-                              <Icon className="w-2.5 h-2.5" strokeWidth={2.2} />
+                              <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                             </span>
-                            <span className={`text-[9px] font-medium leading-tight text-center max-w-[4.5rem] ${
+                            <span className={`text-[10.5px] font-medium leading-tight text-center max-w-[5rem] ${
                               st.active ? st.tone.text : "text-muted-foreground group-hover:text-foreground"
                             }`}>
                               {st.label}
@@ -3088,9 +3088,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           setFtSentFilter(false); setFtDoneFilter(false); setDocsOutFilter(false); setDocsReturnedFilter(false); setCompleteFilter(false);
                         }}
                         title="Clear stage filters"
-                        className="ml-2 shrink-0 w-6 h-6 rounded-full grid place-items-center border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+                        className="ml-2 shrink-0 w-7 h-7 rounded-full grid place-items-center border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
