@@ -1160,7 +1160,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         }
       }
 
-      if (!silent) toast.success("Paperwork checklist updated");
+      // Tick off anything the seller has already sent us (the plot deed almost
+      // always arrives with the first message) so we never ask for it twice.
+      const autoMatched = await autoMatchExistingFiles().catch(() => 0);
+
+      if (!silent) {
+        toast.success(autoMatched
+          ? `Paperwork checklist updated — ${autoMatched} item${autoMatched === 1 ? "" : "s"} already on file marked received`
+          : "Paperwork checklist updated");
+      }
       await load();
     } catch (e) {
       toast.error((e as Error).message);
