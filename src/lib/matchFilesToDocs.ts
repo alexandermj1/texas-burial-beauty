@@ -88,8 +88,8 @@ export function matchFilesToDocs(docs: MatchableDoc[], files: CandidateFile[]): 
       // A purchase agreement mentioning the deed is not the deed.
       if (family === "deed" && DEED_DECOYS.test(name) && !signal.test(name)) return false;
       if (family === "deed" && DEED_DECOYS.test(name) && /purchase agreement|insurance/.test(name)) return false;
-      // An ID only counts when it clearly belongs to the person we asked about.
-      if (family === "photo_id") {
+      // A personal document only counts when it clearly names the right person.
+      if (family === "photo_id" || family === "death_certificate" || family === "marriage_certificate") {
         const surname = surnameOf(doc.person_name);
         if (!surname || !haystack.includes(surname)) return false;
       }
