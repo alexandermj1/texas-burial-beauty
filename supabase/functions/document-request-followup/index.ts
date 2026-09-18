@@ -54,6 +54,19 @@ Deno.serve(async (req) => {
   const input = await req.json().catch(() => ({}));
   const dryRun = input?.dry_run === true;
   const onlyId = typeof input?.submission_id === "string" ? input.submission_id : null;
+  const authHeader = req.headers.get("authorization") ?? "";
+  const suppliedSecret = req.headers.get("x-automation-secret");
+  const { data: jobAuth } = await db.from("automation_job_state").select("trigger_secret").eq("job_name", JOB).maybeSingle();
+  let isStaff = false;
+  if (authHeader.toLowerCase().startsWith("bearer ")) {
+    const { data: authData } = await db.auth.getUser(authHeader.slice(7));
+    if (authData.user) {
+      const { data: role } = await db.from("user_roles").select("role").eq("user_id", authData.user.id).in("role", ["admin", "staff"]).limit(1).maybeSingle();
+      isStaff = Boolean(role);
+    }
+  }
+  const validScheduleSecret = Boolean(suppliedSecret && jobAuth?.trigger_secret && suppliedSecret === jobAuth.trigger_secret);
+  if (!validScheduleSecret && !(dryRun && isStaff)) return respond({ error: "Unauthorized" }, 401);
   const runId = crypto.randomUUID();
   let locked = false;
   const results: { id: string; status: string; reason?: string; items?: string[] }[] = [];
