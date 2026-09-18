@@ -2981,7 +2981,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             }).length;
             return (
               <span
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2 py-0.5 text-[10px] text-muted-foreground"
+                className="inline-flex items-center gap-1.5 h-6 px-2 rounded-full border border-border bg-card text-[10px] text-muted-foreground"
                 title="Total submissions in view / new today"
               >
                 <span><span className="text-foreground font-semibold">{total}</span> total</span>
