@@ -20,6 +20,10 @@ import FamilyTreeMap from "./FamilyTreeMap";
 const SHOW_FAMILY_TREE_MAP = false;
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
+import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
+
+/** States that mean an item needs nothing further from the seller. */
+const DONE_STATES = new Set(["received", "notarized", "complete", "not_needed", "not_required", "waived"]);
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
@@ -1011,6 +1015,54 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return true;
   };
 
+  /**
+   * Mark checklist items received when the seller has already sent that file.
+   * Returns how many items were ticked off. Never touches an item a broker has
+   * already set by hand, and never overwrites an item that carries a file.
+   */
+  const autoMatchExistingFiles = async (): Promise<number> => {
+    const { data: sub } = await supabase.from("contact_submissions")
+      .select("customer_profile_id, seller_attachments").eq("id", submissionId).maybeSingle();
+    const candidates: CandidateFile[] = [];
+    const attachments = (sub as { seller_attachments?: { path?: string; name?: string }[] } | null)?.seller_attachments;
+    for (const f of Array.isArray(attachments) ? attachments : []) {
+      if (f?.path) candidates.push({ name: f.name ?? f.path, path: f.path });
+    }
+    const profileId = (sub as { customer_profile_id?: string | null } | null)?.customer_profile_id;
+    if (profileId) {
+      const { data: cf } = await supabase.from("customer_files")
+        .select("file_name, file_path, extracted_summary").is("deleted_at", null)
+        .eq("customer_profile_id", profileId);
+      for (const f of cf ?? []) {
+        const existing = candidates.find((c) => c.path === f.file_path);
+        if (existing) existing.summary = f.extracted_summary ?? existing.summary;
+        else candidates.push({ name: f.file_name, path: f.file_path, summary: f.extracted_summary });
+      }
+    }
+    if (!candidates.length) return 0;
+
+    const live = await fetchLiveRows();
+    const open = live.filter((r) => {
+      const state = String(r.manual_override ?? r.status ?? r.required_state ?? "").toLowerCase();
+      const hasFile = !!r.file_url || !!(r.file_urls ?? []).length;
+      // "needed" / "maybe" are the everyday states, not a broker's decision —
+      // only a deliberate "not needed" style choice is left alone.
+      const brokerDecided = !!r.manual_override && !["needed", "maybe"].includes(String(r.manual_override).toLowerCase());
+      return !hasFile && !brokerDecided && !DONE_STATES.has(state);
+    });
+    if (!open.length) return 0;
+
+    const matches = matchFilesToDocs(open, candidates);
+    for (const m of matches) {
+      const row = open.find((r) => r.id === m.docId);
+      const notes = [row?.notes, m.reason].filter(Boolean).join(" · ");
+      await supabase.from("submission_documents")
+        .update({ status: "received", required_state: "received", manual_override: "received", notes })
+        .eq("id", m.docId);
+    }
+    return matches.length;
+  };
+
   /** Write the computed checklist into submission_documents, preserving progress. */
   const syncChecklist = async (silent = false) => {
     setSaving(true);
@@ -1160,7 +1212,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         }
       }
 
-      if (!silent) toast.success("Paperwork checklist updated");
+      // Tick off anything the seller has already sent us (the plot deed almost
+      // always arrives with the first message) so we never ask for it twice.
+      const autoMatched = await autoMatchExistingFiles().catch(() => 0);
+
+      if (!silent) {
+        toast.success(autoMatched
+          ? `Paperwork checklist updated — ${autoMatched} item${autoMatched === 1 ? "" : "s"} already on file marked received`
+          : "Paperwork checklist updated");
+      }
       await load();
     } catch (e) {
       toast.error((e as Error).message);
