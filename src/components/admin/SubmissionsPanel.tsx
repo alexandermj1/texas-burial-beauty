@@ -2904,72 +2904,73 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
       {/* Toolbar (desktop only) */}
       {!isMobile && (
-      <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-2.5 py-1.5 flex items-center gap-2">
-        <div className="flex items-center gap-1 shrink-0">
+      <div data-tour="filters" className="lg:col-span-12 rounded-2xl bg-card/80 backdrop-blur-md border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 px-3 py-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Compact icon utilities — labels live in tooltips. */}
-          <button
-            onClick={() => setArchivedView(v => !v)}
-            title={archivedView ? "Back to the live pipeline" : `View archived submissions${archivedCount ? ` (${archivedCount})` : ""}`}
-            className={`relative w-6 h-6 rounded-full border transition-all grid place-items-center ${
-              archivedView
-                ? "bg-amber-500 text-white border-amber-500"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-          >
-            <Archive className="w-3 h-3" />
-            {!archivedView && archivedCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold grid place-items-center border border-card">
-                {archivedCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setListCollapsed(v => !v)}
-            title={listCollapsed ? "Split view — show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
-            className={`w-6 h-6 rounded-full border transition-all grid place-items-center ${
-              listCollapsed
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-          >
-            {listCollapsed ? <PanelLeftOpen className="w-3 h-3" /> : <PanelLeftClose className="w-3 h-3" />}
-          </button>
-          <button
-            onClick={() => setCemeteriesOpen(o => !o)}
-            className={`w-6 h-6 rounded-full border transition-all grid place-items-center ${
-              cemeteriesOpen
-                ? "bg-foreground text-background border-foreground"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-            title={cemeteriesOpen ? "Hide the Cemeteries directory" : "Show the Cemeteries directory in this tab"}
-          >
-            <Building2 className="w-3 h-3" />
-          </button>
-          <button
-            onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
-            className={`h-6 pl-1.5 pr-2 rounded-full text-[10px] font-medium border transition-all inline-flex items-center gap-1 ${
-              kindFilter === "buyer"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
-            title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
-          >
-            <ArrowUpFromLine className="w-3 h-3" /> Buyers
-          </button>
-          {onRefresh && (
             <button
-              onClick={async () => {
-                if (refreshing) return;
-                setRefreshing(true);
-                try { await onRefresh(); } finally { setRefreshing(false); }
-              }}
-              disabled={refreshing}
-              className="w-6 h-6 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all grid place-items-center disabled:opacity-60"
-              title="Sync Gmail and reload submissions"
+              onClick={() => setArchivedView(v => !v)}
+              title={archivedView ? "Back to the live pipeline" : `View archived submissions${archivedCount ? ` (${archivedCount})` : ""}`}
+              className={`relative w-8 h-8 rounded-full border transition-all grid place-items-center ${
+                archivedView
+                  ? "bg-amber-500 text-white border-amber-500"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
             >
-              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
+              <Archive className="w-4 h-4" />
+              {!archivedView && archivedCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold grid place-items-center border border-card">
+                  {archivedCount}
+                </span>
+              )}
             </button>
-          )}
+            <button
+              onClick={() => setListCollapsed(v => !v)}
+              title={listCollapsed ? "Split view — show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
+              className={`w-8 h-8 rounded-full border transition-all grid place-items-center ${
+                listCollapsed
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >
+              {listCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => setCemeteriesOpen(o => !o)}
+              className={`w-8 h-8 rounded-full border transition-all grid place-items-center ${
+                cemeteriesOpen
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+              title={cemeteriesOpen ? "Hide the Cemeteries directory" : "Show the Cemeteries directory in this tab"}
+            >
+              <Building2 className="w-4 h-4" />
+            </button>
+            <div className="h-6 w-px bg-border/60 mx-1" />
+            <button
+              onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
+              className={`h-8 pl-2 pr-2.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
+                kindFilter === "buyer"
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+              title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
+            >
+              <ArrowUpFromLine className="w-4 h-4" /> Buyers
+            </button>
+            {onRefresh && (
+              <button
+                onClick={async () => {
+                  if (refreshing) return;
+                  setRefreshing(true);
+                  try { await onRefresh(); } finally { setRefreshing(false); }
+                }}
+                disabled={refreshing}
+                className="w-8 h-8 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all grid place-items-center disabled:opacity-60"
+                title="Sync Gmail and reload submissions"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              </button>
+            )}
         </div>
         {regionFilter === "texas" && (
           <div className="flex-1 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -3038,7 +3039,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 : steps;
               const anyActive = visibleSteps.some(s => s.active);
               return (
-                <div className="flex items-center justify-center flex-nowrap gap-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex items-center justify-between w-full flex-nowrap gap-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
@@ -3105,14 +3106,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             return d && d >= startOfToday;
           }).length;
           return (
-            <span
-              className="shrink-0 inline-flex items-center gap-1.5 h-6 px-2 rounded-full border border-border bg-card text-[10px] text-muted-foreground"
+            <div
+              className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
               title="Total submissions in view / new today"
             >
-              <span><span className="text-foreground font-semibold">{total}</span> total</span>
-              <span className="opacity-40">·</span>
-              <span><span className="text-primary font-semibold">{today}</span> today</span>
-            </span>
+              <div className="flex items-center gap-1.5 pr-3">
+                <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
+                <span className="font-semibold text-foreground">{total}</span>
+              </div>
+              <div className="flex items-center gap-1.5 pl-3">
+                <span className="text-[10px] uppercase tracking-wider font-medium">Today</span>
+                <span className="font-semibold text-primary">{today}</span>
+              </div>
+            </div>
           );
         })()}
       </div>
