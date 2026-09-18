@@ -449,7 +449,7 @@ export type CemeteryDocRules = {
   own_lost_deed_form?: boolean;
   own_lost_deed_form_name?: string;
   child_waiver_required?: boolean;
-  extra_docs?: { label: string; when?: "always" | "deceased_owner" | "no_deed" | "occupied"; why?: string }[];
+  extra_docs?: { label: string; when?: "always" | "deceased_owner" | "no_deed" | "occupied" | "divorced"; why?: string }[];
   notes?: string;
 };
 
