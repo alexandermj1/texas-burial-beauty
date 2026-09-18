@@ -3050,7 +3050,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex flex-1 min-w-max flex-col items-center justify-center gap-1 py-1 px-1.5 rounded-lg transition-all duration-200 ${
+                            className={`group relative flex flex-1 min-w-max flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-lg transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
@@ -3067,7 +3067,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                 <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                               </span>
                               {st.count > 0 && (
-                                <span className={`absolute -top-1 -right-1 min-w-[15px] h-4 px-1 rounded-full text-[9px] font-bold leading-none grid place-items-center border-2 border-card ${
+                                <span className={`absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full text-[8px] font-semibold leading-none grid place-items-center border border-card shadow-sm ${
                                   st.active ? "bg-foreground text-background" : `${st.tone.dot} text-white`
                                 }`}>
                                   {st.count}
