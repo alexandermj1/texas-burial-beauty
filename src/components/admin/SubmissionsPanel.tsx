@@ -801,6 +801,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   };
   const effStep = (s: Submission) => stageStep(stageSource(s));
 
+  // ---- The one universe the pipeline talks about ----------------------------
+  // Every stage count AND the "Total" chip are computed from this exact set, so
+  // the nine buckets always add up to the total: same region, same archived
+  // view as the list, and duplicates from one email counted once.
+  const pipelineUniverse = useMemo(() => {
+    const seen = new Set<string>();
+    return submissions.filter(s => {
+      if (archivedView !== !!s.archived_at) return false;
+      if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
+      const k = (s.email || "").trim().toLowerCase();
+      if (!k || UNMERGED_IDS.has(s.id)) return true;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissions, archivedView, regionFilter, docsEmails, returnedDocsEmails]);
+
 
 
 
@@ -1674,7 +1691,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     const ans = (x.ownership_answers ?? {}) as Record<string, any>;
                     const now = new Date().toISOString();
                     const STAGES = [
-                      { key: "awaiting_quote", label: "Awaiting quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
+                      // Before the quote the pipeline splits itself by attachments
+                      // (No attachments / Attachments) — that can't be forced by hand.
+                      { key: "awaiting_quote", label: "Before quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
                       { key: "quoted",         label: "Quoted",         cls: "bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300" },
                       { key: "accepted",       label: "Accepted",       cls: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300" },
                       { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
@@ -2975,17 +2994,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         {regionFilter === "texas" && (
           <div className="flex-1 min-w-0 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(() => {
-              // Stage counters mirror the list exactly: archived submissions are
-              // excluded (the list hides them), and duplicate emails count once.
-              const tx = submissions.filter(s => subRegion(s) === "texas" && archivedView === !!s.archived_at);
-              // Count merged people once, not once per duplicate submission.
-              const seenTx = new Set<string>();
-              const txU = tx.filter(s => {
-                const k = (s.email || "").trim().toLowerCase();
-                if (!k || UNMERGED_IDS.has(s.id)) return true;
-                if (seenTx.has(k)) return false;
-                seenTx.add(k); return true;
-              });
+              // Stage counters and the Total chip share one set (pipelineUniverse),
+              // so the nine buckets always add up to the total and nobody can sit
+              // in two buckets at once.
+              const txU = pipelineUniverse;
               type Tone = { dot: string; ring: string; text: string; soft: string };
               const tones: Record<string, Tone> = {
                 slate:   { dot: "bg-slate-500",   ring: "ring-slate-500/40",   text: "text-slate-600 dark:text-slate-300",     soft: "bg-slate-500/10" },
@@ -3101,16 +3113,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {(() => {
-          const total = submissions.length;
+          // Same set the stage buckets count, so Total === sum of the stages.
+          const total = pipelineUniverse.length;
           const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
-          const today = submissions.filter(s => {
+          const today = pipelineUniverse.filter(s => {
             const d = (s as any).created_at ? new Date((s as any).created_at) : null;
             return d && d >= startOfToday;
           }).length;
           return (
             <div
               className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
-              title="Total submissions in view / new today"
+              title="Total people in this view (the stage counts add up to this) / new today"
             >
               <div className="flex items-center gap-1.5 pr-3">
                 <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
@@ -3218,8 +3231,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
               if ((sg as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
               if ((sg as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (sg as any).quote_sent_at };
-              if (hasDocs(sg)) return { step: 2, label: "Awaiting quote", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
-              return { step: 1, label: "New inquiry", accent: "slate", cls: "bg-muted text-muted-foreground border-border", bar: "bg-muted-foreground/40", tint: "bg-card hover:bg-muted/40", icon: Inbox, at: null as string | null };
+              if (hasDocs(sg)) return { step: 2, label: "Attachments", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
+              return { step: 1, label: "No attachments", accent: "slate", cls: "bg-muted text-muted-foreground border-border", bar: "bg-muted-foreground/40", tint: "bg-card hover:bg-muted/40", icon: Inbox, at: null as string | null };
             })();
             const StageIcon = stage.icon;
 
