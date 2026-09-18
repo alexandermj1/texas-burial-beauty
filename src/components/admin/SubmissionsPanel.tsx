@@ -3097,8 +3097,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
           </div>
         )}
+        {(() => {
+          const total = submissions.length;
+          const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+          const today = submissions.filter(s => {
+            const d = (s as any).created_at ? new Date((s as any).created_at) : null;
+            return d && d >= startOfToday;
+          }).length;
+          return (
+            <span
+              className="shrink-0 inline-flex items-center gap-1.5 h-6 px-2 rounded-full border border-border bg-card text-[10px] text-muted-foreground"
+              title="Total submissions in view / new today"
+            >
+              <span><span className="text-foreground font-semibold">{total}</span> total</span>
+              <span className="opacity-40">·</span>
+              <span><span className="text-primary font-semibold">{today}</span> today</span>
+            </span>
+          );
+        })()}
       </div>
       )}
+
 
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
       <AddSubmissionDialog
