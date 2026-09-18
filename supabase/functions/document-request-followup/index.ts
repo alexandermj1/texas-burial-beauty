@@ -84,7 +84,10 @@ Deno.serve(async (req) => {
       const { data: prior } = await db.from("reminder_log").select("sent_at").eq("submission_id", sub.id).eq("reminder_type", TYPE).eq("status", "sent").is("deleted_at", null).order("sent_at", { ascending: false }).limit(1);
       const lastReminder = prior?.[0]?.sent_at ?? null;
       if (lastReminder && lastReminder > cutoff) { results.push({ id: sub.id, status: "skipped", reason: "reminded-recently" }); continue; }
-      const since = [sub.documents_requested_at, lastReminder].filter(Boolean).sort().at(-1) as string;
+      // A conversation should suppress a reminder for the current quiet week,
+      // not forever. For a newly sent request, the request time is the anchor;
+      // for older files, only contact in the last seven days blocks this run.
+      const since = [sub.documents_requested_at, lastReminder, cutoff].filter(Boolean).sort().at(-1) as string;
       const [{ data: notes }, { data: messages }, { data: activity }] = await Promise.all([
         db.from("customer_notes").select("id").eq("submission_id", sub.id).is("deleted_at", null).gt("created_at", since).limit(1),
         db.from("email_messages").select("gmail_thread_id,gmail_message_id,received_at").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(20),
