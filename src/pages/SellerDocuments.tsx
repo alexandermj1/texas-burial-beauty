@@ -383,7 +383,7 @@ const PoaUpload = ({
     <div className="mt-4 rounded-2xl border border-border/60 bg-background/70 p-4 sm:p-5">
       <div className="flex items-start gap-3 sm:gap-4">
         <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
-          {done ? <CheckCircle2 className="w-4.5 h-4.5" /> : <Stamp className="w-4.5 h-4.5" />}
+          {done ? <CheckCircle2 className="w-4 h-4" /> : <Stamp className="w-4 h-4" />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-display text-[17px] sm:text-lg text-foreground leading-snug">
