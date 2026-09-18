@@ -2062,6 +2062,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const Chip = ({ r }: { r: Requirement }) => {
     const key = reqKey(r);
     const s = stateByKey[reqDbKey(r)] ?? (r.review ? "maybe" : "needed");
+    // A returned POA is shown as received. Whether it was notarized remains
+    // contract metadata, not a separate customer-facing checklist status.
+    const displayState: RequiredState = r.code === "D21" && s === "notarized" ? "received" : s;
     const row = rowFor(r);
     const fromContract = !row?.manual_override && !!contractStates[reqDbKey(r)];
     const guide = DOC_GUIDE[r.code];
@@ -2212,11 +2215,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
                 <select
-                  className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[s]}`}
-                  value={s}
+                  className={`text-[11px] rounded px-2 py-1 border-0 font-medium ${STATE_STYLE[displayState]}`}
+                  value={displayState}
                   onChange={(e) => void setRowState(r, e.target.value as RequiredState)}
                 >
-                  {STATE_ORDER.map((v) => <option key={v} value={v}>{STATE_LABEL[v]}</option>)}
+                  {STATE_ORDER.filter((v) => r.code !== "D21" || v !== "notarized").map((v) => (
+                    <option key={v} value={v}>{STATE_LABEL[v]}</option>
+                  ))}
                 </select>
               </>
             )}
