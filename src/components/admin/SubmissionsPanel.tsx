@@ -3016,17 +3016,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 key: string; label: string; icon: typeof Paperclip; count: number;
                 active: boolean; toggle: () => void; tone: Tone;
               }[] = [
-                { key: "docs", label: "Attachments", icon: Paperclip,
-                  count: txU.filter(s => hasDocs(s)).length,
-                  active: docsFilter === "with",
-                  toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.slate },
                 { key: "no-docs", label: "No attachments", icon: FileX,
-                  count: txU.filter(s => !hasDocs(s)).length,
+                  count: txU.filter(s => effStep(s) === 1).length,
                   active: docsFilter === "without",
                   toggle: () => setDocsFilter(docsFilter === "without" ? "all" : "without"), tone: tones.slate },
-                { key: "awaiting-quote", label: "Awaiting quote", icon: Clock,
+                { key: "docs", label: "Attachments", icon: Paperclip,
                   count: txU.filter(s => effStep(s) === 2).length,
-                  active: awaitingQuoteFilter, toggle: () => setAwaitingQuoteFilter(!awaitingQuoteFilter), tone: tones.amber },
+                  active: docsFilter === "with",
+                  toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.amber },
                 { key: "quoted", label: "Quoted", icon: DollarSign,
                   count: txU.filter(s => effStep(s) === 3).length,
                   active: quotedFilter, toggle: () => setQuotedFilter(!quotedFilter), tone: tones.purple },
