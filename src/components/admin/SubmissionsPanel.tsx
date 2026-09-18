@@ -2937,14 +2937,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
             <button
               onClick={() => setCemeteriesOpen(o => !o)}
-              className={`w-7 h-7 rounded-full border transition-all grid place-items-center ${
+              className={`w-6 h-6 rounded-full border transition-all grid place-items-center ${
                 cemeteriesOpen
                   ? "bg-foreground text-background border-foreground"
                   : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
               title={cemeteriesOpen ? "Hide the Cemeteries directory" : "Show the Cemeteries directory in this tab"}
             >
-              <Building2 className="w-3.5 h-3.5" />
+              <Building2 className="w-3 h-3" />
             </button>
             <button
               onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
