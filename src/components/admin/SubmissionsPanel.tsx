@@ -2965,10 +2965,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   try { await onRefresh(); } finally { setRefreshing(false); }
                 }}
                 disabled={refreshing}
-                className="w-7 h-7 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all grid place-items-center disabled:opacity-60"
+                className="w-6 h-6 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-all grid place-items-center disabled:opacity-60"
                 title="Sync Gmail and reload submissions"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
               </button>
             )}
           </div>
