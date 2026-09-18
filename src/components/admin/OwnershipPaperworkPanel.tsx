@@ -260,6 +260,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   // When the document request was last emailed — the send button turns green
   // and reads "Request sent" so it is obvious it has already gone out.
   const [requestedAt, setRequestedAt] = useState<string | null>(null);
+  const [lastAutoFollowupAt, setLastAutoFollowupAt] = useState<string | null>(null);
+  const [followupPausedAt, setFollowupPausedAt] = useState<string | null>(null);
+  const [followupPauseReason, setFollowupPauseReason] = useState("");
   const [poaPrompt, setPoaPrompt] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
   /** A prepared PDF shown inline so it can be checked without leaving the page. */
@@ -311,20 +314,26 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // Only the very first fetch swaps the panel for a spinner. Later refreshes
     // (deletes, realtime pings) patch state in place so the list never jumps.
     if (!didLoad.current) setLoading(true);
-    const [{ data: sub }, { data: docs }, { data: cons }] = await Promise.all([
+    const [{ data: sub }, { data: docs }, { data: cons }, { data: reminders }] = await Promise.all([
       supabase.from("contact_submissions")
-        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at").eq("id", submissionId).maybeSingle(),
+        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at, document_followup_paused_at, document_followup_pause_reason").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls, why, statute_ref, issued_by_us, needs_notary, person_role, sort_order").is("deleted_at", null)
         .eq("submission_id", submissionId),
       supabase.from("contracts")
         .select("id, kind, status, signature_name, fill_data, signed_at, notarized_at, completed_at, countersigned_at, sign_token, principal_key")
         .eq("submission_id", submissionId),
+      supabase.from("reminder_log").select("sent_at").eq("submission_id", submissionId)
+        .eq("reminder_type", "document_request_auto_followup").eq("status", "sent")
+        .is("deleted_at", null).order("sent_at", { ascending: false }).limit(1),
     ]);
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
     setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
     setRequestedAt(((sub as { documents_requested_at?: string | null } | null)?.documents_requested_at ?? null));
+    setLastAutoFollowupAt(reminders?.[0]?.sent_at ?? null);
+    setFollowupPausedAt(((sub as { document_followup_paused_at?: string | null } | null)?.document_followup_paused_at ?? null));
+    setFollowupPauseReason(((sub as { document_followup_pause_reason?: string | null } | null)?.document_followup_pause_reason ?? "") || "");
 
     // The AI reading is stored on the file, so its explanation survives a reload.
     if (a?.aiReading) setReading(a.aiReading as Reading);
@@ -406,6 +415,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setLoading(false);
     didLoad.current = true;
   }, [submissionId, cemetery]);
+
+  const toggleAutoFollowup = async () => {
+    const pausing = !followupPausedAt;
+    const at = pausing ? new Date().toISOString() : null;
+    const reason = pausing ? (followupPauseReason.trim() || "Paused after contact with seller") : null;
+    const { error } = await supabase.from("contact_submissions").update({
+      document_followup_paused_at: at,
+      document_followup_pause_reason: reason,
+    }).eq("id", submissionId);
+    if (error) {
+      toast.error("Could not update automatic follow-ups");
+      return;
+    }
+    setFollowupPausedAt(at);
+    setFollowupPauseReason(reason ?? "");
+    toast.success(pausing ? "Automatic document follow-ups paused" : "Automatic document follow-ups resumed");
+  };
 
   /**
    * Chrome refuses to render (or download) a cross-origin PDF served from a
@@ -2543,6 +2569,26 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   ? "Provisional list. It will be rebuilt from the seller's family confirmation once it comes back, and the power of attorney fills itself from those answers."
                   : "Nothing to request yet — send the family confirmation above first, and the documents (plus a pre-filled power of attorney) follow from the seller's answers."}
             </p>
+
+            {requestedAt && outstanding.length > 0 && (
+              <div className="flex flex-col gap-2 rounded-md border border-border/70 bg-card px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold text-foreground">
+                    Automatic follow-ups {followupPausedAt ? "paused" : "active"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {followupPausedAt
+                      ? followupPauseReason || "No reminders will be sent until resumed."
+                      : lastAutoFollowupAt
+                        ? `Last sent ${new Date(lastAutoFollowupAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}. The next reminder waits for seven quiet days.`
+                        : "A polite reminder waits for seven quiet days and stops when there is a note or email."}
+                  </p>
+                </div>
+                <Button size="sm" variant={followupPausedAt ? "outline" : "ghost"} onClick={() => void toggleAutoFollowup()}>
+                  {followupPausedAt ? "Resume auto follow-ups" : "Pause auto follow-ups"}
+                </Button>
+              </div>
+            )}
 
 
             {rules && Object.keys(rules).length > 0 && (
