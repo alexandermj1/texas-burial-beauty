@@ -1094,8 +1094,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
          const fk = familyKey(r.doc_code, r.person_name, r.label);
          const duplicateAdHoc = isAdHoc(r.doc_code) && !!fk && wantedFamilies.has(fk);
          if (duplicateAdHoc) return !r.file_url && !(r.file_urls ?? []).length && r.status !== "received";
+         // The file moved to a different cemetery: that cemetery's own extra
+         // forms belong to the old one and go, even if they were marked by hand.
+         const oldCemeteryForm = cemeteryMoved && /^C-/.test(r.doc_code ?? "");
          return !!r.doc_code && !wanted.has(key) && !r.file_url
-           && (supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
+           && (oldCemeteryForm || supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
        });
 
       if (stale.length) {
