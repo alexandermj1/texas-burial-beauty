@@ -605,7 +605,8 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
     const applies =
       when === "always" ||
       (when === "deceased_owner" && gone.length > 0) ||
-      (when === "no_deed" && !!deedMissing);
+      (when === "no_deed" && !!deedMissing) ||
+      (when === "divorced" && hasDivorce(v2));
     if (applies) add({ code: "C-EXTRA", label: extra.label, why: extra.why ?? "Required by this cemetery.", fromCemetery: true });
   }
   if (rules.child_waiver_required && gone.length > 0) {
@@ -653,4 +654,23 @@ export function masterRoster(v2: V2State): MasterSigner[] {
     });
   }
   return [...seen.values()];
+}
+
+/**
+ * True only when the family has actually told us about a divorce. Cemeteries
+ * that ask for a decree "if there has been a divorce" must not put that item on
+ * every file — it confuses sellers who were never divorced.
+ */
+function hasDivorce(v2: V2State): boolean {
+  const flag = (v2 as unknown as Record<string, unknown>).divorced;
+  if (flag === true || flag === "yes") return true;
+  const groups = [v2.spouse, v2.heirSpouse, v2.signerSpouse];
+  for (const g of groups) {
+    for (const a of Object.values(g ?? {})) {
+      if (!a) continue;
+      if (String(a.has ?? "").toLowerCase() === "divorced") return true;
+      if (String(a.alive ?? "").toLowerCase() === "divorced") return true;
+    }
+  }
+  return false;
 }
