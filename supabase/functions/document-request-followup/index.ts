@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
   if (!validScheduleSecret && !(dryRun && isStaff)) return respond({ error: "Unauthorized" }, 401);
   const runId = crypto.randomUUID();
   let locked = false;
+  let sendAttempts = 0;
   const results: { id: string; status: string; reason?: string; items?: string[] }[] = [];
   try {
     if (!dryRun) {
@@ -81,7 +82,9 @@ Deno.serve(async (req) => {
     let query = db.from("contact_submissions").select("id,name,email,cemetery,documents_requested_at,customer_profile_id,document_followup_paused_at")
       .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null).is("documents_completed_at", null)
       .is("document_followup_paused_at", null).not("documents_requested_at", "is", null).lte("documents_requested_at", cutoff).not("email", "is", null)
-      .order("documents_requested_at", { ascending: true }).limit(25);
+      // Scan well beyond the send cap so older records suppressed by recent
+      // contact cannot permanently hide eligible sellers farther down the list.
+      .order("documents_requested_at", { ascending: true }).limit(500);
     if (onlyId) query = query.eq("id", onlyId);
     const { data: submissions, error } = await query;
     if (error) throw error;
@@ -117,10 +120,12 @@ Deno.serve(async (req) => {
 
       const idempotency = `${TYPE}:${sub.id}:${lastReminder ?? sub.documents_requested_at}`;
       if (dryRun) { results.push({ id: sub.id, status: "would-send", items: missing.map(itemText) }); continue; }
+      if (sendAttempts >= 25) break;
       const now = new Date().toISOString();
       const { data: reserved, error: reserveError } = await db.from("reminder_log").insert({ submission_id: sub.id, reminder_type: TYPE, sent_via: "gmail_auto", sent_at: now, attempted_at: now, status: "processing", idempotency_key: idempotency, missing_items: missing, notes: `Automatic follow-up for ${missing.length} outstanding item(s).` }).select("id").maybeSingle();
       if (reserveError?.code === "23505" || !reserved) { results.push({ id: sub.id, status: "skipped", reason: "already-claimed" }); continue; }
       if (reserveError) throw reserveError;
+      sendAttempts += 1;
 
       const first = String(sub.name ?? "").trim().split(/\s+/)[0] || "there";
       const link = `${SITE}/documents?s=${sub.id}`;
