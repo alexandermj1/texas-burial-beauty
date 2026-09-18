@@ -182,6 +182,42 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_job_state: {
+        Row: {
+          consecutive_rate_limits: number
+          job_name: string
+          last_completed_at: string | null
+          last_started_at: string | null
+          lease_until: string | null
+          locked_by: string | null
+          pause_reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consecutive_rate_limits?: number
+          job_name: string
+          last_completed_at?: string | null
+          last_started_at?: string | null
+          lease_until?: string | null
+          locked_by?: string | null
+          pause_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consecutive_rate_limits?: number
+          job_name?: string
+          last_completed_at?: string | null
+          last_started_at?: string | null
+          lease_until?: string | null
+          locked_by?: string | null
+          pause_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       buyer_recommendations: {
         Row: {
           asking_price: number | null
@@ -2256,36 +2292,57 @@ export type Database = {
       }
       reminder_log: {
         Row: {
+          attempted_at: string
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          error_code: string | null
+          error_message: string | null
           id: string
+          idempotency_key: string | null
+          missing_items: Json
           notes: string | null
+          provider_message_id: string | null
           reminder_type: string
           sent_at: string
           sent_via: string
+          status: string
           submission_id: string
         }
         Insert: {
+          attempted_at?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          error_code?: string | null
+          error_message?: string | null
           id?: string
+          idempotency_key?: string | null
+          missing_items?: Json
           notes?: string | null
+          provider_message_id?: string | null
           reminder_type: string
           sent_at?: string
           sent_via?: string
+          status?: string
           submission_id: string
         }
         Update: {
+          attempted_at?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          error_code?: string | null
+          error_message?: string | null
           id?: string
+          idempotency_key?: string | null
+          missing_items?: Json
           notes?: string | null
+          provider_message_id?: string | null
           reminder_type?: string
           sent_at?: string
           sent_via?: string
+          status?: string
           submission_id?: string
         }
         Relationships: [
@@ -2777,6 +2834,10 @@ export type Database = {
         Args: { _city: string; _name: string }
         Returns: string
       }
+      claim_automation_job: {
+        Args: { _job_name: string; _lease_seconds?: number; _run_id: string }
+        Returns: boolean
+      }
       get_listings_with_internal: {
         Args: never
         Returns: {
@@ -2822,6 +2883,10 @@ export type Database = {
           _submission_id: string
           _title: string
         }
+        Returns: undefined
+      }
+      release_automation_job: {
+        Args: { _completed?: boolean; _job_name: string; _run_id: string }
         Returns: undefined
       }
     }
