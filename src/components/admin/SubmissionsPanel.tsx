@@ -922,15 +922,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         const sc = _canon(s.cemetery || "");
         if (sc !== cemeteryCanon) return false;
       }
-      if (regionFilter === "texas" && docsFilter !== "all") {
-        const has = hasDocs(s);
-        if (docsFilter === "with" && !has) return false;
-        if (docsFilter === "without" && has) return false;
-      }
       // Each pipeline filter matches only its exact stage — a submission lives
-      // in exactly one stage (the furthest reached), so no double-counting.
+      // in exactly one bucket (the furthest stage reached), so nothing can be
+      // in "Attachments" and "Quoted" at the same time.
       const step = effStep(s);
-      if (awaitingQuoteFilter && step !== 2) return false;
+      if (regionFilter === "texas" && docsFilter !== "all") {
+        if (docsFilter === "with" && step !== 2) return false;
+        if (docsFilter === "without" && step !== 1) return false;
+      }
       if (quotedFilter && step !== 3) return false;
       if (acceptedFilter && step !== 4) return false;
       if (ftSentFilter && step !== 5) return false;
@@ -3017,17 +3016,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 key: string; label: string; icon: typeof Paperclip; count: number;
                 active: boolean; toggle: () => void; tone: Tone;
               }[] = [
-                { key: "docs", label: "Attachments", icon: Paperclip,
-                  count: txU.filter(s => hasDocs(s)).length,
-                  active: docsFilter === "with",
-                  toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.slate },
                 { key: "no-docs", label: "No attachments", icon: FileX,
-                  count: txU.filter(s => !hasDocs(s)).length,
+                  count: txU.filter(s => effStep(s) === 1).length,
                   active: docsFilter === "without",
                   toggle: () => setDocsFilter(docsFilter === "without" ? "all" : "without"), tone: tones.slate },
-                { key: "awaiting-quote", label: "Awaiting quote", icon: Clock,
+                { key: "docs", label: "Attachments", icon: Paperclip,
                   count: txU.filter(s => effStep(s) === 2).length,
-                  active: awaitingQuoteFilter, toggle: () => setAwaitingQuoteFilter(!awaitingQuoteFilter), tone: tones.amber },
+                  active: docsFilter === "with",
+                  toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.amber },
                 { key: "quoted", label: "Quoted", icon: DollarSign,
                   count: txU.filter(s => effStep(s) === 3).length,
                   active: quotedFilter, toggle: () => setQuotedFilter(!quotedFilter), tone: tones.purple },
@@ -3057,13 +3053,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 : steps;
               const anyActive = visibleSteps.some(s => s.active);
               return (
-                <div className="relative flex items-center gap-0 overflow-x-auto -mx-1 px-1">
+                <div className="relative flex flex-wrap items-center gap-y-1 gap-x-0 -mx-1 px-1">
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
                         <div key={st.key} className="flex items-stretch shrink-0">
                           {i > 0 && (
-                            <div className="w-4 sm:w-6 flex items-center pt-0.5">
+                            <div className="w-2 sm:w-3 flex items-center pt-0.5">
                               <span className="h-px w-full bg-gradient-to-r from-border via-border to-border/40" />
                             </div>
                           )}
