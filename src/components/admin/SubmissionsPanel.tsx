@@ -801,6 +801,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   };
   const effStep = (s: Submission) => stageStep(stageSource(s));
 
+  // ---- The one universe the pipeline talks about ----------------------------
+  // Every stage count AND the "Total" chip are computed from this exact set, so
+  // the nine buckets always add up to the total: same region, same archived
+  // view as the list, and duplicates from one email counted once.
+  const pipelineUniverse = useMemo(() => {
+    const seen = new Set<string>();
+    return submissions.filter(s => {
+      if (archivedView !== !!s.archived_at) return false;
+      if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
+      const k = (s.email || "").trim().toLowerCase();
+      if (!k || UNMERGED_IDS.has(s.id)) return true;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissions, archivedView, regionFilter, docsEmails, returnedDocsEmails]);
+
 
 
 
