@@ -434,6 +434,9 @@ const SellerQuoteForm = ({
               <p className="text-[13px] text-foreground/70 leading-relaxed mb-4">
                 Please upload a clear copy of the deed, certificate of ownership, or original purchase records. This is the only document we need right now — it helps us prepare your valuation and we'll need it from you to move forward.
               </p>
+              <p className="text-[13px] text-foreground/70 leading-relaxed mb-4">
+                If you do not have the deed, please contact your cemetery and they can provide you with an alternative or a copy of the document.
+              </p>
               <label htmlFor="seller-attachments-ed"
                 className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-primary/40 bg-background hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
                 <Upload className="w-4 h-4 text-primary" />
@@ -814,6 +817,9 @@ const SellerQuoteForm = ({
                       </div>
                       <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
                         A clear photo or scan of the deed, certificate of ownership, or original purchase paperwork is perfect.
+                      </p>
+                      <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                        If you do not have the deed, please contact your cemetery and they can provide you with an alternative or a copy of the document.
                       </p>
 
                       <label
