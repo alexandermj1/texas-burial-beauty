@@ -333,6 +333,11 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                           </div>
                         );
                       })()}
+                      {countNum > 1 && totalNet > 0 && (
+                        <p className="text-[11px] text-muted-foreground mt-1.5">
+                          Total for {countNum} spaces: <span className="text-foreground font-medium">{formatMoney(totalNet)}</span>
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
