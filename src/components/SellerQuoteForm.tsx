@@ -432,14 +432,14 @@ const SellerQuoteForm = ({
                 <span className="text-[11px] tracking-[0.25em] uppercase font-bold text-primary">Secure broker portal</span>
               </div>
               <p className="text-[13px] text-foreground/70 leading-relaxed mb-4">
-                Any document you attach is uploaded directly to our private, encrypted broker portal — visible only to our licensed Texas team. Never shared, never indexed, never sold.
+                Please upload a clear copy of the deed, certificate of ownership, or original purchase records. This is the only document we need right now — it helps us prepare your valuation and we'll need it from you to move forward.
               </p>
               <label htmlFor="seller-attachments-ed"
                 className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-primary/40 bg-background hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
                 <Upload className="w-4 h-4 text-primary" />
                 <span className="text-sm text-foreground">
-                  {uploading ? "Uploading securely…" : "Attach a deed, receipt or photo "}
-                  <span className="italic text-foreground/55">— optional</span>
+                  {uploading ? "Uploading securely…" : "Upload deed or proof of purchase"}
+                  <span className="italic text-foreground/55"> — required</span>
                 </span>
                 <input ref={fileInputRef} id="seller-attachments-ed" type="file" multiple
                   accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
