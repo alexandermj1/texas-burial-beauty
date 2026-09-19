@@ -376,6 +376,7 @@ Deno.serve(async (req) => {
     let rematchedCount = 0;
     for (const row of (existing ?? []) as any[]) {
       if (row.matched_submission_id) continue;
+      if (row.match_confidence === "excluded") continue;
       const outgoing = isInternalRematch(row.from_email ?? "");
       const matchEmail = outgoing ? parseFromHeader(row.to_email ?? "").email : (row.from_email ?? "");
       const matchName = outgoing ? parseFromHeader(row.to_email ?? "").name : row.from_name;
