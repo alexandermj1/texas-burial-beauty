@@ -120,9 +120,13 @@ Deno.serve(async (req) => {
       const email = String(sub.email ?? "").trim().toLowerCase();
       if (!email.includes("@")) continue;
       const quoteSentAt = String(sub.quote_sent_at);
-      const expiresAt = sub.quote_expires_at ? String(sub.quote_expires_at) : new Date(new Date(quoteSentAt).getTime() + QUOTE_VALID_DAYS * 86_400_000).toISOString();
-      // Once the quote has lapsed, the reminder window has passed — stop.
-      if (new Date(expiresAt).getTime() <= nowMs) { results.push({ id: sub.id, status: "skipped", reason: "quote-expired" }); continue; }
+      // Older sales prices have no stored expiry, and some stored dates have already
+      // lapsed. Those people still deserve the reminder, so we give them a fresh
+      // three-day window from today and save it back so the record stays truthful.
+      const storedExpiry = sub.quote_expires_at ? String(sub.quote_expires_at) : null;
+      const storedIsLive = !!storedExpiry && new Date(storedExpiry).getTime() > nowMs;
+      const expiresAt = storedIsLive ? (storedExpiry as string) : new Date(nowMs + 3 * 86_400_000).toISOString();
+      const needsExpiryWriteback = !storedIsLive;
 
       // One reminder per quote: the sent timestamp is the idempotency anchor,
       // so a revised quote (new quote_sent_at) may be reminded once again.
