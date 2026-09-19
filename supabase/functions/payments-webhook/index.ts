@@ -187,17 +187,10 @@ async function runAutopilot(submissionId: string, step: string) {
 async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: string) {
   const tier = tx.metadata?.listing_tier || "pro";
   if (tx.submission_id) {
-    const { data: sub } = await db().from("contact_submissions")
-      .select("quote_amount, accepted_quote_amount").eq("id", tx.submission_id).maybeSingle();
-    const accepted = Number((sub as any)?.accepted_quote_amount ?? (sub as any)?.quote_amount) || 0;
     await db().from("contact_submissions").update({
       listing_tier: tier,
       listing_paid_at: new Date().toISOString(),
       payment_received_at: new Date().toISOString(),
-      // Paying the listing fee implies the seller accepted our quote.
-      quote_response: "accepted",
-      quote_responded_at: new Date().toISOString(),
-      ...(accepted > 0 ? { accepted_quote_amount: accepted } : {}),
     }).eq("id", tx.submission_id);
   }
   const firstName = (tx.recipient_name || "").split(" ")[0] || "there";

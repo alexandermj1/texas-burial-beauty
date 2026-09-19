@@ -9,8 +9,8 @@
 - [x] Build and verify the new two-column seller record summary
 
 ## Seller record cleanup
-- [ ] Consolidate cemetery, document insights, deed preview, and reply controls in the seller summary
-- [ ] Correct seller plot image and per-plot pricing displays
-- [ ] Restrict Accepted to explicit email acceptance or a manual free-option move
-- [ ] Make long email chains compact, modern, and easy to navigate
+- [x] Consolidate cemetery, document insights, deed preview, and reply controls in the seller summary
+- [x] Correct seller plot image and per-plot pricing displays
+- [x] Restrict Accepted to explicit email acceptance or a manual free-option move
+- [x] Make long email chains compact, modern, and easy to navigate
 - [ ] Correct Robert's inaccurate accepted state and verify the seller record

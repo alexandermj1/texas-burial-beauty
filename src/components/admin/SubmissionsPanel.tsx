@@ -1622,7 +1622,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {kind === "buyer" && <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <img
-                  src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)}
+                  src={getPlotImage(selected.property_type || "", Number((selected as any).plot_count ?? selected.spaces) || 1)}
                   alt=""
                   className="w-14 h-14 rounded-xl object-cover bg-muted/40 shrink-0"
                 />
