@@ -565,6 +565,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const now = Date.now();
       const subById = new Map(texasSubs.map(s => [s.id, s as any]));
       const nextAcceptSuggest: Record<string, { tier: "starter" | "pro" | "featured" | null; snippet: string; at: string }> = {};
+      const confirmedAcceptances: Array<{ id: string; at: string; amount: number | null }> = [];
       for (const [sid, info] of latestPerSub.entries()) {
         if (!info.outgoing) {
           nextAwaiting[sid] = info.received_at;
@@ -573,7 +574,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           const sub = subById.get(sid);
           if (sub?.quote_sent_at && sub?.quote_response !== "accepted") {
             const hit = detectAcceptance(info.body);
-            if (hit) nextAcceptSuggest[sid] = { tier: hit.tier, snippet: hit.snippet, at: info.received_at };
+            if (hit) {
+              nextAcceptSuggest[sid] = { tier: hit.tier, snippet: hit.snippet, at: info.received_at };
+              confirmedAcceptances.push({ id: sid, at: info.received_at, amount: Number(sub.quote_amount) || null });
+            }
           }
         } else {
           // We sent the last message — check if it contained a follow-up promise
@@ -630,6 +634,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       setAwaitingMap(nextAwaiting);
       setFollowupMap(nextFollowup);
       setAcceptSuggestMap(nextAcceptSuggest);
+      if (confirmedAcceptances.length > 0) {
+        await Promise.all(confirmedAcceptances.map(({ id, at, amount }) =>
+          supabase.from("contact_submissions" as any).update({
+            quote_response: "accepted",
+            quote_responded_at: at,
+            accepted_quote_amount: amount,
+            acceptance_channel: "email_reply",
+          } as any).eq("id", id)
+        ));
+        onRefresh?.();
+      }
     };
     recompute();
     // Debounce realtime bursts — the inbox sync writes many rows at once and
@@ -1765,7 +1780,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     );
                   })()}
 
-                  {/* Which listing option did they pick? — manual selector */}
+                  {/* Listing choice is independent from quote acceptance. */}
                   {(() => {
                     const current = String((selected as any).listing_tier || "").toLowerCase();
                     const tiers: { key: string; label: string }[] = [
@@ -1787,34 +1802,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                   : {
                                       listing_tier: t.key,
                                       listing_option: t.key,
-                                      // Choosing a listing option means they accepted the quote
-                                      quote_response: "accepted",
-                                      quote_responded_at: (selected as any).quote_responded_at || new Date().toISOString(),
-                                      quote_sent_at: (selected as any).quote_sent_at || new Date().toISOString(),
-                                      accepted_quote_amount:
-                                        (selected as any).accepted_quote_amount ?? (selected as any).quote_amount ?? null,
                                     }) as any);
                                 if (active) return;
-                                // Accepted -> the listing agreement goes out automatically.
-                                try {
-                                  const { data, error } = await supabase.functions.invoke("autopilot", {
-                                    body: { submission_id: selected.id, step: "listing_agreement" },
-                                  });
-                                  const status = (data as any)?.status;
-                                  if (error) throw error;
-                                  toast({
-                                    title: status === "sent" ? "Listing agreement sent" : "Listing agreement not sent",
-                                    description: status === "sent"
-                                      ? "The seller has been emailed their agreement to sign."
-                                      : `Skipped — ${(data as any)?.reason ?? "already handled"}.`,
-                                  });
-                                } catch (e: any) {
-                                  toast({
-                                    title: "Couldn't send the listing agreement",
-                                    description: String(e?.message ?? e),
-                                    variant: "destructive",
-                                  });
-                                }
+                                toast({ title: "Listing option saved", description: "This does not mark the quote accepted." });
                               }}
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                                 active
@@ -1900,6 +1890,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
                         quote_response: at("accepted") ? "accepted" : (x.quote_response === "accepted" ? null : x.quote_response),
                         quote_responded_at: at("accepted") ? (x.quote_responded_at || now) : (x.quote_response === "accepted" ? null : x.quote_responded_at),
+                        acceptance_channel: at("accepted") ? "manual_starter" : null,
+                        listing_tier: at("accepted") ? "starter" : x.listing_tier,
+                        listing_option: at("accepted") ? "starter" : x.listing_option,
+                        accepted_quote_amount: at("accepted") ? (x.accepted_quote_amount ?? x.quote_amount ?? null) : x.accepted_quote_amount,
                         documents_requested_at: at("docs_out") ? (x.documents_requested_at || now) : null,
                         documents_completed_at: at("complete") ? (x.documents_completed_at || now) : null,
                       };
@@ -2247,7 +2241,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
             {/* Reply state + custom tag — Texas only */}
-            {subRegion(selected) === "texas" && (() => {
+            {subRegion(selected) === "texas" && kind === "buyer" && (() => {
               const isAwaiting = !!awaitingMap[selected.id];
               const currentTag = ((selected as any).custom_tag || "").trim();
               return (
@@ -2358,6 +2352,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     }),
                   ];
               return (
+                <div id={`email-thread-${selected.id}`} className="scroll-mt-4">
                 <EmailThread
                   submissionId={selected.id}
                   customerEmail={selected.email}
@@ -2385,6 +2380,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   } : null}
                   onNewEmailSent={() => {}}
                 />
+                </div>
               );
             })()}
     </>);
@@ -2441,7 +2437,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Texas submissions: show what the customer wrote + our matched
                 cemetery profile (transfer fee, contact, description, section pricing).
                 Tinted by submission volume, matching the Cemeteries directory panel. */}
-            {selected.cemetery && subRegion(selected) === "texas" && (() => {
+            {selected.cemetery && subRegion(selected) === "texas" && kind === "buyer" && (() => {
               const selCanon = _canon(selected.cemetery || "");
               const profile = selCanon ? texasCemProfiles.get(selCanon) : null;
               const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
@@ -2705,7 +2701,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
 
             {/* Buyer property details. Seller details and deed-name comparison live in the overview above. */}
-            {(() => {
+            {kind === "buyer" && (() => {
               if (kind !== "buyer") return null;
               const s: any = selected;
               const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
@@ -2972,7 +2968,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {(() => {
                   if (kind === "buyer") return null;
                   const ft = ftState(selected);
-                  if (!ft.sentAt && !ft.doneAt) return null;
+                  if ((selected as any).quote_response !== "accepted" || (!ft.sentAt && !ft.doneAt)) return null;
                   const done = !!ft.doneAt;
                   return (
                     <div className={`mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs ${
