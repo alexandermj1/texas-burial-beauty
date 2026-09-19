@@ -364,7 +364,7 @@ Deno.serve(async (req) => {
 
     const { data: existing } = await admin
       .from("email_messages")
-      .select("id, gmail_message_id, from_email, from_name, to_email, matched_submission_id")
+      .select("id, gmail_message_id, from_email, from_name, to_email, matched_submission_id, match_confidence")
       .in("gmail_message_id", ids.length ? ids : ["__none__"]);
 
     const existingIds = new Set((existing ?? []).map((r: any) => r.gmail_message_id));
