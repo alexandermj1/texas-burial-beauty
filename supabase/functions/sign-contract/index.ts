@@ -989,9 +989,6 @@ Deno.serve(async (req) => {
     const patch: Record<string, unknown> = {};
     if (c.kind === 'listing_agreement') {
       patch.la_signed_at = nowIso;
-      // Signing the listing agreement implies quote acceptance.
-      patch.quote_response = 'accepted';
-      patch.quote_responded_at = nowIso;
     }
     if (c.kind === 'poa') patch.poa_signed_at = nowIso;
     await svc.from('contact_submissions').update(patch).eq('id', c.submission_id);

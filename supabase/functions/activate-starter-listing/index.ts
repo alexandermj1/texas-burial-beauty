@@ -99,18 +99,12 @@ Deno.serve(async (req) => {
         paid_at: nowIso,
       }).eq("id", transactionId);
 
-      // Mark the submission as an accepted Starter listing so it shows up
-      // correctly in the admin panel (same fields the manual tier picker
-      // sets in SubmissionsPanel.tsx).
-      const acceptedPrice = Number(submission?.quote_amount) || 0;
+      // Record the customer's free listing choice. Quote acceptance is handled
+      // only from an explicit email reply or a deliberate staff pipeline move.
       await supabase.from("contact_submissions").update({
         listing_tier: "starter",
         listing_paid_at: nowIso,
         payment_received_at: nowIso,
-        quote_response: "accepted",
-        quote_responded_at: nowIso,
-        accepted_quote_amount: acceptedPrice > 0 ? acceptedPrice : null,
-        acceptance_channel: "starter_button",
       } as any).eq("id", tx.submission_id);
 
       // Confirmation email to the seller.

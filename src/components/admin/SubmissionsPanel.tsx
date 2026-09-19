@@ -18,6 +18,7 @@ import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryInfoCard from "./CemeteryInfoCard";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import ReassignCemeteryDialog from "./ReassignCemeteryDialog";
+import DeedNameChecker from "./DeedNameChecker";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
@@ -169,7 +170,8 @@ const TIER_PRICE: Record<"starter" | "pro" | "featured", number> = { starter: 0,
 const TIER_LABEL: Record<"starter" | "pro" | "featured", string> = { starter: "Starter", pro: "Pro", featured: "Featured" };
 
 // Detect an acceptance-of-quote reply in inbound email body. Returns tier + snippet.
-const ACCEPT_RX = /\b(i\s+accept|we\s+accept|accepted|i['’]?ll\s+(take|go\s+with|do)|let['’]?s\s+(go|do|proceed)|sounds\s+good|sign\s+me\s+up|let['’]?s\s+move\s+forward|please\s+proceed|go\s+ahead|yes[\s,\.!]+(let|please|proceed)|i\s+want\s+to\s+list|list\s+(it|my)|move\s+forward\s+with|proceed\s+with)\b/i;
+const ACCEPT_RX = /\b(i\s+accept(?:\s+(?:the|your)\s+(?:offer|quote|price))?|we\s+accept(?:\s+(?:the|your)\s+(?:offer|quote|price))?|please\s+proceed\s+with\s+(?:the|your)\s+(?:offer|quote)|i\s+accept\s+the\s+minimum\s+authorized\s+sales\s+price)\b/i;
+const ACCEPT_NEGATION_RX = /\b(do\s+not|don['’]?t|not|cannot|can['’]?t|won['’]?t|haven['’]?t|have\s+not|waiting|think(?:ing)?|consider(?:ing)?|if)\b[^.!?]{0,60}\baccept\b|\baccept\b[^.!?]{0,60}\b(if|but|however|after|once|waiting)\b/i;
 const TIER_RX: Array<[RegExp, "starter" | "pro" | "featured"]> = [
   [/\bstarter\b/i, "starter"],
   [/\bpro\b/i, "pro"],
@@ -177,6 +179,7 @@ const TIER_RX: Array<[RegExp, "starter" | "pro" | "featured"]> = [
 ];
 const detectAcceptance = (body: string): { tier: "starter" | "pro" | "featured" | null; snippet: string } | null => {
   if (!body) return null;
+  if (ACCEPT_NEGATION_RX.test(body)) return null;
   const m = body.match(ACCEPT_RX);
   if (!m) return null;
   let tier: "starter" | "pro" | "featured" | null = null;
@@ -562,6 +565,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const now = Date.now();
       const subById = new Map(texasSubs.map(s => [s.id, s as any]));
       const nextAcceptSuggest: Record<string, { tier: "starter" | "pro" | "featured" | null; snippet: string; at: string }> = {};
+      const confirmedAcceptances: Array<{ id: string; at: string; amount: number | null }> = [];
       for (const [sid, info] of latestPerSub.entries()) {
         if (!info.outgoing) {
           nextAwaiting[sid] = info.received_at;
@@ -570,7 +574,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           const sub = subById.get(sid);
           if (sub?.quote_sent_at && sub?.quote_response !== "accepted") {
             const hit = detectAcceptance(info.body);
-            if (hit) nextAcceptSuggest[sid] = { tier: hit.tier, snippet: hit.snippet, at: info.received_at };
+            if (hit) {
+              nextAcceptSuggest[sid] = { tier: hit.tier, snippet: hit.snippet, at: info.received_at };
+              confirmedAcceptances.push({ id: sid, at: info.received_at, amount: Number(sub.quote_amount) || null });
+            }
           }
         } else {
           // We sent the last message — check if it contained a follow-up promise
@@ -627,6 +634,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       setAwaitingMap(nextAwaiting);
       setFollowupMap(nextFollowup);
       setAcceptSuggestMap(nextAcceptSuggest);
+      if (confirmedAcceptances.length > 0) {
+        await Promise.all(confirmedAcceptances.map(async ({ id, at, amount }) => {
+          await supabase.from("contact_submissions" as any).update({
+            quote_response: "accepted",
+            quote_responded_at: at,
+            accepted_quote_amount: amount,
+            acceptance_channel: "email_reply",
+          } as any).eq("id", id);
+          await supabase.functions.invoke("autopilot", { body: { submission_id: id, step: "listing_agreement" } });
+        }));
+        onRefresh?.();
+      }
     };
     recompute();
     // Debounce realtime bursts — the inbox sync writes many rows at once and
@@ -763,16 +782,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // under "Awaiting quote" and "Accepted" at the same time.
   const stageStep = (s: Submission): number => {
     const a = s as any;
-    if (a.documents_completed_at) return 9;
-    if (a.documents_requested_at) {
+    const accepted = a.quote_response === "accepted";
+    if (accepted && a.documents_completed_at) return 9;
+    if (accepted && a.documents_requested_at) {
       const e = (s.email || "").trim().toLowerCase();
       const ans = (a.ownership_answers ?? {}) as Record<string, any>;
       if ((e && returnedDocsEmails.has(e)) || ans.docsReturnedAt) return 8;
       return 7;
     }
-    if (ftState(s).doneAt) return 6;
-    if (ftState(s).sentAt) return 5;
-    if (a.quote_response === "accepted") return 4;
+    if (accepted && ftState(s).doneAt) return 6;
+    if (accepted && ftState(s).sentAt) return 5;
+    if (accepted) return 4;
     if (a.quote_sent_at) return 3;
     if (hasDocs(s)) return 2;
     return 1;
@@ -1216,6 +1236,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
   const [aiFactsOpen, setAiFactsOpen] = useState(false);
+  const [deedPreviewOpen, setDeedPreviewOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1453,6 +1474,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         quote_sent_at: step >= 3 ? (seller.quote_sent_at || now) : null,
         quote_response: step >= 4 ? "accepted" : (seller.quote_response === "accepted" ? null : seller.quote_response),
         quote_responded_at: step >= 4 ? (seller.quote_responded_at || now) : (seller.quote_response === "accepted" ? null : seller.quote_responded_at),
+        acceptance_channel: step >= 4 ? "manual_starter" : null,
+        listing_tier: step >= 4 ? "starter" : seller.listing_tier,
+        listing_option: step >= 4 ? "starter" : seller.listing_option,
+        accepted_quote_amount: step >= 4 ? (seller.accepted_quote_amount ?? seller.quote_amount ?? null) : seller.accepted_quote_amount,
         documents_requested_at: step >= 7 ? (seller.documents_requested_at || now) : null,
         documents_completed_at: step >= 9 ? (seller.documents_completed_at || now) : null,
       } as any);
@@ -1462,19 +1487,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const current = String(seller.listing_tier || "").toLowerCase();
       const active = current === tier || (tier === "featured" && current === "custom_plus");
       await onUpdate(selected.id, (active ? { listing_tier: null, listing_option: null } : {
-        listing_tier: tier, listing_option: tier, quote_response: "accepted",
-        quote_responded_at: seller.quote_responded_at || new Date().toISOString(),
-        quote_sent_at: seller.quote_sent_at || new Date().toISOString(),
-        accepted_quote_amount: seller.accepted_quote_amount ?? seller.quote_amount ?? null,
+        listing_tier: tier, listing_option: tier,
       }) as any);
-      if (active) return;
-      try {
-        const { data, error } = await supabase.functions.invoke("autopilot", { body: { submission_id: selected.id, step: "listing_agreement" } });
-        if (error) throw error;
-        toast({ title: (data as any)?.status === "sent" ? "Listing agreement sent" : "Listing agreement not sent", description: (data as any)?.status === "sent" ? "The seller has been emailed their agreement to sign." : `Skipped — ${(data as any)?.reason ?? "already handled"}.` });
-      } catch (e: any) {
-        toast({ title: "Couldn't send the listing agreement", description: String(e?.message ?? e), variant: "destructive" });
-      }
+      if (!active) toast({ title: "Listing option saved", description: "This does not mark the quote accepted." });
     };
     const headBlock = (<>
             {kind !== "buyer" && (() => {
@@ -1484,9 +1499,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               };
               const paid = paidMap[selected.id];
               const cemeteryProfile = cemeteryProfileFor(selected.cemetery);
+              const plotCount = Math.max(1, Number(seller.plot_count ?? selected.spaces) || 1);
               const retail = Number(seller.cemetery_retail) || 0;
-              const quotePerPlot = Number(seller.accepted_quote_amount ?? seller.quote_amount) || 0;
-              const resalePerPlot = Number(seller.list_price) || (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
+              const quoteTotal = Number(seller.accepted_quote_amount ?? seller.quote_amount) || 0;
+              const resaleTotal = Number(seller.list_price) || 0;
+              const quotePerPlot = quoteTotal > 0 ? quoteTotal / plotCount : 0;
+              const resalePerPlot = resaleTotal > 0 ? resaleTotal / plotCount : (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
               const deedLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
               const sellingLocation = seller.plot_description || deedLocation;
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
@@ -1508,11 +1526,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <section aria-label="Seller overview" className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                   <div className="flex items-start justify-between gap-4 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)} alt="" className="w-12 h-12 rounded-md object-cover bg-muted shrink-0" />
+                      <img src={getPlotImage(selected.property_type || "", plotCount)} alt="" className="w-12 h-12 rounded-md object-cover bg-muted shrink-0" />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap"><CustomerKindBadge kind="seller" /><BayerBadge inquiryChannel={selected.inquiry_channel} /></div>
                         <h3 className="font-display text-xl text-foreground truncate">{selected.name || "Anonymous"}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{selected.cemetery || "Cemetery not recorded"}</p>
+                        <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
+                          <span className="truncate text-muted-foreground">{selected.cemetery || "Cemetery not recorded"}</span>
+                          {selected.cemetery && subRegion(selected) === "texas" && <>
+                            <button type="button" onClick={() => setExpandedCemetery(v => !v)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Info</button>
+                            <button type="button" onClick={() => { const canon = _canon(selected.cemetery || ""); setRegionFilter("texas"); setCemeteryCanon(canon); setCemeteryLabel(selected.cemetery); setSelectedId(null); }} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Search</button>
+                            <button type="button" onClick={() => setEditCemeteryInline(v => !v)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Edit</button>
+                            <button type="button" onClick={() => setReassignCemeteryOpen(true)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Re-match</button>
+                          </>}
+                        </div>
                       </div>
                     </div>
                     {selected.source === "manual_phone" && seller.handled_by_name && <span className="hidden sm:inline text-[10px] text-muted-foreground">Added by {cleanDisplayName(seller.handled_by_name)}</span>}
@@ -1537,7 +1563,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <div className="mt-5 pt-4 border-t border-border">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-2">Last communication</p>
                         {lastContactAt ? <>
-                          <p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>
+                          <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>{!lastContactFromTCB && <button type="button" onClick={() => document.getElementById(`email-thread-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="rounded-md bg-primary px-2 py-1 text-[10px] font-semibold text-primary-foreground">Reply</button>}</div>
                           <p className="text-xs text-muted-foreground mt-0.5">{formatDate(lastContactAt)}</p>
                           <p className="text-xs font-medium text-accent mt-1">{elapsed(lastContactAt)}</p>
                         </> : <p className="text-sm text-muted-foreground">No email history</p>}
@@ -1562,7 +1588,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <Fact label="Contact email">{selected.email ? <a href={buildGmailComposeUrl({to:selected.email})} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{selected.email}</a> : "Not provided"}</Fact>
                           <Fact label="Contact tel">{selected.phone ? <a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`} className="text-primary hover:underline">{selected.phone}</a> : "Not provided"}</Fact>
                           <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>
-                           <Fact label="Form names match deed"><span className={`font-semibold ${deedNameMatch.className}`}>{deedNameMatch.label}</span>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>
+                           <Fact label="Form names match deed"><button type="button" onClick={() => setDeedPreviewOpen(v => !v)} className={`inline-flex items-center gap-1 font-semibold hover:underline ${deedNameMatch.className}`}><FileCheck className="h-3.5 w-3.5" />{deedNameMatch.label}</button>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>
                           <Fact label="Owner status">{seller.deed_owners_status || "Not provided"}</Fact>
                           <Fact label="Contact relationship to owners">{seller.relationship_to_owner || "Not provided"}</Fact>
                           <Fact label="Added information from form" wide>{info}</Fact>
@@ -1570,13 +1596,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                       <div className="border-t border-border pt-4">
                         <p className="font-display text-base text-foreground mb-3">Pricing & listing</p>
-                        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
                           {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee",v:fmtMoney(cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount)},{l:"Our quote per plot",v:fmtMoney(quotePerPlot)},{l:"Our resale price per plot",v:fmtMoney(resalePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
                         </div>
+                         {plotCount > 1 && (quoteTotal > 0 || resaleTotal > 0) && <p className="mb-3 text-xs text-muted-foreground">All {plotCount} plots: quote {fmtMoney(quoteTotal)} · resale {fmtMoney(resaleTotal || resalePerPlot * plotCount)}</p>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
                         </div>
+                       {(deedPreviewOpen || aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="border-t border-border pt-4 space-y-3">
+                         <div className="flex flex-wrap items-center gap-2">
+                           {aiFacts.length > 0 && <button type="button" onClick={() => setAiFactsOpen(v => !v)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-muted"><Sparkles className="h-3.5 w-3.5" /> Document insights ({aiFacts.length})</button>}
+                         </div>
+                         {deedPreviewOpen && <DeedNameChecker submissionId={selected.id} onUseNames={(names) => onUpdate(selected.id, { deed_owner_names: names.join(", ") } as any)} />}
+                         {aiFactsOpen && <div className="divide-y divide-border rounded-md border border-border bg-background/60">{aiFacts.map((fact, index) => <div key={`${fact.label}-${index}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[150px_1fr_auto]"><span className="text-muted-foreground">{fact.label}</span><span className="text-foreground">{fact.value}</span><span className="text-muted-foreground">{fact.source}</span></div>)}</div>}
+                         {(expandedCemetery || editCemeteryInline) && selected.cemetery && <CemeteryInfoCard key={`summary-${selected.id}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} />}
+                       </div>}
                       </div>
                     </div>
                   </div>
@@ -1587,7 +1622,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {kind === "buyer" && <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <img
-                  src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)}
+                  src={getPlotImage(selected.property_type || "", Number((selected as any).plot_count ?? selected.spaces) || 1)}
                   alt=""
                   className="w-14 h-14 rounded-xl object-cover bg-muted/40 shrink-0"
                 />
@@ -1746,7 +1781,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     );
                   })()}
 
-                  {/* Which listing option did they pick? — manual selector */}
+                  {/* Listing choice is independent from quote acceptance. */}
                   {(() => {
                     const current = String((selected as any).listing_tier || "").toLowerCase();
                     const tiers: { key: string; label: string }[] = [
@@ -1768,34 +1803,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                   : {
                                       listing_tier: t.key,
                                       listing_option: t.key,
-                                      // Choosing a listing option means they accepted the quote
-                                      quote_response: "accepted",
-                                      quote_responded_at: (selected as any).quote_responded_at || new Date().toISOString(),
-                                      quote_sent_at: (selected as any).quote_sent_at || new Date().toISOString(),
-                                      accepted_quote_amount:
-                                        (selected as any).accepted_quote_amount ?? (selected as any).quote_amount ?? null,
                                     }) as any);
                                 if (active) return;
-                                // Accepted -> the listing agreement goes out automatically.
-                                try {
-                                  const { data, error } = await supabase.functions.invoke("autopilot", {
-                                    body: { submission_id: selected.id, step: "listing_agreement" },
-                                  });
-                                  const status = (data as any)?.status;
-                                  if (error) throw error;
-                                  toast({
-                                    title: status === "sent" ? "Listing agreement sent" : "Listing agreement not sent",
-                                    description: status === "sent"
-                                      ? "The seller has been emailed their agreement to sign."
-                                      : `Skipped — ${(data as any)?.reason ?? "already handled"}.`,
-                                  });
-                                } catch (e: any) {
-                                  toast({
-                                    title: "Couldn't send the listing agreement",
-                                    description: String(e?.message ?? e),
-                                    variant: "destructive",
-                                  });
-                                }
+                                toast({ title: "Listing option saved", description: "This does not mark the quote accepted." });
                               }}
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                                 active
@@ -1859,13 +1869,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
                     ];
                     const retE = (selected.email || "").trim().toLowerCase();
+                    const accepted = x.quote_response === "accepted";
                     const current =
-                      x.documents_completed_at ? "complete"
-                      : x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
-                      : x.documents_requested_at ? "docs_out"
-                      : ans.sellerConfirmedAt ? "tree_done"
-                      : ans.questionsSentAt ? "tree_sent"
-                      : x.quote_response === "accepted" ? "accepted"
+                      accepted && x.documents_completed_at ? "complete"
+                      : accepted && x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
+                      : accepted && x.documents_requested_at ? "docs_out"
+                      : accepted && ans.sellerConfirmedAt ? "tree_done"
+                      : accepted && ans.questionsSentAt ? "tree_sent"
+                      : accepted ? "accepted"
                       : x.quote_sent_at ? "quoted"
                       : "awaiting_quote";
 
@@ -1881,6 +1892,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
                         quote_response: at("accepted") ? "accepted" : (x.quote_response === "accepted" ? null : x.quote_response),
                         quote_responded_at: at("accepted") ? (x.quote_responded_at || now) : (x.quote_response === "accepted" ? null : x.quote_responded_at),
+                        acceptance_channel: at("accepted") ? "manual_starter" : null,
+                        listing_tier: at("accepted") ? "starter" : x.listing_tier,
+                        listing_option: at("accepted") ? "starter" : x.listing_option,
+                        accepted_quote_amount: at("accepted") ? (x.accepted_quote_amount ?? x.quote_amount ?? null) : x.accepted_quote_amount,
                         documents_requested_at: at("docs_out") ? (x.documents_requested_at || now) : null,
                         documents_completed_at: at("complete") ? (x.documents_completed_at || now) : null,
                       };
@@ -2228,7 +2243,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
             {/* Reply state + custom tag — Texas only */}
-            {subRegion(selected) === "texas" && (() => {
+            {subRegion(selected) === "texas" && kind === "buyer" && (() => {
               const isAwaiting = !!awaitingMap[selected.id];
               const currentTag = ((selected as any).custom_tag || "").trim();
               return (
@@ -2339,6 +2354,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     }),
                   ];
               return (
+                <div id={`email-thread-${selected.id}`} className="scroll-mt-4">
                 <EmailThread
                   submissionId={selected.id}
                   customerEmail={selected.email}
@@ -2366,6 +2382,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   } : null}
                   onNewEmailSent={() => {}}
                 />
+                </div>
               );
             })()}
     </>);
@@ -2422,7 +2439,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {/* Texas submissions: show what the customer wrote + our matched
                 cemetery profile (transfer fee, contact, description, section pricing).
                 Tinted by submission volume, matching the Cemeteries directory panel. */}
-            {selected.cemetery && subRegion(selected) === "texas" && (() => {
+            {selected.cemetery && subRegion(selected) === "texas" && kind === "buyer" && (() => {
               const selCanon = _canon(selected.cemetery || "");
               const profile = selCanon ? texasCemProfiles.get(selCanon) : null;
               const subCount = selCanon ? (texasCemeteryCounts.get(selCanon) || 0) : 0;
@@ -2686,7 +2703,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
 
             {/* Buyer property details. Seller details and deed-name comparison live in the overview above. */}
-            {(() => {
+            {kind === "buyer" && (() => {
               if (kind !== "buyer") return null;
               const s: any = selected;
               const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
@@ -2754,7 +2771,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
 
             {/* AI-extracted facts from uploaded documents (AI-only) — collapsed by default. */}
-            {(() => {
+            {kind === "buyer" && (() => {
               type Row = { label: string; value: string; source: string };
               const rows: Row[] = [];
               const seenKey = new Set<string>();
@@ -2953,7 +2970,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {(() => {
                   if (kind === "buyer") return null;
                   const ft = ftState(selected);
-                  if (!ft.sentAt && !ft.doneAt) return null;
+                  if ((selected as any).quote_response !== "accepted" || (!ft.sentAt && !ft.doneAt)) return null;
                   const done = !!ft.doneAt;
                   return (
                     <div className={`mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs ${
@@ -3363,17 +3380,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const ft = ftState(sg);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
-              if ((sg as any).documents_requested_at) {
+              const accepted = (sg as any).quote_response === "accepted";
+              if (accepted && (sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-primary-foreground border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
+              if (accepted && (sg as any).documents_requested_at) {
                 const retE = (sg.email || "").trim().toLowerCase();
                 const retAns = ((sg as any).ownership_answers ?? {}) as Record<string, any>;
                 if ((retE && returnedDocsEmails.has(retE)) || retAns.docsReturnedAt)
                   return { step: 8, label: "Docs returned", accent: "cyan", cls: "bg-cyan-600 text-white border-cyan-700", bar: "bg-cyan-500", tint: "bg-cyan-500/[0.07] hover:bg-cyan-500/[0.12]", icon: FileCheck, at: (sg as any).documents_requested_at };
                 return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
               }
-              if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
-              if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
-              if ((sg as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
+              if (accepted && ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-primary-foreground border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
+              if (accepted && ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-primary-foreground border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
+              if (accepted) return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-primary-foreground border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
               if ((sg as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (sg as any).quote_sent_at };
               if (hasDocs(sg)) return { step: 2, label: "Attachments", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
               return { step: 1, label: "No attachments", accent: "slate", cls: "bg-muted text-muted-foreground border-border", bar: "bg-muted-foreground/40", tint: "bg-card hover:bg-muted/40", icon: Inbox, at: null as string | null };
@@ -3400,8 +3418,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             if ((sg as any).quote_sent_at) {
               const accepted = (sg as any).quote_response === "accepted";
-              const quotedPer = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
-              const rowSpaces = Math.max(1, Number((s as any).spaces) || 1);
+              const quoteTotal = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
+              const rowSpaces = Math.max(1, Number((s as any).plot_count ?? (s as any).spaces) || 1);
+              const quotedPer = quoteTotal / rowSpaces;
               const rowRetailPer = Number((sg as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
               const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
               const rowProp = [
@@ -3524,7 +3543,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </span>
                   {isActive && <span className="absolute inset-y-0 left-0 w-[2px] bg-primary" />}
                   <img
-                    src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                    src={getPlotImage(s.property_type || "", Number((s as any).plot_count ?? s.spaces) || 1)}
                     alt=""
                     className="w-11 h-11 rounded-xl object-cover bg-muted/40 shrink-0 mt-0.5 ring-1 ring-border/60"
                   />
@@ -3767,7 +3786,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${isExpanded ? "bg-muted/40" : "hover:bg-muted/40"}`}
                           >
                             <img
-                              src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                              src={getPlotImage(s.property_type || "", Number((s as any).plot_count ?? s.spaces) || 1)}
                               alt=""
                               className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
                             />

@@ -3,7 +3,7 @@
 // appearing in from/to fields so threads still show even if the linker missed it.
 // Replies are composed and sent inline (no Gmail tab) via the gmail-action edge fn.
 import { useEffect, useMemo, useState } from "react";
-import { Mail, Sparkles, Reply, PenLine } from "lucide-react";
+import { ChevronDown, ChevronUp, Mail, Sparkles, Reply, PenLine } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { isOutgoing, classifyEmailKind, extractQuoteAmount, EMAIL_KIND_META, EMAIL_KIND_RING } from "@/lib/emailReply";
@@ -63,6 +63,8 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [composeNew, setComposeNew] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
   // When the listing agreement for this submission is signed, the LA email tag
   // flips to a green "Listing agreement signed" chip.
   const [laSignedAt, setLaSignedAt] = useState<string | null>(null);
@@ -125,10 +127,13 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
   }, [emails]);
 
   const replyTarget = customerEmail || "";
+  const newestFirst = [...emails].reverse();
+  const visibleEmails = showAll ? newestFirst : newestFirst.slice(0, 4);
+  const hiddenCount = Math.max(0, emails.length - visibleEmails.length);
 
   return (
-    <section className="bg-muted/30 rounded-xl border border-border/50 p-4">
-      <div className="flex items-center gap-2 mb-3">
+    <section className="overflow-hidden rounded-lg border border-border bg-card">
+      <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-card/95 px-4 py-3 backdrop-blur">
         <Mail className="w-4 h-4 text-primary" />
         <h4 className="text-sm font-medium text-foreground">
           Email thread <span className="text-muted-foreground font-normal">({emails.length})</span>
@@ -143,7 +148,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
           <button
             type="button"
             onClick={() => { setComposeNew(true); setReplyingTo(null); }}
-            className="ml-auto inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-foreground text-background hover:opacity-90"
+            className="ml-auto inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-90"
             title="Start a new email to this customer"
           >
             <PenLine className="w-2.5 h-2.5" /> New email
@@ -152,7 +157,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
       </div>
 
       {composeNew && replyTarget && (
-        <div className="mb-3">
+        <div className="border-b border-border bg-muted/20 p-3">
           <InlineEmailComposer
             to={replyTarget}
             defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
@@ -168,12 +173,31 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
       )}
 
       {loading ? (
-        <p className="text-xs text-muted-foreground">Loading messages…</p>
+        <p className="p-4 text-xs text-muted-foreground">Loading messages…</p>
       ) : emails.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No emails found for this customer yet.</p>
+        <p className="p-4 text-xs text-muted-foreground">No emails found for this customer yet.</p>
       ) : (
-        <ul className="space-y-2">
-          {[...emails].reverse().map((e) => {
+        <div>
+          {hiddenCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="flex w-full items-center justify-center gap-1.5 border-b border-border bg-muted/20 px-3 py-2 text-[11px] font-medium text-primary hover:bg-muted/40"
+            >
+              <ChevronDown className="h-3.5 w-3.5" /> Show {hiddenCount} earlier message{hiddenCount === 1 ? "" : "s"}
+            </button>
+          )}
+          {showAll && emails.length > 4 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(false)}
+              className="flex w-full items-center justify-center gap-1.5 border-b border-border bg-muted/20 px-3 py-2 text-[11px] font-medium text-primary hover:bg-muted/40"
+            >
+              <ChevronUp className="h-3.5 w-3.5" /> Show recent messages only
+            </button>
+          )}
+          <ul className="divide-y divide-border/60">
+          {visibleEmails.map((e) => {
             const kindOf = (m: EmailRow) =>
               isOutgoing(m.from_email)
                 ? classifyEmailKind(m.subject, `${m.body_html || ""} ${(m.body_text || "")} ${m.snippet || ""}`)
@@ -218,11 +242,12 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
+            const messageOpen = expandedMessage === e.id || isOpen;
             return (
               <li
                 key={e.id}
-                className={`rounded-lg border px-3 py-2 text-xs ${
-                  kind ? ringClass : outgoing ? "bg-primary/5 border-primary/20" : "bg-card border-border/50"
+                className={`px-4 py-3 text-xs transition-colors ${
+                  kind ? ringClass : outgoing ? "bg-primary/5" : "bg-card"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -263,15 +288,11 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                 </div>
                 <p className="font-medium text-foreground/90 truncate">{e.subject || "(no subject)"}</p>
 
-                {body && (
-                  <details className="mt-1 group">
-                    <summary className="list-none cursor-pointer text-muted-foreground hover:text-foreground">
-                      <span className="line-clamp-2 group-open:hidden whitespace-pre-wrap">{body}</span>
-                      <span className="hidden group-open:inline text-[10px] uppercase tracking-wide text-primary">Hide message</span>
-                    </summary>
-                    <pre className="mt-1.5 whitespace-pre-wrap font-sans text-foreground/90 bg-background/60 rounded p-2 border border-border/40 max-h-80 overflow-y-auto">{body}</pre>
-                  </details>
-                )}
+                {body && <button type="button" onClick={() => setExpandedMessage(messageOpen ? null : e.id)} className="mt-1 w-full text-left text-muted-foreground hover:text-foreground">
+                  {!messageOpen && <span className="line-clamp-2 whitespace-pre-wrap">{body}</span>}
+                  {messageOpen && <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-primary"><ChevronUp className="h-3 w-3" /> Collapse message</span>}
+                </button>}
+                {body && messageOpen && <pre className="mt-2 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-md border border-border/50 bg-background/70 p-3 font-sans leading-relaxed text-foreground/90">{body}</pre>}
                 {e.ai_summary && (
                   <p className="text-muted-foreground italic mt-1 flex items-start gap-1">
                     <Sparkles className="w-2.5 h-2.5 text-primary shrink-0 mt-0.5" />
@@ -297,7 +318,8 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
       )}
     </section>
   );
