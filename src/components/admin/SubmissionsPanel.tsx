@@ -1492,6 +1492,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
               const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
               const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
+              const deedOwnerFact = aiFacts.find(f => f.label === "Owner(s) on record") || aiFacts.find(f => f.label === "Purchaser");
+              const deedNameMatch = deedOwnerFact?.status === "match"
+                ? { label: "Matches", className: "text-emerald-700" }
+                : deedOwnerFact?.status === "differs"
+                  ? { label: "Does not match", className: "text-destructive" }
+                  : { label: "Not checked — no readable deed found", className: "text-muted-foreground" };
               const Fact = ({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) => (
                 <div className={`min-w-0 border-b border-border/50 pb-2 ${wide ? "sm:col-span-2" : ""}`}>
                   <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
@@ -1556,6 +1562,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <Fact label="Contact email">{selected.email ? <a href={buildGmailComposeUrl({to:selected.email})} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{selected.email}</a> : "Not provided"}</Fact>
                           <Fact label="Contact tel">{selected.phone ? <a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`} className="text-primary hover:underline">{selected.phone}</a> : "Not provided"}</Fact>
                           <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>
+                           <Fact label="Form names match deed"><span className={`font-semibold ${deedNameMatch.className}`}>{deedNameMatch.label}</span>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>
                           <Fact label="Owner status">{seller.deed_owners_status || "Not provided"}</Fact>
                           <Fact label="Contact relationship to owners">{seller.relationship_to_owner || "Not provided"}</Fact>
                           <Fact label="Added information from form" wide>{info}</Fact>
@@ -2678,10 +2685,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Property details grid — only customer-submitted values. The Deed owner(s) field
-                is special: it always shows the customer's answer alongside the AI-extracted owners
-                from the uploaded deed so the admin can compare both. */}
+            {/* Buyer property details. Seller details and deed-name comparison live in the overview above. */}
             {(() => {
+              if (kind !== "buyer") return null;
               const s: any = selected;
               const aiByLabel = new Map(aiFacts.map(f => [f.label, f]));
               const aiDeed = aiByLabel.get("Owner(s) on record") || aiByLabel.get("Purchaser");
@@ -2702,10 +2708,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { label: "Bayer entry #", value: s.bayer_entry_id || "" },
               ].filter(r => r.value && r.value.trim());
               const showDeedBox = customerDeed || aiDeed;
-              if (kind !== "buyer" && !showDeedBox) return null;
               return (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                  {kind === "buyer" && rows.map(({ label, value }) => (
+                  {rows.map(({ label, value }) => (
                     <Field key={label} label={label} value={value} />
                   ))}
                   {showDeedBox && (() => {
