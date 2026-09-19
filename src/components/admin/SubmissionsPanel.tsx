@@ -18,6 +18,7 @@ import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryInfoCard from "./CemeteryInfoCard";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import ReassignCemeteryDialog from "./ReassignCemeteryDialog";
+import DeedNameChecker from "./DeedNameChecker";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
@@ -169,7 +170,8 @@ const TIER_PRICE: Record<"starter" | "pro" | "featured", number> = { starter: 0,
 const TIER_LABEL: Record<"starter" | "pro" | "featured", string> = { starter: "Starter", pro: "Pro", featured: "Featured" };
 
 // Detect an acceptance-of-quote reply in inbound email body. Returns tier + snippet.
-const ACCEPT_RX = /\b(i\s+accept|we\s+accept|accepted|i['’]?ll\s+(take|go\s+with|do)|let['’]?s\s+(go|do|proceed)|sounds\s+good|sign\s+me\s+up|let['’]?s\s+move\s+forward|please\s+proceed|go\s+ahead|yes[\s,\.!]+(let|please|proceed)|i\s+want\s+to\s+list|list\s+(it|my)|move\s+forward\s+with|proceed\s+with)\b/i;
+const ACCEPT_RX = /\b(i\s+accept(?:\s+(?:the|your)\s+(?:offer|quote|price))?|we\s+accept(?:\s+(?:the|your)\s+(?:offer|quote|price))?|please\s+proceed\s+with\s+(?:the|your)\s+(?:offer|quote)|i\s+accept\s+the\s+minimum\s+authorized\s+sales\s+price)\b/i;
+const ACCEPT_NEGATION_RX = /\b(do\s+not|don['’]?t|not|cannot|can['’]?t|won['’]?t|haven['’]?t|have\s+not|waiting|think(?:ing)?|consider(?:ing)?|if)\b[^.!?]{0,60}\baccept\b|\baccept\b[^.!?]{0,60}\b(if|but|however|after|once|waiting)\b/i;
 const TIER_RX: Array<[RegExp, "starter" | "pro" | "featured"]> = [
   [/\bstarter\b/i, "starter"],
   [/\bpro\b/i, "pro"],
@@ -177,6 +179,7 @@ const TIER_RX: Array<[RegExp, "starter" | "pro" | "featured"]> = [
 ];
 const detectAcceptance = (body: string): { tier: "starter" | "pro" | "featured" | null; snippet: string } | null => {
   if (!body) return null;
+  if (ACCEPT_NEGATION_RX.test(body)) return null;
   const m = body.match(ACCEPT_RX);
   if (!m) return null;
   let tier: "starter" | "pro" | "featured" | null = null;
@@ -763,16 +766,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // under "Awaiting quote" and "Accepted" at the same time.
   const stageStep = (s: Submission): number => {
     const a = s as any;
-    if (a.documents_completed_at) return 9;
-    if (a.documents_requested_at) {
+    const accepted = a.quote_response === "accepted";
+    if (accepted && a.documents_completed_at) return 9;
+    if (accepted && a.documents_requested_at) {
       const e = (s.email || "").trim().toLowerCase();
       const ans = (a.ownership_answers ?? {}) as Record<string, any>;
       if ((e && returnedDocsEmails.has(e)) || ans.docsReturnedAt) return 8;
       return 7;
     }
-    if (ftState(s).doneAt) return 6;
-    if (ftState(s).sentAt) return 5;
-    if (a.quote_response === "accepted") return 4;
+    if (accepted && ftState(s).doneAt) return 6;
+    if (accepted && ftState(s).sentAt) return 5;
+    if (accepted) return 4;
     if (a.quote_sent_at) return 3;
     if (hasDocs(s)) return 2;
     return 1;
@@ -1216,6 +1220,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
   const [aiFactsOpen, setAiFactsOpen] = useState(false);
+  const [deedPreviewOpen, setDeedPreviewOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
