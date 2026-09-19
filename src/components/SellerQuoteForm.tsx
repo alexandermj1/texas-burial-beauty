@@ -216,6 +216,9 @@ const SellerQuoteForm = ({
     }
     const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: intakeId } });
     if (emailError) console.warn("inquiry email failed", emailError);
+    // Branded thank-you to the customer (asks for the deed if none uploaded).
+    const { error: thankYouError } = await supabase.functions.invoke("seller-thankyou-email", { body: { submission_id: intakeId } });
+    if (thankYouError) console.warn("thank-you email failed", thankYouError);
     if (files.length > 0) {
       const { error: attachError } = await supabase.functions.invoke("attach-seller-files", { body: { submission_id: intakeId } });
       if (attachError) console.warn("attach-seller-files failed", attachError);

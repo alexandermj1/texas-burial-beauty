@@ -364,7 +364,7 @@ Deno.serve(async (req) => {
 
     const { data: existing } = await admin
       .from("email_messages")
-      .select("id, gmail_message_id, from_email, from_name, to_email, matched_submission_id")
+      .select("id, gmail_message_id, from_email, from_name, to_email, matched_submission_id, match_confidence")
       .in("gmail_message_id", ids.length ? ids : ["__none__"]);
 
     const existingIds = new Set((existing ?? []).map((r: any) => r.gmail_message_id));
@@ -376,6 +376,7 @@ Deno.serve(async (req) => {
     let rematchedCount = 0;
     for (const row of (existing ?? []) as any[]) {
       if (row.matched_submission_id) continue;
+      if (row.match_confidence === "excluded") continue;
       const outgoing = isInternalRematch(row.from_email ?? "");
       const matchEmail = outgoing ? parseFromHeader(row.to_email ?? "").email : (row.from_email ?? "");
       const matchName = outgoing ? parseFromHeader(row.to_email ?? "").name : row.from_name;
@@ -426,7 +427,11 @@ Deno.serve(async (req) => {
       const outgoing = isInternalAddr(fromEmail);
       const matchEmail = outgoing ? parseFromHeader(toEmail).email : fromEmail;
       const matchName = outgoing ? parseFromHeader(toEmail).name : fromName;
-      const match = matchSubmission(matchEmail, matchName, subs);
+      // Automated customer-facing mail (e.g. the seller thank-you) is kept out
+      // of the submission thread so records don't all open with our own email.
+      // Any reply from the customer is unmarked and still attaches normally.
+      const autoMarker = header(headers, "X-TCB-Auto");
+      const match = autoMarker ? null : matchSubmission(matchEmail, matchName, subs);
 
       return {
         gmail_message_id: msg.id,
@@ -445,7 +450,7 @@ Deno.serve(async (req) => {
         ai_draft_reply: null,
         ai_analyzed_at: null,
         matched_submission_id: match?.id ?? null,
-        match_confidence: match?.confidence ?? "none",
+        match_confidence: autoMarker ? "excluded" : (match?.confidence ?? "none"),
       };
     });
 
