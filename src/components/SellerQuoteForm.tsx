@@ -86,7 +86,6 @@ const SellerQuoteForm = ({
     deedOwnersStatus: "",
     relationshipToOwner: "",
     purchaseInfo: "",
-    prepaidEndowmentInfo: "",
   });
 
 
@@ -207,7 +206,6 @@ const SellerQuoteForm = ({
       deed_owners_status: form.deedOwnersStatus || null,
       relationship_to_owner: form.relationshipToOwner.trim() || null,
       purchase_info: form.purchaseInfo.trim() || null,
-      prepaid_endowment_info: form.prepaidEndowmentInfo.trim() || null,
       seller_attachments: files,
       created_at: new Date().toISOString(),
     });
@@ -222,7 +220,7 @@ const SellerQuoteForm = ({
       const { error: attachError } = await supabase.functions.invoke("attach-seller-files", { body: { submission_id: intakeId } });
       if (attachError) console.warn("attach-seller-files failed", attachError);
     }
-    setForm({ name: "", email: "", phone: "", cemetery: "", cemeteryIsCustom: false, propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "", prepaidEndowmentInfo: "" });
+    setForm({ name: "", email: "", phone: "", cemetery: "", cemeteryIsCustom: false, propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "" });
     setFiles([]);
     setLoading(false);
     navigate("/thank-you");
@@ -422,12 +420,6 @@ const SellerQuoteForm = ({
         helper: "Tell us anything else and (optionally) attach a deed or photo. Then we're done.",
         body: (
           <div className="space-y-7">
-            <div>
-              <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Prepaid endowment / service charges <span className="normal-case tracking-normal italic text-foreground/45">— can increase valuation</span></label>
-              <textarea value={form.prepaidEndowmentInfo} onChange={(e) => setForm({ ...form, prepaidEndowmentInfo: e.target.value })}
-                placeholder="Endowment care, opening/closing fees, vaults, markers…" rows={2} maxLength={1000}
-                className="w-full bg-transparent border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none text-base text-foreground placeholder:text-foreground/40 italic resize-none py-2" />
-            </div>
             <div>
               <label className="block text-[10px] tracking-[0.3em] uppercase text-foreground/55 font-bold mb-3">Anything else we should know</label>
               <textarea value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })}
@@ -801,10 +793,6 @@ const SellerQuoteForm = ({
                           <textarea value={form.purchaseInfo} onChange={(e) => setForm({ ...form, purchaseInfo: e.target.value })} placeholder="When was it purchased, for what amount, and what records do you have?" rows={3} maxLength={1000} className={textareaCls} />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className={labelCls}>Prepaid endowment care or service charges<span className="text-muted-foreground normal-case tracking-normal text-[10px]"> — optional, can increase valuation</span></label>
-                          <textarea value={form.prepaidEndowmentInfo} onChange={(e) => setForm({ ...form, prepaidEndowmentInfo: e.target.value })} placeholder="List any prepaid items such as endowment care, opening/closing fees, vaults, markers or service charges." rows={3} maxLength={1000} className={textareaCls} />
-                        </div>
-                        <div className="sm:col-span-2">
                           <label className={labelCls}>Additional details</label>
                           <textarea value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} placeholder="Reason for selling, preferred timeline, anything else we should know…" rows={3} maxLength={1000} className={textareaCls} />
                         </div>
@@ -825,7 +813,7 @@ const SellerQuoteForm = ({
                         </p>
                       </div>
                       <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                        Helpful to attach: the deed or certificate of ownership, original purchase records, endowment care receipts, or photos of the plot.
+                        Helpful to attach: the deed or certificate of ownership, original purchase records, or photos of the plot.
                       </p>
 
                       <label
