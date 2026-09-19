@@ -822,9 +822,9 @@ const SellerQuoteForm = ({
                       >
                         <Upload className="w-5 h-5 text-primary" />
                         <span className="text-sm font-medium text-foreground">
-                          {uploading ? "Uploading…" : "Click to choose files or drop here"}
+                          {uploading ? "Uploading…" : "Upload deed or proof of purchase"}
                         </span>
-                        <span className="text-[11px] text-muted-foreground">You can add multiple files</span>
+                        <span className="text-[11px] text-muted-foreground">Click to choose files or drop here — multiple files are fine</span>
                         <input
                           ref={fileInputRef}
                           id="seller-attachments"
