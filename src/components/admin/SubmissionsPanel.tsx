@@ -1426,9 +1426,157 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const kind = resolveKind(selected.customer_kind, selected.source);
     const bayerStage = kind === "seller" ? deriveBayerStage(selected as any) : null;
     const focusSplit = !isMobile && listCollapsed;
+    const seller = selected as any;
+    const sellerStage = effStep(selected);
+    const sellerStages = ["No attachments", "Attachments", "Quoted", "Accepted", "Tree sent", "Tree done", "Docs out", "Docs returned", "Complete"];
+    const lastContactAt = lastInteractionMap[selected.id];
+    const lastContactFromTCB = !!lastContactAt && lastOutgoingMap[selected.id] === lastContactAt;
+    const elapsed = (iso?: string | null) => {
+      if (!iso) return "No communication yet";
+      const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+      if (seconds < 60) return "just now";
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+      const days = Math.floor(seconds / 86400);
+      if (days < 30) return `${days}d ago`;
+      const months = Math.floor(days / 30);
+      return months < 12 ? `${months}mo ago` : `${Math.floor(months / 12)}y ago`;
+    };
+    const moveSellerStage = async (step: number) => {
+      const now = new Date().toISOString();
+      const ans = { ...(seller.ownership_answers ?? {}) } as Record<string, any>;
+      ans.questionsSentAt = step >= 5 ? (ans.questionsSentAt || now) : null;
+      ans.sellerConfirmedAt = step >= 6 ? (ans.sellerConfirmedAt || now) : null;
+      ans.docsReturnedAt = step >= 8 ? (ans.docsReturnedAt || now) : null;
+      await onUpdate(selected.id, {
+        ownership_answers: ans,
+        quote_sent_at: step >= 3 ? (seller.quote_sent_at || now) : null,
+        quote_response: step >= 4 ? "accepted" : (seller.quote_response === "accepted" ? null : seller.quote_response),
+        quote_responded_at: step >= 4 ? (seller.quote_responded_at || now) : (seller.quote_response === "accepted" ? null : seller.quote_responded_at),
+        documents_requested_at: step >= 7 ? (seller.documents_requested_at || now) : null,
+        documents_completed_at: step >= 9 ? (seller.documents_completed_at || now) : null,
+      } as any);
+      toast({ title: "Stage updated", description: sellerStages[step - 1] });
+    };
+    const selectListingTier = async (tier: "starter" | "pro" | "featured") => {
+      const current = String(seller.listing_tier || "").toLowerCase();
+      const active = current === tier || (tier === "featured" && current === "custom_plus");
+      await onUpdate(selected.id, (active ? { listing_tier: null, listing_option: null } : {
+        listing_tier: tier, listing_option: tier, quote_response: "accepted",
+        quote_responded_at: seller.quote_responded_at || new Date().toISOString(),
+        quote_sent_at: seller.quote_sent_at || new Date().toISOString(),
+        accepted_quote_amount: seller.accepted_quote_amount ?? seller.quote_amount ?? null,
+      }) as any);
+      if (active) return;
+      try {
+        const { data, error } = await supabase.functions.invoke("autopilot", { body: { submission_id: selected.id, step: "listing_agreement" } });
+        if (error) throw error;
+        toast({ title: (data as any)?.status === "sent" ? "Listing agreement sent" : "Listing agreement not sent", description: (data as any)?.status === "sent" ? "The seller has been emailed their agreement to sign." : `Skipped — ${(data as any)?.reason ?? "already handled"}.` });
+      } catch (e: any) {
+        toast({ title: "Couldn't send the listing agreement", description: String(e?.message ?? e), variant: "destructive" });
+      }
+    };
     const headBlock = (<>
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3">
+            {kind !== "buyer" && (() => {
+              const fmtMoney = (value: unknown) => {
+                const amount = Number(value);
+                return Number.isFinite(amount) && amount > 0 ? `$${Math.round(amount).toLocaleString()}` : "Not recorded";
+              };
+              const paid = paidMap[selected.id];
+              const cemeteryProfile = cemeteryProfileFor(selected.cemetery);
+              const retail = Number(seller.cemetery_retail) || 0;
+              const quotePerPlot = Number(seller.accepted_quote_amount ?? seller.quote_amount) || 0;
+              const resalePerPlot = Number(seller.list_price) || (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
+              const deedLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
+              const sellingLocation = seller.plot_description || deedLocation;
+              const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
+              const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
+              const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
+              const Fact = ({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) => (
+                <div className={`min-w-0 border-b border-border/50 pb-2 ${wide ? "sm:col-span-2" : ""}`}>
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
+                  <div className="text-sm leading-snug text-foreground break-words">{children}</div>
+                </div>
+              );
+              return (
+                <section aria-label="Seller overview" className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+                  <div className="flex items-start justify-between gap-4 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)} alt="" className="w-12 h-12 rounded-md object-cover bg-muted shrink-0" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap"><CustomerKindBadge kind="seller" /><BayerBadge inquiryChannel={selected.inquiry_channel} /></div>
+                        <h3 className="font-display text-xl text-foreground truncate">{selected.name || "Anonymous"}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{selected.cemetery || "Cemetery not recorded"}</p>
+                      </div>
+                    </div>
+                    {selected.source === "manual_phone" && seller.handled_by_name && <span className="hidden sm:inline text-[10px] text-muted-foreground">Added by {cleanDisplayName(seller.handled_by_name)}</span>}
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(210px,0.72fr)_minmax(0,2fr)]">
+                    <aside className="border-b lg:border-b-0 lg:border-r border-border bg-primary/5 p-4 sm:p-5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-3">Pipeline stage</p>
+                      <ol className="grid grid-cols-3 gap-1.5 lg:grid-cols-1 lg:gap-0">
+                        {sellerStages.map((label, index) => {
+                          const step = index + 1;
+                          const active = sellerStage === step;
+                          const passed = sellerStage > step;
+                          return <li key={label} className="relative lg:pb-1.5 lg:last:pb-0">
+                            {index < sellerStages.length - 1 && <span className="hidden lg:block absolute left-[7px] top-5 bottom-0 w-px bg-border" />}
+                            <button onClick={() => moveSellerStage(step)} title={`Move to ${label}`} className={`relative w-full flex items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-[11px] transition-colors ${active ? "bg-primary text-primary-foreground font-semibold" : passed ? "text-primary" : "text-muted-foreground hover:bg-muted"}`}>
+                              <span className={`w-3.5 h-3.5 rounded-full border shrink-0 flex items-center justify-center ${active ? "border-primary-foreground" : passed ? "border-primary bg-primary" : "border-border bg-card"}`}>{passed && <CheckCircle className="w-3 h-3 text-primary-foreground" />}</span>
+                              <span>{label}</span>
+                            </button>
+                          </li>;
+                        })}
+                      </ol>
+                      <div className="mt-5 pt-4 border-t border-border">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-2">Last communication</p>
+                        {lastContactAt ? <>
+                          <p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{formatDate(lastContactAt)}</p>
+                          <p className="text-xs font-medium text-accent mt-1">{elapsed(lastContactAt)}</p>
+                        </> : <p className="text-sm text-muted-foreground">No email history</p>}
+                      </div>
+                    </aside>
+                    <div className="p-4 sm:p-5 space-y-5">
+                      <div>
+                        <p className="font-display text-base text-foreground mb-3">Property</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                          <Fact label="Cemetery">{selected.cemetery || "Not provided"}</Fact>
+                          <Fact label="Type of plots">{selected.property_type || "Not provided"}</Fact>
+                          <Fact label="Locations – on deed">{deedLocation}</Fact>
+                          <Fact label="Locations – being sold"><input aria-label="Locations being sold" defaultValue={sellingLocation === "Not provided" ? "" : sellingLocation} placeholder="Add location" onBlur={e => { const value=e.currentTarget.value.trim(); if(value !== String(seller.plot_description || "")) onUpdate(selected.id,{plot_description:value || null} as any); }} className="w-full bg-transparent border-0 border-b border-dashed border-primary/40 p-0 pb-0.5 text-sm text-foreground outline-none focus:border-primary" /></Fact>
+                          <Fact label="# of plots being sold"><input aria-label="Number of plots being sold" type="number" min="1" defaultValue={seller.plot_count ?? selected.spaces ?? ""} placeholder="Add number" onBlur={e => { const value=Math.max(1,Number(e.currentTarget.value)||1); if(value !== Number(seller.plot_count ?? selected.spaces)) onUpdate(selected.id,{plot_count:value,spaces:String(value)} as any); }} className="w-24 bg-transparent border-0 border-b border-dashed border-primary/40 p-0 pb-0.5 text-sm text-foreground outline-none focus:border-primary" /></Fact>
+                        </div>
+                      </div>
+                      <div className="pt-1">
+                        <p className="font-display text-base text-foreground mb-3">Seller details</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                          <Fact label="Date form originally submitted">{formatDate(selected.created_at)}</Fact>
+                          <Fact label="Contact name">{selected.name || "Not provided"}</Fact>
+                          <Fact label="Contact email">{selected.email ? <a href={buildGmailComposeUrl({to:selected.email})} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{selected.email}</a> : "Not provided"}</Fact>
+                          <Fact label="Contact tel">{selected.phone ? <a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`} className="text-primary hover:underline">{selected.phone}</a> : "Not provided"}</Fact>
+                          <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>
+                          <Fact label="Contact relationship to owners">{seller.relationship_to_owner || "Not provided"}</Fact>
+                          <Fact label="Added information from form" wide>{info}</Fact>
+                        </div>
+                      </div>
+                      <div className="border-t border-border pt-4">
+                        <p className="font-display text-base text-foreground mb-3">Pricing & listing</p>
+                        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+                          {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee",v:fmtMoney(cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount)},{l:"Our quote per plot",v:fmtMoney(quotePerPlot)},{l:"Our resale price per plot",v:fmtMoney(resalePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
+                          <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              );
+            })()}
+            {/* Buyer header */}
+            {kind === "buyer" && <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <img
                   src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)}
@@ -1823,6 +1971,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 })()}
               </div>
             </div>
+
+            </div>}
 
             {/* ---- Buyer workspace -------------------------------------------------
                 Buyers don't need any of the seller machinery. Instead they get what
