@@ -918,7 +918,7 @@ const SellerQuoteForm = ({
           </motion.form>
 
           <p className="text-[11px] text-muted-foreground/70 text-center mt-4">
-            No spam. No pressure. We respond within 24 hours.
+            No spam. No pressure. We'll be in touch once we've reviewed your details.
           </p>
         </div>
       </div>
