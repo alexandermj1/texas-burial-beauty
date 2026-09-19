@@ -415,9 +415,9 @@ const SellerQuoteForm = ({
         ),
       },
       {
-        chapter: "Anything else",
-        title: <>Last thing — anything <span className="italic font-medium text-primary">helpful?</span></>,
-        helper: "Tell us anything else and (optionally) attach a deed or photo. Then we're done.",
+        chapter: "Your deed",
+        title: <>Upload your <span className="italic font-medium text-primary">deed</span> or proof of purchase</>,
+        helper: "The only document we need at this stage is a copy of the deed or proof of purchase for the cemetery plot. This helps us put together an accurate valuation, and we'll need it from you to move forward.",
         body: (
           <div className="space-y-7">
             <div>
@@ -432,14 +432,14 @@ const SellerQuoteForm = ({
                 <span className="text-[11px] tracking-[0.25em] uppercase font-bold text-primary">Secure broker portal</span>
               </div>
               <p className="text-[13px] text-foreground/70 leading-relaxed mb-4">
-                Any document you attach is uploaded directly to our private, encrypted broker portal — visible only to our licensed Texas team. Never shared, never indexed, never sold.
+                Please upload a clear copy of the deed, certificate of ownership, or original purchase records. This is the only document we need right now — it helps us prepare your valuation and we'll need it from you to move forward.
               </p>
               <label htmlFor="seller-attachments-ed"
                 className="flex items-center gap-3 w-full px-4 py-4 rounded-xl border border-dashed border-primary/40 bg-background hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
                 <Upload className="w-4 h-4 text-primary" />
                 <span className="text-sm text-foreground">
-                  {uploading ? "Uploading securely…" : "Attach a deed, receipt or photo "}
-                  <span className="italic text-foreground/55">— optional</span>
+                  {uploading ? "Uploading securely…" : "Upload deed or proof of purchase"}
+                  <span className="italic text-foreground/55"> — required</span>
                 </span>
                 <input ref={fileInputRef} id="seller-attachments-ed" type="file" multiple
                   accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.tif,.tiff,.gif,.doc,.docx,.txt,image/*,application/pdf"
@@ -802,8 +802,8 @@ const SellerQuoteForm = ({
 
                   {step === 3 && (
                     <div>
-                      <h3 className="font-display text-2xl text-foreground mb-1">Attach documents</h3>
-                      <p className="text-sm text-muted-foreground mb-5">Optional — helpful but not required. You can always send them later.</p>
+                      <h3 className="font-display text-2xl text-foreground mb-1">Upload your deed or proof of purchase</h3>
+                      <p className="text-sm text-muted-foreground mb-5">The only document we need at this stage is a copy of the deed or proof of purchase for the cemetery plot. This helps us put together an accurate valuation, and we'll need it from you to move forward.</p>
 
                       <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-xl p-3">
                         <Lock className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
@@ -813,7 +813,7 @@ const SellerQuoteForm = ({
                         </p>
                       </div>
                       <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                        Helpful to attach: the deed or certificate of ownership, original purchase records, or photos of the plot.
+                        A clear photo or scan of the deed, certificate of ownership, or original purchase paperwork is perfect.
                       </p>
 
                       <label
@@ -822,9 +822,9 @@ const SellerQuoteForm = ({
                       >
                         <Upload className="w-5 h-5 text-primary" />
                         <span className="text-sm font-medium text-foreground">
-                          {uploading ? "Uploading…" : "Click to choose files or drop here"}
+                          {uploading ? "Uploading…" : "Upload deed or proof of purchase"}
                         </span>
-                        <span className="text-[11px] text-muted-foreground">You can add multiple files</span>
+                        <span className="text-[11px] text-muted-foreground">Click to choose files or drop here — multiple files are fine</span>
                         <input
                           ref={fileInputRef}
                           id="seller-attachments"
@@ -918,7 +918,7 @@ const SellerQuoteForm = ({
           </motion.form>
 
           <p className="text-[11px] text-muted-foreground/70 text-center mt-4">
-            No spam. No pressure. We respond within 24 hours.
+            No spam. No pressure. We'll be in touch once we've reviewed your details.
           </p>
         </div>
       </div>
