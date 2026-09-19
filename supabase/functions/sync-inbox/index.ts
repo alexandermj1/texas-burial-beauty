@@ -449,7 +449,7 @@ Deno.serve(async (req) => {
         ai_draft_reply: null,
         ai_analyzed_at: null,
         matched_submission_id: match?.id ?? null,
-        match_confidence: match?.confidence ?? "none",
+        match_confidence: autoMarker ? "excluded" : (match?.confidence ?? "none"),
       };
     });
 
