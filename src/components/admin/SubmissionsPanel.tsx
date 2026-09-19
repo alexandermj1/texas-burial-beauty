@@ -1972,7 +1972,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </div>
             </div>
 
-            </div>}
+            }
 
             {/* ---- Buyer workspace -------------------------------------------------
                 Buyers don't need any of the seller machinery. Instead they get what
