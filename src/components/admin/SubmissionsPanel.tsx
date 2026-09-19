@@ -1458,6 +1458,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         quote_sent_at: step >= 3 ? (seller.quote_sent_at || now) : null,
         quote_response: step >= 4 ? "accepted" : (seller.quote_response === "accepted" ? null : seller.quote_response),
         quote_responded_at: step >= 4 ? (seller.quote_responded_at || now) : (seller.quote_response === "accepted" ? null : seller.quote_responded_at),
+        acceptance_channel: step >= 4 ? "manual_starter" : null,
+        listing_tier: step >= 4 ? "starter" : seller.listing_tier,
+        listing_option: step >= 4 ? "starter" : seller.listing_option,
+        accepted_quote_amount: step >= 4 ? (seller.accepted_quote_amount ?? seller.quote_amount ?? null) : seller.accepted_quote_amount,
         documents_requested_at: step >= 7 ? (seller.documents_requested_at || now) : null,
         documents_completed_at: step >= 9 ? (seller.documents_completed_at || now) : null,
       } as any);
@@ -1467,19 +1471,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const current = String(seller.listing_tier || "").toLowerCase();
       const active = current === tier || (tier === "featured" && current === "custom_plus");
       await onUpdate(selected.id, (active ? { listing_tier: null, listing_option: null } : {
-        listing_tier: tier, listing_option: tier, quote_response: "accepted",
-        quote_responded_at: seller.quote_responded_at || new Date().toISOString(),
-        quote_sent_at: seller.quote_sent_at || new Date().toISOString(),
-        accepted_quote_amount: seller.accepted_quote_amount ?? seller.quote_amount ?? null,
+        listing_tier: tier, listing_option: tier,
       }) as any);
-      if (active) return;
-      try {
-        const { data, error } = await supabase.functions.invoke("autopilot", { body: { submission_id: selected.id, step: "listing_agreement" } });
-        if (error) throw error;
-        toast({ title: (data as any)?.status === "sent" ? "Listing agreement sent" : "Listing agreement not sent", description: (data as any)?.status === "sent" ? "The seller has been emailed their agreement to sign." : `Skipped — ${(data as any)?.reason ?? "already handled"}.` });
-      } catch (e: any) {
-        toast({ title: "Couldn't send the listing agreement", description: String(e?.message ?? e), variant: "destructive" });
-      }
+      if (!active) toast({ title: "Listing option saved", description: "This does not mark the quote accepted." });
     };
     const headBlock = (<>
             {kind !== "buyer" && (() => {
@@ -1489,9 +1483,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               };
               const paid = paidMap[selected.id];
               const cemeteryProfile = cemeteryProfileFor(selected.cemetery);
+              const plotCount = Math.max(1, Number(seller.plot_count ?? selected.spaces) || 1);
               const retail = Number(seller.cemetery_retail) || 0;
-              const quotePerPlot = Number(seller.accepted_quote_amount ?? seller.quote_amount) || 0;
-              const resalePerPlot = Number(seller.list_price) || (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
+              const quoteTotal = Number(seller.accepted_quote_amount ?? seller.quote_amount) || 0;
+              const resaleTotal = Number(seller.list_price) || 0;
+              const quotePerPlot = quoteTotal > 0 ? quoteTotal / plotCount : 0;
+              const resalePerPlot = resaleTotal > 0 ? resaleTotal / plotCount : (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
               const deedLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
               const sellingLocation = seller.plot_description || deedLocation;
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
@@ -1513,11 +1510,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 <section aria-label="Seller overview" className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                   <div className="flex items-start justify-between gap-4 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={getPlotImage(selected.property_type || "", Number(selected.spaces || 1) || 1)} alt="" className="w-12 h-12 rounded-md object-cover bg-muted shrink-0" />
+                      <img src={getPlotImage(selected.property_type || "", plotCount)} alt="" className="w-12 h-12 rounded-md object-cover bg-muted shrink-0" />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap"><CustomerKindBadge kind="seller" /><BayerBadge inquiryChannel={selected.inquiry_channel} /></div>
                         <h3 className="font-display text-xl text-foreground truncate">{selected.name || "Anonymous"}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{selected.cemetery || "Cemetery not recorded"}</p>
+                        <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
+                          <span className="truncate text-muted-foreground">{selected.cemetery || "Cemetery not recorded"}</span>
+                          {selected.cemetery && subRegion(selected) === "texas" && <>
+                            <button type="button" onClick={() => setExpandedCemetery(v => !v)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Info</button>
+                            <button type="button" onClick={() => { const canon = _canon(selected.cemetery || ""); setRegionFilter("texas"); setCemeteryCanon(canon); setCemeteryLabel(selected.cemetery); setSelectedId(null); }} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Search</button>
+                            <button type="button" onClick={() => setEditCemeteryInline(v => !v)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Edit</button>
+                            <button type="button" onClick={() => setReassignCemeteryOpen(true)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Re-match</button>
+                          </>}
+                        </div>
                       </div>
                     </div>
                     {selected.source === "manual_phone" && seller.handled_by_name && <span className="hidden sm:inline text-[10px] text-muted-foreground">Added by {cleanDisplayName(seller.handled_by_name)}</span>}
@@ -1542,7 +1547,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <div className="mt-5 pt-4 border-t border-border">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-2">Last communication</p>
                         {lastContactAt ? <>
-                          <p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>
+                          <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>{!lastContactFromTCB && <button type="button" onClick={() => document.getElementById(`email-thread-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="rounded-md bg-primary px-2 py-1 text-[10px] font-semibold text-primary-foreground">Reply</button>}</div>
                           <p className="text-xs text-muted-foreground mt-0.5">{formatDate(lastContactAt)}</p>
                           <p className="text-xs font-medium text-accent mt-1">{elapsed(lastContactAt)}</p>
                         </> : <p className="text-sm text-muted-foreground">No email history</p>}
@@ -1567,7 +1572,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <Fact label="Contact email">{selected.email ? <a href={buildGmailComposeUrl({to:selected.email})} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{selected.email}</a> : "Not provided"}</Fact>
                           <Fact label="Contact tel">{selected.phone ? <a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`} className="text-primary hover:underline">{selected.phone}</a> : "Not provided"}</Fact>
                           <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>
-                           <Fact label="Form names match deed"><span className={`font-semibold ${deedNameMatch.className}`}>{deedNameMatch.label}</span>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>
+                           <Fact label="Form names match deed"><button type="button" onClick={() => setDeedPreviewOpen(v => !v)} className={`inline-flex items-center gap-1 font-semibold hover:underline ${deedNameMatch.className}`}><FileCheck className="h-3.5 w-3.5" />{deedNameMatch.label}</button>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>
                           <Fact label="Owner status">{seller.deed_owners_status || "Not provided"}</Fact>
                           <Fact label="Contact relationship to owners">{seller.relationship_to_owner || "Not provided"}</Fact>
                           <Fact label="Added information from form" wide>{info}</Fact>
@@ -1575,13 +1580,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                       <div className="border-t border-border pt-4">
                         <p className="font-display text-base text-foreground mb-3">Pricing & listing</p>
-                        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
                           {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee",v:fmtMoney(cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount)},{l:"Our quote per plot",v:fmtMoney(quotePerPlot)},{l:"Our resale price per plot",v:fmtMoney(resalePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
                         </div>
+                         {plotCount > 1 && (quoteTotal > 0 || resaleTotal > 0) && <p className="mb-3 text-xs text-muted-foreground">All {plotCount} plots: quote {fmtMoney(quoteTotal)} · resale {fmtMoney(resaleTotal || resalePerPlot * plotCount)}</p>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
                         </div>
+                       {(deedPreviewOpen || aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="border-t border-border pt-4 space-y-3">
+                         <div className="flex flex-wrap items-center gap-2">
+                           {aiFacts.length > 0 && <button type="button" onClick={() => setAiFactsOpen(v => !v)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-muted"><Sparkles className="h-3.5 w-3.5" /> Document insights ({aiFacts.length})</button>}
+                         </div>
+                         {deedPreviewOpen && <DeedNameChecker submissionId={selected.id} onUseNames={(names) => onUpdate(selected.id, { deed_owner_names: names.join(", ") } as any)} />}
+                         {aiFactsOpen && <div className="divide-y divide-border rounded-md border border-border bg-background/60">{aiFacts.map((fact, index) => <div key={`${fact.label}-${index}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[150px_1fr_auto]"><span className="text-muted-foreground">{fact.label}</span><span className="text-foreground">{fact.value}</span><span className="text-muted-foreground">{fact.source}</span></div>)}</div>}
+                         {(expandedCemetery || editCemeteryInline) && selected.cemetery && <CemeteryInfoCard key={`summary-${selected.id}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} />}
+                       </div>}
                       </div>
                     </div>
                   </div>
