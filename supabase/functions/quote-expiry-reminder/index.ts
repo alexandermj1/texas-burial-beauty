@@ -191,6 +191,7 @@ Deno.serve(async (req) => {
       await db.from("email_messages").upsert({ gmail_message_id: providerId, gmail_thread_id: providerThread, from_email: OUR_EMAIL, from_name: "Texas Cemetery Brokers", to_email: email, subject, snippet: "Automatic quote-expiry reminder — 3 days left.", body_text: plain, body_html: html, received_at: now, matched_submission_id: sub.id, customer_profile_id: sub.customer_profile_id, is_read: true }, { onConflict: "gmail_message_id" });
       await db.from("reminder_log").update({ status: "sent", provider_message_id: providerId, error_code: null, error_message: null }).eq("id", reserved.id);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_name: "Automatic follow-up", action_type: "auto_followup_sent", action_summary: "Sent a quote-expiry reminder (3 days left).", details: { quote_sent_at: quoteSentAt, expires_at: expiresAt, gmail_message_id: providerId } });
+      if (needsExpiryWriteback) await db.from("contact_submissions").update({ quote_expires_at: expiresAt }).eq("id", sub.id);
       results.push({ id: sub.id, status: "sent" });
     }
     return respond({ ok: true, dry_run: dryRun, count: results.length, results });
