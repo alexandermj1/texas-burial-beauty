@@ -415,9 +415,9 @@ const SellerQuoteForm = ({
         ),
       },
       {
-        chapter: "Anything else",
-        title: <>Last thing — anything <span className="italic font-medium text-primary">helpful?</span></>,
-        helper: "Tell us anything else and (optionally) attach a deed or photo. Then we're done.",
+        chapter: "Your deed",
+        title: <>Upload your <span className="italic font-medium text-primary">deed</span> or proof of purchase</>,
+        helper: "The only document we need at this stage is a copy of the deed or proof of purchase for the cemetery plot. This helps us put together an accurate valuation, and we'll need it from you to move forward.",
         body: (
           <div className="space-y-7">
             <div>
