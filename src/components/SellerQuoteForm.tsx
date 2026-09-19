@@ -813,7 +813,7 @@ const SellerQuoteForm = ({
                         </p>
                       </div>
                       <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                        Helpful to attach: the deed or certificate of ownership, original purchase records, or photos of the plot.
+                        A clear photo or scan of the deed, certificate of ownership, or original purchase paperwork is perfect.
                       </p>
 
                       <label
