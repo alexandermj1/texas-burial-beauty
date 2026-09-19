@@ -6,3 +6,4 @@
 - [x] Verify reminder selection, duplicate prevention, and email-chain display
 - [x] Match reminders to the established branded submission-email design
 - [x] Send unlabelled customer-view previews only to Alexander's personal inbox
+- [ ] Build and verify the new two-column seller record summary
