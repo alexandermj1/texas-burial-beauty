@@ -283,7 +283,22 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
-                        Guaranteed net proceeds (USD)
+                        Number of spaces
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={plotCount}
+                        onChange={(e) => setPlotCount(e.target.value)}
+                        className="w-full h-11 px-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        From intake. Retail, net proceeds and transfer fee below are all per space.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
+                        Net proceeds per space (USD)
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
