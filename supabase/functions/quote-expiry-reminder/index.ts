@@ -175,7 +175,10 @@ Deno.serve(async (req) => {
         }
       }
       const raw = [`From: Texas Cemetery Brokers <${OUR_EMAIL}>`, `To: ${email}`, `Subject: ${subject}`, ...replyHeaders, "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="tcb-quote"', "", "--tcb-quote", 'Content-Type: text/plain; charset="UTF-8"', "Content-Transfer-Encoding: 8bit", "", plain, "--tcb-quote", 'Content-Type: text/html; charset="UTF-8"', "Content-Transfer-Encoding: 8bit", "", html, "--tcb-quote--"].join("\r\n");
-      const sentResponse = await fetch(`${GMAIL}/users/me/messages/send`, { method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmailKey, "Content-Type": "application/json" }, body: JSON.stringify({ raw: b64url(raw), ...(thread?.gmail_thread_id ? { threadId: thread.gmail_thread_id } : {}) }) });
+      const send = (threadId?: string) => fetch(`${GMAIL}/users/me/messages/send`, { method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmailKey, "Content-Type": "application/json" }, body: JSON.stringify({ raw: b64url(raw), ...(threadId ? { threadId } : {}) }) });
+      let sentResponse = await send(thread?.gmail_thread_id);
+      // A stale conversation id makes Gmail answer 404 — send as a new message instead.
+      if (!sentResponse.ok && sentResponse.status === 404 && thread?.gmail_thread_id) sentResponse = await send();
       const responseText = await sentResponse.text();
       let sent: Record<string, unknown> = {};
       try { sent = JSON.parse(responseText); } catch { /* provider text is retained below */ }
