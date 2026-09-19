@@ -120,9 +120,13 @@ Deno.serve(async (req) => {
       const email = String(sub.email ?? "").trim().toLowerCase();
       if (!email.includes("@")) continue;
       const quoteSentAt = String(sub.quote_sent_at);
-      const expiresAt = sub.quote_expires_at ? String(sub.quote_expires_at) : new Date(new Date(quoteSentAt).getTime() + QUOTE_VALID_DAYS * 86_400_000).toISOString();
-      // Once the quote has lapsed, the reminder window has passed — stop.
-      if (new Date(expiresAt).getTime() <= nowMs) { results.push({ id: sub.id, status: "skipped", reason: "quote-expired" }); continue; }
+      // Older sales prices have no stored expiry, and some stored dates have already
+      // lapsed. Those people still deserve the reminder, so we give them a fresh
+      // three-day window from today and save it back so the record stays truthful.
+      const storedExpiry = sub.quote_expires_at ? String(sub.quote_expires_at) : null;
+      const storedIsLive = !!storedExpiry && new Date(storedExpiry).getTime() > nowMs;
+      const expiresAt = storedIsLive ? (storedExpiry as string) : new Date(nowMs + 3 * 86_400_000).toISOString();
+      const needsExpiryWriteback = !storedIsLive;
 
       // One reminder per quote: the sent timestamp is the idempotency anchor,
       // so a revised quote (new quote_sent_at) may be reminded once again.
@@ -171,7 +175,10 @@ Deno.serve(async (req) => {
         }
       }
       const raw = [`From: Texas Cemetery Brokers <${OUR_EMAIL}>`, `To: ${email}`, `Subject: ${subject}`, ...replyHeaders, "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="tcb-quote"', "", "--tcb-quote", 'Content-Type: text/plain; charset="UTF-8"', "Content-Transfer-Encoding: 8bit", "", plain, "--tcb-quote", 'Content-Type: text/html; charset="UTF-8"', "Content-Transfer-Encoding: 8bit", "", html, "--tcb-quote--"].join("\r\n");
-      const sentResponse = await fetch(`${GMAIL}/users/me/messages/send`, { method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmailKey, "Content-Type": "application/json" }, body: JSON.stringify({ raw: b64url(raw), ...(thread?.gmail_thread_id ? { threadId: thread.gmail_thread_id } : {}) }) });
+      const send = (threadId?: string) => fetch(`${GMAIL}/users/me/messages/send`, { method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmailKey, "Content-Type": "application/json" }, body: JSON.stringify({ raw: b64url(raw), ...(threadId ? { threadId } : {}) }) });
+      let sentResponse = await send(thread?.gmail_thread_id);
+      // A stale conversation id makes Gmail answer 404 — send as a new message instead.
+      if (!sentResponse.ok && sentResponse.status === 404 && thread?.gmail_thread_id) sentResponse = await send();
       const responseText = await sentResponse.text();
       let sent: Record<string, unknown> = {};
       try { sent = JSON.parse(responseText); } catch { /* provider text is retained below */ }
@@ -187,6 +194,7 @@ Deno.serve(async (req) => {
       await db.from("email_messages").upsert({ gmail_message_id: providerId, gmail_thread_id: providerThread, from_email: OUR_EMAIL, from_name: "Texas Cemetery Brokers", to_email: email, subject, snippet: "Automatic quote-expiry reminder — 3 days left.", body_text: plain, body_html: html, received_at: now, matched_submission_id: sub.id, customer_profile_id: sub.customer_profile_id, is_read: true }, { onConflict: "gmail_message_id" });
       await db.from("reminder_log").update({ status: "sent", provider_message_id: providerId, error_code: null, error_message: null }).eq("id", reserved.id);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_name: "Automatic follow-up", action_type: "auto_followup_sent", action_summary: "Sent a quote-expiry reminder (3 days left).", details: { quote_sent_at: quoteSentAt, expires_at: expiresAt, gmail_message_id: providerId } });
+      if (needsExpiryWriteback) await db.from("contact_submissions").update({ quote_expires_at: expiresAt }).eq("id", sub.id);
       results.push({ id: sub.id, status: "sent" });
     }
     return respond({ ok: true, dry_run: dryRun, count: results.length, results });
