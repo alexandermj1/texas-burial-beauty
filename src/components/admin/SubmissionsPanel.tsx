@@ -3027,6 +3027,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { key: "complete", label: "Complete", icon: Sparkles,
                   count: txU.filter(s => effStep(s) === 9).length,
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
+                { key: "archived", label: "Archived", icon: Archive,
+                  count: archivedCount,
+                  active: archivedView, toggle: () => setArchivedView(!archivedView), tone: tones.amber },
               ];
               // Buyers don't move through the seller pipeline — in buyer view
               // only the attachment filters stay; the stage tabs are hidden.
