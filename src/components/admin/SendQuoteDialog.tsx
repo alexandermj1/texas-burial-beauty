@@ -264,7 +264,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
               {!showPreview ? (
                 <>
-                  <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
                         Cemetery retail (USD)
