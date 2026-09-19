@@ -1556,6 +1556,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <Fact label="Contact email">{selected.email ? <a href={buildGmailComposeUrl({to:selected.email})} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{selected.email}</a> : "Not provided"}</Fact>
                           <Fact label="Contact tel">{selected.phone ? <a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`} className="text-primary hover:underline">{selected.phone}</a> : "Not provided"}</Fact>
                           <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>
+                          <Fact label="Owner status">{seller.deed_owners_status || "Not provided"}</Fact>
                           <Fact label="Contact relationship to owners">{seller.relationship_to_owner || "Not provided"}</Fact>
                           <Fact label="Added information from form" wide>{info}</Fact>
                         </div>
@@ -2701,9 +2702,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { label: "Bayer entry #", value: s.bayer_entry_id || "" },
               ].filter(r => r.value && r.value.trim());
               const showDeedBox = customerDeed || aiDeed;
+              if (kind !== "buyer" && !showDeedBox) return null;
               return (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                  {rows.map(({ label, value }) => (
+                  {kind === "buyer" && rows.map(({ label, value }) => (
                     <Field key={label} label={label} value={value} />
                   ))}
                   {showDeedBox && (() => {
@@ -2796,7 +2798,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
             {/* Message / details */}
-            {(selected.message || selected.details) && (
+            {kind === "buyer" && (selected.message || selected.details) && (
               <div>
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
                   {selected.message ? "Message" : "Additional details"}
