@@ -426,7 +426,11 @@ Deno.serve(async (req) => {
       const outgoing = isInternalAddr(fromEmail);
       const matchEmail = outgoing ? parseFromHeader(toEmail).email : fromEmail;
       const matchName = outgoing ? parseFromHeader(toEmail).name : fromName;
-      const match = matchSubmission(matchEmail, matchName, subs);
+      // Automated customer-facing mail (e.g. the seller thank-you) is kept out
+      // of the submission thread so records don't all open with our own email.
+      // Any reply from the customer is unmarked and still attaches normally.
+      const autoMarker = header(headers, "X-TCB-Auto");
+      const match = autoMarker ? null : matchSubmission(matchEmail, matchName, subs);
 
       return {
         gmail_message_id: msg.id,
