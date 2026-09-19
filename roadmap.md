@@ -13,4 +13,4 @@
 - [x] Correct seller plot image and per-plot pricing displays
 - [x] Restrict Accepted to explicit email acceptance or a manual free-option move
 - [x] Make long email chains compact, modern, and easy to navigate
-- [ ] Correct Robert's inaccurate accepted state and verify the seller record
+- [x] Correct Robert's inaccurate accepted state and verify the seller record
