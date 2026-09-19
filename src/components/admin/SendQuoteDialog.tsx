@@ -142,6 +142,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
   const [quoteTouched, setQuoteTouched] = useState(false);
   const [transferFee, setTransferFee] = useState("");
   const [retail, setRetail] = useState("");
+  const [plotCount, setPlotCount] = useState("1");
   const [customMessage, setCustomMessage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -157,10 +158,19 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
       const directoryFee = parseDirectoryFee(directoryContact?.transferFee);
       const dirFeeFromTable = directoryTransferFee ? String(directoryTransferFee) : "";
       const retailStr = intakeRetail != null ? String(intakeRetail) : "";
-      const savedQuote = submission.quote_amount ? String(submission.quote_amount) : "";
+      // How many spaces the seller has — drives per-space vs total figures.
+      const rawCount =
+        Number((submission as any).plot_count) ||
+        Number(String((submission as any).spaces ?? "").replace(/[^0-9.]/g, "")) ||
+        1;
+      const count = Math.max(1, Math.round(rawCount));
+      // quote_amount is stored as the TOTAL net; the input holds the per-space net.
+      const savedTotal = submission.quote_amount ? Number(submission.quote_amount) : 0;
+      const savedPerPlot = savedTotal > 0 ? String(Math.round(savedTotal / count)) : "";
+      setPlotCount(String(count));
       setRetail(retailStr);
-      setQuote(savedQuote || computeQuoteFromRetail(retailStr));
-      setQuoteTouched(!!savedQuote);
+      setQuote(savedPerPlot || computeQuoteFromRetail(retailStr));
+      setQuoteTouched(!!savedPerPlot);
       setTransferFee(dirFeeFromTable || (submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : directoryFee));
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
@@ -176,18 +186,21 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
     setQuoteTouched(true);
   };
 
+  const countNum = Math.max(1, Math.round(Number(plotCount) || 1));
+  const totalNet = quote ? Number(quote) * countNum : 0;
 
   const subject = buildSubject(submission);
-  const body = buildBody(submission, quote, transferFee, customMessage);
+  const body = buildBody(submission, quote, transferFee, customMessage, countNum);
 
   const handleSaveAndOpenEmail = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: quote ? Number(quote) : null,
+      quote_amount: totalNet > 0 ? totalNet : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
       cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
       quote_sent_at: new Date().toISOString(),
+      quote_expires_at: new Date(Date.now() + 10 * 86_400_000).toISOString(),
     } as any);
     setSaving(false);
     if (submission.email) {
@@ -199,7 +212,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
   const handleSaveOnly = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: quote ? Number(quote) : null,
+      quote_amount: totalNet > 0 ? totalNet : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
       cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
