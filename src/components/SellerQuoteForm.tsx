@@ -802,8 +802,8 @@ const SellerQuoteForm = ({
 
                   {step === 3 && (
                     <div>
-                      <h3 className="font-display text-2xl text-foreground mb-1">Attach documents</h3>
-                      <p className="text-sm text-muted-foreground mb-5">Optional — helpful but not required. You can always send them later.</p>
+                      <h3 className="font-display text-2xl text-foreground mb-1">Upload your deed or proof of purchase</h3>
+                      <p className="text-sm text-muted-foreground mb-5">The only document we need at this stage is a copy of the deed or proof of purchase for the cemetery plot. This helps us put together an accurate valuation, and we'll need it from you to move forward.</p>
 
                       <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/15 rounded-xl p-3">
                         <Lock className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
