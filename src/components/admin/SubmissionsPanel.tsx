@@ -2927,22 +2927,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Compact icon utilities — labels live in tooltips. */}
             <button
-              onClick={() => setArchivedView(v => !v)}
-              title={archivedView ? "Back to the live pipeline" : `View archived submissions${archivedCount ? ` (${archivedCount})` : ""}`}
-              className={`relative w-8 h-8 rounded-full border transition-all grid place-items-center ${
-                archivedView
-                  ? "bg-amber-500 text-white border-amber-500"
-                  : "bg-card text-muted-foreground border-border hover:text-foreground"
-              }`}
-            >
-              <Archive className="w-4 h-4" />
-              {!archivedView && archivedCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold grid place-items-center border border-card">
-                  {archivedCount}
-                </span>
-              )}
-            </button>
-            <button
               onClick={() => setListCollapsed(v => !v)}
               title={listCollapsed ? "Split view — show the submissions list beside the detail" : "Focus mode — collapse the list into a drawer"}
               className={`w-8 h-8 rounded-full border transition-all grid place-items-center ${
