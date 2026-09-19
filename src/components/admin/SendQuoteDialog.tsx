@@ -49,33 +49,53 @@ const buildSubject = (s: Submission) => {
   return `Offer to List Your Cemetery Property with Texas Cemetery Brokers${tail}`;
 };
 
-const buildBody = (s: Submission, quote: string, transferFee: string, customMessage: string) => {
+const buildBody = (s: Submission, quote: string, transferFee: string, customMessage: string, plotCount = 1) => {
   const sellerName = s.name || "there";
   const propertyDesc = buildPropertyDescriptor(s);
-  const quoteAmount = formatMoney(quote) || "[Quote Amount]";
-  const transferFeeAmount = formatMoney(transferFee) || "[Transfer Fee Amount]";
+  const count = Math.max(1, Math.round(Number(plotCount) || 1));
+  const multi = count > 1;
+  const noun = multi ? `${count} interment spaces` : "interment property";
+
   const quoteNum = Number(String(quote).replace(/[^0-9.]/g, ""));
   const feeNum = Number(String(transferFee).replace(/[^0-9.]/g, ""));
+  const perPlotNet = isFinite(quoteNum) && quoteNum > 0 ? quoteNum : 0;
+  const totalNet = perPlotNet * count;
+
+  const perPlotAmount = formatMoney(perPlotNet) || "[Quote Amount]";
+  const quoteAmount = formatMoney(totalNet) || "[Quote Amount]";
+  const transferFeeAmount = formatMoney(transferFee) || "[Transfer Fee Amount]";
+  const totalFeeAmount = isFinite(feeNum) && feeNum > 0 ? formatMoney(feeNum * count) : "";
   const grossAmount =
-    isFinite(quoteNum) && quoteNum > 0 && isFinite(feeNum) && feeNum > 0
-      ? formatMoney(quoteNum + feeNum)
+    perPlotNet > 0 && isFinite(feeNum) && feeNum > 0
+      ? formatMoney((perPlotNet + feeNum) * count)
       : "";
+  const perPlotGross =
+    perPlotNet > 0 && isFinite(feeNum) && feeNum > 0 ? formatMoney(perPlotNet + feeNum) : "";
 
   const customBlock = customMessage.trim()
     ? `\n${customMessage.trim()}\n`
     : "";
 
+  const breakdown = multi
+    ? `\nBreakdown for your ${count} spaces:
+• Guaranteed net proceeds per space: ${perPlotAmount}
+• Total guaranteed net proceeds (${count} spaces): ${quoteAmount}${perPlotGross ? `
+• Authorized sales price per space: ${perPlotGross}${grossAmount ? ` (total ${grossAmount})` : ""}` : ""}${totalFeeAmount ? `
+• Transfer fees we cover: ${transferFeeAmount} per space (${totalFeeAmount} in total)` : ""}
+`
+    : "";
+
   return `Dear ${sellerName},
 
-Thank you for considering Texas Cemetery Brokers for the sale of your interment property at ${propertyDesc}. We understand that selling cemetery property is a unique and often specialized process, and navigating the market for cemetery plots can be complex.
+Thank you for considering Texas Cemetery Brokers for the sale of your ${noun} at ${propertyDesc}. We understand that selling cemetery property is a unique and often specialized process, and navigating the market for cemetery plots can be complex.
 
-After a thorough evaluation of your specific property, considering its features, current market conditions, and recent comparable sales, we are pleased to offer you an authorized sales price of ${grossAmount || quoteAmount}${grossAmount ? ` (inclusive of the cemetery's transfer fee of ${transferFeeAmount})` : ""}, giving you a guaranteed net proceeds amount of ${quoteAmount}.
-${customBlock}
+After a thorough evaluation of your specific propert${multi ? "ies" : "y"}, considering ${multi ? "their" : "its"} features, current market conditions, and recent comparable sales, we are pleased to offer you an authorized sales price of ${grossAmount || quoteAmount}${multi ? ` for all ${count} spaces` : ""}${grossAmount ? ` (inclusive of the cemetery's transfer fee${multi ? "s" : ""} of ${totalFeeAmount || transferFeeAmount})` : ""}, giving you a guaranteed net proceeds amount of ${quoteAmount}${multi ? ` (${perPlotAmount} per space)` : ""}.
+${breakdown}${customBlock}
 We offer the following DOUBLE GUARANTEE, designed to provide you with certainty and peace of mind:
 
-1) Your Net Proceeds Guarantee: When your property sells through us, you are guaranteed to receive this exact ${quoteAmount}. This is the precise amount you will walk away with, free and clear, after all selling expenses — including our commission and the cemetery's transfer fee — have been accounted for.
+1) Your Net Proceeds Guarantee: When your propert${multi ? "ies sell" : "y sells"} through us, you are guaranteed to receive this exact ${quoteAmount}${multi ? ` for all ${count} spaces` : ""}. This is the precise amount you will walk away with, free and clear, after all selling expenses — including our commission and the cemetery's transfer fee${multi ? "s" : ""} — have been accounted for.
 
-2) Transfer Fee Coverage Guarantee: We also guarantee to cover the cemetery's transfer fee up to the current prevailing rate of ${transferFeeAmount}. The authorized sales price${grossAmount ? ` of ${grossAmount}` : ""} above includes this ${transferFeeAmount} transfer fee, which is then deducted, leaving your guaranteed net proceeds of ${quoteAmount}.
+2) Transfer Fee Coverage Guarantee: We also guarantee to cover the cemetery's transfer fee up to the current prevailing rate of ${transferFeeAmount} per space. The authorized sales price${grossAmount ? ` of ${grossAmount}` : ""} above includes ${multi && totalFeeAmount ? `these transfer fees (${totalFeeAmount} in total)` : `this ${transferFeeAmount} transfer fee`}, which ${multi ? "are" : "is"} then deducted, leaving your guaranteed net proceeds of ${quoteAmount}.
 
 Fees paid by the buyer (not by you): in addition to the sales price, the buyer pays a buyer's fee of 15% of the sales price for handling the purchase, paperwork and cemetery coordination, plus the cemetery's transfer fee and any optional buyer services they elect. These are charged to the buyer and never reduce your guaranteed net proceeds.
 
@@ -122,6 +142,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
   const [quoteTouched, setQuoteTouched] = useState(false);
   const [transferFee, setTransferFee] = useState("");
   const [retail, setRetail] = useState("");
+  const [plotCount, setPlotCount] = useState("1");
   const [customMessage, setCustomMessage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -137,10 +158,19 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
       const directoryFee = parseDirectoryFee(directoryContact?.transferFee);
       const dirFeeFromTable = directoryTransferFee ? String(directoryTransferFee) : "";
       const retailStr = intakeRetail != null ? String(intakeRetail) : "";
-      const savedQuote = submission.quote_amount ? String(submission.quote_amount) : "";
+      // How many spaces the seller has — drives per-space vs total figures.
+      const rawCount =
+        Number((submission as any).plot_count) ||
+        Number(String((submission as any).spaces ?? "").replace(/[^0-9.]/g, "")) ||
+        1;
+      const count = Math.max(1, Math.round(rawCount));
+      // quote_amount is stored as the TOTAL net; the input holds the per-space net.
+      const savedTotal = submission.quote_amount ? Number(submission.quote_amount) : 0;
+      const savedPerPlot = savedTotal > 0 ? String(Math.round(savedTotal / count)) : "";
+      setPlotCount(String(count));
       setRetail(retailStr);
-      setQuote(savedQuote || computeQuoteFromRetail(retailStr));
-      setQuoteTouched(!!savedQuote);
+      setQuote(savedPerPlot || computeQuoteFromRetail(retailStr));
+      setQuoteTouched(!!savedPerPlot);
       setTransferFee(dirFeeFromTable || (submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : directoryFee));
       setCustomMessage(submission.quote_message || "");
       setShowPreview(false);
@@ -156,18 +186,21 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
     setQuoteTouched(true);
   };
 
+  const countNum = Math.max(1, Math.round(Number(plotCount) || 1));
+  const totalNet = quote ? Number(quote) * countNum : 0;
 
   const subject = buildSubject(submission);
-  const body = buildBody(submission, quote, transferFee, customMessage);
+  const body = buildBody(submission, quote, transferFee, customMessage, countNum);
 
   const handleSaveAndOpenEmail = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: quote ? Number(quote) : null,
+      quote_amount: totalNet > 0 ? totalNet : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
       cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
       quote_sent_at: new Date().toISOString(),
+      quote_expires_at: new Date(Date.now() + 10 * 86_400_000).toISOString(),
     } as any);
     setSaving(false);
     if (submission.email) {
@@ -179,7 +212,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
   const handleSaveOnly = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: quote ? Number(quote) : null,
+      quote_amount: totalNet > 0 ? totalNet : null,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
       cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
@@ -231,7 +264,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
               {!showPreview ? (
                 <>
-                  <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
                         Cemetery retail (USD)
@@ -250,7 +283,22 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
-                        Guaranteed net proceeds (USD)
+                        Number of spaces
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={plotCount}
+                        onChange={(e) => setPlotCount(e.target.value)}
+                        className="w-full h-11 px-3 rounded-lg bg-background border border-border/60 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        From intake. Retail, net proceeds and transfer fee below are all per space.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
+                        Net proceeds per space (USD)
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
@@ -285,6 +333,11 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
                           </div>
                         );
                       })()}
+                      {countNum > 1 && totalNet > 0 && (
+                        <p className="text-[11px] text-muted-foreground mt-1.5">
+                          Total for {countNum} spaces: <span className="text-foreground font-medium">{formatMoney(totalNet)}</span>
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2 block">
