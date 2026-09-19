@@ -635,14 +635,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       setFollowupMap(nextFollowup);
       setAcceptSuggestMap(nextAcceptSuggest);
       if (confirmedAcceptances.length > 0) {
-        await Promise.all(confirmedAcceptances.map(({ id, at, amount }) =>
-          supabase.from("contact_submissions" as any).update({
+        await Promise.all(confirmedAcceptances.map(async ({ id, at, amount }) => {
+          await supabase.from("contact_submissions" as any).update({
             quote_response: "accepted",
             quote_responded_at: at,
             accepted_quote_amount: amount,
             acceptance_channel: "email_reply",
-          } as any).eq("id", id)
-        ));
+          } as any).eq("id", id);
+          await supabase.functions.invoke("autopilot", { body: { submission_id: id, step: "listing_agreement" } });
+        }));
         onRefresh?.();
       }
     };
@@ -1868,13 +1869,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
                     ];
                     const retE = (selected.email || "").trim().toLowerCase();
+                    const accepted = x.quote_response === "accepted";
                     const current =
-                      x.documents_completed_at ? "complete"
-                      : x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
-                      : x.documents_requested_at ? "docs_out"
-                      : ans.sellerConfirmedAt ? "tree_done"
-                      : ans.questionsSentAt ? "tree_sent"
-                      : x.quote_response === "accepted" ? "accepted"
+                      accepted && x.documents_completed_at ? "complete"
+                      : accepted && x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
+                      : accepted && x.documents_requested_at ? "docs_out"
+                      : accepted && ans.sellerConfirmedAt ? "tree_done"
+                      : accepted && ans.questionsSentAt ? "tree_sent"
+                      : accepted ? "accepted"
                       : x.quote_sent_at ? "quoted"
                       : "awaiting_quote";
 
@@ -2769,7 +2771,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
 
             {/* AI-extracted facts from uploaded documents (AI-only) — collapsed by default. */}
-            {(() => {
+            {kind === "buyer" && (() => {
               type Row = { label: string; value: string; source: string };
               const rows: Row[] = [];
               const seenKey = new Set<string>();
@@ -3378,17 +3380,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const ft = ftState(sg);
             const la = laMap[s.id];
             const stage = (() => {
-              if ((sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-white border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
-              if ((sg as any).documents_requested_at) {
+              const accepted = (sg as any).quote_response === "accepted";
+              if (accepted && (sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-primary-foreground border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
+              if (accepted && (sg as any).documents_requested_at) {
                 const retE = (sg.email || "").trim().toLowerCase();
                 const retAns = ((sg as any).ownership_answers ?? {}) as Record<string, any>;
                 if ((retE && returnedDocsEmails.has(retE)) || retAns.docsReturnedAt)
                   return { step: 8, label: "Docs returned", accent: "cyan", cls: "bg-cyan-600 text-white border-cyan-700", bar: "bg-cyan-500", tint: "bg-cyan-500/[0.07] hover:bg-cyan-500/[0.12]", icon: FileCheck, at: (sg as any).documents_requested_at };
                 return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
               }
-              if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-white border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
-              if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-white border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
-              if ((sg as any).quote_response === "accepted") return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-white border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
+              if (accepted && ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-primary-foreground border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
+              if (accepted && ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-primary-foreground border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
+              if (accepted) return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-primary-foreground border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
               if ((sg as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (sg as any).quote_sent_at };
               if (hasDocs(sg)) return { step: 2, label: "Attachments", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
               return { step: 1, label: "No attachments", accent: "slate", cls: "bg-muted text-muted-foreground border-border", bar: "bg-muted-foreground/40", tint: "bg-card hover:bg-muted/40", icon: Inbox, at: null as string | null };
@@ -3415,8 +3418,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             if ((sg as any).quote_sent_at) {
               const accepted = (sg as any).quote_response === "accepted";
-              const quotedPer = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
-              const rowSpaces = Math.max(1, Number((s as any).spaces) || 1);
+              const quoteTotal = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
+              const rowSpaces = Math.max(1, Number((s as any).plot_count ?? (s as any).spaces) || 1);
+              const quotedPer = quoteTotal / rowSpaces;
               const rowRetailPer = Number((sg as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
               const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
               const rowProp = [
@@ -3539,7 +3543,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </span>
                   {isActive && <span className="absolute inset-y-0 left-0 w-[2px] bg-primary" />}
                   <img
-                    src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                    src={getPlotImage(s.property_type || "", Number((s as any).plot_count ?? s.spaces) || 1)}
                     alt=""
                     className="w-11 h-11 rounded-xl object-cover bg-muted/40 shrink-0 mt-0.5 ring-1 ring-border/60"
                   />
@@ -3782,7 +3786,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${isExpanded ? "bg-muted/40" : "hover:bg-muted/40"}`}
                           >
                             <img
-                              src={getPlotImage(s.property_type || "", Number(s.spaces || 1) || 1)}
+                              src={getPlotImage(s.property_type || "", Number((s as any).plot_count ?? s.spaces) || 1)}
                               alt=""
                               className="w-10 h-10 rounded-lg object-cover bg-muted/40 shrink-0 mt-0.5"
                             />
