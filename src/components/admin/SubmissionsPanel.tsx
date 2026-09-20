@@ -1600,10 +1600,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const quotePerPlot = quoteTotal > 0 ? quoteTotal / plotCount : 0;
               const resalePerPlot = resaleTotal > 0 ? resaleTotal / plotCount : (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
               const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
-              const sellingLocation = seller.plot_description || customerLocation;
-              const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
-              const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
-              const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
               const deedLocationParts = ["Section", "Block", "Lot", "Space"]
                 .map((label) => aiFacts.find((fact) => fact.label === label))
                 .filter((fact): fact is NonNullable<typeof fact> => Boolean(fact))
@@ -1614,6 +1610,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               }
               const deedLocation = deedLocationParts.join(" · ");
               const deedLocationSource = aiFacts.find((fact) => ["Section", "Block", "Lot", "Space", "Plot type"].includes(fact.label))?.source;
+              const sellingLocation = seller.plot_description || deedLocation || "Not provided";
+              const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
+              const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
+              const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
               const Fact = ({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) => (
                 <div className={`min-w-0 border-b border-border/50 pb-2 ${wide ? "sm:col-span-2" : ""}`}>
                   <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
@@ -1629,7 +1629,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                        <p className="mt-2 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
                        <div className="mt-4 flex flex-wrap items-center gap-2">
                          {selected.email && <Button type="button" size="sm" onClick={() => openWorkspaceAt("email", `email-thread-${selected.id}`)}><Mail />Email seller</Button>}
-                         {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />Call</a></Button>}
+                          {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />{selected.phone}</a></Button>}
                        </div>
                     </div>
                       <div className="min-w-0 sm:text-right">
