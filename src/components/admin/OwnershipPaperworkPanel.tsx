@@ -995,7 +995,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const countyState = cemCity ? `${cemCity}, TX` : "";
     for (const c of drifted) {
       const fd = { ...((c.fill_data ?? {}) as Record<string, unknown>) };
-      const executed = !!c.signed_at || !!c.notarized_at || !!c.completed_at;
+       const executed = !!c.signed_at || !!c.notarized_at || !!c.completed_at
+         || ["signed", "notarized", "completed"].includes(String(c.status));
       if (executed) continue; // never rewrite paper someone has already signed
       const overrides: Record<string, unknown> = {
         ...fd,
