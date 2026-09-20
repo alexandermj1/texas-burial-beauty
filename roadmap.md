@@ -42,16 +42,16 @@
 - [x] Make next-step buttons reliably wait for and scroll to their exact seller-profile action
 
 ## Plain-English document reasoning
-- [ ] Replace the family-tree diagram with a short relationship-and-signing explanation
-- [ ] Use low-cost AI to explain only non-obvious documents and joint POAs
-- [ ] Keep each explained POA clickable for checking and editing
-- [ ] Label POAs in the request as needed, without a separate prepared status
-- [ ] Rebuild every unsigned request document when cemetery or selling location changes
-- [ ] Verify Patricia Perkins and the seller workflow on desktop and mobile
+- [x] Replace the family-tree diagram with a short relationship-and-signing explanation
+- [x] Use low-cost AI to explain only non-obvious documents and joint POAs
+- [x] Keep each explained POA clickable for checking and editing
+- [x] Label POAs in the request as needed, without a separate prepared status
+- [x] Rebuild every unsigned request document when cemetery or selling location changes
+- [x] Verify Patricia Perkins and the seller workflow on desktop and mobile
 ## Seller profile Apple refinement
-- [ ] Apply the selected Apple workspace hierarchy and spacing across the seller profile
-- [ ] Collapse family confirmation and seller answers by default
-- [ ] Replace cemetery button clutter with clear inline information and working edit controls
-- [ ] Put cemetery and its submission count on the right side of the identity header
-- [ ] Keep family-tree status out of Email, Notes, and Attachments views
-- [ ] Verify cemetery and selling-location updates across unsigned documents, request email, and seller pages
+- [x] Apply the selected Apple workspace hierarchy and spacing across the seller profile
+- [x] Collapse family confirmation and seller answers by default
+- [x] Replace cemetery button clutter with clear inline information and working edit controls
+- [x] Put cemetery and its submission count on the right side of the identity header
+- [x] Keep family-tree status out of Email, Notes, and Attachments views
+- [x] Verify cemetery and selling-location updates across unsigned documents, request email, and seller pages
