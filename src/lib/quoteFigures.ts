@@ -42,8 +42,51 @@ export type QuoteFigures = {
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
-/** Buyer's premium charged on top of the seller's authorized price. */
+/** Buyer's premium charged on top of the seller's authorized price.
+ *  Basis: the purchase price EXCLUDING the cemetery's transfer fee — the same
+ *  basis as clause 4.1 of the listing agreement ("15% of the purchase price"),
+ *  with the transfer fee treated as a separate buyer-paid cemetery charge. */
 export const BUYER_FEE_RATE = 0.15;
+
+/** Default quote as a share of cemetery retail, before the ceiling below. */
+export const TARGET_QUOTE_PCT_OF_RETAIL = 0.55;
+
+/** Hard ceiling: what the buyer pays per space — authorized price + transfer
+ *  fee + the 15% premium — may never exceed this share of cemetery retail.
+ *  On low-value plots a flat transfer fee would otherwise push an ordinary
+ *  55% quote up to ~70%+ of retail once everything is added back in. */
+export const MAX_BUYER_PCT_OF_RETAIL = 0.70;
+
+/** Buyer's total per space for a given authorized (net) price, excluding any
+ *  optional add-on fees. */
+export const buyerPriceFromNet = (netPerSpace: number, transferFee: number) =>
+  netPerSpace + Math.max(0, transferFee) + netPerSpace * BUYER_FEE_RATE;
+
+/** Highest authorized price per space that keeps the buyer's total at or under
+ *  MAX_BUYER_PCT_OF_RETAIL of retail. Returns Infinity when retail is unknown. */
+export function maxNetPerSpace(retailPerPlot: number, transferFee: number): number {
+  const retail = Number(retailPerPlot) || 0;
+  if (retail <= 0) return Infinity;
+  const fee = Math.max(0, Number(transferFee) || 0);
+  return Math.max(0, (MAX_BUYER_PCT_OF_RETAIL * retail - fee) / (1 + BUYER_FEE_RATE));
+}
+
+/** The suggested authorized price per space: 55% of retail, lowered whenever
+ *  the transfer fee and premium would push the buyer past the 70% ceiling.
+ *  Rounded DOWN to $100 so rounding can never breach the ceiling. */
+export function suggestedNetPerSpace(retailPerPlot: number, transferFee: number): number {
+  const retail = Number(retailPerPlot) || 0;
+  if (retail <= 0) return 0;
+  const capped = Math.min(retail * TARGET_QUOTE_PCT_OF_RETAIL, maxNetPerSpace(retail, transferFee));
+  return Math.max(0, Math.floor(capped / 100) * 100);
+}
+
+/** True when a manually typed price breaks the ceiling. */
+export function exceedsBuyerCeiling(netPerSpace: number, retailPerPlot: number, transferFee: number): boolean {
+  const retail = Number(retailPerPlot) || 0;
+  if (retail <= 0 || !(Number(netPerSpace) > 0)) return false;
+  return buyerPriceFromNet(Number(netPerSpace), Number(transferFee) || 0) > MAX_BUYER_PCT_OF_RETAIL * retail + 0.5;
+}
 
 export type BuyerFee = { id: string; label: string; amount: number };
 
