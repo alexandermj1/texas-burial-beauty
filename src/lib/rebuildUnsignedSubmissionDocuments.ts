@@ -44,8 +44,7 @@ export async function rebuildUnsignedSubmissionDocuments(
       body: { submission_id: submissionId, kind: contract.kind, overrides },
     });
     if (rebuildError || (data as { error?: string } | null)?.error) {
-      await supabase.from("contracts").update({ status: "void" }).eq("id", contract.id);
-      continue;
+      throw new Error((data as { error?: string } | null)?.error || rebuildError?.message || "A document could not be updated.");
     }
     rebuilt += 1;
   }
