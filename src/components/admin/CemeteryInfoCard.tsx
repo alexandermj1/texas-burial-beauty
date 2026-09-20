@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import CemeteryFiles from "./CemeteryFiles";
 import CemeteryPeople from "./CemeteryPeople";
 
-import { cemeteryCanon } from "@/lib/cemeteryCanon";
+import { cemeteryCanon, pickBestCemeteryProfile } from "@/lib/cemeteryCanon";
 
 
 interface SectionEntry {

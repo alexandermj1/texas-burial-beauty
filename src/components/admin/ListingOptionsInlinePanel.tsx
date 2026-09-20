@@ -8,7 +8,7 @@ import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Sparkles, RefreshCw, FileSignature, Network, Plus, X, Send, Phone, ChevronDown } from "lucide-react";
-import { cemeteryCanon } from "@/lib/cemeteryCanon";
+import { cemeteryCanon, pickBestCemeteryProfile } from "@/lib/cemeteryCanon";
 import { properCase } from "@/lib/properCase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
