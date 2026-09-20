@@ -20,4 +20,4 @@
 - [x] Use one editable selling location across quote, agreement, family tree, and document request
 - [x] Rebuild the seller header and workflow sidebar without duplicate contact details or grave imagery
 - [x] Align record stages with the global pipeline and preserve all automated steps
-- [ ] Verify seller workflows and desktop/mobile presentation
+- [x] Verify seller workflows and desktop/mobile presentation
