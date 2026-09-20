@@ -20,6 +20,25 @@ const money = (v: unknown) => {
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) : null;
 };
+// The sales-price email quotes the headline INCLUSIVE of the cemetery transfer
+// fee: per space = stored net + fee, all spaces = net x count + fee (the fee is
+// charged once). quote_amount is stored PER SPACE and EXCLUDES the fee, so the
+// reminder must rebuild the same two numbers rather than printing it raw.
+const quoteLines = (netPerSpace: number, transferFee: number, plotCount: number) => {
+  if (!(netPerSpace > 0)) return null;
+  const fee = transferFee > 0 ? transferFee : 0;
+  const count = Math.max(1, plotCount || 1);
+  const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  const perSpace = netPerSpace + fee;
+  const total = netPerSpace * count + fee;
+  return {
+    headline: count > 1 ? `${usd(perSpace)} per space` : usd(perSpace),
+    detail: [
+      count > 1 ? `${usd(total)} across all ${count} spaces` : null,
+      fee > 0 ? `includes the cemetery's ${usd(fee)} transfer fee, charged once${count > 1 ? " for the whole transfer, not per space" : ""}` : null,
+    ].filter(Boolean).join(" — "),
+  };
+};
 const dayFmt = (iso: string) => new Date(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "America/Chicago" });
 const b64url = (value: string) => {
   let binary = "";
@@ -31,19 +50,19 @@ const realThread = (messages: ThreadMessage[]) => messages.find((message) => {
   return thread && !thread.startsWith("packet-") && !thread.startsWith("ownership-") && !thread.startsWith("local-");
 });
 
-export function buildQuoteReminderHtml(firstName: string, cemetery: string | null, amount: string | null, expiresOn: string, replyTo: string) {
+export function buildQuoteReminderHtml(firstName: string, cemetery: string | null, quote: { headline: string; detail: string } | null, expiresOn: string, replyTo: string) {
   const mailto = `mailto:${replyTo}?subject=${encodeURIComponent(`Question about my quote${cemetery ? ` - ${cemetery}` : ""}`)}`;
   const priceQuestionMailto = `mailto:${replyTo}?subject=${encodeURIComponent(`This number looks too high or too low${cemetery ? ` - ${cemetery}` : ""}`)}`;
-  const amountRow = amount
-    ? `<tr><td style="padding:14px 16px;border-bottom:1px solid #f1e6da;"><div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:.22em;color:#a08a76;text-transform:uppercase;margin-bottom:4px;">Minimum authorized sales price</div><div style="font-size:22px;color:#7c3a2e;font-weight:600;">${esc(amount)}</div></td></tr>`
+  const amountRow = quote
+    ? `<tr><td style="padding:14px 16px;border-bottom:1px solid #f1e6da;"><div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:.22em;color:#a08a76;text-transform:uppercase;margin-bottom:4px;">Minimum authorized sales price</div><div style="font-size:22px;color:#7c3a2e;font-weight:600;">${esc(quote.headline)}</div>${quote.detail ? `<div style="font-family:Arial,sans-serif;font-size:12.5px;line-height:1.6;color:#65594f;margin-top:5px;">${esc(quote.detail)}</div>` : ""}</td></tr>`
     : "";
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Texas Cemetery Brokers</title></head><body data-tcb-email="auto_followup" style="margin:0;padding:0;background:#f7f3ee;font-family:Georgia,'Times New Roman',serif;color:#1f2937;"><div style="display:none;max-height:0;overflow:hidden;opacity:0;">Your minimum authorized sales price expires in three days.</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f3ee;padding:32px 16px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border:1px solid #ead9c9;border-radius:14px;overflow:hidden;"><tr><td style="padding:28px 32px;border-bottom:1px solid #f1e6da;text-align:center;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:.18em;color:#7c3a2e;font-weight:600;">TEXAS CEMETERY BROKERS</div><div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.28em;color:#a08a76;margin-top:6px;text-transform:uppercase;">Serving all of Texas</div></td></tr><tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;color:#2d2a26;"><div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.22em;color:#7c3a2e;text-transform:uppercase;margin:0 0 14px;">Sales price reminder</div><p style="margin:0 0 16px;">Dear ${esc(firstName)},</p><p style="margin:0 0 18px;">I hope you are well. Just a gentle note that the minimum authorized sales price we prepared for you${cemetery ? ` for your property at ${esc(cemetery)}` : ""} remains open for <strong>three more days</strong>, until <strong>${esc(expiresOn)}</strong>.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;border:1px solid #ead9c9;border-radius:8px;background:#faf6f0;overflow:hidden;">${amountRow}<tr><td style="padding:14px 16px;"><div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:.22em;color:#a08a76;text-transform:uppercase;margin-bottom:4px;">Valid until</div><div style="font-size:15px;color:#2d2a26;font-weight:600;">${esc(expiresOn)}</div></td></tr></table><div style="margin:0 0 22px;padding:18px 20px;border:1px solid #ead9c9;border-radius:8px;background:#ffffff;text-align:center;"><div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.18em;color:#7c3a2e;text-transform:uppercase;margin-bottom:10px;">Not sure about this figure?</div><a href="${esc(priceQuestionMailto)}" style="display:inline-block;padding:13px 22px;background:#7c3a2e;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;margin-bottom:10px;">Ask us about this number</a><div style="font-size:14px;line-height:1.65;color:#65594f;">Please don't hesitate to speak to our staff. We can make mistakes or miss something, and we're happy to review it with you — no pressure either way.</div></div><div style="margin:0 0 24px;padding:18px 20px;border-left:4px solid #7c3a2e;background:#faf6f0;"><div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.18em;color:#7c3a2e;text-transform:uppercase;margin-bottom:7px;">Ready to proceed?</div><div style="font-size:15px;line-height:1.65;color:#2d2a26;">Please go back to your <strong>original sales price email</strong> in this conversation and use the acceptance option there. That ensures your acceptance is recorded correctly.</div></div><p style="margin:0 0 20px;">Once accepted, we will prepare your agreement straight away. The whole process takes only a few minutes.</p><p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:13px;line-height:1.7;color:#65594f;">If you would like to speak with us, have any questions about the amount, or would like us to explain any part of the process, simply <a href="${esc(mailto)}" style="color:#7c3a2e;text-decoration:none;"><strong>reply to this email</strong></a> or call <a href="tel:+12142304740" style="color:#7c3a2e;text-decoration:none;"><strong>(214) 230-4740</strong></a>. We are always happy to help, with no pressure either way.</p><p style="margin:0;font-size:14px;line-height:1.7;color:#2d2a26;">Warm regards,<br><strong>Alexander James</strong><br><span style="font-family:Arial,sans-serif;font-size:12px;color:#8a7766;">Cemetery Salesperson<br>Texas Cemetery Brokers</span></p></td></tr><tr><td style="padding:20px 32px;border-top:1px solid #f1e6da;text-align:center;font-family:Arial,sans-serif;font-size:12px;color:#8a7766;"><a href="${SITE}" style="color:#7c3a2e;text-decoration:none;">www.texascemeterybrokers.com</a><span style="color:#c8b8aa;"> &nbsp;·&nbsp; </span><a href="tel:+12142304740" style="color:#7c3a2e;text-decoration:none;">(214) 230-4740</a></td></tr></table></td></tr></table></body></html>`;
 }
 
-const buildPlain = (first: string, cemetery: string | null, amount: string | null, expiresOn: string) => [
+const buildPlain = (first: string, cemetery: string | null, quote: { headline: string; detail: string } | null, expiresOn: string) => [
   `Dear ${first},`, "",
   `I hope you are well. Just a gentle note that the minimum authorized sales price we prepared for you${cemetery ? ` for your property at ${cemetery}` : ""} remains open for three more days, until ${expiresOn}.`,
-  ...(amount ? ["", `Minimum authorized sales price: ${amount}`] : []), "",
+  ...(quote ? ["", `Minimum authorized sales price: ${quote.headline}${quote.detail ? ` (${quote.detail})` : ""}`] : []), "",
   "If this number looks too high or too low, please don't hesitate to speak to our staff. We can make mistakes or miss something, and we're happy to review it with you — no pressure either way.", "",
   "To accept, please go back to the original sales price email in this conversation and use the acceptance option there. This ensures your acceptance is recorded correctly.", "",
   "Once accepted, we will prepare your agreement straight away.", "",
@@ -106,7 +125,7 @@ Deno.serve(async (req) => {
     const nowMs = Date.now();
     const remindBefore = new Date(nowMs - REMIND_AFTER_DAYS * 86_400_000).toISOString();
     const quietCutoff = new Date(nowMs - 7 * 86_400_000).toISOString();
-    let query = db.from("contact_submissions").select("id,name,email,cemetery,quote_amount,quote_net_amount,quote_sent_at,quote_expires_at,customer_profile_id")
+    let query = db.from("contact_submissions").select("id,name,email,cemetery,quote_amount,quote_net_amount,transfer_fee_amount,plot_count,spaces,quote_sent_at,quote_expires_at,customer_profile_id")
       .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
       .is("quote_response", null).is("accepted_quote_amount", null).is("quote_responded_at", null)
       .is("document_followup_paused_at", null)
@@ -157,11 +176,12 @@ Deno.serve(async (req) => {
       const first = String(sub.name ?? "").trim().split(/\s+/)[0] || "there";
       // quote_amount is the final number saved and shown in the sent sales-price email.
       // quote_net_amount is retained only as a fallback for older records.
-      const amount = money(sub.quote_amount) ?? money(sub.quote_net_amount);
+      const netPerSpace = Number(sub.quote_amount) || Number(sub.quote_net_amount) || 0;
+      const quote = quoteLines(netPerSpace, Number(sub.transfer_fee_amount) || 0, Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1));
       const expiresOn = dayFmt(expiresAt);
       const subject = `Your minimum authorized sales price expires in 3 days${sub.cemetery ? ` - ${sub.cemetery}` : ""}`;
-      const html = buildQuoteReminderHtml(first, sub.cemetery, amount, expiresOn, OUR_EMAIL);
-      const plain = buildPlain(first, sub.cemetery, amount, expiresOn);
+      const html = buildQuoteReminderHtml(first, sub.cemetery, quote, expiresOn, OUR_EMAIL);
+      const plain = buildPlain(first, sub.cemetery, quote, expiresOn);
       const thread = realThread((messages ?? []) as ThreadMessage[]);
       let replyHeaders: string[] = [];
       if (thread) {

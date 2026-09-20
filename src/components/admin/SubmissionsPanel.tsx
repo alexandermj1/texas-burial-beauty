@@ -37,6 +37,7 @@ import { bayCemeteries } from "@/data/cemeteries";
 import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
+import { quoteFigures } from "@/lib/quoteFigures";
 import { Button } from "@/components/ui/button";
 
 const EmailThread = lazy(() => import("./EmailThread"));
@@ -1607,9 +1608,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const cemeteryProfile = cemeteryProfileFor(selected.cemetery);
               const plotCount = Math.max(1, Number(seller.plot_count ?? selected.spaces) || 1);
               const retail = Number(seller.cemetery_retail) || 0;
-              const quoteTotal = Number(seller.accepted_quote_amount ?? seller.quote_amount) || 0;
+              // quote_amount / accepted_quote_amount are stored PER SPACE and EXCLUDE the
+              // transfer fee; the sales-price email quotes them INCLUSIVE of the fee.
+              const figures = quoteFigures({
+                quoteAmount: seller.quote_amount,
+                acceptedAmount: seller.accepted_quote_amount,
+                transferFee: cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount,
+                plotCount,
+              });
+              const quoteTotal = figures.totalInclFee;
               const resaleTotal = Number(seller.list_price) || 0;
-              const quotePerPlot = quoteTotal > 0 ? quoteTotal / plotCount : 0;
+              const quotePerPlot = figures.perSpaceInclFee;
               const resalePerPlot = resaleTotal > 0 ? resaleTotal / plotCount : (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
               const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
               const deedLocationParts = ["Section", "Block", "Lot", "Space"]
@@ -1709,9 +1718,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <div className="border-t border-border pt-4">
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pricing & listing</p>
                          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
-                          {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee",v:fmtMoney(cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount)},{l:"Our quote per plot",v:fmtMoney(quotePerPlot)},{l:"Our resale price per plot",v:fmtMoney(resalePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
+                          {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee (once)",v:fmtMoney(figures.transferFee)},{l:"Quoted per space (incl. fee)",v:fmtMoney(quotePerPlot)},{l:"Our resale price per plot",v:fmtMoney(resalePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
                         </div>
-                         {plotCount > 1 && (quoteTotal > 0 || resaleTotal > 0) && <p className="mb-3 text-xs text-muted-foreground">All {plotCount} plots: quote {fmtMoney(quoteTotal)} · resale {fmtMoney(resaleTotal || resalePerPlot * plotCount)}</p>}
+                        {figures.hasQuote && <div className="mb-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Exactly as quoted to the seller</p>
+                          <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{figures.headline}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Authorized minimum net of the transfer fee: {fmtMoney(figures.netPerSpace)} per space{plotCount > 1 ? ` · ${fmtMoney(figures.netTotal)} across all ${plotCount} spaces` : ""}. Reminder emails quote the same figures.</p>
+                        </div>}
+                        {plotCount > 1 && resaleTotal > 0 && <p className="mb-3 text-xs text-muted-foreground">Our resale across all {plotCount} plots: {fmtMoney(resaleTotal)}</p>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
@@ -3463,9 +3477,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             if ((sg as any).quote_sent_at) {
               const accepted = (sg as any).quote_response === "accepted";
-              const quoteTotal = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
               const rowSpaces = Math.max(1, Number((s as any).plot_count ?? (s as any).spaces) || 1);
-              const quotedPer = quoteTotal / rowSpaces;
+              // Stored per space, excluding the transfer fee.
+              const quotedPer = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
               const rowRetailPer = Number((sg as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
               const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
               const rowProp = [
