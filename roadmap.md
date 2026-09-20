@@ -23,8 +23,11 @@
 - [x] Verify seller workflows and desktop/mobile presentation
 
 ## Integrated seller workspace
-- [ ] Make cemetery and canonical selling location the dominant record facts
-- [ ] Make the stage timeline read-only and separate deliberate manual moves
-- [ ] Remove or conditionally hide duplicated form, contact, and ownership details
-- [ ] Integrate email, family tree/paperwork, notes, and files into one seller workspace
+- [x] Make cemetery and canonical selling location the dominant record facts
+- [x] Make the stage timeline read-only and separate deliberate manual moves
+- [x] Remove or conditionally hide duplicated form, contact, and ownership details
+- [x] Integrate email, family tree/paperwork, notes, and files into one seller workspace
+- [ ] Restore reliable admin loading and verify every workspace tab/action
+- [ ] Make location editing deliberate and resync unsigned paperwork/doc requests
+- [ ] Rebalance list/detail widths and polish the manual stage control
 - [ ] Verify quote-to-document location consistency and desktop/mobile workflows
