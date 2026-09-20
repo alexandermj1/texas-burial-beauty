@@ -33,9 +33,9 @@
 - [x] Verify quote-to-document location consistency and desktop/mobile workflows
 
 ## Guided seller workflow restoration
-- [ ] Restore the visible family tree and all seller-provided ownership answers
-- [ ] Restore complete historical notes across the seller profile and submission
-- [ ] Replace the full detail pipeline with the current stage and a guided next action
-- [ ] Make the document-request review and send action prominent again
-- [ ] Move archive and delete controls to the bottom of the open submission
-- [ ] Verify each guided action opens the correct email, agreement, family-tree, or document-request workflow
+- [x] Restore the visible family tree and all seller-provided ownership answers
+- [x] Restore complete historical notes across the seller profile and submission
+- [x] Replace the full detail pipeline with the current stage and a guided next action
+- [x] Make the document-request review and send action prominent again
+- [x] Move archive and delete controls to the bottom of the open submission
+- [x] Verify each guided action opens the correct email, agreement, family-tree, or document-request workflow

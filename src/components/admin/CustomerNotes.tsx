@@ -13,7 +13,8 @@ import { softDelete } from "@/lib/softDelete";
 
 interface Note {
   id: string;
-  customer_profile_id: string;
+  customer_profile_id: string | null;
+  submission_id: string | null;
   body: string;
   author_user_id: string | null;
   author_name: string | null;
@@ -87,6 +88,9 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
 
   const scopeColumn = submissionId ? "submission_id" : "customer_profile_id";
   const scopeId = submissionId || customerId || "";
+  const matchesScope = (note: Note) =>
+    (!!submissionId && note.submission_id === submissionId)
+    || (!!customerId && note.customer_profile_id === customerId);
 
   // Load team (admins + agents) for @mention picker
   useEffect(() => {
@@ -124,11 +128,10 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
     if (!scopeId) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("customer_notes" as any)
-        .select("*").is("deleted_at", null)
-        .eq(scopeColumn, scopeId)
-        .order("created_at", { ascending: false });
+      let query = supabase.from("customer_notes" as any).select("*").is("deleted_at", null);
+      if (submissionId && customerId) query = query.or(`submission_id.eq.${submissionId},customer_profile_id.eq.${customerId}`);
+      else query = query.eq(scopeColumn, scopeId);
+      const { data } = await query.order("created_at", { ascending: false });
       if (!cancelled && data) setNotes(data as any);
     })();
     return () => { cancelled = true; };
@@ -141,17 +144,18 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       config: { presence: { key: myId } },
     });
 
-    const filter = `${scopeColumn}=eq.${scopeId}`;
     channel
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "customer_notes", filter }, (payload) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "customer_notes" }, (payload) => {
         const n = payload.new as Note;
+        if (!matchesScope(n)) return;
         setNotes(prev => prev.some(x => x.id === n.id) ? prev : [n, ...prev]);
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "customer_notes", filter }, (payload) => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "customer_notes" }, (payload) => {
         const n = payload.new as Note;
+        if (!matchesScope(n)) return;
         setNotes(prev => prev.map(x => x.id === n.id ? n : x));
       })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "customer_notes", filter }, (payload) => {
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "customer_notes" }, (payload) => {
         const n = payload.old as Note;
         setNotes(prev => prev.filter(x => x.id !== n.id));
       })
@@ -222,8 +226,9 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
       author_user_id: user?.id ?? null,
       author_name: myName,
       parent_note_id: parentId,
+      customer_profile_id: customerId || null,
+      submission_id: submissionId || null,
     };
-    insertPayload[scopeColumn] = scopeId;
     const { data, error } = await supabase.from("customer_notes" as any).insert(insertPayload).select().is("deleted_at", null).single();
     if (error) {
       toast({ title: "Could not save note", description: error.message, variant: "destructive" });
