@@ -206,6 +206,31 @@
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
+  /* Seller workspace actions inherit the current pipeline stage. Primary
+     actions carry the stage colour; supporting actions use its quiet tint. */
+  .seller-stage-profile button:not(.text-destructive):not(.text-amber-700),
+  .seller-stage-profile [role="button"]:not(.text-destructive):not(.text-amber-700) {
+    border-color: hsl(var(--seller-stage-border));
+  }
+  .seller-stage-profile button.bg-primary,
+  .seller-stage-profile [role="button"].bg-primary {
+    background-color: hsl(var(--seller-stage)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+  .seller-stage-profile button.text-primary,
+  .seller-stage-profile [role="button"].text-primary {
+    color: hsl(var(--seller-stage-fg)) !important;
+  }
+  .seller-stage-profile button.bg-secondary,
+  .seller-stage-profile [role="button"].bg-secondary {
+    background-color: hsl(var(--seller-stage-soft)) !important;
+    color: hsl(var(--seller-stage-fg)) !important;
+  }
+  .seller-stage-profile button:hover:not(.bg-destructive):not(.text-destructive):not(.text-amber-700),
+  .seller-stage-profile [role="button"]:hover:not(.bg-destructive):not(.text-destructive):not(.text-amber-700) {
+    border-color: hsl(var(--seller-stage));
+  }
+
   .bg-gradient-sage {
     background: linear-gradient(135deg, hsl(145 20% 92%) 0%, hsl(145 15% 96%) 100%);
   }
