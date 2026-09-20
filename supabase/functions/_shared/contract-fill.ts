@@ -160,9 +160,9 @@ function buildPoaOverlays(page1: PDFPage, font: PDFFont, _bold: PDFFont, data: F
 // rather than tacked on at the end as an addendum, so it reads as part of the
 // contract and the seller initials it alongside the rest of the terms.
 const BUYER_FEE_BODY = [
-  `4.1  Buyer's fee. In addition to the purchase price for the Property, the buyer shall pay Texas Cemetery Brokers LLC (the "Broker") a buyer's fee equal to fifteen percent (15%) of the purchase price, for handling the purchase, the transfer paperwork and coordination with the cemetery.`,
+  `4.1  Buyer's fee. In addition to the sales price for the Property, the buyer shall pay Texas Cemetery Brokers LLC (the "Broker") a buyer's fee equal to fifteen percent (15%) of the sales price, calculated on the full sales price including the cemetery's transfer fee, for handling the purchase, the transfer paperwork and coordination with the cemetery.`,
   `4.2  Charged to the buyer. The buyer's fee is charged to and collected from the buyer. It is separate from, and in addition to, the Broker's commission payable by the Seller under this Agreement, and it is not deducted from the Seller's proceeds.`,
-  `4.3  Other buyer-paid amounts. The buyer also remains responsible for the cemetery's transfer fee and any other cemetery charges, together with any administrative, documentary, notarial, statutory or third-party charges properly billed to the buyer, and any optional buyer services the buyer elects. The buyer's total at closing will therefore exceed the purchase price on which the Seller's proceeds are calculated.`,
+  `4.3  Other buyer-paid amounts. The cemetery's transfer fee forms part of the sales price on which the buyer's fee is calculated and is paid by the buyer. The buyer also remains responsible for any other cemetery charges, together with any administrative, documentary, notarial, statutory or third-party charges properly billed to the buyer, and any optional buyer services the buyer elects. The buyer's total at closing will therefore exceed the sales price on which the Seller's proceeds are calculated.`,
   `4.4  Sale in one or more transactions. Where the Property consists of more than one space, the Seller authorizes the Broker to sell the Property as a whole or in one or more separate transactions to one or more buyers, in any combination, provided each space sells at or above the authorized minimum price per space stated above. Each such transaction is a separate transfer at the cemetery and carries its own cemetery transfer fee and transfer paperwork, payable by the buyer in that transaction, and the buyer's fee under Section 4.1 applies to each transaction. The Seller's proceeds are calculated separately for each transaction on the same terms.`,
   `4.5  No change to Seller's proceeds. Nothing in this Section alters the price, commission or net proceeds agreed with the Seller elsewhere in this Agreement.`,
 ];
@@ -292,8 +292,10 @@ function appendInfoSheet(pdf: PDFDocument, font: PDFFont, bold: PDFFont, serif: 
       ['Seller Net at Min. (85%)', data.authorized_min_total ? money(Math.round(Number(data.authorized_min_total) * 0.85)) : undefined],
       // Buyer-side charge under Sale Terms 4.1 — shown here so the economics of the
       // deal read in full, but it never reduces the Seller's net above.
-      ["Buyer's Fee (15%) - paid by buyer", data.authorized_min_total ? money(Math.round(Number(data.authorized_min_total) * 0.15)) : undefined],
-      ['Buyer Total at Min. (before cemetery fees)', data.authorized_min_total ? money(Math.round(Number(data.authorized_min_total) * 1.15)) : undefined],
+      // Buyer's fee is 15% of the sales price INCLUDING the transfer fee
+      // (clause 4.1); the fee is charged once per transfer, not per space.
+      ["Buyer's Fee (15% of sales price incl. transfer fee) - paid by buyer", data.authorized_min_total ? money(Math.round((Number(data.authorized_min_total) + (Number(data.transfer_fee) || 0)) * 0.15)) : undefined],
+      ['Buyer Total at Min. (incl. transfer fee)', data.authorized_min_total ? money(Math.round((Number(data.authorized_min_total) + (Number(data.transfer_fee) || 0)) * 1.15)) : undefined],
     ];
     rowY = startCard('Sale Terms', termsRows.length);
     for (const [l, v] of termsRows) { row(rowY, l, v); rowY -= 22; }
