@@ -1,25 +1,14 @@
-# Seamless seller record cleanup
+# Integrated seller workspace
 
 ## What will change
-- Consolidate the cemetery name, submission count, search, cemetery information, and re-match controls into one restrained toolbar in the seller summary.
-- Keep detailed cemetery information and editing inline beneath that toolbar, removing the duplicated lower cemetery card.
-- Move the document insights control into the seller summary and present extracted information as a clean inline disclosure instead of a separate lower card.
-- Make the deed-match result clickable and open an inline deed preview focused on the owner-name area.
-- Integrate the reply status with the latest communication area, including a direct reply action and a compact “no reply needed” control; remove the separate lower reply-state box.
-- Rebuild the email chain as a compact conversation view: show the latest messages first, collapse older history behind a clear control, group repeated thread content, and keep reply composition close to the active message on desktop and mobile.
+- Rebuild the seller record around a clear top header where the cemetery and current selling location are the dominant facts. Keep the customer’s original location wording only before a quote is sent, clearly labelled “What the customer wrote”; hide it once staff have saved the quoted location.
+- Make the pipeline a read-only progress display so clicking a stage cannot accidentally move a seller. Put any deliberate manual stage change behind a clearly labelled control and confirmation, while preserving the existing acceptance restrictions and automation.
+- Remove repeated contact details, duplicate submitted dates, and other repeated seller facts. Keep email and phone as compact actions rather than prominent fields. Hide deed-owner status, relationship, and deed-name comparison after the family tree is complete because the completed ownership record supersedes them.
+- Bring the email thread, family tree/document workflow, team notes, seller uploads, customer files, and remaining actions into one coherent workspace. Email will be the primary/default area; the other tools remain immediately accessible without living as disconnected blocks at the bottom.
+- Ensure the editable “Locations being sold” value is the single saved source used by quote emails, listing agreements, family-tree preparation, and document requests.
 
-## Accuracy fixes
-- Use the dedicated plot count before the older `spaces` value everywhere the seller image and related seller displays choose a quantity.
-- Display saved quote and resale totals as per-plot amounts by dividing them by the authoritative plot count; retain totals as secondary context when there are multiple plots.
-- A seller can become Accepted only through an explicit acceptance in their email response, or when staff manually moves them to Accepted for the free listing option. Selecting a tier, sending materials, timestamps, or inferred wording must never accept a seller automatically.
-- Tighten email acceptance detection to require unambiguous confirmation and reject phrases such as “less than expected,” “waiting,” and “not accepting yet.”
-- Prevent family-tree stages from displaying before acceptance, even if stale family-tree timestamps exist.
-- Correct Robert’s incorrect accepted marker while preserving his correspondence and all other record history.
-
-## Verification
-- Confirm Robert shows two plots, the correct two-plot image, and correctly labelled per-plot and total amounts.
-- Confirm Robert remains at Quoted and does not show Family tree sent.
-- Confirm paid-tier selection alone cannot mark a seller Accepted, while a deliberate staff move to Accepted records the free option.
-- Confirm cemetery actions, document insights, deed preview, and reply actions work inline on desktop and mobile.
-- Confirm a long email history initially stays compact, older messages are easy to reveal, and replies remain in context.
-- Confirm the admin page opens without errors and the seller detail remains compact.
+## Technical details
+- Preserve the existing quote acceptance gate: only an actual email acceptance or a confirmed manual Starter move can mark a seller accepted.
+- Reuse the existing email, ownership paperwork, notes, and file components; this is a presentation and orchestration change, not a rewrite of their working processes.
+- Keep all existing archive, delete, quote, agreement, family-tree, and document-request behavior available.
+- Verify the finished seller record at desktop and mobile sizes, including stage safety, email composition, family-tree/documents, notes, files, and shared-location persistence.
