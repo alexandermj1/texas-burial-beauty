@@ -24,7 +24,6 @@ import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
 import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import CustomerFiles from "./CustomerFiles";
-import ContractsPanel from "./ContractsPanel";
 import OwnershipPaperworkPanel from "./OwnershipPaperworkPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { openFileViewer } from "@/lib/fileViewer";
@@ -274,6 +273,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const isMobile = useIsMobile();
   const adminName = useAdminDisplayName();
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
+  const [sellerWorkspaceTab, setSellerWorkspaceTab] = useState<"email" | "paperwork" | "notes" | "files">("email");
+  const [manualStageOpen, setManualStageOpen] = useState(false);
+  useEffect(() => {
+    setSellerWorkspaceTab("email");
+    setManualStageOpen(false);
+  }, [selectedId]);
   // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
   
@@ -1475,6 +1480,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return months < 12 ? `${months}mo ago` : `${Math.floor(months / 12)}y ago`;
     };
     const moveSellerStage = async (step: number) => {
+      const label = sellerStages[step - 1]?.label || "selected stage";
+      const warning = step >= 4
+        ? `Move this seller to ${label}? This is a manual Starter-option override and will update the record's milestone dates.`
+        : `Move this seller to ${label}? This manually changes the record's milestone dates.`;
+      if (!window.confirm(warning)) return;
       const now = new Date().toISOString();
       const ans = { ...(seller.ownership_answers ?? {}) } as Record<string, any>;
       ans.questionsSentAt = step >= 5 ? (ans.questionsSentAt || now) : null;
@@ -1492,7 +1502,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         documents_requested_at: step >= 7 ? (seller.documents_requested_at || now) : null,
         documents_completed_at: step >= 9 ? (seller.documents_completed_at || now) : null,
       } as any);
-      toast({ title: "Stage updated", description: sellerStages[step - 1]?.label });
+      setManualStageOpen(false);
+      toast({ title: "Stage updated", description: label });
     };
     const saveSellingLocation = async (value: string) => {
       const next = value.trim();
@@ -1527,8 +1538,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const resaleTotal = Number(seller.list_price) || 0;
               const quotePerPlot = quoteTotal > 0 ? quoteTotal / plotCount : 0;
               const resalePerPlot = resaleTotal > 0 ? resaleTotal / plotCount : (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
-              const deedLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
-              const sellingLocation = seller.plot_description || deedLocation;
+              const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
+              const sellingLocation = seller.plot_description || customerLocation;
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
               const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
               const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
@@ -1546,24 +1557,34 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
               return (
                 <section aria-label="Seller overview" className="overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-[0_18px_50px_-32px_hsl(var(--foreground)/0.28)]">
-                  <div className="flex flex-col gap-4 border-b border-border/70 bg-card px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                   <div className="flex flex-col gap-4 border-b border-border/70 bg-card px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-7">
                     <div className="min-w-0">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Seller submission record</p>
                       <h3 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
+                       <div className="mt-3 flex items-start gap-2">
+                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                         <div>
+                           <p className="font-display text-lg leading-tight text-foreground sm:text-xl">{selected.cemetery || "Cemetery not recorded"}</p>
+                           <p className="mt-1 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
+                         </div>
+                       </div>
                     </div>
-                    {selected.cemetery && subRegion(selected) === "texas" && <div className="flex flex-wrap items-center gap-1.5" aria-label="Cemetery tools">
+                     <div className="flex flex-wrap items-center justify-end gap-1.5">
+                     {selected.email && <Button asChild type="button" size="sm"><a href={`#email-thread-${selected.id}`}><Mail />Email</a></Button>}
+                     {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />Call</a></Button>}
+                     {selected.cemetery && subRegion(selected) === "texas" && <div className="flex flex-wrap items-center gap-1.5" aria-label="Cemetery tools">
                       <Button type="button" size="sm" variant={expandedCemetery && !editCemeteryInline ? "secondary" : "outline"} onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => !v); }} title="Open cemetery information"><Info />Info</Button>
                       <Button type="button" size="sm" variant="outline" onClick={() => { const canon = _canon(selected.cemetery || ""); setRegionFilter("texas"); setCemeteryCanon(canon); setCemeteryLabel(selected.cemetery); setSelectedId(null); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); }} title="Show every submission at this cemetery"><Search />Search</Button>
                       <Button type="button" size="sm" variant={editCemeteryInline ? "secondary" : "outline"} onClick={() => { setExpandedCemetery(false); setEditCemeteryInline(v => !v); }} title="Edit the cemetery profile here"><Pencil />Edit</Button>
                       <Button type="button" size="sm" variant="outline" onClick={() => setReassignCemeteryOpen(true)} title="Match this record to a different cemetery"><RefreshCw />Re-match</Button>
-                    </div>}
+                     </div>}
+                     </div>
                     {selected.source === "manual_phone" && seller.handled_by_name && <span className="hidden sm:inline text-[10px] text-muted-foreground">Added by {cleanDisplayName(seller.handled_by_name)}</span>}
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-[minmax(230px,0.72fr)_minmax(0,2fr)]">
                     <aside className="border-b border-border/70 bg-muted/35 p-5 lg:border-b-0 lg:border-r sm:p-6">
                       <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pipeline stage</p>
-                      <ol className="grid grid-cols-3 gap-1.5 lg:grid-cols-1 lg:gap-0">
+                      <ol className="grid grid-cols-3 gap-1.5 lg:grid-cols-1 lg:gap-0" aria-label="Current pipeline progress">
                         <li className="relative lg:pb-1.5">
                           <Button type="button" variant="ghost" size="sm" onClick={() => { if (!selected.archived_at) return; onUpdate(selected.id, { archived_at: null, archived_by: null } as any); }} className={`w-full justify-start px-2 text-[11px] ${selected.archived_at ? "bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))]" : "text-muted-foreground"}`} title={selected.archived_at ? "Restore to the live pipeline" : "Archived records are moved using the Archive action below"}><Archive className="h-3.5 w-3.5" />Archived</Button>
                         </li>
@@ -1572,10 +1593,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           const active = sellerStage === step;
                           const passed = sellerStage > step;
                           return <li key={label} className="relative lg:pb-1.5 lg:last:pb-0">
-                            <Button type="button" variant="ghost" size="sm" onClick={() => moveSellerStage(step)} title={`Move to ${label}`} className={`relative w-full justify-start px-2 text-[11px] ${active ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : passed ? "text-primary" : "text-muted-foreground"}`}><StageIcon className="h-3.5 w-3.5" /><span>{label}</span></Button>
+                            <div aria-current={active ? "step" : undefined} className={`flex h-8 w-full items-center gap-2 rounded-md px-2 text-[11px] ${active ? "bg-primary text-primary-foreground" : passed ? "text-primary" : "text-muted-foreground"}`}><StageIcon className="h-3.5 w-3.5" /><span>{label}</span></div>
                           </li>;
                         })}
                       </ol>
+                      <div className="mt-3 border-t border-border pt-3">
+                        <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setManualStageOpen(v => !v)}><Pencil />Change stage manually</Button>
+                        {manualStageOpen && <div className="mt-2 grid gap-1 rounded-md border border-border bg-background p-2">
+                          <p className="px-1 pb-1 text-[10px] leading-relaxed text-muted-foreground">Use only to correct the record. Accepted and later stages are recorded as a manual Starter-option move.</p>
+                          {sellerStages.slice(2).map(({ label, icon: StageIcon }, index) => <Button key={label} type="button" variant="ghost" size="sm" className="justify-start" onClick={() => moveSellerStage(index + 3)}><StageIcon className="h-3.5 w-3.5" />{label}</Button>)}
+                        </div>}
+                      </div>
                       <div className="mt-5 pt-4 border-t border-border">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-2">Last communication</p>
                         {lastContactAt ? <>
@@ -1589,24 +1617,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <div>
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Property</p>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <Fact label="Cemetery"><span className="inline-flex items-center gap-1.5 font-medium text-primary"><MapPin className="h-3.5 w-3.5" />{selected.cemetery || "Not provided"}</span></Fact>
                           <Fact label="Type of plots">{selected.property_type || "Not provided"}</Fact>
-                          <Fact label="Locations – on deed">{deedLocation}</Fact>
-                          <Fact label="Locations – being sold"><input key={`${selected.id}:${seller.plot_description || ""}`} aria-label="Locations being sold" defaultValue={sellingLocation === "Not provided" ? "" : sellingLocation} placeholder="Add location" onBlur={e => saveSellingLocation(e.currentTarget.value)} className="w-full rounded-md border border-border/70 bg-background px-2.5 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><span className="mt-1 block text-[10px] text-muted-foreground">Shared by the quote, agreement, family tree, and document request.</span></Fact>
+                          <Fact label="Locations being sold" wide><input key={`${selected.id}:${seller.plot_description || ""}`} aria-label="Locations being sold" defaultValue={sellingLocation === "Not provided" ? "" : sellingLocation} placeholder="Add the exact location wording" onBlur={e => saveSellingLocation(e.currentTarget.value)} className="w-full rounded-md border border-border/70 bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><span className="mt-1 block text-[10px] text-muted-foreground">This exact wording is used in the quote, agreement, family tree, and document request.</span></Fact>
+                          {!seller.quote_sent_at && !seller.plot_description && customerLocation !== "Not provided" && <Fact label="What the customer wrote" wide><span className="text-muted-foreground">{customerLocation}</span></Fact>}
                           <Fact label="# of plots being sold"><input aria-label="Number of plots being sold" type="number" min="1" defaultValue={seller.plot_count ?? selected.spaces ?? ""} placeholder="Add number" onBlur={e => { const value=Math.max(1,Number(e.currentTarget.value)||1); if(value !== Number(seller.plot_count ?? selected.spaces)) onUpdate(selected.id,{plot_count:value,spaces:String(value)} as any); }} className="w-24 bg-transparent border-0 border-b border-dashed border-primary/40 p-0 pb-0.5 text-sm text-foreground outline-none focus:border-primary" /></Fact>
                         </div>
                       </div>
                       <div className="pt-1">
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seller details</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                          <Fact label="Date form originally submitted">{formatDate(selected.created_at)}</Fact>
-                          <Fact label="Contact name">{selected.name || "Not provided"}</Fact>
-                          <Fact label="Contact email">{selected.email ? <a href={buildGmailComposeUrl({to:selected.email})} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{selected.email}</a> : "Not provided"}</Fact>
-                          <Fact label="Contact tel">{selected.phone ? <a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`} className="text-primary hover:underline">{selected.phone}</a> : "Not provided"}</Fact>
-                          <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>
-                           <Fact label="Form names match deed"><button type="button" onClick={() => setDeedPreviewOpen(v => !v)} className={`inline-flex items-center gap-1 font-semibold hover:underline ${deedNameMatch.className}`}><FileCheck className="h-3.5 w-3.5" />{deedNameMatch.label}</button>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>
-                          <Fact label="Owner status">{seller.deed_owners_status || "Not provided"}</Fact>
-                          <Fact label="Contact relationship to owners">{seller.relationship_to_owner || "Not provided"}</Fact>
+                          {!ftState(selected).doneAt && <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>}
+                          {!ftState(selected).doneAt && <Fact label="Form names match deed"><button type="button" onClick={() => setDeedPreviewOpen(v => !v)} className={`inline-flex items-center gap-1 font-semibold hover:underline ${deedNameMatch.className}`}><FileCheck className="h-3.5 w-3.5" />{deedNameMatch.label}</button>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>}
+                          {!ftState(selected).doneAt && seller.deed_owners_status && <Fact label="Owner status">{seller.deed_owners_status}</Fact>}
+                          {!ftState(selected).doneAt && seller.relationship_to_owner && <Fact label="Relationship to owners">{seller.relationship_to_owner}</Fact>}
                           <Fact label="Added information from form" wide>{info}</Fact>
                         </div>
                       </div>
@@ -1869,76 +1892,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     );
                   })()}
 
-                  {/* Manual stage mover — force a submission into any pipeline stage. */}
-                  {(() => {
-                    const x = selected as any;
-                    const ans = (x.ownership_answers ?? {}) as Record<string, any>;
-                    const now = new Date().toISOString();
-                    const STAGES = [
-                      // Before the quote the pipeline splits itself by attachments
-                      // (No attachments / Attachments) — that can't be forced by hand.
-                      { key: "awaiting_quote", label: "Before quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
-                      { key: "quoted",         label: "Quoted",         cls: "bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300" },
-                      { key: "accepted",       label: "Accepted",       cls: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300" },
-                      { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
-                      { key: "tree_done",      label: "Tree done",      cls: "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300" },
-                      { key: "docs_out",       label: "Docs out",       cls: "bg-sky-500/15 border-sky-500/50 text-sky-700 dark:text-sky-300" },
-                      { key: "docs_returned",  label: "Docs returned",  cls: "bg-cyan-500/15 border-cyan-500/50 text-cyan-700 dark:text-cyan-300" },
-                      { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
-                    ];
-                    const retE = (selected.email || "").trim().toLowerCase();
-                    const accepted = x.quote_response === "accepted";
-                    const current =
-                      accepted && x.documents_completed_at ? "complete"
-                      : accepted && x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
-                      : accepted && x.documents_requested_at ? "docs_out"
-                      : accepted && ans.sellerConfirmedAt ? "tree_done"
-                      : accepted && ans.questionsSentAt ? "tree_sent"
-                      : accepted ? "accepted"
-                      : x.quote_sent_at ? "quoted"
-                      : "awaiting_quote";
-
-                    const move = async (key: string) => {
-                      const idx = STAGES.findIndex(s => s.key === key);
-                      const at = (k: string) => STAGES.findIndex(s => s.key === k) <= idx;
-                      const answers = { ...ans };
-                      answers.questionsSentAt = at("tree_sent") ? (ans.questionsSentAt || now) : null;
-                      answers.sellerConfirmedAt = at("tree_done") ? (ans.sellerConfirmedAt || now) : null;
-                      answers.docsReturnedAt = at("docs_returned") ? (ans.docsReturnedAt || now) : null;
-                      const patch: any = {
-                        ownership_answers: answers,
-                        quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
-                        quote_response: at("accepted") ? "accepted" : (x.quote_response === "accepted" ? null : x.quote_response),
-                        quote_responded_at: at("accepted") ? (x.quote_responded_at || now) : (x.quote_response === "accepted" ? null : x.quote_responded_at),
-                        acceptance_channel: at("accepted") ? "manual_starter" : null,
-                        listing_tier: at("accepted") ? "starter" : x.listing_tier,
-                        listing_option: at("accepted") ? "starter" : x.listing_option,
-                        accepted_quote_amount: at("accepted") ? (x.accepted_quote_amount ?? x.quote_amount ?? null) : x.accepted_quote_amount,
-                        documents_requested_at: at("docs_out") ? (x.documents_requested_at || now) : null,
-                        documents_completed_at: at("complete") ? (x.documents_completed_at || now) : null,
-                      };
-                      await onUpdate(selected.id, patch);
-                      toast({ title: "Stage updated", description: STAGES[idx].label });
-                    };
-
-                    return (
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Move to stage</span>
-                        {STAGES.map(st => (
-                          <button
-                            key={st.key}
-                            onClick={() => move(st.key)}
-                            title={`Move this submission to "${st.label}"`}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
-                              current === st.key ? st.cls : "border-border text-muted-foreground hover:bg-muted/50"
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })()}
                   </>)}
                 </div>
               </div>
@@ -2404,6 +2357,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
     </>);
+    const sellerWorkspaceNav = kind !== "buyer" ? (
+      <nav aria-label="Seller workspace" className="sticky top-2 z-20 flex gap-1 overflow-x-auto rounded-lg border border-border bg-card/95 p-1 shadow-sm backdrop-blur">
+        {([
+          { key: "email", label: "Email", icon: Mail },
+          { key: "paperwork", label: "Family tree & documents", icon: Users },
+          { key: "notes", label: "Notes", icon: Pencil },
+          { key: "files", label: "Attachments", icon: Paperclip },
+        ] as const).map(({ key, label, icon: TabIcon }) => (
+          <Button
+            key={key}
+            type="button"
+            size="sm"
+            variant={sellerWorkspaceTab === key ? "default" : "ghost"}
+            className="shrink-0"
+            onClick={() => setSellerWorkspaceTab(key)}
+          >
+            <TabIcon className="h-3.5 w-3.5" />{label}
+          </Button>
+        ))}
+      </nav>
+    ) : null;
     const tailBlock = (<>
 
             {/* Contact actions */}
@@ -2831,7 +2805,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
             {/* Files the seller uploaded with the form */}
-            {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
+            {kind !== "buyer" && sellerWorkspaceTab === "files" && Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
               <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
             )}
 
@@ -2851,12 +2825,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             {/* Mobile keeps it lean — view-only. Notes, pipelines, reply/action buttons and files
                 are hidden on mobile since admin work is done from desktop. */}
-            {!isMobile && (
+            {(!isMobile || kind !== "buyer") && (
               <>
                 {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-                <div data-tour="notes-section">
+                {(kind === "buyer" || sellerWorkspaceTab === "notes") && <div data-tour="notes-section" className="rounded-lg border border-border bg-card p-4">
                   <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-                </div>
+                </div>}
 
                 {/* Texas pipeline now lives at the top of the detail view — no duplicate here. */}
 
@@ -2916,7 +2890,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {/* Actions — sellers: only show quote before/at the quote stages.
                     Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
-                {(() => {
+                {(kind === "buyer" || sellerWorkspaceTab === "paperwork") && (() => {
                   const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
                   const sellerCanQuote = kind === "seller" && (!bayerStage || sellerEarlyStages.includes(bayerStage));
                   const showQuoteBtn = kind !== "seller" || sellerCanQuote;
@@ -3011,7 +2985,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {/* Ownership proof + the exact paperwork this seller needs. Buyers never
                     sign seller paperwork, so this whole section is hidden for them. */}
-                {kind !== "buyer" && (
+                {kind !== "buyer" && sellerWorkspaceTab === "paperwork" && (
                   <OwnershipPaperworkPanel
                     submissionId={selected.id}
                     cemetery={selected.cemetery}
@@ -3028,7 +3002,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
                 {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
-                {(selected as any).customer_profile_id ? (
+                {kind !== "buyer" && sellerWorkspaceTab === "files" && ((selected as any).customer_profile_id ? (
                   <div data-tour="files-section" className="border-t border-border/40 pt-4">
                     <CustomerFiles
                       customerId={(selected as any).customer_profile_id}
@@ -3042,7 +3016,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </p>
                     <p className="text-xs text-muted-foreground">Setting up file storage for this submission…</p>
                   </div>
-                )}
+                ))}
 
               </>
             )}
@@ -3054,7 +3028,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             animate={{ opacity: 1, y: 0 }}
             className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
           >
-            {focusSplit ? (
+            {kind !== "buyer" ? (
+              <div className="space-y-5">
+                {headBlock}
+                {sellerWorkspaceNav}
+                {sellerWorkspaceTab === "email" && emailBlock}
+                {tailBlock}
+              </div>
+            ) : focusSplit ? (
               <div className="grid grid-cols-12 gap-6 items-start">
                 <div className="col-span-12 xl:col-span-7 min-w-0 space-y-5">{headBlock}{tailBlock}</div>
                 <div className="col-span-12 xl:col-span-5 min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-5">{emailBlock}</div>

@@ -22,6 +22,7 @@ type Packet = {
   cemetery: string | null;
   lawn?: string | null;
   space_numbers?: string | null;
+  plot_description?: string | null;
   deed_owner_names?: string | null;
   relationship_to_owner?: string | null;
   attachments?: Attachment[];
@@ -303,7 +304,7 @@ const OwnershipConfirm = () => {
     return {
       family: surname || "your",
       cemetery: packet?.cemetery ?? "Your cemetery",
-      location: [packet?.lawn, packet?.space_numbers ? `Spaces ${packet.space_numbers}` : ""].filter(Boolean).join(", ") || "The spaces on your deed",
+      location: packet?.plot_description?.trim() || [packet?.lawn, packet?.space_numbers ? `Spaces ${packet.space_numbers}` : ""].filter(Boolean).join(", ") || "The spaces on your deed",
       deedNote: deed.length ? `Deed names as we read them: ${deed.join(", ")}` : "Deed on file",
       deed,
       spaces: splitSpaces(packet?.space_numbers, packet?.lawn),
