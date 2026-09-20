@@ -350,12 +350,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setAnswers(a && typeof a === "object" ? a : {});
     setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
     const savedPlotDesc = ((sub as { plot_description?: string | null } | null)?.plot_description ?? "").trim();
-    setPlotDescription(savedPlotDesc);
-    // Nothing saved yet? Show exactly what the top of the profile shows — the
-    // AI's reading of the deed — instead of "not provided".
-    if (!savedPlotDesc) {
+    // Mirror the "Locations being sold" line at the top of the profile exactly:
+    // an office-verified autopilot location wins; otherwise the AI's reading of
+    // the deed beats stale seller-entered wording saved earlier.
+    const verified = String((a as Record<string, any>)?.autopilot?.plotDescription ?? "").trim();
+    if (verified && verified === savedPlotDesc) {
+      setPlotDescription(savedPlotDesc);
+    } else {
       const deedLoc = await fetchDeedSellingLocation((sub as { email?: string | null } | null)?.email);
-      if (deedLoc) setPlotDescription(deedLoc);
+      setPlotDescription(deedLoc || savedPlotDesc);
     }
     setPlotDescUpdatedAt(String((a as Record<string, any>)?.autopilot?.plotDescriptionUpdatedAt ?? "") || null);
     setRequestedAt(((sub as { documents_requested_at?: string | null } | null)?.documents_requested_at ?? null));
