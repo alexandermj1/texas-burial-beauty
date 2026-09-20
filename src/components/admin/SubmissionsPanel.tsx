@@ -275,16 +275,37 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const adminName = useAdminDisplayName();
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
   const [sellerWorkspaceTab, setSellerWorkspaceTab] = useState<"email" | "paperwork" | "notes" | "files">("email");
+  const [pendingWorkspaceAnchor, setPendingWorkspaceAnchor] = useState<string | null>(null);
   const [manualStageOpen, setManualStageOpen] = useState(false);
   const [locationEditing, setLocationEditing] = useState(false);
   const [locationDraft, setLocationDraft] = useState("");
   const [locationSaving, setLocationSaving] = useState(false);
   useEffect(() => {
     setSellerWorkspaceTab("email");
+    setPendingWorkspaceAnchor(null);
     setManualStageOpen(false);
     setLocationEditing(false);
     setLocationDraft("");
   }, [selectedId]);
+  useEffect(() => {
+    if (!pendingWorkspaceAnchor) return;
+    let stopped = false;
+    let attempts = 0;
+    const findAndScroll = () => {
+      if (stopped) return;
+      const target = document.getElementById(pendingWorkspaceAnchor);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        setPendingWorkspaceAnchor(null);
+        return;
+      }
+      attempts += 1;
+      if (attempts < 60) window.setTimeout(findAndScroll, 50);
+      else setPendingWorkspaceAnchor(null);
+    };
+    window.requestAnimationFrame(findAndScroll);
+    return () => { stopped = true; };
+  }, [pendingWorkspaceAnchor, sellerWorkspaceTab]);
   // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
   
@@ -1472,27 +1493,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       { label: "Docs returned", icon: FileCheck },
       { label: "Complete", icon: Sparkles },
     ];
-    const openPaperworkAt = (anchor?: string) => {
-      setSellerWorkspaceTab("paperwork");
-      if (anchor) window.setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" }), 250);
+    const openWorkspaceAt = (tab: "email" | "paperwork" | "notes" | "files", anchor: string) => {
+      setPendingWorkspaceAnchor(anchor);
+      setSellerWorkspaceTab(tab);
     };
     const guidedAction = sellerStage === 1
-      ? { label: "Ask for an attachment", hint: "Email the seller and request a deed or proof of purchase.", icon: Mail, run: () => setSellerWorkspaceTab("email") }
+      ? { label: "Ask for an attachment", hint: "Email the seller and request a deed or proof of purchase.", icon: Mail, run: () => openWorkspaceAt("email", `email-thread-${selected.id}`) }
       : sellerStage === 2
         ? { label: "Build and send quote", hint: "Review the attachment, then prepare the seller's quote.", icon: DollarSign, run: () => setQuoteOpen(true) }
         : sellerStage === 3
-          ? { label: "Review quote conversation", hint: "Check whether the seller has accepted or needs a reply.", icon: Mail, run: () => setSellerWorkspaceTab("email") }
+          ? { label: "Review quote conversation", hint: "Check whether the seller has accepted or needs a reply.", icon: Mail, run: () => openWorkspaceAt("email", `email-thread-${selected.id}`) }
           : sellerStage === 4
-            ? { label: "Prepare or send listing agreement", hint: "Open the agreement controls and send it for signature.", icon: FileSignature, run: () => openPaperworkAt("listing-agreement-workflow") }
+            ? { label: "Prepare or send listing agreement", hint: "Open the agreement controls and send it for signature.", icon: FileSignature, run: () => openWorkspaceAt("paperwork", "listing-agreement-workflow") }
             : sellerStage === 5
-              ? { label: "Send family confirmation again", hint: "The seller has not completed their family tree yet.", icon: Users, run: () => openPaperworkAt("family-confirmation-workflow") }
+              ? { label: "Send family confirmation again", hint: "The seller has not completed their family tree yet.", icon: Users, run: () => openWorkspaceAt("paperwork", "family-confirmation-workflow") }
               : sellerStage === 6
-                ? { label: "Check document request", hint: "Review the family answers, generated paperwork, and exact request.", icon: FileCheck, run: () => openPaperworkAt("document-request-workflow") }
+                ? { label: "Check document request", hint: "Review the family answers, generated paperwork, and exact request.", icon: FileCheck, run: () => openWorkspaceAt("paperwork", "document-request-workflow") }
                 : sellerStage === 7
-                  ? { label: "Manage outstanding documents", hint: "See what is missing and resend the request when needed.", icon: FileText, run: () => openPaperworkAt("document-request-workflow") }
+                  ? { label: "Manage outstanding documents", hint: "See what is missing and resend the request when needed.", icon: FileText, run: () => openWorkspaceAt("paperwork", "document-request-workflow") }
                   : sellerStage === 8
-                    ? { label: "Review returned documents", hint: "Check each returned file and mark the paperwork complete.", icon: FileCheck, run: () => openPaperworkAt("document-request-workflow") }
-                    : { label: "Review completed file", hint: "Everything required is recorded as complete.", icon: Sparkles, run: () => openPaperworkAt("document-request-workflow") };
+                    ? { label: "Review returned documents", hint: "Check each returned file and mark the paperwork complete.", icon: FileCheck, run: () => openWorkspaceAt("paperwork", "document-request-workflow") }
+                    : { label: "Review completed file", hint: "Everything required is recorded as complete.", icon: Sparkles, run: () => openWorkspaceAt("paperwork", "document-request-workflow") };
     const GuidedActionIcon = guidedAction.icon;
     const lastContactAt = lastInteractionMap[selected.id];
     const lastContactFromTCB = !!lastContactAt && lastOutgoingMap[selected.id] === lastContactAt;

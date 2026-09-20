@@ -39,3 +39,4 @@
 - [x] Make the document-request review and send action prominent again
 - [x] Move archive and delete controls to the bottom of the open submission
 - [x] Verify each guided action opens the correct email, agreement, family-tree, or document-request workflow
+- [x] Make next-step buttons reliably wait for and scroll to their exact seller-profile action
