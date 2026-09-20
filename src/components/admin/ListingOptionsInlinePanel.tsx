@@ -28,6 +28,12 @@ import {
   parseSpaces,
   type SellerForBlock,
 } from "@/lib/buildListingOptionsBlock";
+import {
+  suggestedNetPerSpace,
+  exceedsBuyerCeiling,
+  buyerPriceFromNet,
+  MAX_BUYER_PCT_OF_RETAIL,
+} from "@/lib/quoteFigures";
 
 interface Props {
   seller: SellerForBlock;
