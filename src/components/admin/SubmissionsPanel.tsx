@@ -1626,7 +1626,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <h3 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}</h3>
                        <p className="mt-2 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                         {selected.email && <Button asChild type="button" size="sm"><a href={`#email-thread-${selected.id}`}><Mail />Email seller</a></Button>}
+                         {selected.email && <Button type="button" size="sm" onClick={() => openWorkspaceAt("email", `email-thread-${selected.id}`)}><Mail />Email seller</Button>}
                          {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />Call</a></Button>}
                        </div>
                     </div>
@@ -2426,7 +2426,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             size="sm"
             variant={sellerWorkspaceTab === key ? "default" : "ghost"}
             className="h-10 min-w-max justify-center gap-2 rounded-lg px-3 text-xs"
-            onClick={() => setSellerWorkspaceTab(key)}
+            onClick={() => { setExpandedCemetery(false); setEditCemeteryInline(false); setSellerWorkspaceTab(key); }}
           >
             <TabIcon className="h-3.5 w-3.5" />{label}
           </Button>
