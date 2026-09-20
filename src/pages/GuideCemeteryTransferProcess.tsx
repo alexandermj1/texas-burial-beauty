@@ -6,8 +6,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
-import fern from "@/assets/flowers/fern.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import transferBotanical from "@/assets/transfer-guide-botanical.png";
 
 const PATH = "/cemetery-transfer-process-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -24,13 +23,13 @@ const Ext = ({ href, children }: { href: string; children: React.ReactNode }) =>
 const Section = ({ id, num, eyebrow, title, children }: { id: string; num: string; eyebrow: string; title: React.ReactNode; children: React.ReactNode }) => (
   <section id={id} className="scroll-mt-28 border-t border-border/60 py-12 md:py-16">
     <div className="grid gap-6 md:grid-cols-12 md:gap-10">
-      <div className="relative overflow-hidden md:col-span-3 md:min-h-[240px] md:border-r md:border-border/50 md:pr-8">
+      <div className="relative md:col-span-3 md:min-h-[240px] md:border-r md:border-border/50 md:pr-8">
         <div className="relative z-10 md:sticky md:top-28">
           <p className="font-display text-5xl leading-none text-primary/25">{num}</p>
           <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">{eyebrow}</p>
           <span className="mt-8 hidden h-20 w-px bg-gradient-to-b from-primary/30 to-transparent md:block" />
         </div>
-        <img src={num === "IV" || num === "VI" ? pinkBranch.url : fern.url} alt="" aria-hidden className="pointer-events-none absolute -bottom-7 -left-10 hidden w-40 rotate-6 opacity-[0.22] md:block" />
+        <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute bottom-2 left-0 hidden w-40 opacity-[0.24] md:block" />
       </div>
       <div className="md:col-span-9">
         <h2 className="mb-6 font-display text-3xl leading-[1.08] text-foreground md:text-[2.7rem]">{title}</h2>
@@ -80,6 +79,8 @@ const GuideCemeteryTransferProcess = () => (
 
     <header className="relative overflow-hidden border-b border-border/50 bg-secondary/40 pb-20 pt-28 md:pb-28">
       <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(hsl(var(--stone)/0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
+      <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -right-24 top-10 w-[460px] opacity-55 md:right-0 md:top-4 md:w-[570px] lg:right-6 lg:w-[650px]" />
+      <span className="absolute bottom-0 left-0 h-1 w-1/3 bg-primary/50" />
       <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
         <Link to="/guides" className="mb-12 inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground transition-colors hover:text-foreground">
           <ArrowLeft className="h-3.5 w-3.5" /> All guides
@@ -89,11 +90,11 @@ const GuideCemeteryTransferProcess = () => (
             <span className="h-px w-16 bg-primary/40" />
             <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-primary">Issue N°05 · The Transfer Edition</p>
           </div>
-          <h1 className="max-w-5xl font-display text-[2.9rem] leading-[0.98] text-foreground sm:text-6xl md:text-7xl lg:text-[5.25rem]">
+          <h1 className="max-w-4xl font-display text-[2.9rem] leading-[0.98] text-foreground sm:text-6xl md:text-7xl lg:text-[5.25rem]">
             Who Actually Owns Grandma’s <span className="italic text-primary">Cemetery Plot?</span>
           </h1>
-          <div className="mt-9 grid gap-8 md:grid-cols-12 md:items-end">
-            <p className="text-lg font-light leading-relaxed text-foreground/75 md:col-span-8 md:text-2xl">
+           <div className="mt-9 grid max-w-4xl gap-8 md:grid-cols-12 md:items-end">
+             <p className="text-lg font-light leading-relaxed text-foreground/75 md:col-span-8 md:text-2xl">
               A friendly Texas guide to the three authorities that decide who owns an unused cemetery space, who has to sign, and why the cemetery gets the final word.
             </p>
             <div className="border-l border-border pl-6 text-sm leading-relaxed text-muted-foreground md:col-span-4">
@@ -110,17 +111,23 @@ const GuideCemeteryTransferProcess = () => (
 
     <main>
       <article className="container mx-auto max-w-[1120px] px-6 pb-12 lg:px-10">
-        <div className="grid gap-10 py-12 md:grid-cols-[1fr_280px] md:py-16">
-          <p className="text-xl leading-[1.8] text-foreground/85 first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-primary">
+        <div className="grid overflow-hidden border-b border-border py-10 md:grid-cols-[1fr_240px_250px] md:items-stretch md:py-12">
+          <p className="pr-8 text-xl leading-[1.75] text-foreground/85 first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-primary">
             Here’s a question that sounds simple and isn’t: your father died, he owned four cemetery plots, only one got used, and your family wants to sell the other three. Who signs?
           </p>
-          <nav aria-label="Article chapters" className="border-l border-border pl-6 text-sm text-muted-foreground">
+          <nav aria-label="Article chapters" className="mt-8 border-l border-border pl-6 text-sm text-muted-foreground md:mt-0">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/50">In this guide</p>
             {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
           </nav>
+          <figure className="relative mt-8 min-h-52 overflow-hidden rounded-md md:mt-0">
+            <img src={SPARKMAN_HERO.src} alt="A peaceful memorial garden in Dallas" className="absolute inset-0 h-full w-full object-cover" />
+            <figcaption className="absolute inset-x-0 bottom-0 bg-foreground/75 px-4 py-3 text-xs leading-relaxed text-background">The cemetery’s own record is where every transfer begins.</figcaption>
+          </figure>
         </div>
 
-        <div className="mb-12 rounded-lg border border-primary/20 bg-primary/5 p-7 md:p-9">
+        <div className="relative my-10 overflow-hidden rounded-lg border border-primary/20 bg-primary/5 p-7 md:p-9">
+          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
+          <div className="relative">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">The honest answer</p>
           <p className="font-display text-2xl leading-snug text-foreground md:text-3xl">Three different authorities must line up before anything happens.</p>
           <div className="mt-7 grid gap-4 md:grid-cols-3">
@@ -131,6 +138,7 @@ const GuideCemeteryTransferProcess = () => (
             ].map(({Icon,n,t,d}) => <div key={n} className="border-t border-primary/25 pt-4"><div className="flex items-center gap-3"><Icon className="h-5 w-5 text-primary"/><span className="text-[10px] font-bold tracking-[0.2em] text-primary">{n}</span></div><h2 className="mt-3 font-display text-xl text-foreground">{t}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p></div>)}
           </div>
           <p className="mt-7 text-base leading-relaxed text-foreground/80">Families routinely get two out of three and wonder why nothing is moving. So let’s take them in order.</p>
+          </div>
         </div>
 
         <Section id="nature" num="I" eyebrow="The nature of the interest" title="First, a plot isn’t really property">
@@ -208,7 +216,7 @@ const GuideCemeteryTransferProcess = () => (
         </Section>
 
         <section id="sample-scenario" className="relative my-6 scroll-mt-28 overflow-hidden rounded-lg border border-primary/20 bg-secondary/40 p-6 md:p-10">
-          <img src={pinkBranch.url} alt="" aria-hidden className="pointer-events-none absolute -right-16 -top-20 w-64 -rotate-12 opacity-20" />
+          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-14 -top-14 w-64 opacity-20" />
           <div className="relative">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-primary/20 pb-6">
               <div>
@@ -221,10 +229,10 @@ const GuideCemeteryTransferProcess = () => (
             <div className="mt-7 grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
               <div>
                 <p className="text-base leading-relaxed text-foreground/75">Eleanor Whitaker owned four unused spaces at Sample Cemetery. She died without leaving the plots to anyone specifically. Her husband Thomas is living. Their son Daniel is living and married to Rebecca. Their daughter Susan died first, leaving Olivia and Marcus; Olivia is married to Noah, while Marcus has an existing durable power of attorney naming Elena. Their daughter Linda is living and married to Carlos.</p>
-                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">We entered those facts into the same document generator used for seller files. It followed Eleanor’s surviving spouse, each living child, Susan’s branch through her children, every current spouse, and Marcus’s attorney-in-fact.</p>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">Following the same review process we use for seller files, the signing path includes Eleanor’s surviving spouse, each living child, Susan’s branch through her children, every current spouse, and Marcus’s attorney-in-fact.</p>
 
                 <div className="mt-7 rounded-lg border border-border bg-background/80 p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">What the generator concludes</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">What the family facts mean</p>
                   <p className="mt-3 font-display text-2xl text-foreground">The family cannot solve this with one signature.</p>
                   <p className="mt-3 text-sm leading-relaxed text-foreground/70">Thomas signs in his own right. Daniel and Linda inherit their branches. Olivia and Marcus step into Susan’s branch. Rebecca, Noah and Carlos join their spouses. Elena signs in Marcus’s name under his existing authority.</p>
                 </div>
@@ -259,7 +267,7 @@ const GuideCemeteryTransferProcess = () => (
               <div><p className="font-display text-2xl text-foreground">This is exactly where a broker saves the family time.</p><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">The broker turns the family story into the right signer list, checks the cemetery’s own requirements, and keeps one missing branch from holding up the transfer.</p></div>
               <Link to="/sell" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Work through your family’s file <ArrowRight className="h-4 w-4" /></Link>
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">This sample is illustrative, not a legal conclusion for another family. Sample Cemetery and every person named above are fictional. The displayed result follows our document generator’s current rules and would still be checked against the actual cemetery record.</p>
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">This sample is illustrative, not a legal conclusion for another family. Sample Cemetery and every person named above are fictional. The result follows our current review rules and would still be checked against the actual cemetery record.</p>
           </div>
         </section>
 
@@ -292,7 +300,7 @@ const GuideCemeteryTransferProcess = () => (
         </Section>
 
         <section className="relative my-8 overflow-hidden rounded-lg border border-primary/20 bg-primary/10 px-7 py-9 text-foreground md:px-10 md:py-11">
-          <img src={fern.url} alt="" aria-hidden className="pointer-events-none absolute -bottom-20 -right-12 w-64 -rotate-12 opacity-20" />
+          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -bottom-16 -right-10 w-64 opacity-20" />
           <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
             <div className="relative"><ShieldCheck className="h-7 w-7 text-primary"/><h2 className="mt-4 font-display text-3xl md:text-4xl">Get help from a cemetery broker.</h2><p className="mt-4 max-w-2xl leading-relaxed text-foreground/70">If the family agrees and the goal is a clean sale, we can check the cemetery record, identify the likely signers and explain the transfer requirements before you commit to anything.</p></div>
             <Link to="/sell" className="relative inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Work through your file <ArrowRight className="h-4 w-4"/></Link>
