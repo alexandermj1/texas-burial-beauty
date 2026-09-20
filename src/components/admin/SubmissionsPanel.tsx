@@ -3005,7 +3005,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     cemetery={selected.cemetery}
                     sellerEmail={selected.email}
                     sellerName={selected.name}
-                    defaultOpen={false}
+                    defaultOpen
                     quoteAccepted={(selected as any).quote_response === "accepted"}
                     onSent={() => onRefresh?.()}
                   /></Suspense>
