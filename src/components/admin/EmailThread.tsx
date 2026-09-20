@@ -72,6 +72,16 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
   // flips to a green "Listing agreement signed" chip.
   const [laSignedAt, setLaSignedAt] = useState<string | null>(null);
 
+  // The guided stage buttons (e.g. "Build and send quote") open the very same
+  // composer a broker would use by hand, with the requested pack already open.
+  useEffect(() => {
+    if (!autoCompose) return;
+    setForcedTemplateId(autoCompose.templateId);
+    setReplyingTo(null);
+    setComposeNew(true);
+  }, [autoCompose?.nonce, autoCompose?.templateId]);
+
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
