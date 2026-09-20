@@ -34,13 +34,17 @@ interface Props {
 
 const ZOOMS = [1, 1.6, 2.4, 3.2];
 
+/** Cemeteries, funeral homes and corporations are never the plot owner. */
+const NOT_A_PERSON =
+  /\b(cemetery|cemeteries|memorial|memorials|park|gardens?|mortuary|funeral|chapel|inc\.?|l\.?l\.?c\.?|ltd\.?|company|corp\.?|association|trust company|home)\b/i;
+
 const splitNames = (raw: unknown): string[] => {
   if (Array.isArray(raw)) return raw.flatMap((r) => splitNames(r));
   if (typeof raw !== "string") return [];
   return raw
     .split(/\s*(?:,| and | & |;|\/)\s*/i)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 2 && /[a-z]/i.test(s));
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 2 && /[a-z]/i.test(s) && !NOT_A_PERSON.test(s) && s.split(" ").length >= 2);
 };
 
 const norm = (s: string) =>
