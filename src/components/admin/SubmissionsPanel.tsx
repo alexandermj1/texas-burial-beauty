@@ -1486,18 +1486,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // Each stage carries its own colour, so the page quietly takes on the shade
     // of wherever this seller actually is instead of being green throughout.
     const sellerStages = [
-      { label: "No attachments", icon: FileX, tone: "nodocs" },
-      { label: "Attachments", icon: Paperclip, tone: "new" },
-      { label: "Quoted", icon: DollarSign, tone: "quote" },
-      { label: "Accepted", icon: CheckCircle, tone: "docs" },
-      { label: "Tree sent", icon: Send, tone: "followup" },
-      { label: "Tree done", icon: Users, tone: "followup" },
-      { label: "Docs out", icon: FileText, tone: "quote" },
-      { label: "Docs returned", icon: FileCheck, tone: "new" },
-      { label: "Complete", icon: Sparkles, tone: "docs" },
+      { label: "No attachments", icon: FileX, tone: "slate" },
+      { label: "Attachments", icon: Paperclip, tone: "amber" },
+      { label: "Quoted", icon: DollarSign, tone: "purple" },
+      { label: "Accepted", icon: CheckCircle, tone: "emerald" },
+      { label: "Tree sent", icon: Send, tone: "indigo" },
+      { label: "Tree done", icon: Users, tone: "teal" },
+      { label: "Docs out", icon: FileText, tone: "sky" },
+      { label: "Docs returned", icon: FileCheck, tone: "cyan" },
+      { label: "Complete", icon: Sparkles, tone: "green" },
     ];
-    const stageTone = sellerStages[sellerStage - 1]?.tone ?? "new";
-    const toneVar = (suffix: string) => `hsl(var(--status-${stageTone}${suffix}))`;
+    const stageTone = sellerStages[sellerStage - 1]?.tone ?? "slate";
+    const toneVar = (suffix: string) => `hsl(var(--pipeline-${stageTone}${suffix}))`;
     const needsAttention = !!awaitingAll[selected.id];
     const stagePrimaryStyle = { backgroundColor: "hsl(var(--seller-stage))", color: "hsl(var(--primary-foreground))" };
     const stageSecondaryStyle = { borderColor: toneVar("-border"), backgroundColor: toneVar("-soft"), color: toneVar("-fg") };
@@ -3138,10 +3138,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             animate={{ opacity: 1, y: 0 }}
              className="seller-stage-profile bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] p-6 space-y-5"
              style={{
-               "--seller-stage": `var(--status-${stageTone})`,
-               "--seller-stage-soft": `var(--status-${stageTone}-soft)`,
-               "--seller-stage-fg": `var(--status-${stageTone}-fg)`,
-               "--seller-stage-border": `var(--status-${stageTone}-border)`,
+               "--seller-stage": `var(--pipeline-${stageTone})`,
+               "--seller-stage-soft": `var(--pipeline-${stageTone}-soft)`,
+               "--seller-stage-fg": `var(--pipeline-${stageTone}-fg)`,
+               "--seller-stage-border": `var(--pipeline-${stageTone}-border)`,
              } as React.CSSProperties}
           >
             {kind !== "buyer" ? (
