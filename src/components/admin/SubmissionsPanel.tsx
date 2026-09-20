@@ -1483,17 +1483,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const focusSplit = !isMobile && listCollapsed;
     const seller = selected as any;
     const sellerStage = effStep(selected);
+    // Each stage carries its own colour, so the page quietly takes on the shade
+    // of wherever this seller actually is instead of being green throughout.
     const sellerStages = [
-      { label: "No attachments", icon: FileX },
-      { label: "Attachments", icon: Paperclip },
-      { label: "Quoted", icon: DollarSign },
-      { label: "Accepted", icon: CheckCircle },
-      { label: "Tree sent", icon: Send },
-      { label: "Tree done", icon: Users },
-      { label: "Docs out", icon: FileText },
-      { label: "Docs returned", icon: FileCheck },
-      { label: "Complete", icon: Sparkles },
+      { label: "No attachments", icon: FileX, tone: "nodocs" },
+      { label: "Attachments", icon: Paperclip, tone: "new" },
+      { label: "Quoted", icon: DollarSign, tone: "quote" },
+      { label: "Accepted", icon: CheckCircle, tone: "docs" },
+      { label: "Tree sent", icon: Send, tone: "followup" },
+      { label: "Tree done", icon: Users, tone: "followup" },
+      { label: "Docs out", icon: FileText, tone: "quote" },
+      { label: "Docs returned", icon: FileCheck, tone: "new" },
+      { label: "Complete", icon: Sparkles, tone: "docs" },
     ];
+    const stageTone = sellerStages[sellerStage - 1]?.tone ?? "new";
+    const toneVar = (suffix: string) => `hsl(var(--status-${stageTone}${suffix}))`;
+    const needsAttention = !!awaitingAll[selected.id];
     const openWorkspaceAt = (tab: "email" | "paperwork" | "notes" | "files", anchor: string) => {
       setPendingWorkspaceAnchor(anchor);
       setSellerWorkspaceTab(tab);
