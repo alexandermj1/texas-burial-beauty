@@ -211,7 +211,10 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const ownerList = ownerNames.map((n) => n.trim()).filter(Boolean);
   const deedOwnersClean = ownerList.join(" & ");
 
-  const canGenerate = nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1;
+  // The agreement, POAs and family tree are generated straight after the quote
+  // is accepted, so the quote cannot go out without the wording they need.
+  const canGenerate =
+    nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1 && plotDescription.trim().length > 2;
 
   const prepBlock = useMemo(
     () => ({
