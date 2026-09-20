@@ -21,3 +21,10 @@
 - [x] Rebuild the seller header and workflow sidebar without duplicate contact details or grave imagery
 - [x] Align record stages with the global pipeline and preserve all automated steps
 - [x] Verify seller workflows and desktop/mobile presentation
+
+## Integrated seller workspace
+- [ ] Make cemetery and canonical selling location the dominant record facts
+- [ ] Make the stage timeline read-only and separate deliberate manual moves
+- [ ] Remove or conditionally hide duplicated form, contact, and ownership details
+- [ ] Integrate email, family tree/paperwork, notes, and files into one seller workspace
+- [ ] Verify quote-to-document location consistency and desktop/mobile workflows
