@@ -436,6 +436,43 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     didLoad.current = true;
   }, [submissionId, cemetery]);
 
+  /** Change the selling location here and push it through every live document. */
+  const saveSellingLocation = async () => {
+    const next = locDraft.trim();
+    if (!next) { toast.error("Enter the locations being sold."); return; }
+    if (next === plotDescription.trim()) { setLocEditing(false); return; }
+    const ok = window.confirm("Update the locations being sold everywhere? Quotes, the seller's document page and every unsigned prepared document will use this wording. Signed documents are left exactly as they were signed.");
+    if (!ok) return;
+    setLocSaving(true);
+    try {
+      const at = new Date().toISOString();
+      const nextAnswers = { ...(answers as Record<string, unknown>) };
+      nextAnswers.autopilot = {
+        ...((nextAnswers.autopilot ?? {}) as Record<string, unknown>),
+        plotDescription: next,
+        plotDescriptionUpdatedAt: at,
+      };
+      const { error } = await supabase.from("contact_submissions")
+        .update({ plot_description: next, ownership_answers: nextAnswers } as never)
+        .eq("id", submissionId);
+      if (error) throw error;
+      const rebuilt = await rebuildUnsignedSubmissionDocuments(submissionId, { plotDescription: next });
+      setAnswers(nextAnswers as OwnershipAnswers);
+      setPlotDescription(next);
+      setPlotDescUpdatedAt(at);
+      setLocEditing(false);
+      toast.success(rebuilt
+        ? `Updated everywhere — ${rebuilt} unsigned document${rebuilt === 1 ? " was" : "s were"} rebuilt. Signed copies were left alone.`
+        : "Updated everywhere.");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update the locations being sold.");
+    } finally {
+      setLocSaving(false);
+    }
+  };
+
+
   const toggleAutoFollowup = async () => {
     const pausing = !followupPausedAt;
     const at = pausing ? new Date().toISOString() : null;
