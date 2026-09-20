@@ -84,6 +84,45 @@
     --status-nodocs-fg: 25 50% 28%;
     --status-nodocs-border: 28 45% 80%;
 
+    /* Exact seller pipeline hues. The open profile inherits these same hues so
+       its actions always agree with the stage badge and pipeline filter. */
+    --pipeline-slate: 215 16% 47%;
+    --pipeline-slate-soft: 210 20% 96%;
+    --pipeline-slate-fg: 215 25% 27%;
+    --pipeline-slate-border: 214 20% 82%;
+    --pipeline-amber: 38 92% 50%;
+    --pipeline-amber-soft: 48 96% 89%;
+    --pipeline-amber-fg: 32 95% 30%;
+    --pipeline-amber-border: 43 96% 72%;
+    --pipeline-purple: 271 81% 56%;
+    --pipeline-purple-soft: 270 100% 96%;
+    --pipeline-purple-fg: 272 72% 38%;
+    --pipeline-purple-border: 269 97% 85%;
+    --pipeline-emerald: 160 84% 39%;
+    --pipeline-emerald-soft: 149 80% 94%;
+    --pipeline-emerald-fg: 161 94% 25%;
+    --pipeline-emerald-border: 152 76% 80%;
+    --pipeline-indigo: 239 84% 67%;
+    --pipeline-indigo-soft: 226 100% 97%;
+    --pipeline-indigo-fg: 243 75% 42%;
+    --pipeline-indigo-border: 229 93% 87%;
+    --pipeline-teal: 175 84% 32%;
+    --pipeline-teal-soft: 166 76% 95%;
+    --pipeline-teal-fg: 176 91% 24%;
+    --pipeline-teal-border: 170 77% 76%;
+    --pipeline-sky: 199 89% 48%;
+    --pipeline-sky-soft: 204 100% 97%;
+    --pipeline-sky-fg: 201 90% 32%;
+    --pipeline-sky-border: 200 94% 82%;
+    --pipeline-cyan: 188 86% 43%;
+    --pipeline-cyan-soft: 183 100% 96%;
+    --pipeline-cyan-fg: 192 91% 30%;
+    --pipeline-cyan-border: 187 92% 75%;
+    --pipeline-green: 161 94% 30%;
+    --pipeline-green-soft: 149 80% 94%;
+    --pipeline-green-fg: 163 94% 24%;
+    --pipeline-green-border: 152 76% 80%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 145 25% 36%;
