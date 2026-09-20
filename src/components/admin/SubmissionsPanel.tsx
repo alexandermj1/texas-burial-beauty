@@ -1681,7 +1681,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                    <div className="grid grid-cols-1 lg:grid-cols-[minmax(230px,0.72fr)_minmax(0,2fr)]">
                     <aside className="border-b border-border/70 bg-muted/35 p-5 lg:border-b-0 lg:border-r sm:p-6">
                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Current stage</p>
-                       {(() => { const CurrentIcon = sellerStages[sellerStage - 1]?.icon || Inbox; return <div className="rounded-lg border border-primary/25 bg-primary/[0.06] p-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground"><CurrentIcon className="h-4 w-4" /></span><div><p className="text-sm font-semibold text-foreground">{sellerStages[sellerStage - 1]?.label}</p><p className="text-[10px] text-muted-foreground">Step {sellerStage} of {sellerStages.length}</p></div></div><p className="mt-3 text-xs leading-relaxed text-muted-foreground">{guidedAction.hint}</p><Button type="button" size="sm" className="mt-3 h-auto min-h-9 w-full justify-start whitespace-normal px-3 py-2 text-left leading-snug" onClick={guidedAction.run}><GuidedActionIcon className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1">{guidedAction.label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0" /></Button></div>; })()}
+                       {(() => { const CurrentIcon = sellerStages[sellerStage - 1]?.icon || Inbox; return (
+                         <div className="rounded-xl border p-3.5" style={{ borderColor: toneVar("-border"), backgroundColor: toneVar("-soft") }}>
+                           <div className="flex items-center gap-2.5">
+                             <span className="grid h-8 w-8 place-items-center rounded-full text-white" style={{ backgroundColor: toneVar("") }}><CurrentIcon className="h-4 w-4" /></span>
+                             <div><p className="text-sm font-semibold" style={{ color: toneVar("-fg") }}>{sellerStages[sellerStage - 1]?.label}</p><p className="text-[10px] opacity-70" style={{ color: toneVar("-fg") }}>Step {sellerStage} of {sellerStages.length}</p></div>
+                           </div>
+                           <p className="mt-3 text-xs leading-relaxed opacity-80" style={{ color: toneVar("-fg") }}>{guidedAction.hint}</p>
+                           <Button type="button" size="sm" style={{ backgroundColor: toneVar(""), color: "#fff" }} className={`mt-3 h-auto min-h-9 w-full justify-start whitespace-normal px-3 py-2 text-left leading-snug transition-transform duration-200 hover:brightness-110 active:scale-[0.98] ${needsAttention ? "animate-attention" : ""}`} onClick={guidedAction.run}><GuidedActionIcon className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1">{guidedAction.label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0" /></Button>
+                           {needsAttention && <p className="mt-2 text-[10px] font-medium" style={{ color: "hsl(var(--status-reply))" }}>Waiting on a reply from us</p>}
+                         </div>
+                       ); })()}
                       <div className="mt-3 border-t border-border pt-3">
                          <Button type="button" size="sm" variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setManualStageOpen(v => !v)}><Pencil className="h-3.5 w-3.5" />Correct stage</Button>
                          {manualStageOpen && <div className="mt-1 grid gap-1 rounded-md border border-border bg-background p-2 shadow-sm">
