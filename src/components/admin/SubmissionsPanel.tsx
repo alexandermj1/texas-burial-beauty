@@ -3477,9 +3477,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             if ((sg as any).quote_sent_at) {
               const accepted = (sg as any).quote_response === "accepted";
-              const quoteTotal = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
               const rowSpaces = Math.max(1, Number((s as any).plot_count ?? (s as any).spaces) || 1);
-              const quotedPer = quoteTotal / rowSpaces;
+              // Stored per space, excluding the transfer fee.
+              const quotedPer = Number((sg as any).accepted_quote_amount ?? (sg as any).quote_amount) || 0;
               const rowRetailPer = Number((sg as any).cemetery_retail) || (quotedPer > 0 ? quotedPer / 0.42 : 0);
               const rowPlotLocation = [(s as any).section || null, (s as any).lawn || null].filter(Boolean).join(" · ") || null;
               const rowProp = [
