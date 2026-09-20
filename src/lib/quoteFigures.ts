@@ -31,10 +31,10 @@ export type QuoteFigures = {
   /** Extra one-time fees the office added to the buyer's price. */
   buyerFees: { id: string; label: string; amount: number }[];
   buyerFeesTotal: number;
-  /** 15% buyer's premium on the authorized price. */
+  /** 15% buyer's premium on the sales price INCLUDING the transfer fee. */
   buyerPremiumPerSpace: number;
   buyerPremiumTotal: number;
-  /** What the buyer pays per space (authorized + transfer fee + 15%). */
+  /** What the buyer pays per space: (authorized + transfer fee) x 1.15. */
   buyerPricePerSpace: number;
   /** Full buyer price for all spaces including added fees. */
   buyerPriceTotal: number;
