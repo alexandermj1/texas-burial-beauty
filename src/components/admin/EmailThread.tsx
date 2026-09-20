@@ -56,18 +56,31 @@ interface Props {
     lawn?: string | null;
     transfer_fee_amount?: number | string | null;
   } | null;
+  /** When this changes, open a new email pre-loaded with the given template. */
+  autoCompose?: { templateId: string; nonce: number } | null;
 }
 
-const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext, sellerContext }: Props) => {
+const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext, sellerContext, autoCompose }: Props) => {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [composeNew, setComposeNew] = useState(false);
+  const [forcedTemplateId, setForcedTemplateId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
   // When the listing agreement for this submission is signed, the LA email tag
   // flips to a green "Listing agreement signed" chip.
   const [laSignedAt, setLaSignedAt] = useState<string | null>(null);
+
+  // The guided stage buttons (e.g. "Build and send quote") open the very same
+  // composer a broker would use by hand, with the requested pack already open.
+  useEffect(() => {
+    if (!autoCompose) return;
+    setForcedTemplateId(autoCompose.templateId);
+    setReplyingTo(null);
+    setComposeNew(true);
+  }, [autoCompose?.nonce, autoCompose?.templateId]);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -159,15 +172,17 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
       {composeNew && replyTarget && (
         <div className="border-b border-border bg-muted/20 p-3">
           <InlineEmailComposer
+            key={forcedTemplateId ?? "new"}
             to={replyTarget}
             defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
             recipientName={customerName}
             templates={newEmailTemplates}
+            initialTemplateId={forcedTemplateId}
             submissionId={submissionId}
             buyerContext={buyerContext ?? undefined}
             sellerContext={sellerContext ?? undefined}
-            onSent={(meta) => { setComposeNew(false); onNewEmailSent?.(meta); refresh(); }}
-            onCancel={() => setComposeNew(false)}
+            onSent={(meta) => { setComposeNew(false); setForcedTemplateId(null); onNewEmailSent?.(meta); refresh(); }}
+            onCancel={() => { setComposeNew(false); setForcedTemplateId(null); }}
           />
         </div>
       )}

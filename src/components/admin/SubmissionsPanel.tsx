@@ -236,6 +236,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("texas");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [autoCompose, setAutoCompose] = useState<{ templateId: string; nonce: number } | null>(null);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [plotCardsOpen, setPlotCardsOpen] = useState(false);
   // Manual buyer→seller matching search box (buyer workspace).
@@ -1499,7 +1500,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const guidedAction = sellerStage === 1
       ? { label: "Ask for an attachment", hint: "Email the seller and request a deed or proof of purchase.", icon: Mail, run: () => openWorkspaceAt("email", `email-thread-${selected.id}`) }
       : sellerStage === 2
-        ? { label: "Build and send quote", hint: "Review the attachment, then prepare the seller's quote.", icon: DollarSign, run: () => setQuoteOpen(true) }
+        ? {
+            label: "Build and send quote",
+            hint: "Opens the seller quote packet — pricing, deed owners and plot wording all in one place.",
+            icon: DollarSign,
+            // Exactly the same flow as choosing the seller quote packet in the
+            // email system: the agreement and family tree are generated from
+            // what is entered here, so there is no shorter path.
+            run: () => {
+              setAutoCompose({ templateId: "seller_listing_options", nonce: Date.now() });
+              openWorkspaceAt("email", `email-thread-${selected.id}`);
+            },
+          }
         : sellerStage === 3
           ? { label: "Review quote conversation", hint: "Check whether the seller has accepted or needs a reply.", icon: Mail, run: () => openWorkspaceAt("email", `email-thread-${selected.id}`) }
           : sellerStage === 4
@@ -2411,6 +2423,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     lawn: (x as any)?.lawn ?? null,
                     transfer_fee_amount: cemeteryProfileFor(selected.cemetery)?.transfer_fee ?? selected.transfer_fee_amount ?? null,
                   } : null}
+                  autoCompose={kind !== "buyer" ? autoCompose : null}
                   onNewEmailSent={() => {}}
                  /></Suspense>
                 </div>
