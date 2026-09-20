@@ -4,8 +4,6 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
-import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
 import transferCemetery from "@/assets/transfer-guide-cemetery.jpg";
 import transferCemeteryRecords from "@/assets/transfer-guide-cemetery-records.jpg";
