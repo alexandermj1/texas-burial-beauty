@@ -55,3 +55,9 @@
 - [x] Put cemetery and its submission count on the right side of the identity header
 - [x] Keep family-tree status out of Email, Notes, and Attachments views
 - [x] Verify cemetery and selling-location updates across unsigned documents, request email, and seller pages
+
+## Cemetery transfer process guide
+- [ ] Build Issue 5 from the supplied human-written inheritance article
+- [ ] Add legal-source links, diagrams, internal links, and search metadata
+- [ ] Verify desktop/mobile presentation and publish
+- [ ] Request Google indexing for the live guide
