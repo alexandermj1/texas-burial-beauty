@@ -261,6 +261,7 @@ const InlineEmailComposer = ({
   onCancel,
   sendLabel = "Send",
   templates,
+  initialTemplateId,
   submissionId,
   buyerContext,
   sellerContext,
