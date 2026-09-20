@@ -82,7 +82,7 @@ const FAQ: { q: string; a: string }[] = [
 
 type ListingAgreement = { signed: boolean; completed: boolean; signed_at: string | null } | null;
 
-type Packet = { seller_name: string | null; broker_note?: string | null; cemetery: string | null; documents: PacketDoc[]; poa?: Poa; poas?: Poa[]; listing_agreement?: ListingAgreement };
+type Packet = { seller_name: string | null; broker_note?: string | null; cemetery: string | null; plot_description?: string | null; documents: PacketDoc[]; poa?: Poa; poas?: Poa[]; listing_agreement?: ListingAgreement };
 
 const DONE = ["received", "notarized", "complete"];
 const PUBLIC_SITE_URL = "https://www.texascemeterybrokers.com";
@@ -812,6 +812,13 @@ const SellerDocuments = () => {
           <p className="mt-3 text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Private page for {packet.seller_name}
           </p>
+        )}
+
+        {packet?.plot_description && (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-border/60 bg-card/60 px-4 py-3 text-sm">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <div><span className="text-xs text-muted-foreground">Property covered by this request</span><p className="font-medium text-foreground">{packet.plot_description}</p></div>
+          </div>
         )}
 
         {packet?.broker_note && (

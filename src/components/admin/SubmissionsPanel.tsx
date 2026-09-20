@@ -1620,27 +1620,28 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
               return (
                 <section aria-label="Seller overview" className="overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-[0_18px_50px_-32px_hsl(var(--foreground)/0.28)]">
-                   <div className="flex flex-col gap-4 border-b border-border/70 bg-card px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-7">
+                   <div className="grid gap-5 border-b border-border/70 bg-card px-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)] sm:items-start sm:px-7">
                     <div className="min-w-0">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Seller submission record</p>
                       <h3 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}</h3>
-                       <div className="mt-3 flex items-start gap-2">
-                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                         <div>
-                           <p className="font-display text-lg leading-tight text-foreground sm:text-xl">{selected.cemetery || "Cemetery not recorded"}</p>
-                           <p className="mt-1 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
-                         </div>
+                       <p className="mt-2 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
+                       <div className="mt-4 flex flex-wrap items-center gap-2">
+                         {selected.email && <Button asChild type="button" size="sm"><a href={`#email-thread-${selected.id}`}><Mail />Email seller</a></Button>}
+                         {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />Call</a></Button>}
                        </div>
                     </div>
-                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                     {selected.email && <Button asChild type="button" size="sm"><a href={`#email-thread-${selected.id}`}><Mail />Email</a></Button>}
-                     {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />Call</a></Button>}
-                     {selected.cemetery && subRegion(selected) === "texas" && <div className="flex flex-wrap items-center gap-1.5" aria-label="Cemetery tools">
-                       <Button type="button" size="sm" variant={expandedCemetery && !editCemeteryInline ? "secondary" : "outline"} onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => { const next = !v; if (next) window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); return next; }); }} title="Open cemetery information"><Info />Info</Button>
-                      <Button type="button" size="sm" variant="outline" onClick={() => { const canon = _canon(selected.cemetery || ""); setRegionFilter("texas"); setCemeteryCanon(canon); setCemeteryLabel(selected.cemetery); setSelectedId(null); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); }} title="Show every submission at this cemetery"><Search />Search</Button>
-                      <Button type="button" size="sm" variant={editCemeteryInline ? "secondary" : "outline"} onClick={() => { setExpandedCemetery(false); setEditCemeteryInline(v => !v); }} title="Edit the cemetery profile here"><Pencil />Edit</Button>
-                      <Button type="button" size="sm" variant="outline" onClick={() => setReassignCemeteryOpen(true)} title="Match this record to a different cemetery"><RefreshCw />Re-match</Button>
-                     </div>}
+                      <div className="min-w-0 sm:text-right">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Cemetery</p>
+                        <div className="mt-1 flex items-start gap-2 sm:justify-end">
+                          <MapPin className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                          <p className="font-display text-lg leading-tight text-foreground sm:text-xl">{selected.cemetery || "Not recorded"}</p>
+                        </div>
+                        {selected.cemetery && <p className="mt-1 text-xs text-muted-foreground">{texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} submission{(texasCemeteryCounts.get(_canon(selected.cemetery)) || 0) === 1 ? "" : "s"} at this cemetery</p>}
+                        {selected.cemetery && subRegion(selected) === "texas" && <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end" aria-label="Cemetery tools">
+                          <Button type="button" size="sm" variant={expandedCemetery && !editCemeteryInline ? "secondary" : "outline"} onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => { const next = !v; if (next) window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); return next; }); }} title="Open this cemetery's information inline"><Building2 />Cemetery info</Button>
+                          <Button type="button" size="sm" variant={editCemeteryInline ? "secondary" : "outline"} onClick={() => { setExpandedCemetery(true); setEditCemeteryInline(true); window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); }} title="Edit this cemetery's information inline"><Pencil />Edit info</Button>
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setReassignCemeteryOpen(true)} title="Change the cemetery matched to this seller"><RefreshCw />Change cemetery</Button>
+                        </div>}
                      </div>
                     {selected.source === "manual_phone" && seller.handled_by_name && <span className="hidden sm:inline text-[10px] text-muted-foreground">Added by {cleanDisplayName(seller.handled_by_name)}</span>}
                   </div>
@@ -2412,7 +2413,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
     </>);
     const sellerWorkspaceNav = kind !== "buyer" ? (
-      <nav aria-label="Seller workspace" className="sticky top-2 z-20 flex gap-1 overflow-x-auto rounded-lg border border-border bg-card/95 p-1 shadow-sm backdrop-blur">
+       <nav aria-label="Seller workspace" className="sticky top-2 z-20 grid grid-cols-4 gap-1 overflow-x-auto rounded-xl border border-border/70 bg-card/95 p-1.5 shadow-sm backdrop-blur">
         {([
           { key: "email", label: "Email", icon: Mail },
           { key: "paperwork", label: "Family tree & documents", icon: Users },
@@ -2424,7 +2425,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             type="button"
             size="sm"
             variant={sellerWorkspaceTab === key ? "default" : "ghost"}
-            className="shrink-0"
+            className="h-10 min-w-max justify-center gap-2 rounded-lg px-3 text-xs"
             onClick={() => setSellerWorkspaceTab(key)}
           >
             <TabIcon className="h-3.5 w-3.5" />{label}
@@ -2973,7 +2974,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {/* Family tree questionnaire status — visible at a glance on the submission. */}
                 {(() => {
-                  if (kind === "buyer") return null;
+                  if (kind === "buyer" || sellerWorkspaceTab !== "paperwork") return null;
                   const ft = ftState(selected);
                   if ((selected as any).quote_response !== "accepted" || (!ft.sentAt && !ft.doneAt)) return null;
                   const done = !!ft.doneAt;
@@ -3004,7 +3005,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     cemetery={selected.cemetery}
                     sellerEmail={selected.email}
                     sellerName={selected.name}
-                    defaultOpen
+                    defaultOpen={false}
                     quoteAccepted={(selected as any).quote_response === "accepted"}
                     onSent={() => onRefresh?.()}
                   /></Suspense>

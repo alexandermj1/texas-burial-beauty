@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: sub } = await svc.from('contact_submissions')
-      .select('email, name, cemetery').eq('id', submissionId).maybeSingle();
+      .select('email, name, cemetery, plot_description').eq('id', submissionId).maybeSingle();
     const to = body?.to || sub?.email;
     if (!to) throw new Error('no recipient email');
 
@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
     const brokerNote = String(body?.note ?? '').trim();
     const firstName = greetingOverride || (sub?.name ?? '').trim().split(/\s+/)[0] || 'there';
     const cemLine = sub?.cemetery ? ` at ${esc(sub.cemetery)}` : '';
+    const propertyLine = sub?.plot_description ? esc(sub.plot_description) : '';
 
     // The email stays deliberately short: one button, nothing else. The list of
     // documents, how to get each one, notary steps and the mailing address all
@@ -108,6 +109,7 @@ Deno.serve(async (req) => {
             To complete the sale of your property${cemLine} we need a few documents. We've put them all on one
             secure page for you, with simple instructions for each one.
           </p>
+          ${propertyLine ? `<p style="margin:0 0 22px;padding:12px 16px;background:#faf7f1;border-radius:8px;font-size:14px;color:#4a5568;"><strong style="color:#1f2a37;">Property:</strong> ${propertyLine}</p>` : ''}
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 22px;">
             <tr><td align="center" style="background:#1f2a37;border-radius:8px;">
               <a href="${esc(packetUrl)}" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:17px;">

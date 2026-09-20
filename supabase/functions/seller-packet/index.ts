@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     const { data: sub } = await supabase
       .from("contact_submissions")
-      .select("id, name, email, cemetery, customer_profile_id, deleted_at, ownership_answers")
+      .select("id, name, email, cemetery, plot_description, customer_profile_id, deleted_at, ownership_answers")
       .eq("id", submissionId)
       .maybeSingle();
     if (!sub || sub.deleted_at) return json({ error: "This link is no longer active." }, 404);
@@ -244,6 +244,7 @@ Deno.serve(async (req) => {
         seller_name: String(ownershipAnswers.packetGreeting ?? "").trim() || sub.name,
         broker_note: String(ownershipAnswers.packetNote ?? "").trim() || null,
         cemetery: sub.cemetery,
+        plot_description: sub.plot_description,
         listing_agreement: listingRow
           ? {
               signed: !!listingRow.signed_at || listingRow.status === "signed" || listingRow.status === "completed",
