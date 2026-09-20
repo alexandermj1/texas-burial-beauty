@@ -7,6 +7,7 @@ import { X, Search, Building2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
+import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
 
 interface Props {
   open: boolean;
@@ -70,7 +71,7 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
   const countFor = (id: string) => countsByCemId.get(id) || 0;
 
 
-  const pick = async (row: { id: string; name: string }) => {
+  const pick = async (row: { id: string; name: string; city: string | null }) => {
     if (!submissionId) return;
     if (row.name === currentCemetery) { onClose(); return; }
     setSaving(row.id);
@@ -100,7 +101,16 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
         .update(patch)
         .eq("id", submissionId);
       if (error) throw error;
-      toast({ title: "Cemetery re-matched", description: `Submission moved to "${row.name}".` });
+      const rebuilt = await rebuildUnsignedSubmissionDocuments(submissionId, {
+        cemetery: row.name,
+        cemeteryCity: row.city,
+      });
+      toast({
+        title: "Cemetery updated everywhere",
+        description: rebuilt
+          ? `${rebuilt} unsigned document${rebuilt === 1 ? " was" : "s were"} safely replaced. Signed copies were unchanged.`
+          : `Submission moved to "${row.name}". Signed copies were unchanged.`,
+      });
       onSaved?.();
       onClose();
     } catch (e: any) {
