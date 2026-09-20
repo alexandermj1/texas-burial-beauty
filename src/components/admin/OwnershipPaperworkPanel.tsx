@@ -1,3 +1,4 @@
+import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
