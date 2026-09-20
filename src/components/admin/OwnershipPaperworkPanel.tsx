@@ -2535,12 +2535,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 : "—";
             };
             const facts = [
+              { label: "Cemetery", value: cemetery || "—" },
               { label: "Deed owners entered", value: String(prepared.deedOwnerNames || deedNamesRaw || "—") },
               { label: "Relationship to deed owner", value: relationshipToOwner || "Not provided" },
               { label: "Selling location", value: String(prepared.plotDescription || "—") },
               { label: "Plots", value: String(prepared.plotCount || "—") },
+              { label: "County / state", value: String(prepared.countyState || "—") },
+              { label: "Minimum per plot", value: money(prepared.netPerPlot) },
               { label: "Minimum authorized price", value: money(prepared.authorizedMinTotal) },
               { label: "Expected sale price per plot", value: money(prepared.salesPricePerPlot) },
+              { label: "Transfer fee per plot", value: money(prepared.transferFee) },
+              { label: "Listing option", value: String(prepared.listingOption || "Not selected yet") },
             ];
             return (
               <div className="rounded-lg border border-border/70 bg-muted/20 p-4">
