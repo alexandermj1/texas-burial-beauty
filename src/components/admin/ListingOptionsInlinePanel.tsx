@@ -718,7 +718,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               <label className={labelCls}>Transfer fee (USD)</label>
               <input
                 type="number" min="0" step="5" value={transferFee}
-                onChange={(e) => setTransferFee(e.target.value)} className={inputCls}
+                onChange={(e) => handleTransferFeeChange(e.target.value)} className={inputCls}
               />
             </div>
           </div>
