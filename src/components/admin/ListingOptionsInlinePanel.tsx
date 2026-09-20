@@ -159,6 +159,21 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   }, [seller.id, seller.name, seller.section, seller.lawn, seller.spaces, seller.space_numbers]);
 
   useEffect(() => {
+    const name = (seller.cemetery || "").trim();
+    if (!name) { setCemProfile(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("texas_cemeteries" as any)
+        .select("name, city, address, contact_name, contact_phone, contact_email, transfer_fee, typical_prices, process_info, website");
+      if (cancelled) return;
+      const canon = cemeteryCanon(name);
+      setCemProfile(((data as any[]) || []).find((r) => cemeteryCanon(r.name) === canon) ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [seller.cemetery]);
+
+  useEffect(() => {
     setPlotCount(String(parseSpaces(seller.spaces)));
     setRetail("");
     setNetPerPlot("");
