@@ -28,6 +28,12 @@ import {
   parseSpaces,
   type SellerForBlock,
 } from "@/lib/buildListingOptionsBlock";
+import {
+  suggestedNetPerSpace,
+  exceedsBuyerCeiling,
+  buyerPriceFromNet,
+  MAX_BUYER_PCT_OF_RETAIL,
+} from "@/lib/quoteFigures";
 
 interface Props {
   seller: SellerForBlock;
@@ -229,13 +235,27 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     return () => { cancelled = true; };
   }, [seller.id, seller.spaces, seller.cemetery, seller.transfer_fee_amount]);
 
+  const applyRetail = (v: string, fee: number) => {
+    const r = Number(v);
+    if (!isFinite(r) || r <= 0) return;
+    // 55% of retail, lowered whenever the transfer fee + 15% buyer's premium
+    // would push what the buyer pays past 70% of retail.
+    const net = suggestedNetPerSpace(r, fee);
+    if (!netTouched) setNetPerPlot(String(net));
+    if (!salesTouched) {
+      const cap = Math.floor((MAX_BUYER_PCT_OF_RETAIL * r) / 100) * 100;
+      setSalesPrice(String(Math.min(round100(r * 0.67), cap)));
+    }
+  };
+
   const handleRetailChange = (v: string) => {
     setRetail(v);
-    const r = Number(v);
-    if (isFinite(r) && r > 0) {
-      if (!netTouched) setNetPerPlot(String(round100(r * 0.55)));
-      if (!salesTouched) setSalesPrice(String(round100(r * 0.67)));
-    }
+    applyRetail(v, Number(transferFee) || 0);
+  };
+
+  const handleTransferFeeChange = (v: string) => {
+    setTransferFee(v);
+    applyRetail(retail, Number(v) || 0);
   };
 
   const nppNum = Number(netPerPlot) || 0;
@@ -674,7 +694,18 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
                 onChange={(e) => { setNetPerPlot(e.target.value); setNetTouched(true); }}
                 placeholder="55% of retail" className={inputCls}
               />
-              <p className="text-[9px] text-muted-foreground mt-1">55% of retail, rounded to $100.</p>
+              {exceedsBuyerCeiling(nppNum, retailNum, feeNum) ? (
+                <p className="text-[9px] text-destructive mt-1">
+                  Too high — with the {fmtUsd(feeNum)} transfer fee and the 15% buyer's fee the buyer pays{" "}
+                  {fmtUsd(buyerPriceFromNet(nppNum, feeNum))}, which is{" "}
+                  {Math.round((buyerPriceFromNet(nppNum, feeNum) / retailNum) * 100)}% of retail. Max{" "}
+                  {fmtUsd(suggestedNetPerSpace(retailNum, feeNum))}.
+                </p>
+              ) : (
+                <p className="text-[9px] text-muted-foreground mt-1">
+                  55% of retail, capped so the buyer never pays over {Math.round(MAX_BUYER_PCT_OF_RETAIL * 100)}% of retail.
+                </p>
+              )}
             </div>
             <div>
               <label className={labelCls}># of plots</label>
@@ -687,7 +718,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
               <label className={labelCls}>Transfer fee (USD)</label>
               <input
                 type="number" min="0" step="5" value={transferFee}
-                onChange={(e) => setTransferFee(e.target.value)} className={inputCls}
+                onChange={(e) => handleTransferFeeChange(e.target.value)} className={inputCls}
               />
             </div>
           </div>
