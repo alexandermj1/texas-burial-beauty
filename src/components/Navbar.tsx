@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect, useEffect } from "react";
-import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen } from "lucide-react";
+import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, Flower2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
@@ -76,7 +76,10 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
       >
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 whitespace-nowrap shrink-0">
-            <img src={hibiscusLogo.url} alt="" width={32} height={32} className="w-8 h-8 object-contain" />
+            <span className="relative grid h-8 w-8 shrink-0 place-items-center" aria-hidden>
+              <Flower2 className={`h-6 w-6 ${dark ? "text-[hsl(var(--gold))]" : solid ? "text-primary" : "text-primary-foreground"}`} />
+              <img src={hibiscusLogo.url} alt="" width={32} height={32} className="absolute inset-0 h-8 w-8 object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+            </span>
             <span className={`font-display text-lg sm:text-2xl transition-colors duration-300 ${dark ? dkBrand : solid ? "text-foreground" : "text-primary-foreground"}`}>
               Texas Cemetery Brokers
             </span>

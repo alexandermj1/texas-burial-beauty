@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
+import fern from "@/assets/flowers/fern.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const PATH = "/cemetery-transfer-process-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -22,11 +24,13 @@ const Ext = ({ href, children }: { href: string; children: React.ReactNode }) =>
 const Section = ({ id, num, eyebrow, title, children }: { id: string; num: string; eyebrow: string; title: React.ReactNode; children: React.ReactNode }) => (
   <section id={id} className="scroll-mt-28 border-t border-border/60 py-12 md:py-16">
     <div className="grid gap-6 md:grid-cols-12 md:gap-10">
-      <div className="md:col-span-3">
-        <div className="md:sticky md:top-28">
+      <div className="relative overflow-hidden md:col-span-3 md:min-h-[240px] md:border-r md:border-border/50 md:pr-8">
+        <div className="relative z-10 md:sticky md:top-28">
           <p className="font-display text-5xl leading-none text-primary/25">{num}</p>
           <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">{eyebrow}</p>
+          <span className="mt-8 hidden h-20 w-px bg-gradient-to-b from-primary/30 to-transparent md:block" />
         </div>
+        <img src={num === "IV" || num === "VI" ? pinkBranch.url : fern.url} alt="" aria-hidden className="pointer-events-none absolute -bottom-7 -left-10 hidden w-40 rotate-6 opacity-[0.22] md:block" />
       </div>
       <div className="md:col-span-9">
         <h2 className="mb-6 font-display text-3xl leading-[1.08] text-foreground md:text-[2.7rem]">{title}</h2>
@@ -93,7 +97,7 @@ const GuideCemeteryTransferProcess = () => (
               A friendly Texas guide to the three authorities that decide who owns an unused cemetery space, who has to sign, and why the cemetery gets the final word.
             </p>
             <div className="border-l border-border pl-6 text-sm leading-relaxed text-muted-foreground md:col-span-4">
-              <p>Texas Cemetery Brokers</p><p>Updated September 2026</p><p>14 min read · 7 chapters</p>
+              <p>Texas Cemetery Brokers</p><p>Updated September 2026</p><p>17 min read · 8 chapters</p>
             </div>
           </div>
           <div className="mt-10 flex flex-wrap gap-3">
@@ -112,7 +116,7 @@ const GuideCemeteryTransferProcess = () => (
           </p>
           <nav aria-label="Article chapters" className="border-l border-border pl-6 text-sm text-muted-foreground">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/50">In this guide</p>
-            {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
+            {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
           </nav>
         </div>
 
@@ -203,6 +207,62 @@ const GuideCemeteryTransferProcess = () => (
           </div>
         </Section>
 
+        <section id="sample-scenario" className="relative my-6 scroll-mt-28 overflow-hidden rounded-lg border border-primary/20 bg-secondary/40 p-6 md:p-10">
+          <img src={pinkBranch.url} alt="" aria-hidden className="pointer-events-none absolute -right-16 -top-20 w-64 -rotate-12 opacity-20" />
+          <div className="relative">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-primary/20 pb-6">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">Sample scenario · Sample Cemetery</p>
+                <h2 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-foreground md:text-5xl">One deed. Three generations. Nine people in the signing path.</h2>
+              </div>
+              <span className="rounded-full border border-primary/25 bg-background/70 px-4 py-2 text-xs font-semibold text-primary">Fictional example</span>
+            </div>
+
+            <div className="mt-7 grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
+              <div>
+                <p className="text-base leading-relaxed text-foreground/75">Eleanor Whitaker owned four unused spaces at Sample Cemetery. She died without leaving the plots to anyone specifically. Her husband Thomas is living. Their son Daniel is living and married to Rebecca. Their daughter Susan died first, leaving Olivia and Marcus; Olivia is married to Noah, while Marcus has an existing durable power of attorney naming Elena. Their daughter Linda is living and married to Carlos.</p>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">We entered those facts into the same document generator used for seller files. It followed Eleanor’s surviving spouse, each living child, Susan’s branch through her children, every current spouse, and Marcus’s attorney-in-fact.</p>
+
+                <div className="mt-7 rounded-lg border border-border bg-background/80 p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">What the generator concludes</p>
+                  <p className="mt-3 font-display text-2xl text-foreground">The family cannot solve this with one signature.</p>
+                  <p className="mt-3 text-sm leading-relaxed text-foreground/70">Thomas signs in his own right. Daniel and Linda inherit their branches. Olivia and Marcus step into Susan’s branch. Rebecca, Noah and Carlos join their spouses. Elena signs in Marcus’s name under his existing authority.</p>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-background p-5 md:p-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">Family path</p>
+                <div className="mt-5 flex justify-center"><div className="rounded-md border border-primary/30 bg-primary/10 px-4 py-2 text-center"><p className="font-semibold text-foreground">Eleanor Whitaker</p><p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Deed owner · deceased</p></div></div>
+                <div className="mx-auto h-5 w-px bg-border" />
+                <div className="grid grid-cols-3 gap-2 border-t border-border pt-4 text-center text-xs">
+                  <div><p className="font-semibold text-foreground">Thomas</p><p className="text-muted-foreground">husband</p></div>
+                  <div><p className="font-semibold text-foreground">Daniel</p><p className="text-muted-foreground">son</p><div className="mt-2 rounded bg-primary/5 px-1.5 py-1 text-primary">+ Rebecca</div></div>
+                  <div><p className="font-semibold text-foreground">Linda</p><p className="text-muted-foreground">daughter</p><div className="mt-2 rounded bg-primary/5 px-1.5 py-1 text-primary">+ Carlos</div></div>
+                </div>
+                <div className="mx-auto mt-3 h-5 w-px bg-border" />
+                <div className="rounded-md border border-dashed border-border bg-secondary/50 p-3 text-center text-xs"><p className="font-semibold text-foreground">Susan · daughter · deceased</p><div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded bg-background p-2"><strong>Olivia</strong><br/><span className="text-muted-foreground">+ Noah</span></div><div className="rounded bg-background p-2"><strong>Marcus</strong><br/><span className="text-muted-foreground">Elena signs for him</span></div></div></div>
+              </div>
+            </div>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                ['Individual signer', 'Thomas Whitaker'],
+                ['Joint signer pair', 'Daniel & Rebecca Whitaker'],
+                ['Joint signer pair', 'Olivia & Noah Reed'],
+                ['Signer through agent', 'Marcus Reed · Elena signs'],
+                ['Joint signer pair', 'Linda Flores & Carlos Flores'],
+                ['Supporting family record', 'Susan’s death certificate'],
+              ].map(([kind, names]) => <div key={names} className="rounded-md border border-border bg-card p-4"><p className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">{kind}</p><p className="mt-2 text-sm font-semibold text-foreground">{names}</p></div>)}
+            </div>
+
+            <div className="mt-7 flex flex-col gap-5 rounded-lg border-l-4 border-primary bg-background/80 p-6 md:flex-row md:items-center md:justify-between">
+              <div><p className="font-display text-2xl text-foreground">This is exactly where a broker saves the family time.</p><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">The broker turns the family story into the right signer list, checks the cemetery’s own requirements, and keeps one missing branch from holding up the transfer.</p></div>
+              <Link to="/sell" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Work through your family’s file <ArrowRight className="h-4 w-4" /></Link>
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">This sample is illustrative, not a legal conclusion for another family. Sample Cemetery and every person named above are fictional. The displayed result follows our document generator’s current rules and would still be checked against the actual cemetery record.</p>
+          </div>
+        </section>
+
         <Section id="cemetery" num="V" eyebrow="Authority three" title="The cemetery organization">
           <p>You can have § 711.039 memorised and every heir lined up, and still get nowhere, because the cemetery has its own rulebook.</p>
           <p>Cemeteries maintain the ownership records, so they’re the gatekeeper. Their rules commonly include transfer fees, approval rights over who can buy, and sometimes a right of first refusal that means they buy it back rather than letting you sell to a third party. Some won’t permit resale to outsiders at all.</p>
@@ -231,10 +291,11 @@ const GuideCemeteryTransferProcess = () => (
           <p>Either way, the cost of asking is small and the cost of getting it wrong is not. Cemetery plots are one of those rare assets where the paperwork outlives everyone involved — which is exactly why it’s worth getting right the first time.</p>
         </Section>
 
-        <section className="my-8 overflow-hidden rounded-lg bg-foreground px-7 py-9 text-background md:px-10 md:py-11">
+        <section className="relative my-8 overflow-hidden rounded-lg border border-primary/20 bg-primary/10 px-7 py-9 text-foreground md:px-10 md:py-11">
+          <img src={fern.url} alt="" aria-hidden className="pointer-events-none absolute -bottom-20 -right-12 w-64 -rotate-12 opacity-20" />
           <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
-            <div><ShieldCheck className="h-7 w-7 text-accent"/><h2 className="mt-4 font-display text-3xl md:text-4xl">Let us review the actual paperwork.</h2><p className="mt-4 max-w-2xl leading-relaxed text-background/70">If the family agrees and the goal is a clean sale, we can check the cemetery record, identify the likely signers and explain the transfer requirements before you commit to anything.</p></div>
-            <Link to="/sell" className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 font-semibold text-accent-foreground transition-transform hover:-translate-y-0.5">Start with your plot <ArrowRight className="h-4 w-4"/></Link>
+            <div className="relative"><ShieldCheck className="h-7 w-7 text-primary"/><h2 className="mt-4 font-display text-3xl md:text-4xl">Get help from a cemetery broker.</h2><p className="mt-4 max-w-2xl leading-relaxed text-foreground/70">If the family agrees and the goal is a clean sale, we can check the cemetery record, identify the likely signers and explain the transfer requirements before you commit to anything.</p></div>
+            <Link to="/sell" className="relative inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Work through your file <ArrowRight className="h-4 w-4"/></Link>
           </div>
         </section>
 
