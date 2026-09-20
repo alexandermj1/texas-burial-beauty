@@ -65,6 +65,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [composeNew, setComposeNew] = useState(false);
+  const [forcedTemplateId, setForcedTemplateId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
   // When the listing agreement for this submission is signed, the LA email tag
