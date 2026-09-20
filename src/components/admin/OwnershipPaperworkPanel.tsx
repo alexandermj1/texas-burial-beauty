@@ -2495,7 +2495,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           {/* ── The seller's own confirmation ──
               We no longer guess the ownership answers here. The seller fills in
               their own page, and the documents follow from what comes back. */}
-          <div className="border rounded-lg p-3 bg-background/60 space-y-3">
+          <div id="family-confirmation-workflow" className="border rounded-lg p-3 bg-background/60 space-y-3 scroll-mt-28">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Step 1 · Family confirmation
