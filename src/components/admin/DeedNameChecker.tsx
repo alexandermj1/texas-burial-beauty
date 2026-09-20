@@ -34,13 +34,17 @@ interface Props {
 
 const ZOOMS = [1, 1.6, 2.4, 3.2];
 
+/** Cemeteries, funeral homes and corporations are never the plot owner. */
+const NOT_A_PERSON =
+  /\b(cemetery|cemeteries|memorial|memorials|park|gardens?|mortuary|funeral|chapel|inc\.?|l\.?l\.?c\.?|ltd\.?|company|corp\.?|association|trust company|home)\b/i;
+
 const splitNames = (raw: unknown): string[] => {
   if (Array.isArray(raw)) return raw.flatMap((r) => splitNames(r));
   if (typeof raw !== "string") return [];
   return raw
     .split(/\s*(?:,| and | & |;|\/)\s*/i)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 2 && /[a-z]/i.test(s));
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 2 && /[a-z]/i.test(s) && !NOT_A_PERSON.test(s) && s.split(" ").length >= 2);
 };
 
 const norm = (s: string) =>
@@ -418,36 +422,54 @@ export default function DeedNameChecker({ submissionId, onUseNames }: Props) {
         </div>
       )}
 
-      {suggested.length > 0 && (
-        <div className="border-t border-border/60 px-2 py-2 space-y-1.5">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-primary" />
-            <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">
-              Names the AI read on these documents
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {suggested.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => onUseNames([n])}
-                className="text-[11px] px-2 py-1 rounded-full border border-primary/40 text-primary hover:bg-primary/10"
-                title="Add this name"
-              >
-                {n}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => onUseNames(suggested)}
-              className="text-[11px] px-2 py-1 rounded-full bg-primary text-primary-foreground hover:opacity-90"
-            >
-              Use all
-            </button>
-          </div>
+      <div className="border-t border-border/60 px-2 py-2 space-y-2 bg-primary/[0.04]">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3 text-primary" />
+          <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">
+            Who the AI believes owns this plot
+          </span>
         </div>
-      )}
+        {suggested.length > 0 ? (
+          <>
+            <p className="text-[12px] text-foreground">
+              Read off the deed:{" "}
+              <span className="font-semibold">{suggested.join(" and ")}</span>
+              {suggested.length > 1 ? " — both are owners and both must sign." : " — the only owner named on the deed."}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Check this against the highlighted line on the deed above before you use it.
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => onUseNames(suggested)}
+                className="text-[11px] px-2.5 py-1 rounded-full bg-primary text-primary-foreground hover:opacity-90"
+              >
+                Use {suggested.length > 1 ? "these owners" : "this owner"}
+              </button>
+              {suggested.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => onUseNames([n])}
+                  className="text-[11px] px-2 py-1 rounded-full border border-primary/40 text-primary hover:bg-primary/10"
+                  title="Add just this name"
+                >
+                  + {n}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            The AI could not read any owner names off these documents — read them off the deed above and type them in.
+          </p>
+        )}
+        <p className="text-[11px] text-muted-foreground border-t border-border/60 pt-1.5">
+          What the customer wrote on the form:{" "}
+          <span className="text-foreground font-medium">{customer.typedOwners || customer.name || "Nothing"}</span>
+        </p>
+      </div>
     </div>
   );
 }

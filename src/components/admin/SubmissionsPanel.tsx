@@ -1567,7 +1567,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (!approved) return;
       setLocationSaving(true);
       const answers = { ...(seller.ownership_answers ?? {}) } as Record<string, any>;
-      const autopilot = { ...((answers.autopilot ?? {}) as Record<string, any>), plotDescription: next || null };
+      const autopilot = { ...((answers.autopilot ?? {}) as Record<string, any>), plotDescription: next || null, plotDescriptionUpdatedAt: new Date().toISOString() };
       try {
         await onUpdate(selected.id, { plot_description: next, ownership_answers: { ...answers, autopilot } } as any);
         const rebuilt = await rebuildUnsignedSubmissionDocuments(selected.id, { plotDescription: next });
@@ -1611,6 +1611,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const deedLocation = deedLocationParts.join(" · ");
               const deedLocationSource = aiFacts.find((fact) => ["Section", "Block", "Lot", "Space", "Plot type"].includes(fact.label))?.source;
               const savedAutopilotLocation = String(seller.ownership_answers?.autopilot?.plotDescription || "").trim();
+              const locationUpdatedAt = String(seller.ownership_answers?.autopilot?.plotDescriptionUpdatedAt || "").trim();
               const hasOfficeVerifiedLocation = savedAutopilotLocation && savedAutopilotLocation === String(seller.plot_description || "").trim();
               const sellingLocation = (hasOfficeVerifiedLocation ? savedAutopilotLocation : deedLocation) || seller.plot_description || "Not provided";
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
@@ -1677,7 +1678,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </div>
                         <div className="rounded-lg border border-border/70 bg-muted/20 p-4">
                           <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Locations being sold</p><p className="mt-1 text-base font-semibold leading-snug text-foreground">{sellingLocation}</p><p className="mt-1 text-[10px] text-muted-foreground">Used in the quote, agreements, family confirmation and document request.</p></div>
+                            <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Locations being sold</p><p className="mt-1 text-base font-semibold leading-snug text-foreground">{sellingLocation}</p><p className="mt-1 text-[10px] text-muted-foreground">{locationUpdatedAt ? `Updated ${new Date(locationUpdatedAt).toLocaleString()} — anything signed before then still shows the older wording.` : "Used in the quote, agreements, family confirmation and document request."}</p></div>
                             {!locationEditing && <Button type="button" size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-muted-foreground" title="Edit the selling location everywhere" onClick={() => { setLocationDraft(sellingLocation === "Not provided" ? "" : sellingLocation); setLocationEditing(true); }}><Pencil className="h-3.5 w-3.5" /><span className="sr-only">Edit locations being sold</span></Button>}
                           </div>
                           {locationEditing && <div className="mt-3 space-y-2 border-t border-border/60 pt-3"><textarea aria-label="Locations being sold" value={locationDraft} onChange={e => setLocationDraft(e.currentTarget.value)} rows={2} autoFocus className="w-full resize-y rounded-md border border-primary/50 bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" onClick={() => void saveSellingLocation(locationDraft)} disabled={locationSaving}><Save className="h-3.5 w-3.5" />{locationSaving ? "Updating…" : "Update everywhere"}</Button><Button type="button" size="sm" variant="ghost" onClick={() => { setLocationEditing(false); setLocationDraft(""); }} disabled={locationSaving}><X className="h-3.5 w-3.5" />Cancel</Button></div></div>}

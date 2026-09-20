@@ -18,6 +18,7 @@ import ProofreadButton from "./ProofreadButton";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
+import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
 
 /** States that mean an item needs nothing further from the seller. */
 const DONE_STATES = new Set(["received", "notarized", "complete", "not_needed", "not_required", "waived"]);
@@ -261,6 +262,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [explaining, setExplaining] = useState(false);
   const [familyDetailsOpen, setFamilyDetailsOpen] = useState(false);
   const [sellerAnswersOpen, setSellerAnswersOpen] = useState(false);
+  /** The live selling location on the submission, editable here and everywhere else. */
+  const [plotDescription, setPlotDescription] = useState("");
+  const [plotDescUpdatedAt, setPlotDescUpdatedAt] = useState<string | null>(null);
+  const [locEditing, setLocEditing] = useState(false);
+  const [locDraft, setLocDraft] = useState("");
+  const [locSaving, setLocSaving] = useState(false);
+  /** A signed listing agreement collapses to one line until options are asked for. */
+  const [agreementManage, setAgreementManage] = useState(false);
   const [files, setFiles] = useState<AnyFile[]>([]);
   /** Signed preview URLs for image uploads, keyed by storage path. */
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
@@ -325,7 +334,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     if (!didLoad.current) setLoading(true);
     const [{ data: sub }, { data: docs }, { data: cons }, { data: reminders }] = await Promise.all([
       supabase.from("contact_submissions")
-        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, documents_requested_at, document_followup_paused_at, document_followup_pause_reason").eq("id", submissionId).maybeSingle(),
+        .select("ownership_answers, name, email, customer_profile_id, seller_attachments, deed_owner_names, plot_description, documents_requested_at, document_followup_paused_at, document_followup_pause_reason").eq("id", submissionId).maybeSingle(),
       supabase.from("submission_documents")
         .select("id, doc_code, person_name, label, status, required_state, manual_override, notes, file_url, file_urls, why, statute_ref, issued_by_us, needs_notary, person_role, sort_order").is("deleted_at", null)
         .eq("submission_id", submissionId),
@@ -339,6 +348,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
     setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
+    setPlotDescription(((sub as { plot_description?: string | null } | null)?.plot_description ?? "") || "");
+    setPlotDescUpdatedAt(String((a as Record<string, any>)?.autopilot?.plotDescriptionUpdatedAt ?? "") || null);
     setRequestedAt(((sub as { documents_requested_at?: string | null } | null)?.documents_requested_at ?? null));
     setLastAutoFollowupAt(reminders?.[0]?.sent_at ?? null);
     setFollowupPausedAt(((sub as { document_followup_paused_at?: string | null } | null)?.document_followup_paused_at ?? null));
@@ -424,6 +435,43 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setLoading(false);
     didLoad.current = true;
   }, [submissionId, cemetery]);
+
+  /** Change the selling location here and push it through every live document. */
+  const saveSellingLocation = async () => {
+    const next = locDraft.trim();
+    if (!next) { toast.error("Enter the locations being sold."); return; }
+    if (next === plotDescription.trim()) { setLocEditing(false); return; }
+    const ok = window.confirm("Update the locations being sold everywhere? Quotes, the seller's document page and every unsigned prepared document will use this wording. Signed documents are left exactly as they were signed.");
+    if (!ok) return;
+    setLocSaving(true);
+    try {
+      const at = new Date().toISOString();
+      const nextAnswers = { ...(answers as Record<string, unknown>) };
+      nextAnswers.autopilot = {
+        ...((nextAnswers.autopilot ?? {}) as Record<string, unknown>),
+        plotDescription: next,
+        plotDescriptionUpdatedAt: at,
+      };
+      const { error } = await supabase.from("contact_submissions")
+        .update({ plot_description: next, ownership_answers: nextAnswers } as never)
+        .eq("id", submissionId);
+      if (error) throw error;
+      const rebuilt = await rebuildUnsignedSubmissionDocuments(submissionId, { plotDescription: next });
+      setAnswers(nextAnswers as OwnershipAnswers);
+      setPlotDescription(next);
+      setPlotDescUpdatedAt(at);
+      setLocEditing(false);
+      toast.success(rebuilt
+        ? `Updated everywhere — ${rebuilt} unsigned document${rebuilt === 1 ? " was" : "s were"} rebuilt. Signed copies were left alone.`
+        : "Updated everywhere.");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update the locations being sold.");
+    } finally {
+      setLocSaving(false);
+    }
+  };
+
 
   const toggleAutoFollowup = async () => {
     const pausing = !followupPausedAt;
@@ -2534,11 +2582,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 ? number.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
                 : "—";
             };
+            const savedLocation = (plotDescription || String(prepared.plotDescription || "")).trim();
             const facts = [
               { label: "Cemetery", value: cemetery || "—" },
               { label: "Deed owners entered", value: String(prepared.deedOwnerNames || deedNamesRaw || "—") },
               { label: "Relationship to deed owner", value: relationshipToOwner || "Not provided" },
-              { label: "Selling location", value: String(prepared.plotDescription || "—") },
               { label: "Plots", value: String(prepared.plotCount || "—") },
               { label: "County / state", value: String(prepared.countyState || "—") },
               { label: "Minimum per plot", value: money(prepared.netPerPlot) },
@@ -2551,57 +2599,83 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               <div className="rounded-lg border border-border/70 bg-muted/20 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold text-foreground">Information used to start this file</p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">Saved when the quote and agreement were prepared.</p>
+                    <p className="text-xs font-semibold text-foreground">Information this file is based on</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">Started with the quote. Edit the selling location here and everything follows it.</p>
                   </div>
                   {prepared.preparedAt && <span className="text-[10px] text-muted-foreground">{new Date(String(prepared.preparedAt)).toLocaleDateString()}</span>}
                 </div>
+
+                <div className="mb-4 rounded-lg border border-primary/30 bg-background p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Locations being sold</p>
+                      <p className="mt-1 break-words text-base font-semibold leading-snug text-foreground">{savedLocation || "Not provided"}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {plotDescUpdatedAt
+                          ? `Updated ${new Date(plotDescUpdatedAt).toLocaleString()} — anything signed before then still shows the older wording.`
+                          : "Used in the quote, the listing agreement, the family tree and every document in the request."}
+                      </p>
+                    </div>
+                    {!locEditing && (
+                      <Button size="sm" variant="ghost" className="h-8 shrink-0 text-[11px]" onClick={() => { setLocDraft(savedLocation); setLocEditing(true); }}>
+                        Edit
+                      </Button>
+                    )}
+                  </div>
+                  {locEditing && (
+                    <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
+                      <Textarea rows={2} autoFocus value={locDraft} onChange={(e) => setLocDraft(e.target.value)} aria-label="Locations being sold" />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button size="sm" onClick={() => void saveSellingLocation()} disabled={locSaving}>
+                          {locSaving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}
+                          {locSaving ? "Updating…" : "Update everywhere"}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setLocEditing(false)} disabled={locSaving}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
-                  {facts.map((fact) => <div key={fact.label} className={fact.label === "Selling location" ? "sm:col-span-2" : ""}><dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{fact.label}</dt><dd className="mt-0.5 text-xs font-medium text-foreground">{fact.value}</dd></div>)}
+                  {facts.map((fact) => <div key={fact.label}><dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{fact.label}</dt><dd className="mt-0.5 text-xs font-medium text-foreground">{fact.value}</dd></div>)}
                 </dl>
               </div>
             );
           })()}
 
-          {/* ── The seller's own confirmation ──
-              We no longer guess the ownership answers here. The seller fills in
-              their own page, and the documents follow from what comes back. */}
-          <div id="family-confirmation-workflow" className="border rounded-lg p-3 bg-background/60 space-y-3 scroll-mt-28">
-            <div className="flex items-center justify-between gap-2">
+          {/* ── Family tree: sent or not, and how to send it ── */}
+          <div id="family-confirmation-workflow" className="border rounded-lg p-3 bg-background/60 space-y-2 scroll-mt-28">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Step 1 · Family confirmation
+                <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Family tree
               </span>
               <div className="flex items-center gap-1">
-                <Button size="sm" variant="ghost" className="h-8 text-[11px]" onClick={() => setFamilyDetailsOpen(v => !v)}>
-                  {familyDetailsOpen ? "Hide details" : "View details"}<ChevronDown className={`ml-1 h-3.5 w-3.5 transition-transform ${familyDetailsOpen ? "rotate-180" : ""}`} />
-                </Button>
-                <Button size="sm" variant="outline" className="h-8 text-[11px]" onClick={openAsk} title="Type the deed names, then email the seller their own page">
-                  <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
+                {answers.sellerConfirmedAt && (
+                  <Button size="sm" variant="ghost" className="h-8 text-[11px]" onClick={() => setSellerAnswersOpen((v) => !v)}>
+                    {sellerAnswersOpen ? "Hide their answers" : "View their answers"}
+                  </Button>
+                )}
+                <Button size="sm" variant={answers.sellerConfirmedAt ? "ghost" : "outline"} className="h-8 text-[11px]" onClick={openAsk}
+                  title="Type the deed names, then email the seller their family tree page">
+                  <Send className="w-3.5 h-3.5 mr-1" />
+                  {answers.sellerConfirmedAt || answers.questionsSentAt ? "Send again" : "Send the family tree"}
                 </Button>
               </div>
             </div>
-
-            {familyDetailsOpen && (answers.sellerConfirmedAt ? (
-              <div className="rounded-md border border-emerald-200 bg-emerald-50/70 px-2.5 py-2">
-                <p className="text-[11px] text-emerald-900 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Seller confirmed on {new Date(answers.sellerConfirmedAt).toLocaleString()}
-                </p>
-                {answers.sellerNotes && (
-                  <p className="text-[11px] text-emerald-900/80 mt-1 whitespace-pre-line">“{answers.sellerNotes}”</p>
-                )}
-              </div>
+            {answers.sellerConfirmedAt ? (
+              <p className="text-[11px] text-emerald-700 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Filled out by the seller on {new Date(answers.sellerConfirmedAt).toLocaleDateString()}
+              </p>
             ) : answers.questionsSentAt ? (
-              <p className="text-[11px] text-muted-foreground">
-                Sent to the seller {new Date(answers.questionsSentAt).toLocaleString()} — waiting on their answers
-                before we decide which documents to request.
+              <p className="text-[11px] text-amber-700">
+                Sent {new Date(answers.questionsSentAt).toLocaleDateString()} — not filled out yet.
               </p>
             ) : (
-              <p className="text-[11px] text-muted-foreground">
-                Send the seller their family confirmation page. Once it comes back, the people below and the
-                documents they need follow from their answers.
-              </p>
-            ))}
+              <p className="text-[11px] text-muted-foreground">Not sent yet.</p>
+            )}
+            {answers.sellerConfirmedAt && answers.sellerNotes && (
+              <p className="text-[11px] text-muted-foreground whitespace-pre-line">“{answers.sellerNotes}”</p>
+            )}
           </div>
 
 
@@ -2652,17 +2726,44 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
-          {/* ── Listing agreement sits on its own, above the paperwork ── */}
-          <div id="listing-agreement-workflow" className="space-y-1.5 scroll-mt-28">
-            <span className="text-xs font-semibold">Listing agreement</span>
-            <ContractsPanel
-              submissionId={submissionId}
-              sellerName={sellerName}
-              sellerEmail={sellerEmail}
-              kinds={["listing_agreement"]}
-              hideHeader
-            />
-          </div>
+          {/* ── Listing agreement: once signed it collapses to a single line ── */}
+          {(() => {
+            const signedAgreement = contracts.find((c) => c.kind === "listing_agreement"
+              && (c.signed_at || c.completed_at || c.countersigned_at
+                || ["signed", "completed", "countersigned", "notarized"].includes(String(c.status))));
+            if (signedAgreement && !agreementManage) {
+              const at = signedAgreement.completed_at || signedAgreement.signed_at || signedAgreement.countersigned_at;
+              return (
+                <div id="listing-agreement-workflow" className="scroll-mt-28 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2">
+                  <p className="text-[12px] text-emerald-900 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Listing agreement signed{signedAgreement.signature_name ? ` by ${signedAgreement.signature_name}` : ""}
+                    {at ? ` on ${new Date(at).toLocaleDateString()}` : ""}
+                  </p>
+                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setAgreementManage(true)}>
+                    Open agreement options
+                  </Button>
+                </div>
+              );
+            }
+            return (
+              <div id="listing-agreement-workflow" className="space-y-1.5 scroll-mt-28">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold">Listing agreement</span>
+                  {signedAgreement && (
+                    <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setAgreementManage(false)}>Hide options</Button>
+                  )}
+                </div>
+                <ContractsPanel
+                  submissionId={submissionId}
+                  sellerName={sellerName}
+                  sellerEmail={sellerEmail}
+                  kinds={["listing_agreement"]}
+                  hideHeader
+                />
+              </div>
+            );
+          })()}
 
           {/* ── Checklist ── */}
           <div id="document-request-workflow" className="space-y-3 scroll-mt-28 rounded-lg border-2 border-primary/30 bg-primary/[0.04] p-4 shadow-sm">
