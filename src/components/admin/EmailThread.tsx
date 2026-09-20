@@ -288,7 +288,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                   kind ? ringClass : outgoing ? "bg-primary/5" : "bg-card"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full ${
                       outgoing ? "bg-primary/15 text-primary" : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
@@ -300,7 +300,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                   <div className="flex items-center gap-2 shrink-0">
                     {kind && (
                       <span
-                        className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full border ${kindClass}`}
+                        className={`inline-flex max-w-full flex-wrap items-center gap-1 px-2 py-1 font-bold rounded-md border ${kind === "quote" ? "text-[10px] normal-case" : "text-[9px] uppercase tracking-wide"} ${kindClass}`}
                         title={`${kindLabel} · ${new Date(e.received_at).toLocaleDateString()}`}
                       >
                         {kindLabel}

@@ -126,7 +126,8 @@ export const extractQuoteDetails = (body?: string | null): QuoteEmailDetails => 
   const perSpaceMatch = text.match(new RegExp(`${money}\\s*per space`, "i"));
   const acrossMatch = text.match(new RegExp(`${money}\\s*across all\\s*(\\d+)\\s*spaces?`, "i"));
   const propertyCountMatch = text.match(/(?:your property[^]{0,300})?\b(\d+)\s+spaces?\b/i);
-  const feeMatch = text.match(new RegExp(`cemetery(?:'s)?\\s*(?:\\$[^.]{0,20})?transfer fee(?:[^$]{0,80})?${money}`, "i"))
+  const feeMatch = text.match(new RegExp(`cemetery(?:'s)?\\s*${money}\\s*transfer fee`, "i"))
+    || text.match(new RegExp(`cemetery(?:'s)?\\s*transfer fee(?:[^$]{0,80})?${money}`, "i"))
     || text.match(new RegExp(`${money}\\s+(?:cemetery\\s+)?transfer fee`, "i"));
   return {
     perSpace: perSpaceMatch ? parseMoney(perSpaceMatch[1]) : null,
