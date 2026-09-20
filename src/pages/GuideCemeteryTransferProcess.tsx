@@ -97,7 +97,7 @@ const GuideCemeteryTransferProcess = () => (
               A friendly Texas guide to the three authorities that decide who owns an unused cemetery space, who has to sign, and why the cemetery gets the final word.
             </p>
             <div className="border-l border-border pl-6 text-sm leading-relaxed text-muted-foreground md:col-span-4">
-              <p>Texas Cemetery Brokers</p><p>Updated September 2026</p><p>14 min read · 7 chapters</p>
+              <p>Texas Cemetery Brokers</p><p>Updated September 2026</p><p>17 min read · 8 chapters</p>
             </div>
           </div>
           <div className="mt-10 flex flex-wrap gap-3">
@@ -116,7 +116,7 @@ const GuideCemeteryTransferProcess = () => (
           </p>
           <nav aria-label="Article chapters" className="border-l border-border pl-6 text-sm text-muted-foreground">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/50">In this guide</p>
-            {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
+            {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
           </nav>
         </div>
 

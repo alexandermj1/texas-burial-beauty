@@ -124,7 +124,7 @@ export const guides: Guide[] = [
     titleAccent: "Transfer Process",
     dek: "Who owns an inherited Texas cemetery plot, who must sign, and how spousal rights, heirs, cemetery records and transfer rules work together.",
     status: "live",
-    meta: "7 chapters · 14 min read",
+    meta: "8 chapters · 17 min read",
     panel: "bg-[hsl(28_22%_38%)]",
     panelInk: "text-[hsl(40_30%_97%)]",
     rule: "bg-[hsl(40_45%_82%)]",
