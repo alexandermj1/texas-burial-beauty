@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Balance, Building2, CheckCircle2, FileText, Phone, Scale, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, CheckCircle2, FileText, Phone, Scale, ShieldCheck, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -175,7 +175,7 @@ const GuideCemeteryTransferProcess = () => (
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">One grave, niche or crypt remains reserved for the surviving spouse.</p>
             </div>
           </div>
-          <div className="mt-5 flex items-start gap-3 rounded-lg border border-border bg-card p-5"><Balance className="mt-0.5 h-5 w-5 shrink-0 text-primary"/><p className="text-sm leading-relaxed text-foreground/75"><strong className="text-foreground">Same family, same plots, different signature list</strong> — depending on where Dad ended up.</p></div>
+          <div className="mt-5 flex items-start gap-3 rounded-lg border border-border bg-card p-5"><Scale className="mt-0.5 h-5 w-5 shrink-0 text-primary"/><p className="text-sm leading-relaxed text-foreground/75"><strong className="text-foreground">Same family, same plots, different signature list</strong> — depending on where Dad ended up.</p></div>
         </section>
 
         <Section id="children" num="III" eyebrow="Interment rights" title="And the children have their own rights">
