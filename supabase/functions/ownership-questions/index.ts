@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     const { data: sub } = await svc
       .from("contact_submissions")
-      .select("id, name, email, cemetery, lawn, space_numbers, deed_owner_names, relationship_to_owner, customer_profile_id, deleted_at, ownership_answers, ownership_roster, seller_attachments")
+      .select("id, name, email, cemetery, lawn, space_numbers, plot_description, deed_owner_names, relationship_to_owner, customer_profile_id, deleted_at, ownership_answers, ownership_roster, seller_attachments")
       .eq("id", submissionId)
       .maybeSingle();
     if (!sub || sub.deleted_at) return json({ error: "This link is no longer active." }, 404);
@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
         cemetery: sub.cemetery,
         lawn: sub.lawn,
         space_numbers: sub.space_numbers,
+        plot_description: sub.plot_description,
         deed_owner_names: sub.deed_owner_names,
         // Who the office already marked as deceased when typing the deed.
         deed_owners: (Array.isArray(sub.ownership_roster) ? sub.ownership_roster : [])

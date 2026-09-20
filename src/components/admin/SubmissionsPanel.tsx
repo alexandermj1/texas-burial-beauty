@@ -2424,6 +2424,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
     </>);
+    const sellerWorkspaceNav = kind !== "buyer" ? (
+      <nav aria-label="Seller workspace" className="sticky top-2 z-20 flex gap-1 overflow-x-auto rounded-lg border border-border bg-card/95 p-1 shadow-sm backdrop-blur">
+        {([
+          { key: "email", label: "Email", icon: Mail },
+          { key: "paperwork", label: "Family tree & documents", icon: Users },
+          { key: "notes", label: "Notes", icon: Pencil },
+          { key: "files", label: "Attachments", icon: Paperclip },
+        ] as const).map(({ key, label, icon: TabIcon }) => (
+          <Button
+            key={key}
+            type="button"
+            size="sm"
+            variant={sellerWorkspaceTab === key ? "default" : "ghost"}
+            className="shrink-0"
+            onClick={() => setSellerWorkspaceTab(key)}
+          >
+            <TabIcon className="h-3.5 w-3.5" />{label}
+          </Button>
+        ))}
+      </nav>
+    ) : null;
     const tailBlock = (<>
 
             {/* Contact actions */}
@@ -2851,7 +2872,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
             {/* Files the seller uploaded with the form */}
-            {Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
+            {kind !== "buyer" && sellerWorkspaceTab === "files" && Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
               <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
             )}
 
@@ -2874,9 +2895,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {!isMobile && (
               <>
                 {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-                <div data-tour="notes-section">
+                {(kind === "buyer" || sellerWorkspaceTab === "notes") && <div data-tour="notes-section" className="rounded-lg border border-border bg-card p-4">
                   <CustomerNotes submissionId={selected.id} customerName={selected.name} />
-                </div>
+                </div>}
 
                 {/* Texas pipeline now lives at the top of the detail view — no duplicate here. */}
 
@@ -2936,7 +2957,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {/* Actions — sellers: only show quote before/at the quote stages.
                     Once they've accepted (or moved into L.A. flow), the pipeline owns those buttons. */}
-                {(() => {
+                {(kind === "buyer" || sellerWorkspaceTab === "paperwork") && (() => {
                   const sellerEarlyStages: BayerStage[] = ["initial_inquiry", "quote_issued", "quote_morgued"];
                   const sellerCanQuote = kind === "seller" && (!bayerStage || sellerEarlyStages.includes(bayerStage));
                   const showQuoteBtn = kind !== "seller" || sellerCanQuote;
@@ -3031,7 +3052,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                 {/* Ownership proof + the exact paperwork this seller needs. Buyers never
                     sign seller paperwork, so this whole section is hidden for them. */}
-                {kind !== "buyer" && (
+                {kind !== "buyer" && sellerWorkspaceTab === "paperwork" && (
                   <OwnershipPaperworkPanel
                     submissionId={selected.id}
                     cemetery={selected.cemetery}
@@ -3048,7 +3069,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
                 {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
-                {(selected as any).customer_profile_id ? (
+                {kind !== "buyer" && sellerWorkspaceTab === "files" && ((selected as any).customer_profile_id ? (
                   <div data-tour="files-section" className="border-t border-border/40 pt-4">
                     <CustomerFiles
                       customerId={(selected as any).customer_profile_id}
@@ -3062,7 +3083,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </p>
                     <p className="text-xs text-muted-foreground">Setting up file storage for this submission…</p>
                   </div>
-                )}
+                ))}
 
               </>
             )}
@@ -3074,7 +3095,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             animate={{ opacity: 1, y: 0 }}
             className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 p-6 space-y-5"
           >
-            {focusSplit ? (
+            {kind !== "buyer" ? (
+              <div className="space-y-5">
+                {headBlock}
+                {sellerWorkspaceNav}
+                {sellerWorkspaceTab === "email" && emailBlock}
+                {tailBlock}
+              </div>
+            ) : focusSplit ? (
               <div className="grid grid-cols-12 gap-6 items-start">
                 <div className="col-span-12 xl:col-span-7 min-w-0 space-y-5">{headBlock}{tailBlock}</div>
                 <div className="col-span-12 xl:col-span-5 min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-5">{emailBlock}</div>
