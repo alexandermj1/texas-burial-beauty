@@ -18,7 +18,6 @@ import CemeteryInfoCard from "./CemeteryInfoCard";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import ReassignCemeteryDialog from "./ReassignCemeteryDialog";
 import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
-import DeedNameChecker from "./DeedNameChecker";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
@@ -1270,7 +1269,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
   const [aiFactsOpen, setAiFactsOpen] = useState(false);
-  const [deedPreviewOpen, setDeedPreviewOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1606,12 +1604,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
               const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
               const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
-              const deedOwnerFact = aiFacts.find(f => f.label === "Owner(s) on record") || aiFacts.find(f => f.label === "Purchaser");
-              const deedNameMatch = deedOwnerFact?.status === "match"
-                ? { label: "Matches", className: "text-emerald-700" }
-                : deedOwnerFact?.status === "differs"
-                  ? { label: "Does not match", className: "text-destructive" }
-                  : { label: "Not checked — no readable deed found", className: "text-muted-foreground" };
+              const deedLocationParts = ["Section", "Block", "Lot", "Space"]
+                .map((label) => aiFacts.find((fact) => fact.label === label))
+                .filter((fact): fact is NonNullable<typeof fact> => Boolean(fact))
+                .map((fact) => `${fact.label} ${fact.value}`);
+              const deedPlotType = aiFacts.find((fact) => fact.label === "Plot type");
+              if (deedPlotType && !deedLocationParts.some((part) => part.toLowerCase().includes(deedPlotType.value.toLowerCase()))) {
+                deedLocationParts.push(deedPlotType.value);
+              }
+              const deedLocation = deedLocationParts.join(" · ");
+              const deedLocationSource = aiFacts.find((fact) => ["Section", "Block", "Lot", "Space", "Plot type"].includes(fact.label))?.source;
               const Fact = ({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) => (
                 <div className={`min-w-0 border-b border-border/50 pb-2 ${wide ? "sm:col-span-2" : ""}`}>
                   <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
@@ -1674,7 +1676,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             {locationEditing ? <div className="space-y-2"><textarea aria-label="Locations being sold" value={locationDraft} onChange={e => setLocationDraft(e.currentTarget.value)} rows={2} autoFocus className="w-full resize-y rounded-md border border-primary/50 bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" onClick={() => void saveSellingLocation(locationDraft)} disabled={locationSaving}><Save className="h-3.5 w-3.5" />{locationSaving ? "Updating…" : "Update everywhere"}</Button><Button type="button" size="sm" variant="ghost" onClick={() => { setLocationEditing(false); setLocationDraft(""); }} disabled={locationSaving}><X className="h-3.5 w-3.5" />Cancel</Button></div></div> : <div className="flex items-start justify-between gap-3"><span className="text-base font-medium">{sellingLocation}</span><Button type="button" size="sm" variant="ghost" className="shrink-0 text-muted-foreground" onClick={() => { setLocationDraft(sellingLocation === "Not provided" ? "" : sellingLocation); setLocationEditing(true); }}><Pencil className="h-3.5 w-3.5" />Edit</Button></div>}
                             <span className="mt-1 block text-[10px] text-muted-foreground">Verified wording shared by quotes, agreements, family confirmation, and document requests.</span>
                           </Fact>
-                          {!seller.quote_sent_at && !seller.plot_description && customerLocation !== "Not provided" && <Fact label="What the customer wrote" wide><span className="text-muted-foreground">{customerLocation}</span></Fact>}
+                          {customerLocation !== "Not provided" && <Fact label="Property description comparison" wide><div className="grid gap-3 sm:grid-cols-2"><div><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">What the customer wrote</span><span className="mt-1 block text-muted-foreground">{customerLocation}</span></div><div><span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3 w-3" />What AI read from the deed</span><span className="mt-1 block text-foreground">{deedLocation || "No property description found on the uploaded deed"}</span>{deedLocationSource && <span className="mt-1 block truncate text-[10px] text-muted-foreground" title={deedLocationSource}>From {deedLocationSource}</span>}</div></div></Fact>}
                           <Fact label="# of plots being sold"><input aria-label="Number of plots being sold" type="number" min="1" defaultValue={seller.plot_count ?? selected.spaces ?? ""} placeholder="Add number" onBlur={e => { const value=Math.max(1,Number(e.currentTarget.value)||1); if(value !== Number(seller.plot_count ?? selected.spaces)) onUpdate(selected.id,{plot_count:value,spaces:String(value)} as any); }} className="w-24 bg-transparent border-0 border-b border-dashed border-primary/40 p-0 pb-0.5 text-sm text-foreground outline-none focus:border-primary" /></Fact>
                         </div>
                       </div>
@@ -1682,7 +1684,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seller details</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                           {!ftState(selected).doneAt && <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>}
-                          {!ftState(selected).doneAt && <Fact label="Form names match deed"><button type="button" onClick={() => setDeedPreviewOpen(v => !v)} className={`inline-flex items-center gap-1 font-semibold hover:underline ${deedNameMatch.className}`}><FileCheck className="h-3.5 w-3.5" />{deedNameMatch.label}</button>{deedOwnerFact?.value && <span className="block mt-0.5 text-xs font-normal text-muted-foreground">Deed: {deedOwnerFact.value}</span>}</Fact>}
                           {!ftState(selected).doneAt && seller.deed_owners_status && <Fact label="Owner status">{seller.deed_owners_status}</Fact>}
                           {!ftState(selected).doneAt && seller.relationship_to_owner && <Fact label="Relationship to owners">{seller.relationship_to_owner}</Fact>}
                           <Fact label="Added information from form" wide>{info}</Fact>
@@ -1701,10 +1702,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
                           {aiFacts.length > 0 && <Button type="button" size="sm" variant={aiFactsOpen ? "secondary" : "outline"} onClick={() => setAiFactsOpen(v => !v)}><Sparkles className="h-3.5 w-3.5" />Document insights ({aiFacts.length})</Button>}
                         </div>
-                        {(deedPreviewOpen || aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="mt-3 space-y-3">
+                        {(aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="mt-3 space-y-3">
                          <div className="flex flex-wrap items-center gap-2">
                          </div>
-                         {deedPreviewOpen && <DeedNameChecker submissionId={selected.id} onUseNames={(names) => onUpdate(selected.id, { deed_owner_names: names.join(", ") } as any)} />}
                          {aiFactsOpen && <div className="divide-y divide-border rounded-md border border-border bg-background/60">{aiFacts.map((fact, index) => <div key={`${fact.label}-${index}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[150px_1fr_auto]"><span className="text-muted-foreground">{fact.label}</span><span className="text-foreground">{fact.value}</span><span className="text-muted-foreground">{fact.source}</span></div>)}</div>}
                            {(expandedCemetery || editCemeteryInline) && selected.cemetery && <div id={`cemetery-info-${selected.id}`}><CemeteryInfoCard key={`summary-${selected.id}-${editCemeteryInline ? "edit" : "info"}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} startInEditMode={editCemeteryInline} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} /></div>}
                        </div>}
