@@ -427,6 +427,43 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const cemPhone = String(cemProfile?.contact_phone || "").trim();
   const needsRetail = !(Number(retail) > 0);
 
+  /** Section prices already recorded on this cemetery's profile, newest first. */
+  const cemSections: any[] = useMemo(() => {
+    const src = Array.isArray(cemProfile?.sections) ? cemProfile.sections : [];
+    return [...src].sort((a: any, b: any) => String(b?.date || "").localeCompare(String(a?.date || "")));
+  }, [cemProfile]);
+
+  /** Save a price just given over the phone onto the cemetery profile. */
+  const saveSectionPrice = async () => {
+    const price = Number(sectionDraft.price);
+    if (!cemProfile?.id || !(price > 0)) return;
+    setSavingSection(true);
+    try {
+      const entry = {
+        id: crypto.randomUUID(),
+        name: sectionDraft.name.trim() || plotDescription.trim() || "Section",
+        property_type: sectionDraft.property_type.trim() || (seller.property_type ?? ""),
+        price,
+        date: new Date().toISOString().slice(0, 10),
+        notes: "",
+      };
+      const next = [...(Array.isArray(cemProfile.sections) ? cemProfile.sections : []), entry];
+      const { error } = await supabase
+        .from("texas_cemeteries" as any)
+        .update({ sections: next })
+        .eq("id", cemProfile.id);
+      if (error) throw error;
+      setCemProfile((p: any) => ({ ...p, sections: next }));
+      setSectionDraft({ name: "", property_type: "", price: "" });
+      if (!(Number(retail) > 0)) handleRetailChange(String(price));
+      toast({ title: "Price saved to the cemetery profile" });
+    } catch (e: any) {
+      toast({ title: "Couldn't save the price", description: String(e?.message ?? e), variant: "destructive" });
+    } finally {
+      setSavingSection(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
       {/* Header */}
