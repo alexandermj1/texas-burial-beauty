@@ -28,6 +28,16 @@ export type QuoteFigures = {
   hasQuote: boolean;
   /** Exactly how the sales-price email words it. */
   headline: string;
+  /** Extra one-time fees the office added to the buyer's price. */
+  buyerFees: { id: string; label: string; amount: number }[];
+  buyerFeesTotal: number;
+  /** 15% buyer's premium on the authorized price. */
+  buyerPremiumPerSpace: number;
+  buyerPremiumTotal: number;
+  /** What the buyer pays per space (authorized + transfer fee + 15%). */
+  buyerPricePerSpace: number;
+  /** Full buyer price for all spaces including added fees. */
+  buyerPriceTotal: number;
 };
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
