@@ -48,3 +48,10 @@
 - [ ] Label POAs in the request as needed, without a separate prepared status
 - [ ] Rebuild every unsigned request document when cemetery or selling location changes
 - [ ] Verify Patricia Perkins and the seller workflow on desktop and mobile
+## Seller profile Apple refinement
+- [ ] Apply the selected Apple workspace hierarchy and spacing across the seller profile
+- [ ] Collapse family confirmation and seller answers by default
+- [ ] Replace cemetery button clutter with clear inline information and working edit controls
+- [ ] Put cemetery and its submission count on the right side of the identity header
+- [ ] Keep family-tree status out of Email, Notes, and Attachments views
+- [ ] Verify cemetery and selling-location updates across unsigned documents, request email, and seller pages
