@@ -24,7 +24,6 @@ import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
 import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import CustomerFiles from "./CustomerFiles";
-import ContractsPanel from "./ContractsPanel";
 import OwnershipPaperworkPanel from "./OwnershipPaperworkPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { openFileViewer } from "@/lib/fileViewer";
@@ -276,6 +275,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
   const [sellerWorkspaceTab, setSellerWorkspaceTab] = useState<"email" | "paperwork" | "notes" | "files">("email");
   const [manualStageOpen, setManualStageOpen] = useState(false);
+  useEffect(() => {
+    setSellerWorkspaceTab("email");
+    setManualStageOpen(false);
+  }, [selectedId]);
   // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
   
@@ -1889,76 +1892,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     );
                   })()}
 
-                  {/* Manual stage mover — force a submission into any pipeline stage. */}
-                  {(() => {
-                    const x = selected as any;
-                    const ans = (x.ownership_answers ?? {}) as Record<string, any>;
-                    const now = new Date().toISOString();
-                    const STAGES = [
-                      // Before the quote the pipeline splits itself by attachments
-                      // (No attachments / Attachments) — that can't be forced by hand.
-                      { key: "awaiting_quote", label: "Before quote", cls: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-300" },
-                      { key: "quoted",         label: "Quoted",         cls: "bg-purple-500/15 border-purple-500/50 text-purple-700 dark:text-purple-300" },
-                      { key: "accepted",       label: "Accepted",       cls: "bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-300" },
-                      { key: "tree_sent",      label: "Tree sent",      cls: "bg-indigo-500/15 border-indigo-500/50 text-indigo-700 dark:text-indigo-300" },
-                      { key: "tree_done",      label: "Tree done",      cls: "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300" },
-                      { key: "docs_out",       label: "Docs out",       cls: "bg-sky-500/15 border-sky-500/50 text-sky-700 dark:text-sky-300" },
-                      { key: "docs_returned",  label: "Docs returned",  cls: "bg-cyan-500/15 border-cyan-500/50 text-cyan-700 dark:text-cyan-300" },
-                      { key: "complete",       label: "Complete",       cls: "bg-emerald-600/15 border-emerald-600/50 text-emerald-800 dark:text-emerald-300" },
-                    ];
-                    const retE = (selected.email || "").trim().toLowerCase();
-                    const accepted = x.quote_response === "accepted";
-                    const current =
-                      accepted && x.documents_completed_at ? "complete"
-                      : accepted && x.documents_requested_at && (ans.docsReturnedAt || (retE && returnedDocsEmails.has(retE))) ? "docs_returned"
-                      : accepted && x.documents_requested_at ? "docs_out"
-                      : accepted && ans.sellerConfirmedAt ? "tree_done"
-                      : accepted && ans.questionsSentAt ? "tree_sent"
-                      : accepted ? "accepted"
-                      : x.quote_sent_at ? "quoted"
-                      : "awaiting_quote";
-
-                    const move = async (key: string) => {
-                      const idx = STAGES.findIndex(s => s.key === key);
-                      const at = (k: string) => STAGES.findIndex(s => s.key === k) <= idx;
-                      const answers = { ...ans };
-                      answers.questionsSentAt = at("tree_sent") ? (ans.questionsSentAt || now) : null;
-                      answers.sellerConfirmedAt = at("tree_done") ? (ans.sellerConfirmedAt || now) : null;
-                      answers.docsReturnedAt = at("docs_returned") ? (ans.docsReturnedAt || now) : null;
-                      const patch: any = {
-                        ownership_answers: answers,
-                        quote_sent_at: at("quoted") ? (x.quote_sent_at || now) : null,
-                        quote_response: at("accepted") ? "accepted" : (x.quote_response === "accepted" ? null : x.quote_response),
-                        quote_responded_at: at("accepted") ? (x.quote_responded_at || now) : (x.quote_response === "accepted" ? null : x.quote_responded_at),
-                        acceptance_channel: at("accepted") ? "manual_starter" : null,
-                        listing_tier: at("accepted") ? "starter" : x.listing_tier,
-                        listing_option: at("accepted") ? "starter" : x.listing_option,
-                        accepted_quote_amount: at("accepted") ? (x.accepted_quote_amount ?? x.quote_amount ?? null) : x.accepted_quote_amount,
-                        documents_requested_at: at("docs_out") ? (x.documents_requested_at || now) : null,
-                        documents_completed_at: at("complete") ? (x.documents_completed_at || now) : null,
-                      };
-                      await onUpdate(selected.id, patch);
-                      toast({ title: "Stage updated", description: STAGES[idx].label });
-                    };
-
-                    return (
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1">Move to stage</span>
-                        {STAGES.map(st => (
-                          <button
-                            key={st.key}
-                            onClick={() => move(st.key)}
-                            title={`Move this submission to "${st.label}"`}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
-                              current === st.key ? st.cls : "border-border text-muted-foreground hover:bg-muted/50"
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })()}
                   </>)}
                 </div>
               </div>
@@ -2892,7 +2825,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             {/* Mobile keeps it lean — view-only. Notes, pipelines, reply/action buttons and files
                 are hidden on mobile since admin work is done from desktop. */}
-            {!isMobile && (
+            {(!isMobile || kind !== "buyer") && (
               <>
                 {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
                 {(kind === "buyer" || sellerWorkspaceTab === "notes") && <div data-tour="notes-section" className="rounded-lg border border-border bg-card p-4">
