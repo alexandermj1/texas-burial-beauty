@@ -1,5 +1,5 @@
 import { toast } from "@/hooks/use-toast";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore, Info, Pencil, MapPin } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
@@ -9,7 +9,6 @@ import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
 import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
-import EmailThread from "./EmailThread";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate, buildSellerListingAgreementTemplate, buildSellerFamilyTreeTemplate } from "@/lib/emailTemplates";
@@ -24,7 +23,6 @@ import { getPlotImage } from "@/lib/listingImages";
 import CustomerNotes from "./CustomerNotes";
 import { buildGmailComposeUrl } from "@/lib/gmailCompose";
 import CustomerFiles from "./CustomerFiles";
-import OwnershipPaperworkPanel from "./OwnershipPaperworkPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { openFileViewer } from "@/lib/fileViewer";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,6 +38,9 @@ import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
 import { Button } from "@/components/ui/button";
+
+const EmailThread = lazy(() => import("./EmailThread"));
+const OwnershipPaperworkPanel = lazy(() => import("./OwnershipPaperworkPanel"));
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
 // Submissions staff have explicitly un-merged: they always show as their own row
@@ -275,9 +276,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [pipelineOpenMobile, setPipelineOpenMobile] = useState(false);
   const [sellerWorkspaceTab, setSellerWorkspaceTab] = useState<"email" | "paperwork" | "notes" | "files">("email");
   const [manualStageOpen, setManualStageOpen] = useState(false);
+  const [locationEditing, setLocationEditing] = useState(false);
+  const [locationDraft, setLocationDraft] = useState("");
+  const [locationSaving, setLocationSaving] = useState(false);
   useEffect(() => {
     setSellerWorkspaceTab("email");
     setManualStageOpen(false);
+    setLocationEditing(false);
+    setLocationDraft("");
   }, [selectedId]);
   // Texas-only: filter the list to a single cemetery (canonical key set from the directory panel).
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
@@ -1507,14 +1513,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     };
     const saveSellingLocation = async (value: string) => {
       const next = value.trim();
-      if (next === String(seller.plot_description || "")) return;
+      if (!next) {
+        toast({ title: "Location required", description: "Keep the verified selling location on the record.", variant: "destructive" });
+        return;
+      }
+      if (next === String(seller.plot_description || "")) {
+        setLocationEditing(false);
+        return;
+      }
+      const approved = window.confirm("Replace the verified selling location everywhere? New quotes, the seller document page, and every unsigned prepared document will use this exact wording. Signed documents will not be changed.");
+      if (!approved) return;
+      setLocationSaving(true);
       const answers = { ...(seller.ownership_answers ?? {}) } as Record<string, any>;
       const autopilot = { ...((answers.autopilot ?? {}) as Record<string, any>), plotDescription: next || null };
-      await onUpdate(selected.id, {
-        plot_description: next || null,
-        ownership_answers: { ...answers, autopilot },
-      } as any);
-      toast({ title: "Selling location saved", description: "Quotes, agreements, family-tree paperwork, and document requests will use this wording." });
+      try {
+        await onUpdate(selected.id, { plot_description: next, ownership_answers: { ...answers, autopilot } } as any);
+        const { data: prepared } = await supabase.from("contracts")
+          .select("id, kind, status, fill_data, signed_at, notarized_at, completed_at")
+          .eq("submission_id", selected.id).is("deleted_at", null).neq("status", "void");
+        let rebuilt = 0;
+        for (const contract of prepared ?? []) {
+          if (contract.signed_at || contract.notarized_at || contract.completed_at || ["signed", "notarized", "completed"].includes(String(contract.status))) continue;
+          const fillData = (contract.fill_data ?? {}) as Record<string, unknown>;
+          if (String(fillData.plot_description ?? "").trim() === next) continue;
+          const { error } = await supabase.functions.invoke("generate-contract", {
+            body: { submission_id: selected.id, kind: contract.kind, overrides: { ...fillData, plot_description: next, supersede_contract_id: contract.id } },
+          });
+          if (error) await supabase.from("contracts").update({ status: "void" }).eq("id", contract.id);
+          else rebuilt += 1;
+        }
+        setLocationEditing(false);
+        toast({ title: "Selling location updated everywhere", description: rebuilt ? `${rebuilt} unsigned prepared document${rebuilt === 1 ? " was" : "s were"} safely replaced. Signed copies were left unchanged.` : "New quotes, agreements, family confirmation, and the live document request now use this wording." });
+      } finally {
+        setLocationSaving(false);
+      }
     };
     const selectListingTier = async (tier: "starter" | "pro" | "featured") => {
       const current = String(seller.listing_tier || "").toLowerCase();
@@ -1573,7 +1605,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                      {selected.email && <Button asChild type="button" size="sm"><a href={`#email-thread-${selected.id}`}><Mail />Email</a></Button>}
                      {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />Call</a></Button>}
                      {selected.cemetery && subRegion(selected) === "texas" && <div className="flex flex-wrap items-center gap-1.5" aria-label="Cemetery tools">
-                      <Button type="button" size="sm" variant={expandedCemetery && !editCemeteryInline ? "secondary" : "outline"} onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => !v); }} title="Open cemetery information"><Info />Info</Button>
+                       <Button type="button" size="sm" variant={expandedCemetery && !editCemeteryInline ? "secondary" : "outline"} onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => { const next = !v; if (next) window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); return next; }); }} title="Open cemetery information"><Info />Info</Button>
                       <Button type="button" size="sm" variant="outline" onClick={() => { const canon = _canon(selected.cemetery || ""); setRegionFilter("texas"); setCemeteryCanon(canon); setCemeteryLabel(selected.cemetery); setSelectedId(null); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); }} title="Show every submission at this cemetery"><Search />Search</Button>
                       <Button type="button" size="sm" variant={editCemeteryInline ? "secondary" : "outline"} onClick={() => { setExpandedCemetery(false); setEditCemeteryInline(v => !v); }} title="Edit the cemetery profile here"><Pencil />Edit</Button>
                       <Button type="button" size="sm" variant="outline" onClick={() => setReassignCemeteryOpen(true)} title="Match this record to a different cemetery"><RefreshCw />Re-match</Button>
@@ -1598,9 +1630,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         })}
                       </ol>
                       <div className="mt-3 border-t border-border pt-3">
-                        <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setManualStageOpen(v => !v)}><Pencil />Change stage manually</Button>
-                        {manualStageOpen && <div className="mt-2 grid gap-1 rounded-md border border-border bg-background p-2">
-                          <p className="px-1 pb-1 text-[10px] leading-relaxed text-muted-foreground">Use only to correct the record. Accepted and later stages are recorded as a manual Starter-option move.</p>
+                         <Button type="button" size="sm" variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setManualStageOpen(v => !v)}><Pencil className="h-3.5 w-3.5" />Correct stage</Button>
+                         {manualStageOpen && <div className="mt-1 grid gap-1 rounded-md border border-border bg-background p-2 shadow-sm">
+                           <p className="px-1 pb-1 text-[10px] leading-relaxed text-muted-foreground">Administrative correction only. Later stages record a manual Starter-option move.</p>
                           {sellerStages.slice(2).map(({ label, icon: StageIcon }, index) => <Button key={label} type="button" variant="ghost" size="sm" className="justify-start" onClick={() => moveSellerStage(index + 3)}><StageIcon className="h-3.5 w-3.5" />{label}</Button>)}
                         </div>}
                       </div>
@@ -1618,7 +1650,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Property</p>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           <Fact label="Type of plots">{selected.property_type || "Not provided"}</Fact>
-                          <Fact label="Locations being sold" wide><input key={`${selected.id}:${seller.plot_description || ""}`} aria-label="Locations being sold" defaultValue={sellingLocation === "Not provided" ? "" : sellingLocation} placeholder="Add the exact location wording" onBlur={e => saveSellingLocation(e.currentTarget.value)} className="w-full rounded-md border border-border/70 bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><span className="mt-1 block text-[10px] text-muted-foreground">This exact wording is used in the quote, agreement, family tree, and document request.</span></Fact>
+                          <Fact label="Locations being sold" wide>
+                            {locationEditing ? <div className="space-y-2"><textarea aria-label="Locations being sold" value={locationDraft} onChange={e => setLocationDraft(e.currentTarget.value)} rows={2} autoFocus className="w-full resize-y rounded-md border border-primary/50 bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" onClick={() => void saveSellingLocation(locationDraft)} disabled={locationSaving}><Save className="h-3.5 w-3.5" />{locationSaving ? "Updating…" : "Update everywhere"}</Button><Button type="button" size="sm" variant="ghost" onClick={() => { setLocationEditing(false); setLocationDraft(""); }} disabled={locationSaving}><X className="h-3.5 w-3.5" />Cancel</Button></div></div> : <div className="flex items-start justify-between gap-3"><span className="text-base font-medium">{sellingLocation}</span><Button type="button" size="sm" variant="ghost" className="shrink-0 text-muted-foreground" onClick={() => { setLocationDraft(sellingLocation === "Not provided" ? "" : sellingLocation); setLocationEditing(true); }}><Pencil className="h-3.5 w-3.5" />Edit</Button></div>}
+                            <span className="mt-1 block text-[10px] text-muted-foreground">Verified wording shared by quotes, agreements, family confirmation, and document requests.</span>
+                          </Fact>
                           {!seller.quote_sent_at && !seller.plot_description && customerLocation !== "Not provided" && <Fact label="What the customer wrote" wide><span className="text-muted-foreground">{customerLocation}</span></Fact>}
                           <Fact label="# of plots being sold"><input aria-label="Number of plots being sold" type="number" min="1" defaultValue={seller.plot_count ?? selected.spaces ?? ""} placeholder="Add number" onBlur={e => { const value=Math.max(1,Number(e.currentTarget.value)||1); if(value !== Number(seller.plot_count ?? selected.spaces)) onUpdate(selected.id,{plot_count:value,spaces:String(value)} as any); }} className="w-24 bg-transparent border-0 border-b border-dashed border-primary/40 p-0 pb-0.5 text-sm text-foreground outline-none focus:border-primary" /></Fact>
                         </div>
@@ -1651,7 +1686,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                          </div>
                          {deedPreviewOpen && <DeedNameChecker submissionId={selected.id} onUseNames={(names) => onUpdate(selected.id, { deed_owner_names: names.join(", ") } as any)} />}
                          {aiFactsOpen && <div className="divide-y divide-border rounded-md border border-border bg-background/60">{aiFacts.map((fact, index) => <div key={`${fact.label}-${index}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[150px_1fr_auto]"><span className="text-muted-foreground">{fact.label}</span><span className="text-foreground">{fact.value}</span><span className="text-muted-foreground">{fact.source}</span></div>)}</div>}
-                          {(expandedCemetery || editCemeteryInline) && selected.cemetery && <CemeteryInfoCard key={`summary-${selected.id}-${editCemeteryInline ? "edit" : "info"}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} startInEditMode={editCemeteryInline} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} />}
+                           {(expandedCemetery || editCemeteryInline) && selected.cemetery && <div id={`cemetery-info-${selected.id}`}><CemeteryInfoCard key={`summary-${selected.id}-${editCemeteryInline ? "edit" : "info"}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} startInEditMode={editCemeteryInline} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} /></div>}
                        </div>}
                       </div>
                     </div>
@@ -2326,7 +2361,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   ];
               return (
                 <div id={`email-thread-${selected.id}`} className="scroll-mt-4">
-                <EmailThread
+                 <Suspense fallback={<div className="py-8 text-center text-sm text-muted-foreground">Loading email…</div>}><EmailThread
                   submissionId={selected.id}
                   customerEmail={selected.email}
                   customerName={selected.name}
@@ -2352,7 +2387,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     transfer_fee_amount: cemeteryProfileFor(selected.cemetery)?.transfer_fee ?? selected.transfer_fee_amount ?? null,
                   } : null}
                   onNewEmailSent={() => {}}
-                />
+                 /></Suspense>
                 </div>
               );
             })()}
@@ -2986,14 +3021,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {/* Ownership proof + the exact paperwork this seller needs. Buyers never
                     sign seller paperwork, so this whole section is hidden for them. */}
                 {kind !== "buyer" && sellerWorkspaceTab === "paperwork" && (
-                  <OwnershipPaperworkPanel
+                  <Suspense fallback={<div className="py-8 text-center text-sm text-muted-foreground">Loading family tree and documents…</div>}><OwnershipPaperworkPanel
                     submissionId={selected.id}
                     cemetery={selected.cemetery}
                     sellerEmail={selected.email}
                     sellerName={selected.name}
+                    defaultOpen
                     quoteAccepted={(selected as any).quote_response === "accepted"}
                     onSent={() => onRefresh?.()}
-                  />
+                  /></Suspense>
                 )}
 
 
@@ -3327,7 +3363,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               ? `fixed left-4 top-20 bottom-4 z-50 w-[min(420px,90vw)] bg-card/95 backdrop-blur-xl rounded-2xl border border-border/60 shadow-2xl ring-1 ring-primary/5 overflow-y-auto transition-all duration-300 ease-out ${
                   drawerOpen ? "translate-x-0 opacity-100" : "-translate-x-[115%] opacity-0 pointer-events-none"
                 }`
-              : "lg:col-span-5 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto lg:order-none"
+              : "lg:col-span-4 bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] ring-1 ring-primary/5 overflow-hidden max-h-[calc(100vh-120px)] min-h-[calc(100vh-180px)] overflow-y-auto lg:order-none"
         }
       >
 
@@ -3720,7 +3756,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
-      <div data-tour="detail-panel" className={`${listCollapsed ? "lg:col-span-12" : "lg:col-span-7"} lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
+      <div data-tour="detail-panel" className={`${listCollapsed ? "lg:col-span-12" : "lg:col-span-8"} lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
         {!isMobile && listCollapsed && (
           <div className="flex items-center gap-2">
             <button

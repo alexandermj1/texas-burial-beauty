@@ -28,6 +28,13 @@ const PageTransition = () => {
 
   const words = useMemo(() => BRAND.split(" "), []);
 
+  // Private dashboards are large interactive workspaces. Keeping them outside
+  // AnimatePresence avoids ref hand-offs to lazy route components and makes the
+  // admin appear as soon as its data is ready instead of waiting on an exit.
+  if (location.pathname.startsWith("/admin")) {
+    return <div className="min-h-screen bg-background">{outlet}</div>;
+  }
+
   const initialState = shouldReduceMotion ? { opacity: 1 } : { opacity: 0 };
   const animateState = { opacity: 1 };
   const exitState = { opacity: 0 };

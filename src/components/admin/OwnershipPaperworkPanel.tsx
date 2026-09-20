@@ -48,6 +48,8 @@ type Props = {
   cemetery?: string | null;
   sellerName?: string | null;
   sellerEmail?: string | null;
+  /** The dedicated seller-workspace tab should reveal its actions immediately. */
+  defaultOpen?: boolean;
   /** AI reading only runs once the seller has accepted a quote — it costs money. */
   quoteAccepted?: boolean;
   /** Fires after the family-tree questionnaire is emailed, so the row badge updates. */
@@ -236,7 +238,7 @@ const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
 
 
 
-export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, quoteAccepted, onSent }: Props) {
+export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, defaultOpen = false, quoteAccepted, onSent }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -250,7 +252,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [cemCity, setCemCity] = useState<string | null>(null);
   const [rows, setRows] = useState<DocRow[]>([]);
   // A file with an accepted quote is always in paperwork mode, so open on arrival.
-  const [open, setOpen] = useState(!!quoteAccepted);
+  const [open, setOpen] = useState(defaultOpen || !!quoteAccepted);
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   /** Requirements whose auto-fill failed — shown with a retry rather than an endless spinner. */
   const [genFailed, setGenFailed] = useState<Set<string>>(new Set());
