@@ -1607,9 +1607,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const cemeteryProfile = cemeteryProfileFor(selected.cemetery);
               const plotCount = Math.max(1, Number(seller.plot_count ?? selected.spaces) || 1);
               const retail = Number(seller.cemetery_retail) || 0;
-              const quoteTotal = Number(seller.accepted_quote_amount ?? seller.quote_amount) || 0;
+              // quote_amount / accepted_quote_amount are stored PER SPACE and EXCLUDE the
+              // transfer fee; the sales-price email quotes them INCLUSIVE of the fee.
+              const figures = quoteFigures({
+                quoteAmount: seller.quote_amount,
+                acceptedAmount: seller.accepted_quote_amount,
+                transferFee: cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount,
+                plotCount,
+              });
+              const quoteTotal = figures.totalInclFee;
               const resaleTotal = Number(seller.list_price) || 0;
-              const quotePerPlot = quoteTotal > 0 ? quoteTotal / plotCount : 0;
+              const quotePerPlot = figures.perSpaceInclFee;
               const resalePerPlot = resaleTotal > 0 ? resaleTotal / plotCount : (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
               const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
               const deedLocationParts = ["Section", "Block", "Lot", "Space"]
