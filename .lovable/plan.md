@@ -1,12 +1,11 @@
-# Keep key seller emails open with accurate quote details
+# Keep key seller emails visible and open
 
 ## What will change
 - Keep quote, listing-agreement, family-tree, document-request, POA, and automatic follow-up emails visible and expanded in the seller email feed.
 - Continue showing the newest ordinary correspondence without forcing every routine reply open.
-- Add a compact quote summary taken from the exact sent email: quoted amount, plot count, one-time transfer fee, and acceptance/agreement status.
-- Preserve revised-quote history so each quote displays the figures that were actually sent at that time.
+- Preserve the existing quote highlight and the figures already extracted from the sent quote email.
 
 ## Verification
-- Check a seller with multiple plots, a transfer fee, and accepted quote history.
 - Confirm key emails remain visible and open even when older than the four newest messages.
+- Confirm the existing quote highlight and amount still display correctly.
 - Run the project type check and formatting check.
