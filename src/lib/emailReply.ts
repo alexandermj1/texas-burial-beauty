@@ -113,12 +113,15 @@ export const extractQuoteAmount = (body?: string | null): number | null => {
   if (!body) return null;
   const text = stripQuoted(body).replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
   const money = "\\$\\s?([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{4,})";
-  // Prefer the explicit totals used by the quote template.
+  // The quote card's headline is the suggested sales price per space. Display
+  // that same figure in the thread badge, not the larger all-spaces total that
+  // appears immediately below it for multi-plot sellers.
   const priority = [
-    new RegExp(`${money}\\s*(?:across all|total)`, "i"),
-    new RegExp(`(?:across all|total)[^$]{0,40}${money}`, "i"),
+    new RegExp(`suggested sales price[^$]{0,160}${money}\\s*per space`, "i"),
     new RegExp(`${money}\\s*per space`, "i"),
     new RegExp(`suggested sales price[^$]{0,120}${money}`, "i"),
+    new RegExp(`${money}\\s*(?:across all|total)`, "i"),
+    new RegExp(`(?:across all|total)[^$]{0,40}${money}`, "i"),
   ];
   for (const re of priority) {
     const m = text.match(re);

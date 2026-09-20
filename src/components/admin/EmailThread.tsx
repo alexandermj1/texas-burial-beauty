@@ -149,13 +149,12 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
 
   const replyTarget = customerEmail || "";
   const newestFirst = [...emails].reverse();
-  // Workflow emails carry the facts that move a seller through the process.
-  // Keep every one in the feed even when it is older than the recent-message
-  // window, while ordinary correspondence remains compact.
+  // Keep every quote in the compact feed even when it is older than the four
+  // newest messages. All other emails retain the original recent-only layout.
   const recentIds = new Set(newestFirst.slice(0, 4).map((email) => email.id));
   const visibleEmails = showAll
     ? newestFirst
-    : newestFirst.filter((email) => recentIds.has(email.id) || emailKind(email) !== null);
+    : newestFirst.filter((email) => recentIds.has(email.id) || emailKind(email) === "quote");
   const hiddenCount = Math.max(0, emails.length - visibleEmails.length);
 
   return (
@@ -267,7 +266,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
-             const messageOpen = kind !== null || expandedMessage === e.id || isOpen;
+             const messageOpen = expandedMessage === e.id || isOpen;
             return (
               <li
                 key={e.id}
@@ -313,7 +312,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                 </div>
                 <p className="font-medium text-foreground/90 truncate">{e.subject || "(no subject)"}</p>
 
-                {body && kind === null && <button type="button" onClick={() => setExpandedMessage(messageOpen ? null : e.id)} className="mt-1 w-full text-left text-muted-foreground hover:text-foreground">
+                {body && <button type="button" onClick={() => setExpandedMessage(messageOpen ? null : e.id)} className="mt-1 w-full text-left text-muted-foreground hover:text-foreground">
                   {!messageOpen && <span className="line-clamp-2 whitespace-pre-wrap">{body}</span>}
                   {messageOpen && <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-primary"><ChevronUp className="h-3 w-3" /> Collapse message</span>}
                 </button>}
