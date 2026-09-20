@@ -208,12 +208,6 @@
 
   /* Seller workspace actions inherit the current pipeline stage. Primary
      actions carry the stage colour; supporting actions use its quiet tint. */
-  .seller-stage-nodocs { --seller-stage: var(--status-nodocs); --seller-stage-soft: var(--status-nodocs-soft); --seller-stage-fg: var(--status-nodocs-fg); --seller-stage-border: var(--status-nodocs-border); }
-  .seller-stage-new { --seller-stage: var(--status-new); --seller-stage-soft: var(--status-new-soft); --seller-stage-fg: var(--status-new-fg); --seller-stage-border: var(--status-new-border); }
-  .seller-stage-quote { --seller-stage: var(--status-quote); --seller-stage-soft: var(--status-quote-soft); --seller-stage-fg: var(--status-quote-fg); --seller-stage-border: var(--status-quote-border); }
-  .seller-stage-followup { --seller-stage: var(--status-followup); --seller-stage-soft: var(--status-followup-soft); --seller-stage-fg: var(--status-followup-fg); --seller-stage-border: var(--status-followup-border); }
-  .seller-stage-docs { --seller-stage: var(--status-docs); --seller-stage-soft: var(--status-docs-soft); --seller-stage-fg: var(--status-docs-fg); --seller-stage-border: var(--status-docs-border); }
-
   .seller-stage-profile button:not(.text-destructive):not(.text-amber-700),
   .seller-stage-profile [role="button"]:not(.text-destructive):not(.text-amber-700) {
     border-color: hsl(var(--seller-stage-border));

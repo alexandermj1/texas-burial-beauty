@@ -1499,7 +1499,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const stageTone = sellerStages[sellerStage - 1]?.tone ?? "new";
     const toneVar = (suffix: string) => `hsl(var(--status-${stageTone}${suffix}))`;
     const needsAttention = !!awaitingAll[selected.id];
-    const stagePrimaryStyle = { backgroundColor: toneVar(""), color: "hsl(var(--primary-foreground))" };
+    const stagePrimaryStyle = { backgroundColor: "hsl(var(--seller-stage))", color: "hsl(var(--primary-foreground))" };
     const stageSecondaryStyle = { borderColor: toneVar("-border"), backgroundColor: toneVar("-soft"), color: toneVar("-fg") };
     const openWorkspaceAt = (tab: "email" | "paperwork" | "notes" | "files", anchor: string) => {
       setPendingWorkspaceAnchor(anchor);
@@ -3136,7 +3136,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             key={selected.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-             className={`seller-stage-profile seller-stage-${stageTone} bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] p-6 space-y-5`}
+             className="seller-stage-profile bg-card/80 backdrop-blur-md rounded-2xl border border-border/60 shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.18)] p-6 space-y-5"
+             style={{
+               "--seller-stage": `var(--status-${stageTone})`,
+               "--seller-stage-soft": `var(--status-${stageTone}-soft)`,
+               "--seller-stage-fg": `var(--status-${stageTone}-fg)`,
+               "--seller-stage-border": `var(--status-${stageTone}-border)`,
+             } as React.CSSProperties}
           >
             {kind !== "buyer" ? (
               <div className="space-y-5">
