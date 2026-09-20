@@ -1605,6 +1605,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }) as any);
       if (!active) toast({ title: "Listing option saved", description: "This does not mark the quote accepted." });
     };
+    const sharedDeedLocationParts = ["Section", "Block", "Lot", "Space"]
+      .map((label) => aiFacts.find((fact) => fact.label === label))
+      .filter((fact): fact is NonNullable<typeof fact> => Boolean(fact))
+      .map((fact) => `${fact.label} ${fact.value}`);
+    const sharedDeedPlotType = aiFacts.find((fact) => fact.label === "Plot type");
+    if (sharedDeedPlotType && !sharedDeedLocationParts.some((part) => part.toLowerCase().includes(sharedDeedPlotType.value.toLowerCase()))) {
+      sharedDeedLocationParts.push(sharedDeedPlotType.value);
+    }
+    const sharedDeedLocation = sharedDeedLocationParts.join(" · ");
+    const sharedSavedLocation = String(seller.ownership_answers?.autopilot?.plotDescription || "").trim();
+    const sharedLocationIsVerified = Boolean(sharedSavedLocation && sharedSavedLocation === String(seller.plot_description || "").trim());
+    const sharedSellingLocation = (sharedLocationIsVerified ? sharedSavedLocation : sharedDeedLocation) || seller.plot_description || "Not provided";
+
     const headBlock = (<>
             {kind !== "buyer" && (() => {
               const fmtMoney = (value: unknown) => {
@@ -1629,20 +1642,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const quoteTotal = figures.totalInclFee;
               const quotePerPlot = figures.perSpaceInclFee;
               const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
-              const deedLocationParts = ["Section", "Block", "Lot", "Space"]
-                .map((label) => aiFacts.find((fact) => fact.label === label))
-                .filter((fact): fact is NonNullable<typeof fact> => Boolean(fact))
-                .map((fact) => `${fact.label} ${fact.value}`);
-              const deedPlotType = aiFacts.find((fact) => fact.label === "Plot type");
-              if (deedPlotType && !deedLocationParts.some((part) => part.toLowerCase().includes(deedPlotType.value.toLowerCase()))) {
-                deedLocationParts.push(deedPlotType.value);
-              }
-              const deedLocation = deedLocationParts.join(" · ");
+              const deedLocation = sharedDeedLocation;
               const deedLocationSource = aiFacts.find((fact) => ["Section", "Block", "Lot", "Space", "Plot type"].includes(fact.label))?.source;
-              const savedAutopilotLocation = String(seller.ownership_answers?.autopilot?.plotDescription || "").trim();
               const locationUpdatedAt = String(seller.ownership_answers?.autopilot?.plotDescriptionUpdatedAt || "").trim();
-              const hasOfficeVerifiedLocation = savedAutopilotLocation && savedAutopilotLocation === String(seller.plot_description || "").trim();
-              const sellingLocation = (hasOfficeVerifiedLocation ? savedAutopilotLocation : deedLocation) || seller.plot_description || "Not provided";
+              const sellingLocation = sharedSellingLocation;
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
               const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
               const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
@@ -3089,6 +3092,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     sellerEmail={selected.email}
                     sellerName={selected.name}
                     relationshipToOwner={(selected as any).relationship_to_owner}
+                    sellingLocation={sharedSellingLocation}
                     defaultOpen
                     quoteAccepted={(selected as any).quote_response === "accepted"}
                     onSent={() => onRefresh?.()}

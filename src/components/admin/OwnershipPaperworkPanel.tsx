@@ -48,6 +48,8 @@ type Props = {
   sellerName?: string | null;
   sellerEmail?: string | null;
   relationshipToOwner?: string | null;
+  /** Exact value shown as "Locations being sold" in the seller profile header. */
+  sellingLocation?: string | null;
   /** The dedicated seller-workspace tab should reveal its actions immediately. */
   defaultOpen?: boolean;
   /** AI reading only runs once the seller has accepted a quote — it costs money. */
@@ -238,7 +240,7 @@ const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
 
 
 
-export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, relationshipToOwner, defaultOpen = false, quoteAccepted, onSent }: Props) {
+export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, relationshipToOwner, sellingLocation, defaultOpen = false, quoteAccepted, onSent }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -2591,7 +2593,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 ? number.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
                 : "—";
             };
-            const savedLocation = (plotDescription || String(prepared.plotDescription || "")).trim();
+            const savedLocation = (sellingLocation || plotDescription || String(prepared.plotDescription || "")).trim();
             const facts = [
               { label: "Cemetery", value: cemetery || "—" },
               { label: "Deed owners entered", value: String(prepared.deedOwnerNames || deedNamesRaw || "—") },
