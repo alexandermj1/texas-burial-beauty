@@ -1,4 +1,5 @@
-// Daily automation: three days after a seller sent us their paperwork, if we
+// Weekday-morning automation: three business days after a seller sent us
+// their paperwork, if we
 // have not sent their sales price yet and nobody has spoken with them since,
 // email a warm holding note saying we are coordinating with the cemetery.
 import {
@@ -9,7 +10,21 @@ import {
 
 const JOB = "quote-in-progress-followup";
 const TYPE = "quote_in_progress_followup";
-const WAIT_DAYS = 3;
+const WAIT_BUSINESS_DAYS = 3;
+
+// Whole business days (Mon–Fri) elapsed between two moments — weekends do
+// not count towards the three-day wait.
+export function businessDaysElapsed(fromIso: string, toMs: number): number {
+  let count = 0;
+  const cursor = new Date(fromIso);
+  cursor.setHours(0, 0, 0, 0);
+  while (cursor.getTime() + 86_400_000 <= toMs) {
+    cursor.setTime(cursor.getTime() + 86_400_000);
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) count += 1;
+  }
+  return count;
+}
 
 export function buildBody(firstName: string, cemetery: string | null) {
   const mailto = `mailto:${OUR_EMAIL}?subject=${encodeURIComponent(`Question about my property${cemetery ? ` - ${cemetery}` : ""}`)}`;
@@ -20,7 +35,7 @@ export function buildBody(firstName: string, cemetery: string | null) {
     paragraphs: [
       `Thank you again for sending your paperwork through. I wanted to let you know personally that we are working on your valuation now${cemetery ? ` for your property at <strong>${esc(cemetery)}</strong>` : ""}.`,
       "Our team is in contact with the cemetery to confirm the current details on the property — the section and space, the transfer requirements, and their present pricing. We would rather take a little longer and give you a number we can stand behind than rush one out.",
-      "There is nothing you need to do at this stage. As soon as everything is confirmed, we will email you the price we are authorized to sell at, together with a clear breakdown of the figures.",
+      "There is nothing you need to do at this stage. As soon as everything is confirmed, we will email you a <strong>proposed minimum sales price</strong> for your review, together with a clear breakdown of the figures. Nothing is final until you have seen it and chosen to accept it.",
     ],
     panel: cemetery ? { label: "Property", value: cemetery, note: "We are confirming the current details and pricing directly with this cemetery." } : undefined,
     callout: {
@@ -35,7 +50,7 @@ export function buildBody(firstName: string, cemetery: string | null) {
     `Dear ${firstName},`, "",
     `Thank you again for sending your paperwork through. I wanted to let you know that we are working on your valuation now${cemetery ? ` for your property at ${cemetery}` : ""}.`, "",
     "Our team is in contact with the cemetery to confirm the current details on the property — the section and space, the transfer requirements, and their present pricing. We would rather take a little longer and give you a number we can stand behind than rush one out.", "",
-    "There is nothing you need to do at this stage. As soon as everything is confirmed, we will email you the price we are authorized to sell at, with a clear breakdown of the figures.", "",
+    "There is nothing you need to do at this stage. As soon as everything is confirmed, we will email you a proposed minimum sales price for your review, with a clear breakdown of the figures. Nothing is final until you have seen it and chosen to accept it.", "",
     `If you have any questions in the meantime, reply to this email or call ${PHONE_LABEL}.`, "",
     "Warm regards,", "Alexander James", "Cemetery Salesperson", "Texas Cemetery Brokers",
   ].join("\n");
@@ -75,7 +90,9 @@ Deno.serve(async (req) => {
     }
 
     const nowMs = Date.now();
-    const waitCutoff = new Date(nowMs - WAIT_DAYS * 86_400_000).toISOString();
+    // Three business days can span at most seven calendar days; the query
+    // over-fetches and the per-person check below enforces the real rule.
+    const waitCutoff = new Date(nowMs - 7 * 86_400_000).toISOString();
     let query = db.from("contact_submissions")
       .select("id,name,email,cemetery,created_at,customer_profile_id,seller_attachments")
       .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
@@ -96,6 +113,9 @@ Deno.serve(async (req) => {
       if (handled.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "duplicate-person" }); continue; }
       if (guards.advanced.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "further-along-elsewhere" }); continue; }
       if (guards.emailed.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "already-sent" }); continue; }
+
+      // Three days after we received their paperwork, not counting weekends.
+      if (businessDaysElapsed(String(sub.created_at), nowMs) < WAIT_BUSINESS_DAYS) { results.push({ id: sub.id, status: "skipped", reason: "within-three-business-days" }); continue; }
 
       // Eligible only when they actually sent us something to value.
       let hasAttachment = Array.isArray(sub.seller_attachments) && sub.seller_attachments.length > 0;

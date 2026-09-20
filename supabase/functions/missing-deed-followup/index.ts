@@ -1,4 +1,5 @@
-// Daily automation: seven days after someone filled out the seller form without
+// Weekday-morning automation: three business days after someone filled out
+// the seller form without
 // attaching a deed or proof of purchase, and only if nobody has spoken with them
 // since, send a polite reminder asking for a photo or scan of the deed.
 import {
@@ -9,7 +10,21 @@ import {
 
 const JOB = "missing-deed-followup";
 const TYPE = "missing_deed_followup";
-const WAIT_DAYS = 7;
+const WAIT_BUSINESS_DAYS = 3;
+
+// Whole business days (Mon–Fri) elapsed between two moments — weekends do
+// not count towards the three-day wait.
+export function businessDaysElapsed(fromIso: string, toMs: number): number {
+  let count = 0;
+  const cursor = new Date(fromIso);
+  cursor.setHours(0, 0, 0, 0);
+  while (cursor.getTime() + 86_400_000 <= toMs) {
+    cursor.setTime(cursor.getTime() + 86_400_000);
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) count += 1;
+  }
+  return count;
+}
 
 export function buildBody(firstName: string, cemetery: string | null) {
   const mailto = `mailto:${OUR_EMAIL}?subject=${encodeURIComponent(`My deed${cemetery ? ` - ${cemetery}` : ""}`)}`;
@@ -75,7 +90,9 @@ Deno.serve(async (req) => {
     }
 
     const nowMs = Date.now();
-    const waitCutoff = new Date(nowMs - WAIT_DAYS * 86_400_000).toISOString();
+    // Three business days can span at most seven calendar days; the query
+    // over-fetches and the per-person check below enforces the real rule.
+    const waitCutoff = new Date(nowMs - 7 * 86_400_000).toISOString();
     let query = db.from("contact_submissions")
       .select("id,name,email,cemetery,created_at,customer_profile_id,seller_attachments")
       .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
@@ -96,6 +113,9 @@ Deno.serve(async (req) => {
       if (handled.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "duplicate-person" }); continue; }
       if (guards.advanced.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "further-along-elsewhere" }); continue; }
       if (guards.emailed.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "already-sent" }); continue; }
+
+      // Three days after they sent in the form, not counting weekends.
+      if (businessDaysElapsed(String(sub.created_at), nowMs) < WAIT_BUSINESS_DAYS) { results.push({ id: sub.id, status: "skipped", reason: "within-three-business-days" }); continue; }
 
       // Only people who still have nothing on file.
       let hasAttachment = Array.isArray(sub.seller_attachments) && sub.seller_attachments.length > 0;
