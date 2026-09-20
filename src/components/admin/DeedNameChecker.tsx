@@ -368,12 +368,6 @@ export default function DeedNameChecker({ submissionId, onUseNames }: Props) {
         )}
       </div>
 
-      {foundLine && (
-        <div className="px-2 py-1 border-t border-border/60 text-[10.5px] text-muted-foreground truncate">
-          Zoomed to: <span className="text-foreground">{foundLine}</span>
-        </div>
-      )}
-
       {docs.length > 1 && (
         <div className="flex gap-1 overflow-x-auto px-2 py-1.5 border-t border-border/60">
           {docs.map((d, i) => (
@@ -385,10 +379,10 @@ export default function DeedNameChecker({ submissionId, onUseNames }: Props) {
               className={`shrink-0 rounded border overflow-hidden ${i === idx ? "border-primary" : "border-border/60"}`}
             >
               {d.isImage ? (
-                <img src={d.url} alt="" className="h-12 w-12 object-cover" />
+                <img src={d.url} alt="" className="h-10 w-10 object-cover" />
               ) : (
-                <span className="flex h-12 w-12 items-center justify-center text-[9px] text-muted-foreground px-1 text-center">
-                  {d.name.slice(0, 12)}
+                <span className="flex h-10 w-10 items-center justify-center text-[9px] text-muted-foreground px-1 text-center">
+                  {d.name.slice(0, 10)}
                 </span>
               )}
             </button>
@@ -396,22 +390,21 @@ export default function DeedNameChecker({ submissionId, onUseNames }: Props) {
         </div>
       )}
 
-      <div className="border-t border-border/60 px-2 py-2 space-y-2 bg-primary/[0.04]">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-primary" />
-          <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">
-            Who the AI believes owns this plot
-          </span>
-        </div>
+      {/* One quiet summary: who owns it, what the customer said, and the actions. */}
+      <div className="border-t border-border/60 px-3 py-2.5 space-y-2 bg-primary/[0.04]">
         {suggested.length > 0 ? (
           <>
-            <p className="text-[12px] text-foreground">
-              Read off the deed:{" "}
+            <p className="text-[12px] text-foreground leading-snug">
+              <Sparkles className="w-3 h-3 text-primary inline mr-1 -mt-0.5" />
+              Deed owner{suggested.length > 1 ? "s" : ""}:{" "}
               <span className="font-semibold">{suggested.join(" and ")}</span>
-              {suggested.length > 1 ? " — both are owners and both must sign." : " — the only owner named on the deed."}
             </p>
-            <p className="text-[10px] text-muted-foreground">
-              Check this against the highlighted line on the deed above before you use it.
+            <p className="text-[11px] text-muted-foreground">
+              Customer wrote: <span className="text-foreground">{customer.typedOwners || customer.name || "nothing"}</span>
+              {" · "}
+              <span className={agrees ? "text-emerald-600" : "text-amber-600"}>
+                {agrees ? "matches" : "does not match — check the deed"}
+              </span>
             </p>
             <div className="flex flex-wrap items-center gap-1.5">
               <button
@@ -436,13 +429,12 @@ export default function DeedNameChecker({ submissionId, onUseNames }: Props) {
           </>
         ) : (
           <p className="text-[11px] text-muted-foreground">
-            The AI could not read any owner names off these documents — read them off the deed above and type them in.
+            No owner names could be read here — type them from the deed above.
+            {(customer.typedOwners || customer.name) && (
+              <> Customer wrote: <span className="text-foreground">{customer.typedOwners || customer.name}</span>.</>
+            )}
           </p>
         )}
-        <p className="text-[11px] text-muted-foreground border-t border-border/60 pt-1.5">
-          What the customer wrote on the form:{" "}
-          <span className="text-foreground font-medium">{customer.typedOwners || customer.name || "Nothing"}</span>
-        </p>
       </div>
     </div>
   );
