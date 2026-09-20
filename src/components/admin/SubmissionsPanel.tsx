@@ -3874,13 +3874,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         <>
           <SendQuoteDialog
             submission={(() => {
-              const answers = (selected.ownership_answers ?? {}) as Record<string, any>;
+              const selectedRecord = selected as any;
+              const answers = (selectedRecord.ownership_answers ?? {}) as Record<string, any>;
               const savedAutopilotLocation = String(answers.autopilot?.plotDescription || "").trim();
-              const hasOfficeVerifiedLocation = savedAutopilotLocation && savedAutopilotLocation === String(selected.plot_description || "").trim();
+              const hasOfficeVerifiedLocation = savedAutopilotLocation && savedAutopilotLocation === String(selectedRecord.plot_description || "").trim();
               const deedLocation = ["Section", "Block", "Lot", "Space", "Plot type"]
                 .map((label) => aiFacts.find((fact) => fact.label === label))
-                .filter((fact): fact is AiFact => Boolean(fact))
-                .map((fact) => `${fact.label} ${fact.value}`)
+                .filter(Boolean)
+                .map((fact) => `${fact?.label} ${fact?.value}`)
                 .join(" · ");
               return hasOfficeVerifiedLocation || !deedLocation
                 ? selected
