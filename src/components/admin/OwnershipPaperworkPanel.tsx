@@ -350,12 +350,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setAnswers(a && typeof a === "object" ? a : {});
     setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
     const savedPlotDesc = ((sub as { plot_description?: string | null } | null)?.plot_description ?? "").trim();
-    setPlotDescription(savedPlotDesc);
-    // Nothing saved yet? Show exactly what the top of the profile shows — the
-    // AI's reading of the deed — instead of "not provided".
-    if (!savedPlotDesc) {
+    // Mirror the "Locations being sold" line at the top of the profile exactly:
+    // an office-verified autopilot location wins; otherwise the AI's reading of
+    // the deed beats stale seller-entered wording saved earlier.
+    const verified = String((a as Record<string, any>)?.autopilot?.plotDescription ?? "").trim();
+    if (verified && verified === savedPlotDesc) {
+      setPlotDescription(savedPlotDesc);
+    } else {
       const deedLoc = await fetchDeedSellingLocation((sub as { email?: string | null } | null)?.email);
-      if (deedLoc) setPlotDescription(deedLoc);
+      setPlotDescription(deedLoc || savedPlotDesc);
     }
     setPlotDescUpdatedAt(String((a as Record<string, any>)?.autopilot?.plotDescriptionUpdatedAt ?? "") || null);
     setRequestedAt(((sub as { documents_requested_at?: string | null } | null)?.documents_requested_at ?? null));
@@ -1603,12 +1606,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             email: str(prior?.email) || c.email || str(s.email),
             cemetery: str(prior?.cemetery) || str(s.cemetery) || (cemName ?? ""),
             county_state: str(prior?.county_state) || (s.cemetery_city ? `${str(s.cemetery_city)}, TX` : ""),
-            // The description the office typed on the submission is the single
-            // source of truth — it is the one that was checked against the deed
-            // and corrected. It must beat whatever an earlier (possibly wrong)
-            // copy of this document was generated with; only if the submission
-            // has none do we fall back to the deed extract, then the raw intake.
-            plot_description: str(s.plot_description) || str(prior?.plot_description) || plotHints[0]?.text ||
+            // Use the same resolved location shown at the top of the profile
+            // ("Locations being sold") — office-verified wording, else the AI's
+            // deed reading — never a stale seller-entered value saved earlier.
+            plot_description: plotDescription.trim() || str(s.plot_description) || str(prior?.plot_description) || plotHints[0]?.text ||
               formatPlotDescription({ section: str(s.section), lawn: str(s.lawn), space_numbers: str(s.space_numbers) }),
             plot_count: str(s.plot_count) || str(prior?.plot_count) || str(s.spaces),
             listing_option: str(prior?.listing_option) || str(s.listing_tier) || "Starter",
