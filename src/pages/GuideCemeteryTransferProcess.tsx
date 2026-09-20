@@ -135,7 +135,7 @@ const GuideCemeteryTransferProcess = () => (
           </div>
         </div>
 
-        <Section id="nature" num="I" eyebrow="The nature of the interest" title="First, a plot isn’t really property">
+        <Section id="nature" eyebrow="The nature of the interest" title="First, a plot isn’t really property">
           <p>This trips people up immediately, so let’s clear it up.</p>
           <p>When you “buy a cemetery plot” in Texas, you don’t buy the land. You buy something called the <strong>exclusive right of sepulture</strong> — a right to bury someone in a particular spot. The cemetery still owns the dirt. Texas courts have described what you hold as something closer to an easement or a licence than to real estate.</p>
           <p>Practically, this means the deed isn’t at the county clerk’s office. It’s at the cemetery. The certificate of ownership in your father’s filing cabinet is a copy; the cemetery’s records are the original, and they’re what control.</p>
@@ -145,7 +145,7 @@ const GuideCemeteryTransferProcess = () => (
           </div>
         </Section>
 
-        <Section id="health-code" num="II" eyebrow="Authority one" title="The Texas Health and Safety Code">
+        <Section id="health-code" eyebrow="Authority one" title="The Texas Health and Safety Code">
           <p>Chapter 711 of the Health and Safety Code is where cemetery plots live, and <Ext href={`${HS_711}#711.039`}>§ 711.039</Ext> is the section that decides almost everything. It’s worth knowing what’s in it, because several of its rules will surprise you.</p>
           <h3>Surprise one: it’s separate property</h3>
           <p>Subsection (a) says a plot is presumed to be the separate property of whoever is named as grantee on the certificate.</p>
@@ -184,7 +184,7 @@ const GuideCemeteryTransferProcess = () => (
           <div className="mt-5 flex items-start gap-3 rounded-lg border border-border bg-card p-5"><Scale className="mt-0.5 h-5 w-5 shrink-0 text-primary"/><p className="text-sm leading-relaxed text-foreground/75"><strong className="text-foreground">Same family, same plots, different signature list</strong> — depending on where Dad ended up.</p></div>
         </section>
 
-        <Section id="children" num="III" eyebrow="Interment rights" title="And the children have their own rights">
+        <Section id="children" eyebrow="Interment rights" title="And the children have their own rights">
           <p>Subsection (e) covers what happens where the owner is buried in the plot and left no specific instructions. One space is reserved for the surviving spouse. And the owner’s children, “in order of need,” may be buried in the remaining spaces without the consent of anyone claiming an interest in the plot.</p>
           <p>“In order of need” is a wonderfully Texan phrase that means, essentially, whoever dies first. It’s not a queue you can jump or reserve.</p>
           <p>The practical effect is that a child can occupy a space over the objections of siblings who wanted to sell it. Which is a good reason to have the family conversation early.</p>
@@ -197,7 +197,7 @@ const GuideCemeteryTransferProcess = () => (
           {[{src:resthavenOakPath.url,alt:'Oak-lined path at Resthaven Memorial Park in Texas',name:'The cemetery record is the starting point',caption:'Every transfer begins by confirming exactly how the cemetery has the ownership recorded.'},{src:restlandLawn.url,alt:'The lawn at Restland Memorial Park in Dallas',name:'The cemetery is also the gatekeeper',caption:'Its forms, fees and consent requirements decide what will be accepted and recorded.'}].map((p)=><figure key={p.name} className="overflow-hidden rounded-lg border border-border bg-card"><img src={p.src} alt={p.alt} width={1536} height={1024} className="aspect-[16/10] w-full object-cover" loading="lazy"/><figcaption className="p-5"><p className="font-display text-xl text-foreground">{p.name}</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.caption}</p></figcaption></figure>)}
         </div>
 
-        <Section id="estates-code" num="IV" eyebrow="Authority two" title="The Texas Estates Code">
+        <Section id="estates-code" eyebrow="Authority two" title="The Texas Estates Code">
           <p>Notice that § 711.039 keeps using the phrase “heirs-at-law” and never defines it. That’s deliberate — it’s borrowing the definition from elsewhere.</p>
           <p>That elsewhere is <Ext href={`${ES}201.htm`}>Estates Code Chapter 201</Ext>, the intestate succession rules. And because of the separate property presumption we met earlier, you’ll generally be in the separate-property provisions rather than the community property ones — which is precisely why children end up with a share that families don’t expect.</p>
           <p>Working out exactly who the heirs are can require a <Ext href={`${ES}202.htm`}>determination of heirship under Chapter 202</Ext>, or in some cases evidence under <Ext href={`${ES}203.htm`}>Chapter 203</Ext>. A <Ext href={`${ES}205.htm`}>small estate affidavit under Chapter 205</Ext> has specific eligibility rules and is not a universal substitute for probate. Many cemeteries will accept an affidavit rather than making you open a probate, which saves considerable time and money — but that’s their choice, not your right.</p>
@@ -265,7 +265,7 @@ const GuideCemeteryTransferProcess = () => (
           </div>
         </section>
 
-        <Section id="cemetery" num="V" eyebrow="Authority three" title="The cemetery organization">
+        <Section id="cemetery" eyebrow="Authority three" title="The cemetery organization">
           <p>You can have § 711.039 memorised and every heir lined up, and still get nowhere, because the cemetery has its own rulebook.</p>
           <p>Cemeteries maintain the ownership records, so they’re the gatekeeper. Their rules commonly include transfer fees, approval rights over who can buy, and sometimes a right of first refusal that means they buy it back rather than letting you sell to a third party. Some won’t permit resale to outsiders at all.</p>
           <p>There’s also a statutory rule worth knowing: under <Ext href={`${HS_711}#711.0381`}>§ 711.0381(d)</Ext>, interment rights that were conveyed collectively — a family block of six, say — may not be divided on resale without the cemetery’s consent. So selling two out of six isn’t automatically yours to do.</p>
@@ -277,7 +277,7 @@ const GuideCemeteryTransferProcess = () => (
           </div>
         </Section>
 
-        <Section id="file" num="VI" eyebrow="Before anyone signs" title="Get someone to look at your actual file">
+        <Section id="file" eyebrow="Before anyone signs" title="Get someone to look at your actual file">
           <p>If you’ve read this far, you’ve probably noticed something uncomfortable: a single plot worth a few thousand dollars can generate a genuinely complicated legal question.</p>
           <p>Three overlapping authorities, a statute that inverts the marital property rules you thought you knew, a signature list that flips depending on where the deceased is buried, and a cemetery with its own view of all of it.</p>
           <p>And everything in this article is the general shape of the law. Your situation turns on particulars that no article can anticipate — exactly how the names read on the certificate, whether there’s a will with an express reference to the plot, whether a child predeceased, whether the plots were conveyed as a block, and what your specific cemetery requires.</p>
@@ -301,7 +301,7 @@ const GuideCemeteryTransferProcess = () => (
           </div>
         </section>
 
-        <Section id="faq" num="VII" eyebrow="Common questions" title="Texas cemetery plot inheritance FAQs">
+        <Section id="faq" eyebrow="Common questions" title="Texas cemetery plot inheritance FAQs">
           <div className="not-prose divide-y divide-border border-y border-border">
             {faqs.map((f)=><details key={f.q} className="group py-5"><summary className="cursor-pointer list-none pr-8 font-display text-xl text-foreground marker:hidden">{f.q}</summary><p className="mt-3 max-w-3xl text-sm leading-relaxed text-foreground/70">{f.a}</p></details>)}
           </div>
