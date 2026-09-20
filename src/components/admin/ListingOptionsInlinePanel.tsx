@@ -119,7 +119,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
-        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, plot_description, cemetery_city, ownership_roster, seller_attachments")
+        .select("deed_owner_names, name, email, section, lawn, spaces, space_numbers, plot_description, cemetery_city, ownership_roster, seller_attachments")
         .eq("id", seller.id)
         .maybeSingle();
       if (cancelled) return;
