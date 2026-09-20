@@ -172,3 +172,45 @@ export const personGuards = async (db: SupabaseClient, type: string): Promise<Pe
   }
   return { advanced, emailed, emailOf };
 };
+
+// --- Ownership-document check -------------------------------------------
+// Sellers often upload something that is not proof of ownership (a photo of
+// the headstone, a letter, an ID, a bank statement). The AI reader stores a
+// document_type on each file; only an ownership record counts as paperwork we
+// can actually value, so the "valuation under way" note is held back until one
+// of their files has been read and recognised as a deed / certificate.
+const OWNERSHIP_NEGATIVE = /death certificate|driver|licen[cs]e|passport|identification|\bid card\b|letter|correspondence|invoice|insurance|bank|statement|power of attorney|affidavit|obituary|photo|headstone|marker|will\b|trust\b/i;
+const OWNERSHIP_POSITIVE = /deed|certificate of ownership|certificate of interment|interment right|ownership|burial right|purchase agreement|contract|lot record|cemetery record|title|bill of sale|proof of purchase/i;
+
+export const isOwnershipDocType = (value: unknown) => {
+  const text = String(value ?? "").trim();
+  if (!text) return false;
+  if (OWNERSHIP_NEGATIVE.test(text) && !/deed|certificate of ownership|certificate of interment|interment right/i.test(text)) return false;
+  return OWNERSHIP_POSITIVE.test(text);
+};
+
+export type OwnershipCheck = { ok: boolean; reason: string; docType?: string; pending: number };
+
+/** Looks at every file on the seller's profile and decides whether the AI has
+ *  confirmed at least one of them is a deed or certificate of ownership. */
+export const ownershipDocCheck = async (
+  db: SupabaseClient,
+  customerProfileId: string | null | undefined,
+): Promise<OwnershipCheck> => {
+  if (!customerProfileId) return { ok: false, reason: "no-file-record", pending: 0 };
+  const { data: files } = await db.from("customer_files")
+    .select("file_name,document_type,extraction_status,extracted_data")
+    .eq("customer_profile_id", customerProfileId).is("deleted_at", null).limit(50);
+  const rows = files ?? [];
+  if (!rows.length) return { ok: false, reason: "no-file-record", pending: 0 };
+  let pending = 0;
+  for (const row of rows) {
+    const aiType = (row.extracted_data as Record<string, unknown> | null)?.["document_type"];
+    const status = String(row.extraction_status ?? "").toLowerCase();
+    if (isOwnershipDocType(aiType) || isOwnershipDocType(row.document_type)) {
+      return { ok: true, reason: "ownership-document", docType: String(aiType ?? row.document_type), pending };
+    }
+    if (!aiType && (status === "" || status === "pending" || status === "processing" || status === "failed" || status === "error")) pending += 1;
+  }
+  return { ok: false, reason: pending ? "attachment-not-read-yet" : "attachment-not-ownership-document", pending };
+};

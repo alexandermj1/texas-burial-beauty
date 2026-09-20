@@ -3,7 +3,7 @@
 // email a warm holding note saying we are coordinating with the cemetery.
 import {
   BATCH_SIZE, OUR_EMAIL, PHONE_HREF, PHONE_LABEL, authorize, brandedEmail, cors, esc,
-  firstNameOf, gmailSend, isHumanContact, loadEnv, mimeMessage, personGuards, realThread, respond,
+  firstNameOf, gmailSend, isHumanContact, loadEnv, mimeMessage, ownershipDocCheck, personGuards, realThread, respond,
   threadHeaders, type ThreadMessage,
 } from "../_shared/autoFollowup.ts";
 
@@ -105,6 +105,12 @@ Deno.serve(async (req) => {
       }
       if (!hasAttachment) { results.push({ id: sub.id, status: "skipped", reason: "no-attachment" }); continue; }
 
+      // And only when the AI reader has confirmed one of those files is
+      // actually a deed / certificate of ownership — not an ID, a letter or a
+      // photo. Anything unread or unrecognised waits rather than being emailed.
+      const ownership = await ownershipDocCheck(db, sub.customer_profile_id);
+      if (!ownership.ok) { results.push({ id: sub.id, status: "skipped", reason: ownership.reason }); continue; }
+
       const idempotency = `${TYPE}:${sub.id}`;
       const { data: prior } = await db.from("reminder_log").select("id,sent_at").eq("submission_id", sub.id).eq("reminder_type", TYPE).eq("status", "sent").is("deleted_at", null).order("sent_at", { ascending: false }).limit(1);
       if (prior?.length) { results.push({ id: sub.id, status: "skipped", reason: "already-sent" }); continue; }
@@ -121,7 +127,7 @@ Deno.serve(async (req) => {
       if ((notes ?? []).length || recentHuman || (activity ?? []).length) { results.push({ id: sub.id, status: "skipped", reason: "recent-contact" }); continue; }
 
       handled.add(email);
-      if (dryRun) { results.push({ id: sub.id, status: "would-send" }); continue; }
+      if (dryRun) { results.push({ id: sub.id, status: "would-send", reason: ownership.docType }); continue; }
       if (sendAttempts >= BATCH_SIZE) break;
 
       const now = new Date().toISOString();
