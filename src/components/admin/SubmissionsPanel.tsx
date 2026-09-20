@@ -1617,9 +1617,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 plotCount,
               });
               const quoteTotal = figures.totalInclFee;
-              const resaleTotal = Number(seller.list_price) || 0;
               const quotePerPlot = figures.perSpaceInclFee;
-              const resalePerPlot = resaleTotal > 0 ? resaleTotal / plotCount : (retail > 0 ? Math.round((retail * 0.67) / 100) * 100 : 0);
               const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
               const deedLocationParts = ["Section", "Block", "Lot", "Space"]
                 .map((label) => aiFacts.find((fact) => fact.label === label))
