@@ -229,13 +229,27 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     return () => { cancelled = true; };
   }, [seller.id, seller.spaces, seller.cemetery, seller.transfer_fee_amount]);
 
+  const applyRetail = (v: string, fee: number) => {
+    const r = Number(v);
+    if (!isFinite(r) || r <= 0) return;
+    // 55% of retail, lowered whenever the transfer fee + 15% buyer's premium
+    // would push what the buyer pays past 70% of retail.
+    const net = suggestedNetPerSpace(r, fee);
+    if (!netTouched) setNetPerPlot(String(net));
+    if (!salesTouched) {
+      const cap = Math.floor((MAX_BUYER_PCT_OF_RETAIL * r) / 100) * 100;
+      setSalesPrice(String(Math.min(round100(r * 0.67), cap)));
+    }
+  };
+
   const handleRetailChange = (v: string) => {
     setRetail(v);
-    const r = Number(v);
-    if (isFinite(r) && r > 0) {
-      if (!netTouched) setNetPerPlot(String(round100(r * 0.55)));
-      if (!salesTouched) setSalesPrice(String(round100(r * 0.67)));
-    }
+    applyRetail(v, Number(transferFee) || 0);
+  };
+
+  const handleTransferFeeChange = (v: string) => {
+    setTransferFee(v);
+    applyRetail(retail, Number(v) || 0);
   };
 
   const nppNum = Number(netPerPlot) || 0;
