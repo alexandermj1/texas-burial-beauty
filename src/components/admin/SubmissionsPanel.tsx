@@ -818,15 +818,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const stageStep = (s: Submission): number => {
     const a = s as any;
     const accepted = a.quote_response === "accepted";
-    if (accepted && a.documents_completed_at) return 9;
-    if (accepted && a.documents_requested_at) {
+    if (a.documents_completed_at) return 9;
+    if (a.documents_requested_at) {
       const e = (s.email || "").trim().toLowerCase();
       const ans = (a.ownership_answers ?? {}) as Record<string, any>;
       if ((e && returnedDocsEmails.has(e)) || ans.docsReturnedAt) return 8;
       return 7;
     }
-    if (accepted && ftState(s).doneAt) return 6;
-    if (accepted && ftState(s).sentAt) return 5;
+    if (ftState(s).doneAt) return 6;
+    if (ftState(s).sentAt) return 5;
     if (accepted) return 4;
     if (a.quote_sent_at) return 3;
     if (hasDocs(s)) return 2;
@@ -3497,16 +3497,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const la = laMap[s.id];
             const stage = (() => {
               const accepted = (sg as any).quote_response === "accepted";
-              if (accepted && (sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-primary-foreground border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
-              if (accepted && (sg as any).documents_requested_at) {
+              if ((sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-primary-foreground border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
+              if ((sg as any).documents_requested_at) {
                 const retE = (sg.email || "").trim().toLowerCase();
                 const retAns = ((sg as any).ownership_answers ?? {}) as Record<string, any>;
                 if ((retE && returnedDocsEmails.has(retE)) || retAns.docsReturnedAt)
                   return { step: 8, label: "Docs returned", accent: "cyan", cls: "bg-cyan-600 text-white border-cyan-700", bar: "bg-cyan-500", tint: "bg-cyan-500/[0.07] hover:bg-cyan-500/[0.12]", icon: FileCheck, at: (sg as any).documents_requested_at };
                 return { step: 7, label: "Docs out", accent: "sky", cls: "bg-sky-600 text-white border-sky-700", bar: "bg-sky-500", tint: "bg-sky-500/[0.07] hover:bg-sky-500/[0.12]", icon: FileText, at: (sg as any).documents_requested_at };
               }
-              if (accepted && ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-primary-foreground border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
-              if (accepted && ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-primary-foreground border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
+              if (ft.doneAt) return { step: 6, label: "Tree done", accent: "teal", cls: "bg-teal-600 text-primary-foreground border-teal-700", bar: "bg-teal-500", tint: "bg-teal-500/[0.07] hover:bg-teal-500/[0.12]", icon: Users, at: ft.doneAt };
+              if (ft.sentAt) return { step: 5, label: "Tree sent", accent: "indigo", cls: "bg-indigo-600 text-primary-foreground border-indigo-700", bar: "bg-indigo-500", tint: "bg-indigo-500/[0.07] hover:bg-indigo-500/[0.12]", icon: Users, at: ft.sentAt };
               if (accepted) return { step: 4, label: "Accepted", accent: "green", cls: "bg-green-600 text-primary-foreground border-green-700", bar: "bg-green-500", tint: "bg-green-500/[0.07] hover:bg-green-500/[0.12]", icon: CheckCircle, at: (sg as any).quote_responded_at };
               if ((sg as any).quote_sent_at) return { step: 3, label: "Quoted", accent: "purple", cls: "bg-purple-600 text-white border-purple-700", bar: "bg-purple-500", tint: "bg-purple-500/[0.07] hover:bg-purple-500/[0.12]", icon: DollarSign, at: (sg as any).quote_sent_at };
               if (hasDocs(sg)) return { step: 2, label: "Attachments", accent: "amber", cls: "bg-amber-500 text-white border-amber-600", bar: "bg-amber-500", tint: "bg-amber-500/[0.07] hover:bg-amber-500/[0.12]", icon: Clock, at: null as string | null };
