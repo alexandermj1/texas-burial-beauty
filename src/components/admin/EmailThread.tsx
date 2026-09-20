@@ -24,6 +24,14 @@ interface EmailRow {
   gmail_message_id: string | null;
 }
 
+const emailKind = (message: EmailRow) =>
+  isOutgoing(message.from_email)
+    ? classifyEmailKind(
+        message.subject,
+        `${message.body_html || ""} ${message.body_text || ""} ${message.snippet || ""}`,
+      )
+    : null;
+
 import type { EmailTemplate } from "@/lib/emailTemplates";
 
 interface Props {
@@ -141,7 +149,13 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
 
   const replyTarget = customerEmail || "";
   const newestFirst = [...emails].reverse();
-  const visibleEmails = showAll ? newestFirst : newestFirst.slice(0, 4);
+  // Workflow emails carry the facts that move a seller through the process.
+  // Keep every one in the feed even when it is older than the recent-message
+  // window, while ordinary correspondence remains compact.
+  const recentIds = new Set(newestFirst.slice(0, 4).map((email) => email.id));
+  const visibleEmails = showAll
+    ? newestFirst
+    : newestFirst.filter((email) => recentIds.has(email.id) || emailKind(email) !== null);
   const hiddenCount = Math.max(0, emails.length - visibleEmails.length);
 
   return (
@@ -213,20 +227,16 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
           )}
           <ul className="divide-y divide-border/60">
           {visibleEmails.map((e) => {
-            const kindOf = (m: EmailRow) =>
-              isOutgoing(m.from_email)
-                ? classifyEmailKind(m.subject, `${m.body_html || ""} ${(m.body_text || "")} ${m.snippet || ""}`)
-                : null;
             const outgoing = isOutgoing(e.from_email);
             const sender = outgoing ? "You" : (e.from_name && e.from_name.trim()) || e.from_email;
             const body = (e.body_text && e.body_text.trim()) || e.snippet || "";
-            const kind = kindOf(e);
+             const kind = emailKind(e);
             // A later quote only counts as a *revision* when the figure actually
             // changed from the previous quote in the thread; otherwise it is a re-send.
             const quoteAmount = kind === "quote" ? extractQuoteAmount(`${e.body_html || ""} ${e.body_text || ""}`) : null;
             let quoteLabel = "";
             if (kind === "quote") {
-              const quotes = emails.filter((m) => kindOf(m) === "quote");
+               const quotes = emails.filter((m) => emailKind(m) === "quote");
               const idx = quotes.findIndex((m) => m.id === e.id);
               const prevAmount = idx > 0
                 ? (() => {
@@ -257,7 +267,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
             const replyToAddr = outgoing ? (e.to_email || replyTarget) : (e.from_email || replyTarget);
             const replySubject = e.subject ? (e.subject.toLowerCase().startsWith("re:") ? e.subject : `Re: ${e.subject}`) : "";
             const isOpen = replyingTo === e.id;
-            const messageOpen = expandedMessage === e.id || isOpen;
+             const messageOpen = kind !== null || expandedMessage === e.id || isOpen;
             return (
               <li
                 key={e.id}
@@ -303,7 +313,7 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                 </div>
                 <p className="font-medium text-foreground/90 truncate">{e.subject || "(no subject)"}</p>
 
-                {body && <button type="button" onClick={() => setExpandedMessage(messageOpen ? null : e.id)} className="mt-1 w-full text-left text-muted-foreground hover:text-foreground">
+                {body && kind === null && <button type="button" onClick={() => setExpandedMessage(messageOpen ? null : e.id)} className="mt-1 w-full text-left text-muted-foreground hover:text-foreground">
                   {!messageOpen && <span className="line-clamp-2 whitespace-pre-wrap">{body}</span>}
                   {messageOpen && <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-primary"><ChevronUp className="h-3 w-3" /> Collapse message</span>}
                 </button>}

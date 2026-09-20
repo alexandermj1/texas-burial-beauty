@@ -14,6 +14,7 @@
 - [x] Restrict Accepted to explicit email acceptance or a manual free-option move
 - [x] Make long email chains compact, modern, and easy to navigate
 - [x] Correct Robert's inaccurate accepted state and verify the seller record
+- [x] Keep quote, family-tree, and other workflow emails visible and expanded in the email feed
 
 ## Apple-style seller workspace
 - [x] Make every cemetery action visibly functional
