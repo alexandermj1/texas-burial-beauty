@@ -20,21 +20,15 @@ const Ext = ({ href, children }: { href: string; children: React.ReactNode }) =>
   </a>
 );
 
-const Section = ({ id, num, eyebrow, title, children }: { id: string; num: string; eyebrow: string; title: React.ReactNode; children: React.ReactNode }) => (
-  <section id={id} className="scroll-mt-28 border-t border-border/60 py-12 md:py-16">
-    <div className="grid gap-6 md:grid-cols-12 md:gap-10">
-      <div className="relative md:col-span-3 md:min-h-[240px] md:border-r md:border-border/50 md:pr-8">
-        <div className="relative z-10 md:sticky md:top-28">
-          <p className="font-display text-5xl leading-none text-primary/25">{num}</p>
-          <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">{eyebrow}</p>
-          <span className="mt-8 hidden h-20 w-px bg-gradient-to-b from-primary/30 to-transparent md:block" />
-        </div>
-        <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute bottom-2 left-0 hidden w-40 opacity-[0.24] md:block" />
-      </div>
-      <div className="md:col-span-9">
-        <h2 className="mb-6 font-display text-3xl leading-[1.08] text-foreground md:text-[2.7rem]">{title}</h2>
-        <div className="prose prose-lg max-w-none text-foreground/80 [&_li]:leading-relaxed [&_p]:leading-[1.8] [&_p]:mb-5 [&_strong]:font-semibold [&_strong]:text-foreground">{children}</div>
-      </div>
+const Section = ({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: React.ReactNode; children: React.ReactNode }) => (
+  <section id={id} className="relative scroll-mt-28 border-t border-border/60 py-10 md:py-14">
+    <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-20 -top-20 hidden w-64 opacity-[0.1] md:block" />
+    <div className="relative">
+      <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
+        <span className="h-px w-10 bg-primary/40" />{eyebrow}
+      </p>
+      <h2 className="mb-7 max-w-3xl font-display text-3xl leading-[1.08] text-foreground md:text-[2.5rem]">{title}</h2>
+      <div className="prose prose-lg max-w-none text-foreground/80 [&_p]:mb-5 [&_p]:max-w-3xl [&_p]:leading-[1.8] [&_li]:leading-relaxed [&_h3]:mt-9 [&_h3]:max-w-3xl [&_strong]:font-semibold [&_strong]:text-foreground">{children}</div>
     </div>
   </section>
 );
