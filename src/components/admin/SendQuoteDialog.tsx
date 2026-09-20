@@ -138,11 +138,12 @@ ${PHONE}
 ${WEBSITE}`;
 };
 
-const computeQuoteFromRetail = (retailStr: string): string => {
+// 55% of retail, lowered whenever the transfer fee plus the 15% buyer's fee
+// would push what the buyer pays past 70% of retail.
+const computeQuoteFromRetail = (retailStr: string, feeStr: string | number = 0): string => {
   const r = Number(retailStr);
   if (!isFinite(r) || r <= 0) return "";
-  const raw = r * 0.55;
-  return String(Math.round(raw / 100) * 100);
+  return String(suggestedNetPerSpace(r, Number(feeStr) || 0));
 };
 
 const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferFee }: Props) => {
