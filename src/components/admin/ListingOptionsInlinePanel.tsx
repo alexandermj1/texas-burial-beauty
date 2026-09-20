@@ -111,7 +111,13 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // The cemetery's profile (phone number above all) — quoting usually needs a
   // call to the cemetery first, so their details sit at the top of the pack.
   const [cemProfile, setCemProfile] = useState<any>(null);
-  const [cemOpen, setCemOpen] = useState(false);
+  const [cemOpen, setCemOpen] = useState(true);
+  // A price the broker was just quoted on the phone, saved straight onto the
+  // cemetery profile so the next quote already has it.
+  const [sectionDraft, setSectionDraft] = useState<{ name: string; property_type: string; price: string }>({
+    name: "", property_type: "", price: "",
+  });
+  const [savingSection, setSavingSection] = useState(false);
   // The exact emails the seller will receive after they accept — prepared with
   // the very same builders the standalone buttons use, so nothing differs.
   const [agreementEmailHtml, setAgreementEmailHtml] = useState<string>("");
@@ -165,7 +171,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     (async () => {
       const { data } = await supabase
         .from("texas_cemeteries" as any)
-        .select("name, city, address, contact_name, contact_phone, contact_email, transfer_fee, typical_prices, process_info, website");
+        .select("id, name, city, address, contact_name, contact_phone, contact_email, transfer_fee, typical_prices, process_info, website, description, sections");
       if (cancelled) return;
       const canon = cemeteryCanon(name);
       setCemProfile(((data as any[]) || []).find((r) => cemeteryCanon(r.name) === canon) ?? null);
@@ -421,6 +427,43 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const cemPhone = String(cemProfile?.contact_phone || "").trim();
   const needsRetail = !(Number(retail) > 0);
 
+  /** Section prices already recorded on this cemetery's profile, newest first. */
+  const cemSections: any[] = useMemo(() => {
+    const src = Array.isArray(cemProfile?.sections) ? cemProfile.sections : [];
+    return [...src].sort((a: any, b: any) => String(b?.date || "").localeCompare(String(a?.date || "")));
+  }, [cemProfile]);
+
+  /** Save a price just given over the phone onto the cemetery profile. */
+  const saveSectionPrice = async () => {
+    const price = Number(sectionDraft.price);
+    if (!cemProfile?.id || !(price > 0)) return;
+    setSavingSection(true);
+    try {
+      const entry = {
+        id: crypto.randomUUID(),
+        name: sectionDraft.name.trim() || plotDescription.trim() || "Section",
+        property_type: sectionDraft.property_type.trim() || (seller.property_type ?? ""),
+        price,
+        date: new Date().toISOString().slice(0, 10),
+        notes: "",
+      };
+      const next = [...(Array.isArray(cemProfile.sections) ? cemProfile.sections : []), entry];
+      const { error } = await supabase
+        .from("texas_cemeteries" as any)
+        .update({ sections: next })
+        .eq("id", cemProfile.id);
+      if (error) throw error;
+      setCemProfile((p: any) => ({ ...p, sections: next }));
+      setSectionDraft({ name: "", property_type: "", price: "" });
+      if (!(Number(retail) > 0)) handleRetailChange(String(price));
+      toast({ title: "Price saved to the cemetery profile" });
+    } catch (e: any) {
+      toast({ title: "Couldn't save the price", description: String(e?.message ?? e), variant: "destructive" });
+    } finally {
+      setSavingSection(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
       {/* Header */}
@@ -450,7 +493,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       </div>
 
       <div className="px-5 py-4 space-y-4">
-        {/* 1 — Call the cemetery first */}
+        {/* 1 — The cemetery: everything we already know, plus room to add what they tell you */}
         <div className="rounded-xl border border-border/50 bg-muted/30">
           <button
             type="button"
@@ -459,14 +502,16 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
           >
             <div className="min-w-0 flex-1">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                Step 1 — call the cemetery
+                Step 1 — the cemetery
               </p>
               <p className="text-sm font-medium truncate">{properCase(seller.cemetery || "Cemetery")}</p>
-              {needsRetail && (
-                <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
-                  No retail price on file — ask for their current retail per space while you're on the phone.
-                </p>
-              )}
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {cemSections.length > 0
+                  ? `${cemSections.length} section price${cemSections.length === 1 ? "" : "s"} on file`
+                  : cemProfile?.typical_prices
+                    ? "Pricing notes on file"
+                    : "No pricing recorded yet — add what they quote you below."}
+              </p>
             </div>
             {cemPhone ? (
               <a
@@ -481,19 +526,111 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             )}
             <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${cemOpen ? "rotate-180" : ""}`} />
           </button>
+
           {cemOpen && (
-            <div className="px-4 pb-3.5 pt-1 border-t border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
-              <p><span className="text-muted-foreground">Contact:</span> {cemProfile?.contact_name || "—"}</p>
-              <p><span className="text-muted-foreground">Email:</span> {cemProfile?.contact_email || "—"}</p>
-              <p><span className="text-muted-foreground">Address:</span> {cemProfile?.address || cemProfile?.city || "—"}</p>
-              <p><span className="text-muted-foreground">Transfer fee:</span> {cemProfile?.transfer_fee != null ? `$${cemProfile.transfer_fee}` : "—"}</p>
-              <p className="sm:col-span-2"><span className="text-muted-foreground">Typical prices:</span> {cemProfile?.typical_prices || "—"}</p>
-              {cemProfile?.process_info && (
-                <p className="sm:col-span-2"><span className="text-muted-foreground">Process:</span> {cemProfile.process_info}</p>
+            <div className="px-4 pb-4 pt-3 border-t border-border/40 space-y-3">
+              {/* What we already have on this cemetery's profile */}
+              {cemSections.length > 0 && (
+                <div className="rounded-lg border border-border/50 bg-background/70 overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/50 text-muted-foreground">
+                      <tr>
+                        <th className="text-left font-medium px-2.5 py-1.5">Section</th>
+                        <th className="text-left font-medium px-2.5 py-1.5">Type</th>
+                        <th className="text-right font-medium px-2.5 py-1.5">Retail</th>
+                        <th className="text-right font-medium px-2.5 py-1.5">As of</th>
+                        <th className="px-2.5 py-1.5" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cemSections.map((s: any, i: number) => (
+                        <tr key={s?.id || i} className="border-t border-border/50">
+                          <td className="px-2.5 py-1.5 text-foreground">{s?.name || "—"}</td>
+                          <td className="px-2.5 py-1.5 text-muted-foreground">{s?.property_type || "—"}</td>
+                          <td className="px-2.5 py-1.5 text-right font-medium">
+                            {s?.price != null ? fmtUsd(Number(s.price)) : "—"}
+                          </td>
+                          <td className="px-2.5 py-1.5 text-right text-muted-foreground">{s?.date || "—"}</td>
+                          <td className="px-2.5 py-1.5 text-right">
+                            {s?.price != null && (
+                              <button
+                                type="button"
+                                onClick={() => handleRetailChange(String(Number(s.price)))}
+                                className="text-[11px] text-primary hover:underline"
+                              >
+                                Use
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-              {!cemProfile && (
-                <p className="sm:col-span-2 text-muted-foreground">No cemetery profile yet — save their number and prices on the cemetery page after your call.</p>
+
+              {(cemProfile?.typical_prices || cemProfile?.description) && (
+                <p className="text-xs text-foreground/90 whitespace-pre-wrap">
+                  {cemProfile?.typical_prices || cemProfile?.description}
+                </p>
               )}
+
+              {/* Add the price you were just given on the phone */}
+              <div className="rounded-lg border border-border/50 bg-background/70 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+                  Add a price they just quoted you
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className={labelCls}>Section</label>
+                    <input
+                      type="text" value={sectionDraft.name}
+                      onChange={(e) => setSectionDraft((d) => ({ ...d, name: e.target.value }))}
+                      placeholder="e.g. Garden of Peace" className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Type</label>
+                    <input
+                      type="text" value={sectionDraft.property_type}
+                      onChange={(e) => setSectionDraft((d) => ({ ...d, property_type: e.target.value }))}
+                      placeholder="Plot, crypt…" className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Retail ($)</label>
+                    <input
+                      type="number" min="0" step="50" value={sectionDraft.price}
+                      onChange={(e) => setSectionDraft((d) => ({ ...d, price: e.target.value }))}
+                      placeholder="6000" className={inputCls}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={saveSectionPrice}
+                    disabled={savingSection || !cemProfile?.id || !(Number(sectionDraft.price) > 0)}
+                    className="h-9 inline-flex items-center justify-center gap-1.5 text-xs font-medium px-3 rounded-md bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+                  >
+                    {savingSection ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                    Save price
+                  </button>
+                </div>
+                {!cemProfile?.id && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    This cemetery has no profile yet — create it on the cemetery page to store prices.
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
+                <p><span className="text-muted-foreground">Contact:</span> {cemProfile?.contact_name || "—"}</p>
+                <p><span className="text-muted-foreground">Email:</span> {cemProfile?.contact_email || "—"}</p>
+                <p><span className="text-muted-foreground">Address:</span> {cemProfile?.address || cemProfile?.city || "—"}</p>
+                <p><span className="text-muted-foreground">Transfer fee:</span> {cemProfile?.transfer_fee != null ? `$${cemProfile.transfer_fee}` : "—"}</p>
+                {cemProfile?.process_info && (
+                  <p className="sm:col-span-2"><span className="text-muted-foreground">Process:</span> {cemProfile.process_info}</p>
+                )}
+              </div>
             </div>
           )}
         </div>
