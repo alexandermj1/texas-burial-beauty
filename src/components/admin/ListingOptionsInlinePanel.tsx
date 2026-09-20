@@ -1,3 +1,4 @@
+import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 // Inline "Seller pack" builder that lives inside the composer.
 //
 // It is a single page: pricing, the deed viewer with the AI-read owner names,
@@ -118,7 +119,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     (async () => {
       const { data } = await supabase
         .from("contact_submissions")
-        .select("deed_owner_names, name, section, lawn, spaces, space_numbers, plot_description, cemetery_city, ownership_roster, seller_attachments")
+        .select("deed_owner_names, name, email, section, lawn, spaces, space_numbers, plot_description, cemetery_city, ownership_roster, seller_attachments")
         .eq("id", seller.id)
         .maybeSingle();
       if (cancelled) return;
@@ -127,15 +128,23 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
       setOwnerNames(splitNames(names));
       // Whatever the broker typed before wins — that exact wording carries all
       // the way through to the agreement, POA and document request.
-      setPlotDescription(
-        String(row.plot_description ?? "").trim() ||
-        formatPlotDescription({
-          section: row.section ?? seller.section,
-          lawn: row.lawn ?? seller.lawn,
-          spaces: row.spaces ?? seller.spaces,
-          space_numbers: row.space_numbers ?? seller.space_numbers,
-        }),
-      );
+      const saved = String(row.plot_description ?? "").trim();
+      setPlotDescription(saved);
+      if (!saved) {
+        // Fall back to the deed reading — the same wording shown as "Locations
+        // being sold" at the top of the profile — before the seller's own words.
+        const deedLoc = await fetchDeedSellingLocation(row.email ?? seller.email);
+        if (cancelled) return;
+        setPlotDescription(
+          deedLoc ||
+          formatPlotDescription({
+            section: row.section ?? seller.section,
+            lawn: row.lawn ?? seller.lawn,
+            spaces: row.spaces ?? seller.spaces,
+            space_numbers: row.space_numbers ?? seller.space_numbers,
+          }),
+        );
+      }
       setCountyState(row.cemetery_city ? `${row.cemetery_city}, TX` : "");
       // No separate roster to maintain — the deed names typed here ARE the
       // family-tree seed. The tree view derives from deedOwnerNames below.

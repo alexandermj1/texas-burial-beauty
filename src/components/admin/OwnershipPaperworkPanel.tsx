@@ -1,3 +1,4 @@
+import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -348,7 +349,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const a = ((sub as Record<string, unknown> | null)?.ownership_answers ?? {}) as OwnershipAnswers;
     setAnswers(a && typeof a === "object" ? a : {});
     setDeedNamesRaw(((sub as { deed_owner_names?: string | null } | null)?.deed_owner_names ?? "") || "");
-    setPlotDescription(((sub as { plot_description?: string | null } | null)?.plot_description ?? "") || "");
+    const savedPlotDesc = ((sub as { plot_description?: string | null } | null)?.plot_description ?? "").trim();
+    setPlotDescription(savedPlotDesc);
+    // Nothing saved yet? Show exactly what the top of the profile shows — the
+    // AI's reading of the deed — instead of "not provided".
+    if (!savedPlotDesc) {
+      const deedLoc = await fetchDeedSellingLocation((sub as { email?: string | null } | null)?.email);
+      if (deedLoc) setPlotDescription(deedLoc);
+    }
     setPlotDescUpdatedAt(String((a as Record<string, any>)?.autopilot?.plotDescriptionUpdatedAt ?? "") || null);
     setRequestedAt(((sub as { documents_requested_at?: string | null } | null)?.documents_requested_at ?? null));
     setLastAutoFollowupAt(reminders?.[0]?.sent_at ?? null);
