@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import QRCode from "qrcode";
 import {
   CheckCircle2, Loader2, Upload, Smartphone, FileText, ShieldCheck,
-  ChevronDown, Stamp, X, Mail, Trash2, Phone, HelpCircle, ArrowRight,
+  ChevronDown, Stamp, X, Mail, Trash2, Phone, HelpCircle, ArrowRight, MapPin,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
