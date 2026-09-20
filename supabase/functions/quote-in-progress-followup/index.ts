@@ -1,4 +1,5 @@
-// Daily automation: three days after a seller sent us their paperwork, if we
+// Weekday-morning automation: three business days after a seller sent us
+// their paperwork, if we
 // have not sent their sales price yet and nobody has spoken with them since,
 // email a warm holding note saying we are coordinating with the cemetery.
 import {

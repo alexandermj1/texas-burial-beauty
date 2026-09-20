@@ -1,4 +1,5 @@
-// Daily automation: seven days after someone filled out the seller form without
+// Weekday-morning automation: three business days after someone filled out
+// the seller form without
 // attaching a deed or proof of purchase, and only if nobody has spoken with them
 // since, send a polite reminder asking for a photo or scan of the deed.
 import {
