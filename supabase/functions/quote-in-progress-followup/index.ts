@@ -3,7 +3,7 @@
 // email a warm holding note saying we are coordinating with the cemetery.
 import {
   BATCH_SIZE, OUR_EMAIL, PHONE_HREF, PHONE_LABEL, authorize, brandedEmail, cors, esc,
-  firstNameOf, gmailSend, isHumanContact, loadEnv, mimeMessage, realThread, respond,
+  firstNameOf, gmailSend, isHumanContact, loadEnv, mimeMessage, personGuards, realThread, respond,
   threadHeaders, type ThreadMessage,
 } from "../_shared/autoFollowup.ts";
 
@@ -85,10 +85,18 @@ Deno.serve(async (req) => {
     if (onlyId) query = query.eq("id", onlyId);
     const { data: submissions, error } = await query;
     if (error) throw error;
+    const guards = await personGuards(db, TYPE);
+    const handled = new Set<string>();
 
     for (const sub of submissions ?? []) {
       const email = String(sub.email ?? "").trim().toLowerCase();
       if (!email.includes("@")) continue;
+      // One person, one email — duplicates of the same seller are skipped, and
+      // so is anyone whose other submission has already been quoted or closed.
+      if (handled.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "duplicate-person" }); continue; }
+      if (guards.advanced.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "further-along-elsewhere" }); continue; }
+      if (guards.emailed.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "already-sent" }); continue; }
+      handled.add(email);
 
       // Eligible only when they actually sent us something to value.
       let hasAttachment = Array.isArray(sub.seller_attachments) && sub.seller_attachments.length > 0;
