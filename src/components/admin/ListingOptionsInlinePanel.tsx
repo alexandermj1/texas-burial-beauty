@@ -1,3 +1,4 @@
+import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 // Inline "Seller pack" builder that lives inside the composer.
 //
 // It is a single page: pricing, the deed viewer with the AI-read owner names,
