@@ -16,8 +16,6 @@ import { openFileViewer, type FileViewerSource } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
 import FamilyTreeMap from "./FamilyTreeMap";
-// Family tree diagram is parked for now — flip to true to bring it back.
-const SHOW_FAMILY_TREE_MAP = false;
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
@@ -2551,8 +2549,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             </div>
           ) : null}
 
-          {/* ── The family tree map is hidden for now (kept for later) ── */}
-          {SHOW_FAMILY_TREE_MAP ? (
+          {/* ── Family tree and its person-specific paperwork ── */}
           <div className="border rounded-lg p-3 bg-background/60 space-y-2.5">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold flex items-center gap-1.5">
@@ -2580,14 +2577,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               }}
             />
           </div>
-          ) : null}
 
 
 
 
 
           {/* ── Listing agreement sits on its own, above the paperwork ── */}
-          <div className="space-y-1.5">
+          <div id="listing-agreement-workflow" className="space-y-1.5 scroll-mt-28">
             <span className="text-xs font-semibold">Listing agreement</span>
             <ContractsPanel
               submissionId={submissionId}
@@ -2599,16 +2595,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           </div>
 
           {/* ── Checklist ── */}
-          <div className="space-y-2">
+          <div id="document-request-workflow" className="space-y-3 scroll-mt-28 rounded-lg border-2 border-primary/30 bg-primary/[0.04] p-4 shadow-sm">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-xs font-semibold">
-                Step 2 · Documents required ({documentRequirements.length})
-                {outstanding.length > 0 && (
-                  <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
-                    · {outstanding.length} still outstanding
-                  </span>
-                )}
-              </span>
+              <div>
+                <span className="text-sm font-semibold flex items-center gap-1.5"><FileText className="h-4 w-4 text-primary" />Step 2 · Document request</span>
+                <p className="mt-0.5 text-xs text-muted-foreground">Review the exact checklist before it is emailed to the seller.</p>
+              </div>
 
               <div className="flex items-center gap-1.5">
                 <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
@@ -2623,9 +2615,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 </Button>
                 <Button
                   size="sm"
-                  className={requestedAt
-                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                    : "bg-[#1f2a37] hover:bg-[#111827] text-white"}
+                  className={requestedAt ? "bg-emerald-600 hover:bg-emerald-700 text-primary-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
                   onClick={() => setReview({ step: 1 })}
                   disabled={sending || !sellerEmail}
                   title={requestedAt
@@ -2637,9 +2627,14 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                     : requestedAt ? <Check className="w-3.5 h-3.5 mr-1" /> : <Send className="w-3.5 h-3.5 mr-1" />}
                   {requestedAt
                     ? `Request sent ${new Date(requestedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
-                    : "Send document request"}
+                    : `Review & send request${outstanding.length ? ` (${outstanding.length})` : ""}`}
                 </Button>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-md border border-border/70 bg-background px-3 py-2">
+              <span className={`grid h-7 min-w-7 place-items-center rounded-full px-2 text-xs font-bold ${outstanding.length ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{outstanding.length}</span>
+              <p className="text-xs font-medium text-foreground">{outstanding.length ? `${outstanding.length} item${outstanding.length === 1 ? "" : "s"} still needed from the seller` : "No documents are currently outstanding"}</p>
             </div>
 
 

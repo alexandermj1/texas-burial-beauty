@@ -1472,6 +1472,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       { label: "Docs returned", icon: FileCheck },
       { label: "Complete", icon: Sparkles },
     ];
+    const openPaperworkAt = (anchor?: string) => {
+      setSellerWorkspaceTab("paperwork");
+      if (anchor) window.setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" }), 250);
+    };
+    const guidedAction = sellerStage === 1
+      ? { label: "Ask for an attachment", hint: "Email the seller and request a deed or proof of purchase.", icon: Mail, run: () => setSellerWorkspaceTab("email") }
+      : sellerStage === 2
+        ? { label: "Build and send quote", hint: "Review the attachment, then prepare the seller's quote.", icon: DollarSign, run: () => setQuoteOpen(true) }
+        : sellerStage === 3
+          ? { label: "Review quote conversation", hint: "Check whether the seller has accepted or needs a reply.", icon: Mail, run: () => setSellerWorkspaceTab("email") }
+          : sellerStage === 4
+            ? { label: "Prepare or send listing agreement", hint: "Open the agreement controls and send it for signature.", icon: FileSignature, run: () => openPaperworkAt("listing-agreement-workflow") }
+            : sellerStage === 5
+              ? { label: "Send family confirmation again", hint: "The seller has not completed their family tree yet.", icon: Users, run: () => openPaperworkAt("family-confirmation-workflow") }
+              : sellerStage === 6
+                ? { label: "Check document request", hint: "Review the family answers, generated paperwork, and exact request.", icon: FileCheck, run: () => openPaperworkAt("document-request-workflow") }
+                : sellerStage === 7
+                  ? { label: "Manage outstanding documents", hint: "See what is missing and resend the request when needed.", icon: FileText, run: () => openPaperworkAt("document-request-workflow") }
+                  : sellerStage === 8
+                    ? { label: "Review returned documents", hint: "Check each returned file and mark the paperwork complete.", icon: FileCheck, run: () => openPaperworkAt("document-request-workflow") }
+                    : { label: "Review completed file", hint: "Everything required is recorded as complete.", icon: Sparkles, run: () => openPaperworkAt("document-request-workflow") };
     const lastContactAt = lastInteractionMap[selected.id];
     const lastContactFromTCB = !!lastContactAt && lastOutgoingMap[selected.id] === lastContactAt;
     const elapsed = (iso?: string | null) => {
@@ -1615,20 +1636,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-[minmax(230px,0.72fr)_minmax(0,2fr)]">
                     <aside className="border-b border-border/70 bg-muted/35 p-5 lg:border-b-0 lg:border-r sm:p-6">
-                      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pipeline stage</p>
-                      <ol className="grid grid-cols-3 gap-1.5 lg:grid-cols-1 lg:gap-0" aria-label="Current pipeline progress">
-                        <li className="relative lg:pb-1.5">
-                          <Button type="button" variant="ghost" size="sm" onClick={() => { if (!selected.archived_at) return; onUpdate(selected.id, { archived_at: null, archived_by: null } as any); }} className={`w-full justify-start px-2 text-[11px] ${selected.archived_at ? "bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))]" : "text-muted-foreground"}`} title={selected.archived_at ? "Restore to the live pipeline" : "Archived records are moved using the Archive action below"}><Archive className="h-3.5 w-3.5" />Archived</Button>
-                        </li>
-                        {sellerStages.map(({ label, icon: StageIcon }, index) => {
-                          const step = index + 1;
-                          const active = sellerStage === step;
-                          const passed = sellerStage > step;
-                          return <li key={label} className="relative lg:pb-1.5 lg:last:pb-0">
-                            <div aria-current={active ? "step" : undefined} className={`flex h-8 w-full items-center gap-2 rounded-md px-2 text-[11px] ${active ? "bg-primary text-primary-foreground" : passed ? "text-primary" : "text-muted-foreground"}`}><StageIcon className="h-3.5 w-3.5" /><span>{label}</span></div>
-                          </li>;
-                        })}
-                      </ol>
+                       <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Current stage</p>
+                       {(() => { const CurrentIcon = sellerStages[sellerStage - 1]?.icon || Inbox; return <div className="rounded-lg border border-primary/25 bg-primary/[0.06] p-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground"><CurrentIcon className="h-4 w-4" /></span><div><p className="text-sm font-semibold text-foreground">{sellerStages[sellerStage - 1]?.label}</p><p className="text-[10px] text-muted-foreground">Step {sellerStage} of {sellerStages.length}</p></div></div><p className="mt-3 text-xs leading-relaxed text-muted-foreground">{guidedAction.hint}</p><Button type="button" size="sm" className="mt-3 w-full justify-center" onClick={guidedAction.run}><guidedAction.icon className="h-3.5 w-3.5" />{guidedAction.label}<ChevronRight className="ml-auto h-3.5 w-3.5" /></Button></div>; })()}
                       <div className="mt-3 border-t border-border pt-3">
                          <Button type="button" size="sm" variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setManualStageOpen(v => !v)}><Pencil className="h-3.5 w-3.5" />Correct stage</Button>
                          {manualStageOpen && <div className="mt-1 grid gap-1 rounded-md border border-border bg-background p-2 shadow-sm">
@@ -2863,8 +2872,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {(!isMobile || kind !== "buyer") && (
               <>
                 {/* Collaborative team notes — Enter to post, replies threaded, realtime presence */}
-                {(kind === "buyer" || sellerWorkspaceTab === "notes") && <div data-tour="notes-section" className="rounded-lg border border-border bg-card p-4">
-                  <CustomerNotes submissionId={selected.id} customerName={selected.name} />
+                 {(kind === "buyer" || sellerWorkspaceTab === "notes") && <div data-tour="notes-section" className="rounded-lg border border-border bg-card p-4">
+                   <CustomerNotes submissionId={selected.id} customerId={(selected as any).customer_profile_id || undefined} customerName={selected.name} />
                 </div>}
 
                 {/* Texas pipeline now lives at the top of the detail view — no duplicate here. */}
@@ -2948,47 +2957,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={guard(selected.archived_at ? "Unarchive submission" : "Archive submission", async () => {
-                          const archiving = !selected.archived_at;
-                          const patch = {
-                            archived_at: archiving ? new Date().toISOString() : null,
-                            archived_by: archiving ? (adminName || "admin") : null,
-                          } as any;
-                          await onUpdate(selected.id, patch);
-                          // Archive every copy of this person: the same email often has
-                          // several submissions, and leaving a duplicate live makes it look
-                          // like the archive "didn't work".
-                          const em = (selected.email || "").trim().toLowerCase();
-                          if (em) {
-                            const dupes = submissions.filter(s =>
-                              s.id !== selected.id &&
-                              (s.email || "").trim().toLowerCase() === em &&
-                              !!s.archived_at !== archiving
-                            );
-                            for (const d of dupes) {
-                              try { await onUpdate(d.id, patch); } catch { /* keep going */ }
-                            }
-                            if (dupes.length) {
-                              toast({ title: `${dupes.length} other ${dupes.length === 1 ? "copy" : "copies"} of this person ${archiving ? "archived" : "restored"} too` });
-                            }
-                          }
-                          toast({ title: archiving ? "Moved to archive" : "Restored to pipeline" });
-                        })}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-amber-700 hover:bg-amber-500/10 rounded-full transition-colors"
-                        title={selected.archived_at ? "Move this submission back into the live pipeline" : "Archive — hides it from the pipeline but keeps everything"}
-                      >
-                        {selected.archived_at ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
-                        {selected.archived_at ? "Unarchive" : "Archive"}
-                      </button>
-                      <button
-                        onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 rounded-full transition-colors"
-                        title="Move to trash — you can restore it later from Recently deleted"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
-                      </button>
-
                     </div>
                   );
                 })()}
@@ -3057,6 +3025,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </>
             )}
     </>);
+    const recordControls = kind !== "buyer" ? <div className="flex items-center justify-end gap-2 border-t border-border/50 pt-4">
+      <Button type="button" size="sm" variant="ghost" className="text-amber-700" onClick={guard(selected.archived_at ? "Unarchive submission" : "Archive submission", async () => {
+        const archiving = !selected.archived_at;
+        const patch = { archived_at: archiving ? new Date().toISOString() : null, archived_by: archiving ? (adminName || "admin") : null } as any;
+        await onUpdate(selected.id, patch);
+        const em = (selected.email || "").trim().toLowerCase();
+        if (em) for (const duplicate of submissions.filter(s => s.id !== selected.id && (s.email || "").trim().toLowerCase() === em && !!s.archived_at !== archiving)) await onUpdate(duplicate.id, patch);
+        toast({ title: archiving ? "Moved to archive" : "Restored to pipeline" });
+      })}>{selected.archived_at ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}{selected.archived_at ? "Unarchive" : "Archive"}</Button>
+      <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}><Trash2 className="h-3.5 w-3.5" />Delete</Button>
+    </div> : null;
     return (
           <motion.div
             key={selected.id}
@@ -3069,7 +3048,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {headBlock}
                 {sellerWorkspaceNav}
                 {sellerWorkspaceTab === "email" && emailBlock}
-                {tailBlock}
+                 {tailBlock}
+                 {recordControls}
               </div>
             ) : focusSplit ? (
               <div className="grid grid-cols-12 gap-6 items-start">
