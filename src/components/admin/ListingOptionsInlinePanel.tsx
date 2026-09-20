@@ -412,8 +412,24 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         </div>
       </div>
 
-      {/* ── Everything the pack needs, on one page ─────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+      {/* ── The property being sold: the single most important line ─────── */}
+      <div className="rounded-md border border-primary/40 bg-background p-3">
+        <label className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1 block">
+          The plots being sold — exact wording
+        </label>
+        <input
+          type="text" value={plotDescription}
+          onChange={(e) => setPlotDescription(e.target.value)}
+          placeholder="e.g. Section 3, Block 14, Lot 491, Space 3"
+          className="w-full h-11 px-3 rounded-md bg-background border border-primary/40 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">
+          This wording goes word-for-word into the quote email, the listing agreement, the family tree and every document we request.
+        </p>
+      </div>
+
+      {/* ── Everything else the pack needs, on one page ─────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div>
           <label className={labelCls}>Retail / plot (USD)</label>
           <input
@@ -421,7 +437,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             onChange={(e) => handleRetailChange(e.target.value)}
             placeholder="e.g. 6000" className={inputCls}
           />
-          <p className="text-[9px] text-muted-foreground mt-1">Cemetery retail. Auto-fills the two below.</p>
+          <p className="text-[9px] text-muted-foreground mt-1">Cemetery retail. Sets the quote below.</p>
         </div>
         <div>
           <label className={labelCls}>Quote (net) / plot</label>
@@ -431,15 +447,6 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             placeholder="55% of retail" className={inputCls}
           />
           <p className="text-[9px] text-muted-foreground mt-1">55% of retail, rounded to $100.</p>
-        </div>
-        <div>
-          <label className={labelCls}>Sales price / plot</label>
-          <input
-            type="number" min="0" step="50" value={salesPrice}
-            onChange={(e) => { setSalesPrice(e.target.value); setSalesTouched(true); }}
-            placeholder="67% of retail" className={inputCls}
-          />
-          <p className="text-[9px] text-muted-foreground mt-1">67% of retail, rounded to $100.</p>
         </div>
         <div>
           <label className={labelCls}># of plots</label>
@@ -468,8 +475,11 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         <div className="space-y-2">
           <div>
             <label className={labelCls}>
-              Names on the deed (required — one box per person)
+              Who owns this plot — one box per owner on the deed
             </label>
+            <p className="text-[10px] text-muted-foreground mb-1.5">
+              Use the AI reading on the left as the answer, and only change it if the deed image says otherwise.
+            </p>
             <div className="space-y-1.5">
               {ownerNames.map((n, i) => (
                 <div key={i} className="flex items-center gap-1.5">
@@ -506,14 +516,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
 
           {/* The deed names above ARE the family-tree seed — the tree view
               derives straight from deedOwnerNames, no duplicate list. */}
-          <div>
-            <label className={labelCls}>Plot description</label>
-            <input
-              type="text" value={plotDescription}
-              onChange={(e) => setPlotDescription(e.target.value)}
-              placeholder="Section / lawn / spaces" className={inputCls}
-            />
-          </div>
+          <p className="text-[10px] text-muted-foreground">
+            These exact names go on the listing agreement, the family tree and every power of attorney.
+          </p>
         </div>
       </div>
 
