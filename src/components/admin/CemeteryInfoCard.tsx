@@ -47,6 +47,7 @@ interface Props {
   displayName: string;
   submissionCount: number;
   onClear: () => void;
+  startInEditMode?: boolean;
 }
 
 const canonicalize = (s: string) => cemeteryCanon(s);
@@ -60,7 +61,7 @@ const fmtDate = (iso: string) => {
 const fmtMoney = (n: number | null | undefined) =>
   n == null || isNaN(Number(n)) ? "—" : `$${Number(n).toLocaleString()}`;
 
-const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Props) => {
+const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear, startInEditMode = false }: Props) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -85,11 +86,24 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear }: Prop
       const match = ((data as any[]) || []).find(
         (r) => canonicalize(r.name) === canon
       );
-      setProfile((match as any) || null);
+      const found = (match as any) || null;
+      setProfile(found);
+      if (startInEditMode) {
+        if (found) {
+          setEdits({ sections: Array.isArray(found.sections) ? [...found.sections] : [] });
+          setEditing(true);
+        } else {
+          const created = await ensureProfile();
+          if (created && !cancelled) {
+            setEdits({ sections: Array.isArray(created.sections) ? [...created.sections] : [] });
+            setEditing(true);
+          }
+        }
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [canon]);
+  }, [canon, startInEditMode]);
 
   const ensureProfile = async (): Promise<Profile | null> => {
     if (profile) return profile;

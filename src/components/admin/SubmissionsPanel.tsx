@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore } from "lucide-react";
+import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore, Info, Pencil, MapPin } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
@@ -40,6 +40,7 @@ import { bayCemeteries } from "@/data/cemeteries";
 import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
+import { Button } from "@/components/ui/button";
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
 // Submissions staff have explicitly un-merged: they always show as their own row
@@ -1449,7 +1450,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const focusSplit = !isMobile && listCollapsed;
     const seller = selected as any;
     const sellerStage = effStep(selected);
-    const sellerStages = ["No attachments", "Attachments", "Quoted", "Accepted", "Tree sent", "Tree done", "Docs out", "Docs returned", "Complete"];
+    const sellerStages = [
+      { label: "No attachments", icon: FileX },
+      { label: "Attachments", icon: Paperclip },
+      { label: "Quoted", icon: DollarSign },
+      { label: "Accepted", icon: CheckCircle },
+      { label: "Tree sent", icon: Send },
+      { label: "Tree done", icon: Users },
+      { label: "Docs out", icon: FileText },
+      { label: "Docs returned", icon: FileCheck },
+      { label: "Complete", icon: Sparkles },
+    ];
     const lastContactAt = lastInteractionMap[selected.id];
     const lastContactFromTCB = !!lastContactAt && lastOutgoingMap[selected.id] === lastContactAt;
     const elapsed = (iso?: string | null) => {
@@ -1481,7 +1492,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         documents_requested_at: step >= 7 ? (seller.documents_requested_at || now) : null,
         documents_completed_at: step >= 9 ? (seller.documents_completed_at || now) : null,
       } as any);
-      toast({ title: "Stage updated", description: sellerStages[step - 1] });
+      toast({ title: "Stage updated", description: sellerStages[step - 1]?.label });
+    };
+    const saveSellingLocation = async (value: string) => {
+      const next = value.trim();
+      if (next === String(seller.plot_description || "")) return;
+      const answers = { ...(seller.ownership_answers ?? {}) } as Record<string, any>;
+      const autopilot = { ...((answers.autopilot ?? {}) as Record<string, any>), plotDescription: next || null };
+      await onUpdate(selected.id, {
+        plot_description: next || null,
+        ownership_answers: { ...answers, autopilot },
+      } as any);
+      toast({ title: "Selling location saved", description: "Quotes, agreements, family-tree paperwork, and document requests will use this wording." });
     };
     const selectListingTier = async (tier: "starter" | "pro" | "featured") => {
       const current = String(seller.listing_tier || "").toLowerCase();
@@ -1523,65 +1545,59 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               );
               return (
-                <section aria-label="Seller overview" className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-                  <div className="flex items-start justify-between gap-4 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img src={getPlotImage(selected.property_type || "", plotCount)} alt="" className="w-12 h-12 rounded-md object-cover bg-muted shrink-0" />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap"><CustomerKindBadge kind="seller" /><BayerBadge inquiryChannel={selected.inquiry_channel} /></div>
-                        <h3 className="font-display text-xl text-foreground truncate">{selected.name || "Anonymous"}</h3>
-                        <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
-                          <span className="truncate text-muted-foreground">{selected.cemetery || "Cemetery not recorded"}</span>
-                          {selected.cemetery && subRegion(selected) === "texas" && <>
-                            <button type="button" onClick={() => setExpandedCemetery(v => !v)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Info</button>
-                            <button type="button" onClick={() => { const canon = _canon(selected.cemetery || ""); setRegionFilter("texas"); setCemeteryCanon(canon); setCemeteryLabel(selected.cemetery); setSelectedId(null); }} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Search</button>
-                            <button type="button" onClick={() => setEditCemeteryInline(v => !v)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Edit</button>
-                            <button type="button" onClick={() => setReassignCemeteryOpen(true)} className="rounded-md px-1.5 py-0.5 font-medium text-primary hover:bg-primary/10">Re-match</button>
-                          </>}
-                        </div>
-                      </div>
+                <section aria-label="Seller overview" className="overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-[0_18px_50px_-32px_hsl(var(--foreground)/0.28)]">
+                  <div className="flex flex-col gap-4 border-b border-border/70 bg-card px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Seller submission record</p>
+                      <h3 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
                     </div>
+                    {selected.cemetery && subRegion(selected) === "texas" && <div className="flex flex-wrap items-center gap-1.5" aria-label="Cemetery tools">
+                      <Button type="button" size="sm" variant={expandedCemetery && !editCemeteryInline ? "secondary" : "outline"} onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => !v); }} title="Open cemetery information"><Info />Info</Button>
+                      <Button type="button" size="sm" variant="outline" onClick={() => { const canon = _canon(selected.cemetery || ""); setRegionFilter("texas"); setCemeteryCanon(canon); setCemeteryLabel(selected.cemetery); setSelectedId(null); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); }} title="Show every submission at this cemetery"><Search />Search</Button>
+                      <Button type="button" size="sm" variant={editCemeteryInline ? "secondary" : "outline"} onClick={() => { setExpandedCemetery(false); setEditCemeteryInline(v => !v); }} title="Edit the cemetery profile here"><Pencil />Edit</Button>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setReassignCemeteryOpen(true)} title="Match this record to a different cemetery"><RefreshCw />Re-match</Button>
+                    </div>}
                     {selected.source === "manual_phone" && seller.handled_by_name && <span className="hidden sm:inline text-[10px] text-muted-foreground">Added by {cleanDisplayName(seller.handled_by_name)}</span>}
                   </div>
-                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(210px,0.72fr)_minmax(0,2fr)]">
-                    <aside className="border-b lg:border-b-0 lg:border-r border-border bg-primary/5 p-4 sm:p-5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-3">Pipeline stage</p>
+                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(230px,0.72fr)_minmax(0,2fr)]">
+                    <aside className="border-b border-border/70 bg-muted/35 p-5 lg:border-b-0 lg:border-r sm:p-6">
+                      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pipeline stage</p>
                       <ol className="grid grid-cols-3 gap-1.5 lg:grid-cols-1 lg:gap-0">
-                        {sellerStages.map((label, index) => {
+                        <li className="relative lg:pb-1.5">
+                          <Button type="button" variant="ghost" size="sm" onClick={() => { if (!selected.archived_at) return; onUpdate(selected.id, { archived_at: null, archived_by: null } as any); }} className={`w-full justify-start px-2 text-[11px] ${selected.archived_at ? "bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))]" : "text-muted-foreground"}`} title={selected.archived_at ? "Restore to the live pipeline" : "Archived records are moved using the Archive action below"}><Archive className="h-3.5 w-3.5" />Archived</Button>
+                        </li>
+                        {sellerStages.map(({ label, icon: StageIcon }, index) => {
                           const step = index + 1;
                           const active = sellerStage === step;
                           const passed = sellerStage > step;
                           return <li key={label} className="relative lg:pb-1.5 lg:last:pb-0">
-                            {index < sellerStages.length - 1 && <span className="hidden lg:block absolute left-[7px] top-5 bottom-0 w-px bg-border" />}
-                            <button onClick={() => moveSellerStage(step)} title={`Move to ${label}`} className={`relative w-full flex items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-[11px] transition-colors ${active ? "bg-primary text-primary-foreground font-semibold" : passed ? "text-primary" : "text-muted-foreground hover:bg-muted"}`}>
-                              <span className={`w-3.5 h-3.5 rounded-full border shrink-0 flex items-center justify-center ${active ? "border-primary-foreground" : passed ? "border-primary bg-primary" : "border-border bg-card"}`}>{passed && <CheckCircle className="w-3 h-3 text-primary-foreground" />}</span>
-                              <span>{label}</span>
-                            </button>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => moveSellerStage(step)} title={`Move to ${label}`} className={`relative w-full justify-start px-2 text-[11px] ${active ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : passed ? "text-primary" : "text-muted-foreground"}`}><StageIcon className="h-3.5 w-3.5" /><span>{label}</span></Button>
                           </li>;
                         })}
                       </ol>
                       <div className="mt-5 pt-4 border-t border-border">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-2">Last communication</p>
                         {lastContactAt ? <>
-                          <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>{!lastContactFromTCB && <button type="button" onClick={() => document.getElementById(`email-thread-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="rounded-md bg-primary px-2 py-1 text-[10px] font-semibold text-primary-foreground">Reply</button>}</div>
+                          <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>{!lastContactFromTCB && <Button type="button" size="sm" onClick={() => document.getElementById(`email-thread-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="h-7 px-2 text-[10px]">Reply</Button>}</div>
                           <p className="text-xs text-muted-foreground mt-0.5">{formatDate(lastContactAt)}</p>
                           <p className="text-xs font-medium text-accent mt-1">{elapsed(lastContactAt)}</p>
                         </> : <p className="text-sm text-muted-foreground">No email history</p>}
                       </div>
                     </aside>
-                    <div className="p-4 sm:p-5 space-y-5">
+                    <div className="space-y-6 p-5 sm:p-7">
                       <div>
-                        <p className="font-display text-base text-foreground mb-3">Property</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                          <Fact label="Cemetery">{selected.cemetery || "Not provided"}</Fact>
+                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Property</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <Fact label="Cemetery"><span className="inline-flex items-center gap-1.5 font-medium text-primary"><MapPin className="h-3.5 w-3.5" />{selected.cemetery || "Not provided"}</span></Fact>
                           <Fact label="Type of plots">{selected.property_type || "Not provided"}</Fact>
                           <Fact label="Locations – on deed">{deedLocation}</Fact>
-                          <Fact label="Locations – being sold"><input aria-label="Locations being sold" defaultValue={sellingLocation === "Not provided" ? "" : sellingLocation} placeholder="Add location" onBlur={e => { const value=e.currentTarget.value.trim(); if(value !== String(seller.plot_description || "")) onUpdate(selected.id,{plot_description:value || null} as any); }} className="w-full bg-transparent border-0 border-b border-dashed border-primary/40 p-0 pb-0.5 text-sm text-foreground outline-none focus:border-primary" /></Fact>
+                          <Fact label="Locations – being sold"><input key={`${selected.id}:${seller.plot_description || ""}`} aria-label="Locations being sold" defaultValue={sellingLocation === "Not provided" ? "" : sellingLocation} placeholder="Add location" onBlur={e => saveSellingLocation(e.currentTarget.value)} className="w-full rounded-md border border-border/70 bg-background px-2.5 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><span className="mt-1 block text-[10px] text-muted-foreground">Shared by the quote, agreement, family tree, and document request.</span></Fact>
                           <Fact label="# of plots being sold"><input aria-label="Number of plots being sold" type="number" min="1" defaultValue={seller.plot_count ?? selected.spaces ?? ""} placeholder="Add number" onBlur={e => { const value=Math.max(1,Number(e.currentTarget.value)||1); if(value !== Number(seller.plot_count ?? selected.spaces)) onUpdate(selected.id,{plot_count:value,spaces:String(value)} as any); }} className="w-24 bg-transparent border-0 border-b border-dashed border-primary/40 p-0 pb-0.5 text-sm text-foreground outline-none focus:border-primary" /></Fact>
                         </div>
                       </div>
                       <div className="pt-1">
-                        <p className="font-display text-base text-foreground mb-3">Seller details</p>
+                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seller details</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                           <Fact label="Date form originally submitted">{formatDate(selected.created_at)}</Fact>
                           <Fact label="Contact name">{selected.name || "Not provided"}</Fact>
@@ -1595,7 +1611,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </div>
                       </div>
                       <div className="border-t border-border pt-4">
-                        <p className="font-display text-base text-foreground mb-3">Pricing & listing</p>
+                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pricing & listing</p>
                          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
                           {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee",v:fmtMoney(cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount)},{l:"Our quote per plot",v:fmtMoney(quotePerPlot)},{l:"Our resale price per plot",v:fmtMoney(resalePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
                         </div>
@@ -1604,13 +1620,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
                         </div>
-                       {(deedPreviewOpen || aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="border-t border-border pt-4 space-y-3">
+                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+                          {aiFacts.length > 0 && <Button type="button" size="sm" variant={aiFactsOpen ? "secondary" : "outline"} onClick={() => setAiFactsOpen(v => !v)}><Sparkles className="h-3.5 w-3.5" />Document insights ({aiFacts.length})</Button>}
+                        </div>
+                        {(deedPreviewOpen || aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="mt-3 space-y-3">
                          <div className="flex flex-wrap items-center gap-2">
-                           {aiFacts.length > 0 && <button type="button" onClick={() => setAiFactsOpen(v => !v)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-muted"><Sparkles className="h-3.5 w-3.5" /> Document insights ({aiFacts.length})</button>}
                          </div>
                          {deedPreviewOpen && <DeedNameChecker submissionId={selected.id} onUseNames={(names) => onUpdate(selected.id, { deed_owner_names: names.join(", ") } as any)} />}
                          {aiFactsOpen && <div className="divide-y divide-border rounded-md border border-border bg-background/60">{aiFacts.map((fact, index) => <div key={`${fact.label}-${index}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[150px_1fr_auto]"><span className="text-muted-foreground">{fact.label}</span><span className="text-foreground">{fact.value}</span><span className="text-muted-foreground">{fact.source}</span></div>)}</div>}
-                         {(expandedCemetery || editCemeteryInline) && selected.cemetery && <CemeteryInfoCard key={`summary-${selected.id}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} />}
+                          {(expandedCemetery || editCemeteryInline) && selected.cemetery && <CemeteryInfoCard key={`summary-${selected.id}-${editCemeteryInline ? "edit" : "info"}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} startInEditMode={editCemeteryInline} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} />}
                        </div>}
                       </div>
                     </div>
@@ -2389,7 +2407,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const tailBlock = (<>
 
             {/* Contact actions */}
-            <div className="flex flex-wrap gap-2">
+            {kind === "buyer" && <div className="flex flex-wrap gap-2">
               {selected.email && (
                 <a
                   href={buildGmailComposeUrl({ to: selected.email })}
@@ -2416,7 +2434,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <Send className="w-3.5 h-3.5" /> Send plot cards
                 </button>
               )}
-            </div>
+            </div>}
 
             {/* No cemetery on file yet (e.g. general contact form) — let admins assign one. */}
             {!selected.cemetery && (

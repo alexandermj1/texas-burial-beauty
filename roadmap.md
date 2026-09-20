@@ -14,3 +14,10 @@
 - [x] Restrict Accepted to explicit email acceptance or a manual free-option move
 - [x] Make long email chains compact, modern, and easy to navigate
 - [x] Correct Robert's inaccurate accepted state and verify the seller record
+
+## Apple-style seller workspace
+- [x] Make every cemetery action visibly functional
+- [x] Use one editable selling location across quote, agreement, family tree, and document request
+- [x] Rebuild the seller header and workflow sidebar without duplicate contact details or grave imagery
+- [x] Align record stages with the global pipeline and preserve all automated steps
+- [x] Verify seller workflows and desktop/mobile presentation

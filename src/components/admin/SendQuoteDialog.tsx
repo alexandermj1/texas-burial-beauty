@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Save, Eye } from "lucide-react";
 import type { Submission } from "./SubmissionsPanel";
 import { lookupCemeteryContact } from "@/lib/cemeteryContactLookup";
+import { formatPlotDescription } from "@/lib/plotDescription";
 
 // Pull the first dollar amount out of a directory string like "$400 + endowment care".
 const parseDirectoryFee = (raw: string | null | undefined): string => {
@@ -32,11 +33,18 @@ const formatMoney = (v: string | number | null | undefined) => {
 };
 
 const buildPropertyDescriptor = (s: Submission) => {
+  const savedDescription = String((s as any).plot_description || "").trim();
+  if (savedDescription) return [s.cemetery, savedDescription].filter(Boolean).join(", ");
+  const normalizedLocation = formatPlotDescription({
+    section: s.section,
+    lawn: s.lawn,
+    spaces: (s as any).plot_count ?? s.spaces,
+    space_numbers: s.space_numbers,
+  });
   const parts: string[] = [];
   if (s.cemetery) parts.push(s.cemetery);
-  if (s.section) parts.push(`Section ${s.section}`);
+  if (normalizedLocation) parts.push(normalizedLocation);
   if (s.property_type) parts.push(s.property_type);
-  if (s.spaces) parts.push(`${s.spaces} space${Number(s.spaces) > 1 ? "s" : ""}`);
   return parts.join(", ") || "your property";
 };
 
