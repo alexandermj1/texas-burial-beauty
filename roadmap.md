@@ -30,4 +30,4 @@
 - [x] Restore reliable admin loading and verify every workspace tab/action
 - [x] Make location editing deliberate and resync unsigned paperwork/doc requests
 - [x] Rebalance list/detail widths and polish the manual stage control
-- [ ] Verify quote-to-document location consistency and desktop/mobile workflows
+- [x] Verify quote-to-document location consistency and desktop/mobile workflows
