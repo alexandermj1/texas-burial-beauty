@@ -1610,11 +1610,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const retail = Number(seller.cemetery_retail) || 0;
               // quote_amount / accepted_quote_amount are stored PER SPACE and EXCLUDE the
               // transfer fee; the sales-price email quotes them INCLUSIVE of the fee.
+              const buyerFees = normalizeBuyerFees((seller as any).buyer_fees);
+              const saveBuyerFees = (next: BuyerFee[]) => onUpdate(selected.id, { buyer_fees: next } as any);
               const figures = quoteFigures({
                 quoteAmount: seller.quote_amount,
                 acceptedAmount: seller.accepted_quote_amount,
                 transferFee: cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount,
                 plotCount,
+                buyerFees,
               });
               const quoteTotal = figures.totalInclFee;
               const quotePerPlot = figures.perSpaceInclFee;
