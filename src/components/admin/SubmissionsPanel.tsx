@@ -1499,6 +1499,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const stageTone = sellerStages[sellerStage - 1]?.tone ?? "new";
     const toneVar = (suffix: string) => `hsl(var(--status-${stageTone}${suffix}))`;
     const needsAttention = !!awaitingAll[selected.id];
+    const stagePrimaryStyle = { backgroundColor: toneVar(""), color: "hsl(var(--primary-foreground))" };
+    const stageSecondaryStyle = { borderColor: toneVar("-border"), backgroundColor: toneVar("-soft"), color: toneVar("-fg") };
     const openWorkspaceAt = (tab: "email" | "paperwork" | "notes" | "files", anchor: string) => {
       setPendingWorkspaceAnchor(anchor);
       setSellerWorkspaceTab(tab);
@@ -1658,8 +1660,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <h3 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}</h3>
                        <p className="mt-2 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                         {selected.email && <Button type="button" size="sm" onClick={() => openWorkspaceAt("email", `email-thread-${selected.id}`)}><Mail />Email seller</Button>}
-                          {selected.phone && <Button asChild type="button" size="sm" variant="outline"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />{selected.phone}</a></Button>}
+                         {selected.email && <Button type="button" size="sm" style={stagePrimaryStyle} className="hover:brightness-95" onClick={() => openWorkspaceAt("email", `email-thread-${selected.id}`)}><Mail />Email seller</Button>}
+                           {selected.phone && <Button asChild type="button" size="sm" variant="outline" style={stageSecondaryStyle} className="hover:brightness-95"><a href={`tel:${selected.phone.replace(/[^\d+]/g,"")}`}><Phone />{selected.phone}</a></Button>}
                        </div>
                     </div>
                       <div className="min-w-0 sm:text-right">
@@ -1670,39 +1672,39 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </div>
                         {selected.cemetery && <p className="mt-1 text-xs text-muted-foreground">{texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} submission{(texasCemeteryCounts.get(_canon(selected.cemetery)) || 0) === 1 ? "" : "s"} at this cemetery</p>}
                         {selected.cemetery && subRegion(selected) === "texas" && <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end" aria-label="Cemetery tools">
-                          <Button type="button" size="sm" variant={expandedCemetery && !editCemeteryInline ? "secondary" : "outline"} onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => { const next = !v; if (next) window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); return next; }); }} title="Open this cemetery's information inline"><Building2 />Cemetery info</Button>
-                          <Button type="button" size="sm" variant={editCemeteryInline ? "secondary" : "outline"} onClick={() => { setExpandedCemetery(true); setEditCemeteryInline(true); window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); }} title="Edit this cemetery's information inline"><Pencil />Edit info</Button>
-                          <Button type="button" size="sm" variant="ghost" onClick={() => setReassignCemeteryOpen(true)} title="Change the cemetery matched to this seller"><RefreshCw />Change cemetery</Button>
+                          <Button type="button" size="sm" variant="outline" style={expandedCemetery && !editCemeteryInline ? stagePrimaryStyle : stageSecondaryStyle} className="hover:brightness-95" onClick={() => { setEditCemeteryInline(false); setExpandedCemetery(v => { const next = !v; if (next) window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); return next; }); }} title="Open this cemetery's information inline"><Building2 />Cemetery info</Button>
+                          <Button type="button" size="sm" variant="outline" style={editCemeteryInline ? stagePrimaryStyle : stageSecondaryStyle} className="hover:brightness-95" onClick={() => { setExpandedCemetery(true); setEditCemeteryInline(true); window.setTimeout(() => document.getElementById(`cemetery-info-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); }} title="Edit this cemetery's information inline"><Pencil />Edit info</Button>
+                          <Button type="button" size="sm" variant="outline" style={stageSecondaryStyle} className="hover:brightness-95" onClick={() => setReassignCemeteryOpen(true)} title="Change the cemetery matched to this seller"><RefreshCw />Change cemetery</Button>
                         </div>}
                      </div>
                     {selected.source === "manual_phone" && seller.handled_by_name && <span className="hidden sm:inline text-[10px] text-muted-foreground">Added by {cleanDisplayName(seller.handled_by_name)}</span>}
                    </div>
                    {(expandedCemetery || editCemeteryInline) && selected.cemetery && <div id={`cemetery-info-${selected.id}`} className="border-t border-border/70 bg-muted/20 p-5 sm:p-6"><CemeteryInfoCard key={`summary-${selected.id}-${editCemeteryInline ? "edit" : "info"}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} startInEditMode={editCemeteryInline} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} /></div>}
                    <div className="grid grid-cols-1 lg:grid-cols-[minmax(230px,0.72fr)_minmax(0,2fr)]">
-                    <aside className="border-b border-border/70 bg-muted/35 p-5 lg:border-b-0 lg:border-r sm:p-6">
+                     <aside className="border-b border-border/70 p-5 lg:border-b-0 lg:border-r sm:p-6" style={{ backgroundColor: toneVar("-soft") }}>
                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Current stage</p>
                        {(() => { const CurrentIcon = sellerStages[sellerStage - 1]?.icon || Inbox; return (
                          <div className="rounded-xl border p-3.5" style={{ borderColor: toneVar("-border"), backgroundColor: toneVar("-soft") }}>
                            <div className="flex items-center gap-2.5">
                              <span className="grid h-8 w-8 place-items-center rounded-full text-white" style={{ backgroundColor: toneVar("") }}><CurrentIcon className="h-4 w-4" /></span>
-                             <div><p className="text-sm font-semibold" style={{ color: toneVar("-fg") }}>{sellerStages[sellerStage - 1]?.label}</p><p className="text-[10px] opacity-70" style={{ color: toneVar("-fg") }}>Step {sellerStage} of {sellerStages.length}</p></div>
+                              <div className="min-w-0 flex-1"><p className="text-sm font-semibold" style={{ color: toneVar("-fg") }}>{sellerStages[sellerStage - 1]?.label}</p><p className="text-[10px] opacity-70" style={{ color: toneVar("-fg") }}>Step {sellerStage} of {sellerStages.length}</p></div>
+                              {needsAttention && <span className="h-2 w-2 shrink-0 rounded-full shadow-[0_0_8px_hsl(var(--status-reply)/0.55)]" style={{ backgroundColor: "hsl(var(--status-reply))" }} title="Needs attention"><span className="sr-only">Needs attention</span></span>}
                            </div>
                            <p className="mt-3 text-xs leading-relaxed opacity-80" style={{ color: toneVar("-fg") }}>{guidedAction.hint}</p>
-                           <Button type="button" size="sm" style={{ backgroundColor: toneVar(""), color: "#fff" }} className={`mt-3 h-auto min-h-9 w-full justify-start whitespace-normal px-3 py-2 text-left leading-snug transition-transform duration-200 hover:brightness-110 active:scale-[0.98] ${needsAttention ? "animate-attention" : ""}`} onClick={guidedAction.run}><GuidedActionIcon className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1">{guidedAction.label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0" /></Button>
-                           {needsAttention && <p className="mt-2 text-[10px] font-medium" style={{ color: "hsl(var(--status-reply))" }}>Waiting on a reply from us</p>}
+                            <Button type="button" size="sm" style={stagePrimaryStyle} className="mt-3 h-auto min-h-9 w-full justify-start whitespace-normal px-3 py-2 text-left leading-snug transition-all duration-200 hover:brightness-95 active:scale-[0.99]" onClick={guidedAction.run}><GuidedActionIcon className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1">{guidedAction.label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0" /></Button>
                          </div>
                        ); })()}
                       <div className="mt-3 border-t border-border pt-3">
-                         <Button type="button" size="sm" variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setManualStageOpen(v => !v)}><Pencil className="h-3.5 w-3.5" />Correct stage</Button>
+                          <Button type="button" size="sm" variant="outline" style={stageSecondaryStyle} className="w-full justify-start hover:brightness-95" onClick={() => setManualStageOpen(v => !v)}><Pencil className="h-3.5 w-3.5" />Correct stage</Button>
                          {manualStageOpen && <div className="mt-1 grid gap-1 rounded-md border border-border bg-background p-2 shadow-sm">
                            <p className="px-1 pb-1 text-[10px] leading-relaxed text-muted-foreground">Administrative correction only. Later stages record a manual Starter-option move.</p>
-                          {sellerStages.slice(2).map(({ label, icon: StageIcon }, index) => <Button key={label} type="button" variant="ghost" size="sm" className="justify-start" onClick={() => moveSellerStage(index + 3)}><StageIcon className="h-3.5 w-3.5" />{label}</Button>)}
+                           {sellerStages.slice(2).map(({ label, icon: StageIcon }, index) => <Button key={label} type="button" variant="ghost" size="sm" style={{ color: toneVar("-fg") }} className="justify-start hover:brightness-95" onClick={() => moveSellerStage(index + 3)}><StageIcon className="h-3.5 w-3.5" />{label}</Button>)}
                         </div>}
                       </div>
                       <div className="mt-5 pt-4 border-t border-border">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-2">Last communication</p>
                         {lastContactAt ? <>
-                          <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>{!lastContactFromTCB && <Button type="button" size="sm" onClick={() => document.getElementById(`email-thread-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="h-7 px-2 text-[10px]">Reply</Button>}</div>
+                           <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-foreground">{lastContactFromTCB ? "From TCB" : "From seller"}</p>{!lastContactFromTCB && <Button type="button" size="sm" style={stagePrimaryStyle} onClick={() => document.getElementById(`email-thread-${selected.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="h-7 px-2 text-[10px] hover:brightness-95">Reply</Button>}</div>
                           <p className="text-xs text-muted-foreground mt-0.5">{formatDate(lastContactAt)}</p>
                           <p className="text-xs font-medium text-accent mt-1">{elapsed(lastContactAt)}</p>
                         </> : <p className="text-sm text-muted-foreground">No email history</p>}
@@ -1717,9 +1719,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <div className="rounded-lg border border-border/70 bg-muted/20 p-4">
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Locations being sold</p><p className="mt-1 text-base font-semibold leading-snug text-foreground">{sellingLocation}</p><p className="mt-1 text-[10px] text-muted-foreground">{locationUpdatedAt ? `Updated ${new Date(locationUpdatedAt).toLocaleString()} — anything signed before then still shows the older wording.` : "Used in the quote, agreements, family confirmation and document request."}</p></div>
-                            {!locationEditing && <Button type="button" size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-muted-foreground" title="Edit the selling location everywhere" onClick={() => { setLocationDraft(sellingLocation === "Not provided" ? "" : sellingLocation); setLocationEditing(true); }}><Pencil className="h-3.5 w-3.5" /><span className="sr-only">Edit locations being sold</span></Button>}
+                             {!locationEditing && <Button type="button" size="icon" variant="outline" style={stageSecondaryStyle} className="h-8 w-8 shrink-0 hover:brightness-95" title="Edit the selling location everywhere" onClick={() => { setLocationDraft(sellingLocation === "Not provided" ? "" : sellingLocation); setLocationEditing(true); }}><Pencil className="h-3.5 w-3.5" /><span className="sr-only">Edit locations being sold</span></Button>}
                           </div>
-                          {locationEditing && <div className="mt-3 space-y-2 border-t border-border/60 pt-3"><textarea aria-label="Locations being sold" value={locationDraft} onChange={e => setLocationDraft(e.currentTarget.value)} rows={2} autoFocus className="w-full resize-y rounded-md border border-primary/50 bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20" /><div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" onClick={() => void saveSellingLocation(locationDraft)} disabled={locationSaving}><Save className="h-3.5 w-3.5" />{locationSaving ? "Updating…" : "Update everywhere"}</Button><Button type="button" size="sm" variant="ghost" onClick={() => { setLocationEditing(false); setLocationDraft(""); }} disabled={locationSaving}><X className="h-3.5 w-3.5" />Cancel</Button></div></div>}
+                           {locationEditing && <div className="mt-3 space-y-2 border-t border-border/60 pt-3"><textarea aria-label="Locations being sold" value={locationDraft} onChange={e => setLocationDraft(e.currentTarget.value)} rows={2} autoFocus className="w-full resize-y rounded-md border bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none" style={{ borderColor: toneVar("-border") }} /><div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" style={stagePrimaryStyle} className="hover:brightness-95" onClick={() => void saveSellingLocation(locationDraft)} disabled={locationSaving}><Save className="h-3.5 w-3.5" />{locationSaving ? "Updating…" : "Update everywhere"}</Button><Button type="button" size="sm" variant="outline" style={stageSecondaryStyle} className="hover:brightness-95" onClick={() => { setLocationEditing(false); setLocationDraft(""); }} disabled={locationSaving}><X className="h-3.5 w-3.5" />Cancel</Button></div></div>}
                           {(customerLocation !== "Not provided" || deedLocation) && <details className="mt-3 border-t border-border/60 pt-2"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Compare source wording</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><div><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Customer wrote</span><span className="mt-1 block text-xs text-muted-foreground">{customerLocation}</span></div><div><span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3 w-3" />AI read from deed</span><span className="mt-1 block text-xs font-medium text-foreground">{deedLocation || "No property description found"}</span>{deedLocationSource && <span className="mt-1 block truncate text-[10px] text-muted-foreground" title={deedLocationSource}>From {deedLocationSource}</span>}</div></div></details>}
                         </div>
                       </div>
@@ -1780,7 +1782,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
                         </div>
                         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-                          {aiFacts.length > 0 && <Button type="button" size="sm" variant={aiFactsOpen ? "secondary" : "outline"} onClick={() => setAiFactsOpen(v => !v)}><Sparkles className="h-3.5 w-3.5" />Document insights ({aiFacts.length})</Button>}
+                           {aiFacts.length > 0 && <Button type="button" size="sm" variant="outline" style={aiFactsOpen ? stagePrimaryStyle : stageSecondaryStyle} className="hover:brightness-95" onClick={() => setAiFactsOpen(v => !v)}><Sparkles className="h-3.5 w-3.5" />Document insights ({aiFacts.length})</Button>}
                         </div>
                         {(aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="mt-3 space-y-3">
                          <div className="flex flex-wrap items-center gap-2">
@@ -2493,7 +2495,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
     </>);
     const sellerWorkspaceNav = kind !== "buyer" ? (
-       <nav aria-label="Seller workspace" className="sticky top-2 z-20 grid grid-cols-4 gap-1 overflow-x-auto rounded-xl border border-border/70 bg-card/95 p-1.5 shadow-sm backdrop-blur">
+       <nav aria-label="Seller workspace" className="sticky top-2 z-20 grid grid-cols-4 gap-1 overflow-x-auto rounded-xl border p-1.5 shadow-sm backdrop-blur" style={{ borderColor: toneVar("-border"), backgroundColor: toneVar("-soft") }}>
         {([
           { key: "email", label: "Email", icon: Mail },
           { key: "paperwork", label: "Family tree & documents", icon: Users },
@@ -2505,7 +2507,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             type="button"
             size="sm"
             variant={sellerWorkspaceTab === key ? "default" : "ghost"}
-            className="h-10 min-w-max justify-center gap-2 rounded-lg px-3 text-xs"
+            style={sellerWorkspaceTab === key ? stagePrimaryStyle : { color: toneVar("-fg") }}
+            className="h-10 min-w-max justify-center gap-2 rounded-lg px-3 text-xs hover:brightness-95"
             onClick={() => { setExpandedCemetery(false); setEditCemeteryInline(false); setSellerWorkspaceTab(key); }}
           >
             <TabIcon className="h-3.5 w-3.5" />{label}
