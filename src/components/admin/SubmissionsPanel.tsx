@@ -17,6 +17,7 @@ import TexasCemeteriesPanel from "./TexasCemeteriesPanel";
 import CemeteryInfoCard from "./CemeteryInfoCard";
 import CemeteryMatchDialog from "./CemeteryMatchDialog";
 import ReassignCemeteryDialog from "./ReassignCemeteryDialog";
+import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
 import DeedNameChecker from "./DeedNameChecker";
 import { useActiveListings } from "@/hooks/useActiveListings";
 import { getPlotImage } from "@/lib/listingImages";
@@ -1571,20 +1572,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const autopilot = { ...((answers.autopilot ?? {}) as Record<string, any>), plotDescription: next || null };
       try {
         await onUpdate(selected.id, { plot_description: next, ownership_answers: { ...answers, autopilot } } as any);
-        const { data: prepared } = await supabase.from("contracts")
-          .select("id, kind, status, fill_data, signed_at, notarized_at, completed_at")
-          .eq("submission_id", selected.id).is("deleted_at", null).neq("status", "void");
-        let rebuilt = 0;
-        for (const contract of prepared ?? []) {
-          if (contract.signed_at || contract.notarized_at || contract.completed_at || ["signed", "notarized", "completed"].includes(String(contract.status))) continue;
-          const fillData = (contract.fill_data ?? {}) as Record<string, unknown>;
-          if (String(fillData.plot_description ?? "").trim() === next) continue;
-          const { error } = await supabase.functions.invoke("generate-contract", {
-            body: { submission_id: selected.id, kind: contract.kind, overrides: { ...fillData, plot_description: next, supersede_contract_id: contract.id } },
-          });
-          if (error) await supabase.from("contracts").update({ status: "void" }).eq("id", contract.id);
-          else rebuilt += 1;
-        }
+        const rebuilt = await rebuildUnsignedSubmissionDocuments(selected.id, { plotDescription: next });
         setLocationEditing(false);
         toast({ title: "Selling location updated everywhere", description: rebuilt ? `${rebuilt} unsigned prepared document${rebuilt === 1 ? " was" : "s were"} safely replaced. Signed copies were left unchanged.` : "New quotes, agreements, family confirmation, and the live document request now use this wording." });
       } finally {

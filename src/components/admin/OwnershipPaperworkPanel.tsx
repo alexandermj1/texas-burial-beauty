@@ -9,13 +9,12 @@ import { toast } from "sonner";
 import {
   ClipboardList, Loader2, Users, AlertTriangle, Plus, Trash2, RotateCcw,
   ShieldCheck, FileSignature, Building2, CheckCircle2, ChevronDown, Sparkles,
-  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X, Check, Network,
+  Paperclip, Link2, Undo2, Send, FileText, Mail, Monitor, X, Check,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { openFileViewer, type FileViewerSource } from "@/lib/fileViewer";
 import ContractsPanel from "./ContractsPanel";
 import ProofreadButton from "./ProofreadButton";
-import FamilyTreeMap from "./FamilyTreeMap";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
@@ -256,6 +255,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [genFailed, setGenFailed] = useState<Set<string>>(new Set());
   const [inferring, setInferring] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
+  const [requestExplanation, setRequestExplanation] = useState("");
+  const [explanationError, setExplanationError] = useState("");
+  const [explaining, setExplaining] = useState(false);
   const [files, setFiles] = useState<AnyFile[]>([]);
   /** Signed preview URLs for image uploads, keyed by storage path. */
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
@@ -1796,6 +1798,48 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     return list.find((x) => contractNameOf(x) === wanted)
       ?? (wanted ? list.find((x) => contractNameOf(x).includes(wanted.split(" ")[0])) : list[0]);
   };
+
+  const explanationItems = useMemo(() => requirements
+    .filter((r) => !["LA", "REVIEW", "NOTE"].includes(r.code))
+    .map((r) => ({
+      code: r.code,
+      label: r.label,
+      person: r.personName ?? null,
+      jointNames: r.jointNames ?? [],
+      why: r.why,
+      status: stateByKey[reqDbKey(r)] ?? (r.review ? "maybe" : "needed"),
+      contractKind: r.contractKind ?? null,
+    })), [requirements, stateByKey]);
+  const explanationSignature = useMemo(() => JSON.stringify({
+    cemetery: cemName ?? cemetery ?? "",
+    answers: (answers as Record<string, unknown>).v2 ?? answers.people ?? [],
+    items: explanationItems,
+  }), [cemName, cemetery, answers, explanationItems]);
+  const fallbackExplanation = useMemo(() => {
+    const meaningful = explanationItems.filter((item) => !["D1", "D2", "D2P"].includes(item.code));
+    if (!meaningful.length) return "This request only contains the standard ownership certificate and identification items.";
+    return meaningful.map((item) => item.why || `${item.label} is needed for ${item.person ?? "this sale"}.`).join(" ");
+  }, [explanationItems]);
+
+  useEffect(() => {
+    if (!open || loading || !explanationItems.length) return;
+    let active = true;
+    setExplaining(true);
+    setExplanationError("");
+    void supabase.functions.invoke("explain-document-request", {
+      body: { submission_id: submissionId, items: explanationItems },
+    }).then(({ data, error }) => {
+      if (!active) return;
+      const payload = data as { explanation?: string; error?: string } | null;
+      if (error || payload?.error || !payload?.explanation) {
+        setRequestExplanation(fallbackExplanation);
+        setExplanationError(payload?.error || error?.message || "AI could not explain this request.");
+      } else {
+        setRequestExplanation(payload.explanation);
+      }
+    }).finally(() => { if (active) setExplaining(false); });
+    return () => { active = false; };
+  }, [open, loading, submissionId, explanationSignature, fallbackExplanation]);
   /** A joint POA was asked for but the prepared copy only names one person. */
   const jointMismatch = (r: Requirement) => {
     if (!r.jointNames || r.jointNames.length < 2) return false;
@@ -2200,7 +2244,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
 
 
-              {fromContract && (
+              {fromContract && (r.code !== "D21" || supplied) && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-0.5">
                   <CheckCircle2 className="w-2.5 h-2.5" />On file
                 </span>
@@ -2549,33 +2593,31 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             </div>
           ) : null}
 
-          {/* ── Family tree and its person-specific paperwork ── */}
-          <div className="border rounded-lg p-3 bg-background/60 space-y-2.5">
+          {/* ── Plain-English ownership and paperwork explanation ── */}
+          <div className="border rounded-lg p-4 bg-background/60 space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-semibold flex items-center gap-1.5">
-                <Network className="w-3.5 h-3.5 text-muted-foreground" /> Family tree · who needs what
+                <Sparkles className="w-3.5 h-3.5 text-primary" /> Why these documents are needed
               </span>
               <span className="text-[10px] text-muted-foreground">
-                Click a document to check or edit it · “+” adds one to that person
+                Based on the seller's family answers and the current request
               </span>
             </div>
-            <FamilyTreeMap
-              answers={answers}
-              people={(answers.people ?? []).length ? (answers.people as RosterPerson[]) : roster}
-              requirements={personRequirements}
-              stateOf={(r) => stateByKey[reqDbKey(r)] ?? (r.review ? "maybe" : "needed")}
-              onDocClick={(r) => {
-                if (r.contractKind) { void openDocEditor(r); return; }
-                setExpanded((e) => ({ ...e, [reqKey(r)]: true }));
-                requestAnimationFrame(() => {
-                  document.getElementById(anchorId(r))?.scrollIntoView({ behavior: "smooth", block: "center" });
-                });
-              }}
-              onAddDoc={(name) => {
-                setNewDoc({ kind: "custom", label: "", why: "", person: name, person2: "", needsNotary: false });
-                setAddDocOpen(true);
-              }}
-            />
+            <p className="text-sm leading-6 text-foreground">
+              {explaining && !requestExplanation ? "Writing a simple explanation…" : requestExplanation || fallbackExplanation}
+            </p>
+            {explanationError && (
+              <p className="text-[11px] text-destructive">{explanationError} The rules-based explanation is shown instead.</p>
+            )}
+            {personRequirements.filter((r) => r.contractKind).length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {personRequirements.filter((r) => r.contractKind).map((r) => (
+                  <Button key={reqKey(r)} size="sm" variant="outline" onClick={() => void openContractPdf(r)}>
+                    <FileText className="mr-1.5 h-3.5 w-3.5" />Check {r.label}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
 
 
