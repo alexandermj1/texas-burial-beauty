@@ -2489,6 +2489,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     space_numbers: (x as any)?.space_numbers ?? null,
                     lawn: (x as any)?.lawn ?? null,
                     transfer_fee_amount: cemeteryProfileFor(selected.cemetery)?.transfer_fee ?? selected.transfer_fee_amount ?? null,
+                    quote_response: (selected as any).quote_response ?? null,
+                    accepted_quote_amount: (selected as any).accepted_quote_amount ?? null,
                   } : null}
                   autoCompose={kind !== "buyer" ? autoCompose : null}
                   onNewEmailSent={() => {}}

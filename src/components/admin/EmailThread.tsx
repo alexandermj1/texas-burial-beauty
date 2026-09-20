@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Mail, Sparkles, Reply, PenLine } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { isOutgoing, classifyEmailKind, extractQuoteAmount, EMAIL_KIND_META, EMAIL_KIND_RING } from "@/lib/emailReply";
+import { isOutgoing, classifyEmailKind, extractQuoteAmount, extractQuoteDetails, EMAIL_KIND_META, EMAIL_KIND_RING } from "@/lib/emailReply";
 import InlineEmailComposer from "./InlineEmailComposer";
 
 interface EmailRow {
@@ -63,6 +63,8 @@ interface Props {
     space_numbers?: string | null;
     lawn?: string | null;
     transfer_fee_amount?: number | string | null;
+    quote_response?: string | null;
+    accepted_quote_amount?: number | string | null;
   } | null;
   /** When this changes, open a new email pre-loaded with the given template. */
   autoCompose?: { templateId: string; nonce: number } | null;
@@ -232,7 +234,9 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
              const kind = emailKind(e);
             // A later quote only counts as a *revision* when the figure actually
             // changed from the previous quote in the thread; otherwise it is a re-send.
-            const quoteAmount = kind === "quote" ? extractQuoteAmount(`${e.body_html || ""} ${e.body_text || ""}`) : null;
+            const quoteBody = `${e.body_html || ""} ${e.body_text || ""}`;
+            const quoteAmount = kind === "quote" ? extractQuoteAmount(quoteBody) : null;
+            const quoteDetails = kind === "quote" ? extractQuoteDetails(quoteBody) : null;
             let quoteLabel = "";
             if (kind === "quote") {
                const quotes = emails.filter((m) => emailKind(m) === "quote");
@@ -246,11 +250,21 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     return null;
                   })()
                 : null;
-              const amt = quoteAmount ? ` · $${quoteAmount.toLocaleString()}` : "";
-              if (idx <= 0) quoteLabel = `Quote sent${amt}`;
+              const acceptedNet = Number(sellerContext?.accepted_quote_amount) || 0;
+              const acceptedInclusive = acceptedNet + (quoteDetails?.transferFee || Number(sellerContext?.transfer_fee_amount) || 0);
+              const isAcceptedQuote = sellerContext?.quote_response === "accepted"
+                && !!quoteAmount
+                && Math.abs(quoteAmount - acceptedInclusive) < 1;
+              const status = isAcceptedQuote ? "Accepted" : idx <= 0 ? "Quote sent" : "Quote re-sent";
+              const perSpace = quoteDetails?.perSpace ? ` · $${quoteDetails.perSpace.toLocaleString()}/space` : "";
+              const plots = quoteDetails?.plotCount && quoteDetails.plotCount > 1 ? ` · ${quoteDetails.plotCount} spaces` : "";
+              const total = quoteDetails?.total ? ` · $${quoteDetails.total.toLocaleString()} total` : "";
+              const fee = quoteDetails?.transferFee ? ` · $${quoteDetails.transferFee.toLocaleString()} transfer fee` : "";
+              const detail = `${perSpace}${plots}${total}${fee}`;
+              if (idx <= 0 || isAcceptedQuote) quoteLabel = `${status}${detail}`;
               else if (quoteAmount && prevAmount && quoteAmount !== prevAmount)
-                quoteLabel = `Quote revised${amt} (was $${prevAmount.toLocaleString()})`;
-              else quoteLabel = `Quote re-sent${amt}`;
+                quoteLabel = `Quote revised${detail} (was $${prevAmount.toLocaleString()}/space)`;
+              else quoteLabel = `${status}${detail}`;
             }
             const laSigned = kind === "listing_agreement" && !!laSignedAt;
             const kindLabel = kind === "quote"

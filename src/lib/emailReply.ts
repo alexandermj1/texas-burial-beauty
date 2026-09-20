@@ -107,10 +107,41 @@ const parseMoney = (raw: string): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+export type QuoteEmailDetails = {
+  perSpace: number | null;
+  total: number | null;
+  plotCount: number | null;
+  transferFee: number | null;
+};
+
+/** Read the figures as they were printed in that particular sent quote. */
+export const extractQuoteDetails = (body?: string | null): QuoteEmailDetails => {
+  if (!body) return { perSpace: null, total: null, plotCount: null, transferFee: null };
+  const text = stripQuoted(body)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ");
+  const money = "\\$\\s?([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{1,3})";
+  const perSpaceMatch = text.match(new RegExp(`${money}\\s*per space`, "i"));
+  const acrossMatch = text.match(new RegExp(`${money}\\s*across all\\s*(\\d+)\\s*spaces?`, "i"));
+  const propertyCountMatch = text.match(/(?:your property[^]{0,300})?\b(\d+)\s+spaces?\b/i);
+  const feeMatch = text.match(new RegExp(`cemetery(?:'s)?\\s*(?:\\$[^.]{0,20})?transfer fee(?:[^$]{0,80})?${money}`, "i"))
+    || text.match(new RegExp(`${money}\\s+(?:cemetery\\s+)?transfer fee`, "i"));
+  return {
+    perSpace: perSpaceMatch ? parseMoney(perSpaceMatch[1]) : null,
+    total: acrossMatch ? parseMoney(acrossMatch[1]) : null,
+    plotCount: acrossMatch ? Number(acrossMatch[2]) : propertyCountMatch ? Number(propertyCountMatch[1]) : null,
+    transferFee: feeMatch ? parseMoney(feeMatch[1]) : null,
+  };
+};
+
 // Pull the guaranteed-net / suggested figure out of a generated quote email so
 // the thread can show the amount (and what changed on a re-quote).
 export const extractQuoteAmount = (body?: string | null): number | null => {
   if (!body) return null;
+  const details = extractQuoteDetails(body);
+  if (details.perSpace) return details.perSpace;
   const text = stripQuoted(body).replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
   const money = "\\$\\s?([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{4,})";
   // The quote card's headline is the suggested sales price per space. Display
