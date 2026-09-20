@@ -30,14 +30,14 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 
-import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine } from "lucide-react";
+import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
 import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
-import { quoteFigures } from "@/lib/quoteFigures";
+import { quoteFigures, BUYER_FEE_PRESETS, normalizeBuyerFees, type BuyerFee } from "@/lib/quoteFigures";
 import { Button } from "@/components/ui/button";
 
 const EmailThread = lazy(() => import("./EmailThread"));
@@ -1610,11 +1610,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const retail = Number(seller.cemetery_retail) || 0;
               // quote_amount / accepted_quote_amount are stored PER SPACE and EXCLUDE the
               // transfer fee; the sales-price email quotes them INCLUSIVE of the fee.
+              const buyerFees = normalizeBuyerFees((seller as any).buyer_fees);
+              const saveBuyerFees = (next: BuyerFee[]) => onUpdate(selected.id, { buyer_fees: next } as any);
               const figures = quoteFigures({
                 quoteAmount: seller.quote_amount,
                 acceptedAmount: seller.accepted_quote_amount,
                 transferFee: cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount,
                 plotCount,
+                buyerFees,
               });
               const quoteTotal = figures.totalInclFee;
               const quotePerPlot = figures.perSpaceInclFee;
@@ -1722,8 +1725,40 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Exactly as quoted to the seller</p>
                            <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{figures.headline}</p>
                            <p className="mt-1 text-xs text-muted-foreground">Authorized minimum net of the transfer fee: {fmtMoney(figures.netPerSpace)} per space{plotCount > 1 ? ` · ${fmtMoney(figures.netTotal)} across all ${plotCount} spaces` : ""}. Reminder emails quote the same figures.</p>
-                         </div>}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          </div>}
+                          {figures.hasQuote && <div className="mb-4 rounded-xl border border-primary/25 bg-primary/[0.04] p-4">
+                            <div className="flex flex-wrap items-end justify-between gap-3">
+                              <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Sales price the buyer pays</p>
+                                <p className="mt-1 font-display text-2xl text-foreground">{fmtMoney(figures.buyerPriceTotal)}{plotCount > 1 ? <span className="ml-1 text-sm text-muted-foreground">for all {plotCount} spaces</span> : null}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{fmtMoney(figures.netTotal)} authorized + {fmtMoney(figures.transferFee)} transfer fee + {fmtMoney(figures.buyerPremiumTotal)} buyer's 15%{figures.buyerFeesTotal > 0 ? ` + ${fmtMoney(figures.buyerFeesTotal)} added fees` : ""}</p>
+                            </div>
+                            {figures.buyerFees.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">
+                              {figures.buyerFees.map(fee => (
+                                <button key={fee.id} type="button" onClick={() => saveBuyerFees(figures.buyerFees.filter(f => f.id !== fee.id))} className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground" title="Remove this fee">
+                                  {fee.label} · {fmtMoney(fee.amount)}<X className="h-3 w-3" />
+                                </button>
+                              ))}
+                            </div>}
+                            <p className="mt-3 text-[10px] uppercase tracking-wide text-muted-foreground">Add a fee</p>
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {BUYER_FEE_PRESETS.filter(p => !figures.buyerFees.some(f => f.id === p.id)).map(preset => (
+                                <button key={preset.id} type="button" onClick={() => saveBuyerFees([...figures.buyerFees, preset])} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted">
+                                  <Plus className="h-3 w-3" />{preset.label} · {fmtMoney(preset.amount)}
+                                </button>
+                              ))}
+                              <button type="button" onClick={() => {
+                                const label = window.prompt("Fee name")?.trim();
+                                if (!label) return;
+                                const amount = Math.round(Number(String(window.prompt("Fee amount in dollars") || "").replace(/[^\d.]/g, "")));
+                                if (!Number.isFinite(amount) || amount <= 0) return;
+                                saveBuyerFees([...figures.buyerFees, { id: `custom_${Date.now()}`, label, amount }]);
+                              }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted"><Plus className="h-3 w-3" />Other fee…</button>
+                            </div>
+                            <p className="mt-2 text-[11px] text-muted-foreground">Added fees are charged once to the buyer and never reduce the seller's proceeds.</p>
+                          </div>}
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
                         </div>

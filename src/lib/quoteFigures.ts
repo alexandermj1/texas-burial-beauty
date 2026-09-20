@@ -28,15 +28,55 @@ export type QuoteFigures = {
   hasQuote: boolean;
   /** Exactly how the sales-price email words it. */
   headline: string;
+  /** Extra one-time fees the office added to the buyer's price. */
+  buyerFees: { id: string; label: string; amount: number }[];
+  buyerFeesTotal: number;
+  /** 15% buyer's premium on the authorized price. */
+  buyerPremiumPerSpace: number;
+  buyerPremiumTotal: number;
+  /** What the buyer pays per space (authorized + transfer fee + 15%). */
+  buyerPricePerSpace: number;
+  /** Full buyer price for all spaces including added fees. */
+  buyerPriceTotal: number;
 };
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
+
+/** Buyer's premium charged on top of the seller's authorized price. */
+export const BUYER_FEE_RATE = 0.15;
+
+export type BuyerFee = { id: string; label: string; amount: number };
+
+/** One-click fees the office can add on top of the buyer's price. */
+export const BUYER_FEE_PRESETS: BuyerFee[] = [
+  { id: "plot_showing", label: "Plot showing fee", amount: 1000 },
+  { id: "mortuary", label: "Mortuary fee", amount: 750 },
+  { id: "deed_recording", label: "Deed transfer & recording", amount: 350 },
+  { id: "document_prep", label: "Document preparation", amount: 195 },
+  { id: "escrow", label: "Escrow & closing", amount: 350 },
+  { id: "notary", label: "Mobile notary", amount: 150 },
+  { id: "rush", label: "Rush transfer", amount: 500 },
+  { id: "marketing", label: "Marketing & advertising", amount: 295 },
+];
+
+export function normalizeBuyerFees(raw: unknown): BuyerFee[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((f: any, i: number) => ({
+      id: String(f?.id || `fee_${i}`),
+      label: String(f?.label || "Fee"),
+      amount: Math.max(0, Number(f?.amount) || 0),
+    }))
+    .filter((f) => f.amount > 0);
+}
 
 export function quoteFigures(input: {
   quoteAmount?: number | null;
   acceptedAmount?: number | null;
   transferFee?: number | null;
   plotCount?: number | null;
+  /** Extra one-time fees added to the buyer's price. */
+  buyerFees?: BuyerFee[] | null;
 }): QuoteFigures {
   const plotCount = Math.max(1, Number(input.plotCount) || 1);
   const accepted = Number(input.acceptedAmount) || 0;
@@ -58,5 +98,15 @@ export function quoteFigures(input: {
       : `${money(perSpaceInclFee)}${feeNote}`;
   }
 
-  return { plotCount, netPerSpace, transferFee, perSpaceInclFee, totalInclFee, netTotal, hasQuote, headline };
+  const buyerFees = normalizeBuyerFees(input.buyerFees);
+  const buyerFeesTotal = buyerFees.reduce((sum, f) => sum + f.amount, 0);
+  const buyerPremiumPerSpace = hasQuote ? Math.round(netPerSpace * BUYER_FEE_RATE) : 0;
+  const buyerPremiumTotal = hasQuote ? Math.round(netTotal * BUYER_FEE_RATE) : 0;
+  const buyerPricePerSpace = hasQuote ? perSpaceInclFee + buyerPremiumPerSpace : 0;
+  const buyerPriceTotal = hasQuote ? totalInclFee + buyerPremiumTotal + buyerFeesTotal : 0;
+
+  return {
+    plotCount, netPerSpace, transferFee, perSpaceInclFee, totalInclFee, netTotal, hasQuote, headline,
+    buyerFees, buyerFeesTotal, buyerPremiumPerSpace, buyerPremiumTotal, buyerPricePerSpace, buyerPriceTotal,
+  };
 }
