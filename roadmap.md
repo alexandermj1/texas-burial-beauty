@@ -40,3 +40,11 @@
 - [x] Move archive and delete controls to the bottom of the open submission
 - [x] Verify each guided action opens the correct email, agreement, family-tree, or document-request workflow
 - [x] Make next-step buttons reliably wait for and scroll to their exact seller-profile action
+
+## Plain-English document reasoning
+- [ ] Replace the family-tree diagram with a short relationship-and-signing explanation
+- [ ] Use low-cost AI to explain only non-obvious documents and joint POAs
+- [ ] Keep each explained POA clickable for checking and editing
+- [ ] Label POAs in the request as needed, without a separate prepared status
+- [ ] Rebuild every unsigned request document when cemetery or selling location changes
+- [ ] Verify Patricia Perkins and the seller workflow on desktop and mobile
