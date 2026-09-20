@@ -37,7 +37,7 @@ import { bayCemeteries } from "@/data/cemeteries";
 import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
-import { quoteFigures } from "@/lib/quoteFigures";
+import { quoteFigures, BUYER_FEE_PRESETS, normalizeBuyerFees, type BuyerFee } from "@/lib/quoteFigures";
 import { Button } from "@/components/ui/button";
 
 const EmailThread = lazy(() => import("./EmailThread"));
