@@ -31,10 +31,10 @@ export type QuoteFigures = {
   /** Extra one-time fees the office added to the buyer's price. */
   buyerFees: { id: string; label: string; amount: number }[];
   buyerFeesTotal: number;
-  /** 15% buyer's premium on the authorized price. */
+  /** 15% buyer's premium on the sales price INCLUDING the transfer fee. */
   buyerPremiumPerSpace: number;
   buyerPremiumTotal: number;
-  /** What the buyer pays per space (authorized + transfer fee + 15%). */
+  /** What the buyer pays per space: (authorized + transfer fee) x 1.15. */
   buyerPricePerSpace: number;
   /** Full buyer price for all spaces including added fees. */
   buyerPriceTotal: number;
@@ -43,9 +43,9 @@ export type QuoteFigures = {
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
 /** Buyer's premium charged on top of the seller's authorized price.
- *  Basis: the purchase price EXCLUDING the cemetery's transfer fee — the same
- *  basis as clause 4.1 of the listing agreement ("15% of the purchase price"),
- *  with the transfer fee treated as a separate buyer-paid cemetery charge. */
+ *  Basis: the full sales price INCLUDING the cemetery's transfer fee — the
+ *  same basis as clause 4.1 of the listing agreement ("15% of the sales
+ *  price, including the cemetery's transfer fee"). */
 export const BUYER_FEE_RATE = 0.15;
 
 /** Default quote as a share of cemetery retail, before the ceiling below. */
@@ -60,7 +60,7 @@ export const MAX_BUYER_PCT_OF_RETAIL = 0.70;
 /** Buyer's total per space for a given authorized (net) price, excluding any
  *  optional add-on fees. */
 export const buyerPriceFromNet = (netPerSpace: number, transferFee: number) =>
-  netPerSpace + Math.max(0, transferFee) + netPerSpace * BUYER_FEE_RATE;
+  (netPerSpace + Math.max(0, transferFee)) * (1 + BUYER_FEE_RATE);
 
 /** Highest authorized price per space that keeps the buyer's total at or under
  *  MAX_BUYER_PCT_OF_RETAIL of retail. Returns Infinity when retail is unknown. */
@@ -68,7 +68,7 @@ export function maxNetPerSpace(retailPerPlot: number, transferFee: number): numb
   const retail = Number(retailPerPlot) || 0;
   if (retail <= 0) return Infinity;
   const fee = Math.max(0, Number(transferFee) || 0);
-  return Math.max(0, (MAX_BUYER_PCT_OF_RETAIL * retail - fee) / (1 + BUYER_FEE_RATE));
+  return Math.max(0, (MAX_BUYER_PCT_OF_RETAIL * retail) / (1 + BUYER_FEE_RATE) - fee);
 }
 
 /** The suggested authorized price per space: 55% of retail, lowered whenever
@@ -143,8 +143,8 @@ export function quoteFigures(input: {
 
   const buyerFees = normalizeBuyerFees(input.buyerFees);
   const buyerFeesTotal = buyerFees.reduce((sum, f) => sum + f.amount, 0);
-  const buyerPremiumPerSpace = hasQuote ? Math.round(netPerSpace * BUYER_FEE_RATE) : 0;
-  const buyerPremiumTotal = hasQuote ? Math.round(netTotal * BUYER_FEE_RATE) : 0;
+  const buyerPremiumPerSpace = hasQuote ? Math.round(perSpaceInclFee * BUYER_FEE_RATE) : 0;
+  const buyerPremiumTotal = hasQuote ? Math.round(totalInclFee * BUYER_FEE_RATE) : 0;
   const buyerPricePerSpace = hasQuote ? perSpaceInclFee + buyerPremiumPerSpace : 0;
   const buyerPriceTotal = hasQuote ? totalInclFee + buyerPremiumTotal + buyerFeesTotal : 0;
 

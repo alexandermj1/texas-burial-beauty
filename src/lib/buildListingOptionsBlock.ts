@@ -91,8 +91,10 @@ export async function buildListingOptionsBlock(opts: {
   const commissionTotal = Math.round(saleSubtotal * 0.15);
   const totalSale = saleSubtotal + fee;
   const totalProceeds = saleSubtotal - commissionTotal;
-  const buyerFeePerSpace = Math.round(salePerSpace * 0.15);
-  const buyerFeeTotal = Math.round(saleSubtotal * 0.15);
+  // Buyer's fee: 15% of the sales price INCLUDING the cemetery transfer fee
+  // (matches clause 4.1 of the listing agreement).
+  const buyerFeePerSpace = Math.round(grossPerSpace * 0.15);
+  const buyerFeeTotal = Math.round(totalSale * 0.15);
 
   const cemLabel = properCase(seller.cemetery || "your cemetery");
 
@@ -215,7 +217,7 @@ export async function buildListingOptionsBlock(opts: {
         ${multi ? `<td style="padding:14px 0 0 18px;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(totalProceeds)}</td>` : ""}
       </tr>
     </table>
-    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price. The buyer additionally pays a 15% buyer's fee on top of this price (${fmtUsd(buyerFeePerSpace)} per space${multi ? `, ${fmtUsd(buyerFeeTotal)} across all ${plotCount} spaces` : ""}) — that fee is charged to the buyer and never comes out of your proceeds.</p>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price. The buyer additionally pays a 15% buyer's fee calculated on this sales price, transfer fee included (${fmtUsd(buyerFeePerSpace)} per space${multi ? `, ${fmtUsd(buyerFeeTotal)} across all ${plotCount} spaces` : ""}) — that fee is charged to the buyer and never comes out of your proceeds.</p>
 
 
   </td></tr>
@@ -256,7 +258,7 @@ ${tierCards}
       <!-- HOW IT WORKS -->
       ${section("How this works", `
         ${p(`Our process is simple: you authorize us to sell your property at (or above) an agreed minimum price, and we handle everything from there — marketing, buyer negotiations, cemetery paperwork, and the closing itself. Because we can complete a sale the moment a qualified buyer commits, without coming back to you for approval on each offer, your property stays competitive with buyers who need to move quickly.`, true)}
-        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. Separately, the buyer pays a 15% buyer's fee, calculated on the sale price excluding the cemetery transfer fee, along with that transfer fee and any optional buyer services. Those buyer-side charges are billed to the buyer, so they never touch your proceeds.`, true)}
+        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. Separately, the buyer pays a 15% buyer's fee, calculated on the full sale price including the cemetery transfer fee, along with any optional buyer services. Those buyer-side charges are billed to the buyer, so they never touch your proceeds.`, true)}
       `)}
 
       <!-- WHY PRE-AUTH -->
@@ -275,7 +277,7 @@ ${tierCards}
       <!-- BUYER PAID -->
       ${section("Buyer-paid costs", `
         ${p(`For clarity on the closing statement you'll eventually see, these charges fall to the buyer, not to you:`, true)}
-        ${p(`&bull; <strong style="color:${BRAND_INK};">Buyer's fee — 15% of the sale price.</strong> A fee we charge the buyer for handling the purchase, paperwork and cemetery coordination. It is calculated on the sale price before the cemetery's transfer fee is added, is paid on top of that sale price, and is entirely separate from the 15% commission deducted from your side.<br>&bull; <strong style="color:${BRAND_INK};">Cemetery transfer fee${transferFee > 0 ? ` — ${fmtUsd(transferFee)} at ${escapeHtml(cemLabel)}` : ""}.</strong> Charged by the cemetery to move the interment rights into the buyer's name${plotCount > 1 ? ", and charged once per transfer &mdash; if the spaces are sold to more than one buyer, each of those transfers carries its own transfer fee" : ""}.<br>&bull; <strong style="color:${BRAND_INK};">Other cemetery and service charges.</strong> Quitclaim, recording and endowment care fees, plus optional buyer services such as financing, mortuary referral coordination and in-person showings, itemized separately to the buyer.<br>&bull; <strong style="color:${BRAND_INK};">Any other fees or charges properly assessed at closing.</strong> Cemeteries and third parties may assess additional administrative, documentary, notarial or statutory fees in connection with a transfer. Any such amounts, together with any applicable taxes, are the responsibility of the buyer and are billed to the buyer at closing.`, true)}
+        ${p(`&bull; <strong style="color:${BRAND_INK};">Buyer's fee — 15% of the sale price.</strong> A fee we charge the buyer for handling the purchase, paperwork and cemetery coordination. It is calculated on the full sale price including the cemetery's transfer fee, is paid on top of that sale price, and is entirely separate from the 15% commission deducted from your side.<br>&bull; <strong style="color:${BRAND_INK};">Cemetery transfer fee${transferFee > 0 ? ` — ${fmtUsd(transferFee)} at ${escapeHtml(cemLabel)}` : ""}.</strong> Charged by the cemetery to move the interment rights into the buyer's name${plotCount > 1 ? ", and charged once per transfer &mdash; if the spaces are sold to more than one buyer, each of those transfers carries its own transfer fee" : ""}.<br>&bull; <strong style="color:${BRAND_INK};">Other cemetery and service charges.</strong> Quitclaim, recording and endowment care fees, plus optional buyer services such as financing, mortuary referral coordination and in-person showings, itemized separately to the buyer.<br>&bull; <strong style="color:${BRAND_INK};">Any other fees or charges properly assessed at closing.</strong> Cemeteries and third parties may assess additional administrative, documentary, notarial or statutory fees in connection with a transfer. Any such amounts, together with any applicable taxes, are the responsibility of the buyer and are billed to the buyer at closing.`, true)}
         ${p(`As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
 
       `)}
