@@ -1769,7 +1769,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                          <div className="flex flex-wrap items-center gap-2">
                          </div>
                          {aiFactsOpen && <div className="divide-y divide-border rounded-md border border-border bg-background/60">{aiFacts.map((fact, index) => <div key={`${fact.label}-${index}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[150px_1fr_auto]"><span className="text-muted-foreground">{fact.label}</span><span className="text-foreground">{fact.value}</span><span className="text-muted-foreground">{fact.source}</span></div>)}</div>}
-                           {(expandedCemetery || editCemeteryInline) && selected.cemetery && <div id={`cemetery-info-${selected.id}`}><CemeteryInfoCard key={`summary-${selected.id}-${editCemeteryInline ? "edit" : "info"}`} canon={_canon(selected.cemetery)} displayName={selected.cemetery} submissionCount={texasCemeteryCounts.get(_canon(selected.cemetery)) || 0} startInEditMode={editCemeteryInline} onClear={() => { setExpandedCemetery(false); setEditCemeteryInline(false); }} /></div>}
                        </div>}
                       </div>
                     </div>
