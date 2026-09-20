@@ -236,6 +236,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("texas");
   const [notesDraft, setNotesDraft] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [autoCompose, setAutoCompose] = useState<{ templateId: string; nonce: number } | null>(null);
   const [buyerOpen, setBuyerOpen] = useState(false);
   const [plotCardsOpen, setPlotCardsOpen] = useState(false);
   // Manual buyer→seller matching search box (buyer workspace).
@@ -2422,6 +2423,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     lawn: (x as any)?.lawn ?? null,
                     transfer_fee_amount: cemeteryProfileFor(selected.cemetery)?.transfer_fee ?? selected.transfer_fee_amount ?? null,
                   } : null}
+                  autoCompose={kind !== "buyer" ? autoCompose : null}
                   onNewEmailSent={() => {}}
                  /></Suspense>
                 </div>
