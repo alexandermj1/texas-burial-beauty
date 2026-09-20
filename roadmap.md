@@ -59,5 +59,7 @@
 ## Cemetery transfer process guide
 - [x] Build Issue 5 from the supplied human-written inheritance article
 - [x] Add legal-source links, diagrams, internal links, and search metadata
-- [ ] Verify desktop/mobile presentation and publish
+- [x] Add a rules-generated complex sample family, signer diagram, and broker pathway
+- [x] Enrich the chapter rail with restrained botanical detail and replace the dark closing panel
+- [x] Verify desktop/mobile presentation and publish
 - [ ] Request Google indexing for the live guide
