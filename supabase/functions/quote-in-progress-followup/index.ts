@@ -96,7 +96,6 @@ Deno.serve(async (req) => {
       if (handled.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "duplicate-person" }); continue; }
       if (guards.advanced.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "further-along-elsewhere" }); continue; }
       if (guards.emailed.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "already-sent" }); continue; }
-      handled.add(email);
 
       // Eligible only when they actually sent us something to value.
       let hasAttachment = Array.isArray(sub.seller_attachments) && sub.seller_attachments.length > 0;
@@ -121,6 +120,7 @@ Deno.serve(async (req) => {
       const recentHuman = (messages ?? []).some((m) => m.received_at > since && isHumanContact(m as ThreadMessage, email));
       if ((notes ?? []).length || recentHuman || (activity ?? []).length) { results.push({ id: sub.id, status: "skipped", reason: "recent-contact" }); continue; }
 
+      handled.add(email);
       if (dryRun) { results.push({ id: sub.id, status: "would-send" }); continue; }
       if (sendAttempts >= BATCH_SIZE) break;
 
