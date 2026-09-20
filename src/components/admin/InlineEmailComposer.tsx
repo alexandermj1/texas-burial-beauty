@@ -36,6 +36,8 @@ interface Props {
   sendLabel?: string;
   /** Optional preset templates to pick from. First one is loaded by default. */
   templates?: EmailTemplate[];
+  /** Force a specific template open on mount (e.g. the seller quote packet). */
+  initialTemplateId?: string | null;
   /** Enables the "Attach payment button" action when set. */
   submissionId?: string | null;
   /** When provided, shows an "Attach plot cards" button (Texas buyer flow only). */
@@ -285,7 +287,13 @@ const InlineEmailComposer = ({
   // clobber the user's reply with a full template. Templates can still be
   // chosen from the picker below.
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
-    inReplyToGmailId ? null : (templates && templates.length ? templates[0].id : null),
+    // A caller can demand a specific pack (e.g. the guided "Build and send
+    // quote" action always opens the seller quote packet) so the broker can
+    // never send a quote without filling in what the agreement and family
+    // tree are generated from.
+    initialTemplateId && templates?.some((t) => t.id === initialTemplateId)
+      ? initialTemplateId
+      : inReplyToGmailId ? null : (templates && templates.length ? templates[0].id : null),
   );
 
   const editorRef = useRef<RichTextEditorHandle | null>(null);
