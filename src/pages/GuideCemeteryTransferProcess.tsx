@@ -7,6 +7,7 @@ import Seo from "@/components/Seo";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
+import transferCemetery from "@/assets/transfer-guide-cemetery.jpg";
 
 const PATH = "/cemetery-transfer-process-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -120,7 +121,7 @@ const GuideCemeteryTransferProcess = () => (
             {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
           </nav>
           <figure className="relative mt-8 min-h-52 overflow-hidden rounded-md md:mt-0">
-            <img src={SPARKMAN_HERO.src} alt="A peaceful memorial garden in Dallas" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={transferCemetery} alt="A peaceful Texas memorial garden" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
             <figcaption className="absolute inset-x-0 bottom-0 bg-foreground/75 px-4 py-3 text-xs leading-relaxed text-background">The cemetery’s own record is where every transfer begins.</figcaption>
           </figure>
         </div>
