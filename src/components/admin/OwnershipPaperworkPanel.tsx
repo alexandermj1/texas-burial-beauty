@@ -45,6 +45,7 @@ type Props = {
   cemetery?: string | null;
   sellerName?: string | null;
   sellerEmail?: string | null;
+  relationshipToOwner?: string | null;
   /** The dedicated seller-workspace tab should reveal its actions immediately. */
   defaultOpen?: boolean;
   /** AI reading only runs once the seller has accepted a quote — it costs money. */
@@ -235,7 +236,7 @@ const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
 
 
 
-export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, defaultOpen = false, quoteAccepted, onSent }: Props) {
+export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, relationshipToOwner, defaultOpen = false, quoteAccepted, onSent }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -2525,19 +2526,42 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         </div>
       ) : (
         <div className="space-y-4">
-          {/* How the two halves fit together, in one line, so it's obvious that the
-              documents (and the POA inside them) come out of the seller's answers. */}
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="px-2 py-1 rounded-full bg-muted font-medium text-foreground">1 · Ask the seller</span>
-            <span className="opacity-60">→</span>
-            <span className={`px-2 py-1 rounded-full ${answers.sellerConfirmedAt ? "bg-muted font-medium text-foreground" : "border border-dashed border-border"}`}>
-              2 · Their answers decide the documents
-            </span>
-            <span className="opacity-60">→</span>
-            <span className={`px-2 py-1 rounded-full ${answers.sellerConfirmedAt ? "bg-muted font-medium text-foreground" : "border border-dashed border-border"}`}>
-              3 · POA fills itself &amp; goes out with the request
-            </span>
-          </div>
+          {(() => {
+            const prepared = ((answers as Record<string, unknown>).autopilot ?? {}) as Record<string, unknown>;
+            const money = (value: unknown) => {
+              const number = Number(value);
+              return Number.isFinite(number) && number > 0
+                ? number.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+                : "—";
+            };
+            const facts = [
+              { label: "Cemetery", value: cemetery || "—" },
+              { label: "Deed owners entered", value: String(prepared.deedOwnerNames || deedNamesRaw || "—") },
+              { label: "Relationship to deed owner", value: relationshipToOwner || "Not provided" },
+              { label: "Selling location", value: String(prepared.plotDescription || "—") },
+              { label: "Plots", value: String(prepared.plotCount || "—") },
+              { label: "County / state", value: String(prepared.countyState || "—") },
+              { label: "Minimum per plot", value: money(prepared.netPerPlot) },
+              { label: "Minimum authorized price", value: money(prepared.authorizedMinTotal) },
+              { label: "Expected sale price per plot", value: money(prepared.salesPricePerPlot) },
+              { label: "Transfer fee per plot", value: money(prepared.transferFee) },
+              { label: "Listing option", value: String(prepared.listingOption || "Not selected yet") },
+            ];
+            return (
+              <div className="rounded-lg border border-border/70 bg-muted/20 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Information used to start this file</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">Saved when the quote and agreement were prepared.</p>
+                  </div>
+                  {prepared.preparedAt && <span className="text-[10px] text-muted-foreground">{new Date(String(prepared.preparedAt)).toLocaleDateString()}</span>}
+                </div>
+                <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                  {facts.map((fact) => <div key={fact.label} className={fact.label === "Selling location" ? "sm:col-span-2" : ""}><dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{fact.label}</dt><dd className="mt-0.5 text-xs font-medium text-foreground">{fact.value}</dd></div>)}
+                </dl>
+              </div>
+            );
+          })()}
 
           {/* ── The seller's own confirmation ──
               We no longer guess the ownership answers here. The seller fills in
@@ -2683,15 +2707,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               <p className="text-xs font-medium text-foreground">{outstanding.length ? `${outstanding.length} item${outstanding.length === 1 ? "" : "s"} still needed from the seller` : "No documents are currently outstanding"}</p>
             </div>
 
-
-            {/* Where this list comes from, in plain words. */}
-            <p className="text-[11px] text-muted-foreground bg-muted/50 rounded px-2 py-1.5">
-              {answers.sellerConfirmedAt
-                ? "Built from the seller's family confirmation above. The power of attorney fills itself in from those same answers and is attached to the document request — nothing for them to complete by hand."
-                : documentRequirements.length > 0
-                  ? "Provisional list. It will be rebuilt from the seller's family confirmation once it comes back, and the power of attorney fills itself from those answers."
-                  : "Nothing to request yet — send the family confirmation above first, and the documents (plus a pre-filled power of attorney) follow from the seller's answers."}
-            </p>
 
             {requestedAt && outstanding.length > 0 && (
               <div className="flex flex-col gap-2 rounded-md border border-border/70 bg-card px-3 py-2 sm:flex-row sm:items-center sm:justify-between">

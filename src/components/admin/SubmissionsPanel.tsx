@@ -1689,7 +1689,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                           {!ftState(selected).doneAt && <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>}
                           {!ftState(selected).doneAt && seller.deed_owners_status && <Fact label="Owner status">{seller.deed_owners_status}</Fact>}
-                          {!ftState(selected).doneAt && seller.relationship_to_owner && <Fact label="Relationship to owners">{seller.relationship_to_owner}</Fact>}
+                          <Fact label="Relationship to deed owner">{seller.relationship_to_owner || "Not provided"}</Fact>
                           <Fact label="Added information from form" wide>{info}</Fact>
                         </div>
                       </div>
@@ -3009,6 +3009,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     cemetery={selected.cemetery}
                     sellerEmail={selected.email}
                     sellerName={selected.name}
+                    relationshipToOwner={(selected as any).relationship_to_owner}
                     defaultOpen
                     quoteAccepted={(selected as any).quote_response === "accepted"}
                     onSent={() => onRefresh?.()}
