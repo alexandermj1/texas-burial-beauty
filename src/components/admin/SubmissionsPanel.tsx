@@ -3873,7 +3873,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       {selected && (
         <>
           <SendQuoteDialog
-            submission={selected}
+            submission={(() => {
+              const answers = (selected.ownership_answers ?? {}) as Record<string, any>;
+              const savedAutopilotLocation = String(answers.autopilot?.plotDescription || "").trim();
+              const hasOfficeVerifiedLocation = savedAutopilotLocation && savedAutopilotLocation === String(selected.plot_description || "").trim();
+              const deedLocation = ["Section", "Block", "Lot", "Space", "Plot type"]
+                .map((label) => aiFacts.find((fact) => fact.label === label))
+                .filter((fact): fact is AiFact => Boolean(fact))
+                .map((fact) => `${fact.label} ${fact.value}`)
+                .join(" · ");
+              return hasOfficeVerifiedLocation || !deedLocation
+                ? selected
+                : { ...selected, plot_description: deedLocation };
+            })()}
             open={quoteOpen}
             onClose={() => setQuoteOpen(false)}
             onSave={onUpdate}
