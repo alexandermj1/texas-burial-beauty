@@ -25,3 +25,30 @@ export const cemeteryCanon = (raw: string | null | undefined): string => {
 };
 
 export default cemeteryCanon;
+
+/**
+ * Several rows can share one canonical key ("Restland Memorial Park" and
+ * "Restland Funeral Home & Cemetery (Plano)"). Pick the row that actually holds
+ * the profile we maintain: an exact name match first, otherwise the row with
+ * the most recorded detail — never an empty duplicate.
+ */
+export const pickBestCemeteryProfile = <T extends Record<string, any>>(
+  rows: T[] | null | undefined,
+  rawName: string,
+): T | null => {
+  const canon = cemeteryCanon(rawName);
+  if (!canon) return null;
+  const matches = (rows || []).filter((r) => cemeteryCanon(r?.name) === canon);
+  if (!matches.length) return null;
+  const wanted = String(rawName).trim().toLowerCase();
+  const exact = matches.find((r) => String(r?.name ?? "").trim().toLowerCase() === wanted);
+  if (exact) return exact;
+  const score = (r: T) =>
+    (Array.isArray(r?.sections) ? r.sections.length : 0) * 3 +
+    (r?.contact_phone ? 2 : 0) + (r?.transfer_fee != null ? 2 : 0) +
+    (r?.typical_prices ? 2 : 0) + (r?.process_info ? 1 : 0) +
+    (r?.description ? 1 : 0) + (r?.address ? 1 : 0) +
+    (r?.contact_name ? 1 : 0) + (r?.contact_email ? 1 : 0) +
+    (r?.notes ? 1 : 0) + (r?.auto_created ? 0 : 1);
+  return [...matches].sort((a, b) => score(b) - score(a))[0] ?? null;
+};
