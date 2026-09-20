@@ -258,6 +258,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [requestExplanation, setRequestExplanation] = useState("");
   const [explanationError, setExplanationError] = useState("");
   const [explaining, setExplaining] = useState(false);
+  const [familyDetailsOpen, setFamilyDetailsOpen] = useState(false);
+  const [sellerAnswersOpen, setSellerAnswersOpen] = useState(false);
   const [files, setFiles] = useState<AnyFile[]>([]);
   /** Signed preview URLs for image uploads, keyed by storage path. */
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
@@ -2541,21 +2543,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               We no longer guess the ownership answers here. The seller fills in
               their own page, and the documents follow from what comes back. */}
           <div id="family-confirmation-workflow" className="border rounded-lg p-3 bg-background/60 space-y-3 scroll-mt-28">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-semibold flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Step 1 · Family confirmation
               </span>
-              <Button
-                size="sm" variant="outline" className="h-7 text-[11px]"
-                onClick={openAsk}
-                title="Type the deed names, then email the seller their own page"
-              >
-                <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="ghost" className="h-8 text-[11px]" onClick={() => setFamilyDetailsOpen(v => !v)}>
+                  {familyDetailsOpen ? "Hide details" : "View details"}<ChevronDown className={`ml-1 h-3.5 w-3.5 transition-transform ${familyDetailsOpen ? "rotate-180" : ""}`} />
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 text-[11px]" onClick={openAsk} title="Type the deed names, then email the seller their own page">
+                  <Send className="w-3.5 h-3.5 mr-1" /> Ask the seller
+                </Button>
+              </div>
             </div>
 
-
-            {answers.sellerConfirmedAt ? (
+            {familyDetailsOpen && (answers.sellerConfirmedAt ? (
               <div className="rounded-md border border-emerald-200 bg-emerald-50/70 px-2.5 py-2">
                 <p className="text-[11px] text-emerald-900 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
@@ -2575,22 +2577,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                 Send the seller their family confirmation page. Once it comes back, the people below and the
                 documents they need follow from their answers.
               </p>
-            )}
+            ))}
           </div>
 
 
           {/* ── Exactly what the seller selected on their page ── */}
           {(answers as Record<string, unknown>).v2 ? (
-            <div className="border rounded-lg p-3 bg-background/60 space-y-2">
-              <span className="text-xs font-semibold flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-muted-foreground" /> The seller's answers
-              </span>
-              <SellerAnswersSummary
+            <div className="border rounded-lg bg-background/60">
+              <button type="button" className="flex w-full items-center justify-between gap-3 p-3 text-left" onClick={() => setSellerAnswersOpen(v => !v)}>
+                <span className="text-xs font-semibold flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-muted-foreground" /> The seller's answers</span>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${sellerAnswersOpen ? "rotate-180" : ""}`} />
+              </button>
+              {sellerAnswersOpen && <div className="border-t border-border/60 p-3"><SellerAnswersSummary
                 v2={(answers as Record<string, unknown>).v2 as V2State}
                 people={(answers.people ?? []) as { name: string; relationship?: string; deceased?: boolean }[]}
                 notes={(answers as { sellerNotes?: string }).sellerNotes}
                 deedNames={deedNamesRaw}
-              />
+              /></div>}
             </div>
           ) : null}
 
