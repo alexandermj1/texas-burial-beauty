@@ -56,9 +56,11 @@ interface Props {
     lawn?: string | null;
     transfer_fee_amount?: number | string | null;
   } | null;
+  /** When this changes, open a new email pre-loaded with the given template. */
+  autoCompose?: { templateId: string; nonce: number } | null;
 }
 
-const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext, sellerContext }: Props) => {
+const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newEmailTemplates, onNewEmailSent, buyerContext, sellerContext, autoCompose }: Props) => {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
