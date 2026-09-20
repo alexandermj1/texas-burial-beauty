@@ -111,7 +111,13 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // The cemetery's profile (phone number above all) — quoting usually needs a
   // call to the cemetery first, so their details sit at the top of the pack.
   const [cemProfile, setCemProfile] = useState<any>(null);
-  const [cemOpen, setCemOpen] = useState(false);
+  const [cemOpen, setCemOpen] = useState(true);
+  // A price the broker was just quoted on the phone, saved straight onto the
+  // cemetery profile so the next quote already has it.
+  const [sectionDraft, setSectionDraft] = useState<{ name: string; property_type: string; price: string }>({
+    name: "", property_type: "", price: "",
+  });
+  const [savingSection, setSavingSection] = useState(false);
   // The exact emails the seller will receive after they accept — prepared with
   // the very same builders the standalone buttons use, so nothing differs.
   const [agreementEmailHtml, setAgreementEmailHtml] = useState<string>("");
@@ -165,7 +171,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
     (async () => {
       const { data } = await supabase
         .from("texas_cemeteries" as any)
-        .select("name, city, address, contact_name, contact_phone, contact_email, transfer_fee, typical_prices, process_info, website");
+        .select("id, name, city, address, contact_name, contact_phone, contact_email, transfer_fee, typical_prices, process_info, website, description, sections");
       if (cancelled) return;
       const canon = cemeteryCanon(name);
       setCemProfile(((data as any[]) || []).find((r) => cemeteryCanon(r.name) === canon) ?? null);
