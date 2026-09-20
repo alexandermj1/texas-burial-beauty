@@ -5,8 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
-import transferCemetery from "@/assets/transfer-guide-cemetery.jpg";
-import transferCemeteryRecords from "@/assets/transfer-guide-cemetery-records.jpg";
+import restlandLawn from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
+import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
 
 const PATH = "/cemetery-transfer-process-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -120,7 +120,7 @@ const GuideCemeteryTransferProcess = () => (
             {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
           </nav>
           <figure className="relative mt-8 min-h-52 overflow-hidden rounded-md md:mt-0">
-            <img src={transferCemetery} alt="A peaceful Texas memorial garden" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={restlandLawn.url} alt="The lawn at Restland Memorial Park in Dallas" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
             <figcaption className="absolute inset-x-0 bottom-0 bg-foreground/75 px-4 py-3 text-xs leading-relaxed text-background">The cemetery’s own record is where every transfer begins.</figcaption>
           </figure>
         </div>
@@ -200,7 +200,7 @@ const GuideCemeteryTransferProcess = () => (
         </Section>
 
         <div className="my-4 grid gap-4 sm:grid-cols-2">
-          {[{src:transferCemeteryRecords,alt:'A fountain and memorial garden in a Texas cemetery',name:'The cemetery record is the starting point',caption:'Every transfer begins by confirming exactly how the cemetery has the ownership recorded.'},{src:transferCemetery,alt:'A tree-lined Texas memorial garden with flat bronze markers',name:'The cemetery is also the gatekeeper',caption:'Its forms, fees and consent requirements decide what will be accepted and recorded.'}].map((p)=><figure key={p.name} className="overflow-hidden rounded-lg border border-border bg-card"><img src={p.src} alt={p.alt} width={1536} height={1024} className="aspect-[16/10] w-full object-cover" loading="lazy"/><figcaption className="p-5"><p className="font-display text-xl text-foreground">{p.name}</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.caption}</p></figcaption></figure>)}
+          {[{src:resthavenOakPath.url,alt:'Oak-lined path at Resthaven Memorial Park in Texas',name:'The cemetery record is the starting point',caption:'Every transfer begins by confirming exactly how the cemetery has the ownership recorded.'},{src:restlandLawn.url,alt:'The lawn at Restland Memorial Park in Dallas',name:'The cemetery is also the gatekeeper',caption:'Its forms, fees and consent requirements decide what will be accepted and recorded.'}].map((p)=><figure key={p.name} className="overflow-hidden rounded-lg border border-border bg-card"><img src={p.src} alt={p.alt} width={1536} height={1024} className="aspect-[16/10] w-full object-cover" loading="lazy"/><figcaption className="p-5"><p className="font-display text-xl text-foreground">{p.name}</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.caption}</p></figcaption></figure>)}
         </div>
 
         <Section id="estates-code" num="IV" eyebrow="Authority two" title="The Texas Estates Code">
