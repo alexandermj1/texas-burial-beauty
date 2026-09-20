@@ -1714,16 +1714,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </div>
                       </div>
                       <div className="border-t border-border pt-4">
-                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pricing & listing</p>
-                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
-                          {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee (once)",v:fmtMoney(figures.transferFee)},{l:"Quoted per space (incl. fee)",v:fmtMoney(quotePerPlot)},{l:"Our resale price per plot",v:fmtMoney(resalePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
-                        </div>
-                        {figures.hasQuote && <div className="mb-3 rounded-lg border border-border/70 bg-muted/20 p-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Exactly as quoted to the seller</p>
-                          <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{figures.headline}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">Authorized minimum net of the transfer fee: {fmtMoney(figures.netPerSpace)} per space{plotCount > 1 ? ` · ${fmtMoney(figures.netTotal)} across all ${plotCount} spaces` : ""}. Reminder emails quote the same figures.</p>
-                        </div>}
-                        {plotCount > 1 && resaleTotal > 0 && <p className="mb-3 text-xs text-muted-foreground">Our resale across all {plotCount} plots: {fmtMoney(resaleTotal)}</p>}
+                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pricing & listing</p>
+                          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
+                           {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee (once)",v:fmtMoney(figures.transferFee)},{l:"Quoted per space (incl. fee)",v:fmtMoney(quotePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
+                         </div>
+                         {figures.hasQuote && <div className="mb-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+                           <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Exactly as quoted to the seller</p>
+                           <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{figures.headline}</p>
+                           <p className="mt-1 text-xs text-muted-foreground">Authorized minimum net of the transfer fee: {fmtMoney(figures.netPerSpace)} per space{plotCount > 1 ? ` · ${fmtMoney(figures.netTotal)} across all ${plotCount} spaces` : ""}. Reminder emails quote the same figures.</p>
+                         </div>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
