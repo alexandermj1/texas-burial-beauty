@@ -3,7 +3,7 @@
 // since, send a polite reminder asking for a photo or scan of the deed.
 import {
   BATCH_SIZE, OUR_EMAIL, PHONE_HREF, PHONE_LABEL, SITE, authorize, brandedEmail, cors, esc,
-  firstNameOf, gmailSend, isHumanContact, loadEnv, mimeMessage, realThread, respond,
+  firstNameOf, gmailSend, isHumanContact, loadEnv, mimeMessage, personGuards, realThread, respond,
   threadHeaders, type ThreadMessage,
 } from "../_shared/autoFollowup.ts";
 
@@ -85,10 +85,17 @@ Deno.serve(async (req) => {
     if (onlyId) query = query.eq("id", onlyId);
     const { data: submissions, error } = await query;
     if (error) throw error;
+    const guards = await personGuards(db, TYPE);
+    const handled = new Set<string>();
 
     for (const sub of submissions ?? []) {
       const email = String(sub.email ?? "").trim().toLowerCase();
       if (!email.includes("@")) continue;
+      // One person, one email — duplicates of the same seller are skipped, and
+      // so is anyone whose other submission has already been quoted or closed.
+      if (handled.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "duplicate-person" }); continue; }
+      if (guards.advanced.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "further-along-elsewhere" }); continue; }
+      if (guards.emailed.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "already-sent" }); continue; }
 
       // Only people who still have nothing on file.
       let hasAttachment = Array.isArray(sub.seller_attachments) && sub.seller_attachments.length > 0;
@@ -111,6 +118,7 @@ Deno.serve(async (req) => {
       const recentHuman = (messages ?? []).some((m) => m.received_at > since && isHumanContact(m as ThreadMessage, email));
       if ((notes ?? []).length || recentHuman || (activity ?? []).length) { results.push({ id: sub.id, status: "skipped", reason: "recent-contact" }); continue; }
 
+      handled.add(email);
       if (dryRun) { results.push({ id: sub.id, status: "would-send" }); continue; }
       if (sendAttempts >= BATCH_SIZE) break;
 

@@ -1483,17 +1483,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const focusSplit = !isMobile && listCollapsed;
     const seller = selected as any;
     const sellerStage = effStep(selected);
+    // Each stage carries its own colour, so the page quietly takes on the shade
+    // of wherever this seller actually is instead of being green throughout.
     const sellerStages = [
-      { label: "No attachments", icon: FileX },
-      { label: "Attachments", icon: Paperclip },
-      { label: "Quoted", icon: DollarSign },
-      { label: "Accepted", icon: CheckCircle },
-      { label: "Tree sent", icon: Send },
-      { label: "Tree done", icon: Users },
-      { label: "Docs out", icon: FileText },
-      { label: "Docs returned", icon: FileCheck },
-      { label: "Complete", icon: Sparkles },
+      { label: "No attachments", icon: FileX, tone: "nodocs" },
+      { label: "Attachments", icon: Paperclip, tone: "new" },
+      { label: "Quoted", icon: DollarSign, tone: "quote" },
+      { label: "Accepted", icon: CheckCircle, tone: "docs" },
+      { label: "Tree sent", icon: Send, tone: "followup" },
+      { label: "Tree done", icon: Users, tone: "followup" },
+      { label: "Docs out", icon: FileText, tone: "quote" },
+      { label: "Docs returned", icon: FileCheck, tone: "new" },
+      { label: "Complete", icon: Sparkles, tone: "docs" },
     ];
+    const stageTone = sellerStages[sellerStage - 1]?.tone ?? "new";
+    const toneVar = (suffix: string) => `hsl(var(--status-${stageTone}${suffix}))`;
+    const needsAttention = !!awaitingAll[selected.id];
     const openWorkspaceAt = (tab: "email" | "paperwork" | "notes" | "files", anchor: string) => {
       setPendingWorkspaceAnchor(anchor);
       setSellerWorkspaceTab(tab);
@@ -1676,7 +1681,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                    <div className="grid grid-cols-1 lg:grid-cols-[minmax(230px,0.72fr)_minmax(0,2fr)]">
                     <aside className="border-b border-border/70 bg-muted/35 p-5 lg:border-b-0 lg:border-r sm:p-6">
                        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Current stage</p>
-                       {(() => { const CurrentIcon = sellerStages[sellerStage - 1]?.icon || Inbox; return <div className="rounded-lg border border-primary/25 bg-primary/[0.06] p-3"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground"><CurrentIcon className="h-4 w-4" /></span><div><p className="text-sm font-semibold text-foreground">{sellerStages[sellerStage - 1]?.label}</p><p className="text-[10px] text-muted-foreground">Step {sellerStage} of {sellerStages.length}</p></div></div><p className="mt-3 text-xs leading-relaxed text-muted-foreground">{guidedAction.hint}</p><Button type="button" size="sm" className="mt-3 h-auto min-h-9 w-full justify-start whitespace-normal px-3 py-2 text-left leading-snug" onClick={guidedAction.run}><GuidedActionIcon className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1">{guidedAction.label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0" /></Button></div>; })()}
+                       {(() => { const CurrentIcon = sellerStages[sellerStage - 1]?.icon || Inbox; return (
+                         <div className="rounded-xl border p-3.5" style={{ borderColor: toneVar("-border"), backgroundColor: toneVar("-soft") }}>
+                           <div className="flex items-center gap-2.5">
+                             <span className="grid h-8 w-8 place-items-center rounded-full text-white" style={{ backgroundColor: toneVar("") }}><CurrentIcon className="h-4 w-4" /></span>
+                             <div><p className="text-sm font-semibold" style={{ color: toneVar("-fg") }}>{sellerStages[sellerStage - 1]?.label}</p><p className="text-[10px] opacity-70" style={{ color: toneVar("-fg") }}>Step {sellerStage} of {sellerStages.length}</p></div>
+                           </div>
+                           <p className="mt-3 text-xs leading-relaxed opacity-80" style={{ color: toneVar("-fg") }}>{guidedAction.hint}</p>
+                           <Button type="button" size="sm" style={{ backgroundColor: toneVar(""), color: "#fff" }} className={`mt-3 h-auto min-h-9 w-full justify-start whitespace-normal px-3 py-2 text-left leading-snug transition-transform duration-200 hover:brightness-110 active:scale-[0.98] ${needsAttention ? "animate-attention" : ""}`} onClick={guidedAction.run}><GuidedActionIcon className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1">{guidedAction.label}</span><ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0" /></Button>
+                           {needsAttention && <p className="mt-2 text-[10px] font-medium" style={{ color: "hsl(var(--status-reply))" }}>Waiting on a reply from us</p>}
+                         </div>
+                       ); })()}
                       <div className="mt-3 border-t border-border pt-3">
                          <Button type="button" size="sm" variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setManualStageOpen(v => !v)}><Pencil className="h-3.5 w-3.5" />Correct stage</Button>
                          {manualStageOpen && <div className="mt-1 grid gap-1 rounded-md border border-border bg-background p-2 shadow-sm">
@@ -1727,14 +1742,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                            <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{figures.headline}</p>
                            <p className="mt-1 text-xs text-muted-foreground">Authorized minimum net of the transfer fee: {fmtMoney(figures.netPerSpace)} per space{plotCount > 1 ? ` · ${fmtMoney(figures.netTotal)} across all ${plotCount} spaces` : ""}. Reminder emails quote the same figures.</p>
                           </div>}
-                          {figures.hasQuote && <div className="mb-4 rounded-xl border border-primary/25 bg-primary/[0.04] p-4">
-                            <div className="flex flex-wrap items-end justify-between gap-3">
-                              <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Sales price the buyer pays</p>
-                                <p className="mt-1 font-display text-2xl text-foreground">{fmtMoney(figures.buyerPriceTotal)}{plotCount > 1 ? <span className="ml-1 text-sm text-muted-foreground">for all {plotCount} spaces</span> : null}</p>
-                              </div>
-                              <p className="text-xs text-muted-foreground">{fmtMoney(figures.netTotal)} authorized + {fmtMoney(figures.transferFee)} transfer fee + {fmtMoney(figures.buyerPremiumTotal)} buyer's 15%{figures.buyerFeesTotal > 0 ? ` + ${fmtMoney(figures.buyerFeesTotal)} added fees` : ""}</p>
-                            </div>
+                          {/* Only relevant once they have accepted — before that the buyer price is noise. */}
+                          {figures.hasQuote && seller.quote_response === "accepted" && <details className="group mb-4 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5">
+                            <summary className="flex cursor-pointer flex-wrap items-baseline gap-x-2 gap-y-0.5 list-none">
+                              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Buyer pays</span>
+                              <span className="text-sm font-semibold text-foreground">{fmtMoney(figures.buyerPriceTotal)}</span>
+                              <span className="text-xs text-muted-foreground">{plotCount > 1 ? `for all ${plotCount} spaces · ` : ""}includes fees</span>
+                              <ChevronRight className="ml-auto h-3.5 w-3.5 self-center text-muted-foreground transition-transform group-open:rotate-90" />
+                            </summary>
+                            <p className="mt-2 text-xs text-muted-foreground">{fmtMoney(figures.netTotal)} authorized + {fmtMoney(figures.transferFee)} transfer fee + {fmtMoney(figures.buyerPremiumTotal)} buyer's 15%{figures.buyerFeesTotal > 0 ? ` + ${fmtMoney(figures.buyerFeesTotal)} added fees` : ""}</p>
                             {figures.buyerFees.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">
                               {figures.buyerFees.map(fee => (
                                 <button key={fee.id} type="button" onClick={() => saveBuyerFees(figures.buyerFees.filter(f => f.id !== fee.id))} className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground" title="Remove this fee">
@@ -1758,7 +1774,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted"><Plus className="h-3 w-3" />Other fee…</button>
                             </div>
                             <p className="mt-2 text-[11px] text-muted-foreground">Added fees are charged once to the buyer and never reduce the seller's proceeds.</p>
-                          </div>}
+                          </details>}
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>

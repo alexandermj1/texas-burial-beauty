@@ -137,3 +137,38 @@ export const authorize = async (db: SupabaseClient, req: Request, job: string, a
   const { data: role } = await db.from("user_roles").select("role").eq("user_id", authData.user.id).in("role", ["admin", "staff"]).limit(1).maybeSingle();
   return Boolean(role);
 };
+
+// One person, one email. Sellers often submit the form several times, so the
+// pipeline treats one email address as one person. These guards mirror that:
+// nobody is written to twice, and nobody is written to when any of their other
+// submissions has already moved past this point.
+export type PersonGuards = {
+  advanced: Set<string>;   // emails that already have a quote / acceptance / sale somewhere
+  emailed: Set<string>;    // emails that already received this particular automatic email
+  emailOf: Map<string, string>;
+};
+
+export const personGuards = async (db: SupabaseClient, type: string): Promise<PersonGuards> => {
+  const advanced = new Set<string>();
+  const emailed = new Set<string>();
+  const emailOf = new Map<string, string>();
+
+  const { data: all } = await db.from("contact_submissions")
+    .select("id,email,quote_sent_at,quote_response,closed_at,sold_at,archived_at")
+    .is("deleted_at", null).limit(5000);
+  for (const row of all ?? []) {
+    const email = String(row.email ?? "").trim().toLowerCase();
+    if (!email.includes("@")) continue;
+    emailOf.set(row.id as string, email);
+    if (row.quote_sent_at || row.quote_response === "accepted" || row.closed_at || row.sold_at || row.archived_at) advanced.add(email);
+  }
+
+  const { data: logs } = await db.from("reminder_log")
+    .select("submission_id").eq("reminder_type", type).in("status", ["sent", "processing"])
+    .is("deleted_at", null).limit(5000);
+  for (const log of logs ?? []) {
+    const email = emailOf.get(log.submission_id as string);
+    if (email) emailed.add(email);
+  }
+  return { advanced, emailed, emailOf };
+};
