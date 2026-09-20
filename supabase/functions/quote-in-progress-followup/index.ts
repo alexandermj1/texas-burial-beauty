@@ -89,7 +89,9 @@ Deno.serve(async (req) => {
     }
 
     const nowMs = Date.now();
-    const waitCutoff = new Date(nowMs - WAIT_DAYS * 86_400_000).toISOString();
+    // Three business days can span at most seven calendar days; the query
+    // over-fetches and the per-person check below enforces the real rule.
+    const waitCutoff = new Date(nowMs - 7 * 86_400_000).toISOString();
     let query = db.from("contact_submissions")
       .select("id,name,email,cemetery,created_at,customer_profile_id,seller_attachments")
       .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
@@ -110,6 +112,9 @@ Deno.serve(async (req) => {
       if (handled.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "duplicate-person" }); continue; }
       if (guards.advanced.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "further-along-elsewhere" }); continue; }
       if (guards.emailed.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "already-sent" }); continue; }
+
+      // Three days after we received their paperwork, not counting weekends.
+      if (businessDaysElapsed(String(sub.created_at), nowMs) < WAIT_BUSINESS_DAYS) { results.push({ id: sub.id, status: "skipped", reason: "within-three-business-days" }); continue; }
 
       // Eligible only when they actually sent us something to value.
       let hasAttachment = Array.isArray(sub.seller_attachments) && sub.seller_attachments.length > 0;
