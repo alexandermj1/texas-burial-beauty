@@ -172,15 +172,17 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
       {composeNew && replyTarget && (
         <div className="border-b border-border bg-muted/20 p-3">
           <InlineEmailComposer
+            key={forcedTemplateId ?? "new"}
             to={replyTarget}
             defaultSubject={cemetery ? `Regarding your inquiry: ${cemetery}` : "Regarding your inquiry"}
             recipientName={customerName}
             templates={newEmailTemplates}
+            initialTemplateId={forcedTemplateId}
             submissionId={submissionId}
             buyerContext={buyerContext ?? undefined}
             sellerContext={sellerContext ?? undefined}
-            onSent={(meta) => { setComposeNew(false); onNewEmailSent?.(meta); refresh(); }}
-            onCancel={() => setComposeNew(false)}
+            onSent={(meta) => { setComposeNew(false); setForcedTemplateId(null); onNewEmailSent?.(meta); refresh(); }}
+            onCancel={() => { setComposeNew(false); setForcedTemplateId(null); }}
           />
         </div>
       )}
