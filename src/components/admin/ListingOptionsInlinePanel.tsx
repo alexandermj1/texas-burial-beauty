@@ -108,6 +108,10 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   const [countyState, setCountyState] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  // The cemetery's profile (phone number above all) — quoting usually needs a
+  // call to the cemetery first, so their details sit at the top of the pack.
+  const [cemProfile, setCemProfile] = useState<any>(null);
+  const [cemOpen, setCemOpen] = useState(false);
   // The exact emails the seller will receive after they accept — prepared with
   // the very same builders the standalone buttons use, so nothing differs.
   const [agreementEmailHtml, setAgreementEmailHtml] = useState<string>("");
