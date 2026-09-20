@@ -57,7 +57,7 @@
 - [x] Verify cemetery and selling-location updates across unsigned documents, request email, and seller pages
 
 ## Cemetery transfer process guide
-- [ ] Build Issue 5 from the supplied human-written inheritance article
-- [ ] Add legal-source links, diagrams, internal links, and search metadata
+- [x] Build Issue 5 from the supplied human-written inheritance article
+- [x] Add legal-source links, diagrams, internal links, and search metadata
 - [ ] Verify desktop/mobile presentation and publish
 - [ ] Request Google indexing for the live guide

@@ -115,4 +115,11 @@ export const STATIC_ROUTES: RouteMeta[] = [
       "Texas cemetery plot prices by city, the fees cemeteries add on top, what resale spaces actually sell for, and how much cemetery brokers charge.",
     type: "article",
   },
+  {
+    path: "/cemetery-transfer-process-texas",
+    title: "Who Owns an Inherited Cemetery Plot in Texas?",
+    description:
+      "Who inherits a Texas cemetery plot, who must sign its transfer, and how spousal rights, heirs and cemetery rules work together.",
+    type: "article",
+  },
 ];
