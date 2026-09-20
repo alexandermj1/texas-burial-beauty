@@ -1742,14 +1742,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                            <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{figures.headline}</p>
                            <p className="mt-1 text-xs text-muted-foreground">Authorized minimum net of the transfer fee: {fmtMoney(figures.netPerSpace)} per space{plotCount > 1 ? ` · ${fmtMoney(figures.netTotal)} across all ${plotCount} spaces` : ""}. Reminder emails quote the same figures.</p>
                           </div>}
-                          {figures.hasQuote && <div className="mb-4 rounded-xl border border-primary/25 bg-primary/[0.04] p-4">
-                            <div className="flex flex-wrap items-end justify-between gap-3">
-                              <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Sales price the buyer pays</p>
-                                <p className="mt-1 font-display text-2xl text-foreground">{fmtMoney(figures.buyerPriceTotal)}{plotCount > 1 ? <span className="ml-1 text-sm text-muted-foreground">for all {plotCount} spaces</span> : null}</p>
-                              </div>
-                              <p className="text-xs text-muted-foreground">{fmtMoney(figures.netTotal)} authorized + {fmtMoney(figures.transferFee)} transfer fee + {fmtMoney(figures.buyerPremiumTotal)} buyer's 15%{figures.buyerFeesTotal > 0 ? ` + ${fmtMoney(figures.buyerFeesTotal)} added fees` : ""}</p>
-                            </div>
+                          {/* Only relevant once they have accepted — before that the buyer price is noise. */}
+                          {figures.hasQuote && seller.quote_response === "accepted" && <details className="group mb-4 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5">
+                            <summary className="flex cursor-pointer flex-wrap items-baseline gap-x-2 gap-y-0.5 list-none">
+                              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Buyer pays</span>
+                              <span className="text-sm font-semibold text-foreground">{fmtMoney(figures.buyerPriceTotal)}</span>
+                              <span className="text-xs text-muted-foreground">{plotCount > 1 ? `for all ${plotCount} spaces · ` : ""}includes fees</span>
+                              <ChevronRight className="ml-auto h-3.5 w-3.5 self-center text-muted-foreground transition-transform group-open:rotate-90" />
+                            </summary>
+                            <p className="mt-2 text-xs text-muted-foreground">{fmtMoney(figures.netTotal)} authorized + {fmtMoney(figures.transferFee)} transfer fee + {fmtMoney(figures.buyerPremiumTotal)} buyer's 15%{figures.buyerFeesTotal > 0 ? ` + ${fmtMoney(figures.buyerFeesTotal)} added fees` : ""}</p>
                             {figures.buyerFees.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">
                               {figures.buyerFees.map(fee => (
                                 <button key={fee.id} type="button" onClick={() => saveBuyerFees(figures.buyerFees.filter(f => f.id !== fee.id))} className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground" title="Remove this fee">
