@@ -8,6 +8,7 @@ import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
 import transferCemetery from "@/assets/transfer-guide-cemetery.jpg";
+import transferCemeteryRecords from "@/assets/transfer-guide-cemetery-records.jpg";
 
 const PATH = "/cemetery-transfer-process-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -201,7 +202,7 @@ const GuideCemeteryTransferProcess = () => (
         </Section>
 
         <div className="my-4 grid gap-4 sm:grid-cols-2">
-          {[{src:SPARKMAN_HERO.src,alt:'Fountain garden at Sparkman-Hillcrest Memorial Park in Dallas',name:'The cemetery record is the starting point',caption:'Every transfer begins by confirming exactly how the cemetery has the ownership recorded.'},{src:BLUEBONNET_HERO.src,alt:'Lake and memorial gardens at Bluebonnet Hills Memorial Park in Colleyville',name:'The cemetery is also the gatekeeper',caption:'Its forms, fees and consent requirements decide what will be accepted and recorded.'}].map((p)=><figure key={p.name} className="overflow-hidden rounded-lg border border-border bg-card"><img src={p.src} alt={p.alt} className="aspect-[16/10] w-full object-cover" loading="lazy"/><figcaption className="p-5"><p className="font-display text-xl text-foreground">{p.name}</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.caption}</p></figcaption></figure>)}
+          {[{src:transferCemeteryRecords,alt:'A fountain and memorial garden in a Texas cemetery',name:'The cemetery record is the starting point',caption:'Every transfer begins by confirming exactly how the cemetery has the ownership recorded.'},{src:transferCemetery,alt:'A tree-lined Texas memorial garden with flat bronze markers',name:'The cemetery is also the gatekeeper',caption:'Its forms, fees and consent requirements decide what will be accepted and recorded.'}].map((p)=><figure key={p.name} className="overflow-hidden rounded-lg border border-border bg-card"><img src={p.src} alt={p.alt} width={1536} height={1024} className="aspect-[16/10] w-full object-cover" loading="lazy"/><figcaption className="p-5"><p className="font-display text-xl text-foreground">{p.name}</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.caption}</p></figcaption></figure>)}
         </div>
 
         <Section id="estates-code" num="IV" eyebrow="Authority two" title="The Texas Estates Code">
