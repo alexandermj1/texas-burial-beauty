@@ -694,7 +694,18 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
                 onChange={(e) => { setNetPerPlot(e.target.value); setNetTouched(true); }}
                 placeholder="55% of retail" className={inputCls}
               />
-              <p className="text-[9px] text-muted-foreground mt-1">55% of retail, rounded to $100.</p>
+              {exceedsBuyerCeiling(nppNum, retailNum, feeNum) ? (
+                <p className="text-[9px] text-destructive mt-1">
+                  Too high — with the {fmtUsd(feeNum)} transfer fee and the 15% buyer's fee the buyer pays{" "}
+                  {fmtUsd(buyerPriceFromNet(nppNum, feeNum))}, which is{" "}
+                  {Math.round((buyerPriceFromNet(nppNum, feeNum) / retailNum) * 100)}% of retail. Max{" "}
+                  {fmtUsd(suggestedNetPerSpace(retailNum, feeNum))}.
+                </p>
+              ) : (
+                <p className="text-[9px] text-muted-foreground mt-1">
+                  55% of retail, capped so the buyer never pays over {Math.round(MAX_BUYER_PCT_OF_RETAIL * 100)}% of retail.
+                </p>
+              )}
             </div>
             <div>
               <label className={labelCls}># of plots</label>
