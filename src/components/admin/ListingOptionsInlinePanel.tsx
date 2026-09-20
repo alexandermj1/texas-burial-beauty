@@ -568,6 +568,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
             </>
           ) : nppNum > 0 && !deedOwnersClean ? (
             "Add the names exactly as they appear on the deed before sending."
+          ) : nppNum > 0 && plotDescription.trim().length <= 2 ? (
+            "Write the exact plots being sold — the agreement and family tree are built from it."
           ) : (
             "Enter the retail price per plot — the quote and sales price will auto-calculate."
           )}
