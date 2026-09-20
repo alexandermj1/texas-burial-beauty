@@ -342,33 +342,7 @@ export default function DeedNameChecker({ submissionId, onUseNames }: Props) {
         </div>
       </div>
 
-      {/* What the customer told us on the form, so it can be checked against the deed. */}
-      {(customer.name || customer.typedOwners) && (
-        <div className="px-2 py-1.5 border-b border-border/60 space-y-0.5 bg-muted/20">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            What the customer entered on the form
-          </div>
-          {customer.name && (
-            <div className="text-[11px] text-foreground">
-              Name on the enquiry: <span className="font-medium">{customer.name}</span>
-            </div>
-          )}
-          {customer.typedOwners && (
-            <div className="text-[11px] text-foreground">
-              Owner(s) they typed: <span className="font-medium">{customer.typedOwners}</span>
-            </div>
-          )}
-          {suggested.length > 0 && (
-            <div className={`flex items-center gap-1 text-[10.5px] ${agrees ? "text-emerald-600" : "text-amber-600"}`}>
-              {agrees
-                ? <><CheckCircle2 className="w-3 h-3" /> Matches a name read off the deed</>
-                : <><AlertTriangle className="w-3 h-3" /> Doesn't match the deed names — check before sending</>}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div ref={viewportRef} className="h-64 overflow-auto bg-muted/30 relative">
+      <div ref={viewportRef} className="h-80 overflow-auto bg-muted/30 relative">
         {current?.isImage ? (
           <img
             src={current.url}
