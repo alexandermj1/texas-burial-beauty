@@ -83,10 +83,8 @@ const CemeteryInfoCard = ({ canon, displayName, submissionCount, onClear, startI
       // column was produced by a stricter DB helper (strips "memorial park",
       // "cemetery", etc.) and no longer matches the app-side key used by the
       // submissions list, which caused profiles to look empty.
-      const match = ((data as any[]) || []).find(
-        (r) => canonicalize(r.name) === canon
-      );
-      const found = (match as any) || null;
+      // Duplicate spellings share one canonical key — take the fullest profile.
+      const found = (pickBestCemeteryProfile((data as any[]) || [], displayName) as any) || null;
       setProfile(found);
       if (startInEditMode) {
         if (found) {

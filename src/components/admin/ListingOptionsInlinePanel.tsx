@@ -173,8 +173,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         .from("texas_cemeteries" as any)
         .select("id, name, city, address, contact_name, contact_phone, contact_email, transfer_fee, typical_prices, process_info, website, description, sections");
       if (cancelled) return;
-      const canon = cemeteryCanon(name);
-      setCemProfile(((data as any[]) || []).find((r) => cemeteryCanon(r.name) === canon) ?? null);
+      // Two rows can share one canonical name ("Restland Memorial Park" and
+      // "Restland Funeral Home & Cemetery") — always take the maintained one.
+      setCemProfile(pickBestCemeteryProfile((data as any[]) || [], name));
     })();
     return () => { cancelled = true; };
   }, [seller.cemetery]);
