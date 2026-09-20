@@ -140,6 +140,8 @@ ${WEBSITE}`;
 
 // 55% of retail, lowered whenever the transfer fee plus the 15% buyer's fee
 // would push what the buyer pays past 70% of retail.
+import { suggestedNetPerSpace } from "@/lib/quoteFigures";
+
 const computeQuoteFromRetail = (retailStr: string, feeStr: string | number = 0): string => {
   const r = Number(retailStr);
   if (!isFinite(r) || r <= 0) return "";
@@ -178,7 +180,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
       const savedPerPlot = savedTotal > 0 ? String(Math.round(savedTotal / count)) : "";
       setPlotCount(String(count));
       setRetail(retailStr);
-      setQuote(savedPerPlot || computeQuoteFromRetail(retailStr));
+      setQuote(savedPerPlot || computeQuoteFromRetail(retailStr, dirFeeFromTable || submission.transfer_fee_amount || directoryFee));
       setQuoteTouched(!!savedPerPlot);
       setTransferFee(dirFeeFromTable || (submission.transfer_fee_amount != null ? String(submission.transfer_fee_amount) : directoryFee));
       setCustomMessage(submission.quote_message || "");
@@ -188,7 +190,7 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
 
   const handleRetailChange = (v: string) => {
     setRetail(v);
-    if (!quoteTouched) setQuote(computeQuoteFromRetail(v));
+    if (!quoteTouched) setQuote(computeQuoteFromRetail(v, transferFee));
   };
   const handleQuoteChange = (v: string) => {
     setQuote(v);
