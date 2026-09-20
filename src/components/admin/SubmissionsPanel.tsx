@@ -1567,7 +1567,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (!approved) return;
       setLocationSaving(true);
       const answers = { ...(seller.ownership_answers ?? {}) } as Record<string, any>;
-      const autopilot = { ...((answers.autopilot ?? {}) as Record<string, any>), plotDescription: next || null };
+      const autopilot = { ...((answers.autopilot ?? {}) as Record<string, any>), plotDescription: next || null, plotDescriptionUpdatedAt: new Date().toISOString() };
       try {
         await onUpdate(selected.id, { plot_description: next, ownership_answers: { ...answers, autopilot } } as any);
         const rebuilt = await rebuildUnsignedSubmissionDocuments(selected.id, { plotDescription: next });
