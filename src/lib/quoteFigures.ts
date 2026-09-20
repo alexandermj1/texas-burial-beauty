@@ -88,5 +88,15 @@ export function quoteFigures(input: {
       : `${money(perSpaceInclFee)}${feeNote}`;
   }
 
-  return { plotCount, netPerSpace, transferFee, perSpaceInclFee, totalInclFee, netTotal, hasQuote, headline };
+  const buyerFees = normalizeBuyerFees(input.buyerFees);
+  const buyerFeesTotal = buyerFees.reduce((sum, f) => sum + f.amount, 0);
+  const buyerPremiumPerSpace = hasQuote ? Math.round(netPerSpace * BUYER_FEE_RATE) : 0;
+  const buyerPremiumTotal = hasQuote ? Math.round(netTotal * BUYER_FEE_RATE) : 0;
+  const buyerPricePerSpace = hasQuote ? perSpaceInclFee + buyerPremiumPerSpace : 0;
+  const buyerPriceTotal = hasQuote ? totalInclFee + buyerPremiumTotal + buyerFeesTotal : 0;
+
+  return {
+    plotCount, netPerSpace, transferFee, perSpaceInclFee, totalInclFee, netTotal, hasQuote, headline,
+    buyerFees, buyerFeesTotal, buyerPremiumPerSpace, buyerPremiumTotal, buyerPricePerSpace, buyerPriceTotal,
+  };
 }
