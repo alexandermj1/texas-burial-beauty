@@ -306,16 +306,10 @@ const RegionRow = ({
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
   const [query, setQuery] = useState("");
-  const [plotType, setPlotType] = useState("Any type");
 
   const grouped = useMemo(() => {
     const filtered = bayCemeteries.filter((c) => {
       if (region !== "All" && c.region !== region) return false;
-      if (plotType !== "Any type") {
-        let hh = 0;
-        for (let k = 0; k < c.name.length; k++) hh = (hh * 31 + c.name.charCodeAt(k)) >>> 0;
-        if (!OFFERING_SETS[hh % OFFERING_SETS.length].includes(plotType)) return false;
-      }
       if (query.trim()) {
         const q = query.toLowerCase();
         return (
@@ -333,7 +327,8 @@ const CemeteryDirectory = () => {
       map.set(c.region, arr);
     });
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [region, query, plotType]);
+  }, [region, query]);
+
 
   // Chip order — stable, matches alphabetical section order on the page so
   // the chips never reshuffle while scrolling or filtering.
