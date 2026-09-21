@@ -654,7 +654,7 @@ const CemeteryDirectory = () => {
               cemetery paperwork, transfer and title end to end.
             </p>
 
-            <div className="mt-7">
+            <div className="mt-6 md:mt-7">
               <HeroSearch
                 region={region}
                 setRegion={setRegion}
@@ -665,7 +665,7 @@ const CemeteryDirectory = () => {
               />
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13.5px] font-medium text-foreground/70">
+            <div className="hidden md:flex mt-5 flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13.5px] font-medium text-foreground/70">
               <span className="inline-flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {total}+ cemeteries served
@@ -681,7 +681,7 @@ const CemeteryDirectory = () => {
 
       {/* METRO AREAS — photo cards straight under the search (hidden while searching) */}
       {!isSearching && (
-      <section className="relative z-20 container mx-auto px-6 pt-6 pb-10 md:pt-8 md:pb-16">
+      <section className="relative z-20 container mx-auto px-6 pt-4 pb-8 md:pt-8 md:pb-16">
         <div className="text-center mb-6 md:mb-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5">Explore Texas</p>
           <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
