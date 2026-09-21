@@ -411,7 +411,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const sameDayMetro = effRegions.some((r) => SAME_DAY_REGIONS.includes(r));
 
   return (
-    <section id="map" className={`scroll-mt-28 w-full ${compact ? "py-0" : "py-12 md:py-16"}`}>
+    <section id="map" className={`scroll-mt-28 w-full ${compact || widget ? "py-0" : "py-12 md:py-16"}`}>
       <div className="mx-auto w-full max-w-[1440px]">
         {!hideTitle && (
           <div className="mb-6 text-center">
