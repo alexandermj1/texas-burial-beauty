@@ -315,6 +315,19 @@ export default function ContractsPanel({ submissionId, sellerEmail, sellerName, 
       if (error) throw error;
       if (c.kind === "listing_agreement") {
         await supabase.from("contact_submissions").update({ la_signed_at: now }).eq("id", submissionId);
+        // Same as an e-signature: kick the autopilot so the family tree
+        // questionnaire is emailed next (it no-ops if already sent/done).
+        const { error: apErr } = await supabase.functions.invoke("autopilot", {
+          body: { submission_id: submissionId, step: "family_tree" },
+        });
+        if (apErr) {
+          toast.success(`${KIND_LABEL[c.kind]} marked as signed — but the family tree email failed to send automatically`);
+          await load();
+          return;
+        }
+        toast.success(`${KIND_LABEL[c.kind]} marked as signed — family tree email sent`);
+        await load();
+        return;
       }
       toast.success(`${KIND_LABEL[c.kind]} marked as signed`);
       await load();
