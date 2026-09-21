@@ -41,8 +41,10 @@ interface Props {
   compact?: boolean;
   /** Render the metro/region switcher above the map (default true). */
   metroTabs?: boolean;
-  /** Widget mode: no metro tabs, borderless compact toolbar, shorter map — sits inline like a card widget. */
+  /** Widget mode: borderless compact toolbar, shorter map — sits inline like a card widget. */
   widget?: boolean;
+  /** Called when a metro tab is picked, so the caller can keep its own region state in sync. */
+  onMetroChange?: (regions: string[]) => void;
 }
 
 const ACCENT = "#c1704a";
@@ -105,12 +107,18 @@ const markerIcon = (color: string, active = false) => {
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
  * synced, crawlable index of colour-coded cemetery cards.
  */
-const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true, widget = false }: Props) => {
+const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true, widget = false, onMetroChange }: Props) => {
   const [metroIdx, setMetroIdx] = useState(() => metroIndexForRegions(regions));
   const activeMetro = METRO_OPTIONS[metroIdx];
-  const showTabs = metroTabs && !widget;
+  const showTabs = metroTabs;
   const effRegions = showTabs ? activeMetro.regions : regions;
   const effMetro = showTabs ? (activeMetro.label === "All Texas" ? "Texas" : activeMetro.label) : metro;
+
+  // Keep the selected tab in step when the caller's region scope changes.
+  const regionsKey = regions.join("|");
+  useEffect(() => {
+    setMetroIdx(metroIndexForRegions(regionsKey.split("|")));
+  }, [regionsKey]);
 
   const [active, setActive] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -431,7 +439,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
 
         {/* Region switcher */}
         {showTabs && (
-          <div className="mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <div className={`mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar ${widget ? "sm:justify-center" : ""}`}>
             {METRO_OPTIONS.map((m, i) => (
               <button
                 key={m.label}
@@ -439,6 +447,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                 onClick={() => {
                   setMetroIdx(i);
                   setActive(null);
+                  onMetroChange?.(m.regions);
                 }}
                 aria-pressed={i === metroIdx}
                 className={`${chip(i === metroIdx)} shrink-0`}

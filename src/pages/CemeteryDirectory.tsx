@@ -724,26 +724,20 @@ const CemeteryDirectory = () => {
       </section>
 
       {/* COVERAGE MAP — follows whichever metro area is selected, styled as an inline widget */}
-      <section className="relative z-20 container mx-auto px-6 pb-14 md:pb-20">
+      <section className="relative z-20 container mx-auto px-6 pb-6 md:pb-8">
+        <div className="text-center mb-6 md:mb-8">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5 inline-flex items-center gap-2">
+            <Navigation className="w-3.5 h-3.5" />
+            Coverage map
+          </p>
+          <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
+            {region === "All" ? "Every cemetery we cover in Texas" : `Cemeteries across ${region}`}
+          </h2>
+          <p className="mt-1.5 text-sm text-foreground/60">
+            Pick a metro to zoom in — every pin is a cemetery we hold a profile for, with pricing and the current transfer fee.
+          </p>
+        </div>
         <div className="rounded-3xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-[0_24px_50px_-30px_hsl(var(--foreground)/0.4)] px-5 py-6 md:px-8 md:py-8">
-          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5 inline-flex items-center gap-2">
-                <Navigation className="w-3.5 h-3.5" />
-                Coverage map
-              </p>
-              <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
-                {region === "All" ? "Every cemetery we cover in Texas" : `Cemeteries across ${region}`}
-              </h2>
-              <p className="mt-1.5 text-sm text-foreground/60">
-                Every pin is a cemetery we hold a profile for — pricing, section detail and the current transfer fee.
-              </p>
-            </div>
-            <span className="hidden md:inline-flex items-center gap-2 rounded-full bg-secondary/70 px-3.5 py-1.5 text-xs font-semibold text-foreground/70">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              Updated as new cemeteries join
-            </span>
-          </div>
           <Suspense
             fallback={<div className="h-[320px] flex items-center justify-center text-sm text-foreground/60">Loading map…</div>}
           >
@@ -753,6 +747,15 @@ const CemeteryDirectory = () => {
               fullBleed={false}
               widget
               hideTitle
+              onMetroChange={(regions) => {
+                if (regions.length >= ALL_TEXAS_REGIONS.length) {
+                  setRegion("All");
+                } else {
+                  const match = ALL_TEXAS_REGIONS.find((r) => regions.includes(r));
+                  if (match) setRegion(match);
+                }
+                setQuery("");
+              }}
             />
           </Suspense>
         </div>
@@ -792,7 +795,7 @@ const CemeteryDirectory = () => {
         )}
 
       {/* REGION SECTIONS — grid of compact cards, one block per region */}
-      <section className="relative z-10 pt-6 md:pt-10 pb-20 md:pb-28 overflow-hidden">
+      <section className="relative z-10 pt-2 md:pt-4 pb-20 md:pb-28 overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.45]"
