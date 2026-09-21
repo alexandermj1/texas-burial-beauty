@@ -873,6 +873,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submissions, archivedView, regionFilter, docsEmails, returnedDocsEmails]);
 
+  // Count of buyer submissions in the current view, deduplicated the same way as
+  // the pipeline counts so the badge reflects real people, not duplicate form fills.
+  const buyerCount = useMemo(() => {
+    const seen = new Set<string>();
+    return submissions.filter(s => {
+      if (resolveKind(s.customer_kind, s.source) !== "buyer") return false;
+      if (archivedView !== !!s.archived_at) return false;
+      if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
+      const k = (s.email || "").trim().toLowerCase();
+      if (!k || UNMERGED_IDS.has(s.id)) return true;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    }).length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissions, archivedView, regionFilter]);
+
 
 
 
