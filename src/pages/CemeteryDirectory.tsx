@@ -40,7 +40,7 @@ import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.js
 // pointers don't resolve in every environment, so these are bundled).
 import sparkmanHero from "@/assets/featured/sparkman-fountain-garden.jpg";
 import bluebonnetHero from "@/assets/featured/bluebonnet-hero-lake.jpg";
-import restlandHero from "@/assets/featured/restland-hero-lawn.jpg";
+import restlandFeatured from "@/assets/featured/restland-hero-lawn.jpg";
 import { RESTHAVEN_HERO } from "@/data/resthavenPhotos";
 import { LAUREL_LAND_HERO } from "@/data/laurelLandPhotos";
 import park04 from "@/assets/parks/local/park-04.jpg";
@@ -125,7 +125,7 @@ const FEATURED_BY_REGION: Record<string, string[]> = {
 // Original photography we hold for specific cemeteries (same shots as their own pages)
 const CEMETERY_PHOTOS: Record<string, string> = {
   "Sparkman-Hillcrest Memorial Park": sparkmanHero,
-  "Restland Memorial Park": restlandHero,
+  "Restland Memorial Park": restlandFeatured,
   "Bluebonnet Hills Memorial Park": bluebonnetHero,
   "Rest Haven Memorial Park": RESTHAVEN_HERO.src,
   "Laurel Land Memorial Park Fort Worth": LAUREL_LAND_HERO.src,
