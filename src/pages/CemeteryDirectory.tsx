@@ -727,8 +727,10 @@ const CemeteryDirectory = () => {
           </button>
         </div>
       </section>
+      )}
 
       {/* COVERAGE MAP — follows whichever metro area is selected, styled as an inline widget */}
+      {!isSearching && (
       <section className="relative z-20 container mx-auto px-6 pb-6 md:pb-8">
         <div className="text-center mb-6 md:mb-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5 inline-flex items-center gap-2">
