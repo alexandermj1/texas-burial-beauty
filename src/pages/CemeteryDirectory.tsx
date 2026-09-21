@@ -586,6 +586,41 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
+      {/* AREA PHOTOS — big regional images before the cemetery lists */}
+      <section className="relative z-20 container mx-auto px-6 pb-4 md:pb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {AREA_FEATURES.map((a) => (
+            <button
+              key={a.region}
+              onClick={() => {
+                setRegion(a.region);
+                setQuery("");
+                window.setTimeout(scrollToResults, 60);
+              }}
+              className="group block text-left"
+            >
+              <div className="flex items-baseline justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">Texas</span>
+                  <h3 className="font-display text-2xl md:text-[28px] tracking-tight mt-0.5 truncate">{a.region}</h3>
+                </div>
+                <span className="text-sm font-bold text-muted-foreground whitespace-nowrap">
+                  {countByRegion[a.region] ?? 0}
+                </span>
+              </div>
+              <div className="relative overflow-hidden rounded-2xl shadow-[0_14px_34px_-18px_hsl(var(--foreground)/0.45)] group-hover:shadow-[0_22px_48px_-18px_hsl(var(--primary)/0.45)] transition-shadow">
+                <div
+                  className="aspect-[16/10] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                  style={{ backgroundImage: `url(${REGION_PHOTOS[a.region]?.[0] ?? PHOTO_POOL[0]})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/35 to-transparent" />
+              </div>
+              <p className="text-sm text-muted-foreground mt-3">{a.cities}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <div ref={barAnchorRef} aria-hidden="true" />
 
       {/* Condensed pinned search — same control, slim variant */}
