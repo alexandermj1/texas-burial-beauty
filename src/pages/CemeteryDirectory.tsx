@@ -228,8 +228,8 @@ function HeroSearch({
         className="hidden lg:block absolute -right-[118px] -bottom-[58px] w-[150px] rotate-[-12deg] pointer-events-none select-none opacity-90"
       />
       {/* Gradient ring — sage to terracotta, tying the bar into the floral hero */}
-      <div className="rounded-full p-[2px] bg-gradient-to-r from-primary/50 via-accent/40 to-primary/50 shadow-[0_24px_60px_-26px_hsl(var(--foreground)/0.45)]">
-        <div className="flex items-center rounded-full p-2.5 gap-1 bg-gradient-to-r from-primary/[0.05] via-background to-accent/[0.06]">
+      <div className="rounded-full p-[2.5px] bg-gradient-to-r from-primary/65 via-accent/55 to-primary/65 shadow-[0_28px_70px_-28px_hsl(var(--foreground)/0.55),0_0_0_1px_hsl(var(--background)/0.6)]">
+        <div className="flex items-center rounded-full p-2.5 gap-1 bg-gradient-to-r from-primary/[0.06] via-background/95 to-accent/[0.07] backdrop-blur-sm">
           <Segment
             icon={<MapPin className="w-[18px] h-[18px] text-primary" strokeWidth={2} />}
             label="Where"
