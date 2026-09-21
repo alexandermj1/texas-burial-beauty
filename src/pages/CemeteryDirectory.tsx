@@ -23,12 +23,8 @@ import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
-import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import hibiscusRed from "@/assets/flowers/hibiscus-red.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
-import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
-import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
-import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import heroBotanicalLeft from "@/assets/flowers/hero-botanical-left.png";
+import heroBotanicalRight from "@/assets/flowers/hero-botanical-right.png";
 
 // Memorial park photography (CDN-hosted)
 import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
@@ -568,32 +564,29 @@ const CemeteryDirectory = () => {
           <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/35 blur-3xl" />
           <div className="absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
           <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
-          {/* A composed botanical frame: foliage creates the outer sweep while
-              flowers step inward around the headline instead of floating alone. */}
+          {/* Two purpose-built arrangements create a continuous botanical frame
+              around the headline instead of unrelated floating decorations. */}
           <div className="absolute inset-0 hidden md:block" aria-hidden>
-            <div className="absolute left-0 top-20 h-[590px] w-[35%] max-w-[510px]">
-              <img src={palmFan.url} alt="" className="absolute -left-20 top-0 w-[310px] -rotate-[18deg] opacity-80 select-none" />
-              <img src={bananaLeaf.url} alt="" className="absolute -left-14 top-52 w-[280px] rotate-[16deg] opacity-75 select-none" />
-              <img src={pinkBranch.url} alt="" className="absolute left-20 top-8 w-[230px] rotate-[20deg] opacity-90 select-none" />
-              <img src={hibiscusCoral.url} alt="" className="absolute left-20 top-56 w-[190px] -rotate-[12deg] opacity-95 select-none drop-shadow-sm" />
-              <img src={plumeriaCluster.url} alt="" className="absolute left-48 top-40 w-[145px] rotate-[8deg] opacity-95 select-none drop-shadow-sm" />
-            </div>
-
-            <div className="absolute right-0 top-16 h-[600px] w-[35%] max-w-[520px]">
-              <img src={palmFan.url} alt="" className="absolute -right-24 top-2 w-[330px] rotate-[22deg] opacity-80 scale-x-[-1] select-none" />
-              <img src={bananaLeaf.url} alt="" className="absolute -right-12 top-60 w-[290px] -rotate-[20deg] opacity-75 scale-x-[-1] select-none" />
-              <img src={pinkBranch.url} alt="" className="absolute right-24 top-4 w-[220px] -rotate-[22deg] opacity-90 scale-x-[-1] select-none" />
-              <img src={hibiscusRed.url} alt="" className="absolute right-16 top-56 w-[180px] rotate-[14deg] opacity-95 select-none drop-shadow-sm" />
-              <img src={plumeriaCluster.url} alt="" className="absolute right-48 top-40 w-[140px] -rotate-[10deg] opacity-95 scale-x-[-1] select-none drop-shadow-sm" />
-            </div>
+            <img
+              src={heroBotanicalLeft}
+              alt=""
+              width={1024}
+              height={1408}
+              className="absolute -left-24 top-8 h-[610px] w-auto max-w-[42vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
+            />
+            <img
+              src={heroBotanicalRight}
+              alt=""
+              width={1024}
+              height={1408}
+              className="absolute -right-24 top-5 h-[620px] w-auto max-w-[42vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
+            />
           </div>
 
           {/* On phones, keep the frame above and beside the title so the search stays clear. */}
           <div className="absolute inset-x-0 top-16 h-[320px] md:hidden" aria-hidden>
-            <img src={pinkBranch.url} alt="" className="absolute -left-10 top-8 w-36 rotate-[18deg] opacity-75 select-none" />
-            <img src={hibiscusCoral.url} alt="" className="absolute -left-7 top-36 w-24 -rotate-[12deg] opacity-85 select-none" />
-            <img src={pinkBranch.url} alt="" className="absolute -right-10 top-5 w-36 -rotate-[20deg] opacity-75 scale-x-[-1] select-none" />
-            <img src={plumeriaCluster.url} alt="" className="absolute -right-5 top-36 w-24 rotate-[12deg] opacity-90 select-none" />
+            <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-0 h-64 w-auto opacity-70 select-none" />
+            <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-0 h-64 w-auto opacity-70 select-none" />
           </div>
         </div>
 
