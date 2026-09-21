@@ -29,26 +29,26 @@ import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
 import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
 import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
-import park04 from "@/assets/parks/park-04.jpg.asset.json";
-import park12 from "@/assets/parks/park-12.jpg.asset.json";
-import park23 from "@/assets/parks/park-23.jpg.asset.json";
-import park30 from "@/assets/parks/park-30.jpg.asset.json";
-import park36 from "@/assets/parks/park-36.jpg.asset.json";
-import park39 from "@/assets/parks/park-39.jpg.asset.json";
-import park47 from "@/assets/parks/park-47.jpg.asset.json";
-import park50 from "@/assets/parks/park-50.jpg.asset.json";
-import park57 from "@/assets/parks/park-57.jpg.asset.json";
+import park04 from "@/assets/parks/local/park-04.jpg";
+import park12 from "@/assets/parks/local/park-12.jpg";
+import park23 from "@/assets/parks/local/park-23.jpg";
+import park30 from "@/assets/parks/local/park-30.jpg";
+import park36 from "@/assets/parks/local/park-36.jpg";
+import park39 from "@/assets/parks/local/park-39.jpg";
+import park47 from "@/assets/parks/local/park-47.jpg";
+import park50 from "@/assets/parks/local/park-50.jpg";
+import park57 from "@/assets/parks/local/park-57.jpg";
 
 const PHOTO_POOL: string[] = [
-  park04.url,
-  park12.url,
-  park23.url,
-  park30.url,
-  park36.url,
-  park39.url,
-  park47.url,
-  park50.url,
-  park57.url,
+  park04,
+  park12,
+  park23,
+  park30,
+  park36,
+  park39,
+  park47,
+  park50,
+  park57,
   restlandHero.url,
   resthavenAvenue.url,
   restlandLawn.url,
@@ -58,16 +58,16 @@ const PHOTO_POOL: string[] = [
 // Photography is chosen by REGION (a landscape that represents the area),
 // not per individual cemetery — same region shares the same imagery family.
 const REGION_PHOTOS: Record<string, string[]> = {
-  "Dallas–Fort Worth": [park30.url, park04.url],
-  "Greater Houston": [park47.url, park12.url],
-  "Austin": [park23.url, park36.url],
-  "Central Texas": [park39.url, park50.url],
-  "San Antonio": [park57.url, park23.url],
-  "South Texas": [park12.url, park47.url],
-  "East Texas": [park36.url, park39.url],
-  "El Paso & West Texas": [park50.url, park57.url],
-  "West Texas": [park50.url, park30.url],
-  "North Texas": [park04.url, park39.url],
+  "Dallas–Fort Worth": [park30, park04],
+  "Greater Houston": [park47, park12],
+  "Austin": [park23, park36],
+  "Central Texas": [park39, park50],
+  "San Antonio": [park57, park23],
+  "South Texas": [park12, park47],
+  "East Texas": [park36, park39],
+  "El Paso & West Texas": [park50, park57],
+  "West Texas": [park50, park30],
+  "North Texas": [park04, park39],
 };
 
 // Featured areas shown as large photo cards above the cemetery lists.
