@@ -188,7 +188,15 @@ Deno.serve(async (req) => {
       return hits.sort((a, b) => b.trim().length - a.trim().length)[0] ?? n;
     };
 
-    const principalName = fullName(rawPrincipal);
+    // A value typed by a member of staff in the "check or edit this document"
+    // dialog is final: it must print exactly as typed, never be re-resolved
+    // against the roster or the questionnaire. Without this, an edited name was
+    // silently swapped back for the "most complete" spelling we held on file,
+    // so the saved edit was visible in the dialog but absent from the PDF.
+    const manualEdit = overrides.manual_edit === true;
+    const principalName = manualEdit && String(overrides.seller_name ?? '').trim()
+      ? String(overrides.seller_name).trim()
+      : fullName(rawPrincipal);
     const sellerContact = contactFor(ownership, principalName);
 
     // A submission can require one POA per signer. Keep each person's document
@@ -202,8 +210,13 @@ Deno.serve(async (req) => {
       // The signer writes their own address on the Power of Attorney in front of
       // the notary, so we never pre-print one there. Other documents keep using
       // whatever address we hold.
-      address: kind === 'poa' ? '' : (overrides.address || sellerContact.address || ''),
-      city_state_zip: kind === 'poa' ? '' : (overrides.city_state_zip || sellerContact.city_state_zip || ''),
+      // POAs are normally left blank for the signer to complete in front of the
+      // notary — unless staff deliberately typed an address in the edit dialog,
+      // in which case their entry is printed.
+      address: kind === 'poa' && !(manualEdit && String(overrides.address ?? '').trim())
+        ? '' : (overrides.address || sellerContact.address || ''),
+      city_state_zip: kind === 'poa' && !(manualEdit && String(overrides.city_state_zip ?? '').trim())
+        ? '' : (overrides.city_state_zip || sellerContact.city_state_zip || ''),
       phone: overrides.phone || sellerContact.phone || sub.phone || '',
       email: overrides.email || sellerContact.email || sub.email || '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
@@ -275,7 +288,9 @@ Deno.serve(async (req) => {
 
     } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.filter(Boolean).length > 1) {
       // A married couple signing one instrument instead of one POA each.
-      const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2).map(fullName);
+      const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2)
+        // Staff-typed names print exactly as typed.
+        .map((n) => (manualEdit ? String(n).trim() : fullName(n)));
       // Remember this on the contract so every later regeneration (the seller's
       // sign page, the notary packet) rebuilds the JOINT document, not the
       // single-signer template.
@@ -369,7 +384,9 @@ Deno.serve(async (req) => {
       sign_token_expires_at: existingTokenUsable
         ? (existing!.sign_token_expires_at as string | null)
         : new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
-      fill_data: fill,
+      // Remember that these values were typed by staff, so a later resync or a
+      // cemetery/location change rebuilds the document with their wording intact.
+      fill_data: manualEdit ? { ...fill, manual_edit: true } : fill,
       filled_pdf_path: path,
       created_by: userData.user?.id ?? null,
       principal_key: principalKey,
