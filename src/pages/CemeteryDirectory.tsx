@@ -475,6 +475,14 @@ const CemeteryDirectory = () => {
 
   const total = bayCemeteries.length;
 
+  const countByRegion = useMemo(() => {
+    const m: Record<string, number> = {};
+    bayCemeteries.forEach((c) => {
+      m[c.region] = (m[c.region] ?? 0) + 1;
+    });
+    return m;
+  }, []);
+
   const listRef = useRef<HTMLDivElement | null>(null);
   const barAnchorRef = useRef<HTMLDivElement | null>(null);
   const [barPinned, setBarPinned] = useState(false);
