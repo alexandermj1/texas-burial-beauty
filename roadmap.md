@@ -64,3 +64,10 @@
 - [x] Enrich the chapter rail with restrained botanical detail and replace the dark closing panel
 - [x] Verify desktop/mobile presentation and publish
 - [ ] Request Google indexing for the live guide
+
+## Cemetery directory card redesign
+- [ ] Gather reference screenshots of the preferred California/Airbnb-style card layout
+- [ ] Generate 3 design directions based on the reference
+- [ ] Implement the chosen card style on the Texas cemetery directory page
+- [ ] Use uploaded cemetery photos where available
+- [ ] Verify desktop and mobile presentation
