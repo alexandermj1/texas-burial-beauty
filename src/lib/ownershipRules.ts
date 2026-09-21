@@ -730,7 +730,7 @@ export const DOC_GUIDE: Record<string, DocGuide> = {
     match: ["death", "certificate", "dc"],
   },
   D7: {
-    what: "The signed will that names who receives the estate, including the cemetery property.",
+    what: "A certified copy of the probated will and the order admitting it to probate.",
     how: "The attorney who drafted it, the executor's file, or the county clerk if it was filed for probate.",
     match: ["will", "testament"],
   },
