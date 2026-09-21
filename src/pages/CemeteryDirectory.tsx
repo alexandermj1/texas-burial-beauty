@@ -709,7 +709,7 @@ const CemeteryDirectory = () => {
             </button>
           ))}
         </div>
-        <div className="mt-4 flex sm:hidden justify-center">
+        <div className="mt-5 flex justify-center">
           <button
             onClick={() => {
               setRegion("All");
