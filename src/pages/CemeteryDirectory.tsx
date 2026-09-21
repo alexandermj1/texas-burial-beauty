@@ -721,6 +721,33 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
+      {/* COVERAGE MAP — follows whichever metro area is selected */}
+      <section className="relative z-20 container mx-auto px-6 pb-12 md:pb-16">
+        <div className="rounded-3xl overflow-hidden border border-border/70 bg-background/85 backdrop-blur-sm shadow-[0_18px_44px_-28px_hsl(var(--foreground)/0.45)]">
+          <div className="px-5 pt-5 md:px-7 md:pt-7">
+            <div className="flex items-center gap-2 text-primary mb-1.5">
+              <Navigation className="w-4 h-4" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Coverage map</span>
+            </div>
+            <h2 className="font-display font-semibold text-2xl md:text-3xl tracking-tight text-foreground">
+              {region === "All" ? "Every cemetery we cover in Texas" : `Cemeteries across ${region}`}
+            </h2>
+          </div>
+          <Suspense
+            fallback={<div className="h-[420px] flex items-center justify-center text-sm text-foreground/60">Loading map…</div>}
+          >
+            <MetroCemeteryMap
+              regions={mapRegions}
+              metro={region === "All" ? "Texas" : region}
+              fullBleed={false}
+              compact
+              hideTitle
+              blurb={`Every pin is a cemetery we hold a profile for — pricing, section detail and the current transfer fee.`}
+            />
+          </Suspense>
+        </div>
+      </section>
+
       <div ref={barAnchorRef} aria-hidden="true" />
 
       {/* Condensed pinned search — same control, slim variant */}
