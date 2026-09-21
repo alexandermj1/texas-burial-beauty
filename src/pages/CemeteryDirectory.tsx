@@ -506,26 +506,8 @@ const CemeteryDirectory = () => {
 
                 <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
 
-                {/* Plot type */}
-                <label className="group flex-1 flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer text-left">
-                  <span className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-4 h-4 text-primary" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Plot type</span>
-                    <select
-                      value={plotType}
-                      onChange={(e) => setPlotType(e.target.value)}
-                      className="w-full bg-transparent text-[15px] font-semibold text-foreground tracking-tight focus:outline-none cursor-pointer -ml-0.5"
-                    >
-                      {["Any type", "Plots", "Niches", "Mausoleums", "Companion", "Cremation", "Lawn Crypts", "Family Estates", "Veteran"].map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </span>
-                </label>
-
                 <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
+
 
                 {/* Cemetery */}
                 <label className="group flex-[1.2] flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors text-left">
